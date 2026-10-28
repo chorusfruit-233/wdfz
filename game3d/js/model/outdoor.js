@@ -68,16 +68,34 @@ function buildTree(K, tx, tz, seed, lod){
   for(i=0;i<nb;i++){
     var a=i*(6.283/nb)+r(30+i)*1.1;
     var len=1.0+r(40+i)*1.0, up=0.34+r(50+i)*0.36;
-    K.rod('bark',topX,th-0.1,topZ,topX+Math.cos(a)*len,th+len*up,topZ+Math.sin(a)*len,0.10,0.05,5,0x3d3227,0.98);
+    var bx=topX+Math.cos(a)*len, by=th+len*up, bz=topZ+Math.sin(a)*len;
+    K.rod('bark',topX,th-0.1,topZ,bx,by,bz,0.10,0.05,5,0x3d3227,0.98);
+    if(lod>0){                                             /* 主枝中段再岔出两根细枝 */
+      for(var tw=0;tw<2;tw++){
+        var f=0.45+tw*0.3, ta=a+(tw?0.7:-0.7)+(r(110+i*3+tw)-0.5)*0.6, tl=0.45+r(120+i*3+tw)*0.5;
+        var sx=topX+(bx-topX)*f, sy=th-0.1+(by-th+0.1)*f, sz=topZ+(bz-topZ)*f;
+        K.rod('bark',sx,sy,sz,sx+Math.cos(ta)*tl,sy+tl*0.55,sz+Math.sin(ta)*tl,0.04,0.018,4,0x3a2f25,0.96);
+      }
+    }
   }
-  var cw=3.6+r(41)*2.0, nc=lod>1?8:(lod>0?6:4);
+  /* 落叶：树池周围一圈，黄绿褐几种 */
+  if(lod>0){
+    var nl=lod>1?16:9, LD=K.g('decal'), leafCol=[0x6a5a2a,0x7a6630,0x4a5a30,0x5a4426];
+    for(i=0;i<nl;i++){
+      var la=r(130+i)*6.283, lr=0.7+r(140+i)*1.8, lx=tx+Math.cos(la)*lr, lz=tz+Math.sin(la)*lr, ls=0.05+r(150+i)*0.05, lo=r(160+i)*3.14;
+      var c1=Math.cos(lo)*ls, s1=Math.sin(lo)*ls;
+      LD.quad(lx-c1,lz-s1*0.5, lx-s1*0.5,lz+c1, lx+c1,lz+s1*0.5, lx+s1*0.5,lz-c1, 0.012+i*0.0002, leafCol[i%4]);
+    }
+  }
+  var cw=3.6+r(41)*2.0, nc=lod>1?11:(lod>0?6:4);
   for(i=0;i<nc;i++){
     var ca=r(60+i)*6.283;
     var cr=(0.10+r(70+i)*0.50)*cw*0.5;
     var cy=th+1.0+r(80+i)*2.0;
-    var cs=(0.55+r(90+i)*0.45)*cw*0.40;
+    var cs=(0.55+r(90+i)*0.45)*cw*(lod>1?0.34:0.40);
     K.blob('leaf',topX+Math.cos(ca)*cr, cy, topZ+Math.sin(ca)*cr, cs, cs*0.78, cs, lay[i%3], 0.93+r(100+i)*0.16, lod>0?7:5, 0.35, seed*7+i);
   }
+  if(lod>1) K.blob('leaf',topX,th+1.6,topZ,cw*0.36,cw*0.26,cw*0.36,lay[0],0.72,7,0.3,seed*7+40);   /* 里层一团暗的，冠子不透光 */
 }
 function addOutdoorProps(K, x0, y0, x1, y1){
   var i, j, q=QUALITY|0;
