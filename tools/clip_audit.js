@@ -143,14 +143,30 @@ var ClipAudit=(function(){
     }
     return best;
   }
+  /* 「嵌入」：薄的那个的截面整个包在另一个里（踢脚线伸进柜子背后、托板埋进楼板、门框埋进墙）。
+     真实世界里也是这样装的，看不出破绽；两边的棱都露在外面的交叉才算穿模 */
+  function embedded(A,B){
+    if(Math.abs(A.tc*B.ts-A.ts*B.tc)>1e-3&&Math.abs(A.tc*B.tc+A.ts*B.ts)>1e-3) return false;   /* 不同朝向的不判 */
+    function ext(P){ var ex=Math.abs(P.h[0]*P.tc)+Math.abs(P.h[2]*P.ts), ez=Math.abs(P.h[0]*P.ts)+Math.abs(P.h[2]*P.tc);
+      return [[P.c[0]-ex,P.c[0]+ex],[P.c[1]-P.h[1],P.c[1]+P.h[1]],[P.c[2]-ez,P.c[2]+ez]]; }
+    function enc(S,L){                         /* S 的截面（除最长轴外的两轴）在 L 里 */
+      var e=ext(S), f=ext(L), sz=[e[0][1]-e[0][0],e[1][1]-e[1][0],e[2][1]-e[2][0]], lng=sz.indexOf(Math.max.apply(null,sz)), k, ok=true;
+      for(k=0;k<3;k++){ if(k===lng) continue; if(e[k][0]<f[k][0]-0.003||e[k][1]>f[k][1]+0.003){ ok=false; break; } }
+      return ok;
+    }
+    return enc(A,B)||enc(B,A);
+  }
   function collide(A,B,self){
-    if(A.t==='box'&&B.t==='box'){ if(self) return null; var d=boxBox(A,B); return d>EPS?[ (A.c[0]+B.c[0])/2,(A.c[1]+B.c[1])/2,(A.c[2]+B.c[2])/2 ]:null; }
+    if(A.t==='box'&&B.t==='box'){ if(self) return null; var d=boxBox(A,B); if(d<=EPS||embedded(A,B)) return null; return [ (A.c[0]+B.c[0])/2,(A.c[1]+B.c[1])/2,(A.c[2]+B.c[2])/2 ]; }
     if(A.t==='rod'&&B.t==='box'||A.t==='box'&&B.t==='rod'){
       var R=A.t==='rod'?A:B, X=A.t==='rod'?B:A, iv=segBox(R,X,self?0.01:EPS);
       if(!iv) return null;
       var len=(iv[1]-iv[0])*Math.hypot(R.b[0]-R.a[0],R.b[1]-R.a[1],R.b[2]-R.a[2]);
       if(self&&(iv[0]<=0.001||iv[1]>=0.999)) return null;          /* 一头插在里面：接头，不算 */
       if(len<0.03) return null;
+      /* 杆子从盒子的端面插进去、没有擦破侧面（栏杆插进柱子、管子穿墙）：嵌入，不算 */
+      if(!self){ var r=Math.max(R.r0,R.r1), ivr=segBox(R,X,r+0.004);
+        if(ivr&&(iv[1]-iv[0])-(ivr[1]-ivr[0])<(2*r+0.02)/Math.max(0.01,Math.hypot(R.b[0]-R.a[0],R.b[1]-R.a[1],R.b[2]-R.a[2]))) return null; }
       var u=(iv[0]+iv[1])/2; return [R.a[0]+(R.b[0]-R.a[0])*u,R.a[1]+(R.b[1]-R.a[1])*u,R.a[2]+(R.b[2]-R.a[2])*u];
     }
     if(self) return null;
@@ -158,6 +174,13 @@ var ClipAudit=(function(){
     samples(A).some(function(q){ if(inside(B,q,EPS)){ hit=q; return true; } return false; }) ||
     samples(B).some(function(q){ if(inside(A,q,EPS)){ hit=q; return true; } return false; });
     return hit;
+  }
+  function desc(P){
+    function r(v){ return +v.toFixed(3); }
+    if(P.t==='box') return 'box '+P.m+' c='+P.c.map(r)+' h='+P.h.map(r)+(P.ts?' yaw':'');
+    if(P.t==='cyl') return 'cyl '+P.m+' c='+P.c.map(r)+' r='+r(P.rb)+'/'+r(P.rt)+' h='+r(P.hh);
+    if(P.t==='rod') return 'rod '+P.m+' '+P.a.map(r)+'→'+P.b.map(r)+' r='+r(P.r0);
+    return 'blob '+P.m+' c='+P.c.map(r)+' r='+P.r.map(r);
   }
   function top(o){ return o.replace(/\/.*$/,''); }
   function kind(o){ return o.replace(/[:#@].*$/,''); }
@@ -187,7 +210,7 @@ var ClipAudit=(function(){
         if(!hit) continue;
         var pk=[A.o,B.o].sort().join(' × ');
         if(self) pk=A.o+'|'+A.t+'>'+B.t+'|'+hit.map(function(v){ return Math.round(v*2); });
-        if(!out[pk]) out[pk]={type:self?'self':'overlap',a:A.o,b:self?(A.t+'→'+B.t):B.o,at:hit.map(function(v){ return +v.toFixed(2); }),n:0};
+        if(!out[pk]) out[pk]={type:self?'self':'overlap',a:A.o,b:self?(A.t+'→'+B.t):B.o,at:hit.map(function(v){ return +v.toFixed(2); }),n:0,pa:desc(A),pb:desc(B)};
         out[pk].n++;
       }
     }
