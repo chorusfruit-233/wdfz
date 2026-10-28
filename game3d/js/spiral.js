@@ -32,6 +32,17 @@ function spPolar(R,wx,wy){
 }
 function spiralHere(){ return S.mode==='in'&&S.room===SPIRAL.room; }
 function spiralReset(){ SP.state='ground'; SP.a=0; SP.th=0; S.floorY=0; }
+/* 相同的平面坐标可能位于两圈楼梯或平台：读档时须在碰撞和防卡位之前恢复层数。 */
+function spiralRestore(saved){
+  if(!saved||['ground','stair','top'].indexOf(saved.state)<0||
+     !Number.isFinite(saved.a)||!Number.isFinite(saved.th)||
+     saved.a<SPIRAL.enter[0]||saved.a>SPIRAL.amax) return false;
+  SP.state=saved.state;
+  SP.a=saved.state==='top'?SPIRAL.amax:(saved.state==='ground'?0:saved.a);
+  SP.th=saved.th;
+  S.floorY=SP.state==='top'?SPIRAL.topH:(SP.state==='stair'?clamp(SP.a,0,SPIRAL.amax)/TAU*SPIRAL.turnH:0);
+  return true;
+}
 
 /* 碰撞：按玩家现在所处的层判断某一点能不能站 */
 function spiralSolid(R,wx,wy){

@@ -6,6 +6,8 @@ function saveGame(){
     var d={
       v:1, mode:S.mode, room:S.room, x:S.x, y:S.y, ang:S.ang, pitch:S.pitch,
       tsec:S.tsec, day:S.day, diff:S.diff, san:S.san, viol:S.viol, stam:S.stam, tt:S.tt,
+      tired:!!S.tired, snackT:Math.max(0,S.snackT||0),
+      spiral:spiralHere()?{state:SP.state,a:SP.a,th:SP.th}:null,
       bag:S.bag, hot:S.hot, talent:S.talent, spots:S.spots, clues:S.clues,
       seated:S.seated, ttTier:S.ttTier, hiddenAsked:S.hiddenAsked,
       hiddenLatch:S.hiddenLatch,

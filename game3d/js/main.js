@@ -278,6 +278,7 @@ function clearIntroTimers(){
 }
 function freshState(diff){
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
+  spiralReset();
   buildInteriorData();
   buildRoomBounds();
   S.screen='play';
@@ -285,7 +286,7 @@ function freshState(diff){
   var t=TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)];
   S.talent=t;
   S.tsec=700; S.day=1;
-  S.san=100; S.viol=0; S.stam=100; S.snackT=0; S.tt=0; S.ttTier=0;
+  S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.tt=0; S.ttTier=0;
   S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
   S.spots={}; S.clues={}; S.notes={}; S.marks={};
@@ -340,6 +341,8 @@ var Game={
     S.mode=d.mode||'out'; S.room=d.room||null;
     S.x=d.x; S.y=d.y; S.ang=d.ang||0; S.pitch=d.pitch||0;
     S.tsec=d.tsec; S.day=d.day; S.san=d.san; S.viol=d.viol; S.stam=d.stam;
+    S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
+    S.snackT=Number.isFinite(d.snackT)?clamp(d.snackT,0,SNACK_SEC):0;
     S.tt=d.tt||0; S.ttTier=d.ttTier||0;
     S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0;
     S.bag=d.bag||[]; S.hot=d.hot||[null,null];
@@ -363,7 +366,7 @@ var Game={
         if(HAS_FX2[AN.id]) anfxSpawn(AN.id,S.x,S.y);
       }catch(e){}
     }
-    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated});
+    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral});
     else { S.mode='out'; S.room=null; enterWorldOut(); syncCamera(0); }
     var _tel2=document.getElementById('talent'); if(_tel2) _tel2._set=false;
     var _hot2=document.getElementById('hot'); if(_hot2) _hot2._sig='';
@@ -404,7 +407,7 @@ var Game={
       var e=document.getElementById(id); if(e) e.style.display='none';
     });
     var es=document.getElementById('ends'); if(es) es.remove();
-    document.getElementById('menu').style.display='flex';
+    document.getElementById('menu').style.display='block';
     document.getElementById('sub').style.display='none';
     paintMenuSave();
   }

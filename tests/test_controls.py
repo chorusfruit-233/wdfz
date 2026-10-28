@@ -438,6 +438,137 @@ class ControlsTest(unittest.TestCase):
         page.evaluate("S.tsec=1295;updateSystems(.01)")
         self.assert_js(page, '!S.exam')
 
+    def test_bell_tower_saves_restore_stairs_and_top(self):
+        for stage in ('stair', 'top'):
+            with self.subTest(stage=stage):
+                page = self.page()
+                saved = page.evaluate("""stage => {
+                    doEnterRoom('bell1'); running=false; S.tsec=760;
+                    const R=INTERIORS.bell1, end=SPIRAL.th0+(stage==='top'?SPIRAL.amax+0.4:7.2);
+                    for(let a=SPIRAL.th0; a<=end; a+=0.12){
+                      const x=SPIRAL.cx+Math.cos(a)*1.6, z=SPIRAL.cz+Math.sin(a)*1.6;
+                      S.x=R.ox+(x+R.cols*0.5)*9; S.y=R.oy+(z+R.rows*0.5)*9;
+                      spiralUpdate();
+                    }
+                    if(SP.state!==stage) throw Error('Could not reach '+stage);
+                    const result={x:S.x,y:S.y,state:SP.state,a:SP.a,th:SP.th,height:S.floorY};
+                    if(!saveGame()) throw Error('Save failed');
+                    return result;
+                }""", stage)
+                page.reload(wait_until='load')
+                page.locator('#btncont').click()
+                page.wait_for_function("document.getElementById('banner').textContent==='钟楼'")
+                restored = page.evaluate("""() => {
+                    running=false; syncCamera(0);
+                    return {x:S.x,y:S.y,state:SP.state,a:SP.a,th:SP.th,height:S.floorY,
+                      camera:GLR.cam.position.y,blocked:solidAt(S.x,S.y),bell:bellReach(),
+                      autosave:loadGame()};
+                }""")
+                self.assertEqual(restored['state'], saved['state'])
+                for key in ('x', 'y', 'a', 'th', 'height'):
+                    self.assertAlmostEqual(restored[key], saved[key], places=5, msg=key)
+                self.assertFalse(restored['blocked'])
+                self.assertGreater(restored['camera'], saved['height'])
+                self.assertEqual(restored['autosave']['spiral']['state'], stage)
+                if stage == 'top':
+                    self.assertTrue(restored['bell'])
+                    page.evaluate('tryInteract()')
+                    self.assert_js(page, 'S.exam')
+                    page.evaluate("""const R=INTERIORS.bell1, a=SPIRAL.th0-0.1;
+                        S.x=R.ox+(SPIRAL.cx+Math.cos(a)*1.6+R.cols*0.5)*9;
+                        S.y=R.oy+(SPIRAL.cz+Math.sin(a)*1.6+R.rows*0.5)*9;
+                        spiralUpdate();""")
+                    self.assert_js(page, "SP.state==='stair'&&S.floorY<SPIRAL.topH")
+
+    def test_sprint_effect_and_exhaustion_survive_reload(self):
+        page = self.page()
+        page.evaluate("S.stam=20;S.tired=true;S.snackT=6;saveGame()")
+        page.reload(wait_until='load')
+        self.assertTrue(page.locator('#btncont').is_visible())
+        page.evaluate('Game.continue_();running=false')
+        self.assert_js(page, 'S.tired&&S.snackT===6')
+        page.evaluate("S.snackT=0;KEY.w=true;KEY.shift=true;updatePlayer(.05)")
+        self.assert_js(page, '!S.run&&S.tired')
+
+    def test_older_save_without_new_state_loads_safely(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('bell1'); running=false; S.stam=4; saveGame();
+            const old=loadGame(); delete old.spiral; delete old.snackT; delete old.tired;
+            localStorage.setItem('wdfz3d',JSON.stringify(old));""")
+        page.reload(wait_until='load')
+        self.assertTrue(page.locator('#btncont').is_visible())
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("document.getElementById('banner').textContent==='钟楼'")
+        self.assert_js(page, "SP.state==='ground'&&S.floorY===0&&S.tired&&S.snackT===0&&!solidAt(S.x,S.y)")
+
+    def test_exam_ignores_non_exam_previews(self):
+        page = self.page()
+        for diff, locked in (('easy', False), ('hard', True)):
+            with self.subTest(diff=diff, locked=locked):
+                result = page.evaluate("""([diff,locked]) => {
+                    S.diff=diff; S.day=2; S.tsec=700; S.exam=true;
+                    S.mode='in'; S.room='teach1'; AN.active=false; AN.id=null;
+                    AN.pre='turn'; AN.locked=locked; AN.lockWait=0; AN.cool={};
+                    anStart();
+                    return {active:AN.active,id:AN.id,allowed:!!EXAM_AN[AN.id]};
+                }""", [diff, locked])
+                self.assertTrue(result['active'], result)
+                self.assertTrue(result['allowed'], result)
+
+    def test_guard_flashlight_can_be_retried_after_full_bag(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('guard1'); running=false;
+            const R=INTERIORS.guard1; S.x=R.ox+3.5*R.tw; S.y=R.oy+3.5*R.th;
+            S.ang=Math.PI; S.bag=['roomkey','key','coin','chalk','snack','battery','pill','pen'];
+            tryInteract();""")
+        self.assert_js(page, "!hasItem('torch')&&document.getElementById('sub').textContent.includes('装不下')")
+        page.evaluate("removeItem('coin');tryInteract()")
+        self.assert_js(page, "hasItem('torch')")
+
+    def test_guard_flashlight_enables_garage_escape(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('guard1'); running=false;
+            const R=INTERIORS.guard1; S.x=R.ox+3.5*R.tw; S.y=R.oy+3.5*R.th;
+            S.ang=Math.PI; S.bag=[]; tryInteract(); tryInteract(); tryInteract();""")
+        self.assert_js(page, "hasItem('roomkey')&&hasItem('key')&&hasItem('torch')")
+        page.evaluate("""doEnterRoom('garage1'); running=false; S.ang=0;
+            ROAM.on=true; ROAM.stage='approach'; ROAM.x=S.x+40; ROAM.y=S.y;
+            ROAM.cd=10; ROAM.litAcc=0; USE.torch=false; toggleTorch(); roamTick(1.7);""")
+        self.assert_js(page, "ROAM.stage==='wait'&&!roamGuardsCar()")
+        page.evaluate('useCar(0,0)')
+        page.wait_for_function("S.screen==='end'&&RT.end==='car'", timeout=5000)
+
+    def test_auto_save_death_and_ending_history(self):
+        page = self.page()
+        page.evaluate("S.diff='hard';doEnterRoom('guard1');running=false")
+        self.assert_js(page, "loadGame().room==='guard1'&&loadGame().mode==='in'")
+        page.evaluate('doExitRoom()')
+        self.assert_js(page, "loadGame().mode==='out'&&loadGame().room===null")
+        page.evaluate("kill('测试死亡','vignette')")
+        self.assert_js(page, 'S.dead&&!loadGame()')
+        page.evaluate("Game.quit();freshState('hard');running=false;doEnterRoom('guard1');triggerEnding('face')")
+        self.assert_js(page, "!loadGame()&&!!endsSeen().face")
+        page.evaluate('Game.quit()')
+        self.assertTrue(page.locator('#mends').is_visible())
+        self.assertIn('白名单', page.locator('#mends').inner_text())
+
+    def test_returned_menu_layout_on_short_and_touch_screens(self):
+        for touch, width, height in ((False, 800, 450), (True, 844, 390), (True, 390, 844)):
+            with self.subTest(touch=touch, width=width, height=height):
+                page = self.page(touch=touch)
+                page.set_viewport_size({'width':width, 'height':height})
+                page.evaluate('Game.quit()')
+                layout = page.evaluate("""() => {
+                    const left=document.querySelector('#menu .mleft').getBoundingClientRect();
+                    const keys=document.querySelector('#menu .mkeys').getBoundingClientRect();
+                    const foot=document.querySelector('#menu .mfoot').getBoundingClientRect();
+                    return {display:getComputedStyle(document.getElementById('menu')).display,
+                      leftBottom:left.bottom,keysTop:keys.top,keysBottom:keys.bottom,footTop:foot.top};
+                }""")
+                self.assertEqual(layout['display'], 'block', layout)
+                self.assertGreaterEqual(layout['keysTop'], layout['leftBottom'], layout)
+                self.assertGreaterEqual(layout['footTop'], layout['keysBottom'], layout)
+
     def test_mobile_menu_panels_scroll_and_real_scene_renders(self):
         page = self.page(touch=True)
         page.evaluate("S.screen='menu';document.getElementById('menu').style.display='block';syncFullscreenUI()")

@@ -165,7 +165,9 @@ var AN_MSG={
 };
 function anStart(){
   var id=null;
-  if((S.diff==='easy'||AN.locked)&&AN.pre){
+  /* 进入考试后，之前预告的异象也必须受考试候选限制。 */
+  var examRestricted=typeof examNow==='function'&&examNow();
+  if((S.diff==='easy'||AN.locked)&&AN.pre&&(!examRestricted||EXAM_AN[AN.pre])){
     if(anAllowed(AN.pre)) id=AN.pre;
     else if(AN.locked&&!AN.lockWait){ AN.lockWait=1; AN.next=4; return; }   /* 预报过的那个，等你走到它能出现的地方 */
   }

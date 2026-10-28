@@ -273,6 +273,7 @@ function doEnterRoom(id,spawn){
   }
   if(!(spawn&&spawn.seated)) S.seated=false;
   else S.seated=true;
+  if(R.spiral&&spawn&&spawn.spiral) spiralRestore(spawn.spiral);
   var via=ENTER_VIA; ENTER_VIA=null;
   enterWorldRoom(id);
   if(!spawn){

@@ -281,13 +281,15 @@ function tryInteract(){
   if(ch==='b'){ os('我：床。可是现在不能睡。',2.4); return; }
   if(ch==='k'&&R.host==='guard'){
     if(!hasItem('roomkey')){
-      addItem('roomkey');
-      os('我：柜台下面挂着一串钥匙。其中一把的标签上写着「机房」。',4.2);
+      if(addItem('roomkey')) os('我：柜台下面挂着一串钥匙。其中一把的标签上写着「机房」。',4.2);
       return;
     }
     if(!hasItem('key')){
-      addItem('key');
-      os('我：旁边还挂着一串车钥匙。牌号刻在环上——是车库那两辆的。',4.4);
+      if(addItem('key')) os('我：旁边还挂着一串车钥匙。牌号刻在环上，旁边还放着一把手电筒。',4.4);
+      return;
+    }
+    if(!hasItem('torch')){
+      if(addItem('torch')) os('我：柜台下面还有一把手电筒。去车库之前，把它带上。',4.2);
       return;
     }
     os('我：柜台下面没有别的了。',2.0); return;
