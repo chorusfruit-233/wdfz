@@ -1075,6 +1075,32 @@ class ControlsTest(unittest.TestCase):
             for(var i=0;i<80&&!S.immuneUsed;i++) anTick(.05);""")
         self.assert_js(page, "S.immuneUsed&&!S.dead&&!AN.active&&RT.traces.some(function(t){return t.k==='cup'})")
 
+    def test_hidden_choice_resumes_after_a_death_is_prevented(self):
+        for protection in ('elixir', 'immune', 'god'):
+            with self.subTest(protection=protection):
+                page = self.page()
+                page.evaluate("""protection => {
+                    S.diff='hard';S.day=2;S.san=100;S.viol=0;S.tt=100;
+                    S.hiddenLatch=true;S.hiddenAsked=true;S.hiddenWindow=0;
+                    S.talent=protection==='immune'?'immune':'code';S.immuneUsed=false;
+                    S.bag=protection==='elixir'?['elixir']:[];DEV.god=protection==='god';
+                    AN.active=false;ROAM.on=false;askHiddenChoice();
+                }""", protection)
+                page.locator('#choices button').nth(1).click()
+                self.assert_js(page, '!S.dead&&!PAUSE.on&&!UI.chooseOpen&&S.tt===86&&!S.hiddenLatch&&!S.hiddenAsked')
+                if protection == 'elixir':
+                    self.assert_js(page, "!hasItem('elixir')")
+                elif protection == 'immune':
+                    self.assert_js(page, 'S.immuneUsed')
+                page.evaluate('update(.1)')
+                self.assert_js(page, '!PAUSE.on&&!UI.chooseOpen&&!S.dead&&S.tt<100')
+
+        page = self.page()
+        page.evaluate("""S.diff='hard';S.day=2;S.talent='code';S.bag=[];DEV.god=false;
+            S.tt=100;S.hiddenLatch=true;S.hiddenAsked=true;askHiddenChoice();""")
+        page.locator('#choices button').nth(1).click()
+        self.assert_js(page, "S.dead&&S.death==='names'")
+
     def test_lights_out_hud_debug_minutes_and_podium_text(self):
         page = self.page()
         page.evaluate('S.tsec=1339;updateHUD()')

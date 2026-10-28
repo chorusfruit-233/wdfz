@@ -192,7 +192,12 @@ function askHiddenChoice(){
   PAUSE.on=true;
   UI.choice('第 3 节。我的位子空着。\n全班都转过头来，等我坐回去。',[
     {label:'回教室去',fn:function(){ S.tt=86; S.hiddenLatch=false; S.hiddenAsked=false; PAUSE.on=false; }},
-    {label:'……',fn:function(){ S.hiddenAsked=false; kill('你在自己的位子上坐好了。椅子很合身，像是照着你做的。这一次，不用再起来了。','names'); }}
+    {label:'……',fn:function(){
+      S.hiddenAsked=false;
+      kill('你在自己的位子上坐好了。椅子很合身，像是照着你做的。这一次，不用再起来了。','names');
+      /* 药丸、天赋或调试无敌挡下死亡时，不能留下无面板的暂停或立即重触发的隐性压力。 */
+      if(!S.dead){ S.tt=86; S.hiddenLatch=false; S.hiddenWindow=0; PAUSE.on=false; }
+    }}
   ]);
 }
 
