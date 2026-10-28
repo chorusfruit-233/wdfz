@@ -33,7 +33,7 @@ function updateDialog(dt){
   }
 }
 
-var UI={ bagDirty:true, spotsDirty:true, openPanel:null, chooseOpen:false };
+var UI={ bagDirty:true, spotsDirty:true, openPanel:null, chooseOpen:false, choiceTimer:0, choiceTicker:0, choiceId:0, choiceDeadline:0 };
 
 UI.anyOpen=function(){ return !!UI.openPanel||UI.chooseOpen; };
 UI.open=function(id){
@@ -63,27 +63,53 @@ UI.toggle=function(id){
   if(S.screen!=='play'||S.dead) return;
   if(UI.openPanel===id) UI.close(id); else UI.open(id);
 };
-UI.choice=function(text,opts){
+UI.choice=function(text,opts,options){
+  UI.clearChoiceTimer();
+  var choiceId=++UI.choiceId;
   var el=document.getElementById('choices');
   el.innerHTML='';
   var t=document.createElement('div');
   t.style.cssText='font-size:14px;text-align:center;margin-bottom:6px;opacity:.9;line-height:1.9';
   t.textContent=text;
   el.appendChild(t);
+  function select(i){
+    if(!UI.chooseOpen||UI.choiceId!==choiceId) return;
+    UI.closeChoice();
+    opts[i].fn();
+    resumeMouseLook(); updateTouchUI();
+  }
   for(var i=0;i<opts.length;i++){
-    (function(o){
+    (function(o,idx){
       var b=document.createElement('button');
       b.textContent=o.label;
-      b.onclick=function(){ UI.chooseOpen=false; el.style.display='none'; o.fn(); resumeMouseLook(); updateTouchUI(); };
+      b.onclick=function(){ select(idx); };
       el.appendChild(b);
-    })(opts[i]);
+    })(opts[i],i);
   }
   el.style.display='flex';
   UI.chooseOpen=true;
+  if(options&&options.timeoutMs>0&&opts.length){
+    var end=performance.now()+options.timeoutMs;
+    UI.choiceDeadline=end;
+    var timer=document.createElement('div'); timer.className='choice-timer';
+    timer.setAttribute('role','status'); el.appendChild(timer);
+    function paintTimer(){
+      var label='剩余 '+Math.max(0,Math.ceil((end-performance.now())/1000))+' 秒 · 超时随机选择';
+      if(timer.textContent!==label) timer.textContent=label;
+    }
+    paintTimer();
+    UI.choiceTicker=setInterval(paintTimer,200);
+    UI.choiceTimer=setTimeout(function(){ select(Math.floor(Math.random()*opts.length)); },options.timeoutMs);
+  }
   resetInputState();releaseMouseLook();
   updateTouchUI();
 };
+UI.clearChoiceTimer=function(){
+  clearTimeout(UI.choiceTimer); clearInterval(UI.choiceTicker);
+  UI.choiceTimer=0; UI.choiceTicker=0; UI.choiceDeadline=0;
+};
 UI.closeChoice=function(){
+  UI.clearChoiceTimer(); UI.choiceId++;
   UI.chooseOpen=false;
   var el=document.getElementById('choices');
   el.style.display='none';

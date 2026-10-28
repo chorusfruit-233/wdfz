@@ -3,6 +3,12 @@
 
 var SET={vol:70,sub:1,q:1,shake:1,amb:1,bright:100};
 var SHAKE_ON=true, SUB_MULT=1.0, AMB_ON=true;
+function applyBrightness(){
+  var bright=Number(SET.bright)||100;
+  var slider=document.getElementById('mb');
+  if(slider) slider.value=String(bright);
+  if(GLR.postMat) GLR.postMat.uniforms.uBright.value=Math.max(0.4,Math.min(2.0,bright/100));
+}
 function loadSet(){
   try{
     var s=localStorage.getItem('zw3d_set');
@@ -13,7 +19,7 @@ function loadSet(){
   QUALITY=(SET.q===0||SET.q===2)?SET.q:1;
   try{ var mq=document.getElementById('mq'); if(mq) mq.value=String(QUALITY); }catch(e){}
   try{ SFX.setVol(SET.vol/100); }catch(e){}
-  try{ if(GLR.postMat) GLR.postMat.uniforms.uBright.value=Math.max(0.4,Math.min(2.0,(SET.bright||100)/100)); }catch(e){}
+  applyBrightness();
 }
 function saveSet(){ try{ localStorage.setItem('zw3d_set',JSON.stringify(SET)); }catch(e){} }
 function paintSet(){
@@ -31,7 +37,7 @@ var Settings={
   sub:function(i){ SET.sub=i; SUB_MULT=[0.6,1.0,1.6][i]; paintSet(); saveSet(); },
   bright:function(v){
     SET.bright=+v;
-    try{ if(GLR.postMat) GLR.postMat.uniforms.uBright.value=Math.max(0.4,Math.min(2.0,+v/100)); }catch(e){}
+    applyBrightness();
     saveSet();
   },
   q:function(i){ SET.q=i; QUALITY=i; paintSet(); saveSet();

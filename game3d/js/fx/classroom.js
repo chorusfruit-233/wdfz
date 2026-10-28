@@ -107,7 +107,7 @@ function anwSpawn(){
   }
 }
 function anwTick(dt){
-  var show=(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&AN.next>0&&AN.next<=8&&!UI.anyOpen());
+  var show=(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&AN_WARN[AN.pre]&&anAllowed(AN.pre)&&AN.next>0&&AN.next<=8&&!UI.anyOpen());
   if(!show){ if(ANW.on) anwClear(); return; }
   var key=Math.round(S.tsec+AN.next*rateAt(S.tsec)/60)+'|'+(S.room||'out');
   if(!ANW.on||ANW.key!==key||ANW.room!==S.room){ anwClear(); ANW.key=key; anwSpawn(); }

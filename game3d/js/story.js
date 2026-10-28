@@ -329,6 +329,7 @@ function kill(msg,fx){
   if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
   if(S.dead||S.death) return;
   if(hasItem('elixir')){ elixirSave(); return; }      /* 不知名药丸：替你死一次 */
+  if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
@@ -359,14 +360,23 @@ function kill(msg,fx){
 
 function elixirSave(){
   removeItem('elixir');
+  survivalReset();
+  os('我：……那粒药丸自己在舌根底下化开了。苦得发麻。我还站着——刚才那一下，像是有人替我挨了。',5.2,OS_FORCE);
+  toast('不知名药丸 · 救了你一次');
+}
+function immuneSave(){
+  S.immuneUsed=true;
+  survivalReset();
+  os('我：刚才那一下本该要了我的命。可它擦身而过，像是没有认出我。',5.2,OS_FORCE);
+  toast('天生免疫 · 挡下了一次致命事件');
+}
+function survivalReset(){
   GLR.flash=0.9; GLR.hurt=0.4;
   S.san=Math.max(S.san,45); S.viol=Math.min(S.viol,40);
   try{ if(PAT.state!=='idle') patEnd(null); }catch(e){}
   try{ if(AN.active) anEnd(); }catch(e){}
   try{ if(ROAM.on){ ROAM.stage='wait'; ROAM.waitT=8; ROAM.x=-1e6; ROAM.y=-1e6; ROAM.litAcc=0; } }catch(e){}
   try{ SFX.wake&&SFX.wake(); }catch(e){}
-  os('我：……那粒药丸自己在舌根底下化开了。苦得发麻。我还站着——刚才那一下，像是有人替我挨了。',5.2,OS_FORCE);
-  toast('不知名药丸 · 救了你一次');
 }
 function dreamWake(){
   RT.wakes=(RT.wakes||0)+1;
