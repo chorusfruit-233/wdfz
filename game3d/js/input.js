@@ -316,8 +316,7 @@ function updatePlayer(dt){
     if(typeof DEV!=='undefined'&&DEV.fast)spd*=2.6;
     if(mag>1){fw/=mag;sd/=mag;}
     var ca=Math.cos(S.ang),sa=Math.sin(S.ang),x=S.x,y=S.y;
-    moveBy((ca*fw-sa*sd)*spd*dt,(sa*fw+ca*sd)*spd*dt);
-    spiralUpdate();
+    moveBy((ca*fw-sa*sd)*spd*dt,(sa*fw+ca*sd)*spd*dt,dt);
     S.moving=Math.hypot(S.x-x,S.y-y)>.0001;
   }
   if(S.moving&&!S.seated){

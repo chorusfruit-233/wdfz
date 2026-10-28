@@ -9,14 +9,7 @@
 
 function roomTheme(R){
   var t={floor:'ftile', fcol:PALETTE.floor, wall:PALETTE.wall, wallMat:'plaster', low:0x8b867e, skirt:0x242c32, ceil:0x3a4248, rail:0x6a5a48};
-  if(R.id==='garage1'){ t.floor='fconcrete'; t.fcol=0x6a6a66; t.wall=0x8a8a84; t.wallMat='concrete'; t.low=0x4a4a46; t.ceil=0x2a2e30; }
-  else if(R.id==='trash1'){ t.floor='fconcrete'; t.fcol=0x7a7a72; t.wall=0xa8aca0; t.low=0x6a7068; }
-  else if(R.host==='bell'){ t.floor='fstone'; t.fcol=0x8a8478; t.low=0x6a5a4a; t.ceil=0x2a2420; }
-  else if(R.id==='gear1'){ t.floor='fwood'; t.fcol=0x9a7a52; t.wall=0x27502f; t.low=0x1e3e24; }
-  else if(R.id==='teach6'){ t.floor='fconcrete'; t.fcol=0x8a8680; t.wall=0xa8a49c; t.wallMat='concrete'; }
-  else if(R.host==='c1'||R.host==='c2'){ t.floor='fterrazzo'; t.fcol=0x9a968e; }
-  else if(R.host==='canteen'){ t.fcol=0x9a968e; t.low=0x7a8a84; }
-  return t;
+  return Object.assign(t,ROOM_THEMES[R.id]||ROOM_THEMES[R.host]||{});
 }
 
 function buildRoomGeometry(R){

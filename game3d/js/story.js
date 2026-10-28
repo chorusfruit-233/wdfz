@@ -87,40 +87,6 @@ function fnWhereNow(){
   if(R.host==='teach') return 'teach';
   return 'out';
 }
-var FN_P={grp:null,room:null,mat:null};
-function fnPeopleClear(){
-  if(FN_P.grp){ try{ GLR.scene.remove(FN_P.grp); }catch(e){} }
-  FN_P.grp=null; FN_P.room=null;
-}
-function fnPeopleBuild(){
-  fnPeopleClear();
-  if(S.mode!=='in'||!S.room) return;
-  var R=INTERIORS[S.room]; if(!R) return;
-  if(!FN_P.mat) FN_P.mat=new THREE.MeshBasicMaterial({color:0x41505c,fog:true});
-  var g=new THREE.Group();
-  GLR.scene.add(g); FN_P.grp=g; FN_P.room=S.room;
-  var p=anfxW2S(S.x,S.y), made=0, c,r2,tries=0;
-  while(made<4&&tries++<160){
-    c=1+Math.floor(Math.random()*(R.cols-2));
-    r2=1+Math.floor(Math.random()*(R.rows-2));
-    var ch=R.grid[r2][c];
-    if(ch==='#'||ch==='='||ch==='O'||ch==='S'||ch==='L') continue;
-    var w=worldToScene(R.ox+(c+0.5)*R.tw,R.oy+(r2+0.5)*R.th,R);
-    var d=Math.hypot(w.x-p.x,w.z-p.z);
-    if(d<2.2||d>7.5) continue;
-    var fg=new THREE.Group();
-    fg.add(figMesh('person',FN_P.mat,1));
-    fg.position.set(w.x,0,w.z);
-    fg.rotation.y=Math.atan2(p.x-w.x,p.z-w.z);                 /* 正面（+z）朝着你 */
-    g.add(fg);
-    made++;
-  }
-}
-function fnPeopleTick(){
-  var on=(S.fn&&S.fn.on&&S.fn.v<72);
-  if(!on){ if(FN_P.grp) fnPeopleClear(); return; }
-  if(FN_P.room!==S.room) fnPeopleBuild();
-}
 function fnTick(dt){
   var f=S.fn; if(!f||!f.on) return;
   if(S.dead||S.screen!=='play') return;
@@ -135,12 +101,12 @@ function fnTick(dt){
     f.on=false;
     try{ fnPeopleClear(); }catch(e){}
     try{ os('我：……天黑了。刚才那些都很正常，正常得不对。',4.6); }catch(e){}
-    try{ GLR.flash=Math.max(GLR.flash||0,0.35); }catch(e){}
+    try{ VisualState.flash=Math.max(VisualState.flash||0,0.35); }catch(e){}
     return;
   }
   if(f.v>72&&!f.shown){
     f.shown=true;
-    GLR.hurt=Math.max(GLR.hurt||0,0.45);
+    VisualState.hurt=Math.max(VisualState.hurt||0,0.45);
     os('我：……刚才那些，我是不是笑得太大声了。',4.4);
   }
   try{ fnPeopleTick(); }catch(e){}
@@ -336,7 +302,7 @@ function kill(msg,fx){
   var f=document.getElementById('flash');
   f.style.background='#1a0000'; f.style.opacity='0.9';
   setTimeout(function(){ f.style.opacity='0'; f.style.transition='opacity 1.2s'; },40);
-  GLR.hurt=0.45;                     /* 以前直接拉满，整屏一层粉，演出本身反而看不清 */
+  VisualState.hurt=0.45;                     /* 以前直接拉满，整屏一层粉，演出本身反而看不清 */
   try{ if(SFX.deathFx) SFX.deathFx(S.death); else SFX.death(); }catch(e){ try{ SFX.death(); }catch(_e){} }
   var _ep=(DFX_EPI[S.death]||'');
   var _hold=(S.death==='neck')?3000:((S.death==='grip'||S.death==='gaze'||S.death==='stare'||S.death==='ring'||S.death==='lamps'||S.death==='follow')?2600:2000);
@@ -371,7 +337,7 @@ function immuneSave(){
   toast('天生免疫 · 挡下了一次致命事件');
 }
 function survivalReset(){
-  GLR.flash=0.9; GLR.hurt=0.4;
+  VisualState.flash=0.9; VisualState.hurt=0.4;
   S.san=Math.max(S.san,45); S.viol=Math.min(S.viol,40);
   try{ if(PAT.state!=='idle') patEnd(null); }catch(e){}
   try{ if(AN.active) anEnd(); }catch(e){}
@@ -387,7 +353,7 @@ function dreamWake(){
     AN.next=60;
     S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.pitch=0;
     S.tsec=700; S.san=78; S.viol=0; S.stam=100; S.snackT=0; S.tt=0; S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
-    GLR.hurt=0; GLR.flash=0;
+    VisualState.hurt=0; VisualState.flash=0;
     var f=document.getElementById('flash'); if(f){ f.style.transition='none'; f.style.opacity='0'; }
     UI.closeChoice(); PAUSE.on=false; ROAM.on=false;
     OPENDOORS={};                        /* 回到 11:40：开过的门也都关回去了 */
@@ -422,8 +388,8 @@ function triggerEnding(id){
 }
 function showEndingCard(id){
   var e=ENDINGS[id];
-  GLR.flash=0.6;
-  setTimeout(function(){ GLR.flash=0; },600);
+  VisualState.flash=0.6;
+  setTimeout(function(){ VisualState.flash=0; },600);
   var tag=e.fake?'<div style="font-size:11px;letter-spacing:6px;color:#c8a24a">假 结 局</div>':(e.true?'<div style="font-size:11px;letter-spacing:6px;color:#9fe3c2">真 结 局</div>':'');
   var more=e.fake?'<button onclick="fakeWake()" style="font-family:inherit;font-size:12px;letter-spacing:3px;'+
     'padding:11px 36px;background:rgba(20,48,38,.5);color:#cfe9dc;border:1px solid rgba(130,180,155,.5);cursor:pointer">……再睁开眼</button>':'';
@@ -446,7 +412,7 @@ function fakeWake(){
   var es=document.getElementById('ends'); if(es) es.remove();
   RT.end=null; RT.trashFake=1;
   S.screen='play'; S.dead=false; S.day=Math.max(2,S.day+1); S.tsec=441;
-  GLR.worldNorm=0;
+  VisualState.worldNorm=0;
   var R1=INTERIORS['teach1'];
   doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
   S.seated=true;

@@ -64,7 +64,7 @@ function buildTree(K, tx, tz, seed, lod){
   K.cyl('bark',tx,0,tz,0.30,0.22,0.25,7,0x4a3c2e,0.95);                              /* 根部 */
   K.box('concrete',tx,0.04,tz,1.2,0.08,1.2,0x8a847a,1.0);                            /* 树池 */
   K.g('decal').quad(tx-0.5,tz-0.5,tx+0.5,tz-0.5,tx+0.5,tz+0.5,tx-0.5,tz+0.5,0.081,0x3a2e22);
-  var nb=lod>0?4:2;
+  var nb=lod===3?6:(lod>0?4:2);
   for(i=0;i<nb;i++){
     var a=i*(6.283/nb)+r(30+i)*1.1;
     var len=1.0+r(40+i)*1.0, up=0.34+r(50+i)*0.36;
@@ -87,7 +87,7 @@ function buildTree(K, tx, tz, seed, lod){
       LD.quad(lx-c1,lz-s1*0.5, lx-s1*0.5,lz+c1, lx+c1,lz+s1*0.5, lx+s1*0.5,lz-c1, 0.012+i*0.0002, leafCol[i%4]);
     }
   }
-  var cw=3.6+r(41)*2.0, nc=lod>1?11:(lod>0?6:4);
+  var cw=3.6+r(41)*2.0, nc=lod===3?16:(lod>1?11:(lod>0?6:4));
   for(i=0;i<nc;i++){
     var ca=r(60+i)*6.283;
     var cr=(0.10+r(70+i)*0.50)*cw*0.5;
@@ -322,7 +322,8 @@ function addOutdoorProps(K, x0, y0, x1, y1){
   hedgeLine(420,1284,820,1284);     /* 南墙内侧 */
 
   /* ---- 树：沿路两侧一排 + 草地上零散几丛 ---- */
-  var maxTrees=[45,100,170][q]||100, trees=[], lod=q;
+  /* 所有档位共用实体布局；只减少树冠/枝叶分段，避免低画质穿树或切档被树困住。 */
+  var maxTrees=SCENE_SPEC.trees, trees=[], lod=q;
   function treeOK(mx,my){
     if(!outFree(mx,my,10,7)) return false;
     for(var k=0;k<trees.length;k++) if(dist2(mx,my,trees[k][0],trees[k][1])<26*26) return false;
@@ -350,7 +351,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
   OUTX.treeN=trees.length;
 
   /* ---- 灌木：草地上一小团一小团 ---- */
-  var shrubN=[10,24,40][q]||24, made=0;
+  var shrubN=SCENE_SPEC.shrubs, made=0;
   for(i=0;i<400&&made<shrubN;i++){
     var smx=BOUND.x0+12+hash2(i,131)*(BOUND.x1-BOUND.x0-24);
     var smy=BOUND.y0+12+hash2(i,137)*(BOUND.y1-BOUND.y0-24);
@@ -367,7 +368,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
 /* 草丛：一个 InstancedMesh，一次绘制；"流畅"画质不画 */
 function addGrass(grp){
   var q=QUALITY|0; if(q<1) return;
-  var N=q>1?9000:4200;
+  var N=Quality.get().grass;
   var geo=new THREE.BufferGeometry();
   var P=[], C=[], k;
   for(k=0;k<3;k++){

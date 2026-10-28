@@ -13,6 +13,7 @@ function frame(t){
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
   if(dt>0.25) dt=0.25;
+  QualityWatch.tick(dtG,S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!document.hidden);
   accum+=dt;
   var step=1/60, guard=0;
   while(accum>=step&&guard++<6){
@@ -25,7 +26,7 @@ function update(dt){
   PHONE.checkInterrupt();
   if(S.screen!=='play') return;
   if(PRO.on) return;                     /* 前情提要期间世界不动 */
-  GLR.time+=dt;
+  VisualState.time+=dt;
   updateDialog(dt);
   if(S.dead){
     S.deadT+=dt;
@@ -43,31 +44,6 @@ function update(dt){
   spotTick();
 }
 function render(dt){
-  if(!GLR.renderer) return;
-  if(S.dead){ GLR.hurt=Math.min(0.85,GLR.hurt+dt*0.12); }
-  else { GLR.hurt=Math.max(0,GLR.hurt-dt*0.6); }
-  GLR.flash=Math.max(0, (GLR.flash||0)-dt*1.7);
-  updateLighting();
-  if(typeof CUT!=='undefined'&&CUT.on) cutTick(dt);        /* 结局演出：镜头由 cutscene.js 摆 */
-  if(GLR.dust){
-    GLR.dustT=(GLR.dustT||0)+dt;
-    GLR.dust.position.set(GLR.cam.position.x,0,GLR.cam.position.z);
-    GLR.dust.rotation.y=GLR.dustT*0.015;
-    GLR.dust.position.y=Math.sin(GLR.dustT*0.25)*0.08;
-  }
-  if(GLR.roamFig){
-    if(S.mode==='in'&&S.room==='garage1'&&typeof ROAM!=='undefined'&&ROAM.on&&ROAM.x>-1e5){
-      var rp=worldToScene(ROAM.x,ROAM.y,INTERIORS['garage1']);
-      GLR.roamFig.visible=true;
-      GLR.roamFig.position.set(rp.x,0,rp.z);
-      GLR.roamFig.lookAt(GLR.cam.position.x,0,GLR.cam.position.z);
-    } else { GLR.roamFig.visible=false; }
-  }
-  try{ anfxUpdate(dt); }catch(e){}
-  try{ smileTick(dt); }catch(e){}
-  try{ patRender(); }catch(e){}
-  try{ handsTick(dt); }catch(e){}
-  try{ hallucTick(dt); }catch(e){}
   try{ PCGAME.tick(dt); }catch(e){}
   try{ updateIntro(dt); }catch(e){}
   try{
@@ -80,38 +56,27 @@ function render(dt){
     }
   }catch(e){}
   try{ if(DEV.on) Dev.pos(); }catch(e){}
-  try{ if(DEV.on&&GLR.time%0.4<0.05) Dev.look(); }catch(e){}
+  try{ if(DEV.on&&VisualState.time%0.4<0.05) Dev.look(); }catch(e){}
   try{ if(typeof AMB_ON!=='undefined'){ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
-  GLR.cam.updateMatrixWorld();
-  entFace();
-  var u=GLR.postMat.uniforms;
-  u.uTime.value=GLR.time;
-  var _fnOn=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
-  GLR.fnNorm=GLR.fnNorm===undefined?0:GLR.fnNorm;
-  GLR.fnNorm+= (_fnOn-GLR.fnNorm)*Math.min(1,dt*1.6);
-  u.uFx.value=Math.max(GLR.fnNorm,(GLR.worldNorm||0),(GLRTEST.nofx?1:0));
-  GLR.gaze=(GLR.gaze||0)+((GLR.gazeT||0)-(GLR.gaze||0))*Math.min(1,dt*2.4);
-  u.uGaze.value=GLR.gaze;
-  u.uHurt.value=GLR.hurt;
-  u.uFlash.value=GLR.flash;
-  u.uExpo.value=(GLR.dayExpo===undefined)?1:GLR.dayExpo;
-  u.uRed.value=GLR.patrolRed||0;
-  u.uSan.value=clamp(S.san/100,0,1);
-  if(typeof GLRTEST!=='undefined'&&GLRTEST.nopost){
-    GLR.renderer.setRenderTarget(null);
-    GLR.renderer.render(GLR.scene,GLR.cam);
-    updateHUD();
-    return;
-  }
-  GLR.renderer.setRenderTarget(GLR.rt);
-  GLR.renderer.clear();
-  GLR.renderer.render(GLR.scene,GLR.cam);
-  GLR.renderer.setRenderTarget(null);
-  GLR.renderer.render(GLR.postScene,GLR.postCam);
-  updateHUD();
-  try{ drawMini(dt); }catch(e){}
+  Engine.draw(dt); updateHUD(); drawMini(dt);
 }
+function updateIntro(dt){
+  if(!(S.intro>0)) return;
+  S.intro-=dt;
+  var b=document.getElementById('banner');
+  if(!b) return;
+  if(S.intro>0){
+    b.textContent=String(Math.ceil(S.intro));
+    b.style.opacity='1';
+    b.style.fontSize='64px';
+  }else{
+    b.textContent='';
+    b.style.opacity='0';
+    b.style.fontSize='';
+  }
+}
+
 var miniT=0;
 function drawMini(dt){
   miniT-=dt;
@@ -158,43 +123,6 @@ var AN_NAME={rain:'大暴雨',moth:'蛾群',turn:'被拍肩膀',broad:'广播点
   necker:'围墙外的行人',shadow:'影子慢一拍',twin:'天台的第二个你',raindots:'雨点成字',cup:'清华水杯'};
 
 var markT=0, dtG=0.016;
-function updateMarker(dt){
-  var m=GLR.marker||ensureMarker();
-  if(!m) return;
-  if(S.mode!=='in'||S.dead||S.screen!=='play'||PAUSE.on||(typeof UI!=='undefined'&&UI.anyOpen())){ m.visible=false; return; }
-  markT-=dt;
-  if(markT<=0){
-    markT=0.1;
-    var hit=nearWorld(24);
-    if(!hit){ m.visible=false; GLR.markHit=null; return; }
-    GLR.markHit=hit;
-    var R=INTERIORS[S.room];
-    var p=worldToScene(hit.x,hit.y,R);
-    var hy=Math.min(2.55,(typeof furnH==='function'?furnH(hit.ch):0.9)+0.22);
-    m.position.set(p.x,hy,p.z);
-    m.visible=true;
-  }
-  if(m.visible&&GLR.markHit){
-    m.quaternion.copy(GLR.cam.quaternion);
-    var pu=1+0.09*Math.sin((GLR.time||0)*4.2);
-    m.scale.set(pu,pu,pu);
-  }
-}
-function updateIntro(dt){
-  if(!(S.intro>0)) return;
-  S.intro-=dt;
-  var b=document.getElementById('banner');
-  if(!b) return;
-  if(S.intro>0){
-    b.textContent=String(Math.ceil(S.intro));
-    b.style.opacity='1';
-    b.style.fontSize='64px';
-  }else{
-    b.textContent='';
-    b.style.opacity='0';
-    b.style.fontSize='';
-  }
-}
 function updateHUD(){
   var san=document.getElementById('sanbar');
   if(san){
@@ -357,7 +285,7 @@ var Game={
     if(firstTime){
       setTimeout(function(){ try{ proShow(); }catch(e){} },320);
     }else{
-      try{ GLR.worldNorm=0; }catch(e){}      /* 老玩家直接进里世界，没有"正常世界"那一段 */
+      try{ VisualState.worldNorm=0; }catch(e){}      /* 老玩家直接进里世界，没有"正常世界"那一段 */
       setTimeout(function(){ try{ os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',4.0); }catch(e){} },2400);
       introT1=setTimeout(function(){ os('我：兜里有一张学生证。照片上的人我不认识，可是班号、学号，都是我的。',4.8); },6800);
       os('我：11:40。第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
@@ -467,7 +395,7 @@ var Game={
     resetInputState();releaseMouseLook();
     try{ if(!MENU_PHOTO) setTimeout(captureMenuPhoto,320); }catch(e){}
     try{ if(CUT.on){ CUT.done=null; cutFinish(); } }catch(e){}
-    GLR.worldNorm=0;
+    VisualState.worldNorm=0;
     PAUSE.on=false;document.body.classList.remove('paused');UI.closePanelAll();UI.closeChoice();
     ['pause','die','bag','note','think','mapv','choices'].forEach(function(id){
       var e=document.getElementById(id); if(e) e.style.display='none';
@@ -484,24 +412,13 @@ function captureMenuPhoto(){
   if(typeof S==='undefined'||S.screen!=='menu'){ PHOTO_TRIED=true; return; }
   PHOTO_TRIED=true;
   try{
-    if(typeof GLR==='undefined'||!GLR.renderer||!GLR.postScene) return;
+    if(!Engine.ready()) return;
     var cv=document.getElementById('cv'), menu=document.getElementById('menu');
     if(!cv||!menu||!cv.toDataURL) return;
     var saveT=S.tsec;
     S.tsec=1338;                                  /* 22:18 —— 菜单那张照片是夜里拍的 */
     enterWorldOut();
-    var c=GLR.cam, yaw=-0.35;
-    c.position.set(66.7,7.0,133.3);
-    c.fov=74; c.updateProjectionMatrix();
-    c.lookAt(66.7+Math.cos(yaw)*12, 6.4, 133.3+Math.sin(yaw)*12);
-    var u=GLR.postMat.uniforms;
-    u.uTime.value=0.6; u.uHurt.value=0; u.uFlash.value=0; u.uSan.value=0.62;
-    GLR.renderer.setRenderTarget(GLR.rt);
-    GLR.renderer.clear();
-    GLR.renderer.render(GLR.scene,c);
-    GLR.renderer.setRenderTarget(null);
-    GLR.renderer.render(GLR.postScene,GLR.postCam);
-    var url=cv.toDataURL('image/jpeg',0.84);
+    var url=Engine.captureMenu();
     if(url&&url.length>20000){
       MENU_PHOTO=url;
       menu.style.backgroundImage='radial-gradient(ellipse at 72% 42%,rgba(10,18,22,.34),rgba(3,6,9,.92) 62%),url('+url+')';

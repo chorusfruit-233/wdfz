@@ -301,3 +301,8 @@ body.touch #sub{bottom:calc(24px + var(--sb));max-width:calc(100vw - 2 * 200px -
 }
 /* 演出、前情提要时整套界面让开 */
 body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0!important;transition:opacity .3s}
+
+/* 持续低帧率建议：不阻挡游戏，窄屏自动换行。 */
+#qualityHint{position:fixed;z-index:900;left:50%;top:calc(96px + var(--st));transform:translateX(-50%);display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100vw - 24px);width:max-content;padding:10px 12px;border:1px solid #88724b;border-radius:10px;background:rgba(20,25,27,.96);color:#e0d3b9;font:13px/1.6 sans-serif;box-sizing:border-box;}
+#qualityHint[hidden]{display:none;}
+#qualityHint button{min-height:36px;padding:5px 10px;border:1px solid #6e796e;border-radius:6px;background:#27372f;color:#e3eee5;cursor:pointer;}

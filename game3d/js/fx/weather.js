@@ -15,7 +15,7 @@ function wxHere(st){ return S.mode===st.mode&&S.room===st.room; }
 
 /* ---------- 雨 ---------- */
 var WX_RAIN_AREA=18, WX_RAIN_H=9;
-function wxRainCount(){ return [500,900,1500][QUALITY|0]||900; }
+function wxRainCount(){ return Quality.get().rain; }
 function wxRainSpawn(grp){
   var n=wxRainCount(), i;
   var sd=new Float32Array(n*3), pos=new Float32Array(n*6);
@@ -114,7 +114,7 @@ function wxRainUpdate(dt){
 }
 
 /* ---------- 蛾群 ---------- */
-function wxMothCount(){ return [50,80,120][QUALITY|0]||80; }
+function wxMothCount(){ return Quality.get().moths; }
 function wxMothSpawn(grp,wx,wy){
   var n=wxMothCount(), i;
   var ws=new THREE.Shape();                              /* 一片翅膀：前翅尖、后翅圆（往 +x 伸出去） */

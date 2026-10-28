@@ -18,6 +18,7 @@
 <canvas id="cv" tabindex="0" aria-label="3D 游戏画面，可拖动转动视角"></canvas>
 <button id="fullscreen-toggle" class="screen-control" type="button" onclick="goFullscreen()" aria-pressed="false">进入全屏</button>
 <div id="lookhint" hidden>点击画面恢复鼠标环视 · 按住拖动也可转向</div>
+<div id="qualityHint" role="status" hidden><span>画面持续卡顿，建议降低画质。</span><button type="button" onclick="Settings.q(QUALITY-1)">降低一档</button><button type="button" onclick="QualityWatch.dismiss()" aria-label="关闭画质建议">×</button></div>
 <div id="scan"></div><div id="vig"></div><div id="flash"></div>
 <div id="fade"></div><div id="cutfade"></div><div id="cutbars"><i></i><i></i></div>
 <div id="hud">
@@ -83,7 +84,7 @@
   <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
     <button onclick="Settings.sub(0)">短</button><button onclick="Settings.sub(1)">标准</button><button onclick="Settings.sub(2)">长</button></div></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
-    <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button></div></div>
+    <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button><button onclick="Settings.q(3)">超精细</button></div></div>
   <div class="srow"><span>镜头晃动</span><div class="seg" id="sShake">
     <button onclick="Settings.shake(0)">开</button><button onclick="Settings.shake(1)">关</button></div></div>
   <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
@@ -115,7 +116,7 @@
     <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
     <div class="mctl">
       <label>画面 <select id="mq" onchange="Settings.q(+this.value)">
-        <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option></select></label>
+        <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option></select></label>
       <label class="mbr">亮度 <input type="range" id="mb" min="60" max="150" value="100" oninput="Settings.bright(this.value)"></label>
       <a class="mwiki" href="wiki/index.html">游戏 Wiki <span aria-hidden="true">↗</span></a>
     </div>
@@ -166,16 +167,24 @@
 <script src="game3d/lib/three.min.js"></script>
 <script src="game3d/js/core.js"></script>
 <script src="game3d/js/map.js"></script>
+<script src="game3d/js/quality.js"></script>
+<script src="game3d/js/engine/api.js"></script>
 <script src="game3d/js/render.js"></script>
+<script src="game3d/js/engine/three.js"></script>
+<script src="game3d/js/engine/scene.js"></script>
+<script src="game3d/js/engine/presentation.js"></script>
 <script src="game3d/js/model/materials.js"></script>
 <script src="game3d/js/model/kit.js"></script>
 <script src="game3d/js/model/figure.js"></script>
+<script src="game3d/js/model/specs.js"></script>
 <script src="game3d/js/model/furniture.js"></script>
 <script src="game3d/js/model/room.js"></script>
 <script src="game3d/js/model/building.js"></script>
 <script src="game3d/js/model/outdoor.js"></script>
 <script src="game3d/js/world.js"></script>
+<script src="game3d/js/collision.js"></script>
 <script src="game3d/js/spiral.js"></script>
+<script src="game3d/js/model/spiral.js"></script>
 <script src="game3d/js/patrol.js"></script>
 <script src="game3d/js/portal.js"></script>
 <script src="game3d/js/hands.js"></script>

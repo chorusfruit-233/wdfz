@@ -1,7 +1,7 @@
 /* 里世界 3D · 巡察者、储物柜、校长办公室
    巡察者：上课和考试的时候在各栋楼里游荡，抓不在座位上的人；夜里也会出现在室外。
-     出现之前，屋里的灯会按心跳一样的节拍一明一暗（lighting.js 的 GLR.patrolFlick）；
-     它看见你一会儿就锁定你，灯一下子全红（GLR.patrolRed），然后追过来，被抓到就死。
+     出现之前，屋里的灯会按心跳一样的节拍一明一暗（lighting.js 的 VisualState.patrolFlick）；
+     它看见你一会儿就锁定你，灯一下子全红（VisualState.patrolRed），然后追过来，被抓到就死。
    怎么躲：
      · 跑出它的视线，跟丢 2.5 秒它就放弃；
      · 提前钻进储物柜（H）。被它看见你钻进去的话，没用；
@@ -82,7 +82,7 @@ var PAT_SPEED=16, PAT_CHASE=31, PAT_SEE=135, PAT_CATCH=19;
 function patReset(keepHiding){
   patRemoveFig();
   PAT.state='idle'; PAT.t=0; PAT.lock=0; PAT.locked=false; PAT.lost=0; PAT.still=0; PAT.room=null;
-  GLR.patrolFlick=0; GLR.patrolRed=0;
+  VisualState.patrolFlick=0; VisualState.patrolRed=0;
   if(HIDE.on&&!keepHiding){ HIDE.on=false; var el=document.getElementById('hideslits'); if(el) el.style.display='none'; }
 }
 function patRoomHere(){ return S.mode==='in'?S.room:'out'; }
@@ -227,7 +227,7 @@ function patTick(dt){
     return;
   }
   if(PAT.state==='idle'){
-    GLR.patrolFlick=Math.max(0,(GLR.patrolFlick||0)-dt); GLR.patrolRed=Math.max(0,(GLR.patrolRed||0)-dt);
+    VisualState.patrolFlick=Math.max(0,(VisualState.patrolFlick||0)-dt); VisualState.patrolRed=Math.max(0,(VisualState.patrolRed||0)-dt);
     if(!patEligible()||patIgnores()) return;
     PAT.next-=dt;
     if(PAT.next<=0) patStart();
@@ -235,13 +235,13 @@ function patTick(dt){
   }
   PAT.t+=dt;
   if(PAT.state==='warn'){
-    GLR.patrolFlick=Math.min(1,PAT.t/1.2);
+    VisualState.patrolFlick=Math.min(1,PAT.t/1.2);
     if(PAT.t>3.6) patAppear();
     return;
   }
   /* walk */
   PAT.walkT+=dt;
-  GLR.patrolFlick=PAT.locked?0.35:0.7;
+  VisualState.patrolFlick=PAT.locked?0.35:0.7;
   var d=Math.hypot(S.x-PAT.x,S.y-PAT.y), sees=patSees()&&!patIgnores();
   if(!PAT.locked){
     if(sees) PAT.lock+=dt*(d<60?2.2:1.1);
@@ -257,7 +257,7 @@ function patTick(dt){
       try{ SFX.anomaly&&SFX.anomaly('turn'); }catch(e){}
     }
   }
-  GLR.patrolRed=clamp((GLR.patrolRed||0)+(PAT.locked?dt*3:-dt*2),0,1);
+  VisualState.patrolRed=clamp((VisualState.patrolRed||0)+(PAT.locked?dt*3:-dt*2),0,1);
   if(PAT.locked){
     if(!sees&&(!HIDE.on||!HIDE.seen)) PAT.lost+=dt; else PAT.lost=0;
     if(PAT.lost>2.5){
@@ -323,56 +323,3 @@ function patTick(dt){
 /* ---------- 模型：比老师还高的黑影，两点红光 ---------- */
 /* 巡察者的行头（和 teacher 人形同一套比例，再整体放大 1.12）：
    过膝的长大衣、立领、一排扣子；大檐帽；左臂一圈红袖章；右手夹着点名用的夹板。 */
-var PAT_GEAR=null;
-function patGearGeo(){
-  if(PAT_GEAR) return PAT_GEAR;
-  var K=new Kit(), m='dark', coat=0x1c2026, sp=FIG_SPEC.teacher, t=sp.thin;
-  var hipY=sp.leg, sh=hipY+sp.torso, hx=sp.w/2, hy=sh+sp.neck+sp.head*0.5, s;
-  K.bevel(m,0,(sh+hipY)/2,0,0.36,sh-hipY,0.25,coat,1,0.06);                 /* 大衣上身 */
-  K.bevel(m,0,(hipY+0.50)/2,0,0.37,hipY-0.50,0.27,coat,1,0.05);              /* 下摆到膝下 */
-  K.bevel(m,0,(hipY+0.50)/2-0.12,0,0.40,0.62,0.29,coat,1,0.05);              /* 往下张开一点 */
-  K.box(m,0,0.95,0.146,0.012,0.88,0.01,0x050607,1);                          /* 前襟开衩 */
-  for(s=0;s<5;s++) K.box('metal',0.04,1.45+s*0.14,0.128,0.025,0.025,0.012,0x8a7a50,1);   /* 一排扣子 */
-  K.cyl(m,0,sh-0.06,0,0.12,0.085,0.14,10,coat,1,false);                      /* 立领 */
-  for(s=-1;s<=1;s+=2) K.blob(m,s*hx*0.86,sh-0.02,0,0.1,0.07,0.1,coat,1,6);   /* 垫肩 */
-  K.box(m,0,hipY+0.10,0,0.385,0.05,0.265,0x050607,1);           /* 腰带 */
-  /* 大檐帽 */
-  K.cyl(m,0,hy+0.06,0.0,0.135,0.14,0.07,12,0x0a0c0f,1);
-  K.cyl(m,0,hy+0.13,0.01,0.14,0.165,0.035,12,0x0d1014,1);
-  K.bevel(m,0,hy+0.07,0.14,0.22,0.018,0.13,0x050607,1,0.006);               /* 帽檐 */
-  K.box('metal',0,hy+0.10,0.143,0.05,0.03,0.008,0x5a4a1e,1);                 /* 帽徽，旧得发乌 */
-  /* 左臂红袖章 */
-  var ax=-hx*0.95, up=sp.arm*0.47, y0=sh-0.05-up*0.25, y1=sh-0.05-up*0.55;
-  K.rod(m,ax-0.005,y0,0.004,ax-0.012,y1,0.008,0.062*t,0.06*t,10,0x7a120c,1);
-  K.box('paper',ax-0.062,(y0+y1)/2,0.01,0.004,0.045,0.035,0xb8a070,1);       /* 袖章上的字 */
-  /* 右手夹板 */
-  var hxr=hx*0.95+0.04, hyr=sh-0.05-sp.arm-0.05;
-  K.bevel(m,hxr+0.05,hyr+0.14,0.06,0.018,0.34,0.25,0x2a2118,1,0.006);
-  K.box('paper',hxr+0.06,hyr+0.12,0.06,0.004,0.28,0.21,0x77736a,1);
-  K.box('metal',hxr+0.062,hyr+0.29,0.06,0.012,0.03,0.09,0x50565a,1);       /* 夹子 */
-  PAT_GEAR=K.mergedGeometry();
-  return PAT_GEAR;
-}
-function patAddFig(){
-  patRemoveFig();
-  try{
-    var g=new THREE.Group();
-    var body=figMesh('teacher',new THREE.MeshBasicMaterial({color:0x040506,fog:true}),1.12);
-    g.add(body);
-    var gear=new THREE.Mesh(patGearGeo(),new THREE.MeshBasicMaterial({vertexColors:true,color:0x555555,fog:true})   /* 顶点色当线性值用，整体压暗 */);
-    gear.scale.setScalar(1.12); g.add(gear);
-    var em=new THREE.MeshBasicMaterial({color:0xff2a1a,fog:false});
-    for(var s=-1;s<=1;s+=2){ var e=new THREE.Mesh(new THREE.SphereGeometry(0.035,6,4),em); e.position.set(s*0.065,2.6,0.15); g.add(e); }
-    g.userData.eye=em;
-    GLR.patFig=g; GLR.scene.add(g);
-  }catch(e){ GLR.patFig=null; }
-}
-function patRemoveFig(){ if(GLR.patFig){ try{ GLR.scene.remove(GLR.patFig); }catch(e){} GLR.patFig=null; } }
-function patRender(){
-  var g=GLR.patFig; if(!g) return;
-  if(PAT.state!=='walk'){ g.visible=false; return; }
-  var p=PAT.room==='out'?worldToScene(PAT.x,PAT.y,null):worldToScene(PAT.x,PAT.y,INTERIORS[PAT.room]);
-  g.visible=true; g.position.set(p.x,PAT.room==='out'?0:0,p.z);
-  g.lookAt(GLR.cam.position.x,0,GLR.cam.position.z);  /* 人形正面朝 +z，lookAt 正好让它面朝你 */
-  if(g.userData.eye) g.userData.eye.color.setRGB(1,PAT.locked?0.05:0.25,PAT.locked?0.02:0.12);
-}

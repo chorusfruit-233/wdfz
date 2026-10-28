@@ -120,7 +120,7 @@ function anwTick(dt){
 
 var NC={grp:null,list:[],occ:{},room:null,blocking:false,matN:null,matS:null,normal:false,t:0,said:false};
 function ncClear(){
-  if(NC.grp){ try{ GLR.scene.remove(NC.grp); }catch(e){} }
+  if(NC.grp){GLR.scene.remove(NC.grp);ThreeBackend.disposeGroup(NC.grp);}
   NC.grp=null; NC.list=[]; NC.occ={}; NC.room=null; NC.blocking=false; NC.normal=false; NC.t=0;
 }
 function ncOccupied(c,r){

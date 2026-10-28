@@ -19,7 +19,7 @@ function syncUseState(){
   USE.torch=!!USE.torch&&hasItem('torch');
   USE.phone=false;
   USE.brollyShield=!!USE.brollyShield&&hasItem('brolly');
-  if(GLR.torch) GLR.torch.intensity=USE.torch?55:0;
+  Engine.torch(USE.torch);
 }
 function addItem(id){
   if(!id||id==='nothing') return false;

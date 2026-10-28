@@ -38,7 +38,7 @@ function traceAdd(id){
 function tracesBuild(force){
   var key=(S.mode==='in'?S.room:'out')+'|'+((RT.traces&&RT.traces.length)||0);
   if(!force&&TR.key===key&&TR.g&&TR.g.parent) return;
-  if(TR.g){ try{ GLR.scene.remove(TR.g); }catch(e){} }
+  if(TR.g){GLR.scene.remove(TR.g);ThreeBackend.disposeGroup(TR.g);}
   TR.key=key;
   var g=new THREE.Group(); TR.g=g;
   var room=(S.mode==='in')?S.room:null, R=room?INTERIORS[room]:null;

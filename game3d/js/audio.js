@@ -393,7 +393,7 @@ var SFX=(function(){
     door:function(){ tone(140,0.5,'sawtooth',0.018,260,0,0.3); noise(0.4,0.03,900,0.05,'bandpass',3,0.3,0.15); noise(0.07,0.06,600,0.48,'lowpass'); },
     stairs:function(){ for(var i=0;i<5;i++) noise(0.07,0.04,1000,i*0.16,'bandpass',1.2,0.6); },
     pickup:function(){ tone(1320,0.18,'sine',0.025,0,0,0.5); tone(1760,0.22,'sine',0.018,0,0.06,0.5); },
-    anim:function(mode){ var dur=mode===2?3.0:(mode===3?2.6:2.4); GLR.deathAnim={mode:mode,t:0,dur:dur}; },
+    anim:function(mode){ var dur=mode===2?3.0:(mode===3?2.6:2.4); VisualState.deathAnim={mode:mode,t:0,dur:dur}; },
     death:function(){ tone(70,1.6,'sawtooth',0.11,24); noise(1.4,0.07,240); },
     deathFx:function(type){
       tone(55,2.2,'sawtooth',0.10,22,0,0.3); noise(1.6,0.08,240,0,'lowpass',1,0.4);

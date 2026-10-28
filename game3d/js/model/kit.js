@@ -107,7 +107,7 @@ GeoBuilder.prototype.bevel=function(x,y,z,sx,sy,sz,col,shade,r){
 };
 /* 竖直的圆柱 / 圆台（y 为底面中心） */
 GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
-  seg=Math.max(lodLow()?4:5,lodLow()?Math.ceil(seg*0.6):seg);
+  seg=Math.max(lodLow()?4:5,Math.ceil(seg*Quality.get().segments));
   var rgb=this._rgb(col,shade), k, a0, a1;
   var slope=(rb-rt)/h, nl=Math.sqrt(1+slope*slope);
   for(k=0;k<seg;k++){
@@ -122,7 +122,7 @@ GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
 };
 /* 两点之间的杆（任意方向），r0、r1 两端半径 */
 GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
-  seg=Math.max(4,lodLow()?Math.ceil(seg*0.6):seg);
+  seg=Math.max(4,Math.ceil(seg*Quality.get().segments));
   var dx=x1-x0, dy=y1-y0, dz=z1-z0, L=Math.sqrt(dx*dx+dy*dy+dz*dz)||1e-6;
   var ax=dx/L, ay=dy/L, az=dz/L;
   var ux,uy,uz;                                  /* 找一根垂直的轴 */
@@ -144,7 +144,9 @@ GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
 };
 /* 低多边形椭球：jit>0 时每个顶点随机抖一下（树冠、灌木），面是平的 */
 GeoBuilder.prototype.blob=function(x,y,z,rx,ry,rz,col,shade,seg,jit,seed){
-  seg=seg||(lodLow()?5:7); var rings=Math.max(3,Math.round(seg*0.6)), rgb=this._rgb(col,shade);
+  seg=seg||(lodLow()?5:7);
+  if(QUALITY===3)seg=Math.ceil(seg*Quality.get().segments);
+  var rings=Math.max(3,Math.round(seg*0.6)), rgb=this._rgb(col,shade);
   var V=[], i, j, sd=seed||1;
   for(j=0;j<=rings;j++){
     var row=[], ph=j/rings*Math.PI;

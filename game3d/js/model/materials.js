@@ -40,7 +40,7 @@ var MAT_DEF={
 };
 var MATS={}, TEXS={};
 
-function texSize(){ return (QUALITY===0)?256:512; }
+function texSize(){ return Quality.get().texture; }
 function makeMatTex(kind){
   var SZ=texSize(), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
   var c=cv.getContext('2d'); if(!c) return null;
@@ -169,8 +169,20 @@ function matTex(kind){
   if(!TEXS[kind]) TEXS[kind]=makeMatTex(kind);
   return TEXS[kind];
 }
+/* 材质保持引用稳定；分辨率变更时替换贴图并释放旧贴图，不累积四套 GPU 资源。 */
+var MAT_TEX_SIZE=0;
+function matRefreshQuality(){
+  if(MAT_TEX_SIZE===texSize())return;
+  var old=TEXS;TEXS={};MAT_TEX_SIZE=texSize();
+  Object.keys(MATS).forEach(function(k){
+    var m=MATS[k];if(!m.map)return;
+    m.map=matTex((MAT_DEF[k]||MAT_DEF.plaster)[0]);m.needsUpdate=true;
+  });
+  Object.keys(old).forEach(function(k){old[k].dispose();});
+}
 /* 共享材质：所有房间、室外都用同一批，切场景时不销毁（userData.shared） */
 function matOf(key){
+  if(!MAT_TEX_SIZE)MAT_TEX_SIZE=texSize();
   if(MATS[key]) return MATS[key];
   var d=MAT_DEF[key]||MAT_DEF.plaster, m;
   if(key==='glass'){

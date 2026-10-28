@@ -21,7 +21,7 @@ var FIG_SPEC={
   sit:    {leg:0.44, torso:0.58, arm:0.62, head:0.21, w:0.36, neck:0.07, thin:1.00}
 };
 function figGeo(kind){
-  var key=kind+'|'+(QUALITY===0?0:1);
+  var key=kind+'|'+Quality.get().segments;
   if(FIG_GEO[key]) return FIG_GEO[key];
   var sp=FIG_SPEC[kind]||FIG_SPEC.tall, K=new Kit(), m='dark', c=0xffffff, t=sp.thin;
   var sit=(kind==='sit');
@@ -77,6 +77,7 @@ function figGeo(kind){
     }
   }
   var g=K.mergedGeometry();
+  g.userData={shared:true,figKind:kind};
   FIG_GEO[key]=g;
   return g;
 }
@@ -91,7 +92,8 @@ function figMesh(kind,mat,scale){
 var FX_GEO={}, FX_VC_MAT=null;
 function fxVCMat(){ if(!FX_VC_MAT) FX_VC_MAT=new THREE.MeshBasicMaterial({vertexColors:true,fog:true,side:THREE.DoubleSide});   /* 镜头钻进去也看得见（钟罩下来的时候） */ return FX_VC_MAT; }
 function fxGeo(name){
-  if(FX_GEO[name]) return FX_GEO[name];
+  var key=name+'|'+Quality.get().segments;
+  if(FX_GEO[key]) return FX_GEO[key];
   var K=new Kit(), m='dark', i;
   if(name==='hand'){                        /* 从地下伸出来的手：掌心朝下、五指往前抓，后面拖着一截小臂 */
     var sk=0x6f6a63;
@@ -155,7 +157,8 @@ function fxGeo(name){
     K.cyl(m,0,2.18,0,0.12,0.12,0.04,10,0xf2dca8);
     K.rod(m,0,2.18,0,0,1.92,0,0.03,0.015,5,0xe8c05a);
   }
-  FX_GEO[name]=K.mergedGeometry();
-  return FX_GEO[name];
+  FX_GEO[key]=K.mergedGeometry();
+  FX_GEO[key].userData={shared:true,fxKind:name};
+  return FX_GEO[key];
 }
 function fxMesh(name){ return new THREE.Mesh(fxGeo(name),fxVCMat()); }

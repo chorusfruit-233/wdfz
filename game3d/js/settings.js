@@ -7,7 +7,7 @@ function applyBrightness(){
   var bright=Number(SET.bright)||100;
   ['mb','sBr'].forEach(function(id){ var sl=document.getElementById(id); if(sl) sl.value=String(bright); });
   var bv=document.getElementById('sBrV'); if(bv) bv.textContent=String(bright);
-  if(GLR.postMat) GLR.postMat.uniforms.uBright.value=Math.max(0.4,Math.min(2.0,bright/100));
+  Engine.brightness(bright/100);
 }
 function loadSet(){
   try{
@@ -16,7 +16,7 @@ function loadSet(){
     else if(IS_TOUCH) SET.q=0;          /* 手机第一次打开：性能优先 */
   }catch(e){}
   SHAKE_ON=!!SET.shake; SUB_MULT=[0.6,1.0,1.6][SET.sub]||1.0; AMB_ON=!!SET.amb;
-  QUALITY=(SET.q===0||SET.q===2)?SET.q:1;
+  QUALITY=SET.q=Quality.normalize(SET.q);
   try{ var mq=document.getElementById('mq'); if(mq) mq.value=String(QUALITY); }catch(e){}
   try{ SFX.setVol(SET.vol/100); }catch(e){}
   applyBrightness();
@@ -40,14 +40,12 @@ var Settings={
     applyBrightness();
     saveSet();
   },
-  q:function(i){ SET.q=i; QUALITY=i; paintSet(); saveSet();
-    try{ resizeGL(); }catch(e){}
-    try{ shadeApplyQuality(); }catch(e){}
-    /* 室内重建光柱与灯下光斑，让画质切换即时生效。 */
-    try{ if(S.screen==='play'&&S.mode==='in'&&INTERIORS[S.room]){ shadeBuildRoom(INTERIORS[S.room]); shadeBuildPools(); } }catch(e){}
-    /* 画质同时决定树、草、灌木的数量：在室外就当场重建 */
-    try{ if(S.screen==='play'&&S.mode==='out') enterWorldOut(); }catch(e){}
-    toast(['流畅：少树、无草、低分辨率','均衡','精细：更多树和草'][i]); },
+  q:function(i){
+    SET.q=QUALITY=Quality.normalize(i);paintSet();saveSet();
+    var mq=document.getElementById('mq');if(mq)mq.value=String(QUALITY);
+    Engine.applyQuality();
+    toast(Quality.get().label);
+  },
   shake:function(off){ SET.shake=off?0:1; SHAKE_ON=!off; paintSet(); saveSet(); },
   amb:function(on){ SET.amb=on; AMB_ON=!!on; paintSet(); saveSet(); if(on) SFX.ambient(); else SFX.stopAmbient(); }
 };
