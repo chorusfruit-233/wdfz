@@ -10,12 +10,12 @@ var AN_W={
   shifting:0.9, repeat:0.9, rite:0.85, cold:0.9, hand:0.9,
   loop:1.0, turn:0.5, stare:0.95, twin:0.55, lamps:0.9,
   feast:0.50, necker:0.70, shadow:0.80, bells:0.75, exercise:0.85,
-  rain:0.26, moth:0.24, raindots:0.32
+  rain:0.26, moth:0.24, raindots:0.32, cup:0.8
 };
 var AN_SMALL={chalk:1,roster:1,leak:1,broad:1,shifting:1,cold:1,hand:1,loop:1,turn:1,lamps:1,shadow:1};
-var AN_COOL={rain:260,moth:200};
+var AN_COOL={rain:260,moth:200,cup:150};
 var AN_ID=['rain','moth','turn','broad','bell13','exercise','bells','hand','repeat','chalk',
-  'loop','roster','leak','rite','cold','shifting','stare','lamps','feast','necker','shadow','twin','raindots'];
+  'loop','roster','leak','rite','cold','shifting','stare','lamps','feast','necker','shadow','twin','raindots','cup'];
 var AN_CN={
   rain:'下不完的雨',moth:'蛾群',turn:'有人在我背后拍了一下',broad:'广播点名',
   bell13:'钟敲十三下',exercise:'操场做操的人',bells:'车棚所有铃一起响',
@@ -23,13 +23,13 @@ var AN_CN={
   loop:'无尽的走廊',roster:'被划掉的名字',leak:'天花板渗水',rite:'实验楼仪式现场',
   cold:'冷库',shifting:'窗外的楼在动',stare:'全体回头',lamps:'熄灯后的走廊灯',
   feast:'食堂的盛宴',necker:'围墙外的行人',shadow:'影子慢一拍',
-  twin:'天台的第二个你',raindots:'雨点落成的字'
+  twin:'天台的第二个你',raindots:'雨点落成的字',cup:'清华水杯'
 };
 var DFX_MAP={
   rain:'drown',moth:'swarm',turn:'gaze',broad:'voice',bell13:'bell',
   exercise:'follow',bells:'shatter',hand:'hand',feast:'deep',
   leak:'water',shadow:'shadow',rite:'ring',roster:'names',
-  repeat:'gaze',chalk:'chalk',loop:'loop',cold:'freeze',raindots:'water',
+  repeat:'gaze',chalk:'chalk',loop:'loop',cold:'freeze',raindots:'water',cup:'floor',
   shifting:'twin',stare:'stare',twin:'twin',lamps:'lamps',necker:'neck'
 };
 function nearObj(id,pad){
@@ -58,6 +58,20 @@ function inToiletHere(){
 }
 function inCanteen(){ return S.mode==='in'&&S.room==='canteen1'; }
 function onRoof(){ return S.mode==='in'&&S.room==='teach6'; }
+/* 清华水杯：离你最近的那面高楼外墙（教学楼 / 行政楼 / 实验楼，都是五层）。
+   返回墙上那一点（地图坐标）、朝外的法线、离墙几米；不在室外或离得远返回 null */
+var CUP_BLD=['teach','admin','lab'];
+function cupWall(){
+  if(S.mode!=='out') return null;
+  var mx=S.x/SC, my=S.y/SC, best=null;
+  CUP_BLD.forEach(function(id){
+    var o=objById(id); if(!o) return;
+    var px=clamp(mx,o.x,o.x+o.w), py=clamp(my,o.y,o.y+o.h), dd=Math.hypot(mx-px,my-py);
+    if(dd>0.01&&(!best||dd<best.d)) best={x:px,y:py,d:dd,nx:(mx-px)/dd,ny:(my-py)/dd,id:id};
+  });
+  if(best) best.m=best.d*SC*U2M;
+  return best;
+}
 
 function anAllowed(id){
   var t=S.tsec, nw=needWhere(t);
@@ -84,6 +98,7 @@ function anAllowed(id){
   if(id==='necker'){ return S.mode==='out'&&S.x>(BOUND.x1-220)*SC; }
   if(id==='shadow'){ return S.mode==='out'&&onField(); }
   if(id==='twin'){ return onRoof(); }
+  if(id==='cup'){ var cw=cupWall(); return !!cw&&cw.m<2.4&&!underRoof(); }
   return false;
 }
 function pickAnomaly(){
@@ -146,7 +161,7 @@ function anScheduleNext(){
   if(AN.preNext){ AN.next=AN.preNext; AN.preNext=0; }   /* 黑板上预告过的时间，要兑现 */
 }
 /* 只有"看起来就要命"的那几种会直接杀人；其它的按选择 / 表现扣 SAN */
-var AN_LETHAL={rain:1,rite:1,necker:1,moth:1,twin:1,exercise:1};
+var AN_LETHAL={rain:1,rite:1,necker:1,moth:1,twin:1,exercise:1,cup:1};
 var AN_MSG={
   rain:'我：天一下子暗了。雨不是从云里落下来的——它从很高的地方垂下来，像有人在上面一桶一桶地倒。',
   moth:'我：灯下面聚了一团飞蛾。不对，不是一团。是一整面墙。它们在往我这边挪。',
@@ -170,7 +185,8 @@ var AN_MSG={
   necker:'我：围墙外面有个人在走。我走他也走，我停他也停。他的脖子……太长了。',
   shadow:'我：我的影子慢了半拍。它刚刚，自己动了一下。',
   twin:'我：天台的另一头站着一个人。穿着我们学校的校服。他站的姿势，和我一模一样。',
-  raindots:'我：雨点落在地上，没有散开。它们在排队。'
+  raindots:'我：雨点落在地上，没有散开。它们在排队。',
+  cup:'我：头顶上叮叮当当地响。抬头——四楼的窗台上，一只紫色的保温杯在晃。'
 };
 function anStart(){
   var id=null;
@@ -228,7 +244,7 @@ function entFace(){
 }
 
 var HAS_FX={rain:1,moth:1,exercise:1,necker:1,twin:1,hand:1,shadow:1,
-  leak:1,rite:1,feast:1,lamps:1,chalk:1,roster:1,broad:1,repeat:1,shifting:1,cold:1,raindots:1,stare:1};
+  leak:1,rite:1,feast:1,lamps:1,chalk:1,roster:1,broad:1,repeat:1,shifting:1,cold:1,raindots:1,stare:1,cup:1};
 /* 选一个在玩家前方、站得住的点（世界单位） */
 function aheadPoint(dist){
   var a, k, tries=[0,0.6,-0.6,1.2,-1.2,PI];
@@ -259,6 +275,11 @@ function anOn(id,silent){
     for(var i=0;i<5;i++){ var lp=aheadPoint(rnd(10,34)); d.pts.push({x:lp.x+rnd(-14,14),y:lp.y+rnd(-14,14)}); }
   }
   if(id==='hand'){ var hp=aheadPoint(8); srcX=hp.x; srcY=hp.y; }
+  if(id==='cup'){
+    d.wall=cupWall(); d.phase=0;
+    d.wob=S.diff==='hard'?0.6:(S.diff==='easy'?1.3:0.9);          /* 在窗台上晃多久才掉 */
+    if(d.wall){ srcX=d.wall.x*SC; srcY=d.wall.y*SC; }
+  }
   if(id==='roster'){ d.rx=S.x; d.ry=S.y; d.done=false; }
   try{ if(HAS_FX[id]) anfxSpawn(id, srcX, srcY); }catch(e){}
   AN.rained = AN.rained || (id==='rain');
@@ -296,6 +317,11 @@ function anHurt(msg,loss,opt){
 function underCover(){
   if(S.mode==='in') return true;
   if(USE.brollyShield) return true;
+  return underRoof();
+}
+/* 头顶有没有真正的顶（柱廊、连廊、车棚）；伞不算 */
+function underRoof(){
+  if(S.mode==='in') return true;
   var mx=S.x/SC, my=S.y/SC, i, o;
   for(i=0;i<OBJ.length;i++){
     o=OBJ[i];
@@ -508,6 +534,27 @@ function anTick(dt){
       }
       if(dtwin<16) anKill('他走到了你面前。你们同时抬起手。他的手，是热的。','twin');
       if(AN.t>22){ os('我：他转身，从天台边上走了下去。没有声音。',3.4); anEnd(); }
+      break;
+    case 'cup':
+      if(!d.wall||(S.mode!=='out'&&d.phase<2)){ anEnd(); break; }          /* 进了楼，就砸不到了 */
+      if(d.phase===0&&AN.t>=d.wob){
+        d.phase=1; d.tf=AN.t; d.lx=S.x; d.ly=S.y;                        /* 对准你这一刻站的地方往下掉 */
+        if(!d.said){ d.said=1; os('我：它掉下来了——',1.6,OS_FORCE); }
+        try{ SFX.cupFall&&SFX.cupFall(cupFallTime()); }catch(e){}
+      }
+      if(d.phase===1&&AN.t-d.tf>=cupFallTime()){
+        d.phase=2; d.tl=AN.t;
+        var miss=Math.sqrt(dist2(d.lx,d.ly,S.x,S.y))*U2M;                  /* 米 */
+        try{ SFX.cupHit&&SFX.cupHit(miss); }catch(e){}
+        if(miss<CUP_R&&!underRoof()){
+          anKill('头顶上一声闷响。我最后看见的，是一只紫色的保温杯，杯身上印着四个字：清华大学。它比我想象的要重。','floor');
+          break;
+        }
+        if(miss<CUP_R) os('我：「当」的一声，砸在头顶的雨棚上，又弹到了地上。',3.4);
+        else if(miss<2.6){ S.san-=hard?9:6; os('我：就砸在我脚边。杯子摔瘪了，杯身上印着「清华大学」。杯盖滚开，里面的水还是热的。',4.4); }
+        else os('我：不远处「哐」的一声，一只杯子在地上弹了两下。我不敢抬头。',3);
+      }
+      if(d.phase===2&&AN.t-d.tl>2.6) anEnd();
       break;
     case 'raindots':
       S.san-=dt*0.4;
