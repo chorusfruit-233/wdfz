@@ -978,6 +978,18 @@ class ControlsTest(unittest.TestCase):
             for(var i=0;i<120&&AN.active;i++){ anTick(0.05); anfxUpdate(0.05); }""")
         self.assert_js(page, "!S.dead&&!AN.active&&S.san<100&&RT.traces.some(function(t){return t.k==='cup'})")
 
+    def test_tsinghua_cup_survives_save_and_leaves_trace_outdoors(self):
+        page = self.page()
+        page.evaluate("""S.x=560*SC;S.y=857*SC;AN.pre='cup';AN.locked=true;anStart();anTick(0.1);saveGame();
+            anfxClear();Game.continue_();running=false;""")
+        self.assert_js(page, "AN.id==='cup'&&AN.data.phase===0&&ANFX.kind==='cup'&&!!ANFX.cup&&ANFX.cup.cup.visible")
+        page.evaluate("""for(var i=0;i<40&&AN.data.phase<1;i++){ anTick(0.05); anfxUpdate(0.05); }""")
+        self.assert_js(page, "AN.data.phase===1&&ANFX.cup.ring.visible")
+        # 落地后马上躲进楼里：杯子仍记在室外
+        page.evaluate("""S.y-=14;for(var i=0;i<60&&AN.data.phase<2;i++){ anTick(0.05); anfxUpdate(0.05); }
+            doEnterRoom('teach1');running=false;for(i=0;i<80&&AN.active;i++) anTick(0.05);""")
+        self.assert_js(page, "!AN.active&&RT.traces.some(function(t){return t.k==='cup'&&t.room===null})")
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

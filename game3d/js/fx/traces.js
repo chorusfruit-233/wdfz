@@ -29,7 +29,7 @@ function traceAdd(id){
   else if(id==='chalk') t={k:'dust',x:S.x,y:S.y};
   else if(id==='cup'&&d.phase===2) t={k:'cup',x:d.lx,y:d.ly};
   if(!t) return;
-  t.room=room;
+  t.room=(id==='cup')?null:room;          /* 水杯只砸在室外：落地后才进楼，杯子也留在外面 */
   RT.traces=RT.traces||[];
   RT.traces.push(t);
   while(RT.traces.length>40) RT.traces.shift();

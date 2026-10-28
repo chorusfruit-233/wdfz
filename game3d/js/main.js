@@ -372,9 +372,7 @@ var Game={
     AN.sub=0;
     if(AN.id){
       try{
-        var HAS_FX2={rain:1,moth:1,exercise:1,necker:1,twin:1,hand:1,shadow:1,
-          leak:1,rite:1,feast:1,lamps:1,chalk:1,roster:1,broad:1,repeat:1,shifting:1,cold:1,stare:1};
-        if(HAS_FX2[AN.id]) anfxSpawn(AN.id,S.x,S.y);
+        if(HAS_FX[AN.id]) anfxSpawn(AN.id,S.x,S.y);      /* 和 anOn 共用一张表：以前这里另抄了一份，新异象（水杯、雨点成字）读档后看不见 */
       }catch(e){}
     }
     if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral});
