@@ -36,6 +36,7 @@ var Settings={
   },
   q:function(i){ SET.q=i; QUALITY=i; paintSet(); saveSet();
     try{ resizeGL(); }catch(e){}
+    try{ shadeApplyQuality(); }catch(e){}
     /* 画质同时决定树、草、灌木的数量：在室外就当场重建 */
     try{ if(S.screen==='play'&&S.mode==='out') enterWorldOut(); }catch(e){}
     toast(['流畅：少树、无草、低分辨率','均衡','精细：更多树和草'][i]); },

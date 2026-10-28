@@ -507,6 +507,7 @@ function boot(){
   buildInteriorData();
   buildRoomBounds();
   initGL();
+  try{ shadeApplyQuality(); }catch(e){}
   initInput();
   try{ initPcTouch(); }catch(e){}
   paintMenuSave();

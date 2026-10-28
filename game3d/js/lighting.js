@@ -172,6 +172,7 @@ function updateLighting(){
   var wn=GLR.worldNorm||0;
   GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
   GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
+  try{ shadeTick(s); }catch(e){}
 }
 /* 灯的闪烁：一直有一点点抖；每盏灯隔一阵会接触不良地连闪几下；夜里偶尔整盏暗一下 */
 function lhash(a,b){ var x=Math.sin(a*127.1+b*311.7)*43758.5453; return x-Math.floor(x); }
