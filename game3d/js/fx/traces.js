@@ -60,7 +60,7 @@ function tracesBuild(force){
     if(t.k==='puddle'){ for(j=0;j<6;j++){ var pp=new THREE.Mesh(new THREE.CircleGeometry(0.5+hash2(j,i)*0.9,10),mWet); pp.rotation.x=-Math.PI/2; pp.position.set(p.x+(hash2(i,j)-0.5)*7,0.018,p.z+(hash2(j+3,i)-0.5)*7); g.add(pp); } }
     else if(t.k==='stain'){ for(j=0;j<t.pts.length;j++){ var sp=W(t.pts[j].x,t.pts[j].y); var c1=new THREE.Mesh(new THREE.CircleGeometry(0.7,10),mWet); c1.rotation.x=-Math.PI/2; c1.position.set(sp.x,0.018,sp.z); g.add(c1); anfxBox(g,anfxMat(0x2a2420,0.6),0.9,0.01,0.7,sp.x,2.985,sp.z); } }
     else if(t.k==='chalkring'){ for(j=0;j<30;j++){ if(hash2(i,j)<0.3) continue; var ra=j/30*6.283; var sg=flat(mChalk,0.28,0.05,p.x+Math.cos(ra)*2.1,p.z+Math.sin(ra)*2.1,-ra+Math.PI/2); } for(j=0;j<4;j++){ var ca=j/4*6.283+0.6; anfxBox(g,mPale,0.12,0.03,0.12,p.x+Math.cos(ca)*1.6,0.03,p.z+Math.sin(ca)*1.6); } }
-    else if(t.k==='moths'){ for(j=0;j<40;j++) flat(mPale,0.05,0.03,p.x+(hash2(i,j)-0.5)*5,p.z+(hash2(j,i+7)-0.5)*5,hash2(j,3)*6); }
+    else if(t.k==='moths'){ for(j=0;j<40;j++) flat(mDark,0.05,0.03,p.x+(hash2(i,j)-0.5)*5,p.z+(hash2(j,i+7)-0.5)*5,hash2(j,3)*6); }
     else if(t.k==='rows'){ for(j=0;j<6;j++) footprints(p.x-5+j*2.0,p.z-2,Math.PI/2,7,0.62); }
     else if(t.k==='feet'){ footprints(p.x,p.z,t.a||0,9,0.6); }
     else if(t.k==='paper'){ for(j=0;j<7;j++) flat(mPale,0.18,0.12,p.x+(hash2(i,j)-0.5)*1.6,p.z+(hash2(j,i)-0.5)*1.6,hash2(j,i+1)*6); flat(mRed,0.16,0.012,p.x,p.z,0.4,0.02); }

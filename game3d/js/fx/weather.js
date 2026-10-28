@@ -122,8 +122,8 @@ function wxMothSpawn(grp,wx,wy){
   ws.quadraticCurveTo(0.03,-0.04,0.008,-0.03); ws.lineTo(0,-0.014); ws.lineTo(0,0.012);
   var wing=new THREE.ShapeGeometry(ws,3); wing.rotateX(-PI/2);
   var body=new THREE.BoxGeometry(0.016,0.016,0.06);
-  var wingM=new THREE.InstancedMesh(wing,new THREE.MeshBasicMaterial({color:0xbab1a0,side:THREE.DoubleSide,fog:true}),n*2);
-  var bodyM=new THREE.InstancedMesh(body,new THREE.MeshBasicMaterial({color:0x4e463a,fog:true}),n);
+  var wingM=new THREE.InstancedMesh(wing,new THREE.MeshBasicMaterial({color:0x111111,side:THREE.DoubleSide,fog:true}),n*2);
+  var bodyM=new THREE.InstancedMesh(body,new THREE.MeshBasicMaterial({color:0x080808,fog:true}),n);
   wingM.frustumCulled=false; bodyM.frustumCulled=false;
   grp.add(wingM); grp.add(bodyM);
   var c=anfxW2S(wx,wy), ms=[];
@@ -135,7 +135,7 @@ function wxMothSpawn(grp,wx,wy){
   /* 翅膀上的粉 */
   var nd=(QUALITY|0)===0?60:140, dp=new Float32Array(nd*3), dl=new Float32Array(nd);
   var dg=new THREE.BufferGeometry(); dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
-  var dust=new THREE.Points(dg,new THREE.PointsMaterial({color:0xe6dcc2,size:0.012,transparent:true,opacity:0.65,depthWrite:false,fog:true}));
+  var dust=new THREE.Points(dg,new THREE.PointsMaterial({color:0x303030,size:0.012,transparent:true,opacity:0.65,depthWrite:false,fog:true}));
   dust.frustumCulled=false; grp.add(dust);
   for(i=0;i<nd;i++){ dp[i*3+1]=-9; dl[i]=0; }
   WX.moth={mode:S.mode,room:S.room,wing:wingM,body:bodyM,ms:ms,n:n,c:new THREE.Vector3(c.x,1.9,c.z),
