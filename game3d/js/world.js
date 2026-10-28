@@ -17,6 +17,7 @@ function clearWorldMesh(){
   if(GLR.roomLights){
     for(i=0;i<GLR.roomLights.length;i++) GLR.scene.remove(GLR.roomLights[i]);
     GLR.roomLights=[]; GLR.roomLightBase=[]; GLR.roomLightCol=[];
+    try{ FLK_PREV=[]; }catch(e){}
   }
 }
 function addRoomLights(R){

@@ -305,7 +305,12 @@ function patTick(dt){
   }
   var arrived=Math.hypot(PAT.tx-PAT.x,PAT.ty-PAT.y)<6;
   if(!PAT.locked&&(arrived||!moved)){ var q=patPickSpot(false); if(q){ PAT.tx=q.x; PAT.ty=q.y; PAT.path=null; } }
-  PAT.step-=dt; if(PAT.step<=0&&d<200){ PAT.step=PAT.locked?0.32:0.7; try{ SFX.step(); }catch(e){} }
+  PAT.step-=dt;
+  if(PAT.step<=0&&d<200){                                        /* 脚步：按它在你哪一边分左右声道，背后的发闷 */
+    PAT.step=PAT.locked?0.32:0.7;
+    var rel=Math.atan2(PAT.y-S.y,PAT.x-S.x)-S.ang;
+    try{ SFX.patStep(Math.sin(rel)*0.9,Math.pow(1-d/200,1.4),Math.cos(rel)<-0.2,PAT.locked); }catch(e){}
+  }
   if(d<PAT_CATCH&&patLOS()&&!patIgnores()&&(!HIDE.on||HIDE.seen)&&!S.dead){
     kill(HIDE.on?'柜门被拉开了。外面没有光，只有它弯下来的脸，和一只伸进来的手。'
                 :'一只手从后面按住了我的头顶，很轻，像在点名。灯全红了。我被它带走了，带回了那个空着的座位。','grip');
