@@ -203,6 +203,10 @@ function tryCarRoute(){
 function useCar(cx,cy){
   if(!hasItem('key')&&S.talent!=='drive'){ os('我：车门锁着。',2.4); return; }
   if(RT.carUsed){ os('我：已经开过一辆了。',2.4); return; }
+  if(roamGuardsCar()){
+    kill('你拉开车门，钻进去，摸到钥匙孔。后视镜里，它就站在后座上，弯着腰，脸贴着车顶。','grip');
+    return;
+  }
   RT.carUsed=true; RT.carLeaving=2.0;
   S.enterCool=2.0;
   os('我：引擎着了。车往前冲了出去。',4);
@@ -243,10 +247,13 @@ function tryTrashRoute(){
   os('我：桶盖内侧用记号笔写着：「清运 17:30」。字是倒着写的，像是从里面写的。',4.4,OS_KEEP);
 }
 function tryBeastRoute(){
-  if(!RT.beastDrop){ os('我：我还没往那条缝里放过东西。',2.6); return; }
-  if(inBeastWindow()&&inToiletHere()){ triggerEnding('beast'); return; }
-  if(!inBeastWindow()){ os('我：不是现在。隔间门上刻的时间是 11:45。',3.0); return; }
-  os('我：得在厕所里，第三个隔间门口。',2.6);
+  if(!inToiletHere()||S.room!=='teach1'){ os('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
+  if(!inBeastWindow()){
+    os(hasSeconds()?'我：门上刻的是 11:45:00 整。现在是 '+fmtClockS(S.tsec)+'。到点了就把东西放下（G）。'
+                   :'我：门上刻的是 11:45:00 整——要精确到秒。我得有块带秒针的表。',3.8,OS_KEEP);
+    return;
+  }
+  os('我：就是现在。放下一样东西（G）。',2.6,OS_KEEP);
 }
 /* 隔间：门上刻着时间（《先辈》的提示），时间对了、东西放过了，敲门就是那条路 */
 function useStall(){
@@ -254,7 +261,8 @@ function useStall(){
   if(RT.beastDrop&&inBeastWindow()&&S.room==='teach1'){ triggerEnding('beast'); return; }
   addClue('stall');
   if(S.room==='teach1'){
-    os('我：第三个隔间的门从里面锁着。门板上有人用指甲刻了一行：「11:45　放下一样东西　敲三下」。',5.2,OS_KEEP);
+    os('我：第三个隔间的门从里面锁着。门板上有人用指甲刻了一行：「11:45:00　放下一样东西」。'+
+       (hasSeconds()?'我看了一眼表。':'连秒都刻上了——得有块带秒针的表才行。'),5.6,OS_KEEP);
   }else{
     os('我：隔间的门在里面锁着。门缝底下很暗，暗得不像有地面。',3.4);
   }
@@ -320,6 +328,7 @@ function dreamWake(){
     var f=document.getElementById('flash'); if(f){ f.style.transition='none'; f.style.opacity='0'; }
     UI.closeChoice(); PAUSE.on=false; ROAM.on=false;
     OPENDOORS={};                        /* 回到 11:40：开过的门也都关回去了 */
+    examEnd();
     var R1=INTERIORS['teach1'];
     doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
     try{ SFX.wake&&SFX.wake(); }catch(e){}

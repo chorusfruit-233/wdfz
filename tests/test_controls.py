@@ -388,8 +388,55 @@ class ControlsTest(unittest.TestCase):
         page.evaluate('PC.cd=0;PCGAME.tick(.2)')
         page.keyboard.up('ArrowUp')
         self.assert_js(page, 'PC.dir.y===-1')
-        page.locator('#pcgame button').click()
+        page.locator('#pcexit').click()
         self.assert_js(page, '!PC.on')
+
+    def test_computer_touch_dpad_exit_and_no_time_skip(self):
+        page = self.page(touch=True)
+        page.set_viewport_size({'width':844,'height':390})
+        page.evaluate('S.tsec=760;PCGAME.start()')
+        self.assertTrue(page.locator('#pcgame .pcx').is_visible())
+        self.assertTrue(page.locator('#pcpad').is_visible())
+        page.locator('#pcpad [data-d="0,-1"]').tap()
+        page.evaluate('PC.cd=0;PCGAME.tick(.2)')
+        self.assert_js(page, 'PC.dir.y===-1')
+        page.locator('#pcgame .pcx').tap()
+        self.assert_js(page, '!PC.on&&S.tsec===760')
+
+    def test_snack_sprint_and_exhausted_stamina_does_not_stutter(self):
+        page = self.page()
+        page.evaluate("S.stam=0;S.tired=false;S.snackT=0;KEY.w=true;KEY.shift=true;updatePlayer(.05)")
+        self.assert_js(page, '!S.run&&S.tired')
+        page.evaluate("S.stam=10;updatePlayer(.05)")
+        self.assert_js(page, '!S.run')
+        page.evaluate("S.bag=['snack'];useItem('snack');S.stam=2;updatePlayer(.05)")
+        self.assert_js(page, 'S.run&&S.stam===2&&S.snackT>9')
+        page.evaluate("S.snackT=0;S.stam=STAM_BACK+1;updatePlayer(.05);KEY.w=false;KEY.shift=false")
+        self.assert_js(page, 'S.run&&!S.tired')
+
+    def test_ancestor_window_is_slowed_and_dropping_item_ends(self):
+        page = self.page()
+        self.assert_js(page, 'Math.abs((BEAST_T1-BEAST_T0)*60/rateAt(BEAST_T0+0.01)-15)<0.01')
+        page.evaluate(
+            "var R=INTERIORS.teach1;S.mode='in';S.room='teach1';S.x=R.ox+59.5*9;S.y=R.oy+17.5*9;"
+            "S.dead=false;RT.beastDrop=false;S.tsec=BEAST_T0+0.05;S.bag=['chalk'];S.bagSel=0;dropSelected()")
+        page.wait_for_function("RT.end==='beast'", timeout=5000)
+
+    def test_bell_tower_spiral_stairs_and_exam_mode(self):
+        page = self.page()
+        page.evaluate(
+            "var R=INTERIORS.bell1;S.mode='in';S.room='bell1';spiralReset();"
+            "window.__ring=function(a,r){var x=SPIRAL.cx+Math.cos(a)*r,z=SPIRAL.cz+Math.sin(a)*r;"
+            "  return [R.ox+(x+R.cols*0.5)*9,R.oy+(z+R.rows*0.5)*9];};"
+            "var p=__ring(SPIRAL.th0+Math.PI,1.6);window.__blocked=solidAt(p[0],p[1]);"
+            "for(var a=SPIRAL.th0;a<=SPIRAL.th0+SPIRAL.amax+0.4;a+=0.15){p=__ring(a,1.6);S.x=p[0];S.y=p[1];spiralUpdate();}")
+        self.assert_js(page, "__blocked&&SP.state==='top'&&S.floorY===SPIRAL.topH&&bellReach()")
+        page.evaluate("S.tsec=760;S.exam=false;useBell()")
+        self.assert_js(page, 'S.exam&&!examNow()')
+        page.evaluate("S.tsec=850;updateHUD()")
+        self.assert_js(page, "examNow()&&document.getElementById('period').textContent.indexOf('考试')===0")
+        page.evaluate("S.tsec=1295;updateSystems(.01)")
+        self.assert_js(page, '!S.exam')
 
     def test_mobile_menu_panels_scroll_and_real_scene_renders(self):
         page = self.page(touch=True)

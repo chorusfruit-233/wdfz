@@ -9,6 +9,11 @@ function ri(a,b){return Math.floor(rnd(a,b+1));}
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function dist2(ax,ay,bx,by){var dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;}
 function angDiff(a,b){return Math.abs(((a-b+PI*3)%TAU)-PI);}
+function fmtClockS(tsec){                  /* 带秒：手表 / 秒表天赋 */
+  tsec=((tsec%1440)+1440)%1440;
+  var s=Math.floor(tsec*60+1e-6)%60;
+  return fmtClock(tsec)+':'+(s<10?'0':'')+s;
+}
 function fmtClock(tsec){
   tsec=((tsec%1440)+1440)%1440;
   var h=Math.floor(tsec/60), m=Math.floor(tsec%60);
@@ -29,26 +34,35 @@ var KEEP={
 function isSolidCh(c){return c==='#'||c==='S';}   /* 楼梯占着一整格，人不能站进去 */
 
 var RATE={CLASS:80,BREAK:12,MEAL:14,ASSEM:30,FREE:37,NIGHT:17};
+/* 上课 8:00–12:15、14:00–17:20；晚自习 18:10–19:40、20:00–21:00 */
 var SCHED=[
   [440,480,'早读',    '教室',RATE.CLASS],
   [480,525,'第 1 节','教室',RATE.CLASS],
-  [525,545,'课间',    '自由',RATE.BREAK],
-  [545,590,'第 2 节','教室',RATE.CLASS],
-  [590,620,'课间操',  '操场',RATE.ASSEM],
+  [525,540,'课间',    '自由',RATE.BREAK],
+  [540,585,'第 2 节','教室',RATE.CLASS],
+  [585,620,'课间操',  '操场',RATE.ASSEM],
   [620,665,'第 3 节','教室',RATE.CLASS],
-  [665,685,'课间',    '自由',RATE.BREAK],
-  [685,730,'第 4 节','教室',RATE.CLASS],
-  [730,810,'午饭',    '自由',RATE.MEAL],
-  [810,870,'午休',    '自由',RATE.MEAL],
-  [870,915,'第 5 节','教室',RATE.CLASS],
-  [915,960,'第 6 节','教室',RATE.CLASS],
-  [960,1005,'第 7 节','教室',RATE.CLASS],
-  [1005,1025,'课间',  '自由',RATE.BREAK],
-  [1025,1080,'课外活动','自由',RATE.FREE],
-  [1080,1150,'晚饭',  '自由',RATE.MEAL],
-  [1150,1290,'晚自习','教室',RATE.NIGHT],
+  [665,690,'课间',    '自由',RATE.BREAK],
+  [690,735,'第 4 节','教室',RATE.CLASS],
+  [735,800,'午饭',    '自由',RATE.MEAL],
+  [800,840,'午休',    '自由',RATE.MEAL],
+  [840,885,'第 5 节','教室',RATE.CLASS],
+  [885,890,'课间',    '自由',RATE.BREAK],
+  [890,935,'第 6 节','教室',RATE.CLASS],
+  [935,945,'课间',    '自由',RATE.BREAK],
+  [945,990,'第 7 节','教室',RATE.CLASS],
+  [990,995,'课间',    '自由',RATE.BREAK],
+  [995,1040,'第 8 节','教室',RATE.CLASS],
+  [1040,1060,'课外活动','自由',RATE.FREE],
+  [1060,1090,'晚饭',  '自由',RATE.MEAL],
+  [1090,1180,'晚自习一','教室',RATE.NIGHT],
+  [1180,1200,'课间',  '自由',RATE.BREAK],
+  [1200,1260,'晚自习二','教室',RATE.NIGHT],
+  [1260,1290,'洗漱',  '自由',RATE.NIGHT],
   [1290,1500,'熄灯后','自由',RATE.NIGHT]
 ];
+var MEALS=[[735,800],[1060,1090]];         /* 食堂开饭的时间段 */
+var EVENING=1090;                           /* 晚自习开始 */
 function periodAt(t){
   for(var i=0;i<SCHED.length;i++){var s=SCHED[i]; if(t>=s[0]&&t<s[1])return s;}
   return SCHED[SCHED.length-1];
@@ -60,7 +74,9 @@ function needWhere(t){
   if(t>=1290) return '宿舍';
   return '自由';
 }
-function rateAt(t){ return periodAt(t)[4]; }
+/* 《先辈》：11:45:00–11:45:10 这 10 秒，时间慢到大约 15 个真实秒（流速单位是"游戏秒 / 真实秒"） */
+var BEAST_T0=705, BEAST_T1=705+10/60, BEAST_RATE=10/15;
+function rateAt(t){ return (t>=BEAST_T0&&t<BEAST_T1)?BEAST_RATE:periodAt(t)[4]; }
 function isNight(){ return S.tsec>=1290||S.tsec<440; }
 
 /* 预知梦：中等（第一天死了能醒三次，异象 40–64 秒一次，提前一点告诉你下一个是什么）

@@ -45,10 +45,39 @@ function nearestSeat(){
 }
 
 var VIO_ON=0;
+
+/* ---------- 考试模式 ----------
+   在钟楼顶上撞钟以后，当天剩下的所有"在教室"的时段（上课和晚自习）都变成考试，到熄灯为止：
+     离开座位，SAN 和违规涨得更快；异象只出教室里的那几种；
+     一场考完，大部分时间坐着的，给一次 SAN。 */
+var EXAM_AN={stare:1,chalk:1,repeat:1,roster:1,shifting:1,broad:1};
+function examStart(){
+  if(isNight()){ os('我：钟声荡出去，很快就被夜吞掉了。整座学校都睡着，没有人回应。',4); return; }
+  S.exam=true; S.examCur=null; S.examSeat=0; S.examTot=0;
+  os('我：钟声一圈一圈荡开。过了很久，广播里有人慢慢地念：「今天剩下的课，全部改为考试。请回到自己的座位。」',6,OS_KEEP);
+  toast('考试模式 · 今天剩下的课都是考试，熄灯后结束');
+}
+function examEnd(){ S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0; }
+function examNow(){ return !!S.exam&&needWhere(S.tsec)==='教室'; }
+function examTick(dt){
+  if(!S.exam) return;
+  var p=periodAt(S.tsec), cur=(p[3]==='教室')?p[0]:null;
+  if(cur!==S.examCur){
+    if(S.examCur!==null&&S.examTot>4){                 /* 上一场结束：交卷 */
+      if(S.examSeat/S.examTot>=0.7){ S.san=Math.min(100,S.san+15); os('我：交卷了。监考的人从我桌上收走卷子，没有看我。……可我记得我写了什么。',4.4); toast('考完一场 · SAN +15'); }
+      else os('我：这一场我没坐住。收上去的卷子里，我那一张只有名字，名字被人画了一个圈。',4.4);
+    }
+    S.examCur=cur; S.examSeat=0; S.examTot=0;
+    if(cur!==null) os(S.seated?'我：铃响了。卷子发下来了，我那张的姓名栏里，已经有人替我写好了名字。':'我：铃响了。卷子已经发到了每个人桌上，包括我那张空着的位子。',3.6);
+  }
+  if(cur!==null){ S.examTot+=dt; if(S.seated&&atMySeat()) S.examSeat+=dt; }
+}
 function updateSystems(dt){
   if(S.dead||S.screen!=='play') return;
-  var rate=rateAt(S.tsec);
+  var rate=rateAt(S.tsec), _t0=S.tsec;
   S.tsec += dt*rate/60;
+  if(_t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
+    os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
 
   if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=1290){
     S.fn.note=true;
@@ -66,12 +95,16 @@ function updateSystems(dt){
   }
   try{ fnTick(dt); }catch(e){}
   if(S.tsec>=1500){ S.tsec=440; }
+  if(S.exam&&(S.tsec>=1290||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
+  examTick(dt);
+  var exam=examNow();
 
   var nw=needWhere(S.tsec);
   if(nw==='教室'){
+    var ek=exam?1.8:1;                        /* 考试时离开座位扣得更快 */
     if(S.seated){ S.san+=0.42*dt; }
-    else if(inClassroomHere()){ S.san-=0.9*dt*dif().san; }
-    else { S.san-=2.4*dt*dif().san; }
+    else if(inClassroomHere()){ S.san-=0.9*dt*dif().san*ek; }
+    else { S.san-=2.4*dt*dif().san*ek; }
   }else if(nw==='宿舍'){
     if(inDorm()){ S.san+=0.22*dt; }
     else { S.san-=1.4*dt*dif().san; }
@@ -89,7 +122,7 @@ function updateSystems(dt){
   else if(nw==='宿舍'&&!inDorm()) wrong=true;
   else if(nw==='操场'&&!onField()) wrong=true;
   var vioMul=1;
-  if(nw==='教室') vioMul=1.4;
+  if(nw==='教室') vioMul=exam?2.4:1.4;
   if(S.mode==='out'&&isNight()) vioMul*=0.5;
   S.wrong=wrong;
   if(wrong){ S.viol+=dt*0.85*vioMul; }
@@ -100,7 +133,7 @@ function updateSystems(dt){
   if(S.viol>=100&&!S.dead) killViol();
 
   if(S.seated&&nw==='教室') S.tt+=1.5*dt;
-  else if(inDorm()&&S.tsec>=1150) S.tt+=1.0*dt;
+  else if(inDorm()&&S.tsec>=EVENING) S.tt+=1.0*dt;
   else S.tt=Math.max(0,S.tt-0.35*dt);
   S.tt=clamp(S.tt,0,100);
   if(S.tt>=100&&!S.hiddenLatch){ S.hiddenLatch=true; S.hiddenWindow=3.2; }
@@ -141,7 +174,7 @@ function killViol(){
   else kill('地板变软了。你往下沉，沉得很慢，慢到你能听清头顶上那一声上课铃。','floor');
 }
 
-var ROAM_LIT_NEED=1.6;
+var ROAM_LIT_NEED=1.6, ROAM_REACH=26, ROAM_CAR=200;
 var ROAM={on:false,x:0,y:0,cd:0,seen:0,litAcc:0,stage:'approach',waitT:0,lureTold:0};
 function dangerAt(){
   if(S.mode==='in'){
@@ -157,6 +190,10 @@ function roamReset(){
   ROAM.x=R.ox+R.w*0.42; ROAM.y=R.oy+R.h*0.5;
   ROAM.cd=6.5; ROAM.on=true; ROAM.stage='approach';
   ROAM.litAcc=0; ROAM.waitT=0; ROAM.seen=0; ROAM.lureTold=0; ROAM.toldSpot=0;
+}
+/* 它还在车道上、离你不远：车门一开就被它抓住 */
+function roamGuardsCar(){
+  return ROAM.on&&ROAM.stage==='approach'&&Math.hypot(S.x-ROAM.x,S.y-ROAM.y)<ROAM_CAR;
 }
 function roamLit(){
   if(!(USE.torch||USE.phone)) return false;
@@ -207,7 +244,10 @@ function roamTick(dt){
     var bdx=ROAM.x-S.x, bdy=ROAM.y-S.y, bd=Math.hypot(bdx,bdy)||1;
     ROAM.x+=bdx/bd*13*dt; ROAM.y+=bdy/bd*13*dt;
   }else if(ROAM.cd<=0){
-    ROAM.cd=rnd(1.15,2.45);
+    /* 以前每 1.15–2.45 秒挪一步，平均比走路还慢，跑起来就能甩开，直接冲过去开车。
+       现在近了、或者听见你在跑，就挪得比你跑得还快：只能拿光把它定住。 */
+    var near=Math.hypot(S.x-ROAM.x,S.y-ROAM.y)<220;
+    ROAM.cd=(S.run||near)?rnd(0.55,0.95):rnd(0.9,1.5);
     SFX.step();
     var dx=S.x-ROAM.x, dy=S.y-ROAM.y, dl=Math.hypot(dx,dy)||1;
     var nx=ROAM.x+dx/dl*34, ny=ROAM.y+dy/dl*34;
@@ -218,7 +258,7 @@ function roamTick(dt){
   var dist=Math.sqrt(ddx*ddx+ddy*ddy);
   if(dist<150){ S.san-=dt*1.1; if(!ROAM.seen){ ROAM.seen=1; os('我：车道那头有东西。它不是走路的姿势。',5); } }
   if(dist<230&&!ROAM.toldSpot){ ROAM.toldSpot=1; os('我：车道中间有个高的东西站着。它没在动。',4.4); }
-  if(dist<22&&!lit&&ROAM.litAcc<ROAM_LIT_NEED*0.5&&S.enterCool<=0){
+  if(dist<ROAM_REACH&&!lit&&ROAM.litAcc<ROAM_LIT_NEED*0.5&&S.enterCool<=0){
     kill('你在黑暗里撞上了它。它很高，很冷，一直站在车道中间，等你自己走过去。','grip');
   }
 }

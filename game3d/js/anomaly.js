@@ -80,7 +80,7 @@ function anAllowed(id){
   if(id==='shifting'){ return inClassroomHere(); }
   if(id==='stare'){ return inClassroomHere(); }
   if(id==='lamps'){ return corridorHere()&&isNight(); }
-  if(id==='feast'){ var p=periodAt(t); return inCanteen()&&((t>=730&&t<810)||(t>=1080&&t<1150)); }
+  if(id==='feast'){ return inCanteen()&&MEALS.some(function(m){ return t>=m[0]&&t<m[1]; }); }
   if(id==='necker'){ return S.mode==='out'&&S.x>(BOUND.x1-220)*SC; }
   if(id==='shadow'){ return S.mode==='out'&&onField(); }
   if(id==='twin'){ return onRoof(); }
@@ -95,6 +95,10 @@ function pickAnomaly(){
     pool.push(id);
   }
   if(!pool.length) return null;
+  if(typeof examNow==='function'&&examNow()){       /* 考试时只出教室里的那几种 */
+    pool=pool.filter(function(a){ return EXAM_AN[a]; });
+    if(!pool.length) return null;
+  }
   var want=null;
   if(needWhere(S.tsec)==='教室') want=AN_SMALL;
   var pref=[];

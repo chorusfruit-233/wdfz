@@ -22,7 +22,8 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05070
 #period{font-size:12px;opacity:.78;letter-spacing:1px}
 #place{font-size:12px;opacity:.62;letter-spacing:1px;margin-top:2px}
 /* 亮的室内（保安岗、厕所）里，时段和地点文字会被背景吃掉 */
-#period,#place{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.85)}
+#secclock{font-size:15px;letter-spacing:2px;margin-top:4px;color:#e6d9a8;font-variant-numeric:tabular-nums}
+#period,#place,#secclock{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.85)}
 .tag{font-size:11px;opacity:.5;letter-spacing:1px}
 #talent{font-size:12px;color:#a9d8c2;opacity:.9}
 #stamwrap{width:110px;height:4px;background:rgba(0,0,0,.6);margin-top:6px;border:1px solid rgba(120,170,150,.25)}
@@ -183,6 +184,21 @@ body.touch .bl .tag{display:none}
 #pcgame .pch{font-size:13px;letter-spacing:5px;color:#9fe3c2}
 #pccv{border:1px solid rgba(130,180,155,.4);background:#0a1210}
 #pcgame .pcf{font-size:10px;letter-spacing:1px;color:#6d8580}
+/* 小游戏：画布跟着屏幕缩，触屏上有方向键和右上角的退出键（以前手机上转不了向，横屏时退出键被挤出屏幕） */
+#pccv{width:min(320px,62vmin);height:min(320px,62vmin);touch-action:none}
+#pcgame .pcx{display:none;position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));
+  min-width:64px;min-height:48px;padding:8px 14px;font:inherit;font-size:14px;letter-spacing:2px;color:#e6f2ec;
+  background:rgba(60,24,20,.75);border:1px solid rgba(220,140,120,.5);border-radius:4px}
+#pcpad{display:none;position:absolute;right:calc(28px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:4px;touch-action:none}
+#pcpad button{font:inherit;font-size:22px;color:#cfe9dc;background:rgba(20,48,38,.7);border:1px solid rgba(130,180,155,.45);
+  border-radius:10px;touch-action:none}
+#pcpad button:active{background:rgba(120,200,170,.4)}
+#pcpad [data-d="0,-1"]{grid-column:2;grid-row:1}#pcpad [data-d="-1,0"]{grid-column:1;grid-row:2}
+#pcpad [data-d="1,0"]{grid-column:3;grid-row:2}#pcpad [data-d="0,1"]{grid-column:2;grid-row:3}
+body.touch #pcgame .pcx{display:block}
+body.touch #pcpad{display:grid}
+body.touch #pcgame>button:not(.pcx){display:none}
 #dev{position:fixed;left:14px;top:104px;z-index:44;display:none;width:336px;
   background:rgba(3,9,7,.94);border:1px solid rgba(130,180,155,.34);padding:12px 14px;
   font-size:11px;letter-spacing:1px;color:#a8ccbc}
@@ -213,10 +229,10 @@ body.touch .bl .tag{display:none}
 .seg button.on{background:rgba(120,200,170,.30);border-color:#79c8a4;color:#eafff5}
 /* 触屏：快捷栏（.bc 两格）挪到摇杆上方，不然正好压在奔跑键上 */
 body.touch .bc{bottom:calc(178px + env(safe-area-inset-bottom,0px))}
-#tcol{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:140px;display:grid;grid-template-columns:repeat(2,50px);
-  grid-auto-rows:50px;gap:8px;pointer-events:none;touch-action:none}
-.tb2{width:50px;height:50px;border-radius:50%;border:1px solid rgba(130,180,155,.34);
-  background:rgba(0,0,0,.38);color:#a8ccbc;font-size:11px;display:flex;align-items:center;
+#tcol{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:140px;display:grid;grid-template-columns:repeat(2,58px);
+  grid-auto-rows:58px;gap:8px;pointer-events:none;touch-action:none}
+.tb2{width:58px;height:58px;border-radius:50%;border:1px solid rgba(130,180,155,.34);
+  background:rgba(0,0,0,.38);color:#a8ccbc;font-size:13px;display:flex;align-items:center;
   justify-content:center;pointer-events:auto;letter-spacing:1px;user-select:none}
 .tb2:active{background:rgba(120,200,170,.30);border-color:#79c8a4}
 .tbtn{position:absolute;border-radius:50%;border:1px solid rgba(130,180,155,.34);background:rgba(0,0,0,.34);
@@ -226,7 +242,11 @@ body.touch .bc{bottom:calc(178px + env(safe-area-inset-bottom,0px))}
 #tAct{right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(32px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:15px;
   background:rgba(20,48,38,.55);border-color:rgba(130,200,170,.5)}
 /* 手机上没有 Esc：右上角一个暂停键，时间栏往下让一行 */
-#tPause{right:calc(14px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));width:46px;height:46px}
+#tPause{right:calc(14px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));width:52px;height:52px}
+/* 面板右上角的「关闭」在手机上只是一行小字，点不中 */
+body.touch .panel .close,body.touch #bag .close,body.touch #note .close,body.touch #think .close{
+  font-size:15px!important;opacity:.9!important;padding:12px 16px;border:1px solid rgba(130,180,155,.4);border-radius:4px;
+  right:calc(16px + env(safe-area-inset-right,0px))!important;top:calc(14px + env(safe-area-inset-top,0px))!important}
 #tPause::before,#tPause::after{content:'';width:5px;height:16px;margin:0 3px;border-radius:1px;background:#a9d8c2}
 #tPause:active{background:rgba(120,200,170,.30);border-color:#79c8a4}
 body.touch .tr{top:calc(68px + env(safe-area-inset-top,0px))}
@@ -291,8 +311,10 @@ body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0 !important;transition:o
 @media (max-height:520px){
   #stick{width:104px;height:104px;left:16px;bottom:14px}
   #knob{left:32px;top:32px;width:40px;height:40px}
-  #tcol{grid-template-columns:repeat(2,42px);grid-auto-rows:42px;gap:6px;bottom:118px;right:10px}
-  .tb2{width:42px;height:42px;font-size:10px}
+  /* 横屏：按钮排成 4×2，比两列四行矮，不会顶到右上角的时段和秒表 */
+  #tcol{grid-template-columns:repeat(4,50px);grid-auto-rows:50px;gap:6px;bottom:118px;right:10px}
+  .tb2{width:50px;height:50px;font-size:12px}
+  #pcpad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px)}
   #tAct{width:78px;height:78px;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));font-size:13px}
   #tRun{width:60px;height:60px;right:calc(106px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px))}
   body.touch .bl{top:calc(86px + env(safe-area-inset-top,0px))}

@@ -44,7 +44,11 @@ function addRoomLights(R){
     addLight(0, 2.60, H*0.40, 0xc07a4a, LCFG.ptI*0.8, 14, 2.0);
     return;
   }
-  if(R.host==='bell'){ addLight(0,2.4,0.5,0xffa860,LCFG.ptI*0.9,12,2.0); return; }   /* 只有蜡烛 */
+  if(R.host==='bell'){                                            /* 底下只有蜡烛；楼顶从钟口漏下一点天光 */
+    addLight(0,2.4,2.5,0xffa860,LCFG.ptI*0.9,12,2.0);
+    if(R.spiral){ addLight(SPIRAL.cx,SPIRAL.topH/2,SPIRAL.cz+2.0,0xd8b080,LCFG.ptI*0.5,9,2.0); addLight(SPIRAL.cx,SPIRAL.topH+2.6,SPIRAL.cz,0xc8d0d8,LCFG.ptI*0.8,10,2.0); }
+    return;
+  }
   if(R.host==='trash'){ addLight(0,2.6,0,0xb8d0a8,LCFG.ptI*0.7,10,2.0); return; }
   var n=2;
   for(i=0;i<n;i++){
@@ -142,6 +146,7 @@ function solidAtInterior(R,wx,wy){
       if(lx>sb.x0&&lx<sb.x1&&lz>sb.z0&&lz<sb.z1) return true;
     }
   }
+  if(R.spiral&&typeof spiralSolid==='function'&&spiralSolid(R,wx,wy)) return true;
   var f=FURN_SOLID[t];
   if(f!==undefined){
     var c=Math.floor((wx-R.ox)/R.tw), r=Math.floor((wy-R.oy)/R.th);
@@ -252,6 +257,7 @@ function unstick(){
 }
 function doEnterRoom(id,spawn){
   try{ anfxClear(); }catch(e){}
+  try{ spiralReset(); }catch(e){}
   var R=INTERIORS[id]; if(!R) return;
   S.mode='in'; S.room=id;
   if(spawn){                                  /* 显式指定落点（开局坐座位） */
@@ -286,6 +292,7 @@ function doExitRoom(){
   var R=INTERIORS[S.room]; if(!R) return;
   var o=objById(R.host);
   S.mode='out'; S.room=null; S.seated=false;
+  try{ spiralReset(); }catch(e){}
   showBanner('武大附中 · 校园');
   if(o){ var d=doorWorld(o); S.x=d.x; S.y=d.y; }
   S.enterCool=1.0;
@@ -321,11 +328,11 @@ function syncCamera(dt){
   var eyeTarget=S.seated?1.12:EYE;
   S.eyeH=(S.eyeH===undefined)?EYE:S.eyeH;
   S.eyeH+= (eyeTarget-S.eyeH)*Math.min(1,dt*9);
-  GLR.cam.position.set(p.x, S.eyeH+bob+dyOff+(S.eyeLift||0), p.z+dzOff);
+  GLR.cam.position.set(p.x, S.eyeH+bob+dyOff+(S.eyeLift||0)+(S.floorY||0), p.z+dzOff);   /* floorY：钟楼楼梯上的高度 */
   var targetFov=72+(S.run&&S.moving?9:0);
   S.fov=lerp(S.fov,targetFov,Math.min(1,dt*8));
   if(Math.abs(GLR.cam.fov-S.fov)>0.01){ GLR.cam.fov=S.fov; GLR.cam.updateProjectionMatrix(); }
   var spitch=S.pitch+(S.seated?-0.06:0);
   var dir=new THREE.Vector3(Math.cos(S.ang)*Math.cos(spitch),Math.sin(spitch),Math.sin(S.ang)*Math.cos(spitch));
-  GLR.cam.lookAt(p.x+dir.x, S.eyeH+bob+dir.y, p.z+dir.z);
+  GLR.cam.lookAt(p.x+dir.x, S.eyeH+bob+dir.y+(S.floorY||0), p.z+dir.z);
 }

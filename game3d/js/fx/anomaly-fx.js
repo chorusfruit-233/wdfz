@@ -268,7 +268,7 @@ function anfxSpawn(kind,wx,wy){
       var ge=gazeEye(0.8+Math.random()*0.9);
       var side=(Math.random()-0.5)*0.8*(TTILE*U2M);
       ge.position.set(gq.x+gs.nx*0.12+(gs.nz?side:0), 0.9+Math.random()*1.9, gq.z+gs.nz*0.12+(gs.nx?side:0));
-      ge.userData={d:0.2+Math.random()*1.4, w:ge.scale.x, ph:Math.random()*6.283, blink:3+Math.random()*5};
+      ge.userData={d:0.2+Math.random()*1.4, w:ge.scale.x, ph:Math.random()*6.283};
       grp.add(ge); ANFX.items.push(ge);
     }
     for(gi=0;gi<(QUALITY===0?4:8);gi++){       /* 还有几只就浮在你面前的半空里 */
@@ -276,7 +276,7 @@ function anfxSpawn(kind,wx,wy){
       var fq3=anfxW2S(S.x+Math.cos(fa3)*fr3/U2M, S.y+Math.sin(fa3)*fr3/U2M);
       var fe=gazeEye(0.6+Math.random()*0.7);
       fe.position.set(fq3.x, 1.7+Math.random()*1.0, fq3.z);
-      fe.userData={d:0.5+Math.random()*1.5, w:fe.scale.x, ph:Math.random()*6.283, blink:3+Math.random()*5};
+      fe.userData={d:0.5+Math.random()*1.5, w:fe.scale.x, ph:Math.random()*6.283};
       grp.add(fe); ANFX.items.push(fe);
     }
   } else if(kind==='shadow'){
@@ -433,7 +433,7 @@ function deathFX(type){
         eg.material.opacity=1;
         eg.position.set(gp.x+Math.cos(ea)*er, ey, gp.z+Math.sin(ea)*er);
         eg.scale.set(es,es*0.6875,1);
-        eg.userData={i:ei, a:ea, r:er, y:ey, s:es, blink:Math.random()*6.283};
+        eg.userData={i:ei, a:ea, r:er, y:ey, s:es};
         grp.add(eg); push(eg);
       }
       GLR.gazeT=1;
@@ -805,10 +805,8 @@ function anfxUpdate(dt){
         ob.position.x=eu.cx+Math.cos(eu.a)*rr3;
         ob.position.z=eu.cz+Math.sin(eu.a)*rr3;
         ob.position.y=eu.by+near*0.35;
-        var bl=Math.sin(kk*2.2+eu.blink);
-        var open=bl>0.93?0.12:1;                          /* 眨眼 */
         var gk=eu.s*(1+near*0.5);
-        ob.scale.set(gk, gk*0.6875*open, 1);              /* Sprite 本来就永远正对镜头 */
+        ob.scale.set(gk, gk*0.6875, 1);                   /* 不眨眼。Sprite 本来就永远正对镜头 */
       }
     } else if(dtp==='grip'){
       var sinkT=Math.min(1,kk/2.4);
@@ -888,7 +886,7 @@ function anfxUpdate(dt){
       m=ANFX.items[i]; var gu=m.userData;
       var ap=clamp((ANFX.t-gu.d)/0.6,0,1);                 /* 一只接一只睁开 */
       var lid=0.30+0.70*Math.max(hold,hit);
-      if(Math.sin(ANFX.t*(6.283/gu.blink)+gu.ph)>0.97) lid*=0.1;   /* 偶尔眨一下 */
+      /* 不眨眼：一直睁着盯着你 */
       var pulse=1+0.05*Math.sin(ANFX.t*3.1+gu.ph)+0.25*hit;
       m.scale.set(gu.w*pulse, gu.w*0.6875*lid*ap*pulse, 1);
       m.material.opacity=ap*(0.75+0.25*Math.max(hold,hit));

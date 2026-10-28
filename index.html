@@ -21,7 +21,7 @@
 <div id="fade"></div>
 <div id="hud">
   <div class="tl"><div id="sanwrap"><div id="sanbar"></div></div><div id="clock">11:40</div><div id="place">武大附中 · 校园</div></div>
-  <div class="tr"><div id="period">早读 · 教室</div></div>
+  <div class="tr"><div id="period">早读 · 教室</div><div id="secclock" hidden></div></div>
   <div class="bl"><canvas id="mini" width="150" height="150" style="display:block;margin-bottom:10px;border:1px solid rgba(130,180,155,.28);background:rgba(4,10,8,.55)"></canvas><div id="stamwrap" style="visibility:hidden"><div id="stambar"></div></div>
     </div>
   <div class="bc"><div id="hot"></div></div>
@@ -92,7 +92,9 @@
   <div class="mfoot"><span>请记住你回去的路。它会变。</span><i>WUDFZ · FIELD RECORD 001</i></div>
 </div>
 <div id="pcgame"><div class="pch">机房 · 贪吃蛇</div><canvas id="pccv" width="320" height="320"></canvas>
-  <div class="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" onclick="PCGAME.stop()">退出电脑</button></div>
+  <div class="pcf" id="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" id="pcexit" onclick="PCGAME.stop()">退出电脑</button>
+  <button type="button" class="pcx" onclick="PCGAME.stop()" aria-label="退出电脑">✕ 退出</button>
+  <div id="pcpad"><button type="button" data-d="0,-1" aria-label="上">▲</button><button type="button" data-d="-1,0" aria-label="左">◀</button><button type="button" data-d="1,0" aria-label="右">▶</button><button type="button" data-d="0,1" aria-label="下">▼</button></div></div>
 <div id="dev">
   <div class="dh">DEV MODE <span id="devst"></span></div>
   <div class="drow"><b>位置</b><span id="devpos" style="flex:1;font-size:10px;opacity:.85;line-height:1.7"></span></div>
@@ -146,6 +148,7 @@
 <script src="game3d/js/model/building.js"></script>
 <script src="game3d/js/model/outdoor.js"></script>
 <script src="game3d/js/world.js"></script>
+<script src="game3d/js/spiral.js"></script>
 <script src="game3d/js/fx/gaze.js"></script>
 <script src="game3d/js/fx/anomaly-fx.js"></script>
 <script src="game3d/js/fx/traces.js"></script>

@@ -189,7 +189,7 @@ UI.renderNote=function(){
   for(var k in S.spots){ h+='<div style="font-size:13px;padding:4px 0;opacity:.7">· '+kLabel(k)+'</div>'; any=true; }
   var CLUE_NOTE=[
     ['roomkey','网络中心的门锁着 —— 钥匙应该在保安室。'],
-    ['stall','教学楼一楼厕所，第三个隔间：「11:45　放下一样东西　敲三下」。'],
+    ['stall','教学楼一楼厕所，第三个隔间：「11:45:00　放下一样东西」。要精确到秒：手表，或者「秒表」天赋。'],
     ['trash','垃圾房的桶盖上写着：清运 17:30。'],
     ['usb','门禁终端要插 U 盘。U 盘大概还在网络中心里。'],
     ['comp','白名单里已经有我了。还差行政楼三楼那一步。'],

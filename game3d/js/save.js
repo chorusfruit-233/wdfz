@@ -14,7 +14,8 @@ function saveGame(){
       anId:AN.id, anT:AN.t, anAcc:AN.acc,
       anData:(function(){ try{ return JSON.parse(JSON.stringify(AN.data||{})); }catch(e){ return {}; } })(),
       anNext:AN.next, anLastBig:AN.lastBig,
-      fn:S.fn
+      fn:S.fn,
+      exam:!!S.exam, examCur:S.examCur, examSeat:S.examSeat||0, examTot:S.examTot||0
     };
     localStorage.setItem('wdfz3d',JSON.stringify(d));
     return true;

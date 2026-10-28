@@ -28,6 +28,7 @@ function buildRoomGeometry(R){
   var W=R.cols,H=R.rows,tw=TTILE*U2M,th=TTILE*U2M;
   var halfW=W*tw*0.5, halfH=H*th*0.5;
   var isRoof=(R.host==='teach'&&R.floor===6);
+  var RWH=R.spiral?SPIRAL.wallH:WALLH;           /* 钟楼里面是通高的 */
   var TH=roomTheme(R);
   function CX(c){ return (c+0.5)*tw-halfW; }
   function CZ(r){ return (r+0.5)*th-halfH; }
@@ -67,7 +68,7 @@ function buildRoomGeometry(R){
   }
   /* ---- 吊顶 ---- */
   if(!isRoof){
-    K.g('ceiling').quadN([-halfW,WALLH,-halfH],[halfW,WALLH,-halfH],[halfW,WALLH,halfH],[-halfW,WALLH,halfH],0,-1,0,TH.ceil);
+    K.g('ceiling').quadN([-halfW,RWH,-halfH],[halfW,RWH,-halfH],[halfW,RWH,halfH],[-halfW,RWH,halfH],0,-1,0,TH.ceil);
   }
 
   /* ---- 墙：贪心合并成矩形块 ---- */
@@ -86,7 +87,7 @@ function buildRoomGeometry(R){
     var a, b;
     for(b=0;b<h;b++) for(a=0;a<w;a++) used[(x+a)+','+(y+b)]=1;
     var wcx=CX(x)+(w-1)*tw/2, wcz=CZ(y)+(h-1)*th/2;
-    K.g(TH.wallMat).boxFaces(wcx,WALLH/2,wcz,w*tw,WALLH,h*th,TH.wall,0.94,isRoof?'nsewu':'nsew');
+    K.g(TH.wallMat).boxFaces(wcx,RWH/2,wcz,w*tw,RWH,h*th,TH.wall,0.94,isRoof?'nsewu':'nsew');
     if(isRoof) K.box('concrete',wcx,WALLH+0.04,wcz,w*tw+0.08,0.08,h*th+0.08,0xb8b4ac,1.0);   /* 女儿墙压顶 */
   }
   /* ---- 墙脚：踢脚线 + 墙裙 + 腰线，只沿露在外面的那一侧，连续的一段合成一根 ---- */
@@ -128,6 +129,11 @@ function buildRoomGeometry(R){
     }
   }
   roomDecor(c,isRoof);
+  if(R.spiral){
+    for(y=0;y<H;y++) for(x=0;x<W;x++) if(R.grid[y][x]==='O')       /* 门洞上方补到顶 */
+      K.box(TH.wallMat,CX(x),(WALLH+RWH)/2,CZ(y),tw,RWH-WALLH,th,TH.wall,0.94);
+    buildSpiral(c);
+  }
   return K.build();
 }
 

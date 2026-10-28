@@ -77,9 +77,11 @@ function refreshSky(){
   if(GLR.skyTex) GLR.scene.background=GLR.skyTex;
 }
 function dayLight(){ return sunAt(hourNow()).day; }
+/* 白天室外的画面亮度减半（render.js 后期里乘 GLR.dayExpo）；屋里的灯也比原来暗一档 */
+var DAY_K=0.5, ROOM_LIGHT_K=0.7, ROOM_EXPO=0.85;
 var LCFG={
   ptI:26, ptDist:14, ptDecay:2.0,
-  lampI:20, lampDist:15,
+  lampI:15, lampDist:15,
   camI:1.6, camIk:1.4, camDist:12, camDecay:1.5
 };
 var MOON_DIR=[-0.42,0.80,0.43];
@@ -153,7 +155,7 @@ function updateLighting(){
   }
   var tt=GLR.time||0;
   for(i=0;i<GLR.roomLights.length;i++){
-    var base=GLR.roomLightBase[i]*s.ptK;
+    var base=GLR.roomLightBase[i]*s.ptK*ROOM_LIGHT_K;
     var ph=i*2.7;
     var flick=0.88+0.12*Math.sin(tt*7.3+ph)+0.04*Math.sin(tt*23.1+ph*1.7);
     var blip=Math.sin(tt*0.9+ph*3.1);
@@ -162,6 +164,9 @@ function updateLighting(){
     GLR.roomLights[i].intensity=base*Math.max(0.08,flick)*gz;
   }
   lampTick(s);
+  /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
+  var wn=GLR.worldNorm||0;
+  GLR.dayExpo=s.indoor?(S.room==='garage1'?1:ROOM_EXPO+(1-ROOM_EXPO)*wn):1-(1-DAY_K)*sun.day*(1-wn);
   GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
 }
 /* 路灯：灯头在夜里自发光；离镜头最近的几盏配一盏真点光（数量固定，避免切场景时重编着色器） */

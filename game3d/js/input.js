@@ -275,7 +275,11 @@ function updatePlayer(dt){
   var wantRun=(KEY.shift||TOUCH.run||stickFull)&&!locked;
   var snack=(S.snackT||0)>0;               /* 士力架：这几秒里体力空了也能跑，跑也不掉体力 */
   if(snack)S.snackT-=dt;
-  S.run=wantRun&&(S.stam>6||snack)&&(fw!==0||sd!==0);
+  /* 跑空以后要喘过气（回到 STAM_BACK）才能再跑。以前体力一回到 6 以上就又跑起来，
+     马上又掉下去，按着疾跑（或手机摇杆推到底）时就一顿一顿地在跑和走之间来回切。 */
+  if(S.stam<=6)S.tired=true;
+  else if(S.stam>=STAM_BACK)S.tired=false;
+  S.run=wantRun&&(!S.tired||snack)&&(fw!==0||sd!==0);
   var mag=Math.hypot(fw,sd);
   if(S.seated&&mag>.08)S.seated=false;
   S.moving=mag>.08&&!S.seated;
@@ -285,6 +289,7 @@ function updatePlayer(dt){
     if(mag>1){fw/=mag;sd/=mag;}
     var ca=Math.cos(S.ang),sa=Math.sin(S.ang),x=S.x,y=S.y;
     moveBy((ca*fw-sa*sd)*spd*dt,(sa*fw+ca*sd)*spd*dt);
+    spiralUpdate();
     S.moving=Math.hypot(S.x-x,S.y-y)>.0001;
   }
   if(S.moving&&!S.seated){
@@ -296,4 +301,4 @@ function updatePlayer(dt){
   if(S.enterCool>0)S.enterCool-=dt;
   syncCamera(dt);
 }
-var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=10;
+var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=10,STAM_BACK=35;

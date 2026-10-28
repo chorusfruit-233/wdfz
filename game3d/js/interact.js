@@ -5,6 +5,7 @@ function nearWorld(radius){
   if(S.mode==='in'){
     var R=INTERIORS[S.room];
     if(!R) return null;
+    if(R.spiral&&SP.state!=='ground') return null;   /* 在钟楼楼梯上，够不着地上的东西 */
     var hits=[];
     for(var r=0;r<R.rows;r++) for(var c=0;c<R.cols;c++){
       var ch=R.grid[r][c];
@@ -217,6 +218,7 @@ function tryInteract(){
   }
 
   var R=INTERIORS[S.room];
+  if(bellReach()){ useBell(); return; }
   var _sa=sanActFor(R,null), _hit0=nearWorld(24);
   if(_hit0&&FAC_CD[_hit0.ch]!==undefined){ if(useFacility(_hit0.ch,R)) return; }
   if(_hit0){ var _k=sanActFor(R,_hit0); if(_k){ doSanAct(_k); return; } }
@@ -271,7 +273,7 @@ function tryInteract(){
   }
   if(ch==='X'){ useTrash(); return; }
   if(ch==='p'){
-    if(S.tsec<1150) os('我：现在弹琴，走廊里的人都听得见。',3.0);
+    if(S.tsec<EVENING) os('我：现在弹琴，走廊里的人都听得见。',3.0);
     SFX.moonlight();
     os('我：是《月光》。第一乐章。可是钢琴没有人在弹。',5.5);
     return;
@@ -315,10 +317,11 @@ function useBell(){
     try{ SFX.bigBell&&SFX.bigBell(); }catch(e){}
     anEnd(); return;
   }
-  S.san=Math.max(0,S.san-3);
   addClue('bell');
-  try{ SFX.bigBell&&SFX.bigBell(0.3); }catch(e){}
-  os('我：我推了一下撞木。钟没响。……过了很久，教学楼那边响了一下。',4.2);
+  if(S.exam){ try{ SFX.bigBell&&SFX.bigBell(0.3); }catch(e){} os('我：钟还在嗡嗡地响。今天剩下的课，都是考试了。',3.4); return; }
+  /* 钟楼顶上撞响这口钟：当天剩下的课全部改成考试（examStart 在 systems.js） */
+  try{ SFX.bigBell&&SFX.bigBell(1); }catch(e){}
+  examStart();
 }
 function useAltar(){
   addClue('altar');

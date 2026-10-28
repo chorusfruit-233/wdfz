@@ -220,7 +220,13 @@ function ncUpdate(dt){
       var curS=f.rotation.y||0;
       var dS=((wantS-curS+Math.PI*3)%(Math.PI*2))-Math.PI;
       f.rotation.y=curS+dS*Math.min(1,dt*6);
+      /* 转过来正对着你的时候站起来：坐着扭头看人，看起来很滑稽 */
+      if(ud.mesh&&!ud.stood&&Math.abs(dS)<0.35){ ud.stood=1; ud.stareStood=1; ud.mesh.geometry=figGeo('person'); }
       continue;
+    }
+    if(ud.stareStood&&!staring){                         /* 异象过去了，原来坐着的坐回去 */
+      ud.stareStood=0;
+      if(v<35&&ud.mesh){ ud.stood=0; ud.standing=0; ud.mesh.geometry=figGeo('sit'); }
     }
     if(v>=35&&v<70){
       var want=Math.atan2(ud.hx-p.x,ud.hz-p.z);

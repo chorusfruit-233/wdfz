@@ -162,10 +162,8 @@ function bellFloor(){
   var W=11,H=13,g=blank(W,H,'.');
   border(g,W,H,'#');
   g[H-1][5]='O';                     /* 南门 */
-  g[3][5]='U';                       /* 钟（以前用的是 'b'，画出来是一张宿舍床） */
   g[9][2]='A'; g[9][8]='A';          /* 两张供桌 */
-  g[4][2]='#'; g[4][8]='#';          /* 柱子 */
-  g[6][2]='#'; g[6][8]='#';
+  /* 钟挪到了楼顶：中间是旋转楼梯（spiral.js），原来的四根柱子会挡住楼梯，拿掉了 */
   return g;
 }
 function guardFloor(){
@@ -244,7 +242,7 @@ function buildInteriorData(){
   if(gA2&&gA2[18]) gA2[18][gA2[18].length-3]='L';          /* 行政楼东头 → 连廊① 北 */
   if(gL2&&gL2[16]){ gL2[16][gL2[16].length-3]='L'; gL2[16][2]='L'; }  /* 实验楼东头 → 连廊① 南；西头 → 连廊② 北 */
   if(gT2&&gT2[18]) gT2[18][2]='L';                          /* 教学楼西头 → 连廊② 南 */
-  mkFloor('bell1','钟楼','bell',1,bellFloor());
+  mkFloor('bell1','钟楼','bell',1,bellFloor()).spiral=true;
   mkFloor('guard1','保安岗','guard',1,guardFloor());
   mkFloor('gear1','体育器材室','gear',1,gearFloor());
 }
