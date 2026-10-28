@@ -1,19 +1,51 @@
 /* 里世界 3D · 场景切换、碰撞、移动、镜头 */
 'use strict';
 
+/* ---- 场景缓存 ----
+   房间、室外的模型只和画质、门开没开有关，每次进出都整个重建很浪费（室外一次一两百毫秒）。
+   离开时把网格从场景里拿掉、释放显存（geometry.dispose 只删显卡上的缓冲，数据还在），
+   再回来直接用，显卡那边自动重新上传。最多留室外 + 最近 3 个房间；换画质、换贴图分辨率时清空。
+   门扇单独成块，回来时按当时开没开重建（room.js 的 roomDoorRefresh）。 */
+var SCENE_CACHE={key:'',out:null,rooms:{},order:[]};
+var SCENE_CACHE_ROOMS=3;
+function sceneCacheKey(){ return QUALITY+'|'+(NOTEX?1:0); }
+function disposeGroup(g,keepData){
+  if(!g) return;
+  if(g.geometry&&g.geometry.dispose) g.geometry.dispose();                   /* 释放显存；数据还在，再用会自动重新上传 */
+  if(!keepData&&g.material&&g.material.dispose&&!(g.material.userData&&g.material.userData.shared)) g.material.dispose();   /* 共享材质（materials.js）不能销毁 */
+  if(g.children){ for(var k=0;k<g.children.length;k++) disposeGroup(g.children[k],keepData); }
+}
+function sceneCacheCheck(){
+  var k=sceneCacheKey(); if(SCENE_CACHE.key===k) return;
+  sceneCacheClear(); SCENE_CACHE.key=k;
+}
+function sceneCacheClear(){
+  var id;
+  if(SCENE_CACHE.out&&SCENE_CACHE.out!==GLR.outMesh) disposeGroup(SCENE_CACHE.out);
+  for(id in SCENE_CACHE.rooms) if(SCENE_CACHE.rooms[id]!==GLR.roomMesh) disposeGroup(SCENE_CACHE.rooms[id]);
+  if(GLR.outMesh) GLR.outMesh.userData.uncached=1;            /* 正在用的这份离开时直接销毁 */
+  if(GLR.roomMesh) GLR.roomMesh.userData.uncached=1;
+  SCENE_CACHE.out=null; SCENE_CACHE.rooms={}; SCENE_CACHE.order=[]; SCENE_CACHE.key='';
+}
+function sceneCacheRoom(id,g){
+  SCENE_CACHE.rooms[id]=g;
+  SCENE_CACHE.order=SCENE_CACHE.order.filter(function(x){ return x!==id; }); SCENE_CACHE.order.push(id);
+  while(SCENE_CACHE.order.length>SCENE_CACHE_ROOMS){
+    var old=SCENE_CACHE.order.shift(), og=SCENE_CACHE.rooms[old]; delete SCENE_CACHE.rooms[old];
+    if(og&&og!==GLR.roomMesh) disposeGroup(og);
+  }
+}
+function releaseSceneMesh(g){
+  var cached=!g.userData.uncached&&(g===SCENE_CACHE.out||SCENE_CACHE.rooms[g.userData.roomId]===g);
+  disposeGroup(g,cached);
+}
 function clearWorldMesh(){
   var i;
-  function disposeGroup(g){
-    if(!g) return;
-    if(g.geometry&&g.geometry.dispose) g.geometry.dispose();
-    if(g.material&&g.material.dispose&&!(g.material.userData&&g.material.userData.shared)) g.material.dispose();   /* 共享材质（materials.js）不能销毁 */
-    if(g.children){ for(var k=0;k<g.children.length;k++) disposeGroup(g.children[k]); }
-  }
   if(GLR.roamFig){ GLR.scene.remove(GLR.roamFig); GLR.roamFig=null; }
   if(typeof TR!=='undefined'&&TR.g){ try{ GLR.scene.remove(TR.g); }catch(e){} TR.g=null; TR.key=''; }
   try{ shadeClearRoom(); }catch(e){}
-  if(GLR.roomMesh){ GLR.scene.remove(GLR.roomMesh); disposeGroup(GLR.roomMesh); GLR.roomMesh=null; }
-  if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); disposeGroup(GLR.outMesh); GLR.outMesh=null; }
+  if(GLR.roomMesh){ GLR.scene.remove(GLR.roomMesh); releaseSceneMesh(GLR.roomMesh); GLR.roomMesh=null; }
+  if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); releaseSceneMesh(GLR.outMesh); GLR.outMesh=null; }
   if(GLR.roomLights){
     for(i=0;i<GLR.roomLights.length;i++) GLR.scene.remove(GLR.roomLights[i]);
     GLR.roomLights=[]; GLR.roomLightBase=[]; GLR.roomLightCol=[];
@@ -62,9 +94,12 @@ function addRoomLights(R){
 }
 function enterWorldRoom(roomId){
   clearWorldMesh();
-  if(MAT_RESET_PENDING){ MAT_RESET_PENDING=false; matReset(); }
-  var R=INTERIORS[roomId];
-  GLR.roomMesh=buildRoomGeometry(R);
+  if(MAT_RESET_PENDING){ MAT_RESET_PENDING=false; matReset(); sceneCacheClear(); }
+  sceneCacheCheck();
+  var R=INTERIORS[roomId], cg=SCENE_CACHE.rooms[roomId];
+  if(cg&&R.doorSpecs){ GLR.roomMesh=cg; roomDoorRefresh(R); }       /* 来过：直接用，门扇按现在开没开重建 */
+  else{ GLR.roomMesh=buildRoomGeometry(R); GLR.roomMesh.userData.roomId=roomId; }
+  sceneCacheRoom(roomId,GLR.roomMesh);
   GLR.scene.add(GLR.roomMesh);
   if(roomId==='garage1'){
     GLR.roamFig=buildRoamFigure();
@@ -80,11 +115,16 @@ function enterWorldRoom(roomId){
 }
 function enterWorldOut(){
   clearWorldMesh();
-  if(MAT_RESET_PENDING){ MAT_RESET_PENDING=false; matReset(); }
+  if(MAT_RESET_PENDING){ MAT_RESET_PENDING=false; matReset(); sceneCacheClear(); }
+  sceneCacheCheck();
   try{ ncClear(); }catch(e){}      /* 出去就没有同班同学了 */
-  GLR.outMesh=buildOutdoorGeometry();
-  GLR.outMesh.userData=GLR.outMesh.userData||{};
-  GLR.outMesh.userData.__outworld=1;
+  if(SCENE_CACHE.out) GLR.outMesh=SCENE_CACHE.out;               /* 出来过：直接用（OUT_SOLID、路灯位置也还是那一份） */
+  else{
+    GLR.outMesh=buildOutdoorGeometry();
+    GLR.outMesh.userData=GLR.outMesh.userData||{};
+    GLR.outMesh.userData.__outworld=1;
+    SCENE_CACHE.out=GLR.outMesh;
+  }
   GLR.scene.add(GLR.outMesh);
   try{ shadeMarkMesh(GLR.outMesh); }catch(e){}
   GLR.scene.fog=new THREE.FogExp2(FOG_COL,0.020);

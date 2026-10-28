@@ -26,15 +26,16 @@ function buildRoomGeometry(R){
   R.stairExtra=[];                 /* 以前每进一次房间都往里追加一遍，越积越多 */
   R.propExtra=[];                  /* 大件家具的真实占地（米，房间中心为原点） */
   R.foot={};                       /* 每格家具模型在人身高范围内的占地矩形（米），碰撞用它 */
-  var K=new Kit();
   var W=R.cols,H=R.rows,tw=TTILE*U2M,th=TTILE*U2M;
   var halfW=W*tw*0.5, halfH=H*th*0.5;
   var isRoof=(R.host==='teach'&&R.floor===6);
   var RWH=R.spiral?SPIRAL.wallH:WALLH;           /* 钟楼里面是通高的 */
+  /* 贴地朝下的面不建；有吊顶的房间，贴吊顶朝上的面也不建；顶点多的材质按 16 米切块 */
+  var K=new Kit({cull:isRoof?{floor:0.002}:{floor:0.002,ceil:RWH-0.002},chunk:16});
   var TH=roomTheme(R);
   function CX(c){ return (c+0.5)*tw-halfW; }
   function CZ(r){ return (r+0.5)*th-halfH; }
-  var c={R:R,K:K,W:W,H:H,tw:tw,th:th,halfW:halfW,halfH:halfH,CX:CX,CZ:CZ,theme:TH,
+  var c={R:R,K:K,W:W,H:H,tw:tw,th:th,halfW:halfW,halfH:halfH,CX:CX,CZ:CZ,theme:TH,doors:[],
     solid:function(cx,cz,sx,sz){ R.propExtra.push({x0:cx-sx/2,x1:cx+sx/2,z0:cz-sz/2,z1:cz+sz/2}); },
     ao:function(cx,cz,sx,sz,s){ K.g('decal').aoPatch(cx,cz,sx,sz,s); }};
   function G(y,x){ return (y>=0&&x>=0&&y<H&&x<W)?R.grid[y][x]:null; }
@@ -140,18 +141,20 @@ function buildRoomGeometry(R){
     buildSpiral(c);
   }
   R.shafts=SHAFT_ACC||[]; SHAFT_ACC=null;
-  return K.build();
+  R.doorSpecs=c.doors;
+  var grp=K.build();
+  grp.add(buildDoorLeaves(R));
+  return grp;
 }
 
 /* ---- 门：墙厚 1 米，门洞两侧有门套；门扇在 +z 一侧（走廊那边）；开着的门扇转 90° 贴在门洞边 ---- */
 function roomDoor(c,x,y,cx,cz){
   var K=c.K, R=c.R;
-  var isOpen=(typeof OPENDOORS!=='undefined')?!!OPENDOORS[S.room+':'+x+':'+y]:false;
   var l=R.grid[y][x-1], r=R.grid[y][x+1];
   var horiz=(l==='#'||l==='='||r==='#'||r==='=');
   K.frame(cx,cz,horiz?0:Math.PI/2);
   var DTOP=2.10, TH=c.theme;
-  K.g(TH.wallMat).boxFaces(0,(DTOP+WALLH)/2,0,1,WALLH-DTOP,1,TH.wall,0.94,'nsd');                 /* 过梁 */
+  K.g(TH.wallMat).boxFaces(0,(DTOP+WALLH)/2,0,1,WALLH-DTOP,1,TH.wall,0.94,'ns');                  /* 过梁（底面被下面的门框木条整个盖住，不画，免得两面重合闪烁） */
   var dbl=(l==='='), dbr=(r==='=');                                                              /* 双开门：只在外侧立门套 */
   if(!dbl) K.bevel('wood',-0.47,DTOP/2,0,0.06,DTOP,1.0,0x3d474e,1.06,0.01);
   if(!dbr) K.bevel('wood', 0.47,DTOP/2,0,0.06,DTOP,1.0,0x3d474e,1.06,0.01);
@@ -163,6 +166,18 @@ function roomDoor(c,x,y,cx,cz){
     K.box('wood',0,DTOP+0.11,s*0.507,1.13,0.07,0.014,0x4a545c,1.1);
   }
   K.box('stone',0,0.01,0,0.94,0.02,1.0,0x5a6268,1.05);                                         /* 门槛 */
+  if(R.host==='teach'||R.host==='lab'||R.host==='admin'||R.host==='dormN'||R.host==='dormS'){     /* 门牌 */
+    if(!dbl){ K.box('plastic',-0.1,2.32,0.52,0.36,0.14,0.02,0xe8e4dc,1.05); K.box('dark',-0.1,2.32,0.531,0.26,0.06,0.002,0x2a3a4a,1); }
+  }
+  K.unframe();
+  /* 门扇单独成一块（buildDoorLeaf）：开门时只重建这一扇，不用整层楼重建 */
+  if(c.doors) c.doors.push({x:x,y:y,cx:cx,cz:cz,horiz:horiz,dbl:dbl,dbr:dbr});
+}
+/* 门扇：关着的在门洞里；开着的转 90° 贴着门洞边。一间房所有的门扇画进同一个 Kit（只多几次绘制） */
+function buildDoorLeaf(K,R,d){
+  var isOpen=(typeof OPENDOORS!=='undefined')?!!OPENDOORS[doorKeyAt(R,d.x,d.y)]:false;
+  var dbl=d.dbl, dbr=d.dbr;
+  K.frame(d.cx,d.cz,d.horiz?0:Math.PI/2);
   var hingeX=dbl?0.47:-0.43, sw=dbl?-1:1;                     /* 双开门的右扇铰链在右边 */
   if(dbr&&!dbl){ hingeX=-0.47; sw=1; }
   var lw=0.86, lz=0.38, lh=2.04;
@@ -182,10 +197,22 @@ function roomDoor(c,x,y,cx,cz){
     K.bevel('wood',hingeX+sw*0.03,lh/2+0.01,oz,0.045,lh,lw,0x222a30,1.0,0.008);
     K.box('glass',hingeX+sw*0.03,1.55,oz,0.05,0.42,0.28,0x5a7080,1.0);
   }
-  if(R.host==='teach'||R.host==='lab'||R.host==='admin'||R.host==='dormN'||R.host==='dormS'){     /* 门牌 */
-    if(!dbl){ K.box('plastic',-0.1,2.32,0.52,0.36,0.14,0.02,0xe8e4dc,1.05); K.box('dark',-0.1,2.32,0.531,0.26,0.06,0.002,0x2a3a4a,1); }
-  }
   K.unframe();
+}
+function buildDoorLeaves(R){
+  var K=new Kit({cull:{floor:0.002}});
+  (R.doorSpecs||[]).forEach(function(d){ buildDoorLeaf(K,R,d); });
+  var g=K.build(); g.name='doorleaves';
+  return g;
+}
+/* 开门 / 读档以后：只把门扇按 OPENDOORS 重建（以前整层楼重建）；x、y 留着兼容调用处 */
+function roomDoorRefresh(R,x,y){
+  var grp=GLR.roomMesh; if(!grp||!R||!R.doorSpecs) return;
+  var old=grp.getObjectByName('doorleaves');
+  if(old){ grp.remove(old); old.traverse(function(o){ if(o.geometry) o.geometry.dispose(); }); }
+  var g=buildDoorLeaves(R);
+  try{ shadeMarkMesh(g); }catch(e){}
+  grp.add(g);
 }
 /* ---- 外墙上的出口：门框 + 两扇玻璃门 + 推杠 + 门上的安全出口灯 ---- */
 function roomExit(c,x,y,cx,cz){

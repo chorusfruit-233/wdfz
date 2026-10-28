@@ -208,6 +208,48 @@ class EngineTest(unittest.TestCase):
         self.assert_js(page, "GLR.handRoot.visible&&GLR.handRoot.parent===GLR.handScene&&HANDS.R.parent===GLR.handRoot")
         self.assert_js(page, "(function(){var inMain=false;GLR.scene.traverse(function(o){if(o===HANDS.R) inMain=true;});return !inMain;})()")
 
+    # ---------- 建模内核：紧凑顶点、隐藏面剔除、场景缓存、开门只换门扇 ----------
+    def test_kit_uses_compact_vertex_data(self):
+        page = self.page(q=1)
+        info = page.evaluate("""(function(){
+          var K=new Kit({}); K.box('wood',0,0.5,0,1,1,1,0x808080,1.0);
+          var g=K.build().children[0].geometry, a=g.attributes;
+          return {n:a.normal.array.constructor.name, nn:a.normal.normalized,
+                  c:a.color.array.constructor.name, cn:a.color.normalized,
+                  i:g.index.array.constructor.name, v:a.position.count, t:g.index.count/3,
+                  ny:a.normal.getY(0)};
+        })()""")
+        self.assertEqual((info['n'], info['nn'], info['i']), ('Int8Array', True, 'Uint16Array'))
+        self.assertIn(info['c'], ('Uint8Array', 'Uint16Array'))
+        self.assertEqual((info['v'], info['t']), (24, 12))
+        self.assertIn(round(info['ny'], 3), (-1.0, 0.0, 1.0), '法线压成 8 位后读出来仍是单位方向')
+
+    def test_hidden_faces_on_floor_are_skipped_only_when_asked(self):
+        page = self.page(q=1)
+        counts = page.evaluate("""[null,{floor:0.002},{floor:0.002,ceil:1.0}].map(function(c){
+          var K=new Kit({cull:c}); K.box('wood',0,0.5,0,1,1,1,0x808080,1.0);
+          return K.build().children[0].geometry.index.count/3; })""")
+        self.assertEqual(counts, [12, 10, 8], '贴地的底面、顶到天花板的顶面不画；人物等不开剔除的照旧')
+
+    def test_rooms_and_outdoor_are_reused_and_door_only_rebuilds_its_leaf(self):
+        page = self.page(q=1)
+        page.evaluate("Game.start('easy');running=false;clearIntroTimers();S.screen='play'")
+        page.evaluate("S.mode='in';S.room='teach1';doEnterRoom('teach1');running=false;window.__g1=GLR.roomMesh")
+        page.evaluate("S.mode='out';S.room=null;enterWorldOut();window.__o1=GLR.outMesh")
+        page.evaluate("S.mode='in';S.room='teach1';doEnterRoom('teach1');running=false")
+        self.assert_js(page, "GLR.roomMesh===__g1&&GLR.roomMesh.parent===GLR.scene", '第二次进同一层楼直接用上次建好的')
+        page.evaluate("S.mode='out';S.room=null;enterWorldOut()")
+        self.assert_js(page, "GLR.outMesh===__o1", '第二次出门直接用上次建好的室外')
+        page.evaluate("S.mode='in';S.room='teach1';doEnterRoom('teach1');running=false")
+        r = page.evaluate("""(function(){
+          var R=INTERIORS['teach1'], d=R.doorSpecs[0], g=GLR.roomMesh, old=g.getObjectByName('doorleaves');
+          var n0=g.children.length;
+          OPENDOORS[doorKeyAt(R,d.x,d.y)]=true; roomDoorRefresh(R,d.x,d.y);
+          var nw=g.getObjectByName('doorleaves');
+          return {same:GLR.roomMesh===g, swapped:!!nw&&nw!==old&&!old.parent, n:g.children.length===n0};
+        })()""")
+        self.assertEqual(r, {'same': True, 'swapped': True, 'n': True}, '开门只重建门扇这一块，整层楼和同学不动')
+
 
 if __name__ == '__main__':
     unittest.main()

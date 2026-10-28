@@ -256,7 +256,7 @@ function tryInteract(){
     if(!OPENDOORS[doorKeyAt(R,hit.c,hit.r)]){
       OPENDOORS[doorKeyAt(R,hit.c,hit.r)]=1;
       SFX.door(); os(pick(['我：门开了。','我：门开了。合页的声音拖得很长。','我：门开了。里面比外面冷。']),1.8); S.enterCool=0.35;
-      enterWorldRoom(S.room);
+      roomDoorRefresh(R,hit.c,hit.r);                   /* 只重建这一扇门（以前整层楼重建，同学还会重新随机坐） */
     }else{
       os('我：门开着。',1.4);
     }

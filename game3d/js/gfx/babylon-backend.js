@@ -64,7 +64,7 @@
   /* ---------- 几何体 ---------- */
   function attrArray(a,size){
     if(!a) return null;
-    if(!a.isInterleavedBufferAttribute&&a.itemSize===size) return a.array;
+    if(!a.isInterleavedBufferAttribute&&a.itemSize===size&&a.array instanceof Float32Array&&!a.normalized) return a.array;   /* 压缩格式（8 位法线、半精度颜色）逐个换算 */
     var n=a.count, out=new Float32Array(n*size), i, k;
     var get=[a.getX,a.getY,a.getZ,a.getW];
     for(i=0;i<n;i++) for(k=0;k<size;k++) out[i*size+k]=k<a.itemSize?get[k].call(a,i):(k===3?1:0);

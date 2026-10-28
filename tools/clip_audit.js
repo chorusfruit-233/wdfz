@@ -38,7 +38,7 @@ var ClipAudit=(function(){
     w.__clip=1; holder[name]=w;
   }
   Object.keys(FURN).forEach(function(ch){ wrapFn(FURN,ch,function(c,x,y){ return 'furn:'+ch+'@'+x+','+y; }); });
-  [['roomDoor','door'],['roomExit','exit'],['roomStairs','stair'],['wallWindow','window'],['ceilingLight','light'],['buildSpiral','spiral'],['roomDecor','decor'],
+  [['roomDoor','door'],['buildDoorLeaf','door'],['roomExit','exit'],['roomStairs','stair'],['wallWindow','window'],['ceilingLight','light'],['buildSpiral','spiral'],['roomDecor','decor'],
    ['buildTree','tree'],['bldClassroom','bld'],['bldDorm','bld'],['bldBell','bld'],['bldCanteen','bld'],['bldSmall','bld'],['bldShed','shed'],['bldLink','link'],
    ['garageRamp','ramp'],['garagePed','garageped'],['fieldModel','field'],['courtModel','court'],['courtGear','courtgear'],['fenceRun','fence'],['gateModel','gate'],
    ['acUnit','ac'],['addEntrance','entrance'],['addSmallDoor','smalldoor'],['roofTop','rooftop'],['facadeWindows','facadewin'],['bandAround','band']

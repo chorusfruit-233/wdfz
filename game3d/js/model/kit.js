@@ -3,7 +3,9 @@
      · 顶点色决定颜色；贴图坐标按世界坐标投影（法线朝哪个轴就用另外两个轴），所以纹理在物体之间连续。
      · frame(x,z,rotY) 设一个局部坐标系：家具按自己的"正面"建，放的时候再转过去。
    Kit：按材质分开的一组 GeoBuilder，最后 build() 成一个 Group（每种材质一个 Mesh）。
-   "流畅"画质下倒角退化成普通盒、圆柱减段数，顶点数大约少一半。 */
+   "流畅"画质下倒角退化成普通盒、圆柱减段数，顶点数大约少一半。
+   省资源（画出来和以前一样）：类型化数组建模、压缩顶点格式、不建贴地朝下 / 贴吊顶朝上的面、
+   大网格按位置切块做视锥剔除。数字见 docs/3D更新说明.md「建模内核重写」。 */
 'use strict';
 
 function hash2(a,b){ var h=(a*374761393+b*668265263)^0x5bf03635; h=(h^(h>>13))*1274126177; return ((h^(h>>16))>>>0)/4294967295; }
@@ -18,12 +20,33 @@ function lodLow(){ return QP().lodLow; }
 function lodSeg(seg,min){ return Math.max(min||4,Math.round(seg*QP().segMul)); }
 
 var UVTILE=2.4;
+/* ---- 存储：类型化数组，按需翻倍扩容 ----
+   以前每个分量都 push 进普通数组（每个数 8 字节，还要再拷一份成 Float32Array），一层楼要过几十万个临时数组。
+   现在建模时直接写进 Float32Array / Int8Array，出网格时只拷一次实际用到的长度。
+   法线建模时就存成 8 位整数（×127），颜色、贴图坐标先存 32 位浮点，出网格时再压缩（见 geoFromArrays）。 */
 function GeoBuilder(uv,K){
-  this.p=[]; this.n=[]; this.c=[]; this.u=[]; this.i=[]; this.v=0;
   this.uv=uv||UVTILE; this.K=K||null;
   this.T={x:0,y:0,z:0,c:1,s:0};
+  this.v=0; this.ni=0; this.vc=0; this.ic=0;
+  this.P=null; this.N=null; this.C=null; this.U=null; this.I=null;
 }
-var BoxBuilder=GeoBuilder;          /* 旧名字：室外的灯头、亮窗等还在用 */
+var BoxBuilder=GeoBuilder;          /* 旧名字 */
+GeoBuilder.prototype._grow=function(nv,ni){
+  var c, a;
+  if(nv>this.vc){
+    c=Math.max(256,nv,this.vc*2);
+    a=new Float32Array(c*3); if(this.P) a.set(this.P.subarray(0,this.v*3)); this.P=a;
+    a=new Int8Array(c*3);    if(this.N) a.set(this.N.subarray(0,this.v*3)); this.N=a;
+    a=new Float32Array(c*3); if(this.C) a.set(this.C.subarray(0,this.v*3)); this.C=a;
+    a=new Float32Array(c*2); if(this.U) a.set(this.U.subarray(0,this.v*2)); this.U=a;
+    this.vc=c;
+  }
+  if(ni>this.ic){
+    c=Math.max(384,ni,this.ic*2);
+    a=new Uint32Array(c); if(this.I) a.set(this.I.subarray(0,this.ni)); this.I=a;
+    this.ic=c;
+  }
+};
 GeoBuilder.prototype.tf=function(){ return this.K?this.K.T:this.T; };
 GeoBuilder.prototype.frame=function(x,z,rot,y){ var T=this.tf(); T.x=x||0; T.z=z||0; T.y=y||0; T.c=Math.cos(rot||0); T.s=Math.sin(rot||0); return this; };
 GeoBuilder.prototype.unframe=function(){ return this.frame(0,0,0,0); };
@@ -34,21 +57,44 @@ GeoBuilder.prototype._rgb=function(col,shade){
   shade=shade===undefined?1:shade;
   return [((col>>16)&255)/255*shade, ((col>>8)&255)/255*shade, (col&255)/255*shade];
 };
-/* 加一个多边形面（3 或 4 个点，局部坐标），n 为局部法线 */
+/* 加一个多边形面（3 或 4 个点，局部坐标），n 为局部法线。
+   Kit 设了 cull 时，永远看不见的面不建：
+     · 贴着地面、朝下的面（家具、台阶、墙脚压在地上的那一面；镜头永远在地面以上）；
+     · 有吊顶的房间里，贴着吊顶、朝上的面（吊顶挡着，镜头在下面）。 */
+var FACE_W=new Float64Array(12);
 GeoBuilder.prototype.face=function(pts,n,rgb,noTf){
-  var P=this.p,N=this.n,C=this.c,U=this.u,v=this.v,k;
-  var nw=noTf?n:this._nm(n[0],n[1],n[2]);
-  var ax=Math.abs(nw[0]), ay=Math.abs(nw[1]), az=Math.abs(nw[2]);
-  for(k=0;k<pts.length;k++){
-    var w=noTf?pts[k]:this._pt(pts[k][0],pts[k][1],pts[k][2]);
-    P.push(w[0],w[1],w[2]); N.push(nw[0],nw[1],nw[2]); C.push(rgb[0],rgb[1],rgb[2]);
-    if(ax>=ay&&ax>=az) U.push(w[2]/this.uv, w[1]/this.uv);
-    else if(ay>=az) U.push(w[0]/this.uv, w[2]/this.uv);
-    else U.push(w[0]/this.uv, w[1]/this.uv);
+  var T=this.tf(), m=pts.length, k, nx, ny, nz, W=FACE_W, ymin=1e9, ymax=-1e9;
+  if(noTf){ nx=n[0]; ny=n[1]; nz=n[2]; }
+  else{ nx=n[0]*T.c+n[2]*T.s; ny=n[1]; nz=-n[0]*T.s+n[2]*T.c; }
+  for(k=0;k<m;k++){
+    var q=pts[k], wx, wy, wz;
+    if(noTf){ wx=q[0]; wy=q[1]; wz=q[2]; }
+    else{ wx=T.x+q[0]*T.c+q[2]*T.s; wy=T.y+q[1]; wz=T.z-q[0]*T.s+q[2]*T.c; }
+    W[k*3]=wx; W[k*3+1]=wy; W[k*3+2]=wz;
+    if(wy<ymin) ymin=wy; if(wy>ymax) ymax=wy;
   }
-  if(pts.length===3) this.i.push(v,v+1,v+2);
-  else this.i.push(v,v+1,v+2, v,v+2,v+3);
-  this.v=v+pts.length;
+  var cull=this.K&&this.K.cull;
+  if(cull){
+    if(ny<-0.9&&ymax<=cull.floor) return;
+    if(cull.ceil!==undefined&&ny>0.9&&ymin>=cull.ceil) return;
+  }
+  var v=this.v, ni=this.ni;
+  this._grow(v+m, ni+(m===3?3:6));
+  var P=this.P, N=this.N, C=this.C, U=this.U, I=this.I, uv=this.uv;
+  var ax=Math.abs(nx), ay=Math.abs(ny), az=Math.abs(nz), axis=(ax>=ay&&ax>=az)?0:(ay>=az?1:2);
+  var qx=Math.round(nx*127), qy=Math.round(ny*127), qz=Math.round(nz*127);
+  for(k=0;k<m;k++){
+    var o=(v+k)*3, o2=(v+k)*2, x=W[k*3], y=W[k*3+1], z=W[k*3+2];
+    P[o]=x; P[o+1]=y; P[o+2]=z;
+    N[o]=qx; N[o+1]=qy; N[o+2]=qz;
+    C[o]=rgb[0]; C[o+1]=rgb[1]; C[o+2]=rgb[2];
+    if(axis===0){ U[o2]=z/uv; U[o2+1]=y/uv; }
+    else if(axis===1){ U[o2]=x/uv; U[o2+1]=z/uv; }
+    else{ U[o2]=x/uv; U[o2+1]=y/uv; }
+  }
+  if(m===3){ I[ni]=v; I[ni+1]=v+1; I[ni+2]=v+2; this.ni=ni+3; }
+  else{ I[ni]=v; I[ni+1]=v+1; I[ni+2]=v+2; I[ni+3]=v; I[ni+4]=v+2; I[ni+5]=v+3; this.ni=ni+6; }
+  this.v=v+m;
 };
 GeoBuilder.prototype.box=function(x,y,z,sx,sy,sz,col,shade){
   var rgb=this._rgb(col,shade), hx=sx/2,hy=sy/2,hz=sz/2;
@@ -180,19 +226,119 @@ GeoBuilder.prototype.aoPatch=function(x,z,sx,sz,strength){
   this.quad(x-sx*0.56,z-sz*0.56, x+sx*0.56,z-sz*0.56, x+sx*0.56,z+sz*0.56, x-sx*0.56,z+sz*0.56, 0.0035, s>0.8?0x55524c:0x5c5952);
   this.quad(x-sx*0.44,z-sz*0.44, x+sx*0.44,z-sz*0.44, x+sx*0.44,z+sz*0.44, x-sx*0.44,z+sz*0.44, 0.0045, s>0.8?0x403e3a:0x4a4844);
 };
-GeoBuilder.prototype.build=function(){
-  var g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(this.p,3));
-  g.setAttribute('normal',new THREE.Float32BufferAttribute(this.n,3));
-  g.setAttribute('color',new THREE.Float32BufferAttribute(this.c,3));
-  g.setAttribute('uv',new THREE.Float32BufferAttribute(this.u,2));
-  g.setIndex(this.i);
+/* ---- 出网格：压缩顶点格式 ----
+   位置、贴图坐标仍是 32 位浮点（室外坐标到 280 米，半精度不够）；
+   法线 8 位整数（误差不到半度）；颜色全部 ≤1 时 8 位，否则半精度（有的颜色乘了 >1 的亮度，8 位会截断）。
+   一个顶点从 44 字节降到 26–29 字节。顶点数 ≤ 65535 的用 16 位索引。 */
+var GEO_HALF=null, GEO_HT=null;
+/* 32 位浮点 → 半精度的查表（和 three.js 的 DataUtils.toHalfFloat 同一个算法，内联进循环里省掉函数调用） */
+function geoHalfTables(){
+  if(GEO_HT) return GEO_HT;
+  var base=new Uint32Array(512), shift=new Uint32Array(512), i, e;
+  for(i=0;i<256;i++){
+    e=i-127;
+    if(e<-27){ base[i]=0x0000; base[i|0x100]=0x8000; shift[i]=24; shift[i|0x100]=24; }
+    else if(e<-14){ base[i]=0x0400>>(-e-14); base[i|0x100]=(0x0400>>(-e-14))|0x8000; shift[i]=-e-1; shift[i|0x100]=-e-1; }
+    else if(e<=15){ base[i]=(e+15)<<10; base[i|0x100]=((e+15)<<10)|0x8000; shift[i]=13; shift[i|0x100]=13; }
+    else if(e<128){ base[i]=0x7c00; base[i|0x100]=0xfc00; shift[i]=24; shift[i|0x100]=24; }
+    else{ base[i]=0x7c00; base[i|0x100]=0xfc00; shift[i]=13; shift[i|0x100]=13; }
+  }
+  var buf=new ArrayBuffer(4);
+  GEO_HT={base:base,shift:shift,f:new Float32Array(buf),u:new Uint32Array(buf)};
+  return GEO_HT;
+}
+function geoHalfOK(){
+  if(GEO_HALF===null){ try{ GEO_HALF=!!(GLR&&GLR.renderer&&GLR.renderer.capabilities.isWebGL2); }catch(e){ GEO_HALF=false; } }
+  return GEO_HALF;
+}
+function geoFromArrays(P,N,C,U,I,nv,ni){
+  var g=new THREE.BufferGeometry(), k, cmax=0, n3=nv*3;
+  g.setAttribute('position',new THREE.BufferAttribute(P.slice(0,n3),3));
+  g.setAttribute('normal',new THREE.BufferAttribute(N.slice(0,n3),3,true));
+  for(k=0;k<n3;k++) if(C[k]>cmax) cmax=C[k];
+  if(cmax<=1){
+    var c8=new Uint8Array(n3);
+    for(k=0;k<n3;k++) c8[k]=Math.round(C[k]*255);
+    g.setAttribute('color',new THREE.BufferAttribute(c8,3,true));
+  }else if(geoHalfOK()){
+    var h=new Uint16Array(n3), H=geoHalfTables(), fv=H.f, uv=H.u, base=H.base, shift=H.shift;
+    for(k=0;k<n3;k++){ fv[0]=C[k]; var f=uv[0], e=(f>>23)&0x1ff; h[k]=base[e]+((f&0x007fffff)>>shift[e]); }
+    g.setAttribute('color',new THREE.Float16BufferAttribute(h,3));
+  }else g.setAttribute('color',new THREE.BufferAttribute(C.slice(0,n3),3));
+  g.setAttribute('uv',new THREE.BufferAttribute(U.slice(0,nv*2),2));
+  var idx=(nv<=65535)?new Uint16Array(ni):new Uint32Array(ni);
+  for(k=0;k<ni;k++) idx[k]=I[k];
+  g.setIndex(new THREE.BufferAttribute(idx,1));
   g.computeBoundingSphere();
   return g;
+}
+GeoBuilder.prototype.build=function(){
+  this._grow(1,1);
+  return geoFromArrays(this.P,this.N,this.C,this.U,this.I,this.v,this.ni);
+};
+/* 按位置切块：每个面跟着它第一个顶点所在的格子（size 米）走；一块最多 65535 个顶点（16 位索引）。
+   切开以后镜头背后、视野外的块整块不画（three.js 按每个网格的包围球做视锥剔除）。 */
+/* 切成大约 n 块时格子取多大：按这批顶点在地面上的外包矩形面积平分 */
+GeoBuilder.prototype.cellFor=function(n){
+  var P=this.P, i, x0=1e9, x1=-1e9, z0=1e9, z1=-1e9, m=this.v*3;
+  for(i=0;i<m;i+=3){ var x=P[i], z=P[i+2]; if(x<x0) x0=x; if(x>x1) x1=x; if(z<z0) z0=z; if(z>z1) z1=z; }
+  return Math.max(4,Math.sqrt(Math.max(1,(x1-x0)*(z1-z0))/n));
+};
+GeoBuilder.prototype.buildChunks=function(size){
+  this._grow(1,1);
+  var P=this.P, N=this.N, C=this.C, U=this.U, I=this.I, ni=this.ni, nv=this.v, nt=ni/3, t, i;
+  /* 每个三角形落在哪一格（按它第一个顶点）：同一个面的两个三角形第一个顶点相同，一定在同一格 */
+  var x0=1e9, z0=1e9, x1=-1e9, z1=-1e9;
+  for(i=0;i<nv*3;i+=3){ if(P[i]<x0) x0=P[i]; if(P[i]>x1) x1=P[i]; if(P[i+2]<z0) z0=P[i+2]; if(P[i+2]>z1) z1=P[i+2]; }
+  var gx=Math.max(1,Math.ceil((x1-x0)/size+1e-6)), gz=Math.max(1,Math.ceil((z1-z0)/size+1e-6)), ncell=gx*gz;
+  if(ncell<2) return [this.build()];
+  var cell=new Int32Array(nt), cnt=new Int32Array(ncell+1);
+  for(t=0;t<nt;t++){
+    var v0=I[t*3]*3, cx=Math.min(gx-1,Math.floor((P[v0]-x0)/size)), cz=Math.min(gz-1,Math.floor((P[v0+2]-z0)/size));
+    cell[t]=cx+cz*gx; cnt[cell[t]+1]++;
+  }
+  for(i=0;i<ncell;i++) cnt[i+1]+=cnt[i];
+  var order=new Int32Array(nt), fill=cnt.slice(0,ncell);           /* 计数排序：同一格的三角形排在一起，保持原来的先后 */
+  for(t=0;t<nt;t++) order[fill[cell[t]]++]=t;
+  var out=[], map=new Int32Array(nv), stamp=new Int32Array(nv), sid=0;
+  var P2=new Float32Array(Math.min(nv,65535)*3), N2=new Int8Array(Math.min(nv,65535)*3), C2=new Float32Array(Math.min(nv,65535)*3), U2=new Float32Array(Math.min(nv,65535)*2), I2=new Uint32Array(ni);
+  var c, pos, end;
+  for(c=0;c<ncell;c++){
+    pos=cnt[c]; end=cnt[c+1];
+    while(pos<end){
+      sid++;
+      var cv=0, j=0;
+      /* 一块收到快满 65535 个顶点就另起一块（16 位索引） */
+      while(pos<end){
+        var tt=order[pos]*3, need=0, k;
+        for(k=0;k<3;k++) if(stamp[I[tt+k]]!==sid) need++;
+        if(cv+need>65535&&cv>0) break;
+        for(k=0;k<3;k++){
+          var src=I[tt+k];
+          if(stamp[src]!==sid){
+            stamp[src]=sid; var d=cv++; map[src]=d;
+            P2[d*3]=P[src*3]; P2[d*3+1]=P[src*3+1]; P2[d*3+2]=P[src*3+2];
+            N2[d*3]=N[src*3]; N2[d*3+1]=N[src*3+1]; N2[d*3+2]=N[src*3+2];
+            C2[d*3]=C[src*3]; C2[d*3+1]=C[src*3+1]; C2[d*3+2]=C[src*3+2];
+            U2[d*2]=U[src*2]; U2[d*2+1]=U[src*2+1];
+          }
+          I2[j++]=map[src];
+        }
+        pos++;
+      }
+      out.push(geoFromArrays(P2,N2,C2,U2,I2,cv,j));
+    }
+  }
+  return out;
 };
 
-/* 一组按材质分开的 GeoBuilder */
-function Kit(){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; }
+
+/* 一组按材质分开的 GeoBuilder。
+   opts.cull  —— {floor, ceil}：不建永远看不见的面（见 face）；只给房间、室外这种「地面以上看」的场景用，
+                 人物、杯子这类会被举起来、掉下来的小件不能用。
+   opts.chunk —— 打开切块：顶点多的材质按位置切成几块（每块约 KIT_CHUNK_V 个顶点，最多 KIT_CHUNK_MAX 块），视野外的块不画。 */
+function Kit(opts){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; opts=opts||{}; this.cull=opts.cull||null; this.chunk=opts.chunk||0; }
+var KIT_CHUNK_V=20000, KIT_CHUNK_MAX=8;   /* 切得太碎绘制次数会变多（手机上每次绘制都有开销），所以按顶点数定块数 */
 Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder(matUV(key),this); return this.B[key]; };
 Kit.prototype.frame=function(x,z,rot,y){ this.T.x=x||0; this.T.z=z||0; this.T.y=y||0; this.T.c=Math.cos(rot||0); this.T.s=Math.sin(rot||0); return this; };
 Kit.prototype.unframe=function(){ return this.frame(0,0,0,0); };
@@ -201,8 +347,8 @@ Kit.prototype.unframe=function(){ return this.frame(0,0,0,0); };
 var CAP_Y0=0.10, CAP_Y1=1.85;
 Kit.prototype._cap=function(b,v0,m){
   if(!this.cap||m==='decal'||b.v<=v0) return;
-  var P=b.p, i, x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
-  for(i=v0*3;i<P.length;i+=3){
+  var P=b.P, i, n=b.v*3, x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
+  for(i=v0*3;i<n;i+=3){
     if(P[i]<x0) x0=P[i]; if(P[i]>x1) x1=P[i];
     if(P[i+1]<y0) y0=P[i+1]; if(P[i+1]>y1) y1=P[i+1];
     if(P[i+2]<z0) z0=P[i+2]; if(P[i+2]>z1) z1=P[i+2];
@@ -219,24 +365,31 @@ Kit.prototype.build=function(group){
   var grp=group||new THREE.Group(), k;
   for(k in this.B){
     var b=this.B[k]; if(!b.v) continue;
-    var mesh=new THREE.Mesh(b.build(),matOf(k));
-    if(k==='glass') mesh.renderOrder=2;
-    mesh.userData.matKey=k;
-    grp.add(mesh);
+    var nc=0, geos, j;
+    if(this.chunk) nc=lodLow()?(b.v>65535?Math.ceil(b.v/60000):0)          /* 流畅档（手机）绘制次数更要紧：只在超过 16 位索引时才拆 */
+                              :Math.min(KIT_CHUNK_MAX,Math.floor(b.v/KIT_CHUNK_V));
+    geos=(nc>=2)?b.buildChunks(b.cellFor(nc)):[b.build()];
+    for(j=0;j<geos.length;j++){
+      var mesh=new THREE.Mesh(geos[j],matOf(k));
+      if(k==='glass') mesh.renderOrder=2;
+      mesh.userData.matKey=k;
+      grp.add(mesh);
+    }
   }
   return grp;
 };
 /* 用于小件（人物等）：把 Kit 合成一个几何体，交给调用者自己挂材质 */
 Kit.prototype.mergedGeometry=function(){
-  var all=new GeoBuilder(1), k;
+  var nv=0, ni=0, k, b;
+  for(k in this.B){ nv+=this.B[k].v; ni+=this.B[k].ni; }
+  var P=new Float32Array(nv*3), N=new Int8Array(nv*3), C=new Float32Array(nv*3), U=new Float32Array(nv*2), I=new Uint32Array(ni), v=0, t=0, j;
   for(k in this.B){
-    var b=this.B[k], base=all.v, j;
-    for(j=0;j<b.p.length;j++){ all.p.push(b.p[j]); all.n.push(b.n[j]); all.c.push(b.c[j]); }
-    for(j=0;j<b.u.length;j++) all.u.push(b.u[j]);
-    for(j=0;j<b.i.length;j++) all.i.push(b.i[j]+base);
-    all.v+=b.v;
+    b=this.B[k]; if(!b.v) continue;
+    P.set(b.P.subarray(0,b.v*3),v*3); N.set(b.N.subarray(0,b.v*3),v*3); C.set(b.C.subarray(0,b.v*3),v*3); U.set(b.U.subarray(0,b.v*2),v*2);
+    for(j=0;j<b.ni;j++) I[t+j]=b.I[j]+v;
+    v+=b.v; t+=b.ni;
   }
-  return all.build();
+  return geoFromArrays(P,N,C,U,I,nv,ni);
 };
 
 /* ---- 旧接口：标记高度（准星上的小菱形停在多高）、楼梯朝向 ---- */
