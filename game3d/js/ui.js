@@ -43,8 +43,8 @@ UI.open=function(id){
   var el=document.getElementById(id);
   if(!el) return;
   var previous=UI.openPanel;
-  UI.openPanel=id;
   if(previous&&previous!==id)UI.close(previous,false);
+  UI.openPanel=id;
   if(JOURNAL_TABS[id]){
     UI.lastTab=id;
     var jr=document.getElementById('journal'); if(jr) jr.style.display='flex';

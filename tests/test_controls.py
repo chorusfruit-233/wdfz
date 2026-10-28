@@ -1236,7 +1236,7 @@ class ControlsTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('banner').textContent==='教学楼 1F'&&UI.chooseOpen")
         self.assert_js(page, "AN.id==='roster'&&UI.choiceTimer>0&&document.getElementById('choices').textContent.includes('名单上')")
         page.evaluate("""UI.closeChoice();Math.random=function(){return .5};useRoster(80);""")
-        page.wait_for_timeout(150)
+        page.wait_for_function('!UI.chooseOpen&&AN.data.done', timeout=2000)
         self.assert_js(page, '!UI.chooseOpen&&AN.data.done')
 
     def test_only_hard_to_prevent_anomalies_are_forecast(self):
@@ -1401,6 +1401,101 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, "UI.openPanel==='mapv'&&!!document.getElementById('mapcv')")
         page.keyboard.press('m')
         self.assert_js(page, "!UI.anyOpen()&&document.getElementById('journal').style.display==='none'")
+
+    def test_journal_hides_when_replaced_by_pause(self):
+        page = self.page()
+        page.keyboard.press('Tab')
+        page.evaluate('Game.pause()')
+        self.assertTrue(page.locator('#pause').is_visible())
+        self.assertFalse(page.locator('#journal').is_visible())
+        page.locator('#pause button', has_text='继续').click()
+        page.evaluate("os('恢复后字幕可见',3)")
+        self.assertTrue(page.locator('#sub').is_visible())
+        self.assert_js(page, "!UI.anyOpen()&&!document.body.classList.contains('jopen')")
+
+    def test_narrow_portrait_hotbar_is_visible_and_tappable(self):
+        page = self.page(touch=True)
+        for height in (568, 480):
+            with self.subTest(height=height):
+                page.set_viewport_size({'width': 320, 'height': height})
+                page.evaluate("S.bag=['brolly','torch','watch'];S.hot=['brolly','torch'];USE.brollyShield=false;USE.torch=false;UI.renderHot();updateHUD()")
+                status = page.locator('#status').bounding_box()
+                book = page.locator('#tBook').bounding_box()
+                seconds = page.locator('#secclock').bounding_box()
+                self.assertLess(status['x']+status['width'], book['x'])
+                self.assertLessEqual(seconds['x']+seconds['width'], status['x']+status['width'])
+                stick = page.locator('#stick').bounding_box()
+                for selector in ('#hot .hslot', '#tTorch'):
+                    for control in page.locator(selector).all():
+                        rect = control.bounding_box()
+                        self.assertGreaterEqual(rect['x'], 0)
+                        self.assertLessEqual(rect['x']+rect['width'], 320)
+                        self.assertLess(rect['y']+rect['height'], stick['y'])
+                page.locator('#hot .hslot').nth(0).tap()
+                self.assert_js(page, 'USE.brollyShield')
+                page.locator('#hot .hslot').nth(1).tap()
+                self.assert_js(page, 'USE.torch')
+                page.locator('#tBook').tap()
+                self.assertTrue(page.locator('#journal').is_visible())
+                page.locator('#journal .jclose').tap()
+
+    def test_bell_platform_opening_clearance_and_collision(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+            doEnterRoom('bell1');running=false;
+            const R=INTERIORS.bell1,s=SPIRAL;
+            GLR.roomMesh.updateMatrixWorld(true);
+            function point(a,r=1.6){
+                return {x:s.cx+Math.cos(a)*r,z:s.cz+Math.sin(a)*r};
+            }
+            const a=s.th0+s.amax-3.5,p=point(a),floor=(s.amax-3.5)/TAU*s.turnH;
+            const ray=new THREE.Raycaster(new THREE.Vector3(p.x,floor+.35,p.z),
+                new THREE.Vector3(0,1,0),0,EYE-.35);
+            const headHits=ray.intersectObject(GLR.roomMesh,true).length;
+            SP.state='top';SP.a=s.amax;
+            function blocked(offset){
+                const p=point(s.th0+s.amax+offset);
+                return spiralSolid(R,R.ox+(p.x+R.cols/2)*9,R.oy+(p.z+R.rows/2)*9);
+            }
+            const result={headHits,holeBlocked:blocked(-3.5),platformFree:!blocked(.5),
+                stairFree:!blocked(-.2)};
+            function world(a,r=1.6){const p=point(a,r);return {x:R.ox+(p.x+R.cols/2)*9,y:R.oy+(p.z+R.rows/2)*9};}
+            function walk(target){
+                for(let i=0;i<1000;i++){
+                    const dx=target.x-S.x,dy=target.y-S.y,len=Math.hypot(dx,dy);
+                    if(len<.02) return;
+                    moveBy(dx/len*Math.min(len,.3),dy/len*Math.min(len,.3));spiralUpdate();
+                }
+                throw Error('Stairs blocked at '+JSON.stringify(target));
+            }
+            // Only the starting position is placed; ascent/descent must obey player collision.
+            const start=world(s.th0,3);S.x=start.x;S.y=start.y;spiralReset();
+            walk(world(s.th0));
+            for(let a=s.th0+.04;a<s.th0+s.amax+.6;a+=.04) walk(world(a));
+            result.reachedBell=bellReach()&&S.floorY===s.topH;
+            for(let a=s.th0+s.amax+.55;a>s.th0+s.amax-.4;a-=.04) walk(world(a));
+            result.descended=SP.state==='stair'&&S.floorY<s.topH;
+            return result;
+        }""")
+        self.assertEqual(result, {'headHits': 0, 'holeBlocked': True,
+                                  'platformFree': True, 'stairFree': True,
+                                  'reachedBell': True, 'descended': True})
+
+    def test_pill_effect_survives_reload_and_old_saves_default_to_zero(self):
+        page = self.page()
+        page.evaluate("S.tsec=760;S.san=10;S.bag=['pill'];useItem('pill');updateSystems(.5);saveGame()")
+        saved = page.evaluate('({time:S.pillT,san:S.san})')
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        self.assertEqual(page.evaluate('({time:S.pillT,san:S.san})'), saved)
+        page.keyboard.press('Tab')
+        page.evaluate('update(1)')
+        self.assertEqual(page.evaluate('S.pillT'), saved['time'])
+        page.keyboard.press('Tab')
+        page.evaluate('updateSystems(.5)')
+        self.assertAlmostEqual(page.evaluate('S.pillT'), saved['time']-.5)
+        page.evaluate("const d=loadGame();delete d.pillT;localStorage.setItem('wdfz3d',JSON.stringify(d));Game.continue_();running=false")
+        self.assert_js(page, 'S.pillT===0')
 
     def test_bag_detail_buttons_use_hotbar_and_drop(self):
         page = self.page()

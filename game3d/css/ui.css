@@ -25,6 +25,7 @@
   --ui-bad:#d8665a;
   --ui-blue:#7fb4e0;
   --ui-r:10px;
+  --touch-quick:58px;
   --sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px);
   --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
 }
@@ -40,7 +41,8 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 .hud-card{position:absolute;left:calc(16px + var(--sl));top:calc(14px + var(--st));min-width:196px;max-width:260px;
   padding:10px 14px 12px;background:var(--ui-bg);border:1px solid var(--ui-line);border-radius:var(--ui-r);
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 4px 18px rgba(0,0,0,.35)}
-.hc-top{display:flex;align-items:baseline;gap:10px}
+.hc-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+body.touch .hud-card{max-width:min(260px,calc(100vw - 164px - var(--sl) - var(--sr)))}
 #clock{font:700 26px/1.1 var(--ui-mono);letter-spacing:2px;color:#e6f5ec;text-shadow:0 0 12px rgba(120,220,180,.35)}
 #secclock{font:15px/1 var(--ui-mono);letter-spacing:1px;color:var(--ui-warn)}
 #period{margin-top:5px;font-size:13px;letter-spacing:1px;display:flex;align-items:center;gap:7px}
@@ -263,7 +265,8 @@ body.touch #sub{bottom:calc(24px + var(--sb));max-width:calc(100vw - 2 * 200px -
   #knob{left:47px;top:47px}
 }
 /* 矮屏（横屏手机）：整套缩一档 */
-@media (max-height:520px){
+@media (max-height:520px) and (orientation:landscape){
+  :root{--touch-quick:54px}
   .hud-card{min-width:170px;padding:8px 12px 10px}
   #clock{font-size:22px}
   #mini{width:120px;height:120px}
@@ -290,6 +293,11 @@ body.touch #sub{bottom:calc(24px + var(--sb));max-width:calc(100vw - 2 * 200px -
   .jtabs button{padding:6px 10px}
   .srow>span{width:64px}
   .hud-card{min-width:0}
+}
+/* 竖屏将三个快捷控件作为一排居中，320px 宽度也不会把第一格推出屏幕。 */
+@media (orientation:portrait){
+  body.touch .bc{right:calc(50% - var(--touch-quick) / 2)}
+  #tside{right:calc(50% - var(--touch-quick) * 1.5 - 12px)}
 }
 /* 演出、前情提要时整套界面让开 */
 body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0!important;transition:opacity .3s}

@@ -27,6 +27,11 @@ SPIRAL.wallH=SPIRAL.topH+3.4;
 var SP={state:'ground',a:0,th:0};
 
 function spWrap(a){ return ((a+PI)%TAU+TAU)%TAU-PI; }
+/* 平台开口超过半圈，须保留到楼梯顶的整圈负偏角，不能用 ±π 的最短角差。 */
+function spTopOffset(th){
+  var d=((th-SPIRAL.th0-SPIRAL.amax)%TAU+TAU)%TAU;
+  return d>0?d-TAU:0;
+}
 function spPolar(R,wx,wy){
   var p=worldToScene(wx,wy,R), dx=p.x-SPIRAL.cx, dz=p.z-SPIRAL.cz;
   return {r:Math.sqrt(dx*dx+dz*dz), th:Math.atan2(dz,dx)};
@@ -56,12 +61,12 @@ function spiralSolid(R,wx,wy){
   }
   if(SP.state==='stair'){
     var a=SP.a+spWrap(q.th-SP.th);
-    if(a>=SPIRAL.amax) return q.r>SPIRAL.rOut;              /* 走上顶层平台 */
     if(q.r<SPIRAL.rIn) return true;
+    if(a>=SPIRAL.amax) return q.r>SPIRAL.rOut;              /* 走上顶层平台 */
     if(q.r>SPIRAL.rOut) return a>0.35;                      /* 只有最下面一两级能从侧面迈下去，再往上有栏杆 */
     return false;
   }
-  var dh=spWrap(q.th-(SPIRAL.th0+SPIRAL.amax));
+  var dh=spTopOffset(q.th);
   if(ring&&dh<=0&&dh>=-SPIRAL.hole) return dh<-SPIRAL.arrive;   /* 楼梯口上方 */
   return q.r>SPIRAL.rOut||q.r<SPIRAL.rIn;                   /* 顶层：四周是栏杆，中间是钟 */
 }
@@ -80,7 +85,7 @@ function spiralUpdate(){
       if(!RT.bellTopTold){ RT.bellTopTold=1; os('我：楼梯到头了。钟就挂在头顶，铜锈的味道很重。',3.6); }
     }
   }else{
-    var dh=spWrap(q.th-(SPIRAL.th0+SPIRAL.amax));
+    var dh=spTopOffset(q.th);
     if(ring&&dh<=0&&dh>=-SPIRAL.arrive){ SP.state='stair'; SP.a=SPIRAL.amax+dh; }   /* 从口子走回楼梯 */
   }
   SP.th=q.th;
@@ -117,7 +122,7 @@ function buildSpiral(c){
   var segs=40, sa=TAU/segs, top=s.topH, tEnd=s.th0+s.amax;
   K.cyl('stone',s.cx,top-0.16,s.cz,s.rIn+0.02,s.rIn+0.02,0.16,16,0x6e685e,1.0);
   for(i=0;i<segs;i++){
-    var am=i*sa+sa/2, d=spWrap(am-tEnd);
+    var am=i*sa+sa/2, d=spTopOffset(am);
     if(d<=0&&d>=-s.hole) continue;
     K.frame(s.cx+Math.cos(am)*rm,s.cz+Math.sin(am)*rm,-am,0);
     K.box('stone',0,top-0.08,0,len,0.16,rm*sa*1.12,0x7e786c,1.0);

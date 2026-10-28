@@ -236,11 +236,10 @@ var ClipAudit=(function(){
 
   /* ---------- 室内 ---------- */
   function room(id){
-    var R=INTERIORS[id]; if(!R) return [];
+    var R=INTERIORS[id]; if(!R) throw new Error('未知房间：'+id);
     REC={list:[],mat:'',outdoor:false}; OWN=[]; OWNID=0;
-    var savedPiano=S.__pianoPlaced, g;
-    try{ g=buildRoomGeometry(R); }finally{ REC.done=1; }
-    var list=REC.list; REC=null; S.__pianoPlaced=savedPiano;
+    var savedPiano=S.__pianoPlaced, list=REC.list, g;
+    try{ g=buildRoomGeometry(R); }finally{ REC=null; S.__pianoPlaced=savedPiano; }
     g.traverse(function(o){ if(o.geometry) o.geometry.dispose(); });
     var issues=overlaps(list,{self:true}).map(function(x){ x.room=id; return x; });
     var tw=R.tw*U2M, halfW=R.cols*tw/2, halfH=R.rows*tw/2;
@@ -320,11 +319,12 @@ var ClipAudit=(function(){
       xhr.responseText.split('\n').forEach(function(l,i){ var m=l.match(/\/\* ---- ([^：:（( -]+)/); if(m) PROP_SECT.push([i+1,m[1]]); });
     }
     REC={list:[],mat:'',outdoor:true}; OWN=[]; OWNID=0;
-    var g;
+    var g, list=REC.list;
     var savedOut=OUT_SOLID.slice();
-    try{ g=buildOutdoorGeometry(); }finally{ REC.done=1; }
-    var list=REC.list; REC=null;
-    OUT_SOLID.length=0; savedOut.forEach(function(x){ OUT_SOLID.push(x); });
+    try{ g=buildOutdoorGeometry(); }finally{
+      REC=null;
+      OUT_SOLID.length=0; savedOut.forEach(function(x){ OUT_SOLID.push(x); });
+    }
     g.traverse(function(o){ if(o.geometry) o.geometry.dispose(); });
     /* 零碎道具：同一段里按空间连通分成实例 */
     var props=list.filter(function(p){ return /^prop:/.test(p.o); }), parent=props.map(function(_,i){ return i; });

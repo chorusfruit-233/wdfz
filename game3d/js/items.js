@@ -56,7 +56,7 @@ function toggleTorch(){
 }
 function useHot(i){
   var id=S.hot[i];
-  if(!id){ toast('快捷栏 '+(i+1)+' 是空的 —— Tab 打开背包，点格子右上角 '+(i?'②':'①')); return; }
+  if(!id){ toast('快捷栏 '+(i+1)+' 是空的 —— 打开手册背包，选中物品后点「放到快捷栏 '+(i+1)+'」'); return; }
   if(!hasItem(id)){ S.hot[i]=null; var el=document.getElementById('hot'); if(el) el._sig=''; toast('「'+ITEMS[id].n+'」已经不在了'); UI.renderHot(); return; }
   useItem(id);
 }
