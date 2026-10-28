@@ -84,8 +84,8 @@ function physicalKey(e){
   return codes[e.code]||e.key.toLowerCase();
 }
 function initTouchActivation(){
-  var taps=new Map(),lastTarget=null,lastParent=null,lastIndex=-1,lastBagIndex=-1,lastTime=-1000;
-  var selector='button,.close,.tb2,.hslot,.idea,#bag .s,.hb b';
+  var taps=new Map(),lastTarget=null,lastParent=null,lastIndex=-1,lastBagIndex=-1,lastTime=-1000,lastDone=-1000;
+  var selector='button,.close,.hslot,.idea,#bag .s';
   function control(target){return target.closest?target.closest(selector):null;}
   function bagIndex(el){
     var slot=el&&el.closest?el.closest('#bags .s'):null;
@@ -110,6 +110,9 @@ function initTouchActivation(){
     // 用松指事件触发按钮：浏览器在一次视角滑动后可能不再发送兼容 click。
     // pointerup 保留真实用户激活，全屏请求仍可在这里同步发起。
     tap.el.click();
+    /* 记下按钮处理完的时刻：坐下、进房间这类操作在手机上可能跑上大半秒，
+       浏览器补发的那次 click 要等它跑完才派发，按松指时刻算会超出窗口，于是同一个键被按了两次 */
+    lastDone=performance.now();
   },{capture:true,passive:true});
   document.addEventListener('click',function(e){
     var touch=e.pointerType==='touch'||e.pointerType==='pen'||
@@ -119,7 +122,10 @@ function initTouchActivation(){
     var same=target===lastTarget||(lastTarget&&!lastTarget.isConnected&&target&&
       ((lastParent&&lastParent===target.parentElement&&lastIndex===Array.prototype.indexOf.call(lastParent.children,target))||
        (lastBagIndex>=0&&bagIndex(target)===lastBagIndex)));
-    if(e.isTrusted&&touch&&same&&performance.now()-lastTime<600){
+    /* 松指刚处理过一次：补发的 click 不管落在哪个按钮上都吞掉（按钮处理后弹出的选择框、
+       换出来的面板正好在手指下面时，以前会被这次补发的 click 再点一下） */
+    var ghost=(target||e.target===document.getElementById('cv'))&&performance.now()-lastDone<800;
+    if(e.isTrusted&&touch&&((same&&performance.now()-lastTime<600)||ghost)){
       e.preventDefault();e.stopImmediatePropagation();
     }
   },true);
@@ -166,6 +172,7 @@ function initInput(){
       if([' ','w','arrowup','enter'].indexOf(k)>=0){e.preventDefault();if(!e.repeat)PHONE.flap();}
       return;
     }
+    if(UI.chooseOpen&&!PAUSE.on&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)UI.choiceKey(+k);return;}
     if(PAUSE.on||DEV.on||UI.chooseOpen||S.intro>0)return;
     if(['tab','h','j','m'].indexOf(k)>=0){
       e.preventDefault();if(!e.repeat)UI.toggle({tab:'bag',h:'think',j:'note',m:'mapv'}[k]);return;
@@ -322,4 +329,4 @@ function updatePlayer(dt){
   if(S.enterCool>0)S.enterCool-=dt;
   syncCamera(dt);
 }
-var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=10,STAM_BACK=35;
+var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=30,STAM_BACK=35;

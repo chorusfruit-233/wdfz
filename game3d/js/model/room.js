@@ -234,12 +234,14 @@ function roomStairs(c,x,y,cx,cz){
     bx(runOff-tread*0.44,hgt-0.003,0.05,0.008,wid*0.96,0x5a5e60,1.0,'metal');                     /* 防滑条 */
     bx(runOff-tread*0.5+0.004,hgt-rise/2,0.008,rise-0.04,wid,0xd8d4cc,1.0,'plaster');            /* 踢面 */
   }
-  /* 栏杆：每两级一根立杆，顶上一根连续的木扶手 */
-  var s2;
+  /* 栏杆：每两级一根立杆，顶上一根连续的木扶手。扶手到 2.2 米就停：
+     再往上会穿过楼梯下沿那道 2.3 米高的梁（以前最上面两级的扶手和立杆都插进梁里） */
+  var s2, railTop=2.20-0.92;
   for(s2=-1;s2<=1;s2+=2){
     var pts=[];
     for(st2=0; st2<nR; st2++){
       runOff=baseOff+st2*tread+tread*0.5; hgt=(st2+1)*rise;
+      if(hgt>railTop) break;
       var p=P(runOff), side=s2*halfW2;
       var px=p.x+(ax==='z'?side:0), pz=p.z+(ax==='x'?side:0);
       if(st2%2===0) K.rod('metal',px,hgt,pz,px,hgt+0.92,pz,0.016,0.016,5,0x6d7376,1.0);

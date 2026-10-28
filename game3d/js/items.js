@@ -2,6 +2,7 @@
 'use strict';
 
 var USE={torch:false,phone:false,brollyShield:false};
+var PILL_SEC=30, PILL_RATE=2;              /* 药片：30 秒里每秒回 2 点 SAN（再吃一片从头算，不叠加） */
 var OPENDOORS={};
 var DOOR_LOCKS={'lab3:41:15':'roomkey'};
 function doorLockNeed(R,c,r){ return DOOR_LOCKS[R.id+':'+c+':'+r]||null; }
@@ -66,7 +67,7 @@ function useItem(id){
   if(id==='phone'){ PHONE.start(); return; }
   if(id==='leave'){ useLeave(); return; }
   if(id==='brolly'){ USE.brollyShield=!USE.brollyShield; toast(USE.brollyShield?'撑开伞':'收起伞'); return; }
-  if(id==='pill'){ S.san=Math.min(100,S.san+18); removeItem('pill'); os('我：药片很苦。手不抖了。',3); toast('药片 · SAN +18'); return; }
+  if(id==='pill'){ S.pillT=PILL_SEC; removeItem('pill'); os('我：药片很苦。手慢慢不抖了。',3); toast('药片 · '+PILL_SEC+' 秒内每秒 SAN +'+PILL_RATE); return; }
   if(id==='snack'){ S.snackT=SNACK_SEC; removeItem('snack'); os('我：甜的。腿一下子轻了。',2.4); toast('士力架 · '+SNACK_SEC+' 秒内疾跑不耗体力'); return; }
   if(id==='coin'){ throwCoin(); return; }
   if(id==='atlas'){

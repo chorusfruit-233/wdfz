@@ -12,6 +12,7 @@
 <meta name="theme-color" content="#04070a">
 <meta name="format-detection" content="telephone=no">
 <link rel="stylesheet" href="game3d/css/game.css">
+<link rel="stylesheet" href="game3d/css/ui.css">
 </head>
 <body>
 <canvas id="cv" tabindex="0" aria-label="3D 游戏画面，可拖动转动视角"></canvas>
@@ -20,11 +21,16 @@
 <div id="scan"></div><div id="vig"></div><div id="flash"></div>
 <div id="fade"></div><div id="cutfade"></div><div id="cutbars"><i></i><i></i></div>
 <div id="hud">
-  <div class="tl"><div id="sanwrap"><div id="sanbar"></div></div><div id="clock">11:40</div><div id="place">武大附中 · 校园</div></div>
-  <div class="tr"><div id="period">早读 · 教室</div><div id="secclock" hidden></div></div>
-  <div class="bl"><canvas id="mini" width="150" height="150" style="display:block;margin-bottom:10px;border:1px solid rgba(130,180,155,.28);background:rgba(4,10,8,.55)"></canvas><div id="stamwrap" style="visibility:hidden"><div id="stambar"></div></div>
-    </div>
+  <div class="tl hud-card" id="status">
+    <div class="hc-top"><div id="clock">11:40</div><div id="secclock" hidden></div></div>
+    <div id="period" class="ok">早读 · 教室</div>
+    <div id="place">武大附中 · 校园</div>
+    <div class="hc-meter"><span>SAN</span><div id="sanwrap"><div id="sanbar"></div></div></div>
+    <div class="hc-meter" id="stamrow" hidden><span>体力</span><div id="stamwrap"><div id="stambar"></div></div></div>
+  </div>
+  <div class="bl"><canvas id="mini" width="150" height="150"></canvas></div>
   <div class="bc"><div id="hot"></div></div>
+  <div class="br" id="keyhelp"><kbd>E</kbd>交互 <kbd>F</kbd>手电 <kbd>1</kbd><kbd>2</kbd>快捷栏 <kbd>Tab</kbd>手册 <kbd>Esc</kbd>暂停</div>
 </div>
 <div id="cross"></div><div id="hideslits" aria-hidden="true"></div><div id="searchring" aria-hidden="true"></div>
 <div id="lidtop"></div><div id="lidbot"></div>
@@ -36,19 +42,44 @@
 <div id="choices"></div>
 <div id="toast"></div>
 
-<div class="panel" id="mapv"><div class="close" onclick="UI.close('mapv')">关闭 M</div><h2>校园平面图</h2><div id="mapc"></div></div>
-<div id="bag"><div class="close" onclick="UI.close('bag')" style="position:absolute;right:36px;top:36px;font-size:12px;opacity:.6;cursor:pointer;letter-spacing:2px">关闭 Tab</div><h2 style="font-size:17px;letter-spacing:4px;color:#9fe3c2;font-weight:400">背包</h2><div class="g" id="bags"></div><div class="desc" id="bagdesc"></div></div>
-<div id="note"><div class="close" onclick="UI.close('note')" style="position:absolute;right:36px;top:36px;font-size:12px;opacity:.6;cursor:pointer;letter-spacing:2px">关闭 J</div><h2 style="font-size:17px;letter-spacing:4px;color:#9fe3c2;font-weight:400">笔记本</h2><div id="notein"></div></div>
-<div id="think"><div class="close" onclick="UI.close('think')" style="position:absolute;right:36px;top:36px;font-size:12px;opacity:.6;cursor:pointer;letter-spacing:2px">关闭 H</div><h2>现在能想到的办法</h2><div class="hint" id="thinkhint"></div><div id="ideas"></div></div>
-<div id="pause">
-  <div id="ptalent" style="font-size:11px;letter-spacing:2px;opacity:.55;margin-bottom:14px"></div>
-  <button onclick="UI.open('set')">设置</button>
-  <button onclick="Dev.toggle()">调试 (F2)</button><div style="font-size:15px;letter-spacing:8px;opacity:.7;margin-bottom:16px">已 暂 停</div>
-  <button onclick="Game.resume()">继续</button>
+<div id="journal" role="dialog" aria-label="随身手册">
+  <div class="jbox">
+    <div class="jhead">
+      <nav class="jtabs" role="tablist">
+        <button type="button" role="tab" data-tab="bag" onclick="UI.open('bag')">背包<kbd>Tab</kbd></button>
+        <button type="button" role="tab" data-tab="think" onclick="UI.open('think')">思索<kbd>H</kbd></button>
+        <button type="button" role="tab" data-tab="note" onclick="UI.open('note')">笔记<kbd>J</kbd></button>
+        <button type="button" role="tab" data-tab="mapv" onclick="UI.open('mapv')">地图<kbd>M</kbd></button>
+      </nav>
+      <button type="button" class="jclose close" onclick="UI.close(UI.openPanel)" aria-label="关闭手册">✕<kbd>Esc</kbd></button>
+    </div>
+    <div class="jbody">
+      <section class="jpage" id="bag">
+        <div class="bagwrap">
+          <div class="g" id="bags"></div>
+          <div class="bagside"><div class="bagname" id="bagname"></div><div class="desc" id="bagdesc"></div><div class="bagacts" id="bagacts"></div></div>
+        </div>
+      </section>
+      <section class="jpage" id="think"><div class="jlead" id="thinkhint"></div><div id="ideas"></div></section>
+      <section class="jpage" id="note"><div id="notein"></div></section>
+      <section class="jpage" id="mapv"><div id="mapc"></div><div class="maplegend"><i class="me"></i>你在这里 <i class="mg"></i>校门</div></section>
+    </div>
+  </div>
+</div>
+<div id="pause"><div class="pbox">
+  <div class="ptitle">已暂停</div>
+  <div id="ptalent"></div>
+  <button class="primary" onclick="Game.resume()">继续</button>
   <button onclick="Game.saveNow()">保存进度</button>
-  <button onclick="Game.quit()">回到主菜单</button></div>
-<div id="set"><div style="font-size:15px;letter-spacing:8px;opacity:.7;margin-bottom:18px">设 置</div>
+  <button onclick="UI.open('set')">设置</button>
+  <button onclick="Game.quit()">回到主菜单</button>
+  <div class="pkeys" id="pkeys"></div>
+  <button class="ghost" onclick="Dev.toggle()">调试 (F2)</button>
+</div></div>
+<div id="set"><div class="pbox">
+  <div class="ptitle">设置</div>
   <div class="srow"><span>音量</span><input type="range" id="sVol" min="0" max="100" value="70" oninput="Settings.vol(this.value)"><b id="sVolV">70</b></div>
+  <div class="srow"><span>亮度</span><input type="range" id="sBr" min="60" max="150" value="100" oninput="Settings.bright(this.value)"><b id="sBrV">100</b></div>
   <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
     <button onclick="Settings.sub(0)">短</button><button onclick="Settings.sub(1)">标准</button><button onclick="Settings.sub(2)">长</button></div></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
@@ -57,8 +88,9 @@
     <button onclick="Settings.shake(0)">开</button><button onclick="Settings.shake(1)">关</button></div></div>
   <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
     <button onclick="Settings.amb(1)">开</button><button onclick="Settings.amb(0)">关</button></div></div>
-  <button onclick="Game.resume()" style="margin-top:6px">返回游戏</button>
-</div>
+  <button class="primary" onclick="UI.close('set',false);UI.open('pause')">返回</button>
+  <button onclick="Game.resume()">返回游戏</button>
+</div></div>
 <div id="die"><div class="t">你 死 了 。</div><div class="m" id="diem"></div>
   <div id="dieepi"></div><button onclick="Game.quit()">回到主菜单</button></div>
 <div id="menu">
@@ -124,18 +156,12 @@
   </div>
 </div>
 <div id="touch">
-  <div id="tcol">
-    <div class="tb2" onclick="toggleTorch()">手电</div>
-    <div class="tb2" onclick="dropSelected()">丢弃</div>
-    <div class="tb2" onclick="useHot(0)">1</div>
-    <div class="tb2" onclick="useHot(1)">2</div>
-    <div class="tb2" onclick="UI.toggle('bag')">背包</div>
-    <div class="tb2" onclick="UI.toggle('think')">思索</div>
-    <div class="tb2" onclick="UI.toggle('mapv')">地图</div>
-    <div class="tb2" onclick="UI.toggle('note')">笔记</div>
-  </div>
-  <div id="stick" role="group" aria-label="移动摇杆"><div id="knob"></div></div><button type="button" class="tbtn" id="tAct" aria-label="交互">交互</button>
+  <div id="stick" role="group" aria-label="移动摇杆"><div id="knob"></div></div>
+  <button type="button" class="tbtn" id="tAct" aria-label="交互"><span id="tActL">交互</span></button>
+  <div id="tside"><button type="button" class="tsm" id="tTorch" onclick="toggleTorch()">手电</button></div>
+  <div id="ttop"><button type="button" class="tsm" id="tBook" onclick="UI.toggle(UI.lastTab||'bag')" aria-label="随身手册">手册</button>
   <button type="button" class="tbtn" id="tPause" aria-label="暂停"></button></div>
+</div>
 
 <script src="game3d/lib/three.min.js"></script>
 <script src="game3d/js/core.js"></script>

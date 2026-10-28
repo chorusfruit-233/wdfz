@@ -5,8 +5,8 @@ var SET={vol:70,sub:1,q:1,shake:1,amb:1,bright:100};
 var SHAKE_ON=true, SUB_MULT=1.0, AMB_ON=true;
 function applyBrightness(){
   var bright=Number(SET.bright)||100;
-  var slider=document.getElementById('mb');
-  if(slider) slider.value=String(bright);
+  ['mb','sBr'].forEach(function(id){ var sl=document.getElementById(id); if(sl) sl.value=String(bright); });
+  var bv=document.getElementById('sBrV'); if(bv) bv.textContent=String(bright);
   if(GLR.postMat) GLR.postMat.uniforms.uBright.value=Math.max(0.4,Math.min(2.0,bright/100));
 }
 function loadSet(){

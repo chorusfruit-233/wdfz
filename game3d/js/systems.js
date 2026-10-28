@@ -139,6 +139,7 @@ function updateSystems(dt){
   }else{
     S.san+=0.8*dt;
   }
+  if(S.pillT>0){ var pd=Math.min(dt,S.pillT); S.san+=PILL_RATE*pd; S.pillT-=pd; }
   S.san=clamp(S.san,0,100);
   if(S.san<=0&&!S.dead) kill('你在一个不该睡着的地方睡着了。梦里有人一直在叫你的名字，叫得很温柔。','vignette');
 

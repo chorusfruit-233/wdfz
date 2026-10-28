@@ -296,7 +296,7 @@ class ControlsTest(unittest.TestCase):
         before = page.evaluate('S.ang')
         self.swipe(page)
         self.assertEqual(page.evaluate('S.ang'), before)
-        page.locator('#bag .close').tap()
+        page.locator('#journal .jclose').tap()
         self.swipe(page)
         self.assertGreater(page.evaluate('S.ang'), before + .1)
         page.locator('#fullscreen-toggle').tap()
@@ -1272,6 +1272,8 @@ class ControlsTest(unittest.TestCase):
         mins = page.evaluate("""(()=>{var t=SCHED.reduce((n,p)=>n+(p[1]-p[0])/p[4],0);
             return t+(BEAST_T1-BEAST_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
         self.assertTrue(10 <= mins <= 20, mins)
+        free = page.evaluate("SCHED.filter(p=>p[3]==='自由'&&p[0]<LIGHTS_OUT).reduce((n,p)=>n+(p[1]-p[0])/p[4],0)")
+        self.assertGreaterEqual(free, 10)          # 一天至少 10 分钟自由时间
 
     def test_full_violation_no_longer_kills_but_blocks_leave(self):
         page = self.page()
@@ -1388,6 +1390,67 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, "monoTier()==='breaking'&&MONO_LINES.breaking.any.concat(MONO_LINES.breaking.outNight||[]).indexOf(monoPick())>=0")
         page.evaluate("DLG.open=false;AN.active=false;MONO.t=0;MONO.recent=[];monoTick(0.1)")
         self.assert_js(page, "MONO.recent.length===1&&document.getElementById('sub').textContent===MONO.recent[0]&&MONO.t>=40")
+
+    def test_journal_tabs_share_one_panel_and_keys_switch_or_close(self):
+        page = self.page()
+        page.keyboard.press('Tab')
+        self.assert_js(page, "UI.openPanel==='bag'&&document.getElementById('journal').style.display==='flex'&&document.querySelector('.jtabs .on').dataset.tab==='bag'")
+        page.keyboard.press('h')
+        self.assert_js(page, "UI.openPanel==='think'&&document.getElementById('bag').style.display==='none'&&document.getElementById('think').style.display==='block'")
+        page.locator('#journal .jtabs button', has_text='地图').click()
+        self.assert_js(page, "UI.openPanel==='mapv'&&!!document.getElementById('mapcv')")
+        page.keyboard.press('m')
+        self.assert_js(page, "!UI.anyOpen()&&document.getElementById('journal').style.display==='none'")
+
+    def test_bag_detail_buttons_use_hotbar_and_drop(self):
+        page = self.page()
+        page.evaluate("S.bag=['coin','chalk'];S.hot=[null,null];S.bagSel=1;UI.open('bag')")
+        self.assertEqual(page.locator('#bagname').inner_text(), '粉笔')
+        page.locator('#bagacts button', has_text='放到快捷栏 2').click()
+        self.assert_js(page, "S.hot[1]==='chalk'&&document.querySelector('#bags .s.on .hk').textContent==='2'")
+        page.locator('#bagacts button', has_text='丢弃').click()
+        self.assert_js(page, "S.bag.join()==='coin'&&S.hot[1]===null")
+
+    def test_choice_number_keys_pick_option(self):
+        page = self.page()
+        page.evaluate("window.picked=0;UI.choice('选',[{label:'甲',fn:function(){picked=1}},{label:'乙',fn:function(){picked=2}}])")
+        page.keyboard.press('2')
+        self.assert_js(page, "picked===2&&!UI.chooseOpen")
+
+    def test_touch_action_button_shows_current_action_and_book_opens_journal(self):
+        page = self.page(touch=True)
+        page.evaluate("S.seated=true;updateHUD()")
+        self.assertEqual(page.locator('#tActL').inner_text(), '站起来')
+        self.assert_js(page, "document.getElementById('tAct').classList.contains('live')")
+        page.evaluate("S.seated=false;S.mode='out';S.x=1580;S.y=1800;updateHUD()")
+        page.locator('#tBook').tap()
+        self.assert_js(page, "UI.openPanel==='bag'")
+
+    def test_slow_touch_action_still_fires_once(self):
+        page = self.page(touch=True)
+        # 处理按钮要大半秒（手机上坐下、进房间）时，浏览器补发的 click 不能再触发一次
+        page.evaluate("window.actions=0;tryInteract=function(){actions++;var e=performance.now()+900;while(performance.now()<e){}};void 0")
+        page.locator('#tAct').tap()
+        page.wait_for_timeout(1200)
+        self.assert_js(page, 'actions===1')
+
+    def test_portrait_subtitle_uses_full_width(self):
+        page = self.page(touch=True)
+        page.evaluate("os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',5)")
+        self.assert_js(page, "document.getElementById('sub').getBoundingClientRect().width>300")
+
+    def test_pill_heals_over_time_snack_lasts_thirty_seconds_and_day_is_brighter(self):
+        page = self.page()
+        # 午饭时间（自由时段）：先量 10 秒自然回复，再吃药片比较，多出来的就是药片的 2 点 / 秒
+        page.evaluate("""S.tsec=760;S.san=20;for(var i=0;i<20;i++) updateSystems(0.5);window._base=S.san-20;
+            S.tsec=760;S.san=20;S.bag=['pill','snack'];useItem('pill');for(i=0;i<20;i++) updateSystems(0.5);""")
+        self.assert_js(page, "Math.abs((S.san-20)-_base-20)<0.01&&S.pillT===20")
+        page.evaluate("S.san=10;for(var i=0;i<60;i++) updateSystems(0.5)")
+        self.assert_js(page, "S.pillT===0&&S.san>=50")
+        page.evaluate("useItem('snack')")
+        self.assert_js(page, "SNACK_SEC===30&&S.snackT===30")
+        page.evaluate("S.tsec=720;S.mode='out';updateLighting()")
+        self.assert_js(page, "Math.abs(GLR.dayExpo-0.6)<0.03")
 
 
 if __name__ == '__main__':

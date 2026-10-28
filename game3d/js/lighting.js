@@ -78,7 +78,7 @@ function refreshSky(){
 }
 function dayLight(){ return sunAt(hourNow()).day; }
 /* 白天室外的画面亮度减半（render.js 后期里乘 GLR.dayExpo）。屋里的灯保持原亮度，但会闪 */
-var DAY_K=0.5;
+var DAY_K=0.5, DAY_BOOST=0.2;
 var LCFG={
   ptI:26, ptDist:14, ptDecay:2.0,
   lampI:15, lampDist:15,
@@ -171,7 +171,7 @@ function updateLighting(){
   lampTick(s);
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
   var wn=GLR.worldNorm||0;
-  GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
+  GLR.dayExpo=(s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn))*(1+DAY_BOOST*sun.day*(1-wn));   /* 白天整体再亮 20% */
   GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
   try{ shadeTick(s); }catch(e){}
 }
