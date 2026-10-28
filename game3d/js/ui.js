@@ -1,14 +1,24 @@
 /* 里世界 3D · 字幕、面板、背包、地图 */
 'use strict';
 
-var DLG={open:false,timer:0};
+var DLG={open:false,timer:0,keep:false,queue:[]};
 var PAUSE={on:false};
 
-function os(msg,dur){
+/* how：OS_KEEP = 线索，放完之前不会被别的字幕顶掉（后来的排队）；
+        OS_FORCE = 死亡、惊醒这类，立刻显示并清掉排队。 */
+var OS_KEEP=1, OS_FORCE=2;
+function os(msg,dur,how){
+  if(how===OS_FORCE) DLG.queue.length=0;
+  else if(DLG.open&&DLG.keep&&DLG.timer>0){
+    /* 普通字幕最多排两条，再多就是过时的念叨了 */
+    if(how===OS_KEEP||DLG.queue.length<2) DLG.queue.push([msg,dur,how]);
+    return;
+  }
   var el=document.getElementById('sub');
   el.textContent=msg; el.style.display='block';
   el.style.opacity='1';
-  DLG.open=true; DLG.timer=(dur||3.2)*(typeof SUB_MULT!=='undefined'?SUB_MULT:1);
+  DLG.open=true; DLG.keep=(how===OS_KEEP);
+  DLG.timer=(dur||3.2)*(typeof SUB_MULT!=='undefined'?SUB_MULT:1);
 }
 function toast(msg){
   var el=document.getElementById('toast');
@@ -18,7 +28,8 @@ function toast(msg){
 function updateDialog(dt){
   if(DLG.open && !UI.anyOpen() && !PAUSE.on){
     DLG.timer-=dt;
-    if(DLG.timer<=0){ DLG.open=false; var _e=document.getElementById('sub'); _e.style.opacity='0'; setTimeout(function(){ if(!DLG.open) _e.style.display='none'; },240); }
+    if(DLG.timer<=0&&DLG.queue.length){ var n=DLG.queue.shift(); DLG.keep=false; os(n[0],n[1],n[2]); return; }
+    if(DLG.timer<=0){ DLG.open=false; DLG.keep=false; var _e=document.getElementById('sub'); _e.style.opacity='0'; setTimeout(function(){ if(!DLG.open) _e.style.display='none'; },240); }
   }
 }
 
@@ -201,7 +212,7 @@ function kLabel(k){
 UI.renderThink=function(){
   var ideas=ideasAvailable();
   document.getElementById('thinkhint').textContent=ideas.length?
-    '按 H 静下来想。选一个，然后去做。':'（什么都想不出来。先走一走。）';
+    '选一个，然后去做。':'（什么都想不出来。先走一走。）';
   var el=document.getElementById('ideas');
   el.innerHTML='';
   for(var i=0;i<ideas.length;i++){
@@ -214,6 +225,11 @@ UI.renderThink=function(){
     })(ideas[i]);
   }
 };
+/* 把字收进画布里 */
+function mapLabel(c,txt,x,y,cw,ch){
+  var w=c.measureText(txt).width;
+  c.fillText(txt,clamp(x,3,cw-w-3),clamp(y,13,ch-4));
+}
 UI.renderMap=function(){
   var el=document.getElementById('mapc');
   var bw=BOUND.x1-BOUND.x0, bh=BOUND.y1-BOUND.y0;
@@ -236,18 +252,46 @@ UI.renderMap=function(){
     c.fillRect(X(o.x),Y(o.y),o.w*sc,o.h*sc);
     c.strokeStyle='rgba(120,180,150,.30)'; c.lineWidth=1;
     c.strokeRect(X(o.x),Y(o.y),o.w*sc,o.h*sc);
-    if(o.k==='roof'&&o.w*sc>34){
-      c.fillStyle='rgba(160,200,180,.55)'; c.font='10px monospace';
-      c.fillText(o.n,X(o.x)+3,Y(o.y)+12);
-    }
+  }
+  /* 字最后写，免得被后画的方块盖住。窄的建筑（保安岗、钟楼、垃圾房、车棚……）以前不写名字：字放到旁边 */
+  c.fillStyle='rgba(160,200,180,.62)'; c.font='10px monospace';
+  var boxes=[], used=[];
+  for(i=0;i<OBJ.length;i++){ o=OBJ[i]; if(o.k==='roof') boxes.push([X(o.x),Y(o.y),X(o.x+o.w),Y(o.y+o.h)]); }
+  for(i=0;i<OBJ.length;i++){
+    o=OBJ[i];
+    if(o.k==='roof'&&o.w*sc>34){ c.fillText(o.n,X(o.x)+3,Y(o.y)+12); used.push([X(o.x)+3,Y(o.y)+2,X(o.x)+3+c.measureText(o.n).width,Y(o.y)+12]); }
   }
   var gates=[['北门',GATE_N],['西小门',GATE_W],['南门',GATE_S]];
+  c.font='11px monospace';
+  for(i=0;i<gates.length;i++){
+    var gw=c.measureText(gates[i][0]).width, gx=clamp(X(gates[i][1].x)-11,3,cw-gw-3), gy=clamp(Y(gates[i][1].y)-6,13,ch-4);
+    used.push([gx,gy-11,gx+gw,gy]);
+  }
+  c.font='10px monospace';
+  for(i=0;i<OBJ.length;i++){
+    o=OBJ[i];
+    if(o.k!=='roof'||o.w*sc>34) continue;
+    /* 右边、下边、左边里挑压得最少的：压住别的字最糟，压住别的楼其次 */
+    var nm=o.s||o.n, tw=c.measureText(nm).width, own=X(o.x)+','+Y(o.y);
+    var cand=[[X(o.x+o.w)+3,Y(o.y)+12],[X(o.x),Y(o.y+o.h)+11],[X(o.x)-tw-3,Y(o.y)+12]], pos=cand[0], best=1e9;
+    for(var k=0;k<cand.length;k++){
+      var r=[clamp(cand[k][0],3,cw-tw-3),0,0,0]; r[1]=clamp(cand[k][1],13,ch-4)-10; r[2]=r[0]+tw; r[3]=r[1]+10;
+      var over=function(b){ return r[0]<b[2]&&r[2]>b[0]&&r[1]<b[3]&&r[3]>b[1]; };
+      var cost=used.filter(over).length*10+boxes.filter(function(b){ return b[0]+','+b[1]!==own&&over(b); }).length;
+      if(cost<best){ best=cost; pos=cand[k]; }
+    }
+    mapLabel(c,nm,pos[0],pos[1],cw,ch);
+    used.push([clamp(pos[0],3,cw-tw-3),clamp(pos[1],13,ch-4)-10,clamp(pos[0],3,cw-tw-3)+tw,clamp(pos[1],13,ch-4)]);
+  }
   c.fillStyle='#c8a24a'; c.font='11px monospace';
   for(i=0;i<gates.length;i++){
     c.fillRect(X(gates[i][1].x)-2,Y(gates[i][1].y)-2,4,4);
-    c.fillText(gates[i][0],X(gates[i][1].x)-11,Y(gates[i][1].y)-6);
+    /* 门都在边界上，字以前有一半画到了图外（北门只剩一个黄点） */
+    mapLabel(c,gates[i][0],X(gates[i][1].x)-11,Y(gates[i][1].y)-6,cw,ch);
   }
   var px=X(S.x/SC), py=Y(S.y/SC);
+  var R=S.mode==='in'?INTERIORS[S.room]:null, ho=R?objById(R.host):null;
+  if(ho){ px=X(ho.x+ho.w/2); py=Y(ho.y+ho.h/2); }
   c.fillStyle='#79c8a4';
   c.beginPath(); c.arc(px,py,4.5,0,6.283); c.fill();
   c.strokeStyle='rgba(121,200,164,.75)'; c.lineWidth=1.5;

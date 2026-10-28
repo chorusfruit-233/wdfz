@@ -11,9 +11,13 @@ function nearWorld(radius){
       if(ch==='#'||ch==='.') continue;
       var wx=R.ox+(c+0.5)*R.tw, wy=R.oy+(r+0.5)*R.th;
       var d=Math.sqrt(dist2(wx,wy,S.x,S.y));
-      if(d<radius) hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d});
+      if(d>=radius) continue;
+      /* 以前只取最近的格子、不看朝向：终端被课桌围着时，按 E 永远在翻课桌。
+         现在面前的东西优先，侧面、背后的要近得多才会被选中。 */
+      var off=d<4?0:angDiff(Math.atan2(wy-S.y,wx-S.x),S.ang);
+      hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d+off*10});
     }
-    hits.sort(function(a,b){return a.d-b.d;});
+    hits.sort(function(a,b){return a.score-b.score;});
     return hits[0]||null;
   }
   var best=null,bd=1e9;
@@ -487,11 +491,11 @@ function useTerminal(){
   }
   RT.hacked=true;
   addClue('comp');
-  if(S.talent==='code') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5);
-  else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5);
+  if(S.talent==='code') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
+  else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,OS_KEEP);
   os2later('我：还得去行政楼三楼，把数据同步过去。',5200);
 }
-function os2later(msg,ms){ setTimeout(function(){ if(!S.dead&&S.screen==='play') os(msg,3.6); },ms); }
+function os2later(msg,ms){ setTimeout(function(){ if(!S.dead&&S.screen==='play') os(msg,3.6,OS_KEEP); },ms); }
 function useTrash(){
   if(S.room!=='trash1'){ os('我：这个桶太小了。',2.2); return; }
   tryTrashRoute();
@@ -501,7 +505,7 @@ function useData(){
   if(!RT.hacked){ os('我：它要我输入一个我不该知道的东西。屏幕右下角写着：数据源 · 实验楼 3F 网络中心。',3.8); return; }
   if(RT.data){ os('我：已经同步过了。',2.0); return; }
   RT.data=true;
-  os('我：进度条走完了。屏幕上弹出一张照片——是我。照片底下写着：已登记。西小门的闸机，现在认得我了。',5.2);
+  os('我：进度条走完了。屏幕上弹出一张照片——是我。照片底下写着：已登记。西小门的闸机，现在认得我了。',5.2,OS_KEEP);
 }
 function tryGateWest(){
   if(!RT.hacked||!RT.data){ os('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); addClue('gatew'); return; }

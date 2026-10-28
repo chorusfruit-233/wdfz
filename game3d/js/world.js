@@ -278,6 +278,7 @@ function doEnterRoom(id,spawn){
   GLR.hurt=0;
   showBanner(INTERIORS[id].name);
   onEnterRoom(id);
+  autoSave();
 }
 function exitRoom(){ fadeTo(function(){ doExitRoom(); }); }
 function doExitRoom(){
@@ -289,6 +290,7 @@ function doExitRoom(){
   if(o){ var d=doorWorld(o); S.x=d.x; S.y=d.y; }
   S.enterCool=1.0;
   enterWorldOut();
+  autoSave();
 }
 
 function syncCamera(dt){

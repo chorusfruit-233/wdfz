@@ -130,6 +130,9 @@ function drawMini(dt){
     c.fillRect(X(o.x),Y(o.y),o.w*sc,o.h*sc);
   }
   var px=X(S.x/SC), py=Y(S.y/SC);
+  /* 室内坐标不是室外地图上的位置（在车库里点会落到行政楼上）：室内就标在所在那栋楼上 */
+  var R=S.mode==='in'?INTERIORS[S.room]:null, ho=R?objById(R.host):null;
+  if(ho){ px=X(ho.x+ho.w/2); py=Y(ho.y+ho.h/2); }
   c.fillStyle='#79c8a4';
   c.beginPath(); c.arc(px,py,2.6,0,6.283); c.fill();
   c.strokeStyle='rgba(121,200,164,.85)'; c.lineWidth=1.4;
@@ -204,10 +207,14 @@ function updateHUD(){
   updateTouchUI();
   var pr=document.getElementById('prompt');
   var hint='';
-  if(!S.dead&&S.screen==='play'&&!UI.anyOpen()&&!PAUSE.on&&!DLG.open){
+  /* 字幕显示时也要给提示：字幕很频繁，以前站在门口常常看不到"E 开门" */
+  if(!S.dead&&S.screen==='play'&&!UI.anyOpen()&&!PAUSE.on){
+    var _R=S.mode==='in'?INTERIORS[S.room]:null, _h0=_R?nearWorld(24):null;
+    /* 和 tryInteract 的先后一致：设施、恢复 SAN 的动作排在"坐下"前面 */
+    var _first=_h0&&(FAC_CD[_h0.ch]!==undefined||sanActFor(_R,_h0));
     if(nearRoster()) hint='E 那张名单';
     else if(S.seated) hint='E 站起来';
-    else if(S.mode==='in'&&INTERIORS[S.room]&&hit2_seatNear(INTERIORS[S.room])) hint='E 坐下';
+    else if(_R&&!_first&&hit2_seatNear(_R)) hint='E 坐下';
     else if(S.mode==='in'){
       var h=nearWorld(24);
       if(h){
@@ -260,7 +267,7 @@ function clearIntroTimers(){
   if(introT1){ clearTimeout(introT1); introT1=0; }
   var el=document.getElementById('sub');
   if(el){ el.style.opacity='0'; setTimeout(function(){ if(!DLG.open) el.style.display='none'; },240); }
-  DLG.open=false; DLG.timer=0;
+  DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
@@ -299,7 +306,9 @@ var Game={
     try{
     freshState(diff);
     var R1=INTERIORS['teach1'];
-    enterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
+    /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */
+    S.mode='in'; S.room='teach1'; S.x=R1.ox+48.5*9; S.y=R1.oy+6.5*9; S.seated=true;
+    enterRoom('teach1',{x:S.x, y:S.y, ang:-PI/2, seated:true});
     syncCamera(0);
     clearIntroTimers();
     var firstTime=false;
@@ -388,8 +397,7 @@ var Game={
     var es=document.getElementById('ends'); if(es) es.remove();
     document.getElementById('menu').style.display='flex';
     document.getElementById('sub').style.display='none';
-    var sc=document.getElementById('btncont');
-    if(sc) sc.style.display=loadGame()?'block':'none';
+    paintMenuSave();
   }
 };
 var MENU_PHOTO=null, PHOTO_TRIED=false;
@@ -473,7 +481,7 @@ function boot(){
   buildRoomBounds();
   initGL();
   initInput();
-  document.getElementById('btncont').style.display=loadGame()?'block':'none';
+  paintMenuSave();
   requestAnimationFrame(frame);
   setTimeout(captureMenuPhoto,420);               /* 先让菜单画出来，再拍那张照片 */
 }

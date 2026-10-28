@@ -394,6 +394,11 @@ function anTick(dt){
       if(AN.t>16) anEnd();
       break;
     case 'loop':
+      /* 以前出了教学楼它还在计时，最后在操场上念"门牌上的班号" */
+      if(!corridorHere()){
+        os(S.mode==='out'?'我：推开门，外面是校园。回头看，那条走廊又只有原来那么长了。':'我：我拐进了一间教室。身后的走廊安静下来，不再往前延伸了。',3.4);
+        anEnd(); break;
+      }
       if(KEY['shift']||KEY[' ']||S.run){ AN.acc+=dt*2.6; }
       else { AN.acc+=dt; }
       S.san-=dt*0.3;
