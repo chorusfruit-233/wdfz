@@ -321,12 +321,46 @@ function patTick(dt){
 }
 
 /* ---------- 模型：比老师还高的黑影，两点红光 ---------- */
+/* 巡察者的行头（和 teacher 人形同一套比例，再整体放大 1.12）：
+   过膝的长大衣、立领、一排扣子；大檐帽；左臂一圈红袖章；右手夹着点名用的夹板。 */
+var PAT_GEAR=null;
+function patGearGeo(){
+  if(PAT_GEAR) return PAT_GEAR;
+  var K=new Kit(), m='dark', coat=0x1c2026, sp=FIG_SPEC.teacher, t=sp.thin;
+  var hipY=sp.leg, sh=hipY+sp.torso, hx=sp.w/2, hy=sh+sp.neck+sp.head*0.5, s;
+  K.bevel(m,0,(sh+hipY)/2,0,0.36,sh-hipY,0.25,coat,1,0.06);                 /* 大衣上身 */
+  K.bevel(m,0,(hipY+0.50)/2,0,0.37,hipY-0.50,0.27,coat,1,0.05);              /* 下摆到膝下 */
+  K.bevel(m,0,(hipY+0.50)/2-0.12,0,0.40,0.62,0.29,coat,1,0.05);              /* 往下张开一点 */
+  K.box(m,0,0.95,0.146,0.012,0.88,0.01,0x050607,1);                          /* 前襟开衩 */
+  for(s=0;s<5;s++) K.box('metal',0.04,1.45+s*0.14,0.128,0.025,0.025,0.012,0x8a7a50,1);   /* 一排扣子 */
+  K.cyl(m,0,sh-0.06,0,0.12,0.085,0.14,10,coat,1,false);                      /* 立领 */
+  for(s=-1;s<=1;s+=2) K.blob(m,s*hx*0.86,sh-0.02,0,0.1,0.07,0.1,coat,1,6);   /* 垫肩 */
+  K.box(m,0,hipY+0.10,0,0.385,0.05,0.265,0x050607,1);           /* 腰带 */
+  /* 大檐帽 */
+  K.cyl(m,0,hy+0.06,0.0,0.135,0.14,0.07,12,0x0a0c0f,1);
+  K.cyl(m,0,hy+0.13,0.01,0.14,0.165,0.035,12,0x0d1014,1);
+  K.bevel(m,0,hy+0.07,0.14,0.22,0.018,0.13,0x050607,1,0.006);               /* 帽檐 */
+  K.box('metal',0,hy+0.10,0.143,0.05,0.03,0.008,0x5a4a1e,1);                 /* 帽徽，旧得发乌 */
+  /* 左臂红袖章 */
+  var ax=-hx*0.95, up=sp.arm*0.47, y0=sh-0.05-up*0.25, y1=sh-0.05-up*0.55;
+  K.rod(m,ax-0.005,y0,0.004,ax-0.012,y1,0.008,0.062*t,0.06*t,10,0x7a120c,1);
+  K.box('paper',ax-0.062,(y0+y1)/2,0.01,0.004,0.045,0.035,0xb8a070,1);       /* 袖章上的字 */
+  /* 右手夹板 */
+  var hxr=hx*0.95+0.04, hyr=sh-0.05-sp.arm-0.05;
+  K.bevel(m,hxr+0.05,hyr+0.14,0.06,0.018,0.34,0.25,0x2a2118,1,0.006);
+  K.box('paper',hxr+0.06,hyr+0.12,0.06,0.004,0.28,0.21,0x77736a,1);
+  K.box('metal',hxr+0.062,hyr+0.29,0.06,0.012,0.03,0.09,0x50565a,1);       /* 夹子 */
+  PAT_GEAR=K.mergedGeometry();
+  return PAT_GEAR;
+}
 function patAddFig(){
   patRemoveFig();
   try{
     var g=new THREE.Group();
     var body=figMesh('teacher',new THREE.MeshBasicMaterial({color:0x040506,fog:true}),1.12);
     g.add(body);
+    var gear=new THREE.Mesh(patGearGeo(),new THREE.MeshBasicMaterial({vertexColors:true,color:0x555555,fog:true})   /* 顶点色当线性值用，整体压暗 */);
+    gear.scale.setScalar(1.12); g.add(gear);
     var em=new THREE.MeshBasicMaterial({color:0xff2a1a,fog:false});
     for(var s=-1;s<=1;s+=2){ var e=new THREE.Mesh(new THREE.SphereGeometry(0.035,6,4),em); e.position.set(s*0.065,2.6,0.15); g.add(e); }
     g.userData.eye=em;
