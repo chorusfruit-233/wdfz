@@ -35,6 +35,6 @@ CHROMIUM_EXECUTABLE=/path/to/chromium bash video/build.sh
 
 - `timeline.json`：镜头顺序、时长、字幕。改时长后画面和配乐会一起跟着变。
 - `trailer.js`：每个镜头怎么搭场景、怎么摆镜头（只在渲染时注入页面，游戏本身不加载）。
-- `render.py`：逐帧渲染到 `video/build/frames/`（固定步长，不受实时帧率影响；软件渲染约 0.8 秒一帧，整片约半小时）。`--only <镜头>` 只渲染一个镜头，`--step N` 每 N 帧截一张做预览。
+- `render.py`：逐帧渲染到 `video/build/frames/`（固定步长，不受实时帧率影响；软件渲染约 0.8 秒一帧，整片约半小时）。`--only <镜头>` 只渲染一个镜头，`--step N` 每 N 帧截一张做预览；自定义 `--out` 须是新建或空目录，避免覆盖已有文件。
 - `score.py`：生成 `video/build/score.wav`（约 10 秒）。
 - `build.sh`：上面三步 + 用 ffmpeg 压成 `trailer.mp4`。`video/build/` 是中间文件，不提交。

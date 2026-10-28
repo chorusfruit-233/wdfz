@@ -149,9 +149,9 @@ function updateSystems(dt){
   var vioMul=1;
   if(nw==='教室') vioMul=exam?2.4:1.4;
   if(S.mode==='out'&&isNight()) vioMul*=0.5;
-  S.wrong=wrong;
   /* 熄灯后即使在宿舍也会累积违规；在室外仍沿用原来的夜间倍率。 */
   if(onLeave()) wrong=false;                      /* 请假中：不用待在规定的地方 */
+  S.wrong=wrong;
   leaveTick();
   if(!onLeave()&&(wrong||nw==='宿舍')){ S.viol+=dt*0.85*vioMul; }
   else { S.viol=Math.max(0,S.viol-dt*3.2); }

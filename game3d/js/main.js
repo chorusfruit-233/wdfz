@@ -22,6 +22,7 @@ function frame(t){
   try{ render(dt); }catch(e){ try{ showErr('render: '+e.message); }catch(_e){} }
 }
 function update(dt){
+  PHONE.checkInterrupt();
   if(S.screen!=='play') return;
   if(PRO.on) return;                     /* 前情提要期间世界不动 */
   GLR.time+=dt;
@@ -32,11 +33,12 @@ function update(dt){
     return;
   }
   if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
-  if(!PHONE.on) updatePlayer(dt);                 /* 玩手机：人站着不动，世界照走 */
+  updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
   try{ PHONE.tick(dt); }catch(e){}
   try{ searchTick(dt); }catch(e){}
   updateSystems(dt);
   anDrive(dt);
+  PHONE.checkInterrupt();                         /* 世界更新中可能死亡、开始异象或打开选择 */
   try{ monoTick(dt); }catch(e){}
   spotTick();
 }
@@ -360,6 +362,7 @@ var Game={
     if(d.clockVersion!==2&&S.tsec>=0&&S.tsec<60) S.tsec+=1440;
     S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
     S.snackT=Number.isFinite(d.snackT)?clamp(d.snackT,0,SNACK_SEC):0;
+    PHONE.cool=Number.isFinite(d.phoneCool)?clamp(d.phoneCool,0,PH_COOL):0;
     S.actCool=(d.actCool&&typeof d.actCool==='object'&&!Array.isArray(d.actCool))?Object.assign({},d.actCool):{};
     if(d.clockVersion!==2){
       var oldClock=(d.day||1)*1440+d.tsec, newClock=gameClock();
@@ -440,6 +443,7 @@ var Game={
     try{ patReset(); }catch(e){}
     clearIntroTimers();
     S.screen='menu'; S.dead=false;
+    PHONE.stop();
     resetInputState();releaseMouseLook();
     try{ if(!MENU_PHOTO) setTimeout(captureMenuPhoto,320); }catch(e){}
     try{ if(CUT.on){ CUT.done=null; cutFinish(); } }catch(e){}

@@ -584,7 +584,7 @@ function anTick(dt){
   }
 }
 
-/* 拍肩的另一种：脚步声 → 拍肩 → 要回头。回头：一张笑脸，SAN +5；不回头（或超时）：突脸，扣大量 SAN、加违规 */
+/* 拍肩的另一种：脚步声 → 拍肩 → 要回头。回头损失少量 SAN；不回头时突脸、扣更多 SAN 并加违规。 */
 function turnSmileTick(dt,d){
   if(!d.steps) d.steps=0;
   if(d.chosen===null&&!d.asked&&AN.t>d.steps*0.42&&d.steps<4){          /* 身后的脚步，越来越近 */
@@ -608,8 +608,7 @@ function turnSmileTick(dt,d){
     S.ang+=PI;                                                          /* 真的转过身去 */
     try{ syncCamera(0); }catch(e){}
     smileShow('behind');
-    S.san=Math.min(100,S.san+5); toast('SAN +5');
-    os('我：我回头了。身后是一张很大很大的笑脸，眼睛弯成两道缝，嘴角一直咧到耳根。它冲我点了点头，就不见了。……我反而松了一口气。',5,OS_FORCE);
+    anHurt('我：我回头了。身后是一张很大很大的笑脸，眼睛弯成两道缝，嘴角一直咧到耳根。它冲我点了点头，就不见了。我的手心全是汗。',5,{quiet:1,keep:1});
   }else if(d.chosen==='no'&&AN.acc>1.0){
     d.done=1;
     smileShow('jump');

@@ -25,11 +25,13 @@ PHONE.start=function(){
   if(typeof AN!=='undefined'&&AN.active){ os('我：现在不是看手机的时候。',2.2); return; }
   if(typeof PAT!=='undefined'&&PAT.locked){ os('我：它在看着我。我不敢低头。',2.2); return; }
   PHONE.on=true; PHONE.reset();
+  if(UI.openPanel==='bag') UI.close('bag',false);
   resetInputState(); releaseMouseLook();
   var el=phoneEl(); el.style.display='flex';
   document.getElementById('phhint').textContent=(IS_TOUCH?'点屏幕往上飘':'空格 / W 往上飘')+' · '+(IS_TOUCH?'右上角收起':'Esc 收起');
   try{ SFX.click(); }catch(e){}
   PHONE.draw();
+  updateTouchUI();
 };
 PHONE.reset=function(){
   PHONE.st='ready'; PHONE.y=PH_H*0.45; PHONE.vy=0; PHONE.pipes=[]; PHONE.score=0; PHONE.t=0; PHONE.msg='';
@@ -39,8 +41,15 @@ PHONE.stop=function(dark){
   if(!PHONE.on) return;
   PHONE.on=false;
   var el=document.getElementById('phone'); if(el) el.style.display='none';
-  if(dark) os('我：屏幕一下子黑了。我抬起头。',2.6,OS_FORCE);
-  resetInputState(); resumeMouseLook();
+  /* 不覆盖异象或巡察者刚显示的重要字幕。 */
+  if(dark&&!DLG.open) os('我：屏幕一下子黑了。我抬起头。',2.6);
+  resetInputState(); resumeMouseLook(); updateTouchUI();
+};
+PHONE.checkInterrupt=function(){
+  if(!PHONE.on) return;
+  var danger=AN.active||PAT.locked;
+  if(S.dead||S.screen!=='play'||danger||PAUSE.on||UI.anyOpen()||PC.on)
+    PHONE.stop(danger&&!S.dead&&S.screen==='play');
 };
 PHONE.flap=function(){
   if(!PHONE.on) return;

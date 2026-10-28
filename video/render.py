@@ -14,6 +14,7 @@ from pathlib import Path
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 import threading
@@ -34,14 +35,27 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--only', help='只渲染这个镜头 id')
     ap.add_argument('--step', type=int, default=1, help='每隔几帧取一帧')
-    ap.add_argument('--out', default=str(VIDEO / 'build' / 'frames'))
+    ap.add_argument('--out', help='输出到一个新的或空的目录；默认使用 video/build/frames')
     args = ap.parse_args()
+    if args.step < 1:
+        ap.error('--step 必须大于 0')
 
     tl = json.loads((VIDEO / 'timeline.json').read_text(encoding='utf-8'))
-    out = Path(args.out)
-    if out.exists():
-        shutil.rmtree(out)
-    out.mkdir(parents=True)
+    if args.only and not any(sh['id'] == args.only for sh in tl['shots']):
+        ap.error(f'没有镜头 {args.only}')
+    out = Path(args.out) if args.out else VIDEO / 'build' / 'frames'
+    if out.is_symlink() or (not args.out and out.parent.is_symlink()):
+        ap.error('输出目录不能是符号链接')
+    if out.exists() and not out.is_dir():
+        ap.error('输出路径不是目录')
+    if args.out and out.exists() and any(out.iterdir()):
+        ap.error('自定义输出目录必须为空，以免覆盖已有文件')
+    out.mkdir(parents=True, exist_ok=True)
+    if not args.out:
+        # 默认目录只清理本脚本生成的帧，保留其他文件和子目录。
+        for frame in out.iterdir():
+            if frame.is_file() and re.fullmatch(r'\d{5,}\.jpg', frame.name):
+                frame.unlink()
 
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -87,6 +101,7 @@ def main():
     server.shutdown()
     if errors:
         print('页面报错：', *errors[:5], sep='\n')
+        sys.exit(1)
     print('done', len(frames), 'frames')
 
 
