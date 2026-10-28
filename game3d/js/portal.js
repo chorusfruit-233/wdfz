@@ -11,10 +11,12 @@ var PORTAL_PARTS=['coil','lens','vial','battery'];
 function portalMissing(){ return PORTAL_PARTS.filter(function(k){ return !hasItem(k); }); }
 function portalNeedText(){
   if(!RT.portalSketch) return '';
+  if(RT.portalOpen) return '　门已经打开，回物理实验室的实验台。';
   var m=portalMissing();
   return m.length?'　还差：'+m.map(function(k){ return '「'+ITEMS[k].n+'」'; }).join(''):'　东西齐了，回物理实验室的实验台。';
 }
 function portalBench(){
+  if(RT.portalOpen){ tryPortalRoute(); return; }
   if(!RT.portalSketch){
     RT.portalSketch=1; addClue('portal'); spotMark('portal');
     os('我：实验台上压着一张草图，铅笔画的：一个圈，四个箭头指进去——「线圈（网络中心）」「透镜（显微镜）」「荧光（离心机）」「电池」。圈的正中写着一个字：门。',7,OS_KEEP);
@@ -32,8 +34,9 @@ function portalBench(){
       RT.portalOpen=1;
       try{ SFX.bigBell&&SFX.bigBell(0.4); }catch(e){}
       os('我：电池一接上，透镜里的光就漏了出来，在实验台前面撑开一个圈。圈里面——是有颜色的。',5,OS_FORCE);
+      var openedRun=RT;
       setTimeout(function(){
-        if(S.dead||S.screen!=='play') return;
+        if(RT!==openedRun||!RT.portalOpen||S.dead||S.screen!=='play'||S.mode!=='in'||S.room!=='lab1'||PAUSE.on||UI.anyOpen()) return;
         UI.choice('那个圈在等我。',[
           {label:'走进去',fn:function(){ UI.closeChoice(); triggerEnding('portal'); }},
           {label:'再等一下',fn:function(){ UI.closeChoice(); os('我：圈还在。它不会等太久。',2.6); }}
@@ -46,13 +49,14 @@ function portalBench(){
 /* 门开了以后，再回到实验台就直接问 */
 function tryPortalRoute(){
   if(!RT.portalSketch){ os('我：我还不知道门该怎么造。',2.4); return; }
-  if(RT.portalOpen&&S.room==='lab1'){
+  if(RT.portalOpen&&S.mode==='in'&&S.room==='lab1'){
     UI.choice('那个圈还在实验台前面。',[
       {label:'走进去',fn:function(){ UI.closeChoice(); triggerEnding('portal'); }},
       {label:'再等一下',fn:function(){ UI.closeChoice(); }}
     ]);
     return;
   }
+  if(RT.portalOpen){ os('我：门还在物理实验室的实验台前面。',3.4); return; }
   var m=portalMissing();
   os(m.length?'我：还差'+m.map(function(k){ return '「'+ITEMS[k].n+'」'; }).join('')+'。':'我：东西齐了。回物理实验室的实验台。',3.4);
 }

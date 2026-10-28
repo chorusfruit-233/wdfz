@@ -79,11 +79,11 @@ function hideOut(){
 /* ---------- 巡察者 ---------- */
 var PAT={state:'idle',next:45,t:0,x:0,y:0,room:null,lock:0,locked:false,lost:0,still:0,tx:0,ty:0,stuck:0,walkT:0,step:0};
 var PAT_SPEED=16, PAT_CHASE=31, PAT_SEE=135, PAT_CATCH=19;
-function patReset(){
+function patReset(keepHiding){
   patRemoveFig();
   PAT.state='idle'; PAT.t=0; PAT.lock=0; PAT.locked=false; PAT.lost=0; PAT.still=0; PAT.room=null;
   GLR.patrolFlick=0; GLR.patrolRed=0;
-  if(HIDE.on){ HIDE.on=false; var el=document.getElementById('hideslits'); if(el) el.style.display='none'; }
+  if(HIDE.on&&!keepHiding){ HIDE.on=false; var el=document.getElementById('hideslits'); if(el) el.style.display='none'; }
 }
 function patRoomHere(){ return S.mode==='in'?S.room:'out'; }
 /* 现在这个地方，它会不会来 */
@@ -207,7 +207,7 @@ function patStart(){
   os(PAT.room==='out'?'我：远处的路灯，一盏接一盏地按着拍子闪。':'我：灯开始一明一暗地闪。两下短的，一下长的，像有人在数拍子。',4,OS_KEEP);
 }
 function patAppear(){
-  var p=patPickSpot(true); if(!p){ patReset(); PAT.next=10; return; }
+  var p=patPickSpot(true); if(!p){ patReset(true); PAT.next=10; return; }
   PAT.x=p.x; PAT.y=p.y; PAT.state='walk'; PAT.t=0; PAT.walkT=0; PAT.lock=0; PAT.locked=false;
   var q=patPickSpot(false)||p; PAT.tx=q.x; PAT.ty=q.y;
   patAddFig();
@@ -216,7 +216,7 @@ function patAppear(){
 }
 function patEnd(msg){
   if(msg) os(msg,3.2);
-  patReset();
+  patReset(S.mode==='in'&&PAT.room===S.room);
   PAT.next=patInterval();
 }
 function patTick(dt){
@@ -259,8 +259,7 @@ function patTick(dt){
   }
   GLR.patrolRed=clamp((GLR.patrolRed||0)+(PAT.locked?dt*3:-dt*2),0,1);
   if(PAT.locked){
-    if(!sees&&!HIDE.on) PAT.lost+=dt; else PAT.lost=0;
-    if(HIDE.on&&!HIDE.seen) PAT.lost+=dt;
+    if(!sees&&(!HIDE.on||!HIDE.seen)) PAT.lost+=dt; else PAT.lost=0;
     if(PAT.lost>2.5){
       PAT.locked=false; PAT.lock=0;
       os('我：红光一点一点褪下去。它停下来，在听。',3.2);
@@ -275,17 +274,26 @@ function patTick(dt){
   }
   /* 走路：锁定了就直奔你（躲进柜子被看见，它去开柜门），否则在各处转 */
   var sp=PAT_SPEED, tx, ty;
-  if(PAT.locked){ sp=PAT_CHASE*(PAT.still>0?0.35:1); PAT.tx=S.x; PAT.ty=S.y; }
+  if(PAT.locked){
+    sp=PAT_CHASE*(PAT.still>0?0.35:1);
+    /* 被看见时去柜门前，而不是向不可行走的柜子格直线穿墙。 */
+    var target=HIDE.on&&HIDE.seen&&PAT.room!=='out'?lockerFront(INTERIORS[PAT.room],HIDE.c,HIDE.r):{x:S.x,y:S.y};
+    PAT.tx=target.x; PAT.ty=target.y;
+  }
   if(PAT.room!=='out'){
     PAT.repath=(PAT.repath||0)-dt;
     if(!PAT.path||!PAT.path.length||PAT.repath<=0){
       PAT.repath=PAT.locked?0.5:3;
-      PAT.path=patPath(PAT.tx,PAT.ty)||[];
-      if(!PAT.path.length&&!PAT.locked){ var q0=patPickSpot(false); if(q0){ PAT.tx=q0.x; PAT.ty=q0.y; PAT.path=patPath(q0.x,q0.y)||[]; } }
+      var route=patPath(PAT.tx,PAT.ty);
+      PAT.pathBlocked=!route; PAT.path=route||[];
+      if(!PAT.path.length&&!PAT.locked){
+        var q0=patPickSpot(false);
+        if(q0){ PAT.tx=q0.x; PAT.ty=q0.y; route=patPath(q0.x,q0.y); PAT.pathBlocked=!route; PAT.path=route||[]; }
+      }
     }
-    var wp=PAT.path[0]||{x:PAT.tx,y:PAT.ty};
+    var wp=PAT.path[0]||(PAT.pathBlocked?{x:PAT.x,y:PAT.y}:{x:PAT.tx,y:PAT.ty});
     if(PAT.path.length&&Math.hypot(wp.x-PAT.x,wp.y-PAT.y)<3){ PAT.path.shift(); wp=PAT.path[0]||{x:PAT.tx,y:PAT.ty}; }
-    if(PAT.locked&&d<14){ wp={x:S.x,y:S.y}; }
+    if(PAT.locked&&d<14&&!HIDE.on&&!PAT.pathBlocked&&patLOS()){ wp={x:S.x,y:S.y}; }
     tx=wp.x; ty=wp.y;
   }else{ tx=PAT.tx; ty=PAT.ty; }
   var dx=tx-PAT.x, dy=ty-PAT.y, dl=Math.hypot(dx,dy)||1, st=Math.min(dl,sp*dt);
@@ -298,7 +306,7 @@ function patTick(dt){
   var arrived=Math.hypot(PAT.tx-PAT.x,PAT.ty-PAT.y)<6;
   if(!PAT.locked&&(arrived||!moved)){ var q=patPickSpot(false); if(q){ PAT.tx=q.x; PAT.ty=q.y; PAT.path=null; } }
   PAT.step-=dt; if(PAT.step<=0&&d<200){ PAT.step=PAT.locked?0.32:0.7; try{ SFX.step(); }catch(e){} }
-  if(d<PAT_CATCH&&!patIgnores()&&(!HIDE.on||HIDE.seen)&&!S.dead){
+  if(d<PAT_CATCH&&patLOS()&&!patIgnores()&&(!HIDE.on||HIDE.seen)&&!S.dead){
     kill(HIDE.on?'柜门被拉开了。外面没有光，只有它弯下来的脸，和一只伸进来的手。'
                 :'一只手从后面按住了我的头顶，很轻，像在点名。灯全红了。我被它带走了，带回了那个空着的座位。','grip');
     return;

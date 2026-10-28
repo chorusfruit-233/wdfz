@@ -142,6 +142,10 @@ function dropSelected(){
   var id=S.bag[S.bagSel];
   if(!id){ return; }
   removeItem(id);
+  /* 独有的门材料丢弃后可回原处重取，避免误丢断掉整条路线。 */
+  if(id==='coil') RT.coilTaken=0;
+  if(id==='lens') RT.lensTaken=0;
+  if(id==='vial') RT.vialTaken=0;
   os('我：我把「'+ITEMS[id].n+'」放下了。',2.4);
   if(S.mode==='in'&&inToiletHere()&&S.room==='teach1'&&!RT.beastDrop){
     if(inBeastWindow()){

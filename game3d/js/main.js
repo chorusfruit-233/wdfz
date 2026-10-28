@@ -66,7 +66,7 @@ function render(dt){
   try{ PCGAME.tick(dt); }catch(e){}
   try{ updateIntro(dt); }catch(e){}
   try{
-    if(S.mode==='in'&&!S.dead){
+    if(S.mode==='in'&&!S.dead&&!HIDE.on){
       S.stuckT=(S.stuckT||0)+dt;
       if(S.stuckT>0.5){
         S.stuckT=0;
@@ -286,6 +286,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  clearSearch();
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
   spiralReset();
   buildInteriorData();
@@ -408,6 +409,8 @@ var Game={
   },
   quit:function(){
     running=true;
+    clearSearch();
+    try{ patReset(); }catch(e){}
     clearIntroTimers();
     S.screen='menu'; S.dead=false;
     resetInputState();releaseMouseLook();
