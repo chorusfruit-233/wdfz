@@ -11,11 +11,13 @@ function clearWorldMesh(){
   }
   if(GLR.roamFig){ GLR.scene.remove(GLR.roamFig); GLR.roamFig=null; }
   if(typeof TR!=='undefined'&&TR.g){ try{ GLR.scene.remove(TR.g); }catch(e){} TR.g=null; TR.key=''; }
+  try{ shadeClearRoom(); }catch(e){}
   if(GLR.roomMesh){ GLR.scene.remove(GLR.roomMesh); disposeGroup(GLR.roomMesh); GLR.roomMesh=null; }
   if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); disposeGroup(GLR.outMesh); GLR.outMesh=null; }
   if(GLR.roomLights){
     for(i=0;i<GLR.roomLights.length;i++) GLR.scene.remove(GLR.roomLights[i]);
     GLR.roomLights=[]; GLR.roomLightBase=[]; GLR.roomLightCol=[];
+    try{ FLK_PREV=[]; }catch(e){}
   }
 }
 function addRoomLights(R){
@@ -70,6 +72,7 @@ function enterWorldRoom(roomId){
   var dens=roomId==='garage1'?0.082:0.050;
   GLR.scene.fog=new THREE.FogExp2(FOG_COL,dens);
   addRoomLights(R);
+  try{ shadeMarkMesh(GLR.roomMesh); shadeBuildRoom(R); shadeBuildPools(); }catch(e){}
   try{ tracesBuild(); }catch(e){}
   try{ ncBuild(R); }catch(e){}
   try{ skipClear(); }catch(e){}
@@ -81,6 +84,7 @@ function enterWorldOut(){
   GLR.outMesh.userData=GLR.outMesh.userData||{};
   GLR.outMesh.userData.__outworld=1;
   GLR.scene.add(GLR.outMesh);
+  try{ shadeMarkMesh(GLR.outMesh); }catch(e){}
   GLR.scene.fog=new THREE.FogExp2(FOG_COL,0.020);
   GLR.skyHour=-1; refreshSky();
   GLR.lampPick=0;

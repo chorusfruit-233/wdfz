@@ -159,6 +159,7 @@ function updateLighting(){
     var base=GLR.roomLightBase[i]*s.ptK;
     var flick=roomFlicker(i,tt,s.day);
     if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
+    lightCrackle(i,flick);
     sum+=flick;
     GLR.roomLights[i].intensity=base*Math.max(0.05,flick)*(1+0.3*pr)*gz;
     var bc=GLR.roomLightCol&&GLR.roomLightCol[i];
@@ -172,6 +173,20 @@ function updateLighting(){
   var wn=GLR.worldNorm||0;
   GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
   GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
+  try{ shadeTick(s); }catch(e){}
+}
+/* 灯一下子暗下去（接触不良那一跳）的瞬间：近处的灯管噼啪一声，按方位分左右 */
+var FLK_PREV=[], FLK_LAST=0;
+function lightCrackle(i,flick){
+  var was=FLK_PREV[i]; FLK_PREV[i]=flick;
+  if(was===undefined||!(was>0.5&&flick<0.3)) return;
+  var L=GLR.roomLights[i], c=GLR.cam; if(!L||!c) return;
+  var tt=GLR.time||0; if(tt-FLK_LAST<0.05) return;
+  var dx=L.position.x-c.position.x, dz=L.position.z-c.position.z, d=Math.hypot(dx,dz);
+  if(d>9) return;
+  FLK_LAST=tt;
+  var rel=Math.atan2(dz,dx)-S.ang;
+  try{ SFX.crackle(1-d/9,Math.sin(rel)*0.8); }catch(e){}
 }
 /* 灯的闪烁：一直有一点点抖；每盏灯隔一阵会接触不良地连闪几下；夜里偶尔整盏暗一下 */
 function lhash(a,b){ var x=Math.sin(a*127.1+b*311.7)*43758.5453; return x-Math.floor(x); }

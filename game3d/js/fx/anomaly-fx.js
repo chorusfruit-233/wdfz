@@ -15,6 +15,7 @@ function anfxW2S(wx,wy){
   return worldToScene(wx,wy,null);
 }
 function anfxClear(){
+  try{ wxClear(); }catch(e){}
   if(ANFX.grp){ GLR.scene.remove(ANFX.grp); ANFX.grp=null; }
   ANFX.kind=null; ANFX.items=[]; ANFX.t=0;
   GLR.gazeT=0; GLR.gazeShake=0;
@@ -61,20 +62,9 @@ function anfxSpawn(kind,wx,wy){
   ANFX.kind=kind; ANFX.grp=grp; ANFX.t=0;
   var i;
   if(kind==='rain'){
-    var rm=anfxMat(0x9fb6c4,0.42);
-    for(i=0;i<160;i++){
-      var m=anfxBox(grp,rm,0.025,0.55,0.025,(Math.random()-0.5)*14,-Math.random()*6,(Math.random()-0.5)*14);
-      ANFX.items.push(m);
-    }
-    grp.position.set(p.x,0,p.z);
+    wxRainSpawn(grp);                           /* 雨丝、水圈、积水、闪电：见 fx/weather.js */
   } else if(kind==='moth'){
-    var mm=anfxMat(0xb9b2a0,0.85);
-    for(i=0;i<70;i++){
-      var mm2=anfxBox(grp,mm,0.06,0.03,0.06,(Math.random()-0.5)*2.6,1.0+Math.random()*1.8,(Math.random()-0.5)*2.6);
-      mm2.userData={a:Math.random()*6.28,r:0.4+Math.random()*1.6,sp:1.2+Math.random()*2.4,y:1.0+Math.random()*1.8};
-      ANFX.items.push(mm2);
-    }
-    grp.position.set(p.x,0,p.z);
+    wxMothSpawn(grp,wx,wy);
   } else if(kind==='exercise'){
     var em=anfxMat(0x1b2226,1.0);
     for(i=0;i<6;i++){
@@ -595,22 +585,9 @@ function anfxUpdate(dt){
   ANFX.t+=dt;
   var i,m;
   if(ANFX.kind==='rain'){
-    for(i=0;i<ANFX.items.length;i++){
-      m=ANFX.items[i];
-      m.position.y-=dt*11;
-      if(m.position.y<-1.2){ m.position.y+=6.5; }
-    }
-    if(S.screen==='play'){
-      var pp=anfxW2S(S.x,S.y);
-      ANFX.grp.position.set(pp.x,0,pp.z);
-    }
+    wxRainUpdate(dt);
   } else if(ANFX.kind==='moth'){
-    for(i=0;i<ANFX.items.length;i++){
-      m=ANFX.items[i];
-      var u=m.userData;
-      var a=u.a+ANFX.t*u.sp;
-      m.position.set(Math.cos(a)*u.r, u.y+Math.sin(a*2.3)*0.35, Math.sin(a)*u.r);
-    }
+    wxMothUpdate(dt);
   } else if(ANFX.kind==='exercise'){
     for(i=0;i<ANFX.items.length;i++){
       m=ANFX.items[i];

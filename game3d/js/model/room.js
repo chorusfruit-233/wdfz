@@ -21,6 +21,7 @@ function roomTheme(R){
 
 function buildRoomGeometry(R){
   S.__pianoPlaced=0;
+  SHAFT_ACC=[];                    /* 收集窗户，给光影模块画窗光 */
   R.stats={desk:0, cubicle:0, chair:0, seat:0};
   R.stairExtra=[];                 /* 以前每进一次房间都往里追加一遍，越积越多 */
   R.propExtra=[];                  /* 大件家具的真实占地（米，房间中心为原点） */
@@ -134,6 +135,7 @@ function buildRoomGeometry(R){
       K.box(TH.wallMat,CX(x),(WALLH+RWH)/2,CZ(y),tw,RWH-WALLH,th,TH.wall,0.94);
     buildSpiral(c);
   }
+  R.shafts=SHAFT_ACC||[]; SHAFT_ACC=null;
   return K.build();
 }
 
@@ -271,6 +273,7 @@ function roomStairs(c,x,y,cx,cz){
 /* 一扇嵌在墙里的窗：内侧窗框 + 透进天光的玻璃 + 窗台。nx/nz 是窗朝屋里的方向 */
 function wallWindow(K,x,z,nx,nz,w,y0,y1,mull){
   var rot=Math.atan2(nx,nz);                    /* 局部 +z 朝屋里 */
+  shaftNote(x,z,nx,nz,w,y0,y1);
   K.frame(x,z,rot);
   var h=y1-y0, ym=(y0+y1)/2;
   K.box('sky',0,ym,0.004,w,h,0.004,0xffffff,0.9);
@@ -402,6 +405,7 @@ function roomDecor(c,isRoof){
       K.bevel('wood',bcx+0.8,1.19,wz+0.12,0.16,0.05,0.07,0x3a3028,1,0.01);                  /* 板擦 */
       var hwid=(c1b-c0+1)*tw*0.82, mu;
       K.box('sky',bcx,2.63,wz+0.007,hwid,0.46,0.004,0xffffff,0.9);                         /* 高窗 */
+      shaftNote(bcx,wz,0,1,hwid,2.40,2.86);
       K.box('metal',bcx,2.89,wz+0.03,hwid+0.16,0.06,0.06,0x39434a,1.0);
       K.box('metal',bcx,2.37,wz+0.05,hwid+0.16,0.06,0.10,0x39434a,1.0);
       for(mu=1;mu<5;mu++) K.box('metal',bcx-hwid/2+(hwid/5)*mu,2.63,wz+0.03,0.045,0.50,0.05,0x39434a,1.05);
