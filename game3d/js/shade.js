@@ -29,6 +29,10 @@ function shadeApplyQuality(){
     sc.updateProjectionMatrix();
     m.shadow.bias=-0.0006; m.shadow.normalBias=0.04;
     if(!m.target.parent) GLR.scene.add(m.target);
+  }else{
+    /* 不跟随玩家时，日月光按相对于原点的方向照射。 */
+    m.target.position.set(0,0,0);
+    m.target.updateMatrixWorld();
   }
   GLR.torch.castShadow=on;
   shadeMarkMesh(GLR.roomMesh); shadeMarkMesh(GLR.outMesh);
