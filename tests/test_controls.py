@@ -22,7 +22,7 @@ class ControlsTest(unittest.TestCase):
         cls.server = ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=str(root)))
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
-        cls.url = f'http://127.0.0.1:{cls.server.server_port}/3d.html'
+        cls.url = f'http://127.0.0.1:{cls.server.server_port}/'
         cls.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
         cls.browser = cls.playwright.chromium.launch(
@@ -85,6 +85,48 @@ class ControlsTest(unittest.TestCase):
         self.touch(page, 'touchStart', [{'x': start[0], 'y': start[1]}])
         self.touch(page, 'touchMove', [{'x': end[0], 'y': end[1]}])
         self.touch(page, 'touchEnd', [])
+
+    def test_homepage_and_legacy_3d_link(self):
+        page = self.page()
+        failed_assets = []
+        page.on('response', lambda response: failed_assets.append(response.url)
+                if '/game3d/' in response.url and response.status >= 400 else None)
+        self.assertTrue(page.evaluate('saveGame()'))
+        page.goto(self.url, wait_until='load')
+        self.assert_js(page, "location.pathname==='/'&&!!GLR.renderer&&typeof Game.start==='function'")
+        self.assertTrue(page.locator('#menu .mcard').first.is_visible())
+        self.assertTrue(page.locator('#btncont').is_visible())
+        page.goto(self.url+'3d.html?lang=zh#classroom', wait_until='load')
+        page.wait_for_url('**/index.html?lang=zh#classroom')
+        self.assert_js(page, "location.search==='?lang=zh'&&location.hash==='#classroom'&&!!GLR.renderer")
+        self.assertTrue(page.locator('#menu .mcard').first.is_visible())
+        self.assertTrue(page.locator('#btncont').is_visible())
+        self.assertEqual(failed_assets, [])
+
+    def test_wiki_entry_spoilers_and_return_to_game(self):
+        for touch in (False, True):
+            with self.subTest(touch=touch):
+                page = self.page(touch=touch)
+                self.assertTrue(page.evaluate('saveGame()'))
+                saved = page.evaluate("localStorage.getItem('wdfz3d')")
+                page.goto(self.url, wait_until='load')
+                link = page.locator('#menu a.mwiki')
+                if touch:
+                    link.tap()
+                else:
+                    link.click()
+                page.wait_for_url('**/wiki/index.html')
+                self.assertTrue(page.get_by_role('heading', name='里世界游戏 Wiki').is_visible())
+                spoiler = page.locator('#anomalies details')
+                self.assertIsNone(spoiler.get_attribute('open'))
+                self.assertFalse(spoiler.locator('table').is_visible())
+                spoiler.locator('summary').click()
+                self.assertTrue(spoiler.locator('table').is_visible())
+                self.assertEqual(spoiler.locator('tbody tr').count(), 23)
+                page.get_by_role('link', name='← 返回游戏').click()
+                page.wait_for_url('**/index.html')
+                self.assertTrue(page.locator('#btncont').is_visible())
+                self.assertEqual(page.evaluate("localStorage.getItem('wdfz3d')"), saved)
 
     def test_fullscreen_enters_exits_and_updates_button(self):
         page = self.page()
