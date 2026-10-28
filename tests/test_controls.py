@@ -990,6 +990,103 @@ class ControlsTest(unittest.TestCase):
             doEnterRoom('teach1');running=false;for(i=0;i<80&&AN.active;i++) anTick(0.05);""")
         self.assert_js(page, "!AN.active&&RT.traces.some(function(t){return t.k==='cup'&&t.room===null})")
 
+    def test_brightness_setting_survives_reload(self):
+        context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
+        self.contexts.append(context)
+        page = context.new_page()
+        page.on('pageerror', lambda e: self.errors.append(str(e)))
+        page.goto(self.url, wait_until='load')
+        page.evaluate('Settings.bright(150)')
+        page.reload(wait_until='load')
+        self.assert_js(page, "SET.bright===150&&GLR.postMat.uniforms.uBright.value===1.5&&document.getElementById('mb').value==='150'")
+        page.evaluate('Settings.bright(60)')
+        page.reload(wait_until='load')
+        self.assert_js(page, "SET.bright===60&&GLR.postMat.uniforms.uBright.value===0.6&&document.getElementById('mb').value==='60'")
+
+    def test_lights_share_priority_and_follow_removed_items(self):
+        page = self.page()
+        page.evaluate("S.bag=['torch','phone','brolly'];USE={torch:false,phone:false,brollyShield:false};toggleTorch();useItem('phone');useItem('brolly')")
+        self.assert_js(page, 'USE.torch&&USE.phone&&USE.brollyShield&&GLR.torch.intensity===55')
+        page.evaluate('toggleTorch()')
+        self.assert_js(page, '!USE.torch&&USE.phone&&GLR.torch.intensity===22')
+        page.evaluate("toggleTorch();removeItem('torch')")
+        self.assert_js(page, '!USE.torch&&USE.phone&&GLR.torch.intensity===22')
+        page.evaluate("dropAt(S.bag.indexOf('phone'));removeItem('brolly')")
+        self.assert_js(page, '!USE.phone&&!USE.brollyShield&&GLR.torch.intensity===0')
+
+    def test_light_and_cooldown_restore_and_old_save_defaults(self):
+        page = self.page()
+        page.evaluate("""S.day=1;S.tsec=700;S.san=50;S.actCool={};
+            S.bag=['torch','phone','brolly'];USE={torch:false,phone:false,brollyShield:false};
+            toggleTorch();useItem('phone');useItem('brolly');doSanAct('wash');saveGame();""")
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        self.assert_js(page, 'USE.torch&&USE.phone&&USE.brollyShield&&GLR.torch.intensity===55&&S.actCool.wash>0')
+        self.assert_js(page, "(() => { const san=S.san,t=S.tsec; doSanAct('wash'); return S.san===san&&S.tsec===t; })()")
+        page.evaluate("""var old=loadGame();delete old.actCool;delete old.immuneUsed;old.bag=[];
+            old.use={torch:true,phone:true,brollyShield:true};localStorage.setItem('wdfz3d',JSON.stringify(old));""")
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        self.assert_js(page, '!USE.torch&&!USE.phone&&!USE.brollyShield&&GLR.torch.intensity===0&&Object.keys(S.actCool).length===0&&!S.immuneUsed')
+        page.evaluate("S.actCool={wash:9999};S.immuneUsed=true;freshState('easy');running=false")
+        self.assert_js(page, 'Object.keys(S.actCool).length===0&&!S.immuneUsed')
+
+    def test_fixed_items_remain_after_full_or_duplicate_bag(self):
+        page = self.page()
+        for room, method, item, flag in [('lab4', "useFacility('Y',INTERIORS.lab4)", 'compass', 'geoCompass'),
+                                          ('lab2', "useFacility('K',INTERIORS.lab2)", 'goggles', 'labReagent'),
+                                          ('bell1', 'useAltar()', 'coin', 'altarCoin')]:
+            with self.subTest(item=item):
+                page.evaluate("""room => { S.mode='in';S.room=room;S.bag=['chalk','snack','battery','pill','pen','notebook','memo','phone'];
+                    S.actCool={};RT=newRT(); }""", room)
+                page.evaluate(method)
+                self.assert_js(page, f"!RT.{flag}&&!hasItem('{item}')")
+                page.evaluate(f"removeItem('phone');{method}")
+                self.assert_js(page, f"RT.{flag}&&hasItem('{item}')")
+                page.evaluate(f"RT=newRT();S.actCool={{}};{method}")
+                self.assert_js(page, f"!RT.{flag}&&hasItem('{item}')")
+                page.evaluate(f"removeItem('{item}');S.actCool={{}};{method}")
+                self.assert_js(page, f"RT.{flag}&&hasItem('{item}')")
+
+    def test_immune_talent_saves_once_and_persists(self):
+        page = self.page()
+        page.evaluate("""S.diff='hard';S.talent='immune';S.immuneUsed=false;S.bag=['elixir'];
+            S.san=0;S.viol=100;kill('第一次','vignette');""")
+        self.assert_js(page, '!S.dead&&!hasItem(\'elixir\')&&!S.immuneUsed&&S.san>=45&&S.viol<=40')
+        page.evaluate("S.san=0;S.viol=100;kill('第二次','vignette');saveGame()")
+        self.assert_js(page, '!S.dead&&S.immuneUsed&&S.san>=45&&S.viol<=40')
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        self.assert_js(page, "S.talent==='immune'&&S.immuneUsed&&!S.dead")
+        page.evaluate("kill('第三次','vignette')")
+        self.assert_js(page, 'S.dead&&!loadGame()')
+
+    def test_immune_talent_ends_a_lethal_anomaly(self):
+        page = self.page()
+        page.evaluate("""S.diff='hard';S.talent='immune';S.immuneUsed=false;S.bag=[];
+            S.san=100;S.viol=0;AN.active=true;AN.id='moth';AN.t=1;AN.acc=4.6;
+            AN.data={src:{x:S.x,y:S.y}};anTick(.1);""")
+        self.assert_js(page, 'S.immuneUsed&&!S.dead&&!AN.active&&S.san>0')
+        page.evaluate('for(var i=0;i<10;i++) update(.1)')
+        self.assert_js(page, '!S.dead&&S.immuneUsed')
+        page = self.page()
+        page.evaluate("""S.diff='hard';S.talent='immune';S.immuneUsed=false;S.bag=[];
+            S.x=560*SC;S.y=857*SC;AN.pre='cup';AN.locked=true;anStart();
+            for(var i=0;i<80&&!S.immuneUsed;i++) anTick(.05);""")
+        self.assert_js(page, "S.immuneUsed&&!S.dead&&!AN.active&&RT.traces.some(function(t){return t.k==='cup'})")
+
+    def test_lights_out_hud_debug_minutes_and_podium_text(self):
+        page = self.page()
+        page.evaluate('S.tsec=1339;updateHUD()')
+        self.assertEqual(page.locator('#period').inner_text(), '洗漱 · 自由')
+        page.evaluate('S.tsec=1345;updateHUD()')
+        self.assertEqual(page.locator('#period').inner_text(), '熄灯后 · 宿舍')
+        page.evaluate('S.tsec=700;Dev.time(30)')
+        self.assertEqual(page.evaluate('fmtClock(S.tsec)'), '12:10')
+        page.evaluate("""S.mode='in';S.room='teach1';S.seated=false;S.bag=[];RT=newRT();
+            nearWorld=function(){return {ch:'T'}};hit2_seatNear=function(){return false};tryInteract();""")
+        self.assert_js(page, "hasItem('chalk')&&document.getElementById('sub').textContent.includes('粉笔')")
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

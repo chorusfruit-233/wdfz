@@ -207,7 +207,7 @@ function updateHUD(){
   try{ updateMarker(dtG); }catch(e){}
   document.getElementById('place').textContent=currentPlaceName();
   var p=periodAt(S.tsec);
-  document.getElementById('period').textContent=(S.exam&&p[3]==='教室')?('考试 · '+p[2]):(p[2]+' · '+p[3]);
+  document.getElementById('period').textContent=(S.exam&&p[3]==='教室')?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec));
   var sw=document.getElementById('stamwrap');
   if(sw){ var _sn=(S.snackT||0)>0;          /* 士力架起效时，体力条变成金色的剩余时间 */
     sw.style.visibility=(S.stam<99.5||_sn)?'visible':'hidden';
@@ -297,6 +297,7 @@ function freshState(diff){
   S.talent=t;
   S.tsec=700; S.day=1;
   S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.tt=0; S.ttTier=0;
+  S.actCool={}; S.immuneUsed=false;
   S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
   try{ patReset(); PAT.next=45; }catch(e){}
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
@@ -307,7 +308,7 @@ function freshState(diff){
   S.x=GATE_N.x*SC; S.y=(GATE_N.y+40)*SC;
   S.ang=PI/2; S.pitch=0; S.eyeH=EYE;
   S.hiddenLatch=false; S.hiddenAsked=false; S.dangerSeen={};
-  RT=newRT(); USE={torch:false,phone:false,brollyShield:false}; OPENDOORS={};
+  RT=newRT(); USE={torch:false,phone:false,brollyShield:false}; OPENDOORS={}; syncUseState();
   AN.id=null; AN.active=false; AN.next=(S.diff==='hard')?40:60; AN.rained=false; AN.cool={}; AN.lastBig=false; AN.t=0; AN.acc=0;
   AN.pre=null; AN.preNext=0; AN.locked=false; AN.lockWait=0;
   ROAM.on=false;
@@ -354,6 +355,8 @@ var Game={
     S.tsec=d.tsec; S.day=d.day; S.san=d.san; S.viol=d.viol; S.stam=d.stam;
     S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
     S.snackT=Number.isFinite(d.snackT)?clamp(d.snackT,0,SNACK_SEC):0;
+    S.actCool=(d.actCool&&typeof d.actCool==='object'&&!Array.isArray(d.actCool))?Object.assign({},d.actCool):{};
+    S.immuneUsed=!!d.immuneUsed;
     S.tt=d.tt||0; S.ttTier=d.ttTier||0;
     S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0;
     S.bag=d.bag||[]; S.hot=d.hot||[null,null];
@@ -363,6 +366,7 @@ var Game={
     if(d.fn) S.fn=Object.assign({v:0,on:false,note:false,n:0,next:0,shown:false},d.fn);
     if(d.rt) RT=Object.assign(newRT(),d.rt);
     if(d.use) USE=d.use;
+    syncUseState();
     if(d.openDoors) OPENDOORS=d.openDoors;
     AN.id=d.anId||null; AN.t=d.anT||0; AN.acc=d.anAcc||0;
     AN.data=(d.anData&&typeof d.anData==='object')?d.anData:{};
@@ -505,6 +509,7 @@ function boot(){
   buildInteriorData();
   buildRoomBounds();
   initGL();
+  applyBrightness();
   try{ shadeApplyQuality(); }catch(e){}
   initInput();
   try{ initPcTouch(); }catch(e){}

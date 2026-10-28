@@ -100,9 +100,9 @@ function useFacility(ch,R){
     rolled=true;
     addClue('geo');
     if(!hasItem('compass')&&!RT.geoCompass){
+      if(!addItem('compass')) return true;
       RT.geoCompass=1;
       os('我：地球仪上，学校的位置被铅笔描了很多遍，纸都描破了。底座的抽屉里有个罗盘。',4.6);
-      addItem('compass');
     }else{
       os('我：我转了一下地球仪。它转回来，停在原来那一面。',3.2);
     }
@@ -117,7 +117,10 @@ function useFacility(ch,R){
       if(R.floor===5){ os('我：讲台上摊着谱子。第三乐章那一页被折了角。',3.4); }
       else if(R.floor===3){ os('我：教师台上摊着一本「机房钥匙借用登记」。最后一页是空的。',3.6); }
       else { os('我：教师台上还留着上一节课的东西。烧杯里的水是温的。',3.4); }
-      if(R.floor===2&&!RT.labReagent){ RT.labReagent=1; addItem('goggles'); }
+      if(R.floor===2&&!RT.labReagent){
+        if(hasItem('goggles')) os('我：台上还有一副护目镜，我已经带了一副。',3.2);
+        else if(addItem('goggles')) RT.labReagent=1;
+      }
     }
   }
   if(rolled) cool[key]=facClock()+cd;
@@ -285,7 +288,10 @@ function tryInteract(){
   if(ch==='P'){ sitDown(); return; }
   if(ch==='d'||ch==='f'||ch==='R'){ searchContainer(hit.c,hit.r); return; }
   if(ch==='T'){
-    if(S.room==='teach1'){ addItem('chalk'); os('我：讲台上有一支红笔。',2.8); }
+    if(S.room==='teach1'){
+      if(hasItem('chalk')) os('我：讲台上有一支粉笔，我已经带了一支。',2.8);
+      else if(addItem('chalk')) os('我：讲台上有一支粉笔。',2.8);
+    }
     else os('我：讲台是空的。',2.2);
     return;
   }
@@ -353,9 +359,10 @@ function useBell(){
 function useAltar(){
   addClue('altar');
   if(!RT.altarCoin){
+    if(hasItem('coin')){ os('我：香炉底下压着一枚硬币。我已经带了一枚。',3.6); return; }
+    if(!addItem('coin')) return;
     RT.altarCoin=1;
     os('我：供桌上的饭还冒着气，筷子竖插在正中。照片上那张脸被剪掉了，校服是我们学校的。香炉底下压着一枚硬币。',5.6);
-    addItem('coin');
     return;
   }
   S.san=Math.max(0,S.san-2);

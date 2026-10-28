@@ -108,7 +108,7 @@ var Dev={
   search:function(){ SEARCH.on=!SEARCH.on; clearSearch(); Dev.paint(); toast(SEARCH.on?'翻找读条 0.8 秒：开':'翻找读条：关（立刻翻完）'); },
   god:function(){ DEV.god=!DEV.god; Dev.paint(); toast(DEV.god?'无敌 开':'无敌 关'); },
   san:function(){ S.san=100; S.stam=100; toast('SAN / 体力 已满'); },
-  time:function(min){ S.tsec=((S.tsec+min*60)%1440+1440)%1440; toast('时间 '+(min>0?'+':'')+min+' 分钟'); },
+  time:function(min){ S.tsec=((S.tsec+min)%1440+1440)%1440; toast('时间 '+(min>0?'+':'')+min+' 分钟'); },
   tp:function(){
     var v=document.getElementById('devroom').value; if(!v) return;
     try{ enterRoom(v); toast('传送 → '+v); }catch(e){ toast('传送失败'); }
