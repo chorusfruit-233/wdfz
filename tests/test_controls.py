@@ -128,7 +128,7 @@ class ControlsTest(unittest.TestCase):
                 self.assertFalse(spoiler.locator('table').is_visible())
                 spoiler.locator('summary').click()
                 self.assertTrue(spoiler.locator('table').is_visible())
-                self.assertEqual(spoiler.locator('tbody tr').count(), 23)
+                self.assertEqual(spoiler.locator('tbody tr').count(), 24)
                 page.get_by_role('link', name='← 返回游戏').click()
                 page.wait_for_url('**/index.html')
                 self.assertTrue(page.locator('#btncont').is_visible())
@@ -951,6 +951,32 @@ class ControlsTest(unittest.TestCase):
         page.evaluate("doEnterRoom('teach1');running=false;patAddFig()")
         self.assert_js(page, "GLR.patFig.children.length===4&&GLR.patFig.children[1].geometry.attributes.position.count>500")
         self.assert_js(page, "GLR.patFig.children[1].material.vertexColors===true")
+
+    def test_tsinghua_cup_only_falls_along_tall_outer_walls(self):
+        page = self.page()
+        page.evaluate("S.x=560*SC;S.y=857*SC")
+        self.assert_js(page, "anAllowed('cup')&&cupWall().id==='teach'&&cupWall().m<2.4")
+        page.evaluate("S.y=830*SC")                              # 离墙太远
+        self.assert_js(page, "!anAllowed('cup')")
+        page.evaluate("S.y=990*SC")                              # 教学楼南面柱廊下：头顶有顶
+        self.assert_js(page, "!anAllowed('cup')")
+        page.evaluate("S.y=857*SC;USE.brollyShield=true")        # 伞挡不住保温杯
+        self.assert_js(page, "anAllowed('cup')")
+        page.evaluate("USE.brollyShield=false;doEnterRoom('teach1');running=false")
+        self.assert_js(page, "!anAllowed('cup')&&cupWall()===null")
+
+    def test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move(self):
+        page = self.page()
+        page.evaluate("""S.x=560*SC;S.y=857*SC;AN.pre='cup';AN.locked=true;anStart();
+            for(var i=0;i<80&&!S.dead;i++){ anTick(0.05); anfxUpdate(0.05); }""")
+        self.assert_js(page, "S.dead")
+        page = self.page()
+        page.evaluate("""S.x=560*SC;S.y=857*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
+            for(var i=0;i<40&&AN.data.phase<1;i++){ anTick(0.05); anfxUpdate(0.05); }""")
+        self.assert_js(page, "AN.id==='cup'&&AN.data.phase===1&&ANFX.cup.ring.visible")
+        page.evaluate("""S.y-=14;                                   // 往外躲开约 1.6 米
+            for(var i=0;i<120&&AN.active;i++){ anTick(0.05); anfxUpdate(0.05); }""")
+        self.assert_js(page, "!S.dead&&!AN.active&&S.san<100&&RT.traces.some(function(t){return t.k==='cup'})")
 
 
 if __name__ == '__main__':

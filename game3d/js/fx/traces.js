@@ -27,6 +27,7 @@ function traceAdd(id){
   else if(id==='necker') t={k:'fence',x:BOUND.x1*SC-6,y:S.y};
   else if(id==='feast') t={k:'bowl',x:S.x,y:S.y};
   else if(id==='chalk') t={k:'dust',x:S.x,y:S.y};
+  else if(id==='cup'&&d.phase===2) t={k:'cup',x:d.lx,y:d.ly};
   if(!t) return;
   t.room=room;
   RT.traces=RT.traces||[];
@@ -66,6 +67,10 @@ function tracesBuild(force){
     else if(t.k==='paper'){ for(j=0;j<7;j++) flat(mPale,0.18,0.12,p.x+(hash2(i,j)-0.5)*1.6,p.z+(hash2(j,i)-0.5)*1.6,hash2(j,i+1)*6); flat(mRed,0.16,0.012,p.x,p.z,0.4,0.02); }
     else if(t.k==='handprint'){ for(j=0;j<3;j++) flat(mWet,0.14,0.18,p.x+j*0.35,p.z+(j%2)*0.2,0.3*j); }
     else if(t.k==='fence'){ for(j=0;j<6;j++) anfxBox(g,mDark,0.02,0.18,0.14,p.x+0.02,0.6+hash2(i,j)*0.7,p.z-1.5+j*0.6); }
+    else if(t.k==='cup'){                               /* 摔瘪的保温杯躺在地上，地砖砸出一个白印 */
+      var cgy=cupGroundY(p.x,p.z), cm=cupMesh(); cm.scale.set(2.2,2.2,1.7); cm.rotation.set(0,hash2(i,7)*6.28,Math.PI/2); cm.position.set(p.x,cgy+0.07,p.z); g.add(cm);
+      flat(anfxMat(0xd8d4cc,0.5),0.22,0.18,p.x+0.05,p.z-0.02,hash2(i,3)*3,cgy+0.014);
+    }
     else if(t.k==='bowl'){ anfxBox(g,anfxMat(0xe8e2d4,1.0),0.16,0.08,0.16,p.x+0.6,0.04,p.z); anfxBox(g,anfxMat(0x3a2a1a,1.0),0.012,0.2,0.012,p.x+0.6,0.14,p.z); }
     else if(t.k==='dust'){ for(j=0;j<14;j++) flat(mChalk,0.08,0.08,p.x+(hash2(i,j)-0.5)*1.4,p.z+(hash2(j,i)-0.5)*1.4,0); }
     else if(t.k==='scratch'){ for(j=0;j<5;j++) anfxBox(g,anfxMat(0x3a302c,0.85),0.012,0.9-j*0.08,0.02,p.x,1.1+j*0.03,p.z+j*0.07); }

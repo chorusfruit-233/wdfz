@@ -17,7 +17,7 @@ function anfxW2S(wx,wy){
 function anfxClear(){
   try{ wxClear(); }catch(e){}
   if(ANFX.grp){ GLR.scene.remove(ANFX.grp); ANFX.grp=null; }
-  ANFX.kind=null; ANFX.items=[]; ANFX.t=0;
+  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
 function anfxMat(col,op){
@@ -65,6 +65,8 @@ function anfxSpawn(kind,wx,wy){
     wxRainSpawn(grp);                           /* 雨丝、水圈、积水、闪电：见 fx/weather.js */
   } else if(kind==='moth'){
     wxMothSpawn(grp,wx,wy);
+  } else if(kind==='cup'){
+    cupFxSpawn(grp);                            /* 见 fx/cup.js */
   } else if(kind==='exercise'){
     var em=anfxMat(0x1b2226,1.0);
     for(i=0;i<6;i++){
@@ -588,6 +590,8 @@ function anfxUpdate(dt){
     wxRainUpdate(dt);
   } else if(ANFX.kind==='moth'){
     wxMothUpdate(dt);
+  } else if(ANFX.kind==='cup'){
+    cupFxUpdate(dt);
   } else if(ANFX.kind==='exercise'){
     for(i=0;i<ANFX.items.length;i++){
       m=ANFX.items[i];

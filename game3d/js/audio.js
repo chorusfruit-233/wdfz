@@ -358,6 +358,18 @@ var SFX=(function(){
       for(i=0;i<n;i++) noiseP(0.018,0.05*k,rnd(3500,6500),i*rnd(0.02,0.05),'highpass',0.7,pan,0.2);
       tone(100,0.14,'square',0.012*k,98,0,0.2);
     },
+    /* 清华水杯：往下掉的风声和哨音；落地按离你多远决定多响 */
+    cupFall:function(dur){
+      tone(2200,dur,'sine',0.018,650,0,0.2);
+      noise(dur,0.03,900,0,'bandpass',1.2,0.1,dur*0.8);
+    },
+    cupHit:function(missM){
+      var k=clamp(1-missM/14,0.15,1);
+      bellHit(620,0.035*k,0,0.4);                                     /* 不锈钢的「当」 */
+      noise(0.18,0.16*k,1800,0,'bandpass',0.8,0.3);
+      noise(0.5,0.09*k,240,0,'lowpass',1,0.4);
+      for(var i=0;i<4;i++) tone(rnd(1400,2400),0.05,'triangle',0.02*k,0,0.25+i*rnd(0.12,0.2),0.3);   /* 杯盖滚开 */
+    },
     /* 雷：近的先一声炸裂再滚，远的只有闷闷的滚 */
     thunder:function(delay,str,muffled){
       str=clamp(str===undefined?1:str,0.2,1); var lp=muffled?0.55:1;
@@ -404,6 +416,7 @@ var SFX=(function(){
       else if(id==='necker'){ for(i=0;i<10;i++) noise(0.1,0.035,350,i*0.6,'lowpass',1,0.2); }
       else if(id==='shadow'){ noise(1.8,0.04,500,0,'lowpass',1,0.4,1.6); }
       else if(id==='twin'){ for(i=0;i<6;i++) noise(0.08,0.04,900,i*0.5+0.25,'bandpass',1.2,0.5); }
+      else if(id==='cup'){ for(i=0;i<7;i++) tone(rnd(2600,3400),0.06,'triangle',0.012,0,0.1+i*0.13+Math.random()*0.05,0.4); }   /* 窗台上叮叮当当 */
       else if(id==='moth'){ for(i=0;i<30;i++) noise(0.05,0.02,rnd(1500,2600),i*0.07,'bandpass',3); }
     },
     anomalyEnd:function(id){ tone(330,1.6,'sine',0.01,320,0,0.8); }
