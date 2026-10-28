@@ -101,14 +101,14 @@ function initGL(){
     uniforms:{
       tDiffuse:{value:rt.texture},
       uTime:{value:0}, uRes:{value:new THREE.Vector2(2,2)},
-      uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uGaze:{value:0},
+      uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uGaze:{value:0},
       uFx:{value:GLRTEST.nofx?1.0:0.0}
     },
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
     fragmentShader:[
 'precision highp float;',
 'uniform sampler2D tDiffuse;uniform float uTime;uniform vec2 uRes;',
-'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uGaze;',
+'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uGaze;',
 'varying vec2 vUv;',
 'float hash(vec2 p){',
 '  p = fract(p * vec2(443.8975, 397.2973));',
@@ -123,7 +123,7 @@ function initGL(){
 '  float wob=(1.0-uSan);',
 '  uv.x+=sin(uv.y*11.0+uTime*0.9)*0.0012*wob;',
 '  vec3 col=texture2D(tDiffuse,uv).rgb;',
-'  col=aces(col*uBright*1.12);',
+'  col=aces(col*uBright*uExpo*1.12);',
 '  float lum=dot(col,vec3(0.2126,0.7152,0.0722));',
 '  col=mix(vec3(lum),col,0.70+0.25*uGaze);',
 '  col*=vec3(1.03,1.00,0.985);',

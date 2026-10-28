@@ -14,7 +14,7 @@ var PRO_PAGES=[
   '窗外的颜色不见了。走廊里很安静，安静得能听见灯管里的电流。',
   '下课铃没有响。\n你忽然很确定：这不是你转来的那个学校。\n而它，已经知道你醒了。'
 ];
-var PRO={on:false,i:0,seen:false,woke:false,see:false};
+var PRO={on:false,i:0,seen:false,woke:false,see:false,busy:false};
 function eyelid(close,mid,open){
   var t=document.getElementById('lidtop'), b=document.getElementById('lidbot');
   if(!t||!b){ mid(); if(open) open(); return; }
@@ -47,7 +47,7 @@ function proMark(){ try{ localStorage.setItem('wdfz_pro','1'); }catch(e){} }
 function proShow(){
   var el=document.getElementById('pro');
   if(!el){ proEnd(); return; }
-  PRO.on=true; PRO.i=0; PRO.woke=false; PRO.see=false;
+  PRO.on=true; PRO.i=0; PRO.woke=false; PRO.see=false; PRO.busy=false;
   try{ GLR.worldNorm=1; }catch(e){}          /* 先按"正常世界"渲染 */
   try{ if(el.classList) el.classList.remove('see'); }catch(e){}
   try{ document.body.classList.add('pro'); }catch(e){}
@@ -76,7 +76,7 @@ function proSetText(txt){
   },200);
 }
 function proNext(){
-  if(!PRO.on) return;
+  if(!PRO.on||PRO.busy) return;           /* 睁眼动画期间再按一次，会把第 8 页直接跳过去 */
   PRO.i++;
   if(PRO.i>=PRO_PAGES.length){ proEnd(); return; }
   if(PRO.i===6&&!PRO.see){
@@ -85,7 +85,9 @@ function proNext(){
     if(el) el.classList.add('see');
   }
   if(PRO.i===8&&!PRO.woke){
-    proWake(function(){ proSetText(PRO_PAGES[PRO.i]); });
+    var page=PRO.i;
+    PRO.busy=true;
+    proWake(function(){ PRO.busy=false; proSetText(PRO_PAGES[page]); });
     return;
   }
   proSetText(PRO_PAGES[PRO.i]);

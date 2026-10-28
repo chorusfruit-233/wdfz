@@ -14,16 +14,31 @@ var SPOTS=[
   {id:'office',n:'办公室',    x:400,y:515,w:270,h:90},
   {id:'front', n:'前台',      x:452,y:865,w:218,h:120}
 ];
+/* 室内坐标和室外地图不是一回事（教学楼室内正好压在"隔间""前台"的矩形上，
+   以前坐在教室里就"记下了第三个隔间"）。室内按所在的楼算，厕所隔间要亲眼看到。 */
+var SPOT_ROOM={guard:['guard'],garw:['garage'],trash:['trash'],admin:['data'],lab:['comp']};
+var SPOT_INDOOR_ONLY={stall:1};
+function spotMark(id){
+  if(S.spots[id]) return;
+  var sp=null;
+  for(var i=0;i<SPOTS.length;i++) if(SPOTS[i].id===id) sp=SPOTS[i];
+  if(!sp) return;
+  S.spots[id]=1;
+  os('我：（记下了「'+sp.n+'」）',3);
+  UI.spotsDirty=true;
+}
 function spotTick(){
+  if(S.mode==='in'){
+    var R=INTERIORS[S.room], ids=R&&SPOT_ROOM[R.host];
+    if(ids) for(var k=0;k<ids.length;k++) spotMark(ids[k]);
+    if(R&&R.host==='teach'&&inToiletHere()) spotMark('stall');   /* 隔间那条路只在教学楼 */
+    return;
+  }
   for(var i=0;i<SPOTS.length;i++){
     var sp=SPOTS[i];
-    if(S.spots[sp.id]) continue;
+    if(S.spots[sp.id]||SPOT_INDOOR_ONLY[sp.id]) continue;
     var mx=S.x/SC,my=S.y/SC;
-    if(mx>sp.x-30&&mx<sp.x+sp.w+30&&my>sp.y-30&&my<sp.y+sp.h+30){
-      S.spots[sp.id]=1;
-      os('我：（记下了「'+sp.n+'」）',3);
-      UI.spotsDirty=true;
-    }
+    if(mx>sp.x-30&&mx<sp.x+sp.w+30&&my>sp.y-30&&my<sp.y+sp.h+30) spotMark(sp.id);
   }
 }
 
@@ -188,6 +203,10 @@ function tryCarRoute(){
 function useCar(cx,cy){
   if(!hasItem('key')&&S.talent!=='drive'){ os('我：车门锁着。',2.4); return; }
   if(RT.carUsed){ os('我：已经开过一辆了。',2.4); return; }
+  if(roamGuardsCar()){
+    kill('你拉开车门，钻进去，摸到钥匙孔。后视镜里，它就站在后座上，弯着腰，脸贴着车顶。','grip');
+    return;
+  }
   RT.carUsed=true; RT.carLeaving=2.0;
   S.enterCool=2.0;
   os('我：引擎着了。车往前冲了出去。',4);
@@ -225,13 +244,16 @@ function tryTrashRoute(){
     ]);
     return;
   }
-  os('我：桶盖内侧用记号笔写着：「清运 17:30」。字是倒着写的，像是从里面写的。',4.4);
+  os('我：桶盖内侧用记号笔写着：「清运 17:30」。字是倒着写的，像是从里面写的。',4.4,OS_KEEP);
 }
 function tryBeastRoute(){
-  if(!RT.beastDrop){ os('我：我还没往那条缝里放过东西。',2.6); return; }
-  if(inBeastWindow()&&inToiletHere()){ triggerEnding('beast'); return; }
-  if(!inBeastWindow()){ os('我：不是现在。隔间门上刻的时间是 11:45。',3.0); return; }
-  os('我：得在厕所里，第三个隔间门口。',2.6);
+  if(!inToiletHere()||S.room!=='teach1'){ os('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
+  if(!inBeastWindow()){
+    os(hasSeconds()?'我：门上刻的是 11:45:00 整。现在是 '+fmtClockS(S.tsec)+'。到点了就把东西放下（G）。'
+                   :'我：门上刻的是 11:45:00 整——要精确到秒。我得有块带秒针的表。',3.8,OS_KEEP);
+    return;
+  }
+  os('我：就是现在。放下一样东西（G）。',2.6,OS_KEEP);
 }
 /* 隔间：门上刻着时间（《先辈》的提示），时间对了、东西放过了，敲门就是那条路 */
 function useStall(){
@@ -239,7 +261,8 @@ function useStall(){
   if(RT.beastDrop&&inBeastWindow()&&S.room==='teach1'){ triggerEnding('beast'); return; }
   addClue('stall');
   if(S.room==='teach1'){
-    os('我：第三个隔间的门从里面锁着。门板上有人用指甲刻了一行：「11:45　放下一样东西　敲三下」。',5.2);
+    os('我：第三个隔间的门从里面锁着。门板上有人用指甲刻了一行：「11:45:00　放下一样东西」。'+
+       (hasSeconds()?'我看了一眼表。':'连秒都刻上了——得有块带秒针的表才行。'),5.6,OS_KEEP);
   }else{
     os('我：隔间的门在里面锁着。门缝底下很暗，暗得不像有地面。',3.4);
   }
@@ -276,10 +299,11 @@ function kill(msg,fx){
   var _hold=(S.death==='neck')?3000:((S.death==='grip'||S.death==='gaze'||S.death==='stare'||S.death==='ring'||S.death==='lamps'||S.death==='follow')?2600:2000);
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
   var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3);
+  if(!wake) clearSave();                 /* 没有下一次了：不能再读档回来 */
   if(!wake) setTimeout(function(){
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
   },_hold);
-  os(msg,2.6);
+  os(msg,2.6,OS_FORCE);
   var _deadId=S.deadId=(S.deadId||0)+1;
   setTimeout(function(){
     if(S.deadId!==_deadId||!S.dead) return;
@@ -299,16 +323,19 @@ function dreamWake(){
     AN.active=false; AN.id=null; AN.data={}; AN.t=0; AN.acc=0; AN.pre=null; AN.preNext=0; AN.locked=false;
     AN.next=60;
     S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.pitch=0;
-    S.tsec=700; S.san=78; S.viol=0; S.stam=100; S.tt=0; S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
+    S.tsec=700; S.san=78; S.viol=0; S.stam=100; S.snackT=0; S.tt=0; S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
     GLR.hurt=0; GLR.flash=0;
     var f=document.getElementById('flash'); if(f){ f.style.transition='none'; f.style.opacity='0'; }
     UI.closeChoice(); PAUSE.on=false; ROAM.on=false;
+    OPENDOORS={};                        /* 回到 11:40：开过的门也都关回去了 */
+    examEnd();
     var R1=INTERIORS['teach1'];
     doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
     try{ SFX.wake&&SFX.wake(); }catch(e){}
   },function(){
-    os('……我猛地抬起头，后背全是汗。11:40。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5);
+    os('……我猛地抬起头，后背全是汗。11:40。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,OS_FORCE);
     toast(left>0?'预知梦 · 还能再醒 '+left+' 次':'预知梦 · 下一次，不会再醒了');
+    autoSave();
   });
 }
 
@@ -320,6 +347,7 @@ var ENDINGS={
 };
 function triggerEnding(id){
   RT.end=id;
+  endMark(id); clearSave();
   var e=ENDINGS[id];
   GLR.flash=0.6;
   setTimeout(function(){ GLR.flash=0; },600);

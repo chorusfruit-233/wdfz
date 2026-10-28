@@ -5,15 +5,20 @@ function nearWorld(radius){
   if(S.mode==='in'){
     var R=INTERIORS[S.room];
     if(!R) return null;
+    if(R.spiral&&SP.state!=='ground') return null;   /* 在钟楼楼梯上，够不着地上的东西 */
     var hits=[];
     for(var r=0;r<R.rows;r++) for(var c=0;c<R.cols;c++){
       var ch=R.grid[r][c];
       if(ch==='#'||ch==='.') continue;
       var wx=R.ox+(c+0.5)*R.tw, wy=R.oy+(r+0.5)*R.th;
       var d=Math.sqrt(dist2(wx,wy,S.x,S.y));
-      if(d<radius) hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d});
+      if(d>=radius) continue;
+      /* 以前只取最近的格子、不看朝向：终端被课桌围着时，按 E 永远在翻课桌。
+         现在面前的东西优先，侧面、背后的要近得多才会被选中。 */
+      var off=d<4?0:angDiff(Math.atan2(wy-S.y,wx-S.x),S.ang);
+      hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d+off*10});
     }
-    hits.sort(function(a,b){return a.d-b.d;});
+    hits.sort(function(a,b){return a.score-b.score;});
     return hits[0]||null;
   }
   var best=null,bd=1e9;
@@ -213,6 +218,7 @@ function tryInteract(){
   }
 
   var R=INTERIORS[S.room];
+  if(bellReach()){ useBell(); return; }
   var _sa=sanActFor(R,null), _hit0=nearWorld(24);
   if(_hit0&&FAC_CD[_hit0.ch]!==undefined){ if(useFacility(_hit0.ch,R)) return; }
   if(_hit0){ var _k=sanActFor(R,_hit0); if(_k){ doSanAct(_k); return; } }
@@ -267,7 +273,7 @@ function tryInteract(){
   }
   if(ch==='X'){ useTrash(); return; }
   if(ch==='p'){
-    if(S.tsec<1150) os('我：现在弹琴，走廊里的人都听得见。',3.0);
+    if(S.tsec<EVENING) os('我：现在弹琴，走廊里的人都听得见。',3.0);
     SFX.moonlight();
     os('我：是《月光》。第一乐章。可是钢琴没有人在弹。',5.5);
     return;
@@ -275,13 +281,15 @@ function tryInteract(){
   if(ch==='b'){ os('我：床。可是现在不能睡。',2.4); return; }
   if(ch==='k'&&R.host==='guard'){
     if(!hasItem('roomkey')){
-      addItem('roomkey');
-      os('我：柜台下面挂着一串钥匙。其中一把的标签上写着「机房」。',4.2);
+      if(addItem('roomkey')) os('我：柜台下面挂着一串钥匙。其中一把的标签上写着「机房」。',4.2);
       return;
     }
     if(!hasItem('key')){
-      addItem('key');
-      os('我：旁边还挂着一串车钥匙。牌号刻在环上——是车库那两辆的。',4.4);
+      if(addItem('key')) os('我：旁边还挂着一串车钥匙。牌号刻在环上，旁边还放着一把手电筒。',4.4);
+      return;
+    }
+    if(!hasItem('torch')){
+      if(addItem('torch')) os('我：柜台下面还有一把手电筒。去车库之前，把它带上。',4.2);
       return;
     }
     os('我：柜台下面没有别的了。',2.0); return;
@@ -311,10 +319,11 @@ function useBell(){
     try{ SFX.bigBell&&SFX.bigBell(); }catch(e){}
     anEnd(); return;
   }
-  S.san=Math.max(0,S.san-3);
   addClue('bell');
-  try{ SFX.bigBell&&SFX.bigBell(0.3); }catch(e){}
-  os('我：我推了一下撞木。钟没响。……过了很久，教学楼那边响了一下。',4.2);
+  if(S.exam){ try{ SFX.bigBell&&SFX.bigBell(0.3); }catch(e){} os('我：钟还在嗡嗡地响。今天剩下的课，都是考试了。',3.4); return; }
+  /* 钟楼顶上撞响这口钟：当天剩下的课全部改成考试（examStart 在 systems.js） */
+  try{ SFX.bigBell&&SFX.bigBell(1); }catch(e){}
+  examStart();
 }
 function useAltar(){
   addClue('altar');
@@ -487,11 +496,11 @@ function useTerminal(){
   }
   RT.hacked=true;
   addClue('comp');
-  if(S.talent==='code') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5);
-  else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5);
+  if(S.talent==='code') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
+  else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,OS_KEEP);
   os2later('我：还得去行政楼三楼，把数据同步过去。',5200);
 }
-function os2later(msg,ms){ setTimeout(function(){ if(!S.dead&&S.screen==='play') os(msg,3.6); },ms); }
+function os2later(msg,ms){ setTimeout(function(){ if(!S.dead&&S.screen==='play') os(msg,3.6,OS_KEEP); },ms); }
 function useTrash(){
   if(S.room!=='trash1'){ os('我：这个桶太小了。',2.2); return; }
   tryTrashRoute();
@@ -501,7 +510,7 @@ function useData(){
   if(!RT.hacked){ os('我：它要我输入一个我不该知道的东西。屏幕右下角写着：数据源 · 实验楼 3F 网络中心。',3.8); return; }
   if(RT.data){ os('我：已经同步过了。',2.0); return; }
   RT.data=true;
-  os('我：进度条走完了。屏幕上弹出一张照片——是我。照片底下写着：已登记。西小门的闸机，现在认得我了。',5.2);
+  os('我：进度条走完了。屏幕上弹出一张照片——是我。照片底下写着：已登记。西小门的闸机，现在认得我了。',5.2,OS_KEEP);
 }
 function tryGateWest(){
   if(!RT.hacked||!RT.data){ os('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); addClue('gatew'); return; }

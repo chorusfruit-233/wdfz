@@ -31,7 +31,7 @@ function update(dt){
     try{ syncCamera(dt); }catch(e){}
     return;
   }
-  if(PAUSE.on||UI.anyOpen()){ return; }
+  if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
   updatePlayer(dt);
   updateSystems(dt);
   anDrive(dt);
@@ -86,6 +86,7 @@ function render(dt){
   u.uGaze.value=GLR.gaze;
   u.uHurt.value=GLR.hurt;
   u.uFlash.value=GLR.flash;
+  u.uExpo.value=(GLR.dayExpo===undefined)?1:GLR.dayExpo;
   u.uSan.value=clamp(S.san/100,0,1);
   if(typeof GLRTEST!=='undefined'&&GLRTEST.nopost){
     GLR.renderer.setRenderTarget(null);
@@ -130,6 +131,9 @@ function drawMini(dt){
     c.fillRect(X(o.x),Y(o.y),o.w*sc,o.h*sc);
   }
   var px=X(S.x/SC), py=Y(S.y/SC);
+  /* 室内坐标不是室外地图上的位置（在车库里点会落到行政楼上）：室内就标在所在那栋楼上 */
+  var R=S.mode==='in'?INTERIORS[S.room]:null, ho=R?objById(R.host):null;
+  if(ho){ px=X(ho.x+ho.w/2); py=Y(ho.y+ho.h/2); }
   c.fillStyle='#79c8a4';
   c.beginPath(); c.arc(px,py,2.6,0,6.283); c.fill();
   c.strokeStyle='rgba(121,200,164,.85)'; c.lineWidth=1.4;
@@ -188,6 +192,8 @@ function updateHUD(){
     san.style.background=S.san>60?'#79c8a4':(S.san>30?'#c8b24a':'#c8554a');
   }
   document.getElementById('clock').textContent=fmtClock(S.tsec);
+  var _sc=document.getElementById('secclock');                /* 手表 / 秒表天赋：右上角显示到秒 */
+  if(_sc){ var _hs=hasSeconds(); _sc.hidden=!_hs; if(_hs) _sc.textContent=fmtClockS(S.tsec); }
   var cr=document.getElementById('cross');
   if(cr){ cr.style.display=playerInputAllowed()?'block':'none'; }
   var sn=document.getElementById('sannum');
@@ -196,18 +202,26 @@ function updateHUD(){
   try{ updateMarker(dtG); }catch(e){}
   document.getElementById('place').textContent=currentPlaceName();
   var p=periodAt(S.tsec);
-  document.getElementById('period').textContent=p[2]+' · '+p[3];
+  document.getElementById('period').textContent=(S.exam&&p[3]==='教室')?('考试 · '+p[2]):(p[2]+' · '+p[3]);
   var sw=document.getElementById('stamwrap');
-  if(sw){ sw.style.visibility=S.stam<99.5?'visible':'hidden';
-    document.getElementById('stambar').style.width=clamp(S.stam,0,100)+'%'; }
+  if(sw){ var _sn=(S.snackT||0)>0;          /* 士力架起效时，体力条变成金色的剩余时间 */
+    sw.style.visibility=(S.stam<99.5||_sn)?'visible':'hidden';
+    var _sb=document.getElementById('stambar');
+    _sb.style.width=(_sn?clamp(S.snackT/SNACK_SEC*100,0,100):clamp(S.stam,0,100))+'%';
+    _sb.style.background=_sn?'#d8b45a':(S.tired?'#b0705a':''); }   /* 喘气时变红，回到能跑才变回蓝 */
   UI.renderHot();
   updateTouchUI();
   var pr=document.getElementById('prompt');
   var hint='';
-  if(!S.dead&&S.screen==='play'&&!UI.anyOpen()&&!PAUSE.on&&!DLG.open){
-    if(nearRoster()) hint='E 那张名单';
+  /* 字幕显示时也要给提示：字幕很频繁，以前站在门口常常看不到"E 开门" */
+  if(!S.dead&&S.screen==='play'&&!UI.anyOpen()&&!PAUSE.on){
+    var _R=S.mode==='in'?INTERIORS[S.room]:null, _h0=_R?nearWorld(24):null;
+    /* 和 tryInteract 的先后一致：设施、恢复 SAN 的动作排在"坐下"前面 */
+    var _first=_h0&&(FAC_CD[_h0.ch]!==undefined||sanActFor(_R,_h0));
+    if(bellReach()) hint='E 撞钟';
+    else if(nearRoster()) hint='E 那张名单';
     else if(S.seated) hint='E 站起来';
-    else if(S.mode==='in'&&INTERIORS[S.room]&&hit2_seatNear(INTERIORS[S.room])) hint='E 坐下';
+    else if(_R&&!_first&&hit2_seatNear(_R)) hint='E 坐下';
     else if(S.mode==='in'){
       var h=nearWorld(24);
       if(h){
@@ -260,10 +274,11 @@ function clearIntroTimers(){
   if(introT1){ clearTimeout(introT1); introT1=0; }
   var el=document.getElementById('sub');
   if(el){ el.style.opacity='0'; setTimeout(function(){ if(!DLG.open) el.style.display='none'; },240); }
-  DLG.open=false; DLG.timer=0;
+  DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
+  spiralReset();
   buildInteriorData();
   buildRoomBounds();
   S.screen='play';
@@ -271,7 +286,8 @@ function freshState(diff){
   var t=TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)];
   S.talent=t;
   S.tsec=700; S.day=1;
-  S.san=100; S.viol=0; S.stam=100; S.tt=0; S.ttTier=0;
+  S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.tt=0; S.ttTier=0;
+  S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
   S.spots={}; S.clues={}; S.notes={}; S.marks={};
   S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.seated=false; S.intro=0;
@@ -299,7 +315,9 @@ var Game={
     try{
     freshState(diff);
     var R1=INTERIORS['teach1'];
-    enterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
+    /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */
+    S.mode='in'; S.room='teach1'; S.x=R1.ox+48.5*9; S.y=R1.oy+6.5*9; S.seated=true;
+    enterRoom('teach1',{x:S.x, y:S.y, ang:-PI/2, seated:true});
     syncCamera(0);
     clearIntroTimers();
     var firstTime=false;
@@ -323,7 +341,10 @@ var Game={
     S.mode=d.mode||'out'; S.room=d.room||null;
     S.x=d.x; S.y=d.y; S.ang=d.ang||0; S.pitch=d.pitch||0;
     S.tsec=d.tsec; S.day=d.day; S.san=d.san; S.viol=d.viol; S.stam=d.stam;
+    S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
+    S.snackT=Number.isFinite(d.snackT)?clamp(d.snackT,0,SNACK_SEC):0;
     S.tt=d.tt||0; S.ttTier=d.ttTier||0;
+    S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0;
     S.bag=d.bag||[]; S.hot=d.hot||[null,null];
     S.talent=d.talent||S.talent; S.spots=d.spots||{}; S.clues=d.clues||{};
     S.seated=!!d.seated;
@@ -345,7 +366,7 @@ var Game={
         if(HAS_FX2[AN.id]) anfxSpawn(AN.id,S.x,S.y);
       }catch(e){}
     }
-    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated});
+    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral});
     else { S.mode='out'; S.room=null; enterWorldOut(); syncCamera(0); }
     var _tel2=document.getElementById('talent'); if(_tel2) _tel2._set=false;
     var _hot2=document.getElementById('hot'); if(_hot2) _hot2._sig='';
@@ -386,10 +407,9 @@ var Game={
       var e=document.getElementById(id); if(e) e.style.display='none';
     });
     var es=document.getElementById('ends'); if(es) es.remove();
-    document.getElementById('menu').style.display='flex';
+    document.getElementById('menu').style.display='block';
     document.getElementById('sub').style.display='none';
-    var sc=document.getElementById('btncont');
-    if(sc) sc.style.display=loadGame()?'block':'none';
+    paintMenuSave();
   }
 };
 var MENU_PHOTO=null, PHOTO_TRIED=false;
@@ -473,7 +493,8 @@ function boot(){
   buildRoomBounds();
   initGL();
   initInput();
-  document.getElementById('btncont').style.display=loadGame()?'block':'none';
+  try{ initPcTouch(); }catch(e){}
+  paintMenuSave();
   requestAnimationFrame(frame);
   setTimeout(captureMenuPhoto,420);               /* 先让菜单画出来，再拍那张照片 */
 }

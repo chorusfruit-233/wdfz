@@ -80,7 +80,7 @@ function anAllowed(id){
   if(id==='shifting'){ return inClassroomHere(); }
   if(id==='stare'){ return inClassroomHere(); }
   if(id==='lamps'){ return corridorHere()&&isNight(); }
-  if(id==='feast'){ var p=periodAt(t); return inCanteen()&&((t>=730&&t<810)||(t>=1080&&t<1150)); }
+  if(id==='feast'){ return inCanteen()&&MEALS.some(function(m){ return t>=m[0]&&t<m[1]; }); }
   if(id==='necker'){ return S.mode==='out'&&S.x>(BOUND.x1-220)*SC; }
   if(id==='shadow'){ return S.mode==='out'&&onField(); }
   if(id==='twin'){ return onRoof(); }
@@ -95,6 +95,10 @@ function pickAnomaly(){
     pool.push(id);
   }
   if(!pool.length) return null;
+  if(typeof examNow==='function'&&examNow()){       /* 考试时只出教室里的那几种 */
+    pool=pool.filter(function(a){ return EXAM_AN[a]; });
+    if(!pool.length) return null;
+  }
   var want=null;
   if(needWhere(S.tsec)==='教室') want=AN_SMALL;
   var pref=[];
@@ -161,7 +165,9 @@ var AN_MSG={
 };
 function anStart(){
   var id=null;
-  if((S.diff==='easy'||AN.locked)&&AN.pre){
+  /* 进入考试后，之前预告的异象也必须受考试候选限制。 */
+  var examRestricted=typeof examNow==='function'&&examNow();
+  if((S.diff==='easy'||AN.locked)&&AN.pre&&(!examRestricted||EXAM_AN[AN.pre])){
     if(anAllowed(AN.pre)) id=AN.pre;
     else if(AN.locked&&!AN.lockWait){ AN.lockWait=1; AN.next=4; return; }   /* 预报过的那个，等你走到它能出现的地方 */
   }
@@ -394,6 +400,11 @@ function anTick(dt){
       if(AN.t>16) anEnd();
       break;
     case 'loop':
+      /* 以前出了教学楼它还在计时，最后在操场上念"门牌上的班号" */
+      if(!corridorHere()){
+        os(S.mode==='out'?'我：推开门，外面是校园。回头看，那条走廊又只有原来那么长了。':'我：我拐进了一间教室。身后的走廊安静下来，不再往前延伸了。',3.4);
+        anEnd(); break;
+      }
       if(KEY['shift']||KEY[' ']||S.run){ AN.acc+=dt*2.6; }
       else { AN.acc+=dt; }
       S.san-=dt*0.3;
