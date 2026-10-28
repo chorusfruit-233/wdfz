@@ -151,12 +151,19 @@ function updateSystems(dt){
   if(S.mode==='out'&&isNight()) vioMul*=0.5;
   S.wrong=wrong;
   /* 熄灯后即使在宿舍也会累积违规；在室外仍沿用原来的夜间倍率。 */
-  if(wrong||nw==='宿舍'){ S.viol+=dt*0.85*vioMul; }
+  if(onLeave()) wrong=false;                      /* 请假中：不用待在规定的地方 */
+  leaveTick();
+  if(!onLeave()&&(wrong||nw==='宿舍')){ S.viol+=dt*0.85*vioMul; }
   else { S.viol=Math.max(0,S.viol-dt*3.2); }
   try{ skipTick(dt); }catch(e){}
   try{ ncUpdate(dt); }catch(e){}
   S.viol=clamp(S.viol,0,100);
-  if(S.viol>=100&&!S.dead) killViol();
+  /* 违规记满不再直接死：班主任在本子上划一笔，之后请假条批不下来，直到违规降下去 */
+  if(S.viol>=100&&!RT.violFull){
+    RT.violFull=1;
+    os('我：走廊那头，班主任看了我一眼，在本子上划了一笔。违规记满了——以后的请假条，他不会再签。',5,OS_KEEP);
+    toast('违规已满 · 不能请假');
+  }else if(RT.violFull&&S.viol<60) RT.violFull=0;
 
   if(S.seated&&nw==='教室') S.tt+=1.5*dt;
   else if(inDorm()&&S.tsec>=EVENING) S.tt+=1.0*dt;
@@ -201,9 +208,20 @@ function askHiddenChoice(){
   ]);
 }
 
-function killViol(){
-  if(Math.random()<0.5) kill('有人从后面按住了你的肩膀。然后是第二只手，第三只。它们都很耐心，一点一点把你按回该在的地方。','grip');
-  else kill('地板变软了。你往下沉，沉得很慢，慢到你能听清头顶上那一声上课铃。','floor');
+/* 请假：两个小时（游戏时间）内不用待在规定的地方，巡察者也不管。RT.leaveUntil 用连续的游戏分钟 */
+var LEAVE_MIN=120;
+function onLeave(){ return !!RT.leaveUntil&&gameClock()<RT.leaveUntil; }
+function leaveLeft(){ return onLeave()?Math.ceil(RT.leaveUntil-gameClock()):0; }
+function leaveTick(){
+  if(RT.leaveUntil&&!onLeave()){ RT.leaveUntil=0; os('我：假条上写的时间到了。我得回到该在的地方去。',3.6,OS_KEEP); }
+}
+function useLeave(){
+  if(S.viol>=100||RT.violFull){ os('我：违规记满了。班主任看都不会看这张假条。',3); toast('违规已满 · 不能请假'); return; }
+  if(onLeave()){ os('我：已经请过假了，还剩 '+leaveLeft()+' 分钟。',2.6); return; }
+  RT.leaveUntil=gameClock()+LEAVE_MIN;
+  removeItem('leave');
+  os('我：我把日期填上了。字迹和班主任的签名一模一样——好像本来就是我写的。',4);
+  toast('请假 '+LEAVE_MIN+' 分钟 · 不用待在规定的地方，巡察者也不管你');
 }
 
 var ROAM_LIT_NEED=1.6, ROAM_REACH=26, ROAM_CAR=200;
@@ -228,7 +246,7 @@ function roamGuardsCar(){
   return ROAM.on&&ROAM.stage==='approach'&&Math.hypot(S.x-ROAM.x,S.y-ROAM.y)<ROAM_CAR;
 }
 function roamLit(){
-  if(!(USE.torch||USE.phone)) return false;
+  if(!USE.torch) return false;
   var dx=ROAM.x-S.x, dy=ROAM.y-S.y;
   if(dx*dx+dy*dy>260*260) return false;
   return angDiff(Math.atan2(dy,dx),S.ang)<PI/3;

@@ -13,12 +13,12 @@ function doorKey(R,wx,wy){
 function doorIsOpen(R,wx,wy){ return !!OPENDOORS[doorKey(R,wx,wy)]; }
 
 function hasItem(id){ return S.bag.indexOf(id)>=0; }
-/* 手机和手电共用一盏灯：有手电时优先使用较强的光。 */
+/* 手机只剩小游戏，不再当光源；USE.phone 留着只为兼容旧存档，始终为 false */
 function syncUseState(){
   USE.torch=!!USE.torch&&hasItem('torch');
-  USE.phone=!!USE.phone&&hasItem('phone');
+  USE.phone=false;
   USE.brollyShield=!!USE.brollyShield&&hasItem('brolly');
-  if(GLR.torch) GLR.torch.intensity=USE.torch?55:(USE.phone?22:0);
+  if(GLR.torch) GLR.torch.intensity=USE.torch?55:0;
 }
 function addItem(id){
   if(!id||id==='nothing') return false;
@@ -63,7 +63,8 @@ function useItem(id){
   if(!id||!hasItem(id)) return;
   var nm=ITEMS[id]?ITEMS[id].n:id;
   if(id==='torch'){ toggleTorch(); return; }
-  if(id==='phone'){ USE.phone=!USE.phone; syncUseState(); toast(USE.phone?'手机屏幕：亮':'手机屏幕：灭'); return; }
+  if(id==='phone'){ PHONE.start(); return; }
+  if(id==='leave'){ useLeave(); return; }
   if(id==='brolly'){ USE.brollyShield=!USE.brollyShield; toast(USE.brollyShield?'撑开伞':'收起伞'); return; }
   if(id==='pill'){ S.san=Math.min(100,S.san+18); removeItem('pill'); os('我：药片很苦。手不抖了。',3); toast('药片 · SAN +18'); return; }
   if(id==='snack'){ S.snackT=SNACK_SEC; removeItem('snack'); os('我：甜的。腿一下子轻了。',2.4); toast('士力架 · '+SNACK_SEC+' 秒内疾跑不耗体力'); return; }

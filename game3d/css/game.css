@@ -405,3 +405,14 @@ body.cut #cutbars{display:block}
 #cutbars i:first-child{top:0}#cutbars i:last-child{bottom:0}
 body.cut #hud,body.cut #prompt,body.cut #cross,body.cut #touch,body.cut #lookhint,body.cut #sub,body.cut #searchring,body.cut #hideslits,body.cut .screen-control{display:none!important}
 body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';position:absolute;right:20px;bottom:12px;font-size:11px;letter-spacing:2px;color:#4a5a54}
+
+/* 手机：小游戏面板浮在画面中间，四周的世界还看得见（玩手机时世界不停） */
+#phone{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,.25),rgba(0,0,0,.7))}
+#phone .phbody{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 12px 12px;
+  background:#101418;border:2px solid #2a3238;border-radius:26px;box-shadow:0 0 40px rgba(120,190,220,.18)}
+#phone .phtop{font-size:11px;letter-spacing:4px;color:#8fb8c8}
+#phcv{width:min(200px,42vmin);height:min(340px,71vmin);border-radius:8px;touch-action:none;background:#0b1a24}
+#phone .phhint{font-size:10px;color:#6d8590;letter-spacing:1px}
+#phone .phx{pointer-events:auto;position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));
+  min-width:64px;min-height:44px;padding:8px 14px;font:inherit;font-size:14px;letter-spacing:2px;color:#e6f2ec;
+  background:rgba(20,30,38,.8);border:1px solid rgba(140,190,210,.45);border-radius:4px}

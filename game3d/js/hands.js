@@ -58,7 +58,7 @@ function handsTick(dt){
   if(!GLR.cam) return;
   buildHands();
   var show=S.screen==='play'&&!S.dead&&!(typeof HIDE!=='undefined'&&HIDE.on)&&!(typeof CUT!=='undefined'&&CUT.on);
-  var torchOn=show&&USE.torch&&hasItem('torch'), brollyOn=show&&USE.brollyShield&&hasItem('brolly'), phoneOn=show&&USE.phone&&hasItem('phone');
+  var torchOn=show&&USE.torch&&hasItem('torch'), brollyOn=show&&USE.brollyShield&&hasItem('brolly'), phoneOn=show&&typeof PHONE!=='undefined'&&PHONE.on;       /* 手机只在玩小游戏时拿在手上 */
   var it=HANDS.items, leftUse=null, rightUse=null;
   if(brollyOn) leftUse='brolly';
   if(torchOn) rightUse='torch';

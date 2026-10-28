@@ -129,7 +129,7 @@ function patSees(){
   return Math.hypot(S.x-PAT.x,S.y-PAT.y)<PAT_SEE&&patLOS();
 }
 /* 规规矩矩坐在自己座位上的人，它不管 */
-function patIgnores(){ return S.seated&&needWhere(S.tsec)==='教室'&&atMySeat(); }
+function patIgnores(){ return (S.seated&&needWhere(S.tsec)==='教室'&&atMySeat())||onLeave(); }   /* 请假中它也不管你 */
 /* 室内寻路：网格上 BFS，走格子中心。以前走直线，一碰到教室的墙就卡在原地 */
 function patWalkable(R,c,r){
   if(r<0||c<0||r>=R.rows||c>=R.cols) return false;

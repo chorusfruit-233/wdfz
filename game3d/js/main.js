@@ -32,10 +32,12 @@ function update(dt){
     return;
   }
   if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
-  updatePlayer(dt);
+  if(!PHONE.on) updatePlayer(dt);                 /* 玩手机：人站着不动，世界照走 */
+  try{ PHONE.tick(dt); }catch(e){}
   try{ searchTick(dt); }catch(e){}
   updateSystems(dt);
   anDrive(dt);
+  try{ monoTick(dt); }catch(e){}
   spotTick();
 }
 function render(dt){
@@ -60,6 +62,7 @@ function render(dt){
     } else { GLR.roamFig.visible=false; }
   }
   try{ anfxUpdate(dt); }catch(e){}
+  try{ smileTick(dt); }catch(e){}
   try{ patRender(); }catch(e){}
   try{ handsTick(dt); }catch(e){}
   try{ hallucTick(dt); }catch(e){}
@@ -207,7 +210,7 @@ function updateHUD(){
   try{ updateMarker(dtG); }catch(e){}
   document.getElementById('place').textContent=currentPlaceName();
   var p=periodAt(S.tsec);
-  document.getElementById('period').textContent=(S.exam&&p[3]==='教室')?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec));
+  document.getElementById('period').textContent=onLeave()?('请假中 · 还剩 '+leaveLeft()+' 分钟'):((S.exam&&p[3]==='教室')?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec)));
   var sw=document.getElementById('stamwrap');
   if(sw){ var _sn=(S.snackT||0)>0;          /* 士力架起效时，体力条变成金色的剩余时间 */
     sw.style.visibility=(S.stam<99.5||_sn)?'visible':'hidden';
@@ -309,6 +312,7 @@ function freshState(diff){
   S.ang=PI/2; S.pitch=0; S.eyeH=EYE;
   S.hiddenLatch=false; S.hiddenAsked=false; S.hiddenWindow=0; S.dangerSeen={};
   RT=newRT(); USE={torch:false,phone:false,brollyShield:false}; OPENDOORS={}; syncUseState();
+  try{ PHONE.stop(); PHONE.cool=0; MONO.t=30; MONO.recent=[]; }catch(e){}
   AN.id=null; AN.active=false; AN.next=(S.diff==='hard')?40:60; AN.rained=false; AN.cool={}; AN.lastBig=false; AN.t=0; AN.acc=0;
   AN.pre=null; AN.preNext=0; AN.locked=false; AN.lockWait=0;
   ROAM.on=false;

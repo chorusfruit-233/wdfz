@@ -32,7 +32,7 @@ function syncFullscreenUI(){
   button.disabled=FULLSCREEN.busy||standalone;
   button.setAttribute('aria-pressed',String(active||standalone));
   button.setAttribute('aria-label',text);button.title=text;
-  button.hidden=!!(PRO.on||S.dead||S.screen==='end'||PC.on||UI.chooseOpen||
+  button.hidden=!!(PRO.on||S.dead||S.screen==='end'||PC.on||(typeof PHONE!=='undefined'&&PHONE.on)||UI.chooseOpen||
     (UI.openPanel&&UI.openPanel!=='pause'&&UI.openPanel!=='set'));
   var hint=document.getElementById('mios');
   if(hint)hint.style.display=IS_TOUCH&&!fullscreenSupported()&&!isStandalone()?'block':'none';
