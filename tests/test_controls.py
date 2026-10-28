@@ -103,6 +103,31 @@ class ControlsTest(unittest.TestCase):
         self.assertTrue(page.locator('#btncont').is_visible())
         self.assertEqual(failed_assets, [])
 
+    def test_wiki_entry_spoilers_and_return_to_game(self):
+        for touch in (False, True):
+            with self.subTest(touch=touch):
+                page = self.page(touch=touch)
+                self.assertTrue(page.evaluate('saveGame()'))
+                saved = page.evaluate("localStorage.getItem('wdfz3d')")
+                page.goto(self.url, wait_until='load')
+                link = page.locator('#menu a.mwiki')
+                if touch:
+                    link.tap()
+                else:
+                    link.click()
+                page.wait_for_url('**/wiki/index.html')
+                self.assertTrue(page.get_by_role('heading', name='里世界游戏 Wiki').is_visible())
+                spoiler = page.locator('#anomalies details')
+                self.assertIsNone(spoiler.get_attribute('open'))
+                self.assertFalse(spoiler.locator('table').is_visible())
+                spoiler.locator('summary').click()
+                self.assertTrue(spoiler.locator('table').is_visible())
+                self.assertEqual(spoiler.locator('tbody tr').count(), 23)
+                page.get_by_role('link', name='← 返回游戏').click()
+                page.wait_for_url('**/index.html')
+                self.assertTrue(page.locator('#btncont').is_visible())
+                self.assertEqual(page.evaluate("localStorage.getItem('wdfz3d')"), saved)
+
     def test_fullscreen_enters_exits_and_updates_button(self):
         page = self.page()
         page.evaluate("S.screen='menu';syncFullscreenUI()")
