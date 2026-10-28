@@ -558,6 +558,7 @@ function doSearch(c,r){
   else if(roll<0.82) give='phone';
   else if(roll<0.86) give='watch';
   else if(roll<0.90) give='compass';
+  else if(roll<0.93) give='leave';
   if(S.room==='teach1'&&!RT.hwTaken&&r>1&&r<14){
     RT.hwTaken=true; give='hw';
   }

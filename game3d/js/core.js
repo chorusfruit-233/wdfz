@@ -33,7 +33,9 @@ var KEEP={
 };
 function isSolidCh(c){return c==='#'||c==='S';}   /* 楼梯占着一整格，人不能站进去 */
 
-var RATE={CLASS:80,BREAK:12,MEAL:14,ASSEM:30,FREE:37,NIGHT:17};
+/* 每真实分钟走多少游戏分钟。一天（07:20 → 次日 01:00）约 17 分半真实时间：
+   上课节奏不变（一节 45 分钟约 34 秒）；以前课间、吃饭、晚上走得很慢，一天要 46 分钟。 */
+var RATE={CLASS:80,BREAK:36,MEAL:45,ASSEM:30,FREE:37,NIGHT:70};
 /* 上课 8:00–12:15、14:00–17:20；晚自习 18:10–19:40、20:00–22:00；22:20 熄灯 */
 var SCHED=[
   [440,480,'早读',    '教室',RATE.CLASS],
@@ -87,7 +89,7 @@ function dif(){ return DIFV[S.diff]||DIFV.easy; }
 
 var ITEMS={
   card:{n:'学生证',d:'照片上的人我不认识，班号是我们班。'},
-  phone:{n:'手机',d:'还有电。锁屏是黑的。屏幕能当光源。'},
+  phone:{n:'手机',d:'还有电。别的都打不开了，只剩一个「纸飞机」小游戏。玩一局，手就没那么抖了。'},
   chalk:{n:'粉笔',d:'半截。断口很新。'},
   map:{n:'平面图',d:'边角被翻烂了。能看懂这所学校。'},
   key:{n:'钥匙',d:'一串车钥匙。牌号刻在环上。'},
@@ -114,17 +116,18 @@ var ITEMS={
   vial:{n:'荧光试剂',d:'离心机甩出来的一管，颜色一直在变。（传送门材料）'},
   atlas:{n:'建筑总览图',d:'每栋楼每一层都画在上面。有几处用红笔圈着。'},
   elixir:{n:'不知名药丸',d:'没有说明书的一粒。要死的时候，它会把你拽回来一次。'},
-  seal:{n:'符纸',d:'折成三角的黄纸。巡察者盯上你的时候，它替你挡一次。'}
+  seal:{n:'符纸',d:'折成三角的黄纸。巡察者盯上你的时候，它替你挡一次。'},
+  leave:{n:'请假条',d:'班主任签过字，日期空着。用了能请两个小时的假：这段时间不用待在规定的地方，巡察者也不管你。违规记满了就批不下来。'}
 };
 var ITEM_GLYPH={
   card:'▣', phone:'▤', chalk:'▬', map:'▦', key:'⚿', torch:'▮', brolly:'☂',
   coat:'▧', pill:'◍', notebook:'▤', pen:'✎', snack:'▬', battery:'▮',
   compass:'◎', metronome:'⧗', goggles:'◉', hw:'▤', coin:'◉', usb:'▮',
   watch:'◷', memo:'▭', roomkey:'⚿',
-  coil:'◎', lens:'◌', vial:'▯', atlas:'▦', elixir:'◍', seal:'△'
+  coil:'◎', lens:'◌', vial:'▯', atlas:'▦', elixir:'◍', seal:'△', leave:'▭'
 };
 var ITEM_COL={
-  coil:'#d08a4a', lens:'#a8d8e8', vial:'#7fe0a0', atlas:'#c8b88a', elixir:'#e0a0e0', seal:'#e0c040',
+  coil:'#d08a4a', lens:'#a8d8e8', vial:'#7fe0a0', atlas:'#c8b88a', elixir:'#e0a0e0', seal:'#e0c040', leave:'#e8d8a0',
   torch:'#c8a24a', phone:'#7fb0c8', key:'#c8a24a', coin:'#c8a24a',
   pill:'#c86a6a', snack:'#b89a5a', battery:'#8ac8a4', compass:'#8aa8c8',
   roomkey:'#c8b060'

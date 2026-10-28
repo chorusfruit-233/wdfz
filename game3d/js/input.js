@@ -9,7 +9,7 @@ var INPUT={mode:'mouse',lookId:null,lookType:null,stickId:null,stickCenter:null,
 
 function playerInputAllowed(){
   return S.screen==='play'&&!S.dead&&!PAUSE.on&&!UI.anyOpen()&&
-    !(typeof PRO!=='undefined'&&PRO.on)&&!(typeof PC!=='undefined'&&PC.on)&&
+    !(typeof PRO!=='undefined'&&PRO.on)&&!(typeof PC!=='undefined'&&PC.on)&&!(typeof PHONE!=='undefined'&&PHONE.on)&&
     !(typeof DEV!=='undefined'&&DEV.on)&&!(S.intro>0);
 }
 function pointerIsLocked(){return document.pointerLockElement===document.getElementById('cv');}
@@ -84,9 +84,13 @@ function physicalKey(e){
   return codes[e.code]||e.key.toLowerCase();
 }
 function initTouchActivation(){
-  var taps=new Map(),lastTarget=null,lastTime=-1000;
+  var taps=new Map(),lastTarget=null,lastParent=null,lastIndex=-1,lastBagIndex=-1,lastTime=-1000;
   var selector='button,.close,.tb2,.hslot,.idea,#bag .s,.hb b';
   function control(target){return target.closest?target.closest(selector):null;}
+  function bagIndex(el){
+    var slot=el&&el.closest?el.closest('#bags .s'):null;
+    return slot&&slot.parentElement?Array.prototype.indexOf.call(slot.parentElement.children,slot):-1;
+  }
   document.addEventListener('pointerdown',function(e){
     if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
     var el=control(e.target);
@@ -100,7 +104,9 @@ function initTouchActivation(){
   document.addEventListener('pointerup',function(e){
     var tap=taps.get(e.pointerId);taps.delete(e.pointerId);
     if(!tap||!tap.el.isConnected||tap.el.disabled||control(e.target)!==tap.el)return;
-    lastTarget=tap.el;lastTime=performance.now();
+    lastTarget=tap.el;lastParent=tap.el.parentElement;
+    lastIndex=lastParent?Array.prototype.indexOf.call(lastParent.children,tap.el):-1;
+    lastBagIndex=bagIndex(tap.el);lastTime=performance.now();
     // 用松指事件触发按钮：浏览器在一次视角滑动后可能不再发送兼容 click。
     // pointerup 保留真实用户激活，全屏请求仍可在这里同步发起。
     tap.el.click();
@@ -108,7 +114,12 @@ function initTouchActivation(){
   document.addEventListener('click',function(e){
     var touch=e.pointerType==='touch'||e.pointerType==='pen'||
       (e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents)||(!e.pointerType&&e.detail>0);
-    if(e.isTrusted&&touch&&control(e.target)===lastTarget&&performance.now()-lastTime<600){
+    var target=control(e.target);
+    /* 背包点选会重建格子；浏览器的兼容 click 可能落在同一位置的新节点上。 */
+    var same=target===lastTarget||(lastTarget&&!lastTarget.isConnected&&target&&
+      ((lastParent&&lastParent===target.parentElement&&lastIndex===Array.prototype.indexOf.call(lastParent.children,target))||
+       (lastBagIndex>=0&&bagIndex(target)===lastBagIndex)));
+    if(e.isTrusted&&touch&&same&&performance.now()-lastTime<600){
       e.preventDefault();e.stopImmediatePropagation();
     }
   },true);
@@ -139,6 +150,7 @@ function initInput(){
     if(k==='escape'){
       e.preventDefault();if(e.repeat)return;
       if(PC.on){PCGAME.stop();return;}
+      if(PHONE.on){PHONE.stop();return;}
       if(DEV.on){Dev.close();return;}
       if(UI.openPanel==='set'){UI.close('set',false);if(PAUSE.on)UI.open('pause');return;}
       if(UI.openPanel&&UI.openPanel!=='pause'){UI.close(UI.openPanel);return;}
@@ -148,6 +160,10 @@ function initInput(){
     if(k===' '&&e.target.closest('button,a,[role="button"]'))return;
     if(PC.on){
       if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){KEY[k]=true;e.preventDefault();}
+      return;
+    }
+    if(PHONE.on){
+      if([' ','w','arrowup','enter'].indexOf(k)>=0){e.preventDefault();if(!e.repeat)PHONE.flap();}
       return;
     }
     if(PAUSE.on||DEV.on||UI.chooseOpen||S.intro>0)return;

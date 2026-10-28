@@ -736,7 +736,8 @@ class ControlsTest(unittest.TestCase):
 
     def test_held_items_show_in_hands(self):
         page = self.page()
-        page.evaluate("S.bag=['torch','brolly','phone'];USE.torch=true;USE.brollyShield=true;USE.phone=true;handsTick(0)")
+        # 手机只在玩小游戏时拿在手上
+        page.evaluate("S.bag=['torch','brolly','phone'];USE.torch=true;USE.brollyShield=true;PHONE.on=true;handsTick(0)")
         self.assert_js(page, "HANDS.R.visible&&HANDS.L.visible&&HANDS.items.torch.parent===HANDS.R&&HANDS.items.brolly.parent===HANDS.L&&!HANDS.items.phone.visible")
         page.evaluate("USE.brollyShield=false;handsTick(0)")
         self.assert_js(page, "HANDS.items.phone.parent===HANDS.L&&HANDS.items.phone.visible")
@@ -1005,23 +1006,24 @@ class ControlsTest(unittest.TestCase):
 
     def test_lights_share_priority_and_follow_removed_items(self):
         page = self.page()
-        page.evaluate("S.bag=['torch','phone','brolly'];USE={torch:false,phone:false,brollyShield:false};toggleTorch();useItem('phone');useItem('brolly')")
-        self.assert_js(page, 'USE.torch&&USE.phone&&USE.brollyShield&&GLR.torch.intensity===55')
+        # 手机不再是光源：用它只会打开小游戏
+        page.evaluate("S.bag=['torch','phone','brolly'];USE={torch:false,phone:false,brollyShield:false};toggleTorch();useItem('phone');PHONE.stop();useItem('brolly')")
+        self.assert_js(page, 'USE.torch&&!USE.phone&&USE.brollyShield&&GLR.torch.intensity===55')
         page.evaluate('toggleTorch()')
-        self.assert_js(page, '!USE.torch&&USE.phone&&GLR.torch.intensity===22')
+        self.assert_js(page, '!USE.torch&&!USE.phone&&GLR.torch.intensity===0')
         page.evaluate("toggleTorch();removeItem('torch')")
-        self.assert_js(page, '!USE.torch&&USE.phone&&GLR.torch.intensity===22')
-        page.evaluate("dropAt(S.bag.indexOf('phone'));removeItem('brolly')")
-        self.assert_js(page, '!USE.phone&&!USE.brollyShield&&GLR.torch.intensity===0')
+        self.assert_js(page, '!USE.torch&&GLR.torch.intensity===0')
+        page.evaluate("removeItem('brolly')")
+        self.assert_js(page, '!USE.brollyShield&&GLR.torch.intensity===0')
 
     def test_light_and_cooldown_restore_and_old_save_defaults(self):
         page = self.page()
         page.evaluate("""S.day=1;S.tsec=700;S.san=50;S.actCool={};
             S.bag=['torch','phone','brolly'];USE={torch:false,phone:false,brollyShield:false};
-            toggleTorch();useItem('phone');useItem('brolly');doSanAct('wash');saveGame();""")
+            toggleTorch();useItem('brolly');doSanAct('wash');saveGame();""")
         page.reload(wait_until='load')
         page.evaluate('Game.continue_();running=false')
-        self.assert_js(page, 'USE.torch&&USE.phone&&USE.brollyShield&&GLR.torch.intensity===55&&S.actCool.wash>0')
+        self.assert_js(page, 'USE.torch&&!USE.phone&&USE.brollyShield&&GLR.torch.intensity===55&&S.actCool.wash>0')
         self.assert_js(page, "(() => { const san=S.san,t=S.tsec; doSanAct('wash'); return S.san===san&&S.tsec===t; })()")
         page.evaluate("""var old=loadGame();delete old.actCool;delete old.immuneUsed;old.bag=[];
             old.use={torch:true,phone:true,brollyShield:true};localStorage.setItem('wdfz3d',JSON.stringify(old));""")
@@ -1264,6 +1266,128 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, '!AN.pre&&!AN.preNext&&AN.data.until===undefined')
         page.evaluate("AN.data={};pickAnomaly=function(){return 'rain'};anOn('chalk')")
         self.assert_js(page, "AN.pre==='rain'&&AN.locked&&AN.preNext>0&&AN.data.until>S.tsec")
+
+    def test_one_day_lasts_ten_to_twenty_real_minutes(self):
+        page = self.page()
+        mins = page.evaluate("""(()=>{var t=SCHED.reduce((n,p)=>n+(p[1]-p[0])/p[4],0);
+            return t+(BEAST_T1-BEAST_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
+        self.assertTrue(10 <= mins <= 20, mins)
+
+    def test_full_violation_no_longer_kills_but_blocks_leave(self):
+        page = self.page()
+        page.evaluate("S.tsec=600;S.seated=false;S.viol=99.9;S.bag=['leave'];for(var i=0;i<10;i++) updateSystems(0.2)")
+        self.assert_js(page, "!S.dead&&S.viol>=100&&RT.violFull")
+        page.evaluate("useItem('leave')")
+        self.assert_js(page, "hasItem('leave')&&!onLeave()")
+
+    def test_leave_slip_excuses_schedule_and_patroller_then_expires(self):
+        page = self.page()
+        page.evaluate("doEnterRoom('teach1');running=false;S.tsec=600;S.seated=false;S.viol=0;S.bag=['leave'];useItem('leave')")
+        self.assert_js(page, "onLeave()&&!hasItem('leave')&&patIgnores()&&/请假中/.test((updateHUD(),document.getElementById('period').textContent))")
+        page.evaluate("for(var i=0;i<20;i++) updateSystems(0.5)")
+        self.assert_js(page, "S.viol===0&&!S.wrong")
+        page.evaluate("advanceGameTime(LEAVE_MIN+1);updateSystems(0.1)")
+        self.assert_js(page, "!onLeave()&&!RT.leaveUntil&&!patIgnores()")
+
+    def test_phone_only_plays_paper_plane_and_restores_a_little_san(self):
+        page = self.page()
+        page.evaluate("S.bag=['phone'];S.san=50;S.tsec=700;useItem('phone')")
+        self.assert_js(page, "PHONE.on&&document.getElementById('phone').style.display==='flex'&&GLR.torch.intensity===0&&!playerInputAllowed()")
+        page.evaluate("var t0=S.tsec,x0=S.x;KEY.w=true;update(0.5);KEY.w=false;window._t0=t0;window._x0=x0")
+        self.assert_js(page, "S.tsec>_t0&&S.x===_x0")          # 世界照走，人站着不动
+        page.keyboard.press('Space')
+        self.assert_js(page, "PHONE.st==='fly'")
+        page.evaluate("for(var i=0;i<200&&PHONE.st==='fly';i++) PHONE.tick(0.05)")
+        self.assert_js(page, "PHONE.st==='over'")
+        page.evaluate("window._s0=S.san;PHONE.reset();PHONE.st='fly';PHONE.score=9;PHONE.end()")
+        self.assert_js(page, "Math.abs(S.san-_s0-6)<1e-9&&PHONE.cool>0")   # 一局最多 +6
+        page.evaluate("window._s0=S.san;PHONE.reset();PHONE.st='fly';PHONE.score=9;PHONE.end()")
+        self.assert_js(page, "S.san===_s0")                                 # 发烫：这局不回
+        page.evaluate("AN.active=true;AN.id='broad';PHONE.tick(0.01)")
+        self.assert_js(page, "!PHONE.on&&document.getElementById('phone').style.display==='none'")
+
+    def test_phone_opens_from_inventory_on_mouse_and_touch(self):
+        for touch in (False, True):
+            with self.subTest(touch=touch):
+                page = self.page(touch=touch)
+                page.evaluate("S.bag=['phone'];S.tsec=700;S.san=90;UI.open('bag')")
+                phone = page.locator('#bags .s').first
+                if touch:
+                    phone.tap()
+                    self.assert_js(page, "!PHONE.on&&UI.openPanel==='bag'")
+                    phone.tap()
+                else:
+                    phone.dblclick()
+                self.assert_js(page, "PHONE.on&&!UI.anyOpen()&&document.getElementById('bag').style.display==='none'")
+                self.assertTrue(page.locator('#phcv').is_visible())
+                page.evaluate("window._t0=S.tsec;window._x0=S.x;S.stam=20;S.snackT=5;KEY.w=true;update(0.5)")
+                self.assert_js(page, 'PHONE.on&&S.tsec>_t0&&S.x===_x0&&S.stam>20&&S.snackT<5')
+                page.locator('#phcv').click()
+                self.assert_js(page, "PHONE.st==='fly'")
+                page.locator('#phone .phx').click()
+                self.assert_js(page, '!PHONE.on&&playerInputAllowed()')
+
+    def test_phone_yields_to_choice_anomaly_death_and_menu(self):
+        for situation in ('choice', 'anomaly', 'death', 'menu'):
+            with self.subTest(situation=situation):
+                page = self.page()
+                page.evaluate("S.diff='hard';S.day=2;S.tsec=700;S.bag=['phone'];S.san=80;AN.active=false;PAT.locked=false;useItem('phone')")
+                if situation == 'choice':
+                    page.evaluate("S.tt=100;S.hiddenLatch=true;S.hiddenWindow=0;S.hiddenAsked=false;update(.1)")
+                    self.assert_js(page, 'UI.chooseOpen&&PAUSE.on&&!PHONE.on')
+                elif situation == 'anomaly':
+                    page.evaluate("spotTick=function(){};AN.pre='turn';AN.locked=true;anStart();window._message=document.getElementById('sub').textContent;update(.1)")
+                    self.assert_js(page, "!PHONE.on&&AN.active&&document.getElementById('sub').textContent===_message")
+                elif situation == 'death':
+                    page.evaluate("S.san=.01;update(.1)")
+                    self.assert_js(page, 'S.dead&&!PHONE.on')
+                else:
+                    page.evaluate('Game.quit();update(.1)')
+                    self.assert_js(page, "S.screen==='menu'&&!PHONE.on")
+                self.assert_js(page, "document.getElementById('phone').style.display==='none'")
+
+    def test_phone_reward_cooldown_survives_reload_and_old_saves(self):
+        page = self.page()
+        page.evaluate("S.bag=['phone'];S.san=50;useItem('phone');PHONE.score=6;PHONE.end();PHONE.stop();saveGame()")
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        self.assert_js(page, 'PHONE.cool===PH_COOL')
+        page.evaluate("S.san=50;useItem('phone');PHONE.score=6;PHONE.end()")
+        self.assert_js(page, 'S.san===50')
+        page.evaluate("PHONE.stop();var old=loadGame();delete old.phoneCool;localStorage.setItem('wdfz3d',JSON.stringify(old));Game.continue_();running=false")
+        self.assert_js(page, 'PHONE.cool===0')
+
+    def test_shoulder_tap_smile_variant_small_loss_for_turning_round(self):
+        page = self.page()
+        page.evaluate("""TURN_SMILE_P=1;S.san=60;S.viol=0;AN.pre='turn';AN.locked=true;anStart();
+            for(var i=0;i<60&&!UI.chooseOpen;i++) anTick(0.05);""")
+        self.assert_js(page, "AN.data.smile&&UI.chooseOpen&&/等我回头/.test(document.getElementById('choices').textContent)")
+        page.evaluate("var a0=S.ang;window._a0=a0;AN.data.chosen='yes';UI.closeChoice();for(var i=0;i<20;i++){ anTick(0.05); smileTick(0.05); }")
+        self.assert_js(page, "S.san===55.5&&Math.abs(S.ang-_a0-Math.PI)<1e-6&&SMILE.mode==='behind'")
+        page.evaluate("for(var i=0;i<60&&AN.active;i++){ anTick(0.05); smileTick(0.05); }")
+        self.assert_js(page, "!AN.active")
+        page.evaluate("""S.san=60;S.viol=0;AN.pre='broad';anScheduleNext();AN.pre='turn';AN.locked=true;anStart();
+            for(var i=0;i<60&&!UI.chooseOpen;i++) anTick(0.05);
+            AN.data.chosen='no';UI.closeChoice();for(i=0;i<40&&!SMILE.mode;i++) anTick(0.05);""")
+        self.assert_js(page, "SMILE.mode==='jump'&&S.san<40&&S.viol>=15&&!AN.active")
+
+    def test_shoulder_smile_loss_uses_difficulty_and_can_be_fatal(self):
+        page = self.page()
+        page.evaluate("""S.diff='hard';S.day=2;S.san=60;S.viol=0;TURN_SMILE_P=1;
+            AN.pre='turn';AN.locked=true;anStart();AN.data.chosen='yes';anTick(.31);""")
+        self.assert_js(page, 'S.san===53.75&&!S.dead&&AN.active')
+        page.evaluate("""anEnd();smileClear();S.san=5;S.bag=[];S.talent='code';DEV.god=false;
+            AN.pre='turn';AN.locked=true;anStart();AN.data.chosen='yes';anTick(.31);""")
+        self.assert_js(page, "S.dead&&S.death==='vignette'")
+
+    def test_monologue_changes_with_san(self):
+        page = self.page()
+        page.evaluate("S.san=90")
+        self.assert_js(page, "monoTier()==='calm'&&MONO_LINES.calm.outDay.concat(MONO_LINES.calm.outNight,MONO_LINES.calm.any).indexOf(monoPick())>=0")
+        page.evaluate("S.san=10")
+        self.assert_js(page, "monoTier()==='breaking'&&MONO_LINES.breaking.any.concat(MONO_LINES.breaking.outNight||[]).indexOf(monoPick())>=0")
+        page.evaluate("DLG.open=false;AN.active=false;MONO.t=0;MONO.recent=[];monoTick(0.1)")
+        self.assert_js(page, "MONO.recent.length===1&&document.getElementById('sub').textContent===MONO.recent[0]&&MONO.t>=40")
 
 
 if __name__ == '__main__':

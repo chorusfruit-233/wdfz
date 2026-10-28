@@ -299,7 +299,12 @@ function anOn(id,silent){
       os('我：粉笔在黑板上写了几笔，又慢慢擦掉了。',5);
     }
   }
-  if(id==='turn'){ d.chosen=null; }
+  if(id==='turn'){
+    d.chosen=null;
+    /* 小概率是另一种：先听见身后的脚步声走近，再被拍肩。这一次要回头 */
+    d.smile=Math.random()<TURN_SMILE_P;
+    if(d.smile) os('我：背后有脚步声。很轻，一步一步走近……停在我身后。然后，有人拍了拍我的肩膀。很轻，像在叫我。',4.6,OS_FORCE);
+  }
   if(id==='hand'){ d.chosen=null; }
   if(id==='repeat'){ d.chosen=null; }
   if(id==='cold'){ d.chosen=null; }
@@ -341,6 +346,7 @@ function underRoof(){
   return false;
 }
 
+var TURN_SMILE_P=0.25;
 function anChoiceOptions(d){
   var ms=Number.isFinite(d.choiceRemaining)?Math.max(1,d.choiceRemaining):5000;
   delete d.choiceRemaining;
@@ -369,6 +375,7 @@ function anTick(dt){
       if(AN.t>24) anEnd();
       break;
     case 'turn':
+      if(d.smile){ turnSmileTick(dt,d); break; }
       if(d.chosen===null){
         if(AN.t>1.2&&!d.asked){
           d.asked=true;
@@ -577,6 +584,38 @@ function anTick(dt){
   }
 }
 
+/* 拍肩的另一种：脚步声 → 拍肩 → 要回头。回头损失少量 SAN；不回头时突脸、扣更多 SAN 并加违规。 */
+function turnSmileTick(dt,d){
+  if(!d.steps) d.steps=0;
+  if(d.chosen===null&&!d.asked&&AN.t>d.steps*0.42&&d.steps<4){          /* 身后的脚步，越来越近 */
+    d.steps++;
+    try{ SFX.patStep(0,0.35+d.steps*0.15,true,false); }catch(e){}
+  }
+  if(d.chosen===null){
+    if(AN.t>1.9&&!d.asked){
+      d.asked=true;
+      UI.choice('脚步声停在我身后。那只手拍了拍我的肩膀，没有拿开——像在等我回头。',[
+        {label:'不回头',fn:function(){ d.chosen='no'; UI.closeChoice(); }},
+        {label:'回头看',fn:function(){ d.chosen='yes'; UI.closeChoice(); }}
+      ],anChoiceOptions(d));
+    }
+    return;
+  }
+  AN.acc+=dt;
+  if(d.done) { if(AN.acc>2.2) anEnd(); return; }
+  if(d.chosen==='yes'&&AN.acc>0.3){
+    d.done=1; AN.acc=0;
+    S.ang+=PI;                                                          /* 真的转过身去 */
+    try{ syncCamera(0); }catch(e){}
+    smileShow('behind');
+    anHurt('我：我回头了。身后是一张很大很大的笑脸，眼睛弯成两道缝，嘴角一直咧到耳根。它冲我点了点头，就不见了。我的手心全是汗。',5,{quiet:1,keep:1});
+  }else if(d.chosen==='no'&&AN.acc>1.0){
+    d.done=1;
+    smileShow('jump');
+    S.viol=Math.min(100,S.viol+15);
+    anHurt('我没有回头。它等不及了——那张脸从我肩膀上绕过来，贴着我的鼻尖，一点一点咧开了嘴。',30);
+  }
+}
 function anKill(msg,fx){
   var f=fx||DFX_MAP[AN.id]||'vignette';
   kill(msg,f);
