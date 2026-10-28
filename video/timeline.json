@@ -1,0 +1,27 @@
+{
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "shots": [
+    {"id": "open",     "dur": 7.0, "lines": ["每一天，", "都和昨天一样。"]},
+    {"id": "gate",     "dur": 6.5, "loc": "武汉大学附属中学 · 北门", "note": "22:40"},
+    {"id": "facade",   "dur": 5.5, "loc": "教学楼", "note": "五层 · 二十四间教室"},
+    {"id": "class",    "dur": 5.5, "loc": "高二（六）班", "note": "你的座位，一直空着"},
+    {"id": "hall",     "dur": 5.0, "loc": "一楼走廊", "note": "灯会两短一长地闪"},
+    {"id": "bell",     "dur": 5.5, "loc": "钟楼", "note": "它会敲第十三下"},
+    {"id": "garage",   "dur": 6.0, "loc": "地下车库", "note": "十六辆车，只有一辆能开"},
+    {"id": "card1",    "dur": 2.8, "lines": ["然后，", "异象开始了。"]},
+    {"id": "rain",     "dur": 4.2, "title": "下不完的雨"},
+    {"id": "moth",     "dur": 4.0, "title": "蛾群"},
+    {"id": "stare",    "dur": 4.0, "title": "全体回头"},
+    {"id": "cup",      "dur": 4.6, "title": "清华水杯"},
+    {"id": "patrol",   "dur": 5.4, "title": "巡察者"},
+    {"id": "card2",    "dur": 3.0, "lines": ["规则只有一条：", "活过今天。"]},
+    {"id": "locker",   "dur": 4.5, "caption": "躲进柜子。屏住呼吸。"},
+    {"id": "portal",   "dur": 4.8, "caption": "找齐四样东西，造一扇门。"},
+    {"id": "escape",   "dur": 4.5, "caption": "或者，开车冲出去。"},
+    {"id": "flurry",   "dur": 3.6},
+    {"id": "title",    "dur": 8.5, "lines": ["武大附中 · 里世界"], "sub": "每一天，都和昨天一样。"},
+    {"id": "whisper",  "dur": 3.0, "lines": ["……你作业交了吗？"]}
+  ]
+}
