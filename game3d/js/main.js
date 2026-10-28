@@ -33,6 +33,7 @@ function update(dt){
   }
   if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
   updatePlayer(dt);
+  try{ searchTick(dt); }catch(e){}
   updateSystems(dt);
   anDrive(dt);
   spotTick();
@@ -43,6 +44,7 @@ function render(dt){
   else { GLR.hurt=Math.max(0,GLR.hurt-dt*0.6); }
   GLR.flash=Math.max(0, (GLR.flash||0)-dt*1.7);
   updateLighting();
+  if(typeof CUT!=='undefined'&&CUT.on) cutTick(dt);        /* 结局演出：镜头由 cutscene.js 摆 */
   if(GLR.dust){
     GLR.dustT=(GLR.dustT||0)+dt;
     GLR.dust.position.set(GLR.cam.position.x,0,GLR.cam.position.z);
@@ -58,11 +60,13 @@ function render(dt){
     } else { GLR.roamFig.visible=false; }
   }
   try{ anfxUpdate(dt); }catch(e){}
+  try{ patRender(); }catch(e){}
+  try{ handsTick(dt); }catch(e){}
   try{ hallucTick(dt); }catch(e){}
   try{ PCGAME.tick(dt); }catch(e){}
   try{ updateIntro(dt); }catch(e){}
   try{
-    if(S.mode==='in'&&!S.dead){
+    if(S.mode==='in'&&!S.dead&&!HIDE.on){
       S.stuckT=(S.stuckT||0)+dt;
       if(S.stuckT>0.5){
         S.stuckT=0;
@@ -87,6 +91,7 @@ function render(dt){
   u.uHurt.value=GLR.hurt;
   u.uFlash.value=GLR.flash;
   u.uExpo.value=(GLR.dayExpo===undefined)?1:GLR.dayExpo;
+  u.uRed.value=GLR.patrolRed||0;
   u.uSan.value=clamp(S.san/100,0,1);
   if(typeof GLRTEST!=='undefined'&&GLRTEST.nopost){
     GLR.renderer.setRenderTarget(null);
@@ -218,7 +223,8 @@ function updateHUD(){
     var _R=S.mode==='in'?INTERIORS[S.room]:null, _h0=_R?nearWorld(24):null;
     /* 和 tryInteract 的先后一致：设施、恢复 SAN 的动作排在"坐下"前面 */
     var _first=_h0&&(FAC_CD[_h0.ch]!==undefined||sanActFor(_R,_h0));
-    if(bellReach()) hint='E 撞钟';
+    if(HIDE.on) hint='E 出来';
+    else if(bellReach()) hint='E 撞钟';
     else if(nearRoster()) hint='E 那张名单';
     else if(S.seated) hint='E 站起来';
     else if(_R&&!_first&&hit2_seatNear(_R)) hint='E 坐下';
@@ -230,6 +236,9 @@ function updateHUD(){
           hint=(_nd&&!hasItem(_nd))?'E 开门（锁着）':'E 开门';
         }
         else if(h.ch==='O') hint='E 出去';
+        else if(h.ch==='H') hint='E 躲进柜子';
+        else if(h.ch==='M') hint=hasItem('coin')?'E 投币（售货机）':'E 售货机';
+        else if(INTERIORS[S.room].host==='canteen'&&(h.ch==='k'||h.ch==='t')&&!mealNow()) hint=hasItem('coin')?'E 投币买饭':'E 打饭窗口';
       else if(h.ch==='L') hint='E 走连廊';
       else if(h.ch==='Q') hint='E 看服务器终端';
         else if(h.ch==='S') hint='E 上下楼';
@@ -277,6 +286,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  clearSearch();
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
   spiralReset();
   buildInteriorData();
@@ -288,6 +298,7 @@ function freshState(diff){
   S.tsec=700; S.day=1;
   S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.tt=0; S.ttTier=0;
   S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
+  try{ patReset(); PAT.next=45; }catch(e){}
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
   S.spots={}; S.clues={}; S.notes={}; S.marks={};
   S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.seated=false; S.intro=0;
@@ -398,10 +409,14 @@ var Game={
   },
   quit:function(){
     running=true;
+    clearSearch();
+    try{ patReset(); }catch(e){}
     clearIntroTimers();
     S.screen='menu'; S.dead=false;
     resetInputState();releaseMouseLook();
     try{ if(!MENU_PHOTO) setTimeout(captureMenuPhoto,320); }catch(e){}
+    try{ if(CUT.on){ CUT.done=null; cutFinish(); } }catch(e){}
+    GLR.worldNorm=0;
     PAUSE.on=false;document.body.classList.remove('paused');UI.closePanelAll();UI.closeChoice();
     ['pause','die','bag','note','think','mapv','choices'].forEach(function(id){
       var e=document.getElementById(id); if(e) e.style.display='none';

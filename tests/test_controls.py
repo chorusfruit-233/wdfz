@@ -68,6 +68,7 @@ class ControlsTest(unittest.TestCase):
             S.screen='play';S.mode='out';S.room=null;
             S.x=1580;S.y=1800;S.ang=0;S.pitch=0;S.seated=false;S.intro=0;
             PRO.on=false;PAUSE.on=false;syncCamera(0);updateHUD();
+            CUT.enabled=false;SEARCH.on=false;
         """)
         return page
 
@@ -300,17 +301,16 @@ class ControlsTest(unittest.TestCase):
         self.assertGreater(page.evaluate('S.ang'), before + .1)
         self.assert_js(page, '!document.pointerLockElement&&!PAUSE.on')
 
-    def test_touch_buttons_fire_once_and_running_toggles(self):
+    def test_touch_buttons_fire_once_and_stick_runs_without_button(self):
         page = self.page(touch=True)
         page.evaluate('window.actions=0;tryInteract=function(){actions++};void 0')
         page.locator('#tAct').tap()
         self.assert_js(page, 'actions===1')
-        page.locator('#tRun').tap()
-        self.assert_js(page, 'TOUCH.run')
-        self.swipe(page)
-        self.assert_js(page, 'TOUCH.run')
-        page.locator('#tRun').tap()
-        self.assert_js(page, '!TOUCH.run')
+        self.assert_js(page, "!document.getElementById('tRun')")
+        page.evaluate("S.stam=100;S.tired=false;KEY={};TOUCH.active=true;TOUCH.dx=0;TOUCH.dy=-1;updatePlayer(.05)")
+        self.assert_js(page, 'S.run')
+        page.evaluate("TOUCH.dy=-.5;updatePlayer(.05);TOUCH.active=false")
+        self.assert_js(page, '!S.run')
 
     def test_mouse_lock_modal_return_and_escape_pause(self):
         page = self.page()
@@ -435,7 +435,7 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, 'S.exam&&!examNow()')
         page.evaluate("S.tsec=850;updateHUD()")
         self.assert_js(page, "examNow()&&document.getElementById('period').textContent.indexOf('考试')===0")
-        page.evaluate("S.tsec=1295;updateSystems(.01)")
+        page.evaluate("S.tsec=LIGHTS_OUT+5;updateSystems(.01)")
         self.assert_js(page, '!S.exam')
 
     def test_bell_tower_saves_restore_stairs_and_top(self):
@@ -520,7 +520,7 @@ class ControlsTest(unittest.TestCase):
         page.evaluate("""doEnterRoom('guard1'); running=false;
             const R=INTERIORS.guard1; S.x=R.ox+3.5*R.tw; S.y=R.oy+3.5*R.th;
             S.ang=Math.PI; S.bag=['roomkey','key','coin','chalk','snack','battery','pill','pen'];
-            tryInteract();""")
+            RT.guardKeysTold=1; tryInteract();""")
         self.assert_js(page, "!hasItem('torch')&&document.getElementById('sub').textContent.includes('装不下')")
         page.evaluate("removeItem('coin');tryInteract()")
         self.assert_js(page, "hasItem('torch')")
@@ -529,13 +529,23 @@ class ControlsTest(unittest.TestCase):
         page = self.page()
         page.evaluate("""doEnterRoom('guard1'); running=false;
             const R=INTERIORS.guard1; S.x=R.ox+3.5*R.tw; S.y=R.oy+3.5*R.th;
-            S.ang=Math.PI; S.bag=[]; tryInteract(); tryInteract(); tryInteract();""")
-        self.assert_js(page, "hasItem('roomkey')&&hasItem('key')&&hasItem('torch')")
+            S.ang=Math.PI; S.bag=[]; tryInteract();""")
+        # 钥匙已经不在保安岗：只给手电，并指向校长办公室
+        page.wait_for_function("hasItem('torch')", timeout=5000)
+        self.assert_js(page, "!hasItem('roomkey')&&!hasItem('key')&&RT.guardKeysTold===1")
+        page.evaluate("addItem('key')")
         page.evaluate("""doEnterRoom('garage1'); running=false; S.ang=0;
             ROAM.on=true; ROAM.stage='approach'; ROAM.x=S.x+40; ROAM.y=S.y;
             ROAM.cd=10; ROAM.litAcc=0; USE.torch=false; toggleTorch(); roamTick(1.7);""")
         self.assert_js(page, "ROAM.stage==='wait'&&!roamGuardsCar()")
-        page.evaluate('useCar(0,0)')
+        # 只有一辆能开：先试一辆错的，再试对的那辆；每次都要站着拧 1.6 秒
+        page.evaluate("""var cs=carRightCell().split(':').map(Number);
+            var R=INTERIORS.garage1, wrong=null;
+            for(var r=0;r<R.rows&&!wrong;r++) for(var c=0;c<R.cols;c++) if(R.grid[r][c]==='V'&&(c+':'+r)!==RT.carRight){ wrong=[c,r]; break; }
+            useCar(wrong[0],wrong[1]); searchTick(2);
+            window.__wrong=!RT.carUsed&&Object.keys(RT.carTried).length===1;
+            useCar(cs[0],cs[1]); searchTick(2);""")
+        self.assert_js(page, '__wrong')
         page.wait_for_function("S.screen==='end'&&RT.end==='car'", timeout=5000)
 
     def test_auto_save_death_and_ending_history(self):
@@ -585,6 +595,236 @@ class ControlsTest(unittest.TestCase):
         self.touch(page, 'touchEnd', [])
         page.wait_for_function("document.getElementById('set').scrollTop>0")
         self.assert_js(page, "getComputedStyle(document.body).touchAction!=='none'")
+
+
+    # ---------- 第二轮优化清单 ----------
+    def test_bag_drop_refreshes_open_panel_and_hotbar(self):
+        page = self.page()
+        page.evaluate("S.bag=['coin','chalk'];S.hot=['coin',null];S.bagSel=0;UI.open('bag');dropAt(0)")
+        self.assert_js(page, "S.bag.join()==='chalk'&&S.hot[0]===null&&document.querySelectorAll('#bags .s .item').length===1")
+
+    def test_search_takes_time_and_dev_toggle(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;SEARCH.on=true;S.bag=[];RT.deskUsed={};
+            var R=INTERIORS.teach1,dc=-1,dr=-1;
+            for(var r=1;r<15&&dc<0;r++) for(var c=1;c<R.cols;c++) if(R.grid[r][c]==='d'&&!ncOccupied(c,r)){ dc=c; dr=r; break; }
+            S.x=R.ox+(dc+0.5)*9;S.y=R.oy+(dr+1.5)*9;Math.random=function(){return 0.30};
+            searchContainer(dc,dr);window.__before=S.bag.length;searchTick(0.5);window.__mid=S.bag.length;searchTick(0.4);""")
+        self.assert_js(page, "__before===0&&__mid===0&&S.bag.length===1&&!SEARCH.job")
+        page.evaluate("Dev.search()")
+        self.assert_js(page, "!SEARCH.on")
+
+    def test_schedule_evening_until_ten_and_lights_out(self):
+        page = self.page()
+        self.assert_js(page, "periodAt(1250)[2]==='晚自习二'&&needWhere(1310)==='教室'&&needWhere(1330)==='自由'&&needWhere(1345)==='宿舍'")
+        self.assert_js(page, "LIGHTS_OUT===1340&&periodAt(1339)[2]==='洗漱'")
+
+    def test_anomaly_does_not_repeat_and_prefers_new(self):
+        page = self.page()
+        page.evaluate("window.__allow=['turn'];anAllowed=function(id){return __allow.indexOf(id)>=0};RT.anHist=['turn'];RT.anSeen={turn:1};S.diff='hard'")
+        self.assert_js(page, "pickAnomaly()===null")
+        page.evaluate("__allow=['turn','rain'];AN.cool={}")
+        self.assert_js(page, "pickAnomaly()==='rain'")
+
+    def test_trap_ideas_only_work_on_the_spot(self):
+        page = self.page()
+        page.evaluate("S.spots.front=1;S.mode='out';S.x=704*SC;S.y=900*SC;chooseIdea('front')")
+        self.assert_js(page, "!UI.chooseOpen&&document.getElementById('sub').textContent.includes('北门')")
+        page.evaluate("S.x=GATE_N.x*SC;S.y=(GATE_N.y+20)*SC;chooseIdea('front')")
+        self.assert_js(page, "UI.chooseOpen")
+
+    def test_patroller_locks_on_hides_and_back_turned_escape(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;
+            var R=INTERIORS.teach1;S.x=R.ox+30.5*9;S.y=R.oy+18.5*9;S.ang=0;S.moving=false;
+            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+70;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
+            for(var i=0;i<40&&!(PAT.locked&&GLR.patrolRed>0);i++) patTick(0.1);""")
+        self.assert_js(page, "PAT.locked&&GLR.patrolRed>0&&!S.dead")
+        # 背对它、一动不动 2.5 秒：它走过去
+        page.evaluate("PAT.x=S.x+80;PAT.y=S.y;PAT.path=null;S.ang=Math.PI;for(var i=0;i<28;i++){S.moving=false;patTick(0.1);}")
+        self.assert_js(page, "PAT.state==='idle'&&!S.dead")
+        # 没被看见时躲进柜子：它不会锁定
+        page.evaluate("""PAT.room='teach1';PAT.state='walk';PAT.locked=false;PAT.lock=0;PAT.walkT=0;
+            hideIn({c:28,r:16});PAT.x=S.x+60;PAT.y=S.y+20;for(var i=0;i<20;i++) patTick(0.1);""")
+        self.assert_js(page, "HIDE.on&&!HIDE.seen&&!PAT.locked&&!S.dead")
+        page.evaluate("hideOut()")
+        self.assert_js(page, "!HIDE.on")
+
+    def test_principal_office_keys_and_guard_has_none(self):
+        page = self.page()
+        self.assert_js(page, "INTERIORS.admin5.principal&&INTERIORS.admin5.name.includes('校长')")
+        page.evaluate("""doEnterRoom('admin5');running=false;S.bag=[];RT.deskUsed={};Math.random=function(){return 0.1};doSearch(3,2)""")
+        self.assert_js(page, "hasItem('key')||hasItem('roomkey')")
+        page.evaluate("""doEnterRoom('admin2');running=false;S.bag=[];RT.deskUsed={};Math.random=function(){return 0.05};doSearch(3,2)""")
+        self.assert_js(page, "!hasItem('key')&&!hasItem('roomkey')")
+
+    def test_portal_true_ending_from_lab_parts(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('lab1');running=false;S.bag=['coil','lens','vial','battery'];RT.portalSketch=1;portalBench()""")
+        self.assert_js(page, "UI.chooseOpen")
+        page.locator('#choices button').first.click()
+        page.wait_for_function("UI.chooseOpen&&document.getElementById('choices').textContent.includes('走进去')", timeout=6000)
+        page.locator('#choices button').first.click()
+        page.wait_for_function("S.screen==='end'&&RT.end==='portal'", timeout=5000)
+        self.assert_js(page, "!hasItem('coil')&&document.getElementById('ends').textContent.includes('真 结 局')")
+
+    def test_trash_is_a_fake_ending_you_can_wake_from(self):
+        page = self.page()
+        page.evaluate("doEnterRoom('trash1');running=false;triggerEnding('trash')")
+        self.assert_js(page, "S.screen==='end'&&document.getElementById('ends').textContent.includes('假 结 局')&&!!loadGame()")
+        page.evaluate("fakeWake()")
+        self.assert_js(page, "S.screen==='play'&&S.room==='teach1'&&RT.trashFake===1&&!document.getElementById('ends')")
+        page.evaluate("doEnterRoom('trash1');running=false;S.tsec=1051;tryTrashRoute()")
+        self.assert_js(page, "S.screen==='play'")
+
+    def test_coin_buys_meal_and_vending_items(self):
+        page = self.page()
+        page.evaluate("doEnterRoom('canteen1');running=false;S.tsec=900;S.san=50;S.bag=['coin'];canteenWindow()")
+        page.locator('#choices button').first.click()
+        self.assert_js(page, "S.san===74&&!hasItem('coin')")
+        page.evaluate("S.bag=['coin'];Math.random=function(){return 0.01};useVending()")
+        self.assert_js(page, "hasItem('snack')&&!hasItem('coin')")
+
+    def test_elixir_saves_once_and_seal_wards_patroller(self):
+        page = self.page()
+        page.evaluate("S.bag=['elixir'];S.dead=false;S.death=null;kill('x','grip')")
+        self.assert_js(page, "!S.dead&&!hasItem('elixir')")
+        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;S.bag=['seal'];
+            var R=INTERIORS.teach1;S.x=R.ox+30.5*9;S.y=R.oy+18.5*9;
+            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+50;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
+            for(var i=0;i<40&&hasItem('seal');i++) patTick(0.1);""")
+        self.assert_js(page, "!hasItem('seal')&&PAT.state==='idle'&&!PAT.locked&&!S.dead")
+
+    def test_held_items_show_in_hands(self):
+        page = self.page()
+        page.evaluate("S.bag=['torch','brolly','phone'];USE.torch=true;USE.brollyShield=true;USE.phone=true;handsTick(0)")
+        self.assert_js(page, "HANDS.R.visible&&HANDS.L.visible&&HANDS.items.torch.parent===HANDS.R&&HANDS.items.brolly.parent===HANDS.L&&!HANDS.items.phone.visible")
+        page.evaluate("USE.brollyShield=false;handsTick(0)")
+        self.assert_js(page, "HANDS.items.phone.parent===HANDS.L&&HANDS.items.phone.visible")
+
+    def test_ending_cutscene_plays_and_can_be_skipped(self):
+        page = self.page()
+        page.evaluate("doEnterRoom('teach1');running=false;CUT.enabled=true;triggerEnding('beast')")
+        self.assert_js(page, "S.screen==='cut'&&CUT.on&&document.body.classList.contains('cut')")
+        page.evaluate("cutTick(1);")
+        self.assert_js(page, "CUT.on&&GLR.worldNorm>=0")
+        page.keyboard.press('Space')
+        self.assert_js(page, "!CUT.on&&S.screen==='end'&&RT.end==='beast'")
+
+    def test_portal_materials_can_be_retried_after_full_bag_or_drop(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('lab3');running=false;S.seated=false;
+            nearWorld=function(){return {ch:'Q'}};hit2_seatNear=function(){return false};
+            S.bag=['coin','chalk','snack','battery','pill','pen','notebook','memo'];tryInteract();""")
+        self.assert_js(page, "!RT.coilTaken&&!hasItem('coil')")
+        page.evaluate("removeItem('coin');tryInteract()")
+        self.assert_js(page, "RT.coilTaken&&hasItem('coil')")
+        page.evaluate("dropAt(S.bag.indexOf('coil'));tryInteract()")
+        self.assert_js(page, "RT.coilTaken&&hasItem('coil')")
+        for ch, item, flag in [('N', 'lens', 'lensTaken'), ('C', 'vial', 'vialTaken')]:
+            with self.subTest(item=item):
+                page.evaluate("""({ch,flag})=>{ S.bag=['coin','chalk','snack','battery','pill','pen','notebook','memo'];
+                    RT[flag]=0;S.actCool={};facRoll=function(){return 0};useFacility(ch,INTERIORS[S.room]); }""", {'ch': ch, 'flag': flag})
+                self.assert_js(page, f"!RT.{flag}&&!hasItem('{item}')")
+                page.evaluate("""({ch})=>{ removeItem('coin');useFacility(ch,INTERIORS[S.room]); }""", {'ch': ch})
+                self.assert_js(page, f"RT.{flag}&&hasItem('{item}')")
+                page.evaluate("""({ch,item})=>{ dropAt(S.bag.indexOf(item));S.actCool={};useFacility(ch,INTERIORS[S.room]); }""", {'ch': ch, 'item': item})
+                self.assert_js(page, f"RT.{flag}&&hasItem('{item}')")
+
+    def test_portal_remains_accessible_after_assembly_and_reload(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('lab1');running=false;RT.portalSketch=1;
+            S.bag=['coil','lens','vial','battery'];portalBench();""")
+        page.locator('#choices button').first.click()
+        page.wait_for_function("UI.chooseOpen&&document.getElementById('choices').textContent.includes('走进去')", timeout=6000)
+        page.locator('#choices button').last.click()
+        page.evaluate("saveGame();Game.continue_();running=false;")
+        self.assert_js(page, "RT.portalOpen&&S.room==='lab1'&&portalNeedText().includes('门已经打开')")
+        page.evaluate("portalBench()")
+        self.assert_js(page, "UI.chooseOpen&&document.getElementById('choices').textContent.includes('走进去')")
+        page.locator('#choices button').first.click()
+        self.assert_js(page, "S.screen==='end'&&RT.end==='portal'")
+
+    def test_locker_position_and_patrol_end_stay_hidden_until_exit(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;patReset();
+            hideIn({c:28,r:16});window.__hiddenX=S.x;window.__hiddenY=S.y;render(0.6);""")
+        self.assert_js(page, "HIDE.on&&S.x===__hiddenX&&S.y===__hiddenY&&document.getElementById('hideslits').style.display==='block'")
+        page.evaluate("""PAT.room='teach1';PAT.state='walk';PAT.locked=true;PAT.lost=0;PAT.walkT=0;
+            PAT.x=S.x+70;PAT.y=S.y+20;PAT.tx=S.x;PAT.ty=S.y;
+            for(var i=0;i<30;i++) patTick(0.1);""")
+        self.assert_js(page, "!PAT.locked&&HIDE.on")
+        page.evaluate("patEnd(null)")
+        self.assert_js(page, "HIDE.on&&S.x===__hiddenX&&S.y===__hiddenY")
+        page.evaluate("tryInteract()")
+        self.assert_js(page, "!HIDE.on&&canStand(S.x,S.y)&&document.getElementById('hideslits').style.display==='none'")
+        page.evaluate("hideIn({c:28,r:16});saveGame();Game.quit()")
+        self.assert_js(page, "!HIDE.on&&document.getElementById('hideslits').style.display==='none'")
+        page.evaluate("Game.continue_();running=false")
+        page.wait_for_function("S.room==='teach1'&&!HIDE.on&&!solidAt(S.x,S.y)")
+
+    def test_patroller_reaches_seen_locker_without_crossing_walls(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;patReset();
+            hideIn({c:28,r:16});HIDE.seen=true;var R=INTERIORS.teach1;
+            OPENDOORS['teach1:25:15']=1;PAT.room='teach1';PAT.state='walk';PAT.locked=true;
+            PAT.lost=0;PAT.walkT=0;PAT.x=R.ox+25.5*R.tw;PAT.y=R.oy+13.5*R.th;PAT.path=null;
+            window.__caught=false;window.__crossedWall=false;kill=function(){__caught=true};
+            for(var i=0;i<160&&!__caught;i++){
+              patTick(0.05);if(tileAt(R,PAT.x,PAT.y)==='#') __crossedWall=true;
+            }""")
+        self.assert_js(page, "__caught&&!__crossedWall")
+        page.evaluate("""patReset();S.x=R.ox+29.5*R.tw;S.y=R.oy+13.5*R.th;OPENDOORS={};
+            PAT.room='teach1';PAT.state='walk';PAT.locked=true;PAT.lost=0;PAT.walkT=0;
+            PAT.x=R.ox+27.5*R.tw;PAT.y=R.oy+13.5*R.th;PAT.path=null;
+            window.__caught=false;window.__crossedWall=false;
+            for(var i=0;i<10;i++){patTick(0.1);if(tileAt(R,PAT.x,PAT.y)==='#') __crossedWall=true;}""")
+        self.assert_js(page, "!__caught&&!__crossedWall")
+        page.evaluate("""patReset();S.x=R.ox+29.5*R.tw-3;S.y=R.oy+13.5*R.th;OPENDOORS={};
+            for(var c=0;c<R.cols;c++) if(R.grid[15][c]==='=') OPENDOORS['teach1:'+c+':15']=1;
+            PAT.room='teach1';PAT.state='walk';PAT.locked=true;PAT.lost=0;PAT.walkT=0;
+            PAT.x=R.ox+27.5*R.tw+3;PAT.y=R.oy+13.5*R.th;PAT.path=null;
+            window.__caught=false;window.__crossedWall=false;
+            for(var i=0;i<10;i++){patTick(0.1);if(tileAt(R,PAT.x,PAT.y)==='#') __crossedWall=true;}""")
+        self.assert_js(page, "!__caught&&!__crossedWall")
+
+    def test_portal_delayed_prompt_does_not_interrupt_other_contexts(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('lab1');running=false;RT.portalSketch=1;
+            S.bag=['coil','lens','vial','battery'];window.__realTimeout=window.setTimeout;
+            window.setTimeout=function(fn,ms){ if(ms===2600){window.__portalTimer=fn;return 0;} return __realTimeout(fn,ms); };
+            portalBench();""")
+        page.locator('#choices button').first.click()
+        page.evaluate("""window.setTimeout=__realTimeout;S.room='lab2';__portalTimer();""")
+        self.assert_js(page, "!UI.chooseOpen")
+        page.evaluate("S.room='lab1';UI.open('bag');__portalTimer()")
+        self.assert_js(page, "!UI.chooseOpen&&UI.openPanel==='bag'")
+        page.evaluate("UI.closePanelAll();RT=newRT();__portalTimer()")
+        self.assert_js(page, "!UI.chooseOpen")
+
+    def test_full_bag_does_not_consume_searchable_key_or_usb(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('admin5');running=false;RT.deskUsed={};
+            S.bag=['coin','chalk','snack','battery','pill','pen','notebook','memo'];
+            Math.random=function(){return 0.1};doSearch(2,2);""")
+        self.assert_js(page, "!RT.deskUsed['admin5:2:2']&&!hasItem('key')&&!hasItem('roomkey')")
+        page.evaluate("removeItem('coin');doSearch(2,2)")
+        self.assert_js(page, "RT.deskUsed['admin5:2:2']&&(hasItem('key')||hasItem('roomkey'))")
+        page.evaluate("""doEnterRoom('lab3');running=false;RT.deskUsed={};
+            S.bag=['coin','chalk','snack','battery','pill','pen','notebook','memo'];
+            var R=INTERIORS.lab3, found=[];for(var r=0;r<R.rows;r++)for(var c=0;c<R.cols;c++)if(R.grid[r][c]==='R')found.push([c,r]);
+            window.__shelf=found[0];doSearch(__shelf[0],__shelf[1]);""")
+        self.assert_js(page, "!RT.deskUsed['lab3:'+__shelf[0]+':'+__shelf[1]]&&!hasItem('usb')")
+        page.evaluate("removeItem('coin');doSearch(__shelf[0],__shelf[1])")
+        self.assert_js(page, "hasItem('usb')")
+
+    def test_search_job_is_cleared_when_quitting_or_starting_new_game(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('garage1');running=false;holdJob(1.6,function(){RT.carUsed=true});
+            searchTick(0.5);Game.quit();""")
+        self.assert_js(page, "!SEARCH.job&&document.getElementById('searchring').style.display==='none'")
+        page.evaluate("freshState('normal')")
+        self.assert_js(page, "!SEARCH.job&&!RT.carUsed")
 
 
 if __name__ == '__main__':

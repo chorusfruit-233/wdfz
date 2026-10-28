@@ -20,13 +20,23 @@ function addItem(id){
   S.bag.push(id);
   try{ SFX.pickup(); }catch(e){}
   os('我：拿到了「'+ITEMS[id].n+'」。',2.6);
-  UI.bagDirty=true;
+  bagChanged();
   return true;
 }
 function removeItem(id){
   var i=S.bag.indexOf(id);
-  if(i>=0){ S.bag.splice(i,1); UI.bagDirty=true; return true; }
-  return false;
+  if(i<0) return false;
+  S.bag.splice(i,1);
+  for(var k=0;k<2;k++) if(S.hot[k]===id) S.hot[k]=null;      /* 快捷栏里也取下来 */
+  if(S.bagSel>=S.bag.length) S.bagSel=Math.max(0,S.bag.length-1);
+  bagChanged();
+  return true;
+}
+/* 背包变了：打开着的背包和快捷栏立刻重画（以前丢掉东西后格子还显示着） */
+function bagChanged(){
+  UI.bagDirty=true;
+  var hot=document.getElementById('hot'); if(hot) hot._sig='';
+  if(UI.openPanel==='bag') UI.renderBag(); else UI.renderHot();
 }
 function toggleTorch(){
   if(!hasItem('torch')){ toast('没有手电筒'); return; }
@@ -50,11 +60,21 @@ function useItem(id){
   if(id==='pill'){ S.san=Math.min(100,S.san+18); removeItem('pill'); os('我：药片很苦。手不抖了。',3); toast('药片 · SAN +18'); return; }
   if(id==='snack'){ S.snackT=SNACK_SEC; removeItem('snack'); os('我：甜的。腿一下子轻了。',2.4); toast('士力架 · '+SNACK_SEC+' 秒内疾跑不耗体力'); return; }
   if(id==='coin'){ throwCoin(); return; }
+  if(id==='atlas'){
+    for(var ai=0;ai<SPOTS.length;ai++) if(SPOTS[ai].id!=='stall') S.spots[SPOTS[ai].id]=1;
+    UI.spotsDirty=true; addClue('atlas');
+    os('我：总览图上用红笔圈了三处：行政楼五楼「校长办公室」，实验楼一楼「物理实验室」，还有钟楼——旁边写着「顶上能看见整个学校」。',6,OS_KEEP);
+    UI.open('mapv');
+    return;
+  }
+  if(id==='elixir'){ os('我：留着。没有说明书，可我知道它什么时候该吃——到时候它自己会起作用。',3.2); return; }
+  if(id==='seal'){ os('我：符纸在口袋里很安静。等那个高个子盯上我的时候，它才会动。',3.2); return; }
+  if(id==='coil'||id==='lens'||id==='vial'){ os('我：'+nm+'。'+ITEMS[id].d+portalNeedText(),3.6); return; }
   if(id==='watch'){ toast('现在是 '+fmtClockS(S.tsec)); os('我：现在是 '+fmtClockS(S.tsec)+'。秒针走得很稳。',2.6); return; }
   if(id==='compass'){ useCompass(); return; }
   if(id==='memo'){
     S.spots.data=1; S.spots.comp=1; UI.spotsDirty=true;
-    os('我：纸条上是一行潦草的字：「实验楼 3F 网络中心 → 行政楼 3F 门禁机 → 西小门。钥匙在保安室。」最后一个字被划得很深。',6);
+    os('我：纸条上是一行潦草的字：「实验楼 3F 网络中心 → 行政楼 3F 门禁机 → 西小门。钥匙收到校长室去了。」最后一个字被划得很深。',6);
     toast('记下了：机房 · 数据终端');
     return;
   }
@@ -105,7 +125,7 @@ function useCompass(){
   os('我：指针在抖，最后停在'+dirs[k]+'——'+what+'。',3.0);
 }
 function throwCoin(){
-  if(S.mode!=='in'||S.room!=='garage1'){ os('我：扔在这儿没意义。',2); return; }
+  if(S.mode!=='in'||S.room!=='garage1'){ os(S.room==='canteen1'?'我：要买饭就去打饭窗口，要买东西就去售货机。':'我：扔在这儿没意义。留着，食堂能用。',2.4); return; }
   var a=S.ang+rnd(-0.4,0.4), far=rnd(60,120);
   RT.lure={x:S.x+Math.cos(a)*far,y:S.y+Math.sin(a)*far,t:8};
   ROAM.lureTold=0;
@@ -122,6 +142,10 @@ function dropSelected(){
   var id=S.bag[S.bagSel];
   if(!id){ return; }
   removeItem(id);
+  /* 独有的门材料丢弃后可回原处重取，避免误丢断掉整条路线。 */
+  if(id==='coil') RT.coilTaken=0;
+  if(id==='lens') RT.lensTaken=0;
+  if(id==='vial') RT.vialTaken=0;
   os('我：我把「'+ITEMS[id].n+'」放下了。',2.4);
   if(S.mode==='in'&&inToiletHere()&&S.room==='teach1'&&!RT.beastDrop){
     if(inBeastWindow()){
@@ -147,4 +171,34 @@ function hasClue(id){
   if(!S.clues[id]) return false;
   if(hasItem('notebook')&&hasItem('pen')) return true;
   return S.clues[id]===S.day;
+}
+
+/* ---------- 食堂：饭点以外投币买饭；售货机投币随机出东西 ---------- */
+function mealNow(){ return MEALS.some(function(m){ return S.tsec>=m[0]&&S.tsec<m[1]; }); }
+function canteenWindow(){
+  if(!hasItem('coin')){ os('我：窗口里的人头也不抬：「饭点过了。要吃，拿钱来。」',3.2); return; }
+  UI.choice('窗口里还剩一点饭菜。「一个硬币一份。」',[
+    {label:'投一枚硬币买饭（SAN +24）',fn:function(){
+      UI.closeChoice(); removeItem('coin');
+      S.san=Math.min(100,S.san+24); S.stam=Math.min(100,S.stam+30);
+      S.tsec=((S.tsec+10)%1440+1440)%1440;
+      os('我：硬币落进铁盒子里，响了很久。饭是热的——这里第一次有热的东西。',3.8); toast('买饭 · SAN +24');
+      try{ SFX.click(); }catch(e){}
+    }},
+    {label:'算了',fn:function(){ UI.closeChoice(); }}
+  ]);
+}
+/* 售货机：一个硬币换一样东西，偶尔有好东西，也会吞币 */
+var VEND_POOL=[['snack',24],['battery',18],['pill',14],['seal',10],['watch',7],['elixir',6],['torch',5],[null,16]];
+function useVending(){
+  if(!hasItem('coin')){ os('我：售货机的灯管一闪一闪。投币口旁边贴着：「只收硬币」。',3.0); return; }
+  removeItem('coin');
+  try{ SFX.click(); }catch(e){}
+  var tot=0,i; for(i=0;i<VEND_POOL.length;i++) tot+=VEND_POOL[i][1];
+  var r=Math.random()*tot, got=null;
+  for(i=0;i<VEND_POOL.length;i++){ r-=VEND_POOL[i][1]; if(r<0){ got=VEND_POOL[i][0]; break; } }
+  if(got&&hasItem(got)) got=null;
+  if(!got){ os('我：硬币吞进去了。机器里咔哒响了一声，什么也没掉下来。玻璃后面，有一排东西转过来对着我。',4.2); return; }
+  os('我：咔哒一声，掉下来一样东西——「'+ITEMS[got].n+'」。',3.0);
+  addItem(got);
 }

@@ -34,7 +34,7 @@ var KEEP={
 function isSolidCh(c){return c==='#'||c==='S';}   /* 楼梯占着一整格，人不能站进去 */
 
 var RATE={CLASS:80,BREAK:12,MEAL:14,ASSEM:30,FREE:37,NIGHT:17};
-/* 上课 8:00–12:15、14:00–17:20；晚自习 18:10–19:40、20:00–21:00 */
+/* 上课 8:00–12:15、14:00–17:20；晚自习 18:10–19:40、20:00–22:00；22:20 熄灯 */
 var SCHED=[
   [440,480,'早读',    '教室',RATE.CLASS],
   [480,525,'第 1 节','教室',RATE.CLASS],
@@ -57,12 +57,13 @@ var SCHED=[
   [1060,1090,'晚饭',  '自由',RATE.MEAL],
   [1090,1180,'晚自习一','教室',RATE.NIGHT],
   [1180,1200,'课间',  '自由',RATE.BREAK],
-  [1200,1260,'晚自习二','教室',RATE.NIGHT],
-  [1260,1290,'洗漱',  '自由',RATE.NIGHT],
-  [1290,1500,'熄灯后','自由',RATE.NIGHT]
+  [1200,1320,'晚自习二','教室',RATE.NIGHT],
+  [1320,1340,'洗漱',  '自由',RATE.NIGHT],
+  [1340,1500,'熄灯后','自由',RATE.NIGHT]
 ];
 var MEALS=[[735,800],[1060,1090]];         /* 食堂开饭的时间段 */
 var EVENING=1090;                           /* 晚自习开始 */
+var LIGHTS_OUT=1340;                        /* 熄灯 22:20 */
 function periodAt(t){
   for(var i=0;i<SCHED.length;i++){var s=SCHED[i]; if(t>=s[0]&&t<s[1])return s;}
   return SCHED[SCHED.length-1];
@@ -71,13 +72,13 @@ function needWhere(t){
   var p=periodAt(t);
   if(p[3]==='教室') return '教室';
   if(p[3]==='操场') return '操场';
-  if(t>=1290) return '宿舍';
+  if(t>=LIGHTS_OUT) return '宿舍';
   return '自由';
 }
 /* 《先辈》：11:45:00–11:45:10 这 10 秒，时间慢到大约 15 个真实秒（流速单位是"游戏秒 / 真实秒"） */
 var BEAST_T0=705, BEAST_T1=705+10/60, BEAST_RATE=10/15;
 function rateAt(t){ return (t>=BEAST_T0&&t<BEAST_T1)?BEAST_RATE:periodAt(t)[4]; }
-function isNight(){ return S.tsec>=1290||S.tsec<440; }
+function isNight(){ return S.tsec>=LIGHTS_OUT||S.tsec<440; }
 
 /* 预知梦：中等（第一天死了能醒三次，异象 40–64 秒一次，提前一点告诉你下一个是什么）
    梦魇：中上（不会醒，异象 24–40 秒一次，致死阈值更低，二选一的代价更重） */
@@ -102,19 +103,28 @@ var ITEMS={
   metronome:{n:'节拍器',d:'摆锤自己在动，可是没有声音。'},
   goggles:{n:'护目镜',d:'镜片上有洗不掉的斑点。'},
   hw:{n:'作业本',d:'写完了的作业。字很工整，不是我的。'},
-  coin:{n:'硬币',d:'边缘磨得很圆。扔出去会有声音。'},
+  coin:{n:'硬币',d:'边缘磨得很圆。食堂窗口和售货机都收；在车库里扔出去会有声音。'},
   usb:{n:'U 盘',d:'上面贴着「门禁」两个字。'},
   watch:{n:'手表',d:'带秒针。能数到秒。'},
   memo:{n:'纸条',d:'上面写着门禁和白名单的事。'},
-  roomkey:{n:'机房钥匙',d:'铜的，磨得发亮。塑料标签上写着「机房」。'}
+  roomkey:{n:'机房钥匙',d:'铜的，磨得发亮。塑料标签上写着「机房」。'},
+  /* 高级物品 */
+  coil:{n:'铜线圈',d:'从服务器里抽出来的一卷。缠得很密，摸上去一直在发烫。（传送门材料）'},
+  lens:{n:'透镜',d:'显微镜上拧下来的物镜。透过它看，墙后面像是还有一层。（传送门材料）'},
+  vial:{n:'荧光试剂',d:'离心机甩出来的一管，颜色一直在变。（传送门材料）'},
+  atlas:{n:'建筑总览图',d:'每栋楼每一层都画在上面。有几处用红笔圈着。'},
+  elixir:{n:'不知名药丸',d:'没有说明书的一粒。要死的时候，它会把你拽回来一次。'},
+  seal:{n:'符纸',d:'折成三角的黄纸。巡察者盯上你的时候，它替你挡一次。'}
 };
 var ITEM_GLYPH={
   card:'▣', phone:'▤', chalk:'▬', map:'▦', key:'⚿', torch:'▮', brolly:'☂',
   coat:'▧', pill:'◍', notebook:'▤', pen:'✎', snack:'▬', battery:'▮',
   compass:'◎', metronome:'⧗', goggles:'◉', hw:'▤', coin:'◉', usb:'▮',
-  watch:'◷', memo:'▭', roomkey:'⚿'
+  watch:'◷', memo:'▭', roomkey:'⚿',
+  coil:'◎', lens:'◌', vial:'▯', atlas:'▦', elixir:'◍', seal:'△'
 };
 var ITEM_COL={
+  coil:'#d08a4a', lens:'#a8d8e8', vial:'#7fe0a0', atlas:'#c8b88a', elixir:'#e0a0e0', seal:'#e0c040',
   torch:'#c8a24a', phone:'#7fb0c8', key:'#c8a24a', coin:'#c8a24a',
   pill:'#c86a6a', snack:'#b89a5a', battery:'#8ac8a4', compass:'#8aa8c8',
   roomkey:'#c8b060'

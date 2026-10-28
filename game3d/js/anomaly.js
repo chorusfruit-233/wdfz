@@ -108,11 +108,19 @@ function pickAnomaly(){
     pool=pool.filter(function(a){ return a!=='necker'&&a!=='twin'&&a!=='moth'&&a!=='rite'; });
     if(!pool.length) return null;
   }
+  /* 不再纯随机：同一种不连着来（只剩它就这次不来）；最近出过的少来，没见过的多来。
+     以前室外路上几乎只剩「拍肩膀」，一局能连着拍九次。 */
+  var hist=RT.anHist||[], last=hist[hist.length-1], seen=RT.anSeen||{};
+  if(pool.length>1) pool=pool.filter(function(a){ return a!==last; });
+  else if(pool[0]===last) return null;
+  if(!hist.length&&pool.indexOf('chalk')>=0) return 'chalk';   /* 第一次总是黑板上的预告：先教会你看时间 */
   var tot=0,ws=[];
   for(i=0;i<pool.length;i++){
     var w=AN_W[pool[i]]||1;
     if(AN_SMALL[pool[i]]) w*=1.25;
     if(inLabHere()) w*=1.9;
+    if(hist.slice(-4).indexOf(pool[i])>=0) w*=0.35;
+    if(!seen[pool[i]]) w*=2.2;
     ws.push(w); tot+=w;
   }
   var r=Math.random()*tot,acc=0;
@@ -129,6 +137,7 @@ function anInterval(){
   base*=0.62+0.38*clamp(S.san,0,100)/100;
   base*=1-clamp(S.viol,0,100)/260;
   if(AN.lastBig) base*=1.25;                     /* 大的过去之后，给一口喘气的时间 */
+  if(S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].principal) base*=0.5;   /* 校长办公室：异象频发 */
   return Math.max(10,base);
 }
 function anScheduleNext(){
@@ -176,6 +185,7 @@ function anStart(){
   if(!id) id=pickAnomaly();
   if(!id){ anScheduleNext(); AN.next=Math.min(AN.next,6); return; }
   AN.id=id; AN.t=0; AN.acc=0; AN.active=true; AN.data={}; AN.sub=0;
+  RT.anHist=(RT.anHist||[]).concat(id).slice(-6); RT.anSeen=RT.anSeen||{}; RT.anSeen[id]=1;
   AN.lastBig=!AN_SMALL[id];
   if(AN_COOL[id]!==undefined||id==='rain'||id==='moth'||id==='raindots') AN.cool[id]=S.tsec;
   if(id==='rain'||id==='moth'||id==='raindots') AN.rained=true;

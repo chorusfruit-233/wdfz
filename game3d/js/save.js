@@ -54,7 +54,7 @@ function paintMenuSave(){
   var el=document.getElementById('mends');
   if(!el||typeof ENDINGS==='undefined') return;
   var seen=endsSeen(), ids=Object.keys(ENDINGS), got=[];
-  for(var i=0;i<ids.length;i++) if(seen[ids[i]]) got.push(ENDINGS[ids[i]].t);
+  for(var i=0;i<ids.length;i++) if(seen[ids[i]]) got.push(ENDINGS[ids[i]].t+(ENDINGS[ids[i]].true?'（真）':ENDINGS[ids[i]].fake?'（假）':''));
   el.textContent=got.length?'已见结局 '+got.length+' / '+ids.length+'　'+got.join(' '):'';
   el.style.display=got.length?'block':'none';
 }

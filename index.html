@@ -18,7 +18,7 @@
 <button id="fullscreen-toggle" class="screen-control" type="button" onclick="goFullscreen()" aria-pressed="false">进入全屏</button>
 <div id="lookhint" hidden>点击画面恢复鼠标环视 · 按住拖动也可转向</div>
 <div id="scan"></div><div id="vig"></div><div id="flash"></div>
-<div id="fade"></div>
+<div id="fade"></div><div id="cutfade"></div><div id="cutbars"><i></i><i></i></div>
 <div id="hud">
   <div class="tl"><div id="sanwrap"><div id="sanbar"></div></div><div id="clock">11:40</div><div id="place">武大附中 · 校园</div></div>
   <div class="tr"><div id="period">早读 · 教室</div><div id="secclock" hidden></div></div>
@@ -26,7 +26,7 @@
     </div>
   <div class="bc"><div id="hot"></div></div>
 </div>
-<div id="cross"></div>
+<div id="cross"></div><div id="hideslits" aria-hidden="true"></div><div id="searchring" aria-hidden="true"></div>
 <div id="lidtop"></div><div id="lidbot"></div>
 <div id="pro"><div id="protext"></div><div id="prohint">点击 / 空格 继续</div></div>
 <div id="skip"><b></b><i></i><em></em></div>
@@ -107,6 +107,7 @@
   <div class="drow2">
     <button id="devfast" onclick="Dev.fast()">快跑 ×2.6</button>
     <button id="devgod" onclick="Dev.god()">无敌</button>
+    <button id="devsearch" onclick="Dev.search()">翻找读条</button>
     <button onclick="Dev.san()">SAN 满</button>
     <button onclick="Dev.revive()">复活</button>
     <button onclick="Dev.time(30)">+30 分</button>
@@ -133,7 +134,7 @@
     <div class="tb2" onclick="UI.toggle('mapv')">地图</div>
     <div class="tb2" onclick="UI.toggle('note')">笔记</div>
   </div>
-  <div id="stick" role="group" aria-label="移动摇杆"><div id="knob"></div></div><button type="button" class="tbtn" id="tRun" aria-pressed="false">奔跑</button><button type="button" class="tbtn" id="tAct" aria-label="交互">交互</button>
+  <div id="stick" role="group" aria-label="移动摇杆"><div id="knob"></div></div><button type="button" class="tbtn" id="tAct" aria-label="交互">交互</button>
   <button type="button" class="tbtn" id="tPause" aria-label="暂停"></button></div>
 
 <script src="game3d/lib/three.min.js"></script>
@@ -149,6 +150,10 @@
 <script src="game3d/js/model/outdoor.js"></script>
 <script src="game3d/js/world.js"></script>
 <script src="game3d/js/spiral.js"></script>
+<script src="game3d/js/patrol.js"></script>
+<script src="game3d/js/portal.js"></script>
+<script src="game3d/js/hands.js"></script>
+<script src="game3d/js/cutscene.js"></script>
 <script src="game3d/js/fx/gaze.js"></script>
 <script src="game3d/js/fx/anomaly-fx.js"></script>
 <script src="game3d/js/fx/traces.js"></script>

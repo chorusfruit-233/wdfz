@@ -31,8 +31,6 @@ function endStick(){
 }
 function resetInputState(){
   KEY={};endLook();endStick();TOUCH.run=false;S.moving=false;S.run=false;
-  var run=document.getElementById('tRun');
-  if(run){run.classList.remove('held');run.setAttribute('aria-pressed','false');}
 }
 window.__resetInput=resetInputState;
 
@@ -112,6 +110,7 @@ function initInput(){
   var cv=document.getElementById('cv'),stick=document.getElementById('stick');
   initTouchActivation();
   document.addEventListener('pointerdown',function(e){
+    if(typeof S!=='undefined'&&S.screen==='cut'){ cutSkip(); return; }
     if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();
     else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen')INPUT.mode='mouse';
   },{capture:true,passive:true});
@@ -126,6 +125,7 @@ function initInput(){
       if(k===' '||k==='enter'){e.preventDefault();if(!e.repeat)proNext();}
       return;
     }
+    if(S.screen==='cut'){ if(k===' '||k==='enter'||k==='escape'){e.preventDefault();cutSkip();} return; }   /* 跳过结局演出 */
     if(S.screen!=='play'||S.dead||e.ctrlKey||e.metaKey||e.altKey)return;
     if(k==='escape'){
       e.preventDefault();if(e.repeat)return;
@@ -231,12 +231,7 @@ function initInput(){
     window.addEventListener('pointercancel',stickEnd);
     stick.addEventListener('lostpointercapture',stickEnd);
   }
-  var run=document.getElementById('tRun');
-  run.addEventListener('click',function(){
-    if(!playerInputAllowed())return;
-    TOUCH.run=!TOUCH.run;run.classList.toggle('held',TOUCH.run);
-    run.setAttribute('aria-pressed',String(TOUCH.run));
-  });
+  /* 手机上不再单独放奔跑键：摇杆推到底就是跑 */
   document.getElementById('tAct').addEventListener('click',function(){if(playerInputAllowed())tryInteract();});
   document.getElementById('tPause').addEventListener('click',function(){if(!PAUSE.on)Game.pause();});
 
@@ -263,6 +258,7 @@ function initInput(){
 
 function updatePlayer(dt){
   if(S.dead||S.screen!=='play'||(S.intro||0)>0)return;
+  if(typeof HIDE!=='undefined'&&HIDE.on){ S.moving=false; S.run=false; S.stam=Math.min(100,S.stam+11*dt); syncCamera(dt); return; }   /* 躲在柜子里：不能动 */
   var locked=!playerInputAllowed(),fw=0,sd=0;
   if(!locked){
     if(KEY.w||KEY.arrowup)fw++;

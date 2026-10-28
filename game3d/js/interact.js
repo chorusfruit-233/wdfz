@@ -75,12 +75,24 @@ function useFacility(ch,R){
   }else if(ch==='C'){
     rolled=true;
     var v2=facRoll(100);
-    if(v2<46){ S.san=Math.min(100,S.san+7); os('我：转子转起来，液体分成两层。白的在上。',3.6); toast('离心机 · SAN +7'); }
+    if(v2<46&&!RT.vialTaken){
+      if(!addItem('vial')) return true;
+      RT.vialTaken=1; os('我：转子转起来，液体分成两层。最底下沉着一线发光的东西，我把它倒进一支空管里。',4.2);
+    }
+    else if(v2<46){ S.san=Math.min(100,S.san+7); os('我：转子转起来，液体分成两层。白的在上。',3.6); toast('离心机 · SAN +7'); }
     else if(v2<72){ S.san=Math.min(100,S.san+2); os('我：离心机停了。管子里的东西还在转。',3.6); toast('离心机 · SAN +2'); }
     else { S.san=Math.max(0,S.san-5); os('我：配平没配好，整台机器在桌上跳。',3.6); toast('离心机 · SAN −5'); }
     S.tsec=((S.tsec+5)%1440+1440)%1440;
   }else if(ch==='N'){
     rolled=true;
+    if(!RT.lensTaken){                       /* 传送门材料：透镜 */
+      if(addItem('lens')){
+        RT.lensTaken=1;
+        os('我：镜片里有一只眼睛，它眨了一下，物镜就松了。我把它拧了下来，攥在手里是凉的。',4.4);
+        cool[key]=facClock()+cd;
+      }
+      return true;
+    }
     var v3=facRoll(100);
     if(v3<58){ S.san=Math.min(100,S.san+4); os('我：调焦旋钮是热的。视野里有东西在慢慢游。',3.6); toast('显微镜 · SAN +4'); }
     else { S.san=Math.max(0,S.san-4); os('我：镜片里有一只眼睛。它先眨了一下。',3.8); toast('显微镜 · SAN −4'); }
@@ -99,6 +111,8 @@ function useFacility(ch,R){
     if(R.host==='admin'){
       os('我：办公桌上摊着一叠表格。最上面那张的名字被涂掉了。',3.6);
       if(!RT.adminDesk){ RT.adminDesk=1; addClue('office'); toast('办公室 · 线索 +1'); }
+    }else if(R.floor===1){
+      portalBench(); return true;            /* 物理实验室的实验台：造传送门（portal.js） */
     }else{
       if(R.floor===5){ os('我：讲台上摊着谱子。第三乐章那一页被折了角。',3.4); }
       else if(R.floor===3){ os('我：教师台上摊着一本「机房钥匙借用登记」。最后一页是空的。',3.6); }
@@ -113,7 +127,8 @@ function useFacility(ch,R){
 function sanActFor(R,hit){
   if(S.mode==='in'){
     if(!hit||!R) return null;
-    if(R.host==='canteen'&&(hit.ch==='k'||hit.ch==='t')) return 'eat';
+    /* 饭点免费吃；饭点以外得投币（见 canteenWindow） */
+    if(R.host==='canteen'&&(hit.ch==='k'||hit.ch==='t')&&mealNow()) return 'eat';
     if((R.host==='dormN'||R.host==='dormS')&&hit.ch==='b') return 'sleep';
     if(R.host==='lab'&&hit.ch==='p') return 'piano';
     if(R.host==='lab'&&hit.ch==='n') return 'pc';
@@ -192,6 +207,7 @@ function useRoster(){
 function tryInteract(){
   if(S.screen!=='play'||S.dead||PAUSE.on||UI.anyOpen()) return;
   if(S.seated){ S.seated=false; os('我站了起来。',1.6); S.enterCool=0.4; return; }
+  if(HIDE.on){ hideOut(); return; }
   if(nearRoster()){ useRoster(); return; }
 
   if(S.mode==='out'){
@@ -230,7 +246,7 @@ function tryInteract(){
     var _need=doorLockNeed(R,hit.c,hit.r);
     if(_need&&!hasItem(_need)){
       os('我：门锁着。锁孔是圆的，很新。',2.8);
-      toast('需要「'+ITEMS[_need].n+'」· 保安室大概有');
+      toast('需要「'+ITEMS[_need].n+'」· 校长办公室可能有');
       addClue('roomkey');
       return;
     }
@@ -248,10 +264,18 @@ function tryInteract(){
     exitRoom(); return;
   }
   if(ch==='S'){ stairGo(); return; }
+  if(ch==='H'){ hideIn(hit); return; }
   if(ch==='L'){ useLink(R,hit.c,hit.r); return; }
   if(ch==='Q'){
-    os('我：服务器在响，像很多人一起压着嗓子呼气。屏幕上滚着门禁记录——每一行的时间都是 11:40。',4.6);
     addClue('server');
+    if(!RT.coilTaken){                       /* 传送门材料：铜线圈 */
+      if(addItem('coil')){
+        RT.coilTaken=1;
+        os('我：服务器在响，像很多人一起压着嗓子呼气。机柜背板松了，里面一卷铜线圈烫得发红——我把它抽了出来，机柜一下子安静了。',5.2);
+      }
+      return;
+    }
+    os('我：服务器在响，像很多人一起压着嗓子呼气。屏幕上滚着门禁记录——每一行的时间都是 11:40。',4.6);
     return;
   }
   if(ch==='q'){ searchContainer(hit.c,hit.r); return; }
@@ -280,12 +304,11 @@ function tryInteract(){
   }
   if(ch==='b'){ os('我：床。可是现在不能睡。',2.4); return; }
   if(ch==='k'&&R.host==='guard'){
-    if(!hasItem('roomkey')){
-      if(addItem('roomkey')) os('我：柜台下面挂着一串钥匙。其中一把的标签上写着「机房」。',4.2);
-      return;
-    }
-    if(!hasItem('key')){
-      if(addItem('key')) os('我：旁边还挂着一串车钥匙。牌号刻在环上，旁边还放着一把手电筒。',4.4);
+    /* 钥匙以前就挂在这儿，太容易了；现在收到了校长办公室 */
+    if(!RT.guardKeysTold){
+      RT.guardKeysTold=1; addClue('keys');
+      os('我：柜台下面的钥匙钩全空了。钩子旁边贴着一张条：「钥匙一律上交校长办公室（行政楼五楼）」。',4.8,OS_KEEP);
+      if(!hasItem('torch')) setTimeout(function(){ if(!S.dead&&!hasItem('torch')&&addItem('torch')) os('我：抽屉里倒是有一把手电筒。去车库之前，把它带上。',3.8); },2600);
       return;
     }
     if(!hasItem('torch')){
@@ -294,6 +317,8 @@ function tryInteract(){
     }
     os('我：柜台下面没有别的了。',2.0); return;
   }
+  if(R.host==='canteen'&&(ch==='t'||ch==='k')){ canteenWindow(); return; }
+  if(ch==='M'){ useVending(); return; }
   if(ch==='t'||ch==='k'){ os('我：没有能吃的。',2.0); return; }
   if(ch==='B'||ch==='G'){ useStall(); return; }
   if(ch==='w'){ S.san=Math.min(100,S.san+4); os('我：洗了把脸。',2.2); return; }
@@ -445,6 +470,12 @@ function labLoot(floor){
   if(floor===5) return r<0.22?'metronome':(r<0.36?'snack':null);
   return null;
 }
+/* 翻找要花 0.8 秒：站着别动，准星外面那一圈走满才算翻完；走开就断了。DEV 里可以关掉 */
+var SEARCH={on:true,dur:0.8,job:null};
+function clearSearch(){
+  SEARCH.job=null;
+  var el=document.getElementById('searchring'); if(el) el.style.display='none';
+}
 function searchContainer(c,r){
   var key=S.room+':'+c+':'+r;
   if(typeof ncOccupied==='function'&&ncOccupied(c,r)){
@@ -452,8 +483,49 @@ function searchContainer(c,r){
     return;
   }
   if(RT.deskUsed[key]){ os('我：翻过了。',1.6); return; }
+  if(SEARCH.on){
+    if(!SEARCH.job){ SEARCH.job={c:c,r:r,room:S.room,x:S.x,y:S.y,t:0}; try{ SFX.click(); }catch(e){} }
+    return;
+  }
+  doSearch(c,r);
+}
+function searchTick(dt){
+  var j=SEARCH.job, el=document.getElementById('searchring');
+  if(j&&(S.dead||S.mode!=='in'||S.room!==j.room||Math.hypot(S.x-j.x,S.y-j.y)>5)){
+    SEARCH.job=null; os(j.done?'我：手一松，钥匙从锁孔里滑了出来。':'我：手一松，没翻完。',1.4); j=null;
+  }
+  if(el){ el.style.display=j?'block':'none'; if(j) el.style.setProperty('--p',Math.min(1,j.t/(j.dur||SEARCH.dur))); }
+  if(!j) return;
+  j.t+=dt;
+  if(j.t>=(j.dur||SEARCH.dur)){ SEARCH.job=null; if(el) el.style.display='none'; if(j.done) j.done(); else doSearch(j.c,j.r); }
+}
+/* 别的"站着别动、等读条走满"的操作（比如在车库里一辆辆试钥匙）也用这一圈 */
+function holdJob(dur,done){
+  if(SEARCH.job) return false;
+  SEARCH.job={room:S.room,x:S.x,y:S.y,t:0,dur:dur,done:done};
+  return true;
+}
+function doSearch(c,r){
+  var key=S.room+':'+c+':'+r;
+  if(RT.deskUsed[key]) return;
+  /* 满包不能占用容器，否则钥匙或固定的 U 盘会消失。 */
+  if(S.bag.length>=8){ os('我：装不下了。先腾出一个空位再翻。',2.4); return; }
   RT.deskUsed[key]=1;
   var _R=INTERIORS[S.room];
+  /* 车钥匙和机房钥匙：校长办公室的容器 18%，别的老师办公室 1%（以前直接挂在保安岗） */
+  if(_R&&_R.host==='admin'){
+    var miss=['key','roomkey'].filter(function(k){ return !hasItem(k); });
+    if(miss.length&&Math.random()<(_R.principal?0.18:0.01)){
+      var kk=miss[Math.floor(Math.random()*miss.length)];
+      os(kk==='key'?'我：抽屉最里面压着一串车钥匙，牌号刻在环上。':'我：抽屉里有一把铜钥匙，塑料标签上写着「机房」。',3.6);
+      addItem(kk); return;
+    }
+    if(_R.principal){
+      var pr=Math.random();
+      if(pr<0.12&&!hasItem('atlas')){ os('我：抽屉里卷着一大张图纸，是整个学校每一层的平面图。',3.4); addItem('atlas'); return; }
+      if(pr<0.18&&!hasItem('elixir')){ os('我：一个空药盒里只剩一粒药丸，盒子上的字被刮掉了。',3.4); addItem('elixir'); return; }
+    }
+  }
   if(S.room==='lab3'&&_R&&_R.grid[r]&&_R.grid[r][c]==='R'&&!hasItem('usb')){
     os('我：货架最上层有个文件盒，里面躺着一个 U 盘。标签上写着「门禁」。',3.6);
     addItem('usb'); return;

@@ -107,6 +107,7 @@ function canteenFloor(){
   g[6][4]='k'; g[6][5]='k'; g[6][6]='k'; g[7][4]='k'; g[7][5]='k'; g[7][6]='k';
   for(y=2;y<=18;y+=3) for(x=2;x<=W-3;x+=4) g[y][x]='t';
   g[27][30]='O'; g[27][31]='O'; g[26][3]='S'; g[26][4]='S';
+  g[9][W-2]='M'; g[12][W-2]='M';                 /* 东墙边两台售货机 */
   return g;
 }
 function dormFloor(f){
@@ -139,7 +140,9 @@ function garageFloor(){
   for(i=0;i<5;i++) for(var j=0;j<3;j++){
     g[5+j*7][8+i*10]='#';
   }
-  var cars=[[12,4],[12,9],[24,4],[24,9],[36,4],[36,9]];
+  /* 四排车，16 辆。只有一辆能开（story.js useCar），得一辆一辆试 */
+  var cars=[], cr, cc, rows=[4,9,16,22], cols=[12,24,36,46];
+  for(cr=0;cr<rows.length;cr++) for(cc=0;cc<cols.length;cc++) cars.push([cols[cc],rows[cr]]);
   for(i=0;i<cars.length;i++){ g[cars[i][1]][cars[i][0]]='V'; }   /* V = 车；'c' 在教室代表椅子，不能复用 */
   g[13][55]='S'; g[13][56]='S';
   g[12][59]='O'; g[13][59]='O';
@@ -245,6 +248,7 @@ function buildInteriorData(){
   mkFloor('bell1','钟楼','bell',1,bellFloor()).spiral=true;
   mkFloor('guard1','保安岗','guard',1,guardFloor());
   mkFloor('gear1','体育器材室','gear',1,gearFloor());
+  if(typeof placeLockers==='function') placeLockers();          /* 储物柜和校长办公室：patrol.js */
 }
 
 var OBJ=[

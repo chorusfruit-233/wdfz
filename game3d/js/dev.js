@@ -101,9 +101,11 @@ var Dev={
     var f=document.getElementById('devfast'), g=document.getElementById('devgod'), s=document.getElementById('devst');
     if(f) f.className=DEV.fast?'on':'';
     if(g) g.className=DEV.god?'on':'';
+    var sr=document.getElementById('devsearch'); if(sr) sr.className=SEARCH.on?'on':'';
     if(s) s.textContent='· ON';
   },
   fast:function(){ DEV.fast=!DEV.fast; Dev.paint(); toast(DEV.fast?'快跑 开':'快跑 关'); },
+  search:function(){ SEARCH.on=!SEARCH.on; clearSearch(); Dev.paint(); toast(SEARCH.on?'翻找读条 0.8 秒：开':'翻找读条：关（立刻翻完）'); },
   god:function(){ DEV.god=!DEV.god; Dev.paint(); toast(DEV.god?'无敌 开':'无敌 关'); },
   san:function(){ S.san=100; S.stam=100; toast('SAN / 体力 已满'); },
   time:function(min){ S.tsec=((S.tsec+min*60)%1440+1440)%1440; toast('时间 '+(min>0?'+':'')+min+' 分钟'); },
