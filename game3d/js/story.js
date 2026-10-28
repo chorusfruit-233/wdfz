@@ -315,7 +315,7 @@ function dreamWake(){
     AN.active=false; AN.id=null; AN.data={}; AN.t=0; AN.acc=0; AN.pre=null; AN.preNext=0; AN.locked=false;
     AN.next=60;
     S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.pitch=0;
-    S.tsec=700; S.san=78; S.viol=0; S.stam=100; S.tt=0; S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
+    S.tsec=700; S.san=78; S.viol=0; S.stam=100; S.snackT=0; S.tt=0; S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
     GLR.hurt=0; GLR.flash=0;
     var f=document.getElementById('flash'); if(f){ f.style.transition='none'; f.style.opacity='0'; }
     UI.closeChoice(); PAUSE.on=false; ROAM.on=false;

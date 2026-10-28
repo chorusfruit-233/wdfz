@@ -48,7 +48,7 @@ function useItem(id){
   if(id==='phone'){ USE.phone=!USE.phone; GLR.torch.intensity=USE.phone?22:(USE.torch?55:0); toast(USE.phone?'手机屏幕：亮':'手机屏幕：灭'); return; }
   if(id==='brolly'){ USE.brollyShield=!USE.brollyShield; toast(USE.brollyShield?'撑开伞':'收起伞'); return; }
   if(id==='pill'){ S.san=Math.min(100,S.san+18); removeItem('pill'); os('我：药片很苦。手不抖了。',3); toast('药片 · SAN +18'); return; }
-  if(id==='snack'){ S.stam=Math.min(100,S.stam+35); removeItem('snack'); os('我：甜的。',2.4); toast('士力架 · 体力 +35'); return; }
+  if(id==='snack'){ S.snackT=SNACK_SEC; removeItem('snack'); os('我：甜的。腿一下子轻了。',2.4); toast('士力架 · '+SNACK_SEC+' 秒内疾跑不耗体力'); return; }
   if(id==='coin'){ throwCoin(); return; }
   if(id==='watch'){ toast('现在是 '+fmtClock(S.tsec)); os('我：现在是 '+fmtClock(S.tsec)+'。',2.6); return; }
   if(id==='compass'){ useCompass(); return; }

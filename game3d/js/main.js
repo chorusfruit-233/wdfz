@@ -201,8 +201,11 @@ function updateHUD(){
   var p=periodAt(S.tsec);
   document.getElementById('period').textContent=p[2]+' · '+p[3];
   var sw=document.getElementById('stamwrap');
-  if(sw){ sw.style.visibility=S.stam<99.5?'visible':'hidden';
-    document.getElementById('stambar').style.width=clamp(S.stam,0,100)+'%'; }
+  if(sw){ var _sn=(S.snackT||0)>0;          /* 士力架起效时，体力条变成金色的剩余时间 */
+    sw.style.visibility=(S.stam<99.5||_sn)?'visible':'hidden';
+    var _sb=document.getElementById('stambar');
+    _sb.style.width=(_sn?clamp(S.snackT/SNACK_SEC*100,0,100):clamp(S.stam,0,100))+'%';
+    _sb.style.background=_sn?'#d8b45a':''; }
   UI.renderHot();
   updateTouchUI();
   var pr=document.getElementById('prompt');
@@ -278,7 +281,7 @@ function freshState(diff){
   var t=TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)];
   S.talent=t;
   S.tsec=700; S.day=1;
-  S.san=100; S.viol=0; S.stam=100; S.tt=0; S.ttTier=0;
+  S.san=100; S.viol=0; S.stam=100; S.snackT=0; S.tt=0; S.ttTier=0;
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
   S.spots={}; S.clues={}; S.notes={}; S.marks={};
   S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.seated=false; S.intro=0;
