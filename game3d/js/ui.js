@@ -26,21 +26,27 @@ var UI={ bagDirty:true, spotsDirty:true, openPanel:null, chooseOpen:false };
 
 UI.anyOpen=function(){ return !!UI.openPanel||UI.chooseOpen; };
 UI.open=function(id){
-  if(UI.openPanel&&UI.openPanel!==id) UI.close(UI.openPanel);
   var el=document.getElementById(id);
   if(!el) return;
-  el.style.display=(id==='think'||id==='pause'||id==='bag'||id==='note')?'block':'flex';
+  var previous=UI.openPanel;
   UI.openPanel=id;
+  if(previous&&previous!==id)UI.close(previous,false);
+  el.style.display=(id==='think'||id==='bag'||id==='note')?'block':'flex';
+  resetInputState();releaseMouseLook();
   if(id==='bag') UI.renderBag();
   if(id==='note') UI.renderNote();
   if(id==='think') UI.renderThink();
   if(id==='mapv') UI.renderMap();
-  if(document.exitPointerLock) document.exitPointerLock();
+  updateTouchUI();
 };
-UI.close=function(id){
+UI.close=function(id,resume){
   var el=document.getElementById(id);
   if(el) el.style.display='none';
-  if(UI.openPanel===id) UI.openPanel=null;
+  if(UI.openPanel===id){
+    UI.openPanel=null;resetInputState();
+    if(resume!==false)resumeMouseLook();
+    updateTouchUI();
+  }
 };
 UI.toggle=function(id){
   if(S.screen!=='play'||S.dead) return;
@@ -57,17 +63,20 @@ UI.choice=function(text,opts){
     (function(o){
       var b=document.createElement('button');
       b.textContent=o.label;
-      b.onclick=function(){ UI.chooseOpen=false; el.style.display='none'; o.fn(); };
+      b.onclick=function(){ UI.chooseOpen=false; el.style.display='none'; o.fn(); resumeMouseLook(); updateTouchUI(); };
       el.appendChild(b);
     })(opts[i]);
   }
   el.style.display='flex';
   UI.chooseOpen=true;
+  resetInputState();releaseMouseLook();
+  updateTouchUI();
 };
 UI.closeChoice=function(){
   UI.chooseOpen=false;
   var el=document.getElementById('choices');
   el.style.display='none';
+  updateTouchUI();
 };
 var BAGTAP={i:-1,t:0};
 function bagUse(i){
@@ -246,5 +255,5 @@ UI.renderMap=function(){
   c.lineTo(px+Math.cos(S.ang)*16,py+Math.sin(S.ang)*16); c.stroke();
 };
 UI.closePanelAll=function(){
-  ['bag','note','think','mapv','pause'].forEach(function(id){ UI.close(id); });
+  ['bag','note','think','mapv','pause','set'].forEach(function(id){ UI.close(id,false); });
 };

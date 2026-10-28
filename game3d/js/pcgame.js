@@ -5,6 +5,7 @@ var PC={on:false,body:[],dir:{x:1,y:0},food:{x:3,y:3},score:0,dead:false,t:0};
 var PCGAME={
   start:function(){
     PC.on=true; PC.dead=false; PC.score=0; PC.t=0; PC.cd=3.0;
+    resetInputState();releaseMouseLook();
     PC.body=[{x:8,y:8}]; PC.dir={x:1,y:0}; PC.food=this.rf();
     var el=document.getElementById('pcgame'); if(el) el.style.display='flex';
     this.draw();
@@ -17,6 +18,7 @@ var PCGAME={
     PC.on=false;
     var el=document.getElementById('pcgame'); if(el) el.style.display='none';
     S.tsec=((S.tsec+10*60)%1440+1440)%1440;
+    resetInputState();resumeMouseLook();
   },
   tick:function(dt){
     if(!PC.on) return;
@@ -25,10 +27,10 @@ var PCGAME={
     PC.t+=dt;
     if(PC.t<0.14) return;
     PC.t=0;
-    if(KEY['w']) PC.dir={x:0,y:-1};
-    else if(KEY['s']) PC.dir={x:0,y:1};
-    else if(KEY['a']) PC.dir={x:-1,y:0};
-    else if(KEY['d']) PC.dir={x:1,y:0};
+    if(KEY.w||KEY.arrowup) PC.dir={x:0,y:-1};
+    else if(KEY.s||KEY.arrowdown) PC.dir={x:0,y:1};
+    else if(KEY.a||KEY.arrowleft) PC.dir={x:-1,y:0};
+    else if(KEY.d||KEY.arrowright) PC.dir={x:1,y:0};
     var h={x:PC.body[0].x+PC.dir.x, y:PC.body[0].y+PC.dir.y};
     if(h.x<0||h.y<0||h.x>=16||h.y>=16){ PC.dead=true; this.draw(); return; }
     for(var i=0;i<PC.body.length;i++) if(PC.body[i].x===h.x&&PC.body[i].y===h.y){ PC.dead=true; this.draw(); return; }

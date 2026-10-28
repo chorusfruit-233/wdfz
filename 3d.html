@@ -14,7 +14,9 @@
 <link rel="stylesheet" href="game3d/css/game.css">
 </head>
 <body>
-<canvas id="cv"></canvas>
+<canvas id="cv" tabindex="0" aria-label="3D 游戏画面，可拖动转动视角"></canvas>
+<button id="fullscreen-toggle" class="screen-control" type="button" onclick="goFullscreen()" aria-pressed="false">进入全屏</button>
+<div id="lookhint" hidden>点击画面恢复鼠标环视 · 按住拖动也可转向</div>
 <div id="scan"></div><div id="vig"></div><div id="flash"></div>
 <div id="fade"></div>
 <div id="hud">
@@ -77,7 +79,7 @@
         <em>03</em><span><b>继续上次</b><i>读取最近的存档</i></span><u>→</u>
       </button>
     </div>
-    <div class="mios" id="mios">iPhone：点「分享 → 添加到主屏幕」，再从主屏幕图标打开 —— 没有地址栏，就是全屏。</div>
+    <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
     <div class="mctl">
       <label>画面 <select id="mq" onchange="Settings.q(+this.value)">
         <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option></select></label>
@@ -88,7 +90,7 @@
   <div class="mfoot"><span>请记住你回去的路。它会变。</span><i>WUDFZ · FIELD RECORD 001</i></div>
 </div>
 <div id="pcgame"><div class="pch">机房 · 贪吃蛇</div><canvas id="pccv" width="320" height="320"></canvas>
-  <div class="pcf">WASD 转向 · Esc 退出 · 得分越高 SAN 越多</div></div>
+  <div class="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" onclick="PCGAME.stop()">退出电脑</button></div>
 <div id="dev">
   <div class="dh">DEV MODE <span id="devst"></span></div>
   <div class="drow"><b>位置</b><span id="devpos" style="flex:1;font-size:10px;opacity:.85;line-height:1.7"></span></div>
@@ -127,8 +129,8 @@
     <div class="tb2" onclick="UI.toggle('mapv')">地图</div>
     <div class="tb2" onclick="UI.toggle('note')">笔记</div>
   </div>
-  <div id="stick"><div id="knob"></div></div><div class="tbtn" id="tRun">奔跑</div><div class="tbtn" id="tAct">E</div>
-  <div class="tbtn" id="tPause" aria-label="暂停"></div></div>
+  <div id="stick" role="group" aria-label="移动摇杆"><div id="knob"></div></div><button type="button" class="tbtn" id="tRun" aria-pressed="false">奔跑</button><button type="button" class="tbtn" id="tAct" aria-label="交互">交互</button>
+  <button type="button" class="tbtn" id="tPause" aria-label="暂停"></button></div>
 
 <script src="game3d/lib/three.min.js"></script>
 <script src="game3d/js/core.js"></script>

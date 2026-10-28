@@ -189,7 +189,7 @@ function updateHUD(){
   }
   document.getElementById('clock').textContent=fmtClock(S.tsec);
   var cr=document.getElementById('cross');
-  if(cr){ cr.style.display=(S.screen==='play'&&!S.dead&&!UI.anyOpen()&&!PAUSE.on)?'block':'none'; }
+  if(cr){ cr.style.display=playerInputAllowed()?'block':'none'; }
   var sn=document.getElementById('sannum');
   if(sn) sn.textContent=Math.round(S.san);
   try{ anwTick(dtG); }catch(e){}
@@ -263,6 +263,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0;
 }
 function freshState(diff){
+  resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
   buildInteriorData();
   buildRoomBounds();
   S.screen='play';
@@ -350,26 +351,24 @@ var Game={
     var _hot2=document.getElementById('hot'); if(_hot2) _hot2._sig='';
     SFX.resume();
   },
-  pauseToggle:function(){
+  pause:function(){
     try{ paintSet(); }catch(e){}
-    if(S.screen!=='play'||S.dead) return;
-    PAUSE.on=!PAUSE.on;
-    if(!PAUSE.on){ var sx=document.getElementById('set'); if(sx) sx.style.display='none'; try{ UI.openPanel=null; }catch(e){} }
-    if(PAUSE.on){
-      var pt=document.getElementById('ptalent');
-      if(pt&&TALENTS[S.talent]) pt.textContent='天赋 · '+TALENTS[S.talent].n+'　'+TALENTS[S.talent].d;
-    }
-    var el=document.getElementById('pause');
-    el.style.display=PAUSE.on?'flex':'none';
-    document.body.classList.toggle('paused',PAUSE.on);   /* 字幕层级比面板高，暂停时先藏起来 */
-    if(PAUSE.on&&document.exitPointerLock) document.exitPointerLock();
+    if(S.screen!=='play'||S.dead||PAUSE.on)return;
+    PAUSE.on=true;
+    var pt=document.getElementById('ptalent');
+    if(pt&&TALENTS[S.talent])pt.textContent='天赋 · '+TALENTS[S.talent].n+'　'+TALENTS[S.talent].d;
+    document.body.classList.add('paused');
+    UI.open('pause');
+  },
+  pauseToggle:function(){
+    if(PAUSE.on)Game.resume();else Game.pause();
   },
   resume:function(){
+    if(S.screen!=='play'||S.dead)return;
+    UI.closePanelAll();resetInputState();
     PAUSE.on=false; document.body.classList.remove('paused');
-    var e1=document.getElementById('pause'); if(e1) e1.style.display='none';
-    var e2=document.getElementById('set');   if(e2) e2.style.display='none';
-    try{ UI.openPanel=null; }catch(e){}
-    if(running){ lastT=0; }
+    if(running){lastT=performance.now();accum=0;}
+    resumeMouseLook();updateTouchUI();
   },
   saveNow:function(){
     if(saveGame()) toast('已保存');
@@ -380,15 +379,15 @@ var Game={
     running=true;
     clearIntroTimers();
     S.screen='menu'; S.dead=false;
+    resetInputState();releaseMouseLook();
     try{ if(!MENU_PHOTO) setTimeout(captureMenuPhoto,320); }catch(e){}
-    PAUSE.on=false; UI.closePanelAll&&UI.closePanelAll();
+    PAUSE.on=false;document.body.classList.remove('paused');UI.closePanelAll();UI.closeChoice();
     ['pause','die','bag','note','think','mapv','choices'].forEach(function(id){
       var e=document.getElementById(id); if(e) e.style.display='none';
     });
     var es=document.getElementById('ends'); if(es) es.remove();
     document.getElementById('menu').style.display='flex';
     document.getElementById('sub').style.display='none';
-    if(document.exitPointerLock) document.exitPointerLock();
     var sc=document.getElementById('btncont');
     if(sc) sc.style.display=loadGame()?'block':'none';
   }
@@ -475,9 +474,6 @@ function boot(){
   initGL();
   initInput();
   document.getElementById('btncont').style.display=loadGame()?'block':'none';
-  window.addEventListener('visibilitychange',function(){
-    if(document.hidden){ if(S.screen==='play'&&!PAUSE.on&&!S.dead) Game.pauseToggle(); }
-  });
   requestAnimationFrame(frame);
   setTimeout(captureMenuPhoto,420);               /* 先让菜单画出来，再拍那张照片 */
 }

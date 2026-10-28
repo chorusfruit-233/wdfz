@@ -18,6 +18,7 @@ var DEV_DEATH=[
 var Dev={
   open:function(){
     DEV.on=true;
+    resetInputState();releaseMouseLook();
     var el=document.getElementById('dev'); if(el) el.style.display='block';
     var rs=document.getElementById('devroom');
     if(rs&&!rs.options.length){
@@ -94,7 +95,7 @@ var Dev={
       el.textContent='#'+hex+'  ('+mx+','+mz+')  '+Math.round(h.distance)+'m  高'+h.point.y.toFixed(1);
     }catch(e){ el.textContent='探测失败: '+e.message; }
   },
-  close:function(){ DEV.on=false; var el=document.getElementById('dev'); if(el) el.style.display='none'; },
+  close:function(){DEV.on=false;var el=document.getElementById('dev');if(el)el.style.display='none';resetInputState();resumeMouseLook();},
   toggle:function(){ if(DEV.on) Dev.close(); else Dev.open(); },
   paint:function(){
     var f=document.getElementById('devfast'), g=document.getElementById('devgod'), s=document.getElementById('devst');
