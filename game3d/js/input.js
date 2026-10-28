@@ -61,9 +61,18 @@ function resumeMouseLook(){
   if(INPUT.wantsLock&&INPUT.mode==='mouse'&&playerInputAllowed())requestMouseLook();
 }
 function useTouchInput(){
+  var changed=!IS_TOUCH;
   INPUT.mode='touch';INPUT.lastTouchAt=performance.now();INPUT.blockClickUntil=INPUT.lastTouchAt+800;
   IS_TOUCH=true;document.body.classList.add('touch');
   if(pointerIsLocked()||INPUT.lockPending)releaseMouseLook();
+  if(changed)updateTouchUI();
+}
+function useMouseInput(){
+  INPUT.mode='mouse';INPUT.blockClickUntil=0;
+  if(IS_TOUCH){
+    IS_TOUCH=false;document.body.classList.remove('touch');
+    updateTouchUI();
+  }
 }
 function updateInputUI(){
   var hint=document.getElementById('lookhint');
@@ -112,7 +121,7 @@ function initInput(){
   document.addEventListener('pointerdown',function(e){
     if(typeof S!=='undefined'&&S.screen==='cut'){ cutSkip(); return; }
     if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();
-    else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen')INPUT.mode='mouse';
+    else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen'&&INPUT.stickId===null)useMouseInput();
   },{capture:true,passive:true});
   window.addEventListener('keydown',function(e){
     var k=physicalKey(e);
@@ -218,7 +227,7 @@ function initInput(){
       TOUCH.dx=dx/radius;TOUCH.dy=dy/radius;TOUCH.active=true;
     }
     stick.addEventListener('pointerdown',function(e){
-      if(!playerInputAllowed()||INPUT.stickId!==null)return;
+      if((e.pointerType!=='touch'&&e.pointerType!=='pen')||!playerInputAllowed()||INPUT.stickId!==null)return;
       useTouchInput();INPUT.stickId=e.pointerId;
       var r=stick.getBoundingClientRect(),knob=document.getElementById('knob');
       INPUT.stickCenter={x:r.left+r.width/2,y:r.top+r.height/2,radius:(r.width-knob.offsetWidth)/2};

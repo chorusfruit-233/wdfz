@@ -2,8 +2,12 @@
 'use strict';
 
 var IS_TOUCH=(function(){
-  return !!((window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)||
-    'ontouchstart' in window||navigator.maxTouchPoints>0);
+  /* 触屏笔记本也有触摸能力；优先按主要指针决定初始界面。 */
+  if(window.matchMedia){
+    if(window.matchMedia('(pointer: fine)').matches) return false;
+    if(window.matchMedia('(pointer: coarse)').matches) return true;
+  }
+  return !!('ontouchstart' in window||navigator.maxTouchPoints>0);
 })();
 var FULLSCREEN={busy:false,resizeFrame:0};
 function isStandalone(){

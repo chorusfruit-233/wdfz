@@ -164,7 +164,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05070
 /* ---------- 移动端 ----------
    原来 #touch 只写了 display:none，从来没有代码把它打开 ——
    手机上根本没有摇杆和按钮，等于只能看。
-   现在：boot 里按 pointer:coarse / ontouchstart 判定，body 加 .touch，
+   现在：boot 按主要指针设置初始界面，之后按实际触摸 / 鼠标输入切换 .touch，
    HUD 小地图缩到左上、把左下角让给摇杆，右下角是 E 与奔跑，
    八个快捷按钮排在右侧油门下沿、两列四行。 */
 body.touch #touch{display:block}

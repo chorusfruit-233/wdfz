@@ -48,7 +48,7 @@ class ControlsTest(unittest.TestCase):
             context.close()
         self.assertEqual(self.errors, [], 'Unexpected page errors')
 
-    def page(self, touch=False):
+    def page(self, touch=False, hybrid=False):
         context = self.browser.new_context(
             viewport={'width': 390, 'height': 844} if touch else {'width': 1000, 'height': 700},
             has_touch=touch, is_mobile=touch, device_scale_factor=1,
@@ -58,6 +58,11 @@ class ControlsTest(unittest.TestCase):
             localStorage.setItem('wdfz_pro','1');
             localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));
         """)
+        if hybrid:
+            context.add_init_script("""
+                Object.defineProperty(navigator,'maxTouchPoints',{value:5,configurable:true});
+                Object.defineProperty(window,'ontouchstart',{value:null,configurable:true});
+            """)
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
@@ -326,6 +331,40 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, 'UI.openPanel==="pause"')
         page.locator('#pause button',has_text='继续').click()
         page.wait_for_function('!!document.pointerLockElement&&!PAUSE.on')
+
+    def test_touch_capable_desktop_uses_locked_mouse_and_rotates_view(self):
+        page = self.page(hybrid=True)
+        self.assert_js(page, "matchMedia('(pointer: fine)').matches&&navigator.maxTouchPoints>0")
+        self.assert_js(page, "INPUT.mode==='mouse'&&!IS_TOUCH&&!document.body.classList.contains('touch')")
+        page.mouse.click(400, 300)
+        page.wait_for_function('!!document.pointerLockElement')
+        page.evaluate('S.ang=0;S.pitch=0')
+        page.mouse.move(460, 325)
+        self.assert_js(page, "INPUT.mode==='mouse'&&!IS_TOUCH&&!PAUSE.on&&S.ang>.05&&S.pitch<-.02")
+        self.assertFalse(page.locator('#touch').is_visible())
+
+    def test_mouse_on_touch_joystick_does_not_start_touch_input(self):
+        page = self.page(touch=True)
+        rect = page.locator('#stick').bounding_box()
+        page.mouse.click(rect['x']+rect['width']/2, rect['y']+rect['height']/2)
+        self.assert_js(page, "INPUT.mode==='mouse'&&!IS_TOUCH&&!TOUCH.active&&INPUT.stickId===null")
+        self.assertFalse(page.locator('#touch').is_visible())
+        page.mouse.click(205, 290)
+        page.wait_for_function('!!document.pointerLockElement')
+        self.assert_js(page, "INPUT.mode==='mouse'&&!PAUSE.on")
+
+    def test_mouse_and_touch_can_switch_after_pointer_lock(self):
+        page = self.page(touch=True)
+        page.mouse.click(205, 290)
+        page.wait_for_function('!!document.pointerLockElement')
+        self.assert_js(page, "INPUT.mode==='mouse'&&!IS_TOUCH&&!document.body.classList.contains('touch')")
+        self.swipe(page)
+        page.wait_for_function('!document.pointerLockElement')
+        self.assert_js(page, "INPUT.mode==='touch'&&IS_TOUCH&&document.body.classList.contains('touch')&&S.ang>.1&&!PAUSE.on")
+        self.assertTrue(page.locator('#touch').is_visible())
+        page.mouse.click(205, 290)
+        page.wait_for_function('!!document.pointerLockElement')
+        self.assert_js(page, "INPUT.mode==='mouse'&&!IS_TOUCH&&!document.body.classList.contains('touch')&&!PAUSE.on")
 
     def test_mouse_drag_fallback_remains_available_after_rejection(self):
         page = self.page()
