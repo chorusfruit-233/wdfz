@@ -4,19 +4,22 @@
 function saveGame(){
   try{
     var d={
-      v:1, mode:S.mode, room:S.room, x:S.x, y:S.y, ang:S.ang, pitch:S.pitch,
+      v:1, clockVersion:2, mode:S.mode, room:S.room, x:S.x, y:S.y, ang:S.ang, pitch:S.pitch,
       tsec:S.tsec, day:S.day, diff:S.diff, san:S.san, viol:S.viol, stam:S.stam, tt:S.tt,
       tired:!!S.tired, snackT:Math.max(0,S.snackT||0),
       actCool:S.actCool||{}, immuneUsed:!!S.immuneUsed,
       spiral:spiralHere()?{state:SP.state,a:SP.a,th:SP.th}:null,
       bag:S.bag, hot:S.hot, talent:S.talent, spots:S.spots, clues:S.clues,
       seated:S.seated, ttTier:S.ttTier, hiddenAsked:S.hiddenAsked,
-      hiddenLatch:S.hiddenLatch,
+      hiddenLatch:S.hiddenLatch, hiddenWindow:Number.isFinite(S.hiddenWindow)?S.hiddenWindow:0,
       rt:RT, use:USE, anRained:AN.rained, anCool:AN.cool,
+      roam:(S.mode==='in'&&S.room==='garage1')?Object.assign({},ROAM):null,
       openDoors:OPENDOORS,
       anId:AN.id, anT:AN.t, anAcc:AN.acc,
       anData:(function(){ try{ return JSON.parse(JSON.stringify(AN.data||{})); }catch(e){ return {}; } })(),
-      anNext:AN.next, anLastBig:AN.lastBig,
+      anNext:AN.next, anLastBig:AN.lastBig, anPre:AN.pre, anPreNext:AN.preNext,
+      anLocked:!!AN.locked, anLockWait:AN.lockWait||0,
+      anChoiceMs:(AN.active&&UI.chooseOpen&&UI.choiceTimer)?Math.max(0,UI.choiceDeadline-performance.now()):null,
       fn:S.fn,
       exam:!!S.exam, examCur:S.examCur, examSeat:S.examSeat||0, examTot:S.examTot||0
     };

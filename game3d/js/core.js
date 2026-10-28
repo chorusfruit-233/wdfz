@@ -146,4 +146,5 @@ var TALENTS={
   immune:{n:'天生免疫',d:'总有一次要命的事会绕开我。'},
   crowd:{n:'藏在人群里',d:'人多的时候不显眼。'}
 };
-var TAL_KEYS=Object.keys(TALENTS);
+/* 已有存档仍可读取旧天赋；新局只随机有实际效果的天赋。 */
+var TAL_KEYS=['code','drive','stomach','night','watch','thin','immune'];

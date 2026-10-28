@@ -1087,6 +1087,158 @@ class ControlsTest(unittest.TestCase):
             nearWorld=function(){return {ch:'T'}};hit2_seatNear=function(){return false};tryInteract();""")
         self.assert_js(page, "hasItem('chalk')&&document.getElementById('sub').textContent.includes('粉笔')")
 
+    def test_exercise_includes_all_courts_and_night_dorm_accumulates_violations(self):
+        page = self.page()
+        for area in ('field', 'courtA', 'courtB', 'court2', 'track', 'bad2', 'bad3'):
+            with self.subTest(area=area):
+                self.assertTrue(page.evaluate("""id => { const o=objById(id);S.mode='out';S.room=null;
+                    S.x=(o.x+o.w/2)*SC;S.y=(o.y+o.h/2)*SC;return onField(); }""", area))
+        self.assert_js(page, "(() => { const o=objById('court2');S.y=(o.y+o.h/2)*SC;S.x=(o.x-5)*SC;const inside=onField();S.x=(o.x-6)*SC;return inside&&!onField(); })()")
+        page.evaluate("""S.mode='in';S.room='dorm1';S.tsec=1345;S.day=2;S.san=80;S.viol=10;
+            S.tt=0;S.hiddenLatch=false;updateSystems(1);""")
+        self.assert_js(page, '!S.wrong&&S.viol>10&&S.san>80')
+
+    def test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them(self):
+        page = self.page()
+        self.assert_js(page, "TAL_KEYS.length===7&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd'].every(x=>!TAL_KEYS.includes(x))")
+        page.evaluate("S.talent='map';saveGame();Game.continue_();running=false")
+        self.assert_js(page, "S.talent==='map'&&TALENTS[S.talent].n==='过目不忘'")
+
+    def test_coin_lures_the_garage_follower_then_expires(self):
+        page = self.page()
+        page.evaluate("""S.mode='in';S.room='garage1';S.x=400;S.y=400;S.ang=Math.PI/2;
+            S.bag=['coin'];S.enterCool=999;USE={torch:false,phone:false,brollyShield:false};
+            RT=newRT();ROAM.on=true;ROAM.stage='approach';ROAM.x=500;ROAM.y=400;ROAM.cd=0;ROAM.litAcc=0;
+            solidAtInterior=function(){return false};Math.random=function(){return 0.5};throwCoin();roamTick(.1);""")
+        self.assert_js(page, "!hasItem('coin')&&RT.lure&&ROAM.y>400&&ROAM.lureTold===1")
+        page.evaluate("window.__y=ROAM.y;RT.lure.t=.01;ROAM.cd=0;roamTick(.1)")
+        self.assert_js(page, 'RT.lure===null&&ROAM.y<__y')
+
+    def test_debug_panel_requires_password(self):
+        page = self.page()
+        answers = iter(['wrong', '114514'])
+        page.on('dialog', lambda dialog: dialog.accept(next(answers)))
+        page.evaluate('Dev.open()')
+        self.assert_js(page, '!DEV.on')
+        page.evaluate('Dev.open()')
+        self.assert_js(page, "DEV.on&&document.getElementById('dev').style.display==='block'")
+        page.evaluate('Dev.close()')
+
+    def test_anomaly_choice_uses_real_time_and_random_option(self):
+        page = self.page()
+        page.evaluate("""AN.id='turn';AN.active=true;AN.t=0;AN.acc=0;AN.data={chosen:null};
+            Math.random=function(){return .99};anTick(1.3);""")
+        self.assert_js(page, "UI.chooseOpen&&document.querySelector('.choice-timer').textContent.includes('5 秒')")
+        page.wait_for_timeout(5200)
+        self.assert_js(page, "!UI.chooseOpen&&AN.data.chosen==='yes'&&AN.t===1.3&&!UI.choiceTimer")
+        page.evaluate("window.__late=false;UI.choice('x',[{label:'a',fn:function(){__late=true}}],{timeoutMs:80});UI.closeChoice()")
+        page.wait_for_timeout(130)
+        self.assert_js(page, '!__late&&!UI.chooseOpen')
+
+    def test_continuous_days_and_cooldowns_across_time_skips(self):
+        page = self.page()
+        page.evaluate("""S.day=1;S.tsec=1330;S.fn=null;S.actCool={};S.san=50;doSanAct('sleep');""")
+        self.assert_js(page, "S.day===2&&S.tsec===1375&&S.actCool.sleep===gameClock()+200")
+        page.evaluate("S.day=2;S.tsec=1438;S.actCool={};doSanAct('wash')")
+        self.assert_js(page, 'S.day===2&&S.tsec===1442')
+        page.evaluate('S.day=2;S.tsec=1490;window.__clock=gameClock();advanceGameTime(20)')
+        self.assert_js(page, 'S.day===2&&S.tsec===450&&gameClock()-__clock===400')
+        page.evaluate('S.day=2;S.tsec=1349;advanceGameTime(2)')
+        self.assert_js(page, 'S.day===3&&S.tsec===1351')
+        page.evaluate("AN.cool.rain=gameClock();S.day=3;S.tsec=1490;advanceGameTime(20)")
+        self.assert_js(page, 'gameClock()-AN.cool.rain>260')
+
+    def test_skipped_time_fires_lights_out_and_first_day_story(self):
+        page = self.page()
+        page.evaluate("""S.day=1;S.tsec=1339;S.fn={note:false,on:false,n:0};S.exam=true;
+            S.actCool={};doSanAct('wash');""")
+        self.assert_js(page, 'S.tsec===1343&&S.day===1&&S.fn.note&&!S.exam')
+        page.evaluate('advanceGameTime(8)')
+        self.assert_js(page, 'S.tsec===1351&&S.day===2&&S.fn.on&&S.fn.left===4')
+
+    def test_old_cooldown_timestamps_migrate_without_expiring_or_extending(self):
+        page = self.page()
+        page.evaluate("""S.day=2;S.tsec=700;S.actCool={wash:2*1440+720};AN.cool={rain:650};saveGame();
+            var old=loadGame();delete old.clockVersion;localStorage.setItem('wdfz3d',JSON.stringify(old));""")
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        self.assert_js(page, 'S.actCool.wash-gameClock()===20&&gameClock()-AN.cool.rain===50')
+
+    def test_reload_keeps_follower_previews_and_hidden_window(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('garage1');running=false;S.tsec=760;S.day=2;
+            ROAM.on=true;ROAM.stage='approach';ROAM.x=S.x+55;ROAM.y=S.y+12;ROAM.cd=3;ROAM.litAcc=.7;
+            AN.active=false;AN.id=null;AN.pre='moth';AN.preNext=17;AN.locked=true;AN.lockWait=1;AN.next=19;
+            S.hiddenLatch=true;S.hiddenAsked=false;S.hiddenWindow=1.7;saveGame();""")
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("document.getElementById('banner').textContent==='地下车库'")
+        self.assert_js(page, "ROAM.on&&ROAM.stage==='approach'&&ROAM.x===S.x+55&&ROAM.y===S.y+12&&ROAM.cd===3&&ROAM.litAcc===.7")
+        self.assert_js(page, "AN.pre==='moth'&&AN.preNext===17&&AN.locked&&AN.lockWait===1&&AN.next===19&&S.hiddenLatch&&S.hiddenWindow===1.7")
+        page.evaluate('S.hiddenAsked=true;saveGame()')
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("document.getElementById('banner').textContent==='地下车库'")
+        page.evaluate('updateSystems(.01)')
+        self.assert_js(page, "S.hiddenAsked&&UI.chooseOpen&&document.getElementById('choices').textContent.includes('我的位子空着')")
+
+    def test_reload_restores_timed_anomaly_choice_and_indoor_effect(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;AN.id='turn';AN.active=true;AN.t=0;AN.acc=0;
+            AN.data={chosen:null};anTick(1.3);saveGame();""")
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("document.getElementById('banner').textContent==='教学楼 1F'")
+        page.evaluate('update(.01)')
+        self.assert_js(page, "AN.id==='turn'&&UI.chooseOpen&&UI.choiceTimer&&AN.data.chosen===null")
+
+        page.evaluate("""UI.closeChoice();AN.id='stare';AN.active=true;AN.t=2;AN.data={};saveGame();""")
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("document.getElementById('banner').textContent==='教学楼 1F'")
+        self.assert_js(page, "AN.id==='stare'&&AN.active&&ANFX.kind==='stare'")
+
+    def test_roster_anomaly_choice_is_timed_and_restored(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;S.bag=[];AN.id='roster';AN.active=true;AN.t=2;
+            AN.data={done:false,rx:S.x,ry:S.y};useRoster();saveGame();""")
+        self.assert_js(page, 'UI.chooseOpen&&UI.choiceTimer>0')
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("document.getElementById('banner').textContent==='教学楼 1F'&&UI.chooseOpen")
+        self.assert_js(page, "AN.id==='roster'&&UI.choiceTimer>0&&document.getElementById('choices').textContent.includes('名单上')")
+        page.evaluate("""UI.closeChoice();Math.random=function(){return .5};useRoster(80);""")
+        page.wait_for_timeout(150)
+        self.assert_js(page, '!UI.chooseOpen&&AN.data.done')
+
+    def test_only_hard_to_prevent_anomalies_are_forecast(self):
+        page = self.page()
+        page.evaluate("S.tsec=760;AN.active=false;AN.next=5;AN.pre='turn';anwTick(.1)")
+        self.assert_js(page, '!ANW.on')
+        page.evaluate("AN.pre='rain';anwTick(.1)")
+        self.assert_js(page, 'ANW.on')
+        page.evaluate("S.mode='in';S.room='teach1';anwTick(.1)")
+        self.assert_js(page, '!ANW.on')
+        page.evaluate("AN.pre='rite';anwTick(.1)")
+        self.assert_js(page, '!ANW.on')
+        page.evaluate("""AN.pre=null;AN.next=0;S.diff='hard';pickAnomaly=function(){return 'rain'};
+            anAllowed=function(){return true};anOn=function(){};anStart();""")
+        self.assert_js(page, "!AN.active&&AN.pre==='rain'&&AN.next===8")
+        page.evaluate('anStart()')
+        self.assert_js(page, "AN.active&&AN.id==='rain'")
+
+    def test_chalk_and_pendulum_only_announce_difficult_anomalies(self):
+        page = self.page()
+        page.evaluate("""S.mode='in';S.room='lab1';S.actCool={};AN.active=false;AN.pre='turn';AN.locked=false;
+            useFacility('Z',INTERIORS.lab1);""")
+        self.assert_js(page, "!AN.locked&&document.getElementById('sub').textContent.includes('没有给出危险预警')")
+        page.evaluate("AN.pre='moth';AN.rained=true;S.actCool={};useFacility('Z',INTERIORS.lab1)")
+        self.assert_js(page, "AN.locked&&document.getElementById('sub').textContent.includes('蛾群')")
+        page.evaluate("""HAS_FX.chalk=0;AN.data={};pickAnomaly=function(){return 'turn'};anOn('chalk');""")
+        self.assert_js(page, '!AN.pre&&!AN.preNext&&AN.data.until===undefined')
+        page.evaluate("AN.data={};pickAnomaly=function(){return 'rain'};anOn('chalk')")
+        self.assert_js(page, "AN.pre==='rain'&&AN.locked&&AN.preNext>0&&AN.data.until>S.tsec")
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

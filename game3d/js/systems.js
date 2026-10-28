@@ -17,7 +17,7 @@ function inDorm(){
 function onField(){
   if(S.mode!=='out') return false;
   var mx=S.x/SC,my=S.y/SC;
-  var ids=['field','court','track','bad2','bad3'];
+  var ids=['field','court2','track','bad2','bad3'];
   for(var i=0;i<ids.length;i++){
     var o=objById(ids[i]);
     if(o&&mx>o.x-6&&mx<o.x+o.w+6&&my>o.y-6&&my<o.y+o.h+6) return true;
@@ -72,29 +72,54 @@ function examTick(dt){
   }
   if(cur!==null){ S.examTot+=dt; if(S.seated&&atMySeat()) S.examSeat+=dt; }
 }
+/* 日数沿用 22:30 切换，01:00 跳到同一日的 07:20。冷却使用连续的游戏分钟。 */
+function gameClock(){
+  var day=Math.max(1,S.day||1), late=S.tsec>=LIGHTS_OUT+10&&day>1;
+  return (day-1-(late?1:0))*1440+S.tsec;
+}
+function advanceGameTime(minutes){
+  var remaining=Math.max(0,minutes||0);
+  while(remaining>0){
+    var before=S.tsec, step=Math.min(remaining,Math.max(0,1500-before));
+    S.tsec+=step; remaining-=step;
+    if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=LIGHTS_OUT){
+      S.fn.note=true;
+      os('我：口袋里多了一张对折的纸。上面写着——灯前看字字如旧，月下认人人已非。　　　　　——笑时莫出声。',8);
+    }
+    if(S.exam&&before<LIGHTS_OUT&&S.tsec>=LIGHTS_OUT){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
+    if((before<LIGHTS_OUT+10&&S.tsec>=LIGHTS_OUT+10)||(S.day===1&&before>=LIGHTS_OUT+10)){
+      S.day=(S.day||1)+1;
+      if(S.day===2){
+        os('我：……今天几号来着？我想不起来了。',4);
+        if(S.fn&&S.fn.note&&!S.fn.on&&S.fn.n===0){
+          S.fn.on=true; S.fn.v=0; S.fn.next=10; S.fn.used={}; S.fn.n=0; S.fn.left=4; S.fn.done=false;
+          try{ fadeTo(function(){}); }catch(e){}
+          setTimeout(function(){ try{ os('我：第二天。所有东西都回到了原来的位置，颜色也回来了。',5.5); }catch(e){} },1200);
+          setTimeout(function(){ try{ fnPeopleBuild(); }catch(e){} },1800);
+        }
+      }
+    }
+    if(S.tsec>=1500) S.tsec=440;
+    else if(step<=0) break;
+  }
+}
+function rewindGameTime(minutes){
+  var remaining=Math.max(0,minutes||0);
+  while(remaining>0){
+    if(S.tsec<=440) S.tsec=1500;
+    var before=S.tsec, step=Math.min(remaining,S.tsec-440);
+    S.tsec-=step; remaining-=step;
+    if(before>=LIGHTS_OUT+10&&S.tsec<LIGHTS_OUT+10&&S.day>1) S.day--;
+  }
+}
 function updateSystems(dt){
   if(S.dead||S.screen!=='play') return;
   var rate=rateAt(S.tsec), _t0=S.tsec;
-  S.tsec += dt*rate/60;
+  advanceGameTime(dt*rate/60);
   if(_t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
     os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
 
-  if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=LIGHTS_OUT){
-    S.fn.note=true;
-    os('我：口袋里多了一张对折的纸。上面写着——灯前看字字如旧，月下认人人已非。　　　　　——笑时莫出声。',8);
-  }
-  if(S.day===1 && S.tsec>=LIGHTS_OUT+10){
-    S.day=2;
-    os('我：……今天几号来着？我想不起来了。',4);
-    if(S.fn&&S.fn.note&&!S.fn.on&&S.fn.n===0){
-      S.fn.on=true; S.fn.v=0; S.fn.next=10; S.fn.used={}; S.fn.n=0; S.fn.left=4; S.fn.done=false;
-      try{ fadeTo(function(){}); }catch(e){}
-      setTimeout(function(){ try{ os('我：第二天。所有东西都回到了原来的位置，颜色也回来了。',5.5); }catch(e){} },1200);
-      setTimeout(function(){ try{ fnPeopleBuild(); }catch(e){} },1800);
-    }
-  }
   try{ fnTick(dt); }catch(e){}
-  if(S.tsec>=1500){ S.tsec=440; }
   if(S.exam&&(S.tsec>=LIGHTS_OUT||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
   examTick(dt);
   var exam=examNow();
@@ -125,7 +150,8 @@ function updateSystems(dt){
   if(nw==='教室') vioMul=exam?2.4:1.4;
   if(S.mode==='out'&&isNight()) vioMul*=0.5;
   S.wrong=wrong;
-  if(wrong){ S.viol+=dt*0.85*vioMul; }
+  /* 熄灯后即使在宿舍也会累积违规；在室外仍沿用原来的夜间倍率。 */
+  if(wrong||nw==='宿舍'){ S.viol+=dt*0.85*vioMul; }
   else { S.viol=Math.max(0,S.viol-dt*3.2); }
   try{ skipTick(dt); }catch(e){}
   try{ ncUpdate(dt); }catch(e){}
@@ -205,10 +231,12 @@ function roamLit(){
 function roamTick(dt){
   if(RT.carLeaving>0) RT.carLeaving-=dt;
   var dg=dangerAt();
-  if(dg!=='garage'||!INTERIORS['garage1']){ ROAM.on=false; return; }
+  if(dg!=='garage'||!INTERIORS['garage1']){ ROAM.on=false; RT.lure=null; return; }
   if(RT.carLeaving>0){ ROAM.on=false; return; }
   if(!ROAM.on) roamReset();
   var R=INTERIORS['garage1'];
+  var lure=RT.lure;
+  if(lure){ lure.t-=dt; if(lure.t<=0){ RT.lure=null; lure=null; } }
   var lit=roamLit();
   if(lit) ROAM.litAcc+=dt; else ROAM.litAcc=Math.max(0,ROAM.litAcc-dt*0.35);
 
@@ -250,10 +278,12 @@ function roamTick(dt){
     var near=Math.hypot(S.x-ROAM.x,S.y-ROAM.y)<220;
     ROAM.cd=(S.run||near)?rnd(0.55,0.95):rnd(0.9,1.5);
     SFX.step();
-    var dx=S.x-ROAM.x, dy=S.y-ROAM.y, dl=Math.hypot(dx,dy)||1;
-    var nx=ROAM.x+dx/dl*34, ny=ROAM.y+dy/dl*34;
+    var tx=lure?lure.x:S.x, ty=lure?lure.y:S.y;
+    var dx=tx-ROAM.x, dy=ty-ROAM.y, dl=Math.hypot(dx,dy)||1, step=Math.min(34,dl);
+    var nx=ROAM.x+dx/dl*step, ny=ROAM.y+dy/dl*step;
     if(!solidAtInterior(R,nx,ROAM.y)) ROAM.x=nx;
     if(!solidAtInterior(R,ROAM.x,ny)) ROAM.y=ny;
+    if(lure&&!ROAM.lureTold){ ROAM.lureTold=1; os('我：那东西停了一下，脚步朝硬币落地的方向去了。',3.6); }
   }
   var ddx=S.x-ROAM.x, ddy=S.y-ROAM.y;
   var dist=Math.sqrt(ddx*ddx+ddy*ddy);

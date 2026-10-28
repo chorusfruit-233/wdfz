@@ -307,7 +307,7 @@ function freshState(diff){
   S.mode='out'; S.room=null;
   S.x=GATE_N.x*SC; S.y=(GATE_N.y+40)*SC;
   S.ang=PI/2; S.pitch=0; S.eyeH=EYE;
-  S.hiddenLatch=false; S.hiddenAsked=false; S.dangerSeen={};
+  S.hiddenLatch=false; S.hiddenAsked=false; S.hiddenWindow=0; S.dangerSeen={};
   RT=newRT(); USE={torch:false,phone:false,brollyShield:false}; OPENDOORS={}; syncUseState();
   AN.id=null; AN.active=false; AN.next=(S.diff==='hard')?40:60; AN.rained=false; AN.cool={}; AN.lastBig=false; AN.t=0; AN.acc=0;
   AN.pre=null; AN.preNext=0; AN.locked=false; AN.lockWait=0;
@@ -353,16 +353,23 @@ var Game={
     S.mode=d.mode||'out'; S.room=d.room||null;
     S.x=d.x; S.y=d.y; S.ang=d.ang||0; S.pitch=d.pitch||0;
     S.tsec=d.tsec; S.day=d.day; S.san=d.san; S.viol=d.viol; S.stam=d.stam;
+    if(d.clockVersion!==2&&S.tsec>=0&&S.tsec<60) S.tsec+=1440;
     S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
     S.snackT=Number.isFinite(d.snackT)?clamp(d.snackT,0,SNACK_SEC):0;
     S.actCool=(d.actCool&&typeof d.actCool==='object'&&!Array.isArray(d.actCool))?Object.assign({},d.actCool):{};
+    if(d.clockVersion!==2){
+      var oldClock=(d.day||1)*1440+d.tsec, newClock=gameClock();
+      Object.keys(S.actCool).forEach(function(k){ if(Number.isFinite(S.actCool[k])) S.actCool[k]=newClock+Math.max(0,S.actCool[k]-oldClock); });
+    }
     S.immuneUsed=!!d.immuneUsed;
     S.tt=d.tt||0; S.ttTier=d.ttTier||0;
     S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0;
     S.bag=d.bag||[]; S.hot=d.hot||[null,null];
     S.talent=d.talent||S.talent; S.spots=d.spots||{}; S.clues=d.clues||{};
     S.seated=!!d.seated;
-    S.hiddenLatch=!!d.hiddenLatch; S.hiddenAsked=!!d.hiddenAsked;
+    S.hiddenLatch=!!d.hiddenLatch; S.hiddenAsked=false;
+    S.hiddenWindow=Number.isFinite(d.hiddenWindow)?d.hiddenWindow:(S.hiddenLatch?3.2:0);
+    if(d.hiddenAsked&&S.hiddenLatch) S.hiddenWindow=0; /* 读档后重新呈现尚未回答的选择 */
     if(d.fn) S.fn=Object.assign({v:0,on:false,note:false,n:0,next:0,shown:false},d.fn);
     if(d.rt) RT=Object.assign(newRT(),d.rt);
     if(d.use) USE=d.use;
@@ -372,15 +379,29 @@ var Game={
     AN.data=(d.anData&&typeof d.anData==='object')?d.anData:{};
     AN.next=(typeof d.anNext==='number')?d.anNext:45;
     AN.rained=!!d.anRained; AN.cool=d.anCool||{};
+    if(d.clockVersion!==2){
+      var savedClock=gameClock();
+      Object.keys(AN.cool).forEach(function(k){
+        if(Number.isFinite(AN.cool[k])) AN.cool[k]=savedClock-((S.tsec-AN.cool[k]+1440)%1440);
+      });
+    }
+    AN.pre=d.anPre||null; AN.preNext=d.anPreNext||0; AN.locked=!!d.anLocked; AN.lockWait=d.anLockWait||0;
     AN.lastBig=!!d.anLastBig; AN.active=!!d.anId;
+    if(AN.active&&AN.data.asked&&AN.data.chosen===null&&['turn','hand','repeat','cold'].indexOf(AN.id)>=0){
+      AN.data.asked=false;
+      if(Number.isFinite(d.anChoiceMs)) AN.data.choiceRemaining=d.anChoiceMs;
+    }
     AN.sub=0;
-    if(AN.id){
+    if(S.mode==='in'&&S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign(ROAM,d.roam);
+    function restoreAnomalyFX(){
+      if(!AN.id||!AN.active) return;
       try{
         if(HAS_FX[AN.id]) anfxSpawn(AN.id,S.x,S.y);      /* 和 anOn 共用一张表：以前这里另抄了一份，新异象（水杯、雨点成字）读档后看不见 */
       }catch(e){}
+      if(AN.id==='roster'&&!AN.data.done&&Number.isFinite(d.anChoiceMs)) useRoster(d.anChoiceMs);
     }
-    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral});
-    else { S.mode='out'; S.room=null; enterWorldOut(); syncCamera(0); }
+    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral},restoreAnomalyFX);
+    else { S.mode='out'; S.room=null; enterWorldOut(); syncCamera(0); restoreAnomalyFX(); }
     var _tel2=document.getElementById('talent'); if(_tel2) _tel2._set=false;
     var _hot2=document.getElementById('hot'); if(_hot2) _hot2._sig='';
     SFX.resume();
