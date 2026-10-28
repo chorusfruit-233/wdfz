@@ -17,7 +17,8 @@ var SPIRAL={
   steps:16,                 /* 每圈台阶数 */
   th0:Math.PI/2,            /* 楼梯口在柱子正南 */
   enter:[-0.30,0.50],       /* 地面上能踏上第一级的角度范围（相对楼梯口） */
-  hole:0.62                 /* 顶上平台在最后一段楼梯上方留的口子（弧度） */
+  hole:3.9,                 /* 顶上平台在楼梯上方留的口子（弧度）：以前只留 0.62，最后小半圈楼梯离平台底不到 1.7 米，走上去头就穿进石板里 */
+  arrive:0.62               /* 口子里只有靠楼梯顶这一段能从平台走回楼梯，其余一圈是栏杆 */
 };
 SPIRAL.amax=SPIRAL.turns*TAU;
 SPIRAL.topH=SPIRAL.turns*SPIRAL.turnH;
@@ -60,7 +61,9 @@ function spiralSolid(R,wx,wy){
     if(q.r>SPIRAL.rOut) return a>0.35;                      /* 只有最下面一两级能从侧面迈下去，再往上有栏杆 */
     return false;
   }
-  return q.r>SPIRAL.rOut;                                   /* 顶层：四周是栏杆 */
+  var dh=spWrap(q.th-(SPIRAL.th0+SPIRAL.amax));
+  if(ring&&dh<=0&&dh>=-SPIRAL.hole) return dh<-SPIRAL.arrive;   /* 楼梯口上方 */
+  return q.r>SPIRAL.rOut||q.r<SPIRAL.rIn;                   /* 顶层：四周是栏杆，中间是钟 */
 }
 /* 移动之后更新所处的层和高度 */
 function spiralUpdate(){
@@ -78,7 +81,7 @@ function spiralUpdate(){
     }
   }else{
     var dh=spWrap(q.th-(SPIRAL.th0+SPIRAL.amax));
-    if(ring&&dh<=0&&dh>=-SPIRAL.hole){ SP.state='stair'; SP.a=SPIRAL.amax+dh; }   /* 从口子走回楼梯 */
+    if(ring&&dh<=0&&dh>=-SPIRAL.arrive){ SP.state='stair'; SP.a=SPIRAL.amax+dh; }   /* 从口子走回楼梯 */
   }
   SP.th=q.th;
   S.floorY=SP.state==='top'?SPIRAL.topH:(SP.state==='stair'?clamp(SP.a,0,SPIRAL.amax)/TAU*SPIRAL.turnH:0);
@@ -124,9 +127,11 @@ function buildSpiral(c){
     K.rod('wood',s.cx+Math.cos(a1)*(s.rOut-0.05),top+0.98,s.cz+Math.sin(a1)*(s.rOut-0.05),
                  s.cx+Math.cos(a2)*(s.rOut-0.05),top+0.98,s.cz+Math.sin(a2)*(s.rOut-0.05),0.03,0.03,5,0x4a3626);
   }
-  /* 钟：挂在平台上方的横梁上（沿用 FURN.U 的造型，整体抬到平台高度） */
-  var cc={K:K,R:c.R,ao:function(){},solid:function(){}};
-  K.frame(0,0,0,top); FURN.U(cc,0,0,s.cx,s.cz); K.unframe();
-  K.box('wood',s.cx-1.25,top+1.45,s.cz,0.18,2.9,0.18,0x3a2a1c,1.0);                     /* 吊钟木架的两根立柱 */
-  K.box('wood',s.cx+1.25,top+1.45,s.cz,0.18,2.9,0.18,0x3a2a1c,1.0);
+  /* 口子靠下那一边的栏杆（楼梯在它下面两米多） */
+  var ae=tEnd-s.hole, ce=Math.cos(ae), se=Math.sin(ae), rr;
+  for(rr=s.rIn+0.15;rr<s.rOut;rr+=0.6) K.rod('metal',s.cx+ce*rr,top,s.cz+se*rr,s.cx+ce*rr,top+0.96,s.cz+se*rr,0.02,0.02,5,0x2a2622);
+  K.rod('wood',s.cx+ce*(s.rIn+0.05),top+0.98,s.cz+se*(s.rIn+0.05),s.cx+ce*(s.rOut-0.05),top+0.98,s.cz+se*(s.rOut-0.05),0.03,0.03,5,0x4a3626);
+  /* 钟：挂在横贯两面墙的木梁上（以前两根立柱立在平台边，现在那里是楼梯口，柱子会挡头） */
+  var cc={K:K,R:c.R,ao:function(){},solid:function(){},beamW:c.W-1.2};
+  K.frame(0,0,0,top); FURN.U(cc,Math.floor(s.cx+c.halfW),Math.floor(s.cz+c.halfH),s.cx,s.cz); K.unframe();
 }

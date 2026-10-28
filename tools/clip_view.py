@@ -35,7 +35,7 @@ def main():
                 for(var d=0.3;d<=dist;d+=0.1){ if(solidS(x+Math.cos(a)*d,z+Math.sin(a)*d)) break; ok=d; }
                 if(!best||ok>best[1]+0.05) best=[a,ok];
               }
-              var dd=Math.max(0.6,best[1]-0.1), cy=Math.min(2.7,Math.max(0.5,y+dd*0.5));
+              var dd=Math.max(0.6,best[1]-0.1), cy=R?Math.min(2.7,Math.max(0.5,y+dd*0.5)):Math.max(0.5,y+dd*0.3);
               GLR.cam.position.set(x+Math.cos(best[0])*dd,cy,z+Math.sin(best[0])*dd); GLR.cam.lookAt(x,y,z);
               S.tsec=760; for(var k=0;k<2;k++) render(0.016);
             }""", [room, x, y, z, dist, yaw])

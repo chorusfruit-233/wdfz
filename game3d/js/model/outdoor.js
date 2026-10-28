@@ -129,6 +129,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
     for(var k=0;k<OBJ.length;k++){ var a2=apronOf(OBJ[k]); if(a2&&inRect(mx,my,a2,0)) return true; if(OBJ[k].k!=='roof'&&inRect(mx,my,[OBJ[k].x,OBJ[k].y,OBJ[k].x+OBJ[k].w,OBJ[k].y+OBJ[k].h],0)) return true; }
     return false;
   }
+  var CURB_H=[], CURB_V=[];          /* 先收集，最后在丁字口、拐角处互相截齐再建（以前两段在拐角叠在一起，顶面共面闪烁） */
   for(i=0;i<ROADS.length;i++){
     var r=ROADS[i], e;
     var edges=[[r[0],r[1],r[2],r[1],0,-1],[r[0],r[3],r[2],r[3],0,1],[r[0],r[1],r[0],r[3],-1,0],[r[2],r[1],r[2],r[3],1,0]];
@@ -144,14 +145,34 @@ function addOutdoorProps(K, x0, y0, x1, y1){
           if(t1>run0){
             var ax3=E[0]+(E[2]-E[0])*run0, ay3=E[1]+(E[3]-E[1])*run0, bx3=E[0]+(E[2]-E[0])*t1, by3=E[1]+(E[3]-E[1])*t1;
             var cxm=M((ax3+bx3)/2), czm=M((ay3+by3)/2);
-            if(E[4]===0) K.bevel('concrete',cxm,0.07,czm,M(Math.abs(bx3-ax3))+0.15,0.14,0.16,0xb4b0a6,1.0,0.02);
-            else K.bevel('concrete',cxm,0.07,czm,0.16,0.14,M(Math.abs(by3-ay3))+0.15,0xb4b0a6,1.0,0.02);
+            if(E[4]===0) CURB_H.push({a:cxm-M(Math.abs(bx3-ax3))/2-0.075,b:cxm+M(Math.abs(bx3-ax3))/2+0.075,c:czm});
+            else CURB_V.push({a:czm-M(Math.abs(by3-ay3))/2-0.075,b:czm+M(Math.abs(by3-ay3))/2+0.075,c:cxm});
           }
           run0=-1;
         }
       }
     }
   }
+
+  (function(){
+    var CT=0.08, j, h, v, LISTS=[CURB_H,CURB_V];
+    function trimEnd(a,c){               /* 把 a 靠近 c 的那一头截到 c 那段的侧面；c 不在 a 的端头附近就不动 */
+      if(Math.abs(c-a.a)<0.4) { a.a=Math.max(a.a,c+CT); return true; }
+      if(Math.abs(c-a.b)<0.4) { a.b=Math.min(a.b,c-CT); return true; }
+      return false;
+    }
+    CURB_H.forEach(function(hh){ CURB_V.forEach(function(vv){
+      if(hh.c<vv.a-CT||hh.c>vv.b+CT||vv.c+CT<=hh.a||vv.c-CT>=hh.b) return;   /* 不相交 */
+      if(!trimEnd(hh,vv.c)) trimEnd(vv,hh.c);                                 /* 拐角截横的；丁字口截竖的 */
+    }); });
+    /* 同一条线上前后两段重叠的合并 */
+    LISTS.forEach(function(L){
+      L.sort(function(p,q){ return p.c-q.c||p.a-q.a; });
+      for(j=L.length-1;j>0;j--){ h=L[j]; v=L[j-1]; if(Math.abs(h.c-v.c)<CT*2&&h.a<v.b+0.01){ v.b=Math.max(v.b,h.b); L.splice(j,1); } }
+    });
+    CURB_H.forEach(function(q){ if(q.b-q.a>0.1) K.bevel('concrete',(q.a+q.b)/2,0.07,q.c,q.b-q.a,0.14,0.16,0xb4b0a6,1.0,0.02); });
+    CURB_V.forEach(function(q){ if(q.b-q.a>0.1) K.bevel('concrete',q.c,0.07,(q.a+q.b)/2,0.16,0.14,q.b-q.a,0xb4b0a6,1.0,0.02); });
+  })();
 
   /* ---- 花园：一座不锈钢雕塑（几根斜杆托着一个环）+ 校训牌 ---- */
   (function(){
@@ -178,7 +199,8 @@ function addOutdoorProps(K, x0, y0, x1, y1){
   var flowerCols=[0xb24a4a,0xc8a24a,0xa85a8a,0xd8d4e8,0xc86a3a];
   for(i=0;i<beds.length;i++){
     var fmx=beds[i][0], fmy=beds[i][1];
-    if(!inObj(fmx,fmy,0,true)&&!outFree(fmx,fmy,4,3)&&!(inRect(fmx,fmy,[400,1000,670,1078],0))) continue;
+    var inGarden=inRect(fmx,fmy,[400,1000,670,1078],0);
+    if(!inGarden&&(inObj(fmx,fmy,8,true)||!outFree(fmx,fmy,4,3))) continue;   /* 以前这里条件写反了：落在楼、车库坡道上的也照建 */
     if(onRoad(fmx,fmy,3)) continue;
     var fx0=M(fmx), fz0=M(fmy);
     K.box('brick',fx0,0.20,fz0-0.65,2.8,0.40,0.12,0x8a8478,1.0);

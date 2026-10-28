@@ -254,14 +254,28 @@ function roomStairs(c,x,y,cx,cz){
     }
   }
   var shaftD=nR*tread, farOff=baseOff+shaftD;
-  bx(farOff+0.06,WALLH*0.5,0.12,WALLH,wid+0.12,0x0d1114,0.75,'dark');                         /* 梯井尽头：黑的 */
+  bx(farOff+0.06,WALLH*0.5,0.12,WALLH,wid,0x0d1114,0.75,'dark');                             /* 不再比梯井宽：旁边墙上有门时会插进门框 */                         /* 梯井尽头：黑的 */
   var midOff=baseOff+shaftD*0.5, mp=P(midOff), TH=c.theme;
-  if(ax==='z'){
-    K.box(TH.wallMat,mp.x-halfW2-0.11,WALLH*0.5,mp.z,0.12,WALLH,shaftD,PALETTE.wall,0.88);
-    K.box(TH.wallMat,mp.x+halfW2+0.11,WALLH*0.5,mp.z,0.12,WALLH,shaftD,PALETTE.wall,0.82);
-  }else{
-    K.box(TH.wallMat,mp.x,WALLH*0.5,mp.z-halfW2-0.11,shaftD,WALLH,0.12,PALETTE.wall,0.88);
-    K.box(TH.wallMat,mp.x,WALLH*0.5,mp.z+halfW2+0.11,shaftD,WALLH,0.12,PALETTE.wall,0.82);
+  /* 梯井两侧的挡墙：那一侧本来就是墙（或门）就不再建，以前贴着外墙那面会把墙上的门框、窗戳穿 */
+  function sideOpen(sd){
+    var k, off, p2, gx, gy, ch;
+    for(k=0;k<3;k++){
+      off=baseOff+shaftD*(k+0.5)/3; p2=P(off);
+      if(ax==='z') p2.x+=sd*(halfW2+0.11); else p2.z+=sd*(halfW2+0.11);
+      gx=Math.floor((p2.x+c.halfW)/tw); gy=Math.floor((p2.z+c.halfH)/th);
+      ch=R.grid[gy]&&R.grid[gy][gx];
+      if(ch&&ch!=='#'&&ch!=='='&&ch!=='O') return true;
+    }
+    return false;
+  }
+  var sd2;
+  for(sd2=-1;sd2<=1;sd2+=2){
+    if(!sideOpen(sd2)) continue;
+    /* 只建在楼梯自己那几格里：梯井伸进后面墙里的那一截有墙挡着，挡墙再往里伸会戳穿墙上的门框 */
+    var runCells=(bestBlock===-2)?99:(ax==='z'?gd*th:gw*tw), sLo=Math.max(Math.min(baseOff,farOff),-runCells*0.5), sHi=Math.min(Math.max(baseOff,farOff),runCells*0.5);
+    var sp2=P((sLo+sHi)*0.5), sLen=sHi-sLo;
+    if(ax==='z') K.box(TH.wallMat,sp2.x+sd2*(halfW2+0.11),WALLH*0.5,sp2.z,0.12,WALLH,sLen,PALETTE.wall,sd2<0?0.88:0.82);
+    else K.box(TH.wallMat,sp2.x,WALLH*0.5,sp2.z+sd2*(halfW2+0.11),sLen,WALLH,0.12,PALETTE.wall,sd2<0?0.88:0.82);
   }
   bx(midOff,2.30-0.07,shaftD,0.14,wid+0.14,0x2c3034,0.72,'concrete');                        /* 楼梯下沿的梁 */
   bx(baseOff-0.06,(2.30+WALLH)*0.5,0.10,WALLH-2.30,wid+0.10,PALETTE.wall,0.90,TH.wallMat);
@@ -312,6 +326,7 @@ function roomDecor(c,isRoof){
         if(R.grid[rr][x]!=='#'||R.grid[rr][x-1]!=='#'||R.grid[rr][x+1]!=='#') continue;
         var ic=R.grid[inner][x];
         if(ic==='#'||ic==='S'||R.grid[inner][x-1]==='#'||R.grid[inner][x+1]==='#') continue;
+        if(R.grid[inner][x-1]==='S'||R.grid[inner][x+1]==='S') continue;     /* 窗有 1.5 米宽：旁边一格是楼梯也不开，梯井的梁会插进窗里 */
         if(R.grid[inner][x]==='O') continue;
         wallWindow(K,CX(x),CZ(rr)+nz*th*0.5,0,nz,1.5,1.0,2.25,2);
       }

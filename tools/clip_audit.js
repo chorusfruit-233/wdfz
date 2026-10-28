@@ -156,9 +156,25 @@ var ClipAudit=(function(){
     }
     return enc(A,B)||enc(B,A);
   }
+  /* 「坐在面上」：小的那个只从大的一个面浅浅插进去（< 12 厘米）、另一头露在外面：
+     篮球架底座压进场地面层、雨棚和门洞插进墙里、柱脚埋进地面。插得深、或者整个横穿才算 */
+  function seated(A,B){
+    if(Math.abs(A.tc*B.ts-A.ts*B.tc)>1e-3&&Math.abs(A.tc*B.tc+A.ts*B.ts)>1e-3) return false;
+    function ext(P){ var ex=Math.abs(P.h[0]*P.tc)+Math.abs(P.h[2]*P.ts), ez=Math.abs(P.h[0]*P.ts)+Math.abs(P.h[2]*P.tc);
+      return [[P.c[0]-ex,P.c[0]+ex],[P.c[1]-P.h[1],P.c[1]+P.h[1]],[P.c[2]-ez,P.c[2]+ez]]; }
+    var vA=A.h[0]*A.h[1]*A.h[2], vB=B.h[0]*B.h[1]*B.h[2], S=vA<vB?A:B, L=vA<vB?B:A, e=ext(S), f=ext(L), k;
+    for(k=0;k<3;k++){
+      var ov=Math.min(e[k][1],f[k][1])-Math.max(e[k][0],f[k][0]);
+      if(ov<0.12&&(e[k][0]<f[k][0]-0.01||e[k][1]>f[k][1]+0.01)&&!(e[k][0]<f[k][0]-0.01&&e[k][1]>f[k][1]+0.01)) return true;
+    }
+    return false;
+  }
+  /* 楼的实心主体（大于 30 立方米、各边都厚）：别的东西插进去的部分被墙体整个挡住，看不见 */
+  function body(P){ return P.t==='box'&&/^bld:/.test(P.o)&&P.h[0]>0.2&&P.h[1]>0.2&&P.h[2]>0.2&&8*P.h[0]*P.h[1]*P.h[2]>30; }
   function collide(A,B,self){
-    if(A.t==='box'&&B.t==='box'){ if(self) return null; var d=boxBox(A,B); if(d<=EPS||embedded(A,B)) return null; return [ (A.c[0]+B.c[0])/2,(A.c[1]+B.c[1])/2,(A.c[2]+B.c[2])/2 ]; }
+    if(A.t==='box'&&B.t==='box'){ if(self) return null; var d=boxBox(A,B); if(d<=EPS||embedded(A,B)||seated(A,B)||body(A)||body(B)) return null; return [ (A.c[0]+B.c[0])/2,(A.c[1]+B.c[1])/2,(A.c[2]+B.c[2])/2 ]; }
     if(A.t==='rod'&&B.t==='box'||A.t==='box'&&B.t==='rod'){
+      if(!self&&(body(A)||body(B))) return null;
       var R=A.t==='rod'?A:B, X=A.t==='rod'?B:A, iv=segBox(R,X,self?0.01:EPS);
       if(!iv) return null;
       var len=(iv[1]-iv[0])*Math.hypot(R.b[0]-R.a[0],R.b[1]-R.a[1],R.b[2]-R.a[2]);
@@ -170,6 +186,7 @@ var ClipAudit=(function(){
       var u=(iv[0]+iv[1])/2; return [R.a[0]+(R.b[0]-R.a[0])*u,R.a[1]+(R.b[1]-R.a[1])*u,R.a[2]+(R.b[2]-R.a[2])*u];
     }
     if(self) return null;
+    if(body(A)||body(B)) return null;
     var hit=null;
     samples(A).some(function(q){ if(inside(B,q,EPS)){ hit=q; return true; } return false; }) ||
     samples(B).some(function(q){ if(inside(A,q,EPS)){ hit=q; return true; } return false; });

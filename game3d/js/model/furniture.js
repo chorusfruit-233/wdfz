@@ -19,8 +19,8 @@ function chairModel(K,x,z,rot,seatY,col){
   for(lx=-1;lx<=1;lx+=2) for(lz=-1;lz<=1;lz+=2){
     K.rod('metal',lx*0.17,0,lz*0.16, lx*0.17,sy-0.02,lz*0.16, 0.013,0.013,5,C_FRAME);
   }
-  K.rod('metal',-0.17,sy,0.17,-0.17,sy+0.40,0.19,0.012,0.012,5,C_FRAME);   /* 靠背立杆 */
-  K.rod('metal', 0.17,sy,0.17, 0.17,sy+0.40,0.19,0.012,0.012,5,C_FRAME);
+  K.rod('metal',-0.17,sy-0.02,0.218,-0.17,sy+0.38,0.218,0.012,0.012,5,C_FRAME);   /* 靠背立杆：贴在靠背板后面（以前从板子中间穿过去） */
+  K.rod('metal', 0.17,sy-0.02,0.218, 0.17,sy+0.38,0.218,0.012,0.012,5,C_FRAME);
   K.rod('metal',-0.17,0.12,-0.16,0.17,0.12,-0.16,0.01,0.01,4,C_FRAME);    /* 横撑 */
   K.unframe();
 }
@@ -106,7 +106,12 @@ FURN.T=function(c,x,y,cx,cz){
 };
 /* ---- 车库里的车：车身、车舱、车窗、四个轮子、车灯、车牌 ---- */
 FURN.V=function(c,x,y,cx,cz){
-  var K=c.K, col=[0x39424a,0x4a3a36,0x2e3a44,0x5a5e62,0x30343a][(x*3+y)%5];
+  var K=c.K, col=[0x39424a,0x4a3a36,0x2e3a44,0x5a5e62,0x30343a][(x*3+y)%5], g=c.R.grid, k2;
+  /* 车身 3.7×1.8 米，比一格大得多：前后左右两格内有柱子就往反方向让 0.4 米（以前车尾插进柱子里） */
+  for(k2=-2;k2<=2;k2++){
+    if(g[y+1]&&g[y+1][x+k2]==='#'){ cz-=0.40; break; }
+    if(g[y-1]&&g[y-1][x+k2]==='#'){ cz+=0.40; break; }
+  }
   c.ao(cx,cz,3.9,2.3,1.0);
   c.solid(cx,cz,3.70,1.85);              /* 以前碰撞只有一格的 0.82，人能直接走进车身里 */
   K.frame(cx,cz,0);
@@ -280,6 +285,7 @@ FURN.K=function(c,x,y,cx,cz){
   var K=c.K;
   if(c.R.host==='admin'){
     var adw=1.15, add=0.86;
+    if(c.R.grid[y][x-1]==='#') cx+=0.10;           /* 桌子比一格宽：靠西墙时往东让一点，左边抽屉柜以前插进墙脚线 */
     c.ao(cx,cz,adw*1.02,add*1.02,0.9);
     c.solid(cx,cz,adw,add);
     K.bevel('wood',cx,0.72,cz,adw,0.05,add,0x7a5a38,1.08,0.015);
@@ -523,7 +529,7 @@ FURN.G=FURN.B;
 /* ---- 钟楼的铜钟：横梁吊着，下沿是喇叭口 ---- */
 FURN.U=function(c,x,y,cx,cz){
   var K=c.K;
-  K.bevel('wood',cx,2.82,cz,2.6,0.18,0.22,0x3a2a1c,1.0,0.03);
+  K.bevel('wood',cx,2.82,cz,c.beamW||2.6,0.18,0.22,0x3a2a1c,1.0,0.03);              /* 横梁 */
   K.rod('metal',cx,2.72,cz,cx,2.50,cz,0.04,0.04,6,0x2a2018);
   K.cyl('metal',cx,2.36,cz,0.30,0.20,0.18,14,0x7c5c2c,1.0);
   K.cyl('metal',cx,1.62,cz,0.62,0.32,0.74,16,0x6e5228,1.05);                              /* 钟身 */
