@@ -826,6 +826,64 @@ class ControlsTest(unittest.TestCase):
         page.evaluate("freshState('normal')")
         self.assert_js(page, "!SEARCH.job&&!RT.carUsed")
 
+    def test_fine_quality_shadows_window_shafts_and_light_pools(self):
+        page = self.page()
+        page.evaluate("Settings.q(2);doEnterRoom('teach1');running=false;S.tsec=760;updateLighting()")
+        self.assert_js(page, "SHADE.shadows&&GLR.renderer.shadowMap.enabled&&GLR.moon.castShadow")
+        self.assert_js(page, "INTERIORS.teach1.shafts.length>0&&!!SHADE.shaftGrp&&SHADE.shaftGrp.children.length===INTERIORS.teach1.shafts.length")
+        self.assert_js(page, "SHADE.pools.length>0&&SHADE.shaftMat.opacity>0")
+        # 光柱要落到地上，不能悬在半空
+        self.assert_js(page, "SHADE.shaftGrp.children.every(function(m){var p=m.geometry.attributes.position.array;return p[7]<0.1})")
+        page.evaluate("Settings.q(0);doEnterRoom('teach1');running=false;updateLighting()")
+        self.assert_js(page, "!SHADE.shadows&&!GLR.renderer.shadowMap.enabled&&!SHADE.shaftGrp&&SHADE.pools.length>0")
+        page.evaluate("Settings.q(2);S.mode='out';S.room=null;enterWorldOut();updateLighting()")
+        self.assert_js(page, "!SHADE.shaftGrp&&SHADE.pools.length===0&&!!GLR.outMesh")
+
+    def test_rain_streaks_splashes_lightning_and_cleanup(self):
+        page = self.page()
+        page.evaluate("""AN.active=true;AN.id='rain';AN.t=0;AN.acc=0;AN.data={};
+            anfxSpawn('rain',S.x,S.y);for(var i=0;i<40;i++) anfxUpdate(0.05);""")
+        self.assert_js(page, "WX.rain&&WX.rain.n===500&&WX.rain.puddles.length>0&&WX.rain.puddles[0].material.opacity>0")
+        self.assert_js(page, "WX.rain.splash.some(function(m){return m.visible})")
+        page.evaluate("GLR.flash=0;WX.rain.nextBolt=0;anfxUpdate(0.01)")
+        self.assert_js(page, "GLR.flash>0.4&&WX.rain.nextBolt>5")
+        page.evaluate("anfxClear()")
+        self.assert_js(page, "WX.rain===null&&!ANFX.grp")
+
+    def test_moth_swarm_closes_in_but_keeps_off_the_lens(self):
+        page = self.page()
+        page.evaluate("""AN.active=true;AN.id='moth';AN.t=0;AN.acc=0;AN.data={src:{x:S.x+60,y:S.y}};
+            anfxSpawn('moth',S.x+60,S.y);for(var i=0;i<60;i++) anfxUpdate(0.05);window._d0=wxMothDist();
+            AN.acc=6;for(i=0;i<80;i++) anfxUpdate(0.05);""")
+        self.assert_js(page, "WX.moth.n===50&&wxMothDist()<_d0")
+        self.assert_js(page, "WX.moth.ms.every(function(m){return m.p.distanceTo(GLR.cam.position)>0.3})")
+        self.assert_js(page, "WX.moth.dp.some(function(v,i){return i%3===1&&v>0})")
+        page.evaluate("anfxClear()")
+        self.assert_js(page, "WX.moth===null&&wxMothDist()===99")
+
+    def test_footstep_surfaces_and_light_crackle(self):
+        page = self.page()
+        page.evaluate("S.mode='out';S.room=null;S.x=300*SC;S.y=230*SC")
+        self.assertEqual(page.evaluate("SFX.surface()"), 'grass')
+        page.evaluate("S.x=340*SC;S.y=280*SC")
+        self.assertEqual(page.evaluate("SFX.surface()"), 'court')
+        page.evaluate("S.x=GATE_N.x*SC;S.y=(GATE_N.y-60)*SC")
+        self.assertEqual(page.evaluate("SFX.surface()"), 'road')
+        page.evaluate("doEnterRoom('garage1');running=false")
+        self.assertEqual(page.evaluate("SFX.surface()"), 'garage')
+        page.evaluate("doEnterRoom('teach1');running=false")
+        self.assertEqual(page.evaluate("SFX.surface()"), 'tile')
+        page.evaluate("""var L=GLR.roomLights[0];GLR.cam.position.set(L.position.x+1,1.6,L.position.z);
+            FLK_PREV=[];FLK_LAST=-9;GLR.time=5;lightCrackle(0,1);lightCrackle(0,0.1);
+            SFX.step();SFX.patStep(0.5,0.6,true,true);SFX.thunder(0.1,0.8,false);""")
+        self.assert_js(page, "FLK_LAST===5")
+
+    def test_patroller_has_its_own_uniform(self):
+        page = self.page()
+        page.evaluate("doEnterRoom('teach1');running=false;patAddFig()")
+        self.assert_js(page, "GLR.patFig.children.length===4&&GLR.patFig.children[1].geometry.attributes.position.count>500")
+        self.assert_js(page, "GLR.patFig.children[1].material.vertexColors===true")
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

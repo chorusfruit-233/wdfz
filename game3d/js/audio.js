@@ -347,6 +347,7 @@ var SFX=(function(){
     tick:function(dt){ try{ if(L) tick(dt); else if(bgOn) buildLayers(); }catch(e){} },
     setVol:function(v){ vol=Math.max(0,Math.min(1,v)); if(mg){ try{ mg.gain.value=vol; }catch(e){} } },
     getVol:function(){ return vol; },
+    surface:function(){ return stepSurface(); },
     step:function(){ stepSound(stepSurface(),(typeof S!=='undefined'&&S.run)?1.35:1,0,0,stepWet()); },
     /* 巡察者的脚步：按方位分左右，越近越响，背后的发闷 */
     patStep:function(pan,k,behind,locked){ stepSound(stepSurface(),(locked?1.5:1.1)*k,pan,behind,stepWet()); },
