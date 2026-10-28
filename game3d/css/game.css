@@ -238,7 +238,6 @@ body.touch .bc{bottom:calc(178px + env(safe-area-inset-bottom,0px))}
 .tbtn{position:absolute;border-radius:50%;border:1px solid rgba(130,180,155,.34);background:rgba(0,0,0,.34);
   pointer-events:auto;display:flex;align-items:center;justify-content:center;font:inherit;font-size:12px;color:#a9d8c2;
   padding:0;touch-action:none;cursor:pointer}
-#tRun{right:calc(132px + env(safe-area-inset-right,0px));bottom:calc(44px + env(safe-area-inset-bottom,0px));width:70px;height:70px}
 #tAct{right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(32px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:15px;
   background:rgba(20,48,38,.55);border-color:rgba(130,200,170,.5)}
 /* 手机上没有 Esc：右上角一个暂停键，时间栏往下让一行 */
@@ -250,7 +249,6 @@ body.touch .panel .close,body.touch #bag .close,body.touch #note .close,body.tou
 #tPause::before,#tPause::after{content:'';width:5px;height:16px;margin:0 3px;border-radius:1px;background:#a9d8c2}
 #tPause:active{background:rgba(120,200,170,.30);border-color:#79c8a4}
 body.touch .tr{top:calc(68px + env(safe-area-inset-top,0px))}
-#tRun.held{background:rgba(120,200,170,.34);border-color:#79c8a4;color:#eafff5;box-shadow:0 0 14px rgba(120,220,180,.35)}
 #flash{position:fixed;inset:0;z-index:8;background:#000;pointer-events:none;opacity:0;transition:opacity .5s}
 #fade{position:fixed;inset:0;z-index:40;background:#05080a;pointer-events:none;opacity:0;transition:opacity .18s ease}
 @keyframes panelIn{from{opacity:0}to{opacity:1}}
@@ -307,7 +305,7 @@ body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0 !important;transition:o
 .item{display:flex;flex-direction:column;align-items:center;gap:3px}
 .item .nm{font-size:9px;opacity:.75;text-align:center;line-height:1.2;max-width:52px}
 /* 矮屏（横屏手机）整套缩小一档。必须写在所有控件规则之后 —— 同优先级下后写的赢，
-   放在前面会被上面的 #tcol / #tAct / #tRun 盖掉。 */
+   放在前面会被上面的 #tcol / #tAct 盖掉。 */
 @media (max-height:520px){
   #stick{width:104px;height:104px;left:16px;bottom:14px}
   #knob{left:32px;top:32px;width:40px;height:40px}
@@ -316,7 +314,6 @@ body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0 !important;transition:o
   .tb2{width:50px;height:50px;font-size:12px}
   #pcpad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px)}
   #tAct{width:78px;height:78px;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));font-size:13px}
-  #tRun{width:60px;height:60px;right:calc(106px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px))}
   body.touch .bl{top:calc(86px + env(safe-area-inset-top,0px))}
   body.touch .bl #mini{width:88px!important;height:88px!important}
 }
@@ -386,3 +383,22 @@ body.touch #menu .mtop{padding-right:calc(176px + env(safe-area-inset-right,0px)
   #pcgame{gap:7px;overflow:auto;padding:15px}
   #pccv{width:min(320px,60vh);height:min(320px,60vh)}
 }
+
+/* 翻找读条：准星外一圈，--p 从 0 走到 1 */
+#searchring{position:fixed;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;z-index:9;display:none;pointer-events:none;
+  border-radius:50%;--p:0;background:conic-gradient(#9fe3c2 calc(var(--p)*360deg),rgba(255,255,255,.12) 0);
+  -webkit-mask:radial-gradient(circle,transparent 17px,#000 18px);mask:radial-gradient(circle,transparent 17px,#000 18px)}
+
+/* 躲在储物柜里：眼前是一排百叶缝 */
+#hideslits{position:fixed;inset:0;z-index:7;display:none;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.97) 0 26px,rgba(0,0,0,.25) 26px 38px);
+  box-shadow:inset 0 0 120px 40px #000}
+
+/* 结局演出：上下黑边，界面全藏起来；点一下或按空格跳过 */
+#cutfade{position:fixed;inset:0;z-index:41;background:#000;opacity:0;pointer-events:none}
+#cutbars{display:none}
+body.cut #cutbars{display:block}
+#cutbars i{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:42;pointer-events:none}
+#cutbars i:first-child{top:0}#cutbars i:last-child{bottom:0}
+body.cut #hud,body.cut #prompt,body.cut #cross,body.cut #touch,body.cut #lookhint,body.cut #sub,body.cut #searchring,body.cut #hideslits,body.cut .screen-control{display:none!important}
+body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';position:absolute;right:20px;bottom:12px;font-size:11px;letter-spacing:2px;color:#4a5a54}

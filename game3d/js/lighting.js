@@ -77,8 +77,8 @@ function refreshSky(){
   if(GLR.skyTex) GLR.scene.background=GLR.skyTex;
 }
 function dayLight(){ return sunAt(hourNow()).day; }
-/* 白天室外的画面亮度减半（render.js 后期里乘 GLR.dayExpo）；屋里的灯也比原来暗一档 */
-var DAY_K=0.5, ROOM_LIGHT_K=0.7, ROOM_EXPO=0.85;
+/* 白天室外的画面亮度减半（render.js 后期里乘 GLR.dayExpo）。屋里的灯保持原亮度，但会闪 */
+var DAY_K=0.5;
 var LCFG={
   ptI:26, ptDist:14, ptDecay:2.0,
   lampI:15, lampDist:15,
@@ -154,20 +154,42 @@ function updateLighting(){
     }
   }
   var tt=GLR.time||0;
+  var pf=GLR.patrolFlick||0, pr=GLR.patrolRed||0, sum=0;
   for(i=0;i<GLR.roomLights.length;i++){
-    var base=GLR.roomLightBase[i]*s.ptK*ROOM_LIGHT_K;
-    var ph=i*2.7;
-    var flick=0.88+0.12*Math.sin(tt*7.3+ph)+0.04*Math.sin(tt*23.1+ph*1.7);
-    var blip=Math.sin(tt*0.9+ph*3.1);
-    if(blip>0.992) flick*=0.45;
-    if(s.day<0.3&&Math.sin(tt*0.37+ph*5.3)>0.985) flick*=0.15;   /* 夜里偶尔整盏暗下去一下 */
-    GLR.roomLights[i].intensity=base*Math.max(0.08,flick)*gz;
+    var base=GLR.roomLightBase[i]*s.ptK;
+    var flick=roomFlicker(i,tt,s.day);
+    if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
+    sum+=flick;
+    GLR.roomLights[i].intensity=base*Math.max(0.05,flick)*(1+0.3*pr)*gz;
+    var bc=GLR.roomLightCol&&GLR.roomLightCol[i];
+    if(bc) GLR.roomLights[i].color.setRGB(bc.r+(1-bc.r)*pr, bc.g*(1-0.92*pr), bc.b*(1-0.95*pr));   /* 被它盯上：灯变红 */
   }
+  /* 灯盘本身（自发光材质）跟着一起闪、一起变红 */
+  var em=(typeof MATS!=='undefined')&&MATS.emit;
+  if(em){ var k=GLR.roomLights.length?clamp(sum/GLR.roomLights.length,0.2,1):1; em.color.setRGB(k,k*(1-0.9*pr),k*(1-0.92*pr)); }
   lampTick(s);
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
   var wn=GLR.worldNorm||0;
-  GLR.dayExpo=s.indoor?(S.room==='garage1'?1:ROOM_EXPO+(1-ROOM_EXPO)*wn):1-(1-DAY_K)*sun.day*(1-wn);
+  GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
   GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
+}
+/* 灯的闪烁：一直有一点点抖；每盏灯隔一阵会接触不良地连闪几下；夜里偶尔整盏暗一下 */
+function lhash(a,b){ var x=Math.sin(a*127.1+b*311.7)*43758.5453; return x-Math.floor(x); }
+function roomFlicker(i,tt,day){
+  var ph=i*2.7;
+  var f=0.93+0.07*Math.sin(tt*7.3+ph)+0.03*Math.sin(tt*23.1+ph*1.7);
+  var seg=Math.floor((tt+ph*3)/7), r=lhash(seg,i);
+  if(r<0.5){                                             /* 这 7 秒里有一次：0.4–1.1 秒的连闪 */
+    var at=lhash(seg,i+17)*5.5, len=0.4+lhash(seg,i+31)*0.7, u=(tt+ph*3)-seg*7-at;
+    if(u>0&&u<len) f*=(Math.sin(u*90)>0.1)?1:0.12;
+  }
+  if(day<0.3&&Math.sin(tt*0.37+ph*5.3)>0.985) f*=0.15;
+  return f;
+}
+/* 巡察者出现前的节拍：两下短闪、一下长暗，像心跳 */
+function patrolBeat(tt){
+  var u=(tt*0.9)%1;
+  return (u<0.08||(u>0.16&&u<0.24))?0.1:(u>0.5&&u<0.7?0.25:1);
 }
 /* 路灯：灯头在夜里自发光；离镜头最近的几盏配一盏真点光（数量固定，避免切场景时重编着色器） */
 var OUT_LAMPS=[];
@@ -206,6 +228,7 @@ function lampTick(s){
   for(i=0;i<L.length;i++){
     var fl=1;
     if(i===1&&Math.sin(tt*1.7)>0.93) fl=0.25+0.5*Math.abs(Math.sin(tt*31));   /* 总有一盏接触不良 */
+    if((GLR.patrolFlick||0)>0) fl*=1-GLR.patrolFlick*(1-patrolBeat(tt));     /* 夜里巡察者在室外：路灯也按节拍闪 */
     L[i].intensity=L[i].userData.on?LCFG.lampI*smooth01(0.15,0.7,night)*fl:0;
   }
 }

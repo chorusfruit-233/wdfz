@@ -15,7 +15,7 @@ function clearWorldMesh(){
   if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); disposeGroup(GLR.outMesh); GLR.outMesh=null; }
   if(GLR.roomLights){
     for(i=0;i<GLR.roomLights.length;i++) GLR.scene.remove(GLR.roomLights[i]);
-    GLR.roomLights=[]; GLR.roomLightBase=[];
+    GLR.roomLights=[]; GLR.roomLightBase=[]; GLR.roomLightCol=[];
   }
 }
 function addRoomLights(R){
@@ -26,6 +26,7 @@ function addRoomLights(R){
     GLR.scene.add(pl);
     GLR.roomLights.push(pl);
     GLR.roomLightBase.push(inten);
+    (GLR.roomLightCol||(GLR.roomLightCol=[])).push(new THREE.Color(col));
   }
   if(R.host==='teach'&&R.floor>=1&&R.floor<=5){
     var spans2=[[5,11],[21,27],[45,51]];

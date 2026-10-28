@@ -79,11 +79,11 @@ function updateSystems(dt){
   if(_t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
     os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
 
-  if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=1290){
+  if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=LIGHTS_OUT){
     S.fn.note=true;
     os('我：口袋里多了一张对折的纸。上面写着——灯前看字字如旧，月下认人人已非。　　　　　——笑时莫出声。',8);
   }
-  if(S.day===1 && S.tsec>=1350){
+  if(S.day===1 && S.tsec>=LIGHTS_OUT+10){
     S.day=2;
     os('我：……今天几号来着？我想不起来了。',4);
     if(S.fn&&S.fn.note&&!S.fn.on&&S.fn.n===0){
@@ -95,7 +95,7 @@ function updateSystems(dt){
   }
   try{ fnTick(dt); }catch(e){}
   if(S.tsec>=1500){ S.tsec=440; }
-  if(S.exam&&(S.tsec>=1290||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
+  if(S.exam&&(S.tsec>=LIGHTS_OUT||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
   examTick(dt);
   var exam=examNow();
 
@@ -159,6 +159,7 @@ function updateSystems(dt){
 
   dangerTick(dt);
   roamTick(dt);
+  try{ patTick(dt); }catch(e){}
 }
 
 function askHiddenChoice(){
