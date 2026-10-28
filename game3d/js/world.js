@@ -218,7 +218,7 @@ function fadeTo(fn){
   },170);
 }
 var ENTER_VIA=null;          /* 'stair' / 'out'：决定进楼后站在哪 */
-function enterRoom(id,spawn){ fadeTo(function(){ doEnterRoom(id,spawn); }); }
+function enterRoom(id,spawn,afterEnter){ fadeTo(function(){ doEnterRoom(id,spawn); if(afterEnter) afterEnter(); }); }
 /* 找门口 / 楼梯口旁边一格能站的地方，并面朝屋里 */
 function entryNear(R,chs){
   var r,c,k,best=null;

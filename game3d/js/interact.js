@@ -43,7 +43,7 @@ var SAN_ACTS={
   view:  {n:'看看远处',     san:6,  min:6,  cd:40,  msg:'我：从这里能看见半个校园。都在雾里。雾的边上，一直是同一栋楼。'}
 };
 var FAC_CD={Z:70,C:90,N:45,Y:200,K:0};
-function facClock(){ return (S.day||1)*1440+S.tsec; }
+function facClock(){ return gameClock(); }
 function facRoll(n){
   var r=Math.random(), r2=Math.random();
   if(hasItem('goggles')) r=Math.max(r,r2);
@@ -58,7 +58,7 @@ function useFacility(ch,R){
   if(ch==='Z'){
     /* 物理实验室：单摆会"预报"下一次异象 —— 说出来的那个就是真的会来的那个 */
     rolled=true;
-    if(!AN.active&&AN.pre){
+    if(!AN.active&&AN.pre&&AN_WARN[AN.pre]&&anAllowed(AN.pre)){
       AN.locked=true;
       var mins=Math.max(1,Math.round(AN.next*rateAt(S.tsec)/60));
       os('我：我把摆拉开、松手。它没有来回摆，而是慢慢停在一个方向上，像被什么吸住了。\n秤盘上的砝码排成了几个字——「'+(AN_CN[AN.pre]||AN.pre)+'」。还有大约 '+mins+' 分钟。',6.5);
@@ -69,9 +69,9 @@ function useFacility(ch,R){
       os('我：摆在乱转，转得越来越快。它在说：已经来了。',3.6);
     }else{
       S.san=Math.min(100,S.san+5);
-      os('我：摆停在正中，一动不动。暂时什么也不会来。',3.4);
+      os('我：摆停在正中，一动不动。它没有给出危险预警。',3.4);
     }
-    S.tsec=((S.tsec+3)%1440+1440)%1440;
+    advanceGameTime(3);
   }else if(ch==='C'){
     rolled=true;
     var v2=facRoll(100);
@@ -82,7 +82,7 @@ function useFacility(ch,R){
     else if(v2<46){ S.san=Math.min(100,S.san+7); os('我：转子转起来，液体分成两层。白的在上。',3.6); toast('离心机 · SAN +7'); }
     else if(v2<72){ S.san=Math.min(100,S.san+2); os('我：离心机停了。管子里的东西还在转。',3.6); toast('离心机 · SAN +2'); }
     else { S.san=Math.max(0,S.san-5); os('我：配平没配好，整台机器在桌上跳。',3.6); toast('离心机 · SAN −5'); }
-    S.tsec=((S.tsec+5)%1440+1440)%1440;
+    advanceGameTime(5);
   }else if(ch==='N'){
     rolled=true;
     if(!RT.lensTaken){                       /* 传送门材料：透镜 */
@@ -100,9 +100,9 @@ function useFacility(ch,R){
     rolled=true;
     addClue('geo');
     if(!hasItem('compass')&&!RT.geoCompass){
+      if(!addItem('compass')) return true;
       RT.geoCompass=1;
       os('我：地球仪上，学校的位置被铅笔描了很多遍，纸都描破了。底座的抽屉里有个罗盘。',4.6);
-      addItem('compass');
     }else{
       os('我：我转了一下地球仪。它转回来，停在原来那一面。',3.2);
     }
@@ -117,7 +117,10 @@ function useFacility(ch,R){
       if(R.floor===5){ os('我：讲台上摊着谱子。第三乐章那一页被折了角。',3.4); }
       else if(R.floor===3){ os('我：教师台上摊着一本「机房钥匙借用登记」。最后一页是空的。',3.6); }
       else { os('我：教师台上还留着上一节课的东西。烧杯里的水是温的。',3.4); }
-      if(R.floor===2&&!RT.labReagent){ RT.labReagent=1; addItem('goggles'); }
+      if(R.floor===2&&!RT.labReagent){
+        if(hasItem('goggles')) os('我：台上还有一副护目镜，我已经带了一副。',3.2);
+        else if(addItem('goggles')) RT.labReagent=1;
+      }
     }
   }
   if(rolled) cool[key]=facClock()+cd;
@@ -151,14 +154,14 @@ function sanActFor(R,hit){
 function doSanAct(key){
   var a=SAN_ACTS[key]; if(!a) return;
   S.actCool=S.actCool||{};
-  var clockNow=(S.day||1)*1440+S.tsec;
+  var clockNow=gameClock();
   if(S.actCool[key]&&clockNow<S.actCool[key]){
     os('我：刚做过。现在没那个心情。',2.4); return;
   }
   S.san=Math.min(100,S.san+a.san);
   var _before=S.tsec;
-  S.tsec=((S.tsec+a.min)%1440+1440)%1440;
-  S.actCool[key]=(S.day||1)*1440+S.tsec+a.cd;
+  advanceGameTime(a.min);
+  S.actCool[key]=gameClock()+a.cd;
   S.stam=Math.min(100,S.stam+25);
   if(key==='piano'){ try{ SFX.resume(); SFX.moonlight(); }catch(e){} }
   else if(key==='pc'){ try{ PCGAME.start(); }catch(e){} }
@@ -187,7 +190,7 @@ function timeSkipCard(mins,actName,tsec){
 }
 function nearRoster(){ return AN.active&&AN.id==='roster'&&AN.data&&!AN.data.done&&AN.data.rx!==undefined&&dist2(S.x,S.y,AN.data.rx,AN.data.ry)<80*80; }
 /* 被划掉的名单：以前没有任何办法"处理"它，16 秒后必扣 30 违规 */
-function useRoster(){
+function useRoster(timeoutMs){
   var d=AN.data;
   if(hasItem('pen')||hasItem('chalk')){
     d.done=true;
@@ -202,7 +205,7 @@ function useRoster(){
     {label:'用指甲把名字刻回去',fn:function(){ UI.closeChoice(); d.done=true; S.san=Math.max(0,S.san-10);
       os('我：指甲劈了。名字刻上去了，歪歪扭扭的，渗着一点红。',4.0); }},
     {label:'不管它',fn:function(){ UI.closeChoice(); }}
-  ]);
+  ],{timeoutMs:Number.isFinite(timeoutMs)?Math.max(1,timeoutMs):5000});
 }
 function tryInteract(){
   if(S.screen!=='play'||S.dead||PAUSE.on||UI.anyOpen()) return;
@@ -285,7 +288,10 @@ function tryInteract(){
   if(ch==='P'){ sitDown(); return; }
   if(ch==='d'||ch==='f'||ch==='R'){ searchContainer(hit.c,hit.r); return; }
   if(ch==='T'){
-    if(S.room==='teach1'){ addItem('chalk'); os('我：讲台上有一支红笔。',2.8); }
+    if(S.room==='teach1'){
+      if(hasItem('chalk')) os('我：讲台上有一支粉笔，我已经带了一支。',2.8);
+      else if(addItem('chalk')) os('我：讲台上有一支粉笔。',2.8);
+    }
     else os('我：讲台是空的。',2.2);
     return;
   }
@@ -353,9 +359,10 @@ function useBell(){
 function useAltar(){
   addClue('altar');
   if(!RT.altarCoin){
+    if(hasItem('coin')){ os('我：香炉底下压着一枚硬币。我已经带了一枚。',3.6); return; }
+    if(!addItem('coin')) return;
     RT.altarCoin=1;
     os('我：供桌上的饭还冒着气，筷子竖插在正中。照片上那张脸被剪掉了，校服是我们学校的。香炉底下压着一枚硬币。',5.6);
-    addItem('coin');
     return;
   }
   S.san=Math.max(0,S.san-2);

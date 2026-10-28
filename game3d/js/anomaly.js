@@ -106,7 +106,7 @@ function pickAnomaly(){
   for(i=0;i<AN_ID.length;i++){
     id=AN_ID[i];
     if(!anAllowed(id)) continue;
-    if(AN_COOL[id]&&AN.cool[id]!==undefined&&(S.tsec-AN.cool[id])<AN_COOL[id]) continue;
+    if(AN_COOL[id]&&AN.cool[id]!==undefined&&(gameClock()-AN.cool[id])<AN_COOL[id]) continue;
     pool.push(id);
   }
   if(!pool.length) return null;
@@ -156,12 +156,14 @@ function anInterval(){
   return Math.max(10,base);
 }
 function anScheduleNext(){
-  try{ AN.pre = pickAnomaly(); }catch(e){ AN.pre=null; }
+  if(!AN.preNext||!AN.pre){ try{ AN.pre = pickAnomaly(); }catch(e){ AN.pre=null; } }
   AN.next=anInterval();
   if(AN.preNext){ AN.next=AN.preNext; AN.preNext=0; }   /* 黑板上预告过的时间，要兑现 */
 }
 /* 只有"看起来就要命"的那几种会直接杀人；其它的按选择 / 表现扣 SAN */
 var AN_LETHAL={rain:1,rite:1,necker:1,moth:1,twin:1,exercise:1,cup:1};
+/* 难以提前避开的遭遇才发预警；其余异象仍可正常发生。 */
+var AN_WARN={rain:1,moth:1,cup:1};
 var AN_MSG={
   rain:'我：天一下子暗了。雨不是从云里落下来的——它从很高的地方垂下来，像有人在上面一桶一桶地倒。',
   moth:'我：灯下面聚了一团飞蛾。不对，不是一团。是一整面墙。它们在往我这边挪。',
@@ -189,10 +191,10 @@ var AN_MSG={
   cup:'我：头顶上叮叮当当地响。抬头——四楼的窗台上，一只紫色的保温杯在晃。'
 };
 function anStart(){
-  var id=null;
+  var id=null, planned=AN.pre;
   /* 进入考试后，之前预告的异象也必须受考试候选限制。 */
   var examRestricted=typeof examNow==='function'&&examNow();
-  if((S.diff==='easy'||AN.locked)&&AN.pre&&(!examRestricted||EXAM_AN[AN.pre])){
+  if((S.diff==='easy'||AN.locked||AN_WARN[AN.pre])&&AN.pre&&(!examRestricted||EXAM_AN[AN.pre])){
     if(anAllowed(AN.pre)) id=AN.pre;
     else if(AN.locked&&!AN.lockWait){ AN.lockWait=1; AN.next=4; return; }   /* 预报过的那个，等你走到它能出现的地方 */
   }
@@ -200,10 +202,12 @@ function anStart(){
   AN.pre=null;
   if(!id) id=pickAnomaly();
   if(!id){ anScheduleNext(); AN.next=Math.min(AN.next,6); return; }
+  /* 位置变化可能让新抽到的危险异象没有预警，先给它完整的预警时间。 */
+  if(AN_WARN[id]&&id!==planned){ AN.pre=id; AN.next=8; return; }
   AN.id=id; AN.t=0; AN.acc=0; AN.active=true; AN.data={}; AN.sub=0;
   RT.anHist=(RT.anHist||[]).concat(id).slice(-6); RT.anSeen=RT.anSeen||{}; RT.anSeen[id]=1;
   AN.lastBig=!AN_SMALL[id];
-  if(AN_COOL[id]!==undefined||id==='rain'||id==='moth'||id==='raindots') AN.cool[id]=S.tsec;
+  if(AN_COOL[id]!==undefined||id==='rain'||id==='moth'||id==='raindots') AN.cool[id]=gameClock();
   if(id==='rain'||id==='moth'||id==='raindots') AN.rained=true;
   os(AN_MSG[id]||'我：……',4.6);
   try{ SFX.anomaly&&SFX.anomaly(id); }catch(e){}
@@ -284,11 +288,16 @@ function anOn(id,silent){
   try{ if(HAS_FX[id]) anfxSpawn(id, srcX, srcY); }catch(e){}
   AN.rained = AN.rained || (id==='rain');
   if(id==='chalk'){
-    /* 黑板上写的是"下一次"的钟点：先把下一次的间隔掷出来，结束时照着兑现 */
-    AN.preNext=anInterval();
-    var mins=Math.round((16+AN.preNext)*rateAt(S.tsec)/60);
-    d.until=S.tsec+mins;
-    os('我：黑板上写着一个时间——'+fmtClock(d.until)+'。字迹和我的一模一样。',5);
+    var next=pickAnomaly();
+    if(AN_WARN[next]){
+      AN.pre=next; AN.locked=true; AN.preNext=anInterval();
+      var mins=Math.round((16+AN.preNext)*rateAt(S.tsec)/60);
+      d.until=S.tsec+mins;
+      os('我：黑板上写着一个时间——'+fmtClock(d.until)+'。字迹和我的一模一样。',5);
+    }else{
+      AN.pre=null; AN.preNext=0;
+      os('我：粉笔在黑板上写了几笔，又慢慢擦掉了。',5);
+    }
   }
   if(id==='turn'){ d.chosen=null; }
   if(id==='hand'){ d.chosen=null; }
@@ -332,6 +341,11 @@ function underRoof(){
   return false;
 }
 
+function anChoiceOptions(d){
+  var ms=Number.isFinite(d.choiceRemaining)?Math.max(1,d.choiceRemaining):5000;
+  delete d.choiceRemaining;
+  return {timeoutMs:ms};
+}
 function anTick(dt){
   if(!AN.active||AN.id===null) return;
   var id=AN.id, d=AN.data, hard=(S.diff==='hard');
@@ -361,8 +375,8 @@ function anTick(dt){
           UI.choice('背后有只手，拍了一下我的肩膀。它还搭在那儿。',[
             {label:'不回头',fn:function(){ d.chosen='no'; UI.closeChoice(); }},
             {label:'回头看',fn:function(){ d.chosen='yes'; UI.closeChoice(); }}
-          ]);
-        } else if(d.asked&&d.chosen===null&&AN.t>11){ d.chosen='no'; UI.closeChoice(); }
+          ],anChoiceOptions(d));
+        }
       }else if(d.chosen==='yes'){
         AN.acc+=dt;
         if(AN.acc>0.5) anHurt('我回头了。它的脸离我只有一寸——没有五官，只有一层湿透的皮。下一秒，什么都没有了。肩膀上还是凉的。',26,{quiet:1});
@@ -401,8 +415,8 @@ function anTick(dt){
           UI.choice('隔间底下伸来一只手。手心朝上，像在等什么。',[
             {label:'不动',fn:function(){ d.chosen='no'; UI.closeChoice(); }},
             {label:'把手放上去',fn:function(){ d.chosen='yes'; UI.closeChoice(); }}
-          ]);
-        } else if(d.asked&&d.chosen===null&&AN.t>11){ d.chosen='no'; UI.closeChoice(); }
+          ],anChoiceOptions(d));
+        }
       }else if(d.chosen==='yes'){
         var lost=null;
         if(S.bag.length){ lost=S.bag[Math.floor(Math.random()*S.bag.length)]; removeItem(lost); }
@@ -420,8 +434,8 @@ function anTick(dt){
           if(S.bag.indexOf('hw')>=0) opts.push({label:'把作业本递过去',fn:function(){ d.chosen='hw'; UI.closeChoice(); }});
           opts.push({label:'不出声',fn:function(){ d.chosen='quiet'; UI.closeChoice(); }});
           opts.push({label:'说出一个名字',fn:function(){ d.chosen='name'; UI.closeChoice(); }});
-          UI.choice('后桌：「你作业交了吗？」',opts);
-        } else if(d.asked&&d.chosen===null&&AN.t>15){ d.chosen='quiet'; UI.closeChoice(); }
+          UI.choice('后桌：「你作业交了吗？」',opts,anChoiceOptions(d));
+        }
       }else if(d.chosen==='hw'){
         S.san=Math.min(100,S.san+12); removeItem('hw'); os('我：后面那只手接过了作业本，翻了一页，又翻了一页。然后安静了。',3.6); anEnd();
       }else if(d.chosen==='name'){
@@ -472,8 +486,8 @@ function anTick(dt){
           UI.choice('最东边那扇门后面，冷得像冰柜。门缝里有东西在敲，很有节奏。',[
             {label:'把门拉开一条缝',fn:function(){ d.chosen='near'; UI.closeChoice(); }},
             {label:'转身就走',fn:function(){ d.chosen='away'; UI.closeChoice(); }}
-          ]);
-        } else if(d.asked&&d.chosen===null&&AN.t>11){ d.chosen='near'; UI.closeChoice(); }
+          ],anChoiceOptions(d));
+        }
       }else if(d.chosen==='near'){
         S.san=Math.min(100,S.san+14);
         os('我：里面挂着一排冻硬的校服，袖子在风里互相敲。最外面那件的胸口，绣着我的名字。……我反而不怕了。',5.4);
@@ -503,7 +517,7 @@ function anTick(dt){
       if(!inCanteen()){ AN.acc=Math.max(0,AN.acc-dt*0.5); }
       else { AN.acc+=dt; }
       if(AN.acc>(S.talent==='stomach'?17:9)){
-        S.tsec=((S.tsec+20)%1440+1440)%1440;
+        advanceGameTime(20);
         anHurt('我回过神来的时候，嘴里有东西。我不记得自己坐下过。面前的碗是空的，上面那张纸条写着我的名字。',22);
       }
       if(AN.active&&AN.t>24) anEnd();
