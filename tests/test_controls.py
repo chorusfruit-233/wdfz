@@ -606,8 +606,10 @@ class ControlsTest(unittest.TestCase):
     def test_search_takes_time_and_dev_toggle(self):
         page = self.page()
         page.evaluate("""doEnterRoom('teach1');running=false;SEARCH.on=true;S.bag=[];RT.deskUsed={};
-            var R=INTERIORS.teach1;S.x=R.ox+46.5*9;S.y=R.oy+3.5*9;Math.random=function(){return 0.30};
-            searchContainer(45,2);window.__before=S.bag.length;searchTick(0.5);window.__mid=S.bag.length;searchTick(0.4);""")
+            var R=INTERIORS.teach1,dc=-1,dr=-1;
+            for(var r=1;r<15&&dc<0;r++) for(var c=1;c<R.cols;c++) if(R.grid[r][c]==='d'&&!ncOccupied(c,r)){ dc=c; dr=r; break; }
+            S.x=R.ox+(dc+0.5)*9;S.y=R.oy+(dr+1.5)*9;Math.random=function(){return 0.30};
+            searchContainer(dc,dr);window.__before=S.bag.length;searchTick(0.5);window.__mid=S.bag.length;searchTick(0.4);""")
         self.assert_js(page, "__before===0&&__mid===0&&S.bag.length===1&&!SEARCH.job")
         page.evaluate("Dev.search()")
         self.assert_js(page, "!SEARCH.on")
@@ -635,11 +637,11 @@ class ControlsTest(unittest.TestCase):
         page = self.page()
         page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;
             var R=INTERIORS.teach1;S.x=R.ox+30.5*9;S.y=R.oy+18.5*9;S.ang=0;S.moving=false;
-            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+70;PAT.y=S.y;PAT.tx=PAT.x;PAT.ty=PAT.y;
-            for(var i=0;i<10;i++) patTick(0.1);""")
-        self.assert_js(page, "PAT.locked&&GLR.patrolRed>0")
+            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+70;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
+            for(var i=0;i<40&&!(PAT.locked&&GLR.patrolRed>0);i++) patTick(0.1);""")
+        self.assert_js(page, "PAT.locked&&GLR.patrolRed>0&&!S.dead")
         # 背对它、一动不动 2.5 秒：它走过去
-        page.evaluate("PAT.x=S.x+80;S.ang=Math.PI;for(var i=0;i<28;i++){S.moving=false;patTick(0.1);}")
+        page.evaluate("PAT.x=S.x+80;PAT.y=S.y;PAT.path=null;S.ang=Math.PI;for(var i=0;i<28;i++){S.moving=false;patTick(0.1);}")
         self.assert_js(page, "PAT.state==='idle'&&!S.dead")
         # 没被看见时躲进柜子：它不会锁定
         page.evaluate("""PAT.room='teach1';PAT.state='walk';PAT.locked=false;PAT.lock=0;PAT.walkT=0;
@@ -689,9 +691,9 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, "!S.dead&&!hasItem('elixir')")
         page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;S.bag=['seal'];
             var R=INTERIORS.teach1;S.x=R.ox+30.5*9;S.y=R.oy+18.5*9;
-            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+50;PAT.y=S.y;PAT.tx=PAT.x;PAT.ty=PAT.y;
-            for(var i=0;i<10;i++) patTick(0.1);""")
-        self.assert_js(page, "!hasItem('seal')&&PAT.state==='idle'&&!PAT.locked")
+            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+50;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
+            for(var i=0;i<40&&hasItem('seal');i++) patTick(0.1);""")
+        self.assert_js(page, "!hasItem('seal')&&PAT.state==='idle'&&!PAT.locked&&!S.dead")
 
     def test_held_items_show_in_hands(self):
         page = self.page()
