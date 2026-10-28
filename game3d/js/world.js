@@ -62,6 +62,7 @@ function addRoomLights(R){
 }
 function enterWorldRoom(roomId){
   clearWorldMesh();
+  if(MAT_RESET_PENDING){ MAT_RESET_PENDING=false; matReset(); }
   var R=INTERIORS[roomId];
   GLR.roomMesh=buildRoomGeometry(R);
   GLR.scene.add(GLR.roomMesh);
@@ -79,6 +80,7 @@ function enterWorldRoom(roomId){
 }
 function enterWorldOut(){
   clearWorldMesh();
+  if(MAT_RESET_PENDING){ MAT_RESET_PENDING=false; matReset(); }
   try{ ncClear(); }catch(e){}      /* 出去就没有同班同学了 */
   GLR.outMesh=buildOutdoorGeometry();
   GLR.outMesh.userData=GLR.outMesh.userData||{};
@@ -152,6 +154,14 @@ function solidAtInterior(R,wx,wy){
     }
   }
   if(R.spiral&&typeof spiralSolid==='function'&&spiralSolid(R,wx,wy)) return true;
+  if(R.foot){                        /* 房间建过模型：按模型真实占地（本格和周围一圈的家具都可能伸过来） */
+    var c0=Math.floor((wx-R.ox)/R.tw), r0=Math.floor((wy-R.oy)/R.th), dc, dr, F, fi;
+    for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++){
+      F=R.foot[(c0+dc)+','+(r0+dr)]; if(!F) continue;
+      for(fi=0;fi<F.length;fi++){ sb=F[fi]; if(lx>sb.x0&&lx<sb.x1&&lz>sb.z0&&lz<sb.z1) return true; }
+    }
+    return false;
+  }
   var f=FURN_SOLID[t];
   if(f!==undefined){
     var c=Math.floor((wx-R.ox)/R.tw), r=Math.floor((wy-R.oy)/R.th);
@@ -183,15 +193,72 @@ function solidAt(wx,wy){
   return solidAtOutdoor(wx,wy);
 }
 function canStand(wx,wy){
+  if(QP().exactCollide) return !circleHits(wx,wy,PRAD);
   if(solidAt(wx,wy)) return false;
   if(!solidAt(wx+PRAD,wy)) { if(!solidAt(wx-PRAD,wy)) { if(!solidAt(wx,wy+PRAD)) { if(!solidAt(wx,wy-PRAD)) return true; } } }
   return false;
 }
+/* ---- 超精细：圆形精确碰撞 ----
+   以前只查人中心和前后左右四个点，家具的角能从两个点中间斜着戳进人身体（最多 10 厘米）。
+   这里把人当成半径 PRAD 的圆，和附近每一块实心矩形（墙格、关着的门、家具真实占地、
+   楼梯井、室外的楼和道具）算最近距离；钟楼旋梯这种不是矩形的，再沿圆周取 12 个点。 */
+function rectHit(cx,cy,r,x0,x1,y0,y1){
+  var dx=Math.max(x0-cx,0,cx-x1), dy=Math.max(y0-cy,0,cy-y1);
+  return dx*dx+dy*dy<r*r;
+}
+function circleHits(wx,wy,r){
+  var i, q;
+  if(S.mode!=='in'){
+    var mx=wx/SC, my=wy/SC, mr=r/SC;
+    if(mx-mr<BOUND.x0+4||my-mr<BOUND.y0+4||mx+mr>BOUND.x1-4||my+mr>BOUND.y1-4) return true;
+    for(i=0;i<OBJ.length;i++){ q=OBJ[i]; if(q.k==='roof'&&rectHit(mx,my,mr,q.x,q.x+q.w,q.y,q.y+q.h)) return true; }
+    for(i=0;i<OUT_SOLID.length;i++){ q=OUT_SOLID[i]; if(rectHit(mx,my,mr,q.x0,q.x1,q.y0,q.y1)) return true; }
+    return false;
+  }
+  var R=INTERIORS[S.room]; if(!R) return true;
+  if(solidAtInterior(R,wx,wy)) return true;
+  var c0=Math.floor((wx-r-R.ox)/R.tw), c1=Math.floor((wx+r-R.ox)/R.tw), r0=Math.floor((wy-r-R.oy)/R.th), r1=Math.floor((wy+r-R.oy)/R.th), c, rr;
+  for(rr=r0;rr<=r1;rr++) for(c=c0;c<=c1;c++){
+    var x0=R.ox+c*R.tw, y0=R.oy+rr*R.th;
+    if(!rectHit(wx,wy,r,x0,x0+R.tw,y0,y0+R.th)) continue;
+    var t=(rr<0||c<0||rr>=R.rows||c>=R.cols)?'#':R.grid[rr][c];
+    if(isSolidCh(t)) return true;
+    if(t==='='&&solidAtInterior(R,x0+R.tw/2,y0+R.th/2)) return true;
+    if(!R.foot&&FURN_SOLID[t]!==undefined){ var f=FURN_SOLID[t]*0.5; if(rectHit(wx,wy,r,x0+R.tw*(0.5-f),x0+R.tw*(0.5+f),y0+R.th*(0.5-f),y0+R.th*(0.5+f))) return true; }
+  }
+  /* 米制的矩形：家具占地、楼梯井、大件 */
+  var lx=(wx-R.ox-R.w*0.5)*U2M, lz=(wy-R.oy-R.h*0.5)*U2M, lr=r*U2M, L=[R.stairExtra,R.propExtra], k, dc, dr;
+  for(k=0;k<L.length;k++) for(i=0;L[k]&&i<L[k].length;i++){ q=L[k][i]; if(rectHit(lx,lz,lr,q.x0,q.x1,q.z0,q.z1)) return true; }
+  if(R.foot){
+    var cc=Math.floor((wx-R.ox)/R.tw), cr=Math.floor((wy-R.oy)/R.th), F;
+    for(dr=-2;dr<=2;dr++) for(dc=-2;dc<=2;dc++){ F=R.foot[(cc+dc)+','+(cr+dr)]; if(F) for(i=0;i<F.length;i++){ q=F[i]; if(rectHit(lx,lz,lr,q.x0,q.x1,q.z0,q.z1)) return true; } }
+  }
+  if(R.spiral&&typeof spiralSolid==='function'){
+    for(i=0;i<12;i++){ var a=i/12*TAU; if(spiralSolid(R,wx+Math.cos(a)*r,wy+Math.sin(a)*r)) return true; }
+  }
+  return false;
+}
 function moveBy(dx,dy){
+  if(QP().exactCollide){ moveByExact(dx,dy); return; }
   var stuck=!canStand(S.x,S.y);
   var nx=S.x+dx, ny=S.y+dy;
   if(stuck||canStand(nx,S.y)) S.x=nx;
   if(stuck||canStand(S.x,ny)) S.y=ny;
+}
+/* 240 Hz 细分：一帧的位移切成几小步，每一步先整步试，撞了就分别沿 x、y 贴着滑，
+   跑得快、帧率低的时候也不会一步穿过薄的东西（门框、柜子边）；钟楼楼梯每一小步都更新层高 */
+function moveByExact(dx,dy){
+  var n=Math.max(1,Math.round(QP().physHz/60)), sx=dx/n, sy=dy/n, k;
+  var stuck=circleHits(S.x,S.y,PRAD);
+  for(k=0;k<n;k++){
+    if(stuck||!circleHits(S.x+sx,S.y+sy,PRAD)){ S.x+=sx; S.y+=sy; }
+    else{
+      if(!circleHits(S.x+sx,S.y,PRAD)) S.x+=sx;
+      else if(!circleHits(S.x,S.y+sy,PRAD)) S.y+=sy;
+    }
+    if(k<n-1&&typeof spiralUpdate==='function') spiralUpdate();
+    if(stuck) stuck=circleHits(S.x,S.y,PRAD);
+  }
 }
 
 function doorWorld(o){
@@ -243,7 +310,7 @@ function entryNear(R,chs){
 }
 function unstick(){
   try{
-    if(S.mode!=='in') return;
+    if(S.mode!=='in'||S.seated) return;              /* 坐在椅子上：椅子有碰撞，人本来就在它里面 */
     var R=INTERIORS[S.room]; if(!R) return;
     if(!solidAt(S.x,S.y)) return;
     var c=Math.floor((S.x-R.ox)/R.tw), r=Math.floor((S.y-R.oy)/R.th), rad, dr, dc;

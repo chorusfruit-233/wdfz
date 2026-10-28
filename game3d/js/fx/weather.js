@@ -15,7 +15,7 @@ function wxHere(st){ return S.mode===st.mode&&S.room===st.room; }
 
 /* ---------- 雨 ---------- */
 var WX_RAIN_AREA=18, WX_RAIN_H=9;
-function wxRainCount(){ return [500,900,1500][QUALITY|0]||900; }
+function wxRainCount(){ return QP().rain; }
 function wxRainSpawn(grp){
   var n=wxRainCount(), i;
   var sd=new Float32Array(n*3), pos=new Float32Array(n*6);
@@ -33,7 +33,7 @@ function wxRainSpawn(grp){
           splash:[],si:0,puddles:[],ripT:0,bolt:0,bolt2:-1,nextBolt:2.5+Math.random()*4};
   /* 落地水圈：一个池子轮着用 */
   var ring=new THREE.RingGeometry(0.035,0.06,12); ring.rotateX(-PI/2);
-  var ns=(QUALITY|0)===0?16:36;
+  var ns=QP().splash;
   for(i=0;i<ns;i++){
     var sm=new THREE.Mesh(ring,new THREE.MeshBasicMaterial({color:0xc8d6de,transparent:true,opacity:0,depthWrite:false,fog:true}));
     sm.visible=false; sm.userData.life=0; grp.add(sm); st.splash.push(sm);
@@ -41,7 +41,7 @@ function wxRainSpawn(grp){
   /* 积水：人身边几摊，慢慢变深 */
   var pg=new THREE.CircleGeometry(1,20); pg.rotateX(-PI/2);
   var c=anfxW2S(S.x,S.y);
-  for(i=0;i<(QUALITY|0?9:5);i++){
+  for(i=0;i<QP().puddles;i++){
     var a=Math.random()*PI*2, r=1.2+Math.random()*6;
     var pm=new THREE.Mesh(pg,new THREE.MeshBasicMaterial({color:0x1a242c,transparent:true,opacity:0,depthWrite:false,fog:true}));
     pm.scale.set(0.5+Math.random()*1.1,1,0.35+Math.random()*0.7);
@@ -114,7 +114,7 @@ function wxRainUpdate(dt){
 }
 
 /* ---------- 蛾群 ---------- */
-function wxMothCount(){ return [50,80,120][QUALITY|0]||80; }
+function wxMothCount(){ return QP().moths; }
 function wxMothSpawn(grp,wx,wy){
   var n=wxMothCount(), i;
   var ws=new THREE.Shape();                              /* 一片翅膀：前翅尖、后翅圆（往 +x 伸出去） */
@@ -133,7 +133,7 @@ function wxMothSpawn(grp,wx,wy){
              ph:Math.random()*PI*2, fl:26+Math.random()*16, h:1.3+Math.random()*1.4});
   }
   /* 翅膀上的粉 */
-  var nd=(QUALITY|0)===0?60:140, dp=new Float32Array(nd*3), dl=new Float32Array(nd);
+  var nd=QP().dust, dp=new Float32Array(nd*3), dl=new Float32Array(nd);
   var dg=new THREE.BufferGeometry(); dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
   var dust=new THREE.Points(dg,new THREE.PointsMaterial({color:0x303030,size:0.012,transparent:true,opacity:0.65,depthWrite:false,fog:true}));
   dust.frustumCulled=false; grp.add(dust);

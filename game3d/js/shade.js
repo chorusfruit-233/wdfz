@@ -10,7 +10,7 @@
 var SHADE={shadows:false,shaftMat:null,shaftGrp:null,pools:[],poolTex:null,shaftTex:null};
 
 /* ---------- 实时阴影 ---------- */
-function shadeWantShadows(){ return (QUALITY|0)>=2; }
+function shadeWantShadows(){ return QP().shadows; }
 function shadeApplyQuality(){
   if(!GLR.renderer) return;
   var on=shadeWantShadows();
@@ -24,7 +24,8 @@ function shadeApplyQuality(){
   var m=GLR.moon;
   m.castShadow=on;
   if(on){
-    m.shadow.mapSize.set(2048,2048);
+    m.shadow.mapSize.set(QP().shadowMap,QP().shadowMap);
+    if(m.shadow.map){ m.shadow.map.dispose(); m.shadow.map=null; }
     var sc=m.shadow.camera; sc.left=-30; sc.right=30; sc.top=30; sc.bottom=-30; sc.near=1; sc.far=90;
     sc.updateProjectionMatrix();
     m.shadow.bias=-0.0006; m.shadow.normalBias=0.04;
@@ -79,7 +80,7 @@ var SHAFT_ACC=null;            /* buildRoomGeometry 期间收集窗户：{x,z,nx
 function shaftNote(x,z,nx,nz,w,y0,y1){ if(SHAFT_ACC) SHAFT_ACC.push({x:x,z:z,nx:nx,nz:nz,w:w,y0:y0,y1:y1}); }
 function shadeBuildRoom(R){
   shadeClearRoom();
-  if((QUALITY|0)<1||!R||!R.shafts||!R.shafts.length) return;
+  if(!QP().shafts||!R||!R.shafts||!R.shafts.length) return;
   if(!SHADE.shaftMat) SHADE.shaftMat=new THREE.MeshBasicMaterial({map:shadeTex('shaft'),color:0xfff1d6,transparent:true,opacity:0,
     blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:true});
   var grp=new THREE.Group(), i, w;

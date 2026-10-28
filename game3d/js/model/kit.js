@@ -13,7 +13,9 @@ function shadeHex(col,s){
   var b=Math.min(255,Math.max(0,(col&255)*s))|0;
   return (r<<16)|(g<<8)|b;
 }
-function lodLow(){ return QUALITY===0; }
+function lodLow(){ return QP().lodLow; }
+/* 圆柱、杆、椭球的分段数按档位缩放：流畅 0.6 倍、超精细 1.6 倍 */
+function lodSeg(seg,min){ return Math.max(min||4,Math.round(seg*QP().segMul)); }
 
 var UVTILE=2.4;
 function GeoBuilder(uv,K){
@@ -107,7 +109,7 @@ GeoBuilder.prototype.bevel=function(x,y,z,sx,sy,sz,col,shade,r){
 };
 /* 竖直的圆柱 / 圆台（y 为底面中心） */
 GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
-  seg=Math.max(lodLow()?4:5,lodLow()?Math.ceil(seg*0.6):seg);
+  seg=lodSeg(seg,lodLow()?4:5);
   var rgb=this._rgb(col,shade), k, a0, a1;
   var slope=(rb-rt)/h, nl=Math.sqrt(1+slope*slope);
   for(k=0;k<seg;k++){
@@ -122,7 +124,7 @@ GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
 };
 /* 两点之间的杆（任意方向），r0、r1 两端半径 */
 GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
-  seg=Math.max(4,lodLow()?Math.ceil(seg*0.6):seg);
+  seg=lodSeg(seg,4);
   var dx=x1-x0, dy=y1-y0, dz=z1-z0, L=Math.sqrt(dx*dx+dy*dy+dz*dz)||1e-6;
   var ax=dx/L, ay=dy/L, az=dz/L;
   var ux,uy,uz;                                  /* 找一根垂直的轴 */
@@ -144,7 +146,7 @@ GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
 };
 /* 低多边形椭球：jit>0 时每个顶点随机抖一下（树冠、灌木），面是平的 */
 GeoBuilder.prototype.blob=function(x,y,z,rx,ry,rz,col,shade,seg,jit,seed){
-  seg=seg||(lodLow()?5:7); var rings=Math.max(3,Math.round(seg*0.6)), rgb=this._rgb(col,shade);
+  seg=lodSeg(seg||7,5); var rings=Math.max(3,Math.round(seg*0.6)), rgb=this._rgb(col,shade);
   var V=[], i, j, sd=seed||1;
   for(j=0;j<=rings;j++){
     var row=[], ph=j/rings*Math.PI;
@@ -194,11 +196,25 @@ function Kit(){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; }
 Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder(matUV(key),this); return this.B[key]; };
 Kit.prototype.frame=function(x,z,rot,y){ this.T.x=x||0; this.T.z=z||0; this.T.y=y||0; this.T.c=Math.cos(rot||0); this.T.s=Math.sin(rot||0); return this; };
 Kit.prototype.unframe=function(){ return this.frame(0,0,0,0); };
-Kit.prototype.box=function(m,x,y,z,sx,sy,sz,col,sh){ this.g(m).box(x,y,z,sx,sy,sz,col,sh); };
-Kit.prototype.bevel=function(m,x,y,z,sx,sy,sz,col,sh,r){ this.g(m).bevel(x,y,z,sx,sy,sz,col,sh,r); };
-Kit.prototype.cyl=function(m,x,y,z,rb,rt,h,seg,col,sh,caps){ this.g(m).cyl(x,y,z,rb,rt,h,seg,col,sh,caps); };
-Kit.prototype.rod=function(m,x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh){ this.g(m).rod(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh); };
-Kit.prototype.blob=function(m,x,y,z,rx,ry,rz,col,sh,seg,jit,seed){ this.g(m).blob(x,y,z,rx,ry,rz,col,sh,seg,jit,seed); };
+/* 占地记录：cap 不为空时，每个图元在人身高范围（0.10–1.85 米）内的水平外包矩形记进去，
+   房间生成拿它当家具的碰撞（room.js），以前碰撞是每种字符一个固定比例的方块，和模型对不上 */
+var CAP_Y0=0.10, CAP_Y1=1.85;
+Kit.prototype._cap=function(b,v0,m){
+  if(!this.cap||m==='decal'||b.v<=v0) return;
+  var P=b.p, i, x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
+  for(i=v0*3;i<P.length;i+=3){
+    if(P[i]<x0) x0=P[i]; if(P[i]>x1) x1=P[i];
+    if(P[i+1]<y0) y0=P[i+1]; if(P[i+1]>y1) y1=P[i+1];
+    if(P[i+2]<z0) z0=P[i+2]; if(P[i+2]>z1) z1=P[i+2];
+  }
+  if(y1<CAP_Y0||y0>CAP_Y1) return;
+  this.cap.push({x0:x0,x1:x1,z0:z0,z1:z1});
+};
+Kit.prototype.box=function(m,x,y,z,sx,sy,sz,col,sh){ var b=this.g(m), v=b.v; b.box(x,y,z,sx,sy,sz,col,sh); this._cap(b,v,m); };
+Kit.prototype.bevel=function(m,x,y,z,sx,sy,sz,col,sh,r){ var b=this.g(m), v=b.v; b.bevel(x,y,z,sx,sy,sz,col,sh,r); this._cap(b,v,m); };
+Kit.prototype.cyl=function(m,x,y,z,rb,rt,h,seg,col,sh,caps){ var b=this.g(m), v=b.v; b.cyl(x,y,z,rb,rt,h,seg,col,sh,caps); this._cap(b,v,m); };
+Kit.prototype.rod=function(m,x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh){ var b=this.g(m), v=b.v; b.rod(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh); this._cap(b,v,m); };
+Kit.prototype.blob=function(m,x,y,z,rx,ry,rz,col,sh,seg,jit,seed){ var b=this.g(m), v=b.v; b.blob(x,y,z,rx,ry,rz,col,sh,seg,jit,seed); this._cap(b,v,m); };
 Kit.prototype.build=function(group){
   var grp=group||new THREE.Group(), k;
   for(k in this.B){

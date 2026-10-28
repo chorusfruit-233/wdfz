@@ -21,17 +21,17 @@ var FIG_SPEC={
   sit:    {leg:0.44, torso:0.58, arm:0.62, head:0.21, w:0.36, neck:0.07, thin:1.00}
 };
 function figGeo(kind){
-  var key=kind+'|'+(QUALITY===0?0:1);
+  var key=kind+'|'+QP().figDetail;
   if(FIG_GEO[key]) return FIG_GEO[key];
   var sp=FIG_SPEC[kind]||FIG_SPEC.tall, K=new Kit(), m='dark', c=0xffffff, t=sp.thin;
   var sit=(kind==='sit');
-  var hipY=sit?0.47:sp.leg, sh=hipY+sp.torso, hx=sp.w/2;
+  var hipY=sit?0.535:sp.leg, sh=hipY+sp.torso, hx=sp.w/2;     /* 坐姿：大腿压在 0.46 米的椅面上（以前 0.47，大腿下半截埋进椅面） */
   /* 腿 */
   var s;
   for(s=-1;s<=1;s+=2){
     var lx=s*0.095*t;
     if(sit){
-      K.rod(m,lx,hipY,-0.02, lx,hipY+0.02,0.40, 0.075,0.062,7,c);        /* 大腿往前平伸 */
+      K.rod(m,lx,hipY,-0.02, lx,hipY+0.02,0.40, 0.07,0.06,7,c);          /* 大腿往前平伸，膝盖在桌斗底下 */
       K.rod(m,lx,hipY+0.02,0.40, lx*1.05,0.08,0.44, 0.058,0.046,7,c);   /* 小腿垂下 */
       K.bevel(m,lx*1.05,0.045,0.50,0.11,0.09,0.25,c,1,0.03);
     }else{

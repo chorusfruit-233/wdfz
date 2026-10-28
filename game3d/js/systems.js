@@ -227,6 +227,11 @@ function useLeave(){
 
 var ROAM_LIT_NEED=1.6, ROAM_REACH=26, ROAM_CAR=200;
 var ROAM={on:false,x:0,y:0,cd:0,seen:0,litAcc:0,stage:'approach',waitT:0,lureTold:0};
+/* 车库里那个人有身体：中心和四周 0.28 米都不能在实心里（以前只看脚下一个点，半个身子能进车里） */
+function roamBlocked(R,x,y){
+  var r=2.5;
+  return solidAtInterior(R,x,y)||solidAtInterior(R,x+r,y)||solidAtInterior(R,x-r,y)||solidAtInterior(R,x,y+r)||solidAtInterior(R,x,y-r);
+}
 function dangerAt(){
   if(S.mode==='in'){
     if(S.room==='garage1') return 'garage';
@@ -295,7 +300,9 @@ function roamTick(dt){
   if(lit){
     ROAM.cd=Math.max(ROAM.cd,0.55);
     var bdx=ROAM.x-S.x, bdy=ROAM.y-S.y, bd=Math.hypot(bdx,bdy)||1;
-    ROAM.x+=bdx/bd*13*dt; ROAM.y+=bdy/bd*13*dt;
+    var rx=ROAM.x+bdx/bd*13*dt, ry=ROAM.y+bdy/bd*13*dt;          /* 被光照着往后退：也不能退进车里、墙里 */
+    if(!roamBlocked(R,rx,ROAM.y)) ROAM.x=rx;
+    if(!roamBlocked(R,ROAM.x,ry)) ROAM.y=ry;
   }else if(ROAM.cd<=0){
     /* 以前每 1.15–2.45 秒挪一步，平均比走路还慢，跑起来就能甩开，直接冲过去开车。
        现在近了、或者听见你在跑，就挪得比你跑得还快：只能拿光把它定住。 */
@@ -305,8 +312,8 @@ function roamTick(dt){
     var tx=lure?lure.x:S.x, ty=lure?lure.y:S.y;
     var dx=tx-ROAM.x, dy=ty-ROAM.y, dl=Math.hypot(dx,dy)||1, step=Math.min(34,dl);
     var nx=ROAM.x+dx/dl*step, ny=ROAM.y+dy/dl*step;
-    if(!solidAtInterior(R,nx,ROAM.y)) ROAM.x=nx;
-    if(!solidAtInterior(R,ROAM.x,ny)) ROAM.y=ny;
+    if(!roamBlocked(R,nx,ROAM.y)) ROAM.x=nx;
+    if(!roamBlocked(R,ROAM.x,ny)) ROAM.y=ny;
     if(lure&&!ROAM.lureTold){ ROAM.lureTold=1; os('我：那东西停了一下，脚步朝硬币落地的方向去了。',3.6); }
   }
   var ddx=S.x-ROAM.x, ddy=S.y-ROAM.y;

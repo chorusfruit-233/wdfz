@@ -138,45 +138,117 @@ function patWalkable(R,c,r){
   if(t==='=') return doorIsOpen(R,R.ox+(c+0.5)*R.tw,R.oy+(r+0.5)*R.th);
   return false;
 }
+/* ---- 细网格寻路 ----
+   以前在 1 米的格子上走格子中心，身体（半径 0.28 米）会擦过办公椅、机房的桌椅。
+   现在每格切成 4×4 个 0.25 米的小格：墙、楼梯、家具的真实占地（R.foot）往外胀一个身体半径，
+   胀进去的小格不能走；门按开没开实时判断。路径找到以后拉直，拐角不会切进家具。 */
+var PAT_NAV_N=4, PAT_BODY=0.30;
+function patNav(R){
+  if(R.patNav&&R.patNav.foot===R.foot) return R.patNav;
+  var N=PAT_NAV_N, W=R.cols*N, H=R.rows*N, cm=R.tw*U2M, blk=new Uint8Array(W*H), door=new Uint8Array(W*H);
+  var hw=R.cols*cm/2, hh=R.rows*cm/2, r=PAT_BODY, c, rr;
+  function stamp(x0,x1,z0,z1){          /* 房间左上角为原点的米 */
+    var i0=Math.max(0,Math.floor((x0-r)/cm*N-0.5)), i1=Math.min(W-1,Math.ceil((x1+r)/cm*N-0.5));
+    var j0=Math.max(0,Math.floor((z0-r)/cm*N-0.5)), j1=Math.min(H-1,Math.ceil((z1+r)/cm*N-0.5)), i, j;
+    for(j=j0;j<=j1;j++) for(i=i0;i<=i1;i++){
+      var mx=(i+0.5)*cm/N, mz=(j+0.5)*cm/N;
+      if(mx>x0-r&&mx<x1+r&&mz>z0-r&&mz<z1+r) blk[i+j*W]=1;
+    }
+  }
+  for(rr=0;rr<R.rows;rr++) for(c=0;c<R.cols;c++){
+    var t=R.grid[rr][c];
+    if(t==='='){ var a, b; for(b=0;b<N;b++) for(a=0;a<N;a++) door[c*N+a+(rr*N+b)*W]=1; continue; }
+    if(isSolidCh(t)||t==='O') stamp(c*cm,(c+1)*cm,rr*cm,(rr+1)*cm);
+    else if(!R.foot&&FURN_SOLID[t]!==undefined&&t!=='P'){ var f=FURN_SOLID[t]; stamp((c+0.5-f/2)*cm,(c+0.5+f/2)*cm,(rr+0.5-f/2)*cm,(rr+0.5+f/2)*cm); }
+  }
+  function stampM(L){ (L||[]).forEach(function(q){ stamp(q.x0+hw,q.x1+hw,q.z0+hh,q.z1+hh); }); }
+  if(R.foot) for(var k in R.foot) stampM(R.foot[k]);
+  stampM(R.propExtra); stampM(R.stairExtra);
+  R.patNav={W:W,H:H,blk:blk,door:door,foot:R.foot,cm:cm};
+  return R.patNav;
+}
+function patNodeOf(R,wx,wy){ var N=PAT_NAV_N; return [Math.floor((wx-R.ox)/R.tw*N),Math.floor((wy-R.oy)/R.th*N)]; }
+function patNodeW(R,i,j){ var N=PAT_NAV_N; return {x:R.ox+(i+0.5)*R.tw/N, y:R.oy+(j+0.5)*R.th/N}; }
+function patFree(R,nv,i,j){
+  if(i<0||j<0||i>=nv.W||j>=nv.H) return false;
+  var k=i+j*nv.W;
+  if(nv.blk[k]) return false;
+  if(nv.door[k]){ var p=patNodeW(R,i,j); return doorIsOpen(R,p.x,p.y); }
+  return true;
+}
+/* 离 (i,j) 最近的能走的小格（站在家具边上、柜门前时用） */
+function patSnap(R,nv,i,j){
+  if(patFree(R,nv,i,j)) return [i,j];
+  var rad, a, b, best=null, bd=1e9;
+  for(rad=1;rad<=6&&!best;rad++){
+    for(b=-rad;b<=rad;b++) for(a=-rad;a<=rad;a++){
+      if(Math.max(Math.abs(a),Math.abs(b))!==rad||!patFree(R,nv,i+a,j+b)) continue;
+      var d=a*a+b*b; if(d<bd){ bd=d; best=[i+a,j+b]; }
+    }
+  }
+  return best;
+}
+/* 两个小格之间直线走过去全是能走的 */
+function patClear(R,nv,a,b){
+  var n=Math.ceil(Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]))*2), k;
+  for(k=1;k<n;k++){
+    var u=k/n, i=Math.round(a[0]+(b[0]-a[0])*u), j=Math.round(a[1]+(b[1]-a[1])*u);
+    if(!patFree(R,nv,i,j)) return false;
+  }
+  return true;
+}
 function patPath(tx,ty){
-  var R=INTERIORS[PAT.room];
-  var c0=Math.floor((PAT.x-R.ox)/R.tw), r0=Math.floor((PAT.y-R.oy)/R.th);
-  var c1=Math.floor((tx-R.ox)/R.tw), r1=Math.floor((ty-R.oy)/R.th);
-  if(!patWalkable(R,c1,r1)) return null;
-  var W=R.cols, prev={}, q=[c0+r0*W], head=0, k=c0+r0*W, D=[[1,0],[-1,0],[0,1],[0,-1]];
-  prev[k]=-1;
+  var R=INTERIORS[PAT.room], nv=patNav(R), W=nv.W;
+  var s0=patNodeOf(R,PAT.x,PAT.y), t0=patNodeOf(R,tx,ty);
+  var s=patSnap(R,nv,s0[0],s0[1]), t=patSnap(R,nv,t0[0],t0[1]);
+  if(!s||!t) return null;
+  var sk=s[0]+s[1]*W, tk=t[0]+t[1]*W, prev=new Int32Array(nv.W*nv.H).fill(-2), q=[sk], head=0, k;
+  var D=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  prev[sk]=-1;
   while(head<q.length){
-    k=q[head++];
-    if(k===c1+r1*W) break;
-    var c=k%W, r=(k-c)/W;
-    for(var i=0;i<4;i++){
-      var nc=c+D[i][0], nr=r+D[i][1], nk=nc+nr*W;
-      if(prev[nk]!==undefined||!patWalkable(R,nc,nr)) continue;
+    k=q[head++]; if(k===tk) break;
+    var i=k%W, j=(k-i)/W, d;
+    for(d=0;d<8;d++){
+      var ni=i+D[d][0], nj=j+D[d][1], nk=ni+nj*W;
+      if(ni<0||nj<0||ni>=W||nj>=nv.H||prev[nk]!==-2||!patFree(R,nv,ni,nj)) continue;
+      if(d>=4&&(!patFree(R,nv,i+D[d][0],j)||!patFree(R,nv,i,j+D[d][1]))) continue;   /* 斜着走不贴角 */
       prev[nk]=k; q.push(nk);
     }
   }
-  if(prev[c1+r1*W]===undefined) return null;
-  var path=[]; k=c1+r1*W;
-  while(k!==-1&&k!==c0+r0*W){ var cc=k%W; path.unshift({x:R.ox+(cc+0.5)*R.tw,y:R.oy+((k-cc)/W+0.5)*R.th}); k=prev[k]; }
+  if(prev[tk]===-2) return null;
+  var nodes=[]; k=tk;
+  while(k!==-1){ nodes.unshift([k%W,(k-k%W)/W]); k=prev[k]; }
+  /* 拉直：从当前点能直线走到的最远一个就跳过去 */
+  var path=[], cur=0;
+  while(cur<nodes.length-1){
+    var nx=nodes.length-1;
+    while(nx>cur+1&&!patClear(R,nv,nodes[cur],nodes[nx])) nx--;
+    path.push(patNodeW(R,nodes[nx][0],nodes[nx][1])); cur=nx;
+  }
+  if(t0[0]===t[0]&&t0[1]===t[1]&&path.length) path[path.length-1]={x:tx,y:ty};
   return path;
 }
-/* 出现的位置：从你脚下能走到的格子里，挑远的那一批之一 */
+/* 内部用：某个世界坐标点（按细网格）能不能走 */
+function patNavFree(R,wx,wy){ var nv=patNav(R), n=patNodeOf(R,wx,wy); return patFree(R,nv,n[0],n[1]); }
+/* 出现的位置：从你脚下能走到的地方里，挑远的那一批之一 */
 function patFarSpot(){
-  var R=INTERIORS[PAT.room], W=R.cols, D=[[1,0],[-1,0],[0,1],[0,-1]];
-  var c0=Math.floor((S.x-R.ox)/R.tw), r0=Math.floor((S.y-R.oy)/R.th), seen={}, q=[[c0,r0,0]], head=0, out=[];
-  seen[c0+r0*W]=1;
+  var R=INTERIORS[PAT.room], nv=patNav(R), W=nv.W, D=[[1,0],[-1,0],[0,1],[0,-1]];
+  var p0=patNodeOf(R,S.x,S.y), st=patSnap(R,nv,p0[0],p0[1]);
+  if(!st) return null;
+  var dist=new Int32Array(W*nv.H).fill(-1), q=[st[0]+st[1]*W], head=0, out=[];
+  dist[q[0]]=0;
   while(head<q.length){
-    var e=q[head++]; out.push(e);
-    for(var i=0;i<4;i++){
-      var nc=e[0]+D[i][0], nr=e[1]+D[i][1], nk=nc+nr*W;
-      if(seen[nk]||!patWalkable(R,nc,nr)) continue;
-      seen[nk]=1; q.push([nc,nr,e[2]+1]);
+    var k=q[head++], i=k%W, j=(k-i)/W; out.push(k);
+    for(var d=0;d<4;d++){
+      var ni=i+D[d][0], nj=j+D[d][1], nk=ni+nj*W;
+      if(ni<0||nj<0||ni>=W||nj>=nv.H||dist[nk]>=0||!patFree(R,nv,ni,nj)) continue;
+      dist[nk]=dist[k]+1; q.push(nk);
     }
   }
   if(out.length<2) return null;
-  out.sort(function(a,b){ return b[2]-a[2]; });
-  var pick=out[Math.floor(Math.random()*Math.max(1,Math.floor(out.length*0.15)))];
-  return {x:R.ox+(pick[0]+0.5)*R.tw, y:R.oy+(pick[1]+0.5)*R.th};
+  out.sort(function(a,b){ return dist[b]-dist[a]; });
+  var pk=out[Math.floor(Math.random()*Math.max(1,Math.floor(out.length*0.15)))];
+  return patNodeW(R,pk%W,(pk-pk%W)/W);
 }
 function patPickSpot(far){
   if(far&&PAT.room!=='out') return patFarSpot();
@@ -192,7 +264,7 @@ function patPickSpot(far){
       if(!far&&Math.random()<0.6){               /* 一多半时候往你附近转 */
         c=Math.floor((S.x-R.ox)/R.tw+rnd(-9,9)); r2=Math.floor((S.y-R.oy)/R.th+rnd(-5,5));
       }else{ c=Math.floor(rnd(1,R.cols-1)); r2=Math.floor(rnd(1,R.rows-1)); }
-      if(!patWalkable(R,c,r2)) continue;
+      if(!patWalkable(R,c,r2)||!patNavFree(R,R.ox+(c+0.5)*R.tw,R.oy+(r2+0.5)*R.th)) continue;
       if(!far&&!patPath(R.ox+(c+0.5)*R.tw,R.oy+(r2+0.5)*R.th)) continue;
       x=R.ox+(c+0.5)*R.tw; y=R.oy+(r2+0.5)*R.th;
     }
@@ -298,7 +370,7 @@ function patTick(dt){
   }else{ tx=PAT.tx; ty=PAT.ty; }
   var dx=tx-PAT.x, dy=ty-PAT.y, dl=Math.hypot(dx,dy)||1, st=Math.min(dl,sp*dt);
   var mvx=dx/dl*st, mvy=dy/dl*st, moved=false;
-  if(PAT.room!=='out'){ PAT.x+=mvx; PAT.y+=mvy; moved=true; }        /* 室内沿格子中心走，不会穿墙 */
+  if(PAT.room!=='out'){ PAT.x+=mvx; PAT.y+=mvy; moved=true; }        /* 室内沿细网格拉直的路径走，不穿墙、不擦家具 */
   else{
     if(!patSolid(PAT.x+mvx,PAT.y)){ PAT.x+=mvx; moved=true; }
     if(!patSolid(PAT.x,PAT.y+mvy)){ PAT.y+=mvy; moved=true; }

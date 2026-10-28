@@ -98,19 +98,29 @@ function render(dt){
   u.uExpo.value=(GLR.dayExpo===undefined)?1:GLR.dayExpo;
   u.uRed.value=GLR.patrolRed||0;
   u.uSan.value=clamp(S.san/100,0,1);
-  if(typeof GLRTEST!=='undefined'&&GLRTEST.nopost){
-    GLR.renderer.setRenderTarget(null);
-    GLR.renderer.render(GLR.scene,GLR.cam);
-    updateHUD();
-    return;
-  }
-  GLR.renderer.setRenderTarget(GLR.rt);
-  GLR.renderer.clear();
-  GLR.renderer.render(GLR.scene,GLR.cam);
-  GLR.renderer.setRenderTarget(null);
-  GLR.renderer.render(GLR.postScene,GLR.postCam);
+  GFX.frame(dt);                                  /* 用哪个引擎画由渲染层决定（gfx/） */
+  fpsWatch(dt);
   updateHUD();
   try{ drawMini(dt); }catch(e){}
+}
+/* 性能保护：玩的时候帧率连续 8 秒低于这一档的下限，就问要不要降一档（只问一次，可以选「别再问」） */
+var FPSW={acc:0,n:0,low:0,asked:false};
+function fpsWatch(dt){
+  if(S.screen!=='play'||!running||UI.anyOpen()||PAUSE.on||!SET.fpsAsk) { FPSW.acc=0; FPSW.n=0; return; }
+  var floor=QP().fpsFloor; if(!floor||QUALITY===0||FPSW.asked) return;
+  FPSW.acc+=dtG||dt; FPSW.n++;
+  if(FPSW.acc<2) return;
+  var fps=FPSW.n/FPSW.acc; FPSW.acc=0; FPSW.n=0;
+  FPSW.low=fps<floor?FPSW.low+2:Math.max(0,FPSW.low-2);
+  if(FPSW.low<8) return;
+  FPSW.asked=true;
+  var down=QPROF[QUALITY-1];
+  try{ releaseMouseLook&&releaseMouseLook(); }catch(e){}
+  UI.choice('画面有点卡（大约每秒 '+Math.round(fps)+' 帧）。要从「'+QP().name+'」降到「'+down.name+'」吗？',[
+    {label:'降到「'+down.name+'」',fn:function(){ Settings.q(QUALITY-1); }},
+    {label:'先不用',fn:function(){}},
+    {label:'别再问了',fn:function(){ SET.fpsAsk=0; saveSet(); }}
+  ]);
 }
 var miniT=0;
 function drawMini(dt){
@@ -558,6 +568,7 @@ function boot(){
   buildInteriorData();
   buildRoomBounds();
   initGL();
+  GFX.select();
   applyBrightness();
   try{ shadeApplyQuality(); }catch(e){}
   initInput();

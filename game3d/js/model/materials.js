@@ -40,7 +40,7 @@ var MAT_DEF={
 };
 var MATS={}, TEXS={};
 
-function texSize(){ return (QUALITY===0)?256:512; }
+function texSize(){ return QP().texSize; }
 function makeMatTex(kind){
   var SZ=texSize(), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
   var c=cv.getContext('2d'); if(!c) return null;
@@ -194,5 +194,13 @@ function matOf(key){
   m.userData.shared=true;
   MATS[key]=m;
   return m;
+}
+/* 画质换了贴图分辨率：丢掉缓存的贴图和材质，下次建模时重新生成 */
+var MAT_RESET_PENDING=false;
+function matReset(){
+  var k;
+  for(k in TEXS) if(TEXS[k]&&TEXS[k].dispose) TEXS[k].dispose();
+  for(k in MATS) if(MATS[k]&&MATS[k].dispose) MATS[k].dispose();
+  TEXS={}; MATS={};
 }
 function matUV(key){ var d=MAT_DEF[key]; return d?d[1]:2.4; }

@@ -229,10 +229,10 @@ function buildInteriorData(){
   }
   for(mr=4;mr<=10;mr+=2){ for(mc=2;mc<=15;mc+=3){ if(gl5[mr][mc]==='.') gl5[mr][mc]='P'; } }
   var ga3=INTERIORS['admin3'].grid;
-  var a3r=Math.floor(ga3.length*0.5);
-  var a3c=Math.floor(ga3[0].length*0.5);
-  if(ga3[a3r+1][a3c]==='d') a3c++;                 /* 正下方工位的椅子朝北摆，会插进终端机：挪到两把椅子中间 */
-  ga3[a3r][a3c]='D';
+  /* 数据终端：以前塞在两排工位中间（a3r 行），前后的工位和椅子把它夹住，椅子还插进机箱里；
+     挪到南边走廊靠墙，屏幕朝北对着走廊 */
+  var a3c=Math.floor(ga3[0].length*0.5)+1;
+  ga3[ga3.length-2][a3c]='D';
   mkFloor('canteen1','食堂 1F','canteen',1,canteenFloor());
   /* 北宿舍 dorm1–3、南宿舍 dorm4–6，各自 1–3 层。以前南宿舍一楼的 floor 是 4，出口提示"窗子封死了"，出不去 */
   for(f=1;f<=6;f++){

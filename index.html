@@ -83,7 +83,10 @@
   <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
     <button onclick="Settings.sub(0)">短</button><button onclick="Settings.sub(1)">标准</button><button onclick="Settings.sub(2)">长</button></div></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
-    <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button></div></div>
+    <button onclick="Settings.q(0)">流畅</button><button onclick="Settings.q(1)">均衡</button><button onclick="Settings.q(2)">精细</button><button onclick="Settings.q(3)">超精细</button></div></div>
+  <div class="srow"><span>渲染引擎</span><div class="seg" id="sEng">
+    <button onclick="Settings.engine(0)">自动</button><button onclick="Settings.engine(1)">Three.js</button><button onclick="Settings.engine(2)">Babylon.js</button></div></div>
+  <div class="srow snote"><span>正在使用</span><b id="sEngV">Three.js</b></div>
   <div class="srow"><span>镜头晃动</span><div class="seg" id="sShake">
     <button onclick="Settings.shake(0)">开</button><button onclick="Settings.shake(1)">关</button></div></div>
   <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
@@ -115,7 +118,7 @@
     <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
     <div class="mctl">
       <label>画面 <select id="mq" onchange="Settings.q(+this.value)">
-        <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option></select></label>
+        <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option></select></label>
       <label class="mbr">亮度 <input type="range" id="mb" min="60" max="150" value="100" oninput="Settings.bright(this.value)"></label>
       <a class="mwiki" href="wiki/index.html">游戏 Wiki <span aria-hidden="true">↗</span></a>
     </div>
@@ -163,49 +166,6 @@
   <button type="button" class="tbtn" id="tPause" aria-label="暂停"></button></div>
 </div>
 
-<script src="game3d/lib/three.min.js"></script>
-<script src="game3d/js/core.js"></script>
-<script src="game3d/js/map.js"></script>
-<script src="game3d/js/render.js"></script>
-<script src="game3d/js/model/materials.js"></script>
-<script src="game3d/js/model/kit.js"></script>
-<script src="game3d/js/model/figure.js"></script>
-<script src="game3d/js/model/furniture.js"></script>
-<script src="game3d/js/model/room.js"></script>
-<script src="game3d/js/model/building.js"></script>
-<script src="game3d/js/model/outdoor.js"></script>
-<script src="game3d/js/world.js"></script>
-<script src="game3d/js/spiral.js"></script>
-<script src="game3d/js/patrol.js"></script>
-<script src="game3d/js/portal.js"></script>
-<script src="game3d/js/hands.js"></script>
-<script src="game3d/js/cutscene.js"></script>
-<script src="game3d/js/fx/gaze.js"></script>
-<script src="game3d/js/fx/anomaly-fx.js"></script>
-<script src="game3d/js/fx/weather.js"></script>
-<script src="game3d/js/fx/cup.js"></script>
-<script src="game3d/js/fx/smile.js"></script>
-<script src="game3d/js/fx/traces.js"></script>
-<script src="game3d/js/fx/classroom.js"></script>
-<script src="game3d/js/lighting.js"></script>
-<script src="game3d/js/shade.js"></script>
-<script src="game3d/js/state.js"></script>
-<script src="game3d/js/input.js"></script>
-<script src="game3d/js/ui.js"></script>
-<script src="game3d/js/systems.js"></script>
-<script src="game3d/js/anomaly.js"></script>
-<script src="game3d/js/items.js"></script>
-<script src="game3d/js/story.js"></script>
-<script src="game3d/js/interact.js"></script>
-<script src="game3d/js/audio.js"></script>
-<script src="game3d/js/save.js"></script>
-<script src="game3d/js/settings.js"></script>
-<script src="game3d/js/dev.js"></script>
-<script src="game3d/js/pcgame.js"></script>
-<script src="game3d/js/phone.js"></script>
-<script src="game3d/js/mono.js"></script>
-<script src="game3d/js/mobile.js"></script>
-<script src="game3d/js/prologue.js"></script>
-<script src="game3d/js/main.js"></script>
+<script src="game3d/js/manifest.js"></script>
 </body>
 </html>

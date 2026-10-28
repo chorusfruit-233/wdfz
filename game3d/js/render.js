@@ -5,7 +5,7 @@ var U2M=1/9;
 var GLR={};
 var NOTEX=(typeof location!=='undefined'&&location.search)?(location.search.indexOf('notex')>=0):false;
 var DEV_HIDE={canopy:0,sign:0,link:0,fence:0};
-var QUALITY=1;   /* 0 低 / 1 中 / 2 高，由设置面板写入 */
+var QUALITY=1;   /* 0 流畅 / 1 均衡 / 2 精细 / 3 超精细，由设置面板写入；每档的具体参数见 quality.js */
 var GLRTEST=(function(){
   var q=(typeof location!=='undefined'&&location.search)?location.search:'';
   return {
@@ -43,7 +43,7 @@ var SKY_COL=0x1e2a33;
 function initGL(){
   var cv=document.getElementById('cv');
   var renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.4));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,QP().pixelRatio));
   renderer.setSize(window.innerWidth,window.innerHeight,false);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   try{ renderer.useLegacyLights=false; }catch(e){}
@@ -198,8 +198,10 @@ function resizeGL(){
   GLR.renderer.setSize(w,h,false);
   GLR.cam.aspect=w/h; GLR.cam.updateProjectionMatrix();
   var dpr=GLR.renderer.getPixelRatio?GLR.renderer.getPixelRatio():1;
-  var RTS=(GLRTEST&&GLRTEST.hq)?1.0:(QUALITY===0?0.55:(QUALITY===2?1.0:0.70));
+  GLR.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,QP().pixelRatio));
+  var RTS=(GLRTEST&&GLRTEST.hq)?1.0:QP().rts;
   var rw=Math.max(2,Math.round(w*dpr*RTS)), rh=Math.max(2,Math.round(h*dpr*RTS));
   GLR.rt.setSize(rw,rh);
   GLR.postMat.uniforms.uRes.value.set(rw,rh);
+  try{ GFX.resize(); }catch(e){}
 }
