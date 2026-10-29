@@ -49,8 +49,8 @@ var VIO_ON=0;
 /* ---------- 考试模式 ----------
    在钟楼顶上撞钟以后，当天剩下的所有"在教室"的时段（上课和晚自习）都变成考试，到熄灯为止：
      离开座位，SAN 和违规涨得更快；异象只出教室里的那几种；
-     一场考完，大部分时间坐着的，给一次 SAN。 */
-var EXAM_AN={stare:1,chalk:1,repeat:1,roster:1,shifting:1,broad:1};
+     一场考完，大部分时间坐着的，给一次 SAN。
+   考试时能出的异象见 anomaly.js 注册表里的 exam（派生出 EXAM_AN）。 */
 function examStart(){
   if(isNight()){ os('我：钟声荡出去，很快就被夜吞掉了。整座学校都睡着，没有人回应。',4); return; }
   S.exam=true; S.examCur=null; S.examSeat=0; S.examTot=0;

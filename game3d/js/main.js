@@ -116,11 +116,6 @@ function drawMini(dt){
   c.lineTo(px+Math.cos(S.ang)*9,py+Math.sin(S.ang)*9); c.stroke();
 }
 var hudT=0;
-var AN_NAME={rain:'大暴雨',moth:'蛾群',turn:'被拍肩膀',broad:'广播点名',bell13:'钟敲十三下',
-  exercise:'操场做操',bells:'车棚齐鸣',hand:'隔间递手',repeat:'你作业交了吗',chalk:'黑板上的字',
-  loop:'无尽的走廊',roster:'被划掉的名字',leak:'天花板渗水',rite:'实验楼仪式',cold:'冷库',
-  shifting:'窗外的楼在动',stare:'全体回头',lamps:'熄灯后的走廊灯',feast:'食堂盛宴',
-  necker:'围墙外的行人',shadow:'影子慢一拍',twin:'天台的第二个你',raindots:'雨点成字',cup:'清华水杯'};
 
 var markT=0, dtG=0.016;
 function updateHUD(){
