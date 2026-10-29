@@ -9,6 +9,10 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offs
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px 0;border-bottom:1px solid var(--line);font-size:13px;letter-spacing:.08em}
 .topbar a{text-decoration:none}.brand{color:var(--muted)}.brand strong{color:var(--text);font-weight:650}
 .return{white-space:nowrap}
+.toplinks{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end}
+.repo{color:var(--gold)}.repo:hover{color:#fff1d2}
+.button.ghost{border-color:#8a7a55;color:var(--gold)}.button.ghost:hover{background:#2c2618}
+.tag.inline{margin-left:10px;font-size:13px;vertical-align:middle}
 .hero{padding:72px 0 54px;max-width:760px}
 .eyebrow,.kicker{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.18em}
 h1{margin:12px 0 18px;font-size:clamp(38px,7vw,68px);line-height:1.15;letter-spacing:.04em}
