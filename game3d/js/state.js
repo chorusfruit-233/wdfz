@@ -19,7 +19,7 @@ var S={
 var RT={};   /* 剧情标志，随存档走 */
 
 function newRT(){
-  return {deskUsed:{}, hwTaken:false, hwGiven:false, key:false, plate:false,
+  return {deskUsed:{}, pendingLoot:{}, hwTaken:false, hwGiven:false, key:false, plate:false,
     carPlates:[], carFuel:[], carUsed:false, carLeaving:0, hacked:false, data:false,
     trash:false, beast:false, beastDrop:false, dropped:[], clue:0, rained:false,
     anaSeen:{}, lure:null, piano:{}, endTrap:null};

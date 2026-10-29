@@ -290,6 +290,8 @@ function initInput(){
 
 function updatePlayer(dt){
   if(S.dead||S.screen!=='play'||(S.intro||0)>0)return;
+  var snack=(S.snackT||0)>0;
+  if(snack) S.snackT=Math.max(0,S.snackT-dt);
   if(typeof HIDE!=='undefined'&&HIDE.on){ S.moving=false; S.run=false; S.stam=Math.min(100,S.stam+11*dt); syncCamera(dt); return; }   /* 躲在柜子里：不能动 */
   var locked=!playerInputAllowed(),fw=0,sd=0;
   if(!locked){
@@ -301,8 +303,7 @@ function updatePlayer(dt){
   }
   var stickFull=TOUCH.active&&Math.hypot(TOUCH.dx,TOUCH.dy)>.96;
   var wantRun=(KEY.shift||TOUCH.run||stickFull)&&!locked;
-  var snack=(S.snackT||0)>0;               /* 士力架：这几秒里体力空了也能跑，跑也不掉体力 */
-  if(snack)S.snackT-=dt;
+  /* 士力架：这几秒里体力空了也能跑，跑也不掉体力。躲柜子时世界照走，计时也要继续。 */
   /* 跑空以后要喘过气（回到 STAM_BACK）才能再跑。以前体力一回到 6 以上就又跑起来，
      马上又掉下去，按着疾跑（或手机摇杆推到底）时就一顿一顿地在跑和走之间来回切。 */
   if(S.stam<=6)S.tired=true;

@@ -518,11 +518,26 @@ function holdJob(dur,done){
   SEARCH.job={room:S.room,x:S.x,y:S.y,t:0,dur:dur,done:done};
   return true;
 }
+/* 重复物品先留在原容器，保存首次抽到的结果，不能通过重试来重抽。 */
+function searchLoot(key,id){
+  if(hasItem(id)){
+    if(!RT.pendingLoot) RT.pendingLoot={};
+    RT.pendingLoot[key]=id;
+    delete RT.deskUsed[key];
+    os('我：这里有「'+ITEMS[id].n+'」。我已经带着一份，先把它留在这里。',3.2);
+    return;
+  }
+  if(addItem(id)){
+    RT.deskUsed[key]=1;
+    if(RT.pendingLoot) delete RT.pendingLoot[key];
+  }
+}
 function doSearch(c,r){
   var key=S.room+':'+c+':'+r;
   if(RT.deskUsed[key]) return;
   /* 满包不能占用容器，否则钥匙或固定的 U 盘会消失。 */
   if(S.bag.length>=8){ os('我：装不下了。先腾出一个空位再翻。',2.4); return; }
+  if(RT.pendingLoot&&RT.pendingLoot[key]){ searchLoot(key,RT.pendingLoot[key]); return; }
   RT.deskUsed[key]=1;
   var _R=INTERIORS[S.room];
   /* 车钥匙和机房钥匙：校长办公室的容器 18%，别的老师办公室 1%（以前直接挂在保安岗） */
@@ -545,7 +560,7 @@ function doSearch(c,r){
   }
   if(_R&&_R.host==='lab'){
     var lv=labLoot(_R.floor);
-    if(lv) addItem(lv); else os('我：空的。抽屉里只有一层灰。',2.0);
+    if(lv) searchLoot(key,lv); else os('我：空的。抽屉里只有一层灰。',2.0);
     return;
   }
   var roll=Math.random();
@@ -568,7 +583,7 @@ function doSearch(c,r){
   if(S.room==='teach1'&&!RT.hwTaken&&r>1&&r<14){
     RT.hwTaken=true; give='hw';
   }
-  if(give) addItem(give);
+  if(give) searchLoot(key,give);
   else os(pick(['我：空的。只有一层灰。','我：空的。抽屉底下用圆珠笔写着一个名字，被涂黑了。','我：空的。最里面有一小撮头发。']),2.4);
 }
 function useTerminal(){
