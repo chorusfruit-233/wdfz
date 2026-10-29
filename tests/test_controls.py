@@ -52,6 +52,13 @@ class ControlsTest(BrowserCase):
                 self.assertTrue(page.locator('#btncont').is_visible())
                 self.assertEqual(page.evaluate("localStorage.getItem('wdfz3d')"), saved)
 
+    def test_goggles_make_lab_rolls_better(self):
+        page = self.page()
+        # 离心机、显微镜都是数字小的好：带着护目镜时两次里取小的
+        page.evaluate("window.seq=[0.9,0.1];Math.random=()=>seq.shift();S.bag=[];window.plain=facRoll(100);"
+                      "seq=[0.9,0.1];S.bag=['goggles'];window.withG=facRoll(100);")
+        self.assertEqual(page.evaluate('[plain,withG]'), [90, 10])
+
     def test_fullscreen_enters_exits_and_updates_button(self):
         page = self.page()
         page.evaluate("S.screen='menu';syncFullscreenUI()")

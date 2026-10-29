@@ -46,7 +46,7 @@ var FAC_CD={Z:70,C:90,N:45,Y:200,K:0};
 function facClock(){ return gameClock(); }
 function facRoll(n){
   var r=Math.random(), r2=Math.random();
-  if(hasItem('goggles')) r=Math.max(r,r2);
+  if(hasItem('goggles')) r=Math.min(r,r2);              /* 护目镜：两次里取好的那次（离心机、显微镜都是数字小的好） */
   return Math.floor(r*n);
 }
 function useFacility(ch,R){
