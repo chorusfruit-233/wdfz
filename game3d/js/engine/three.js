@@ -62,7 +62,7 @@ ThreeBackend.boot=function(){
     uniforms:{
       tDiffuse:{value:rt.texture},tDepth:{value:rt.texture},tHands:{value:rt.texture},uHands:{value:0},uAO:{value:0},uNear:{value:cam.near},uFar:{value:cam.far},uAA:{value:0},
       uTime:{value:0}, uRes:{value:new THREE.Vector2(2,2)},
-      uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0},
+      uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0}, uBloom:{value:0}, uGrain:{value:1},
       uFx:{value:GLRTEST.nofx?1.0:0.0}
     },
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
@@ -71,7 +71,7 @@ ThreeBackend.boot=function(){
 'uniform sampler2D tDiffuse;uniform float uTime;uniform vec2 uRes;',
 'uniform sampler2D tDepth;uniform float uAO;uniform float uNear;uniform float uFar;uniform float uAA;',
 'uniform sampler2D tHands;uniform float uHands;',
-'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;',
+'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;uniform float uBloom;uniform float uGrain;',
 'varying vec2 vUv;',
 'float hash(vec2 p){',
 '  p = fract(p * vec2(443.8975, 397.2973));',
@@ -113,20 +113,27 @@ ThreeBackend.boot=function(){
 '  col.r=sceneColor(uv+dc*ca).r;col.b=sceneColor(uv-dc*ca).b;',
 '  col*=contactAO(uv);',
 '  if(uHands>0.5){vec4 hand=texture2D(tHands,uv);col=mix(col,hand.rgb,hand.a);}',
-'  col=aces(col*uBright*uExpo*1.12);',
+/* 「真实」档的辉光：灯管、手电光斑、亮窗周围晕开一圈（三圈采样，只取超过阈值的部分） */
+'  if(uBloom>0.0){vec3 bl=vec3(0.0);vec2 asp=vec2(uRes.y/uRes.x,1.0);',
+'    for(int i=0;i<12;i++){float a=float(i)*0.5236+0.26;vec2 o=vec2(cos(a),sin(a))*asp;',
+'      bl+=max(texture2D(tDiffuse,uv+o*0.007).rgb-0.62,0.0);',
+'      bl+=max(texture2D(tDiffuse,uv+o*0.017).rgb-0.62,0.0)*0.65;',
+'      bl+=max(texture2D(tDiffuse,uv+o*0.034).rgb-0.62,0.0)*0.35;}',
+'    col+=bl/12.0*uBloom;}',
+'  col=aces(col*uBright*uExpo*0.96);',
 '  float lum=dot(col,vec3(0.2126,0.7152,0.0722));',
-'  col=mix(vec3(lum),col,0.58+0.37*uGaze);',
+'  col=mix(vec3(lum),col,0.46+0.49*uGaze);',
 '  col*=vec3(1.03,1.00,0.985);',
 '  float lm2=dot(col,vec3(0.299,0.587,0.114));',
-'  vec3 tint=mix(vec3(0.72,0.92,1.18), vec3(1.0), smoothstep(0.04,0.42,lm2));',
+'  vec3 tint=mix(vec3(0.66,0.90,1.02), vec3(1.0,0.98,0.90), smoothstep(0.04,0.50,lm2));',
   '  col*=mix(tint, vec3(1.0), uFx);',
 '  col=col*col*(3.0-2.0*clamp(col,0.0,1.0))*0.28+col*0.72;',
 '  float n=hash(gl_FragCoord.xy+fract(uTime)*91.0);',
 '  float lmN=dot(col,vec3(0.299,0.587,0.114));',
-'  col+=(n-0.5)*(0.012+0.030*(1.0-smoothstep(0.0,0.5,lmN)))*(1.0-uFx);',
-'  col=max(col-0.005*(1.0-uFx),0.0)*(1.0+0.005*(1.0-uFx));',
+'  col+=(n-0.5)*(0.012+0.030*(1.0-smoothstep(0.0,0.5,lmN)))*(1.0-uFx)*uGrain;',
+'  col=max(col-0.009*(1.0-uFx),0.0)*(1.0+0.009*(1.0-uFx));',
 '  float vg=distance(uv,vec2(0.5,0.5));',
-'  col*=1.0-0.68*smoothstep(0.28,1.0,vg*1.24)*(1.0-uFx);',
+'  col*=1.0-0.84*smoothstep(0.20,0.95,vg*1.28)*(1.0-uFx);',
 '  col*=mix(vec3(1.0),vec3(1.0,0.32,0.27),uHurt*0.85);',
 '  col=mix(col,vec3(0.16,0.0,0.0),uHurt*0.55*smoothstep(0.28,0.95,vg*1.3));',
 '  col+=vec3(0.90,0.95,1.0)*uFlash*0.8;',
@@ -185,6 +192,20 @@ ThreeBackend.boot=function(){
   return GLR;
 };
 
+/* 「真实」档的环境反射：一个暗的灰绿色房间，顶上几根灯管。金属、玻璃、瓷砖上有一点点反光，不会发亮 */
+function buildEnvTex(){
+  var pm=new THREE.PMREMGenerator(GLR.renderer), sc=new THREE.Scene(), i;
+  var geo=new THREE.SphereGeometry(10,32,16), cols=[], pos=geo.attributes.position;
+  for(i=0;i<pos.count;i++){ var t=pos.getY(i)/10, v=t>0?0.06+0.05*t:0.06+0.035*t; cols.push(v*0.9,v,v*0.92); }
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
+  var room=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({side:THREE.BackSide,vertexColors:true}));
+  sc.add(room);
+  var tube=new THREE.BoxGeometry(5,0.3,0.6), tm=new THREE.MeshBasicMaterial({color:0x8c958a});
+  for(i=-1;i<=1;i++){ var b=new THREE.Mesh(tube,tm); b.position.set(i*3.4,8.6,0); sc.add(b); }
+  var tex=pm.fromScene(sc,0.035).texture;
+  pm.dispose(); geo.dispose(); tube.dispose(); room.material.dispose(); tm.dispose();
+  return tex;
+}
 ThreeBackend.resize=function(){
   var w=Math.max(1,window.innerWidth),h=Math.max(1,window.innerHeight),q=Quality.get();
   /* 限制高分屏的总像素，避免旋转或大屏下离屏目标无限膨胀。 */
@@ -205,6 +226,9 @@ ThreeBackend.resize=function(){
   var u=GLR.postMat.uniforms;
   u.tDiffuse.value=GLR.rt.texture;u.tDepth.value=GLR.rt.depthTexture||GLR.rt.texture;
   u.uAO.value=ao?q.ao:0;u.uAA.value=q.samples&&!samples?1:0;
+  u.uBloom.value=q.bloom||0;u.uGrain.value=q.pbr?0.45:1;   /* 真实档：颗粒轻一些，画面干净 */
+  if(q.pbr&&!GLR.envTex)GLR.envTex=buildEnvTex();
+  GLR.scene.environment=q.pbr?GLR.envTex:null;
   var RTS=(GLRTEST&&GLRTEST.hq)?1:q.scale;
   var rw=Math.max(2,Math.round(w*dpr*RTS)), rh=Math.max(2,Math.round(h*dpr*RTS));
   GLR.rt.setSize(rw,rh);

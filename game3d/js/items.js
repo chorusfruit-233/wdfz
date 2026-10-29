@@ -60,43 +60,46 @@ function useHot(i){
   if(!hasItem(id)){ S.hot[i]=null; var el=document.getElementById('hot'); if(el) el._sig=''; toast('「'+ITEMS[id].n+'」已经不在了'); UI.renderHot(); return; }
   useItem(id);
 }
-function useItem(id){
-  if(!id||!hasItem(id)) return;
-  var nm=ITEMS[id]?ITEMS[id].n:id;
-  if(id==='torch'){ toggleTorch(); return; }
-  if(id==='phone'){ PHONE.start(); return; }
-  if(id==='leave'){ useLeave(); return; }
-  if(id==='brolly'){ USE.brollyShield=!USE.brollyShield; toast(USE.brollyShield?'撑开伞':'收起伞'); return; }
-  if(id==='pill'){ S.pillT=PILL_SEC; removeItem('pill'); os('我：药片很苦。手慢慢不抖了。',3); toast('药片 · '+PILL_SEC+' 秒内每秒 SAN +'+PILL_RATE); return; }
-  if(id==='snack'){ S.snackT=SNACK_SEC; removeItem('snack'); os('我：甜的。腿一下子轻了。',2.4); toast('士力架 · '+SNACK_SEC+' 秒内疾跑不耗体力'); return; }
-  if(id==='coin'){ throwCoin(); return; }
-  if(id==='atlas'){
-    for(var ai=0;ai<SPOTS.length;ai++) if(SPOTS[ai].id!=='stall') S.spots[SPOTS[ai].id]=1;
+/* 每种东西拿在手上「用」一下做什么。没写在这里的：能看的就看一眼说明，其余用不上 */
+function useMaterial(id,nm){ os('我：'+nm+'。'+ITEMS[id].d+portalNeedText(),3.6); }
+var ITEM_USE={
+  torch:function(){ toggleTorch(); },
+  phone:function(){ PHONE.start(); },
+  leave:function(){ useLeave(); },
+  brolly:function(){ USE.brollyShield=!USE.brollyShield; toast(USE.brollyShield?'撑开伞':'收起伞'); },
+  pill:function(){ S.pillT=PILL_SEC; removeItem('pill'); os('我：药片很苦。手慢慢不抖了。',3); toast('药片 · '+PILL_SEC+' 秒内每秒 SAN +'+PILL_RATE); },
+  snack:function(){ S.snackT=SNACK_SEC; removeItem('snack'); os('我：甜的。腿一下子轻了。',2.4); toast('士力架 · '+SNACK_SEC+' 秒内疾跑不耗体力'); },
+  coin:function(){ throwCoin(); },
+  atlas:function(){
+    for(var i=0;i<SPOTS.length;i++) if(SPOTS[i].id!=='stall') S.spots[SPOTS[i].id]=1;
     UI.spotsDirty=true; addClue('atlas');
     os('我：总览图上用红笔圈了三处：行政楼五楼「校长办公室」，实验楼一楼「物理实验室」，还有钟楼——旁边写着「顶上能看见整个学校」。',6,OS_KEEP);
     UI.open('mapv');
-    return;
-  }
-  if(id==='elixir'){ os('我：留着。没有说明书，可我知道它什么时候该吃——到时候它自己会起作用。',3.2); return; }
-  if(id==='seal'){ os('我：符纸在口袋里很安静。等那个高个子盯上我的时候，它才会动。',3.2); return; }
-  if(id==='coil'||id==='lens'||id==='vial'){ os('我：'+nm+'。'+ITEMS[id].d+portalNeedText(),3.6); return; }
-  if(id==='watch'){ toast('现在是 '+fmtClockS(S.tsec)); os('我：现在是 '+fmtClockS(S.tsec)+'。秒针走得很稳。',2.6); return; }
-  if(id==='compass'){ useCompass(); return; }
-  if(id==='memo'){
+  },
+  elixir:function(){ os('我：留着。没有说明书，可我知道它什么时候该吃——到时候它自己会起作用。',3.2); },
+  seal:function(){ os('我：符纸在口袋里很安静。等那个高个子盯上我的时候，它才会动。',3.2); },
+  coil:useMaterial, lens:useMaterial, vial:useMaterial,
+  watch:function(){ toast('现在是 '+fmtClockS(S.tsec)); os('我：现在是 '+fmtClockS(S.tsec)+'。秒针走得很稳。',2.6); },
+  compass:function(){ useCompass(); },
+  memo:function(){
     S.spots.data=1; S.spots.comp=1; UI.spotsDirty=true;
     os('我：纸条上是一行潦草的字：「实验楼 3F 网络中心 → 行政楼 3F 门禁机 → 西小门。钥匙收到校长室去了。」最后一个字被划得很深。',6);
     toast('记下了：机房 · 数据终端');
-    return;
-  }
-  if(id==='map'){
-    var mapIds=['guard','garage','trash','wall'], mk;
-    for(mk=0;mk<mapIds.length;mk++) S.spots[mapIds[mk]]=1;
+  },
+  map:function(){
+    ['guard','garage','trash','wall'].forEach(function(k){ S.spots[k]=1; });
     UI.spotsDirty=true;
     os('我：平面图上有几个地方被反复描过：保安岗、车库、垃圾房、东围墙。',4.2);
     UI.open('mapv');
-    return;
   }
-  if(id==='card'||id==='map'||id==='notebook'||id==='memo'||id==='hw'||id==='usb'||id==='key'||id==='roomkey'||id==='metronome'||id==='goggles'||id==='coat'||id==='battery'||id==='chalk'||id==='pen'){
+};
+/* 拿出来看一眼就收起来的东西 */
+var ITEM_READ={card:1,notebook:1,hw:1,usb:1,key:1,roomkey:1,metronome:1,goggles:1,coat:1,battery:1,chalk:1,pen:1};
+function useItem(id){
+  if(!id||!hasItem(id)) return;
+  var nm=ITEMS[id]?ITEMS[id].n:id;
+  if(ITEM_USE.hasOwnProperty(id)){ ITEM_USE[id](id,nm); return; }
+  if(ITEM_READ[id]){
     os('我：'+nm+'。'+ITEMS[id].d,3.0);
     toast(nm+(hasItem('notebook')&&hasItem('pen')?' · 线索会写进本子':''));
     return;

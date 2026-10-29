@@ -208,6 +208,7 @@ body.touch .bagacts kbd{display:none}
 .srow.snote{min-height:24px;margin-top:-6px}
 .srow.snote b{width:auto;flex:1;text-align:left;font-size:12px}
 #sQ button{font-size:12px;padding:6px 2px;white-space:nowrap}
+#sQ button{min-width:0;padding:6px 1px;white-space:nowrap}          /* 画质有五档：窄屏也排得下 */
 .seg button.on{background:var(--ui-acc-bg);border-color:var(--ui-acc);color:#effbf4}
 
 /* ---------- 全屏键 ---------- */

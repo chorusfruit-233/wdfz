@@ -227,7 +227,7 @@ ThreeBackend.draw=function(dt){
   u.uExpo.value=(GLR.dayExpo===undefined)?1:GLR.dayExpo;
   u.uRed.value=GLR.patrolRed||0;
   u.uSan.value=clamp(S.san/100,0,1);
-  if(typeof GLRTEST!=='undefined'&&GLRTEST.nopost){
+  if(GLRTEST.nopost){
     GLR.renderer.setRenderTarget(null);
     GLR.renderer.render(GLR.scene,GLR.cam);
     ThreeBackend.drawHands();

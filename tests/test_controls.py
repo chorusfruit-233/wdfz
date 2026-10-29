@@ -35,9 +35,12 @@ class ControlsTest(BrowserCase):
                     link.click()
                 page.wait_for_url('**/wiki/index.html')
                 self.assertTrue(page.get_by_role('heading', name='里世界游戏 Wiki').is_visible())
-                item_row = page.locator('#items tbody tr').filter(has_text='药片 / 士力架')
-                self.assertIn('每秒回复 2 点 SAN', item_row.inner_text())
-                self.assertIn('士力架让你 30 秒内', item_row.inner_text())
+                rows = page.locator('#items tbody tr')
+                self.assertIn('每秒回 2 SAN', rows.filter(has_text='药片').first.inner_text())
+                self.assertIn('30 秒内奔跑不耗体力', rows.filter(has_text='士力架').first.inner_text())
+                repo = page.locator('.topbar a.repo')
+                self.assertTrue(repo.is_visible())
+                self.assertEqual(repo.get_attribute('href'), 'https://github.com/chorusfruit-233/wdfz')
                 spoiler = page.locator('#anomalies details')
                 self.assertIsNone(spoiler.get_attribute('open'))
                 self.assertFalse(spoiler.locator('table').is_visible())
@@ -48,6 +51,13 @@ class ControlsTest(BrowserCase):
                 page.wait_for_url('**/index.html')
                 self.assertTrue(page.locator('#btncont').is_visible())
                 self.assertEqual(page.evaluate("localStorage.getItem('wdfz3d')"), saved)
+
+    def test_goggles_make_lab_rolls_better(self):
+        page = self.page()
+        # 离心机、显微镜都是数字小的好：带着护目镜时两次里取小的
+        page.evaluate("window.seq=[0.9,0.1];Math.random=()=>seq.shift();S.bag=[];window.plain=facRoll(100);"
+                      "seq=[0.9,0.1];S.bag=['goggles'];window.withG=facRoll(100);")
+        self.assertEqual(page.evaluate('[plain,withG]'), [90, 10])
 
     def test_fullscreen_enters_exits_and_updates_button(self):
         page = self.page()
@@ -1238,7 +1248,8 @@ class ControlsTest(BrowserCase):
         page.wait_for_function("document.getElementById('banner').textContent==='教学楼 1F'&&UI.chooseOpen")
         self.assert_js(page, "AN.id==='roster'&&UI.choiceTimer>0&&document.getElementById('choices').textContent.includes('名单上')")
         page.evaluate("""UI.closeChoice();Math.random=function(){return .5};useRoster(80);""")
-        page.wait_for_function('!UI.chooseOpen&&AN.data.done', timeout=2000)
+        # 按固定间隔轮询：无头浏览器在画面不变时很少刷新，按画面刷新轮询会偶尔等满 2 秒还没检查到。
+        page.wait_for_function('!UI.chooseOpen&&AN.data.done', timeout=2000, polling=50)
         self.assert_js(page, '!UI.chooseOpen&&AN.data.done')
 
     def test_only_hard_to_prevent_anomalies_are_forecast(self):
