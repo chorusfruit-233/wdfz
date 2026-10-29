@@ -40,10 +40,15 @@ class EngineTest(BrowserCase):
               if(Math.abs(p.getX(i))>0.3001||Math.abs(p.getY(i)-0.5)>0.0201||Math.abs(p.getZ(i))>0.2001)inside=false;}
             window.box4={dirs:Object.keys(dirs).length,inside:inside};""")
         self.assert_js(page, 'box4.dirs>20&&box4.inside')
-        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=760;S.intro=0;Settings.q(3);
-            window.tri=g=>{let n=0;g.traverse(o=>{if(o.geometry&&o.geometry.index)n+=o.geometry.index.count/3});return n};
-            window.t3=tri(GLR.roomMesh);Settings.q(4);syncCamera(0);render(.016);window.t4=tri(GLR.roomMesh);""")
-        self.assert_js(page, "QUALITY===4&&Quality.get().label==='真实'&&t4>t3*1.5")
+        # 三角形数按实际画出来的算（实例化的乘上实例个数），两档都等各自的模型包读好再数：
+        # 房间自己拼的方块全倒圆角，多一半以上；Blender 的模型换成最细的一档，也更多
+        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=760;S.intro=0;
+            window.tri=g=>{let m=0,i=0;g.traverse(o=>{if(o.geometry&&o.geometry.index){let t=o.geometry.index.count/3*(o.isInstancedMesh?o.count:1);if(o.isInstancedMesh)i+=t;else m+=t;}});return [m,i]};0""")
+        self.set_quality(page, 3)
+        page.evaluate('window.t3=tri(GLR.roomMesh)')
+        self.set_quality(page, 4)
+        page.evaluate('syncCamera(0);render(.016);window.t4=tri(GLR.roomMesh);')
+        self.assert_js(page, "QUALITY===4&&Quality.get().label==='真实'&&t4[0]>t3[0]*1.5&&t4[1]>t3[1]*1.2")
         self.assert_js(page, "GLR.roomMesh.children.some(o=>o.material&&o.material.isMeshStandardMaterial)&&!!GLR.scene.environment")
         self.assert_js(page, "GLR.postMat.uniforms.uBloom.value>0&&GLR.postMat.uniforms.uAO.value>=0.5&&!document.getElementById('errbox')")
         # 混响跟着空间走（关掉「音乐/环境」也一样，只要有音效）；回到别的档位用回通用混响，材质也换回原来那批

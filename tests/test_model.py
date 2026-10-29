@@ -26,7 +26,7 @@ class ModelTest(BrowserCase):
         self.assertEqual(counts, [12, 10, 8], '贴地的底面、顶到天花板的顶面不画；人物等不开剔除的照旧')
 
     def test_rooms_and_outdoor_are_reused_and_door_only_rebuilds_its_leaf(self):
-        page = self.page(); page.evaluate("Settings.q(1)")
+        page = self.page(); self.set_quality(page, 1)
         page.evaluate("Game.start('easy');running=false;clearIntroTimers();S.screen='play'")
         page.evaluate("S.mode='in';S.room='teach1';doEnterRoom('teach1');running=false;window.__g1=GLR.roomMesh")
         page.evaluate("S.mode='out';S.room=null;enterWorldOut();window.__o1=GLR.outMesh")

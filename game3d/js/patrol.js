@@ -188,12 +188,14 @@ function patSnap(R,nv,i,j){
   }
   return best;
 }
-/* 两个小格之间直线走过去全是能走的 */
+/* 两个小格之间直线走过去全是能走的。线两侧各再看四分之一格：拉直的路不贴着胀开的家具占地抄近路
+   （家具占地按模型的碰撞代理算，斜着的椅背比方块深，以前只看线上的格子会从它的角上擦过去） */
 function patClear(R,nv,a,b){
-  var n=Math.ceil(Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]))*2), k;
+  var n=Math.ceil(Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]))*4), k, di, dj;
   for(k=1;k<n;k++){
-    var u=k/n, i=Math.round(a[0]+(b[0]-a[0])*u), j=Math.round(a[1]+(b[1]-a[1])*u);
-    if(!patFree(R,nv,i,j)) return false;
+    var u=k/n, fi=a[0]+(b[0]-a[0])*u, fj=a[1]+(b[1]-a[1])*u;
+    for(di=-0.25;di<=0.25;di+=0.5) for(dj=-0.25;dj<=0.25;dj+=0.5)
+      if(!patFree(R,nv,Math.round(fi+di),Math.round(fj+dj))) return false;
   }
   return true;
 }
