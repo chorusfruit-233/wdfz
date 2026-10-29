@@ -12,6 +12,7 @@ var CUP_GEO={};
 function cupFallTime(){ return Math.sqrt(2*CUP_H/9.8); }
 /* 一只保温杯：清华紫的杯身、一圈白色字带（"清华大学"）、银色杯盖和杯底 */
 function cupGeo(){
+  var ag=figAssetGeo('cup_tsinghua','cup',true); if(ag) return ag;
   var key=Quality.get().segments;
   if(CUP_GEO[key]) return CUP_GEO[key];
   var K=new Kit(), m='dark';

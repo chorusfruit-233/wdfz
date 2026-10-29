@@ -72,7 +72,7 @@ class EngineTest(BrowserCase):
             window.before=snapshot();window.collider=JSON.stringify([INTERIORS.teach1.foot,INTERIORS.teach1.propExtra,INTERIORS.teach1.stairExtra]);
             window.oldFigure=NC.list[0].children[0].geometry;""")
         for q in (3, 1, 2, 0):
-            page.evaluate('q=>Settings.q(q)', q)
+            self.set_quality(page, q)                    # 人形也是模型包里的，等这一档读好
             self.assert_js(page, 'snapshot()===before&&NC.grp===oldNC&&ANFX.grp===oldFX')
             self.assert_js(page, 'JSON.stringify([INTERIORS.teach1.foot,INTERIORS.teach1.propExtra,INTERIORS.teach1.stairExtra])===collider')
             if q == 3:
