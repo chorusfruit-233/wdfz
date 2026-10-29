@@ -1,12 +1,8 @@
-/* 与渲染无关的圆形角色碰撞。坐标均为游戏世界单位，四档画质共用。 */
+/* 与渲染无关的圆形角色碰撞。坐标均为游戏世界单位，各档画质共用。 */
 'use strict';
-var Physics=Object.freeze({hz:240});
+var Physics=Object.freeze({hz:SharedPhysics.hz});
 var Collision={
-  rectDepth:function(x,y,r,x0,y0,x1,y1){
-    var dx=Math.max(x0-x,0,x-x1),dy=Math.max(y0-y,0,y-y1);
-    if(dx===0&&dy===0)return r+Math.min(x-x0,x1-x,y-y0,y1-y);
-    return Math.max(0,r-Math.hypot(dx,dy));
-  },
+  rectDepth:SharedPhysics.rectDepth,
   depth:function(x,y,r,room){
     var total=0;
     function rect(x0,y0,x1,y1){total+=Collision.rectDepth(x,y,r,x0,y0,x1,y1);}

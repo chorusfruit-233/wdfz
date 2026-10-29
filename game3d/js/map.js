@@ -189,6 +189,29 @@ function mkFloor(id,name,host,floor,grid,enter){
     rows:grid.length,cols:grid[0].length,tw:TTILE,th:TTILE,enter:enter===undefined?true:enter};
   return INTERIORS[id];
 }
+/* 储物柜与校长办公室属于地图数据，房主服务与浏览器都必须构建同一份网格。 */
+var LOCKER_CELLS={
+  teach:[[12,16],[28,16],[44,16]],
+  admin:[[9,17],[25,17],[41,17]],
+  lab:[[10,16],[28,16],[37,16]]
+};
+function placeLockers(){
+  var id,R,cells,i;
+  for(id in INTERIORS){
+    R=INTERIORS[id];
+    if(R.host==='teach'&&R.floor>5)continue;
+    cells=LOCKER_CELLS[R.host];if(!cells)continue;
+    for(i=0;i<cells.length;i++){
+      var c=cells[i][0],r=cells[i][1];
+      if(R.grid[r]&&R.grid[r][c]==='.'&&R.grid[r+1]&&R.grid[r+1][c]==='.')R.grid[r][c]='H';
+    }
+  }
+  var P=INTERIORS.admin5;
+  if(P){
+    P.name='行政楼 5F · 校长办公室';P.principal=true;
+    [[8,1],[24,1],[40,1]].forEach(function(q){if(P.grid[q[1]][q[0]]==='.'&&P.grid[q[1]+1][q[0]]==='.')P.grid[q[1]][q[0]]='H';});
+  }
+}
 function buildInteriorData(){
   if(Object.keys(INTERIORS).length) return;
   var f;
@@ -250,7 +273,7 @@ function buildInteriorData(){
   mkFloor('bell1','钟楼','bell',1,bellFloor()).spiral=true;
   mkFloor('guard1','保安岗','guard',1,guardFloor());
   mkFloor('gear1','体育器材室','gear',1,gearFloor());
-  if(typeof placeLockers==='function') placeLockers();          /* 储物柜和校长办公室：patrol.js */
+  placeLockers();
 }
 
 var OBJ=[

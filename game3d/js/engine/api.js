@@ -21,5 +21,9 @@ var Engine={
   captureMenu:function(){return ThreeBackend.captureMenu();},
   torch:function(on){if(GLR.torch)GLR.torch.intensity=on?55:0;},
   brightness:function(value){if(GLR.postMat)GLR.postMat.uniforms.uBright.value=value;},
-  applyQuality:function(){QualityWatch.reset();if(this.ready())ThreeBackend.applyQuality();}
+  applyQuality:function(){QualityWatch.reset();if(this.ready())ThreeBackend.applyQuality();},
+  remotePose:function(id,pose,name){if(this.ready())ThreeBackend.remotePose(id,pose,name);},
+  remoteRemove:function(id){if(ThreeBackend.remoteRemove)ThreeBackend.remoteRemove(id);},
+  remoteClear:function(){if(ThreeBackend.remoteClear)ThreeBackend.remoteClear();},
+  remoteTick:function(dt,zone,waiting){if(this.ready())ThreeBackend.remoteTick(dt,zone,waiting);}
 };

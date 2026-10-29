@@ -9,29 +9,7 @@
    校长办公室（行政楼 5F）：抽屉里有车钥匙和机房钥匙（每个容器 18%），但巡察者常驻、异象也来得勤。 */
 'use strict';
 
-/* ---------- 储物柜 ---------- */
-var LOCKER_CELLS={
-  teach:[[12,16],[28,16],[44,16]],
-  admin:[[9,17],[25,17],[41,17]],
-  lab:[[10,16],[28,16],[37,16]]
-};
-function placeLockers(){
-  var id, R, cells, i;
-  for(id in INTERIORS){
-    R=INTERIORS[id];
-    if(R.host==='teach'&&R.floor>5) continue;
-    cells=LOCKER_CELLS[R.host]; if(!cells) continue;
-    for(i=0;i<cells.length;i++){
-      var c=cells[i][0], r=cells[i][1];
-      if(R.grid[r]&&R.grid[r][c]==='.'&&R.grid[r+1]&&R.grid[r+1][c]==='.') R.grid[r][c]='H';
-    }
-  }
-  var P=INTERIORS.admin5;
-  if(P){
-    P.name='行政楼 5F · 校长办公室'; P.principal=true;
-    [[8,1],[24,1],[40,1]].forEach(function(q){ if(P.grid[q[1]][q[0]]==='.'&&P.grid[q[1]+1][q[0]]==='.') P.grid[q[1]][q[0]]='H'; });
-  }
-}
+/* ---------- 储物柜：地图位置在 map.js 中定义 ---------- */
 FURN_SOLID.H=0.82;
 /* 一人高的铁皮储物柜，门朝南（+z），门上有一排百叶缝 */
 FURN.H=function(c,x,y,cx,cz){

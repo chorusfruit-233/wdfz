@@ -112,6 +112,7 @@ var SAVE_SCHEMA=[
   }
 ];
 function saveGame(){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing)return false;
   try{
     var d={v:1, clockVersion:2};
     SAVE_SCHEMA.forEach(function(f){ f.save(d); });
@@ -137,6 +138,7 @@ function autoSave(){
   if(S.screen==='play'&&!S.dead) saveGame();
 }
 function clearSave(){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing)return;
   try{ localStorage.removeItem('wdfz3d'); }catch(e){}
 }
 /* 拿到过的结局单独记，不跟存档一起删 */
@@ -145,6 +147,7 @@ function endsSeen(){
   try{ var d=JSON.parse(localStorage.getItem(ENDS_KEY)||'{}'); return (d&&typeof d==='object')?d:{}; }catch(e){ return {}; }
 }
 function endMark(id){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing)return;
   var d=endsSeen(); d[id]=1;
   try{ localStorage.setItem(ENDS_KEY,JSON.stringify(d)); }catch(e){}
 }

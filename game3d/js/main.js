@@ -59,6 +59,7 @@ function render(dt){
   try{ if(DEV.on&&VisualState.time%0.4<0.05) Dev.look(); }catch(e){}
   try{ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
+  try{ Multiplayer.tick(dt); }catch(e){}
   Engine.draw(dt); updateHUD(); drawMini(dt);
 }
 function updateIntro(dt){
@@ -217,17 +218,17 @@ function freshState(diff){
   if(!running){ running=true; lastT=0; }
 }
 var Game={
-  start:function(diff){
+  start:function(diff,options){
     try{
     freshState(diff);
     var R1=INTERIORS['teach1'];
     /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */
     S.mode='in'; S.room='teach1'; S.x=R1.ox+48.5*9; S.y=R1.oy+6.5*9; S.seated=true;
-    enterRoom('teach1',{x:S.x, y:S.y, ang:-PI/2, seated:true});
+    enterRoom('teach1',{x:S.x, y:S.y, ang:-PI/2, seated:true},options&&options.onEntered);
     syncCamera(0);
     clearIntroTimers();
     var firstTime=false;
-    try{ firstTime=!proSeen(); }catch(e){}
+    try{ firstTime=!proSeen()&&!(options&&options.skipPrologue); }catch(e){}
     if(firstTime){
       setTimeout(function(){ try{ proShow(); }catch(e){} },320);
     }else{
@@ -283,11 +284,13 @@ var Game={
     resumeMouseLook();updateTouchUI();
   },
   saveNow:function(){
+    if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){ toast('联机原型暂不支持保存'); Game.resume(); return; }
     if(saveGame()) toast('已保存');
     else toast('保存失败');
     Game.resume();
   },
   quit:function(){
+    if(typeof Multiplayer!=='undefined'&&Multiplayer.playing) Multiplayer.leave();
     running=true;
     clearSearch();
     try{ patReset(); }catch(e){}

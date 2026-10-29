@@ -25,13 +25,7 @@ function teachFrontZ(){
 function buildRoomBounds(){
   for(var id in INTERIORS){
     var R=INTERIORS[id];
-    var o=objById(R.host);
-    R.w=R.cols*R.tw; R.h=R.rows*R.th;
-    if(o){
-      var hc={x:o.x*SC+o.w*SC/2, y:o.y*SC+o.h*SC/2};
-      R.ox=hc.x-R.w/2; R.oy=hc.y-R.h/2;
-    }else{ R.ox=0; R.oy=0; }
-    R.cx=R.ox+R.w/2; R.cy=R.oy+R.h/2;
+    Object.assign(R,SharedRoomBounds.bounds(R,OBJ,SC));
   }
 }
 
@@ -109,17 +103,7 @@ function canStand(wx,wy){
   return Collision.depth(wx,wy,PRAD)<1e-7;
 }
 function moveBy(dx,dy,dt){
-  if(!Number.isFinite(dx)||!Number.isFinite(dy))return;
-  var n=Math.max(1,Math.ceil((dt||1/60)*Physics.hz),Math.ceil(Math.hypot(dx,dy)/(PRAD*0.5)));
-  dx/=n;dy/=n;
-  for(var i=0;i<n;i++){
-    var before=Collision.depth(S.x,S.y,PRAD),nx=S.x+dx,ny=S.y+dy;
-    var ax=Collision.depth(nx,S.y,PRAD);
-    if(ax<1e-7||ax<before-1e-7){S.x=nx;before=ax;}
-    var ay=Collision.depth(S.x,ny,PRAD);
-    if(ay<1e-7||ay<before-1e-7)S.y=ny;
-    spiralUpdate();
-  }
+  SharedPhysics.moveCircle(S,dx,dy,dt,PRAD,function(x,y){return Collision.depth(x,y,PRAD);},spiralUpdate);
 }
 
 function doorWorld(o){
