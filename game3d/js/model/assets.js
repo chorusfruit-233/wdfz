@@ -201,16 +201,20 @@ var ASSETS_BASE=(function(){
   try{ var s=document.currentScript&&document.currentScript.src; if(s) return s.replace(/js\/model\/assets\.js(\?.*)?$/,'assets/'); }catch(e){}
   return 'game3d/assets/';
 })();
-/* 开局要的那一档：照 settings.js 读存档里的画质（没存过、是触屏就是流畅），解析到这里就同步插进页面 */
-(function(){
-  if(typeof document==='undefined'||!document.write) return;
+/* 开局的画质：照 settings.js 读存档（没存过、是触屏就是流畅）。模型包、贴图包（materials.js）都按它挑开局读哪一档 */
+function bootQuality(){
   var q=1;
   try{
     var s=JSON.parse(localStorage.getItem('zw3d_set')||'null');
     if(s&&s.q!==undefined) q=s.q;
     else if(window.matchMedia&&!window.matchMedia('(pointer: fine)').matches&&(window.matchMedia('(pointer: coarse)').matches||'ontouchstart' in window||navigator.maxTouchPoints>0)) q=0;
   }catch(e){}
-  var lod=Quality.get(Quality.normalize(q)).lod;
+  return Quality.normalize(q);
+}
+/* 开局要的那一档模型包：解析到这里就同步插进页面 */
+(function(){
+  if(typeof document==='undefined'||!document.write) return;
+  var lod=Quality.get(bootQuality()).lod;
   ASSETS.loading[lod]=1;
   document.write('<script src="'+ASSETS_BASE+'models_l'+lod+'.js"><\/script>');
 })();

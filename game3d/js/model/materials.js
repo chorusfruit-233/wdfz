@@ -1,8 +1,8 @@
 /* 里世界 3D · 材质库
-   以前所有东西共用一张"墙面"贴图（课桌、车、床上都是墙面的竖条纹）。
-   现在按材质分开，每种一张现场画出来的贴图（不加载任何图片），
-   贴图坐标按世界坐标投影：同一种材质在相邻物体之间是连续的。
-   贴图都是灰度的，颜色仍然来自顶点色，所以外形和配色保持原样。 */
+   按材质分开，每种一张灰度颜色图和一张高度图（高度图在这里算成法线贴图）。
+   贴图是离线生成的（tools/textures/build_textures.py → game3d/assets/textures_512.js、textures_1024.js，WebP），
+   无缝平铺、固定不变；贴图坐标按世界坐标投影：同一种材质在相邻物体之间是连续的。
+   贴图都是灰度的，颜色仍然来自顶点色，所以外形和配色保持原样。叶片卡、污渍图集仍是现场画的（带透明）。 */
 'use strict';
 
 /* key: [贴图种类, 一张贴图覆盖多少米, 高光强度, 高光颜色] */
@@ -44,126 +44,57 @@ var MAT_DEF={
 var MATS={}, TEXS={};
 
 function texSize(){ return Quality.get().texture; }
-function makeMatTex(kind){
-  var SZ=texSize(), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
-  var c=cv.getContext('2d'); if(!c) return null;
-  var i, j, k=SZ/512;
-  function R(){ return Math.random(); }
-  function grain(center,amp,alpha,count,size){
-    c.globalAlpha=alpha;
-    for(i=0;i<count;i++){
-      var v=Math.round(center+(R()-0.5)*amp); v=v<0?0:(v>255?255:v);
-      c.fillStyle='rgb('+v+','+v+','+v+')';
-      var s=(size||3)*k*(0.6+R()*1.2);
-      c.fillRect(R()*SZ,R()*SZ,s,s);
-    }
-    c.globalAlpha=1;
-  }
-  function fill(v){ c.fillStyle='rgb('+v+','+v+','+v+')'; c.fillRect(0,0,SZ,SZ); }
-  function line(x0,y0,x1,y1,v,w,a){ c.globalAlpha=a===undefined?1:a; c.strokeStyle='rgb('+v+','+v+','+v+')'; c.lineWidth=w*k; c.beginPath(); c.moveTo(x0,y0); c.lineTo(x1,y1); c.stroke(); c.globalAlpha=1; }
-  if(kind==='plaster'){
-    fill(232);
-    for(i=0;i<7;i++){                                  /* 雨水 / 潮气留下的竖向水渍 */
-      var sx=R()*SZ, sw=(5+R()*20)*k, sh=(80+R()*260)*k;
-      var gr=c.createLinearGradient(0,0,0,sh);
-      gr.addColorStop(0,'rgba(110,106,100,0.09)'); gr.addColorStop(1,'rgba(110,106,100,0)');
-      c.fillStyle=gr; c.fillRect(sx,0,sw,sh);
-    }
-    grain(228,18,0.10,5200);
-    grain(200,30,0.05,400,6);
-  }else if(kind==='tile'){
-    fill(220);
-    for(i=0;i<2;i++) for(j=0;j<2;j++){                 /* 2×2 块 60 公分地砖，每块深浅略不同 */
-      var v=212+Math.floor(R()*18);
-      c.fillStyle='rgb('+v+','+v+','+v+')'; c.fillRect(i*SZ/2+2*k,j*SZ/2+2*k,SZ/2-4*k,SZ/2-4*k);
-    }
-    grain(222,16,0.08,3000);
-    for(i=0;i<=2;i++){ line(i*SZ/2,0,i*SZ/2,SZ,150,3); line(0,i*SZ/2,SZ,i*SZ/2,150,3); }
-  }else if(kind==='terrazzo'){
-    fill(214);
-    for(i=0;i<1600;i++){                               /* 水磨石的碎石子 */
-      var tv=R()<0.5?160+R()*40:235+R()*20;
-      c.fillStyle='rgb('+(tv|0)+','+(tv|0)+','+((tv-6)|0)+')';
-      var r0=(1+R()*3)*k; c.beginPath(); c.arc(R()*SZ,R()*SZ,r0,0,6.283); c.fill();
-    }
-    line(0,1,SZ,1,170,2); line(1,0,1,SZ,170,2);         /* 铜分隔条 */
-  }else if(kind==='ceiling'){
-    fill(226);
-    for(i=0;i<2600;i++){ c.fillStyle='rgba(120,120,120,'+(0.25+R()*0.4).toFixed(2)+')'; c.fillRect(R()*SZ,R()*SZ,1.6*k,1.6*k); }   /* 矿棉板的针孔 */
-    for(i=0;i<=2;i++){ line(i*SZ/2,0,i*SZ/2,SZ,175,4); line(0,i*SZ/2,SZ,i*SZ/2,175,4); }
-  }else if(kind==='wood'){
-    fill(214);
-    for(i=0;i<140;i++){
-      c.globalAlpha=0.05+R()*0.09;
-      c.fillStyle=R()>0.5?'#ffffff':'#9a9a9a';
-      var wy=R()*SZ; c.fillRect(0,wy,SZ,(1+R()*3)*k);  /* 顺着 u 方向的木纹 */
-    }
-    for(i=0;i<5;i++){                                  /* 几个木节 */
-      c.globalAlpha=0.18; c.strokeStyle='#7a7a7a'; c.lineWidth=1.2*k;
-      var kx=R()*SZ, ky=R()*SZ;
-      for(j=1;j<4;j++){ c.beginPath(); c.ellipse(kx,ky,j*7*k,j*2.4*k,0,0,6.283); c.stroke(); }
-    }
-    c.globalAlpha=1; grain(214,10,0.06,2200);
-  }else if(kind==='metal'){
-    fill(206);
-    for(i=0;i<300;i++){ c.globalAlpha=0.05+R()*0.06; c.fillStyle=R()>0.5?'#ffffff':'#8a8a8a'; c.fillRect(0,R()*SZ,SZ,1*k); }   /* 拉丝 */
-    c.globalAlpha=1;
-    for(i=0;i<6;i++){ c.globalAlpha=0.10; c.fillStyle='#6a5a4a'; c.beginPath(); c.arc(R()*SZ,R()*SZ,(6+R()*18)*k,0,6.283); c.fill(); }   /* 锈斑 */
-    c.globalAlpha=1;
-  }else if(kind==='fabric'){
-    fill(208);
-    for(i=0;i<SZ;i+=3*k){ line(i,0,i,SZ,190,1,0.35); line(0,i,SZ,i,226,1,0.35); }
-    grain(208,20,0.06,1800);
-  }else if(kind==='brick'){
-    /* 一顺一丁的红砖：砖本身深浅不一，灰缝是浅色 */
-    fill(196);
-    var rows=32, bh=SZ/rows, bw=SZ/8;
-    for(j=0;j<rows;j++){
-      var off=(j%2)?bw/2:0;
-      for(i=-1;i<9;i++){
-        var bv=150+Math.floor(R()*55);
-        c.fillStyle='rgb('+bv+','+bv+','+bv+')';
-        c.fillRect(i*bw+off+1.5*k,j*bh+1.5*k,bw-3*k,bh-3*k);
-      }
-    }
-    grain(170,40,0.08,3000);
-  }else if(kind==='concrete'){
-    fill(200);
-    grain(196,40,0.12,6000,4);
-    for(i=0;i<5;i++){                                  /* 几道细裂缝 */
-      var cx=R()*SZ, cy=R()*SZ; c.strokeStyle='rgba(90,90,90,0.35)'; c.lineWidth=1*k; c.beginPath(); c.moveTo(cx,cy);
-      for(j=0;j<6;j++){ cx+=(R()-0.5)*60*k; cy+=(R()-0.3)*40*k; c.lineTo(cx,cy); } c.stroke();
-    }
-    for(i=0;i<4;i++){ c.fillStyle='rgba(120,120,120,0.10)'; c.beginPath(); c.arc(R()*SZ,R()*SZ,(20+R()*50)*k,0,6.283); c.fill(); }
-  }else if(kind==='stone'){
-    fill(206);
-    grain(204,46,0.12,5000,3);
-    for(i=0;i<40;i++){ c.strokeStyle='rgba(150,150,150,0.25)'; c.lineWidth=(0.8+R())*k; c.beginPath(); var sx2=R()*SZ, sy2=R()*SZ; c.moveTo(sx2,sy2); c.bezierCurveTo(sx2+30*k,sy2+10*k,sx2+60*k,sy2-20*k,sx2+(80+R()*60)*k,sy2+5*k); c.stroke(); }
-  }else if(kind==='board'){
-    fill(70);
-    for(i=0;i<18;i++){ c.fillStyle='rgba(255,255,255,'+(0.03+R()*0.05).toFixed(3)+')'; c.beginPath(); c.ellipse(R()*SZ,R()*SZ,(30+R()*90)*k,(10+R()*30)*k,R()*3,0,6.283); c.fill(); }   /* 擦不干净的粉笔印 */
-    grain(70,20,0.08,1500);
-  }else if(kind==='grass'){
-    fill(196);
-    for(i=0;i<9000;i++){ var gv=150+R()*100; c.strokeStyle='rgba('+(gv|0)+','+(gv|0)+','+(gv|0)+',0.5)'; c.lineWidth=1*k; var gx=R()*SZ, gy=R()*SZ; c.beginPath(); c.moveTo(gx,gy); c.lineTo(gx+(R()-0.5)*3*k,gy-(3+R()*5)*k); c.stroke(); }
-    for(i=0;i<10;i++){ c.fillStyle='rgba(120,120,120,0.12)'; c.beginPath(); c.arc(R()*SZ,R()*SZ,(20+R()*60)*k,0,6.283); c.fill(); }
-  }else if(kind==='leaf'){
-    fill(170);
-    for(i=0;i<2600;i++){ var lv=110+R()*140; c.fillStyle='rgba('+(lv|0)+','+(lv|0)+','+(lv|0)+',0.75)'; c.beginPath(); c.ellipse(R()*SZ,R()*SZ,(3+R()*5)*k,(1.5+R()*2.5)*k,R()*3.14,0,6.283); c.fill(); }
-  }else if(kind==='bark'){
-    fill(170);
-    for(i=0;i<70;i++){ c.globalAlpha=0.25+R()*0.2; c.fillStyle=R()>0.5?'#5a5a5a':'#d0d0d0'; c.fillRect(R()*SZ,0,(2+R()*6)*k,SZ); }   /* 竖向树皮裂纹 */
-    c.globalAlpha=1; grain(170,40,0.10,2000);
-  }else if(kind==='paper'){
-    fill(238);
-    for(i=0;i<16;i++) line(30*k,(40+i*26)*k,(SZ-30*k)*(0.5+R()*0.5),(40+i*26)*k,150,2,0.5);   /* 一行行字 */
-  }else{
-    fill(220); grain(220,12,0.06,1500);
-  }
-  var t=new THREE.CanvasTexture(cv);
+/* 每张贴图最大 1024（离线贴图包的最大一档）；「真实」档也用 1024，省显存 */
+function matTexSize(){ return Math.min(texSize(),1024); }
+
+/* ---- 离线贴图包：TEX_PACK(分辨率, {种类: [颜色图, 高度图]})。流畅、均衡、精细读 512 的，超精细、真实读 1024 的。
+   开局在这里同步插进页面（和模型包一样，file:// 也行），图片解码完（页面 load 之前）才算读好；
+   游戏里换到更细的一档时后台读，读好以后整批换掉贴图。还没有包时颜色图先用平均亮度的纯色、不加法线。 */
+var TEXP={packs:{},loading:{}};
+var TEX_MEAN={plaster:231,tile:218,terrazzo:213,ceiling:223,wood:213,metal:205,plain:220,fabric:208,brick:182,
+  concrete:199,stone:206,board:74,grass:194,leaf:173,bark:167,paper:236};
+function texPackRes(){ return texSize()>512?1024:512; }
+function TEX_PACK(res,data){
+  var P={res:res,img:{},left:0,ready:false};
+  TEXP.packs[res]=P; delete TEXP.loading[res];
+  function done(){ if(--P.left===0){ P.ready=true; texPackReady(res); } }
+  Object.keys(data).forEach(function(k){
+    P.img[k]=data[k].map(function(src){ var im=new Image(); P.left++; im.onload=done; im.onerror=done; im.src=src; return im; });
+  });
+}
+/* 这一种材质现在能用的图：先要当前画质那一档，没读好就用别的已读好的 */
+function texPackImg(kind,j){
+  function ok(P){ var a=P&&P.ready&&P.img[kind]; return !!(a&&a[j]&&a[j].naturalWidth); }
+  var P=TEXP.packs[texPackRes()], r;
+  if(ok(P)) return P.img[kind][j];
+  for(r in TEXP.packs) if(ok(TEXP.packs[r])) return TEXP.packs[r].img[kind][j];
+  return null;
+}
+function texPackBest(){ var b=0, r; for(r in TEXP.packs) if(TEXP.packs[r].ready&&+r>b) b=+r; return b; }
+/* 当前画质要的那一档还没有（已经有更细的就不用读） */
+function texPackWant(){
+  var res=texPackRes();
+  if(TEXP.packs[res]||TEXP.loading[res]||texPackBest()>=res||typeof document==='undefined') return;
+  TEXP.loading[res]=1;
+  var s=document.createElement('script'); s.src=ASSETS_BASE+'textures_'+res+'.js'; s.async=true;
+  s.onerror=function(){ delete TEXP.loading[res]; };
+  document.head.appendChild(s);
+}
+/* 一档读好了：已经建好的材质换上新贴图 */
+function texPackReady(){ if(MAT_TEX_SIZE) matRefreshQuality(true); }
+function texParams(t,aniso){
   t.wrapS=THREE.RepeatWrapping; t.wrapT=THREE.RepeatWrapping;
-  try{ t.anisotropy=Math.min(8,GLR.renderer.capabilities.getMaxAnisotropy()); }catch(e){ t.anisotropy=4; }
+  try{ t.anisotropy=Math.min(aniso,GLR.renderer.capabilities.getMaxAnisotropy()); }catch(e){ t.anisotropy=Math.min(aniso,4); }
   t.generateMipmaps=true; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
+  return t;
+}
+function makeMatTex(kind){
+  var SZ=matTexSize(), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
+  var c=cv.getContext('2d'); if(!c) return null;
+  var im=texPackImg(kind,0);
+  if(im){ c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high'; c.drawImage(im,0,0,SZ,SZ); }
+  else{ var v=TEX_MEAN[kind]||220; c.fillStyle='rgb('+v+','+v+','+v+')'; c.fillRect(0,0,SZ,SZ); }
+  var t=texParams(new THREE.CanvasTexture(cv),8);
   t.colorSpace=THREE.SRGBColorSpace;
   return t;
 }
@@ -239,79 +170,17 @@ function matTex(kind){
 
 /* ---- 浮雕：每种贴图配一张高度图，算成法线贴图 ----
    砖缝、地砖缝、吊顶的分格和针孔、混凝土的裂缝和气孔、木纹、树皮……光从侧面照过来时有起伏，
-   不再像印在平面上的花纹。灰缝、砖的位置和颜色贴图是同一套格子，对得上。
-   分辨率是颜色贴图的一半（法线变化平缓，看不出来），「流畅」档不用。 */
+   不再像印在平面上的花纹。高度图和颜色图是同一次生成的，灰缝、砖的位置对得上。
+   分辨率是颜色贴图的一半（法线变化平缓，看不出来），「流畅」档不用。乳胶漆墙、磨光的水磨石只给一点点。 */
 var RELIEF={   /* 种类: 强度（normalScale） */
-  plaster:0.35, tile:0.9, terrazzo:0.5, ceiling:0.8, wood:0.45, metal:0.18, fabric:0.6,
-  brick:1.1, concrete:0.8, stone:0.7, grass:0.7, leaf:0.9, bark:1.2
+  plaster:0.10, tile:0.9, terrazzo:0.35, ceiling:0.35, wood:0.45, metal:0.18, fabric:0.9,
+  brick:1.1, concrete:0.35, stone:0.3, grass:0.5, leaf:0.6, bark:1.2
 };
 function makeMatHeight(kind){
-  var SZ=Math.max(128,texSize()>>1), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
+  var im=texPackImg(kind,1); if(!im) return null;
+  var SZ=Math.max(128,matTexSize()>>1), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
   var c=cv.getContext('2d'); if(!c) return null;
-  var i, j, k=SZ/512;
-  function R(){ return Math.random(); }
-  function fill(v){ c.fillStyle='rgb('+v+','+v+','+v+')'; c.fillRect(0,0,SZ,SZ); }
-  function dots(center,amp,alpha,count,size){
-    c.globalAlpha=alpha;
-    for(i=0;i<count;i++){ var v=Math.round(center+(R()-0.5)*amp); v=v<0?0:(v>255?255:v); c.fillStyle='rgb('+v+','+v+','+v+')';
-      var s=(size||3)*k*(0.6+R()*1.2); c.fillRect(R()*SZ,R()*SZ,s,s); }
-    c.globalAlpha=1;
-  }
-  function line(x0,y0,x1,y1,v,w,a){ c.globalAlpha=a===undefined?1:a; c.strokeStyle='rgb('+v+','+v+','+v+')'; c.lineWidth=Math.max(1,w*k); c.beginPath(); c.moveTo(x0,y0); c.lineTo(x1,y1); c.stroke(); c.globalAlpha=1; }
-  if(kind==='brick'){
-    fill(70);                                               /* 灰缝凹进去 */
-    var rows=32, bh=SZ/rows, bw=SZ/8;
-    for(j=0;j<rows;j++){
-      var off=(j%2)?bw/2:0;
-      for(i=-1;i<9;i++){
-        var v=200+Math.floor(R()*30);
-        c.fillStyle='rgb('+v+','+v+','+v+')'; c.fillRect(i*bw+off+1.5*k,j*bh+1.5*k,bw-3*k,bh-3*k);
-        c.fillStyle='rgba(255,255,255,0.25)'; c.fillRect(i*bw+off+3*k,j*bh+3*k,bw-6*k,bh-6*k);   /* 砖面中间略鼓 */
-      }
-    }
-    dots(200,60,0.15,2200,2);
-  }else if(kind==='tile'){
-    fill(200);
-    for(i=0;i<=2;i++){ line(i*SZ/2,0,i*SZ/2,SZ,60,4); line(0,i*SZ/2,SZ,i*SZ/2,60,4); }
-    dots(200,14,0.08,1200,2);
-  }else if(kind==='terrazzo'){
-    fill(180); dots(180,30,0.10,1500,2);
-    line(0,1,SZ,1,240,2); line(1,0,1,SZ,240,2);             /* 铜分隔条略高出一点 */
-  }else if(kind==='ceiling'){
-    fill(200);
-    for(i=0;i<2600;i++){ c.fillStyle='rgba(40,40,40,'+(0.4+R()*0.4).toFixed(2)+')'; c.fillRect(R()*SZ,R()*SZ,1.6*k,1.6*k); }
-    for(i=0;i<=2;i++){ line(i*SZ/2,0,i*SZ/2,SZ,50,6); line(0,i*SZ/2,SZ,i*SZ/2,50,6); }   /* 龙骨缝 */
-  }else if(kind==='wood'){
-    fill(160);
-    for(i=0;i<160;i++){ c.globalAlpha=0.10+R()*0.2; c.fillStyle=R()>0.5?'#ffffff':'#404040'; c.fillRect(0,R()*SZ,SZ,(1+R()*3)*k); }
-    c.globalAlpha=1;
-  }else if(kind==='metal'){
-    fill(160);
-    for(i=0;i<300;i++){ c.globalAlpha=0.08+R()*0.08; c.fillStyle=R()>0.5?'#ffffff':'#505050'; c.fillRect(0,R()*SZ,SZ,1*k); }
-    c.globalAlpha=1;
-  }else if(kind==='fabric'){
-    fill(150);
-    for(i=0;i<SZ;i+=3*k){ line(i,0,i,SZ,220,1.2,0.6); line(0,i+1.5*k,SZ,i+1.5*k,90,1.2,0.6); }
-  }else if(kind==='concrete'){
-    fill(170); dots(170,90,0.22,5000,4);
-    for(i=0;i<300;i++){ c.fillStyle='rgba(30,30,30,0.6)'; c.beginPath(); c.arc(R()*SZ,R()*SZ,(0.8+R()*1.6)*k,0,6.283); c.fill(); }   /* 气孔 */
-    for(i=0;i<5;i++){ var cx=R()*SZ, cy=R()*SZ; c.strokeStyle='rgba(20,20,20,0.8)'; c.lineWidth=1.4*k; c.beginPath(); c.moveTo(cx,cy);
-      for(j=0;j<6;j++){ cx+=(R()-0.5)*60*k; cy+=(R()-0.3)*40*k; c.lineTo(cx,cy); } c.stroke(); }
-  }else if(kind==='stone'){
-    fill(170); dots(170,110,0.18,5000,3);
-  }else if(kind==='plaster'){
-    fill(170); dots(170,70,0.14,7000,3); dots(170,90,0.08,500,8);
-  }else if(kind==='grass'){
-    fill(120);
-    for(i=0;i<6000;i++){ var gv=120+R()*130; c.strokeStyle='rgba('+(gv|0)+','+(gv|0)+','+(gv|0)+',0.6)'; c.lineWidth=1.2*k; var gx=R()*SZ, gy=R()*SZ; c.beginPath(); c.moveTo(gx,gy); c.lineTo(gx+(R()-0.5)*3*k,gy-(3+R()*5)*k); c.stroke(); }
-  }else if(kind==='leaf'){
-    fill(90);
-    for(i=0;i<1800;i++){ var lv=150+R()*100; c.fillStyle='rgba('+(lv|0)+','+(lv|0)+','+(lv|0)+',0.85)'; c.beginPath(); c.ellipse(R()*SZ,R()*SZ,(3+R()*5)*k,(1.5+R()*2.5)*k,R()*3.14,0,6.283); c.fill(); }
-  }else if(kind==='bark'){
-    fill(140);
-    for(i=0;i<90;i++){ c.globalAlpha=0.35+R()*0.3; c.fillStyle=R()>0.45?'#202020':'#e0e0e0'; c.fillRect(R()*SZ,0,(2+R()*6)*k,SZ); }
-    c.globalAlpha=1; dots(140,60,0.12,1500,2);
-  }else return null;
+  c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high'; c.drawImage(im,0,0,SZ,SZ);
   return cv;
 }
 /* 高度图 → 法线贴图（OpenGL 约定：绿色朝 +V；画布的 y 向下，V 向上） */
@@ -344,11 +213,14 @@ function matNormal(kind){
   }
   return TEXS[key];
 }
-/* 材质保持引用稳定；分辨率变更时替换贴图并释放旧贴图，不累积四套 GPU 资源。 */
+/* 材质保持引用稳定；分辨率变更（或读好了更细的贴图包：force）时替换贴图并释放旧贴图，不累积四套 GPU 资源。 */
 var MAT_TEX_SIZE=0;
-function matRefreshQuality(){
-  if(MAT_TEX_SIZE===texSize())return;
-  var old=TEXS;TEXS={};MAT_TEX_SIZE=texSize();
+function matRefreshQuality(force){
+  texPackWant();
+  if(!force&&MAT_TEX_SIZE===texSize())return;
+  var old=TEXS;TEXS={};
+  if(MAT_TEX_SIZE===texSize()) ['foliage','grime'].forEach(function(k){ if(old[k]){ TEXS[k]=old[k]; delete old[k]; } });   /* 现场画的两张尺寸没变就留着 */
+  MAT_TEX_SIZE=texSize();
   Object.keys(MATS).forEach(function(k){
     var m=MATS[k],kind=(MAT_DEF[k]||MAT_DEF.plaster)[0];
     if(m.map)m.map=matTex(kind);
@@ -390,7 +262,7 @@ function matPBR(key){
 }
 /* 共享材质：所有房间、室外都用同一批，切场景时不销毁（userData.shared） */
 function matOf(key){
-  if(!MAT_TEX_SIZE)MAT_TEX_SIZE=texSize();
+  if(!MAT_TEX_SIZE){ MAT_TEX_SIZE=texSize(); texPackWant(); }
   if(Quality.get().pbr&&!PBR_SKIP[key]) return matPBR(key);
   if(MATS[key]) return MATS[key];
   var d=MAT_DEF[key]||MAT_DEF.plaster, m;
@@ -425,3 +297,10 @@ function matOf(key){
   return m;
 }
 function matUV(key){ var d=MAT_DEF[key]; return d?d[1]:2.4; }
+/* 开局要的那一档贴图包：照存档里的画质（assets.js 的 bootQuality），解析到这里就同步插进页面 */
+(function(){
+  if(typeof document==='undefined'||!document.write) return;
+  var res=Quality.get(bootQuality()).texture>512?1024:512;
+  TEXP.loading[res]=1;
+  document.write('<script src="'+ASSETS_BASE+'textures_'+res+'.js"><\/script>');
+})();
