@@ -44,7 +44,7 @@ var Settings={
   },
   q:function(i){
     i=qualityValid(i);
-    var texChanged=QPROF[i].texSize!==QP().texSize;
+    var texChanged=QPROF[i].texSize!==QP().texSize||QPROF[i].relief!==QP().relief;
     SET.q=i; QUALITY=i; paintSet(); saveSet();
     try{ var mq=document.getElementById('mq'); if(mq) mq.value=String(i); }catch(e){}
     if(texChanged) MAT_RESET_PENDING=true;         /* 贴图分辨率变了：下次建场景时材质重新生成 */

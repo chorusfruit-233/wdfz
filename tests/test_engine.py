@@ -250,6 +250,41 @@ class EngineTest(unittest.TestCase):
         })()""")
         self.assertEqual(r, {'same': True, 'swapped': True, 'n': True}, '开门只重建门扇这一块，整层楼和同学不动')
 
+    # ---------- 写实化建模：曲面平滑、新图元、流畅档的顶点预算 ----------
+    def test_curved_surfaces_are_smooth_and_new_primitives_build(self):
+        page = self.page(q=1)
+        r = page.evaluate("""(function(){
+          function nrm(K){ return K.build().children[0].geometry.attributes.normal; }
+          var a=new Kit({}); a.cyl('metal',0,0,0,0.2,0.2,1,8,0x808080,1,false); var na=nrm(a);
+          var b=new Kit({}); b.cyl('metal',0,0,0,0.2,0.2,1,4,0x808080,1,false); var nb=nrm(b);
+          var c=new Kit({}); c.lathe('metal',0,0,0,[[0.1,0],[0.2,0.5],[0.05,1]],12,0x808080,1);
+          var gc=c.build().children[0].geometry; gc.computeBoundingBox();
+          var d=new Kit({}); d.prism('metal',0,0,0,[[-1,0],[1,0],[0.8,0.5],[-0.8,0.6]],0.4,0x808080,1,0.02);
+          var gd=d.build().children[0].geometry; gd.computeBoundingBox();
+          var e=new Kit({}); e.leafCards('foliage',0,2,0,1,0x406040,1,2,0,0,2,0); var ue=e.build().children[0].geometry.attributes.uv;
+          var umin=1e9,umax=-1e9,i; for(i=0;i<ue.count;i++){ umin=Math.min(umin,ue.getX(i),ue.getY(i)); umax=Math.max(umax,ue.getX(i),ue.getY(i)); }
+          return {smooth:Math.abs(na.getX(0)-na.getX(3))>0.1, flat:Math.abs(nb.getX(0)-nb.getX(3))<0.01,
+                  lathe:[+gc.boundingBox.max.y.toFixed(3),+gc.boundingBox.max.x.toFixed(3)],
+                  prism:[+gd.boundingBox.max.x.toFixed(3),+gd.boundingBox.max.y.toFixed(3),+gd.boundingBox.max.z.toFixed(3)],
+                  uv:[umin,umax], fol:!!matOf('foliage').map&&matOf('foliage').alphaTest>0};
+        })()""")
+        self.assertTrue(r['smooth'], '8 段圆柱的侧面法线沿圆周变化（平滑着色）')
+        self.assertTrue(r['flat'], '4 段的是故意做的棱柱，保留棱线')
+        self.assertEqual(r['lathe'], [1.0, 0.2])
+        self.assertEqual(r['prism'], [1.0, 0.6, 0.2])
+        self.assertEqual(r['uv'], [0, 1], '叶片卡整张贴图铺满')
+        self.assertTrue(r['fol'], '叶片卡用镂空贴图')
+
+    def test_low_quality_keeps_a_vertex_budget(self):
+        page = self.page(q=0)
+        n = page.evaluate("""(function(){
+          function cnt(g){ var n=0; g.traverse(function(o){ if(o.geometry&&o.geometry.attributes.position) n+=o.geometry.attributes.position.count; }); g.traverse(function(o){ if(o.geometry) o.geometry.dispose(); }); return n; }
+          var ins=0; Object.keys(INTERIORS).forEach(function(id){ S.__pianoPlaced=0; ins+=cnt(buildRoomGeometry(INTERIORS[id])); });
+          return {indoor:ins, outdoor:cnt(buildOutdoorGeometry())};
+        })()""")
+        self.assertLess(n['indoor'], 2300000, '流畅档（手机）全校室内的顶点数')
+        self.assertLess(n['outdoor'], 270000, '流畅档室外的顶点数')
+
 
 if __name__ == '__main__':
     unittest.main()

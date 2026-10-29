@@ -15,8 +15,8 @@ var WDFZ_MANIFEST={
     'lib/three.min.js',
     /* 基础：常量、地图数据、渲染器、画质档位表 */
     'js/core.js','js/map.js','js/render.js','js/quality.js',
-    /* 建模：材质、建模工具、人物、家具、房间、楼、室外 */
-    'js/model/materials.js','js/model/kit.js','js/model/figure.js','js/model/furniture.js',
+    /* 建模：材质、建模工具、常见小物件、人物、家具、房间、楼、室外 */
+    'js/model/materials.js','js/model/kit.js','js/model/props.js','js/model/figure.js','js/model/furniture.js',
     'js/model/room.js','js/model/building.js','js/model/outdoor.js',
     /* 世界：碰撞与进出房间、钟楼旋梯、巡察者、传送门、手持物、结局演出 */
     'js/world.js','js/spiral.js','js/patrol.js','js/portal.js','js/hands.js','js/cutscene.js',

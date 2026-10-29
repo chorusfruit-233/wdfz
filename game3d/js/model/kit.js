@@ -5,7 +5,8 @@
    Kit：按材质分开的一组 GeoBuilder，最后 build() 成一个 Group（每种材质一个 Mesh）。
    "流畅"画质下倒角退化成普通盒、圆柱减段数，顶点数大约少一半。
    省资源（画出来和以前一样）：类型化数组建模、压缩顶点格式、不建贴地朝下 / 贴吊顶朝上的面、
-   大网格按位置切块做视锥剔除。数字见 docs/3D更新说明.md「建模内核重写」。 */
+   大网格按位置切块做视锥剔除。数字见 docs/3D更新说明.md「建模内核重写」。
+   写实化（见「建模写实化」）：圆柱、杆、椭球平滑着色；旋转体 lathe、挤出体 prism、叶片卡 leafCards；Kit.sub 嵌套坐标。 */
 'use strict';
 
 function hash2(a,b){ var h=(a*374761393+b*668265263)^0x5bf03635; h=(h^(h>>13))*1274126177; return ((h^(h>>16))>>>0)/4294967295; }
@@ -62,7 +63,9 @@ GeoBuilder.prototype._rgb=function(col,shade){
      · 贴着地面、朝下的面（家具、台阶、墙脚压在地上的那一面；镜头永远在地面以上）；
      · 有吊顶的房间里，贴着吊顶、朝上的面（吊顶挡着，镜头在下面）。 */
 var FACE_W=new Float64Array(12);
-GeoBuilder.prototype.face=function(pts,n,rgb,noTf){
+/* vn（可选）：每个顶点自己的法线（局部坐标）。圆柱、杆、椭球、旋转体的侧面用它做平滑着色，
+   顶点还是每个面各自一份（颜色、贴图坐标照旧按面算），只是法线沿曲面连续，看起来是圆的而不是一棱一棱的。 */
+GeoBuilder.prototype.face=function(pts,n,rgb,noTf,vn,uvs){
   var T=this.tf(), m=pts.length, k, nx, ny, nz, W=FACE_W, ymin=1e9, ymax=-1e9;
   if(noTf){ nx=n[0]; ny=n[1]; nz=n[2]; }
   else{ nx=n[0]*T.c+n[2]*T.s; ny=n[1]; nz=-n[0]*T.s+n[2]*T.c; }
@@ -86,9 +89,14 @@ GeoBuilder.prototype.face=function(pts,n,rgb,noTf){
   for(k=0;k<m;k++){
     var o=(v+k)*3, o2=(v+k)*2, x=W[k*3], y=W[k*3+1], z=W[k*3+2];
     P[o]=x; P[o+1]=y; P[o+2]=z;
-    N[o]=qx; N[o+1]=qy; N[o+2]=qz;
+    if(vn){
+      var a=vn[k], vx=a[0], vy=a[1], vz=a[2];
+      if(!noTf){ var tx=vx*T.c+vz*T.s; vz=-vx*T.s+vz*T.c; vx=tx; }
+      N[o]=Math.round(vx*127); N[o+1]=Math.round(vy*127); N[o+2]=Math.round(vz*127);
+    }else{ N[o]=qx; N[o+1]=qy; N[o+2]=qz; }
     C[o]=rgb[0]; C[o+1]=rgb[1]; C[o+2]=rgb[2];
-    if(axis===0){ U[o2]=z/uv; U[o2+1]=y/uv; }
+    if(uvs){ U[o2]=uvs[k][0]; U[o2+1]=uvs[k][1]; }                 /* 叶片卡这种整张贴图铺满一个面的 */
+    else if(axis===0){ U[o2]=z/uv; U[o2+1]=y/uv; }
     else if(axis===1){ U[o2]=x/uv; U[o2+1]=z/uv; }
     else{ U[o2]=x/uv; U[o2+1]=y/uv; }
   }
@@ -155,13 +163,15 @@ GeoBuilder.prototype.bevel=function(x,y,z,sx,sy,sz,col,shade,r){
 };
 /* 竖直的圆柱 / 圆台（y 为底面中心） */
 GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
+  var smooth=(seg>=6);                           /* 4、5 段的是故意做成棱柱 / 棱锥的（攒尖顶、矛尖），不抹平 */
   seg=lodSeg(seg,lodLow()?4:5);
   var rgb=this._rgb(col,shade), k, a0, a1;
-  var slope=(rb-rt)/h, nl=Math.sqrt(1+slope*slope);
+  var slope=(rb-rt)/h, nl=Math.sqrt(1+slope*slope), ny=slope/nl;
   for(k=0;k<seg;k++){
     a0=k/seg*6.2832; a1=(k+1)/seg*6.2832;
     var c0=Math.cos(a0),s0=Math.sin(a0),c1=Math.cos(a1),s1=Math.sin(a1), cm=Math.cos((a0+a1)/2), sm=Math.sin((a0+a1)/2);
-    this.face([[x+c0*rb,y,z+s0*rb],[x+c0*rt,y+h,z+s0*rt],[x+c1*rt,y+h,z+s1*rt],[x+c1*rb,y,z+s1*rb]],[cm/nl,slope/nl,sm/nl],rgb);
+    var vn=smooth?[[c0/nl,ny,s0/nl],[c0/nl,ny,s0/nl],[c1/nl,ny,s1/nl],[c1/nl,ny,s1/nl]]:null;
+    this.face([[x+c0*rb,y,z+s0*rb],[x+c0*rt,y+h,z+s0*rt],[x+c1*rt,y+h,z+s1*rt],[x+c1*rb,y,z+s1*rb]],[cm/nl,ny,sm/nl],rgb,false,vn);
     if(caps!==false){
       if(rt>0.001) this.face([[x,y+h,z],[x+c1*rt,y+h,z+s1*rt],[x+c0*rt,y+h,z+s0*rt]],[0,1,0],rgb);
       if(rb>0.001&&caps!=='top') this.face([[x,y,z],[x+c0*rb,y,z+s0*rb],[x+c1*rb,y,z+s1*rb]],[0,-1,0],rgb);
@@ -178,12 +188,16 @@ GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
   var ul=Math.sqrt(ux*ux+uy*uy+uz*uz)||1; ux/=ul; uy/=ul; uz/=ul;
   var vx=ay*uz-az*uy, vy=az*ux-ax*uz, vz=ax*uy-ay*ux;
   var rgb=this._rgb(col,shade), k, caps=(Math.max(r0,r1)>=0.04);
+  var smooth=(seg>=5||Math.max(r0,r1)<0.03);    /* 粗的四棱杆是方料（横梁、撞木以外的），细杆一律当圆管 */
+  var tl=(r0-r1)/L, tn=Math.sqrt(1+tl*tl);       /* 两头粗细不同：法线往细的那头偏 */
+  function P(c,s,r,bx,by,bz){ return [bx+(ux*c+vx*s)*r, by+(uy*c+vy*s)*r, bz+(uz*c+vz*s)*r]; }
+  function NR(c,s){ return [(ux*c+vx*s+ax*tl)/tn, (uy*c+vy*s+ay*tl)/tn, (uz*c+vz*s+az*tl)/tn]; }
   for(k=0;k<seg;k++){
     var a0=k/seg*6.2832, a1=(k+1)/seg*6.2832, am=(a0+a1)/2;
     var c0=Math.cos(a0),s0=Math.sin(a0),c1=Math.cos(a1),s1=Math.sin(a1);
-    function P(c,s,r,bx,by,bz){ return [bx+(ux*c+vx*s)*r, by+(uy*c+vy*s)*r, bz+(uz*c+vz*s)*r]; }
-    var n=[ux*Math.cos(am)+vx*Math.sin(am), uy*Math.cos(am)+vy*Math.sin(am), uz*Math.cos(am)+vz*Math.sin(am)];
-    this.face([P(c0,s0,r0,x0,y0,z0),P(c1,s1,r0,x0,y0,z0),P(c1,s1,r1,x1,y1,z1),P(c0,s0,r1,x1,y1,z1)],n,rgb);
+    var n=NR(Math.cos(am),Math.sin(am));
+    var vn=null; if(smooth){ var n0=NR(c0,s0), n1=NR(c1,s1); vn=[n0,n1,n1,n0]; }
+    this.face([P(c0,s0,r0,x0,y0,z0),P(c1,s1,r0,x0,y0,z0),P(c1,s1,r1,x1,y1,z1),P(c0,s0,r1,x1,y1,z1)],n,rgb,false,vn);
     if(caps){                                     /* 细杆的两头看不见，不封口（省一半三角形） */
       this.face([[x1,y1,z1],P(c0,s0,r1,x1,y1,z1),P(c1,s1,r1,x1,y1,z1)],[ax,ay,az],rgb);
       this.face([[x0,y0,z0],P(c1,s1,r0,x0,y0,z0),P(c0,s0,r0,x0,y0,z0)],[-ax,-ay,-az],rgb);
@@ -193,23 +207,112 @@ GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
 /* 低多边形椭球：jit>0 时每个顶点随机抖一下（树冠、灌木），面是平的 */
 GeoBuilder.prototype.blob=function(x,y,z,rx,ry,rz,col,shade,seg,jit,seed){
   seg=lodSeg(seg||7,5); var rings=Math.max(3,Math.round(seg*0.6)), rgb=this._rgb(col,shade);
-  var V=[], i, j, sd=seed||1;
+  var V=[], VN=[], i, j, sd=seed||1;
   for(j=0;j<=rings;j++){
-    var row=[], ph=j/rings*Math.PI;
+    var row=[], nrow=[], ph=j/rings*Math.PI;
     for(i=0;i<seg;i++){
       var th=i/seg*6.2832, jj=(jit&&j>0&&j<rings)?(1+(hash2(sd*31+i,j*17+sd)-0.5)*jit):1;
-      row.push([x+Math.sin(ph)*Math.cos(th)*rx*jj, y+Math.cos(ph)*ry*jj, z+Math.sin(ph)*Math.sin(th)*rz*jj]);
+      var ex=Math.sin(ph)*Math.cos(th), ey=Math.cos(ph), ez=Math.sin(ph)*Math.sin(th);
+      row.push([x+ex*rx*jj, y+ey*ry*jj, z+ez*rz*jj]);
+      var gx=ex/rx, gy=ey/ry, gz=ez/rz, gl=Math.sqrt(gx*gx+gy*gy+gz*gz)||1;   /* 椭球面的法线（不随抖动变：树冠看起来是一团软的） */
+      nrow.push([gx/gl,gy/gl,gz/gl]);
     }
-    V.push(row);
+    V.push(row); VN.push(nrow);
   }
   for(j=0;j<rings;j++) for(i=0;i<seg;i++){
-    var a=V[j][i], b=V[j][(i+1)%seg], c=V[j+1][(i+1)%seg], d=V[j+1][i];
+    var i1=(i+1)%seg, a=V[j][i], b=V[j][i1], c=V[j+1][i1], d=V[j+1][i];
+    var na=VN[j][i], nb=VN[j][i1], nc=VN[j+1][i1], nd=VN[j+1][i];
     var cx=(a[0]+b[0]+c[0]+d[0])/4-x, cy=(a[1]+b[1]+c[1]+d[1])/4-y, cz=(a[2]+b[2]+c[2]+d[2])/4-z, l=Math.sqrt(cx*cx+cy*cy+cz*cz)||1;
     var sh=(jit?(0.92+hash2(i+sd,j)*0.16):1);
     var rg=[rgb[0]*sh,rgb[1]*sh,rgb[2]*sh];
-    if(j===0) this.face([a,c,d],[cx/l,cy/l,cz/l],rg);
-    else if(j===rings-1) this.face([a,b,d],[cx/l,cy/l,cz/l],rg);
-    else this.face([a,b,c,d],[cx/l,cy/l,cz/l],rg);
+    if(j===0) this.face([a,c,d],[cx/l,cy/l,cz/l],rg,false,[na,nc,nd]);
+    else if(j===rings-1) this.face([a,b,d],[cx/l,cy/l,cz/l],rg,false,[na,nb,nd]);
+    else this.face([a,b,c,d],[cx/l,cy/l,cz/l],rg,false,[na,nb,nc,nd]);
+  }
+};
+/* 旋转体：轮廓 prof=[[半径, 高度], …]（从下往上）绕竖轴转一圈，y 为底。
+   轮廓相邻两段夹角小于 35° 的折点按平滑处理（灯罩、瓶子、垃圾桶、轮胎），大于的保留棱线（台阶、凸缘）。
+   第一个、最后一个点半径大于 0 时封口。 */
+GeoBuilder.prototype.lathe=function(x,y,z,prof,seg,col,shade){
+  seg=lodSeg(seg||12,lodLow()?5:6);
+  var rgb=this._rgb(col,shade), n=prof.length, i, k, SN=[];
+  for(i=0;i<n-1;i++){                                     /* 每一段的外法线（在 半径-高度 平面里） */
+    var dr=prof[i+1][0]-prof[i][0], dh=prof[i+1][1]-prof[i][1], L=Math.sqrt(dr*dr+dh*dh)||1;
+    SN.push([dh/L,-dr/L]);
+  }
+  function endN(i,atEnd){                                 /* 第 i 段在起点 / 终点处的法线：和相邻段夹角小就取平均 */
+    var a=SN[i], j=atEnd?i+1:i-1;
+    if(j<0||j>=SN.length) return a;
+    var b=SN[j], d=a[0]*b[0]+a[1]*b[1];
+    if(d<0.82) return a;
+    var mx=a[0]+b[0], my=a[1]+b[1], ml=Math.sqrt(mx*mx+my*my)||1;
+    return [mx/ml,my/ml];
+  }
+  for(i=0;i<n-1;i++){
+    var p0=prof[i], p1=prof[i+1];
+    if(p0[0]<1e-4&&p1[0]<1e-4) continue;
+    var e0=endN(i,false), e1=endN(i,true), flat=Math.abs(p1[1]-p0[1])<1e-5;
+    for(k=0;k<seg;k++){
+      var a0=k/seg*6.2832, a1=(k+1)/seg*6.2832, am=(a0+a1)/2;
+      var c0=Math.cos(a0),s0=Math.sin(a0),c1=Math.cos(a1),s1=Math.sin(a1);
+      /* 顶点顺序和 cyl 一样（从外面看逆时针）：起点 θ0、终点 θ0、终点 θ1、起点 θ1 */
+      var pts=[[x+c0*p0[0],y+p0[1],z+s0*p0[0]],[x+c0*p1[0],y+p1[1],z+s0*p1[0]],[x+c1*p1[0],y+p1[1],z+s1*p1[0]],[x+c1*p0[0],y+p0[1],z+s1*p0[0]]];
+      var fn=[Math.cos(am)*SN[i][0],SN[i][1],Math.sin(am)*SN[i][0]];
+      var vn=flat?null:[[c0*e0[0],e0[1],s0*e0[0]],[c0*e1[0],e1[1],s0*e1[0]],[c1*e1[0],e1[1],s1*e1[0]],[c1*e0[0],e0[1],s1*e0[0]]];
+      if(p0[0]<1e-4) this.face([pts[0],pts[1],pts[2]],fn,rgb,false,vn&&[vn[0],vn[1],vn[2]]);        /* 下端收成一个点 */
+      else if(p1[0]<1e-4) this.face([pts[0],pts[1],pts[3]],fn,rgb,false,vn&&[vn[0],vn[1],vn[3]]);   /* 上端收成一个点 */
+      else this.face(pts,fn,rgb,false,vn);
+    }
+  }
+  var b=prof[0], t=prof[n-1];
+  for(k=0;k<seg;k++){
+    var q0=k/seg*6.2832, q1=(k+1)/seg*6.2832;
+    if(b[0]>1e-4) this.face([[x,y+b[1],z],[x+Math.cos(q0)*b[0],y+b[1],z+Math.sin(q0)*b[0]],[x+Math.cos(q1)*b[0],y+b[1],z+Math.sin(q1)*b[0]]],[0,-1,0],rgb);
+    if(t[0]>1e-4) this.face([[x,y+t[1],z],[x+Math.cos(q1)*t[0],y+t[1],z+Math.sin(q1)*t[0]],[x+Math.cos(q0)*t[0],y+t[1],z+Math.sin(q0)*t[0]]],[0,1,0],rgb);
+  }
+};
+/* 挤出体：凸多边形轮廓 prof=[[u, v], …]（逆时针，u 沿局部 x、v 是高度）沿局部 z 挤出 depth（以 z 为中心）。
+   车身、屋脊、台阶侧板这种「侧面一个形状、往里一样厚」的东西。r>0 时两侧的棱切一道倒角。 */
+GeoBuilder.prototype.prism=function(x,y,z,prof,depth,col,shade,r){
+  var rgb=this._rgb(col,shade), n=prof.length, hz=depth/2, i, ins=Math.min(r||0,hz*0.4);
+  if(lodLow()) ins=0;
+  var cu=0, cv=0; for(i=0;i<n;i++){ cu+=prof[i][0]/n; cv+=prof[i][1]/n; }
+  /* 倒角：两个端面往里缩 ins，侧面和端面之间加一圈斜面 */
+  function shrink(p){ var du=p[0]-cu, dv=p[1]-cv, l=Math.sqrt(du*du+dv*dv)||1, s=Math.max(0,1-ins/l); return [cu+du*s,cv+dv*s]; }
+  var inner=prof.map(shrink);
+  for(i=0;i<n;i++){
+    var a=prof[i], b=prof[(i+1)%n], du=b[0]-a[0], dv=b[1]-a[1], L=Math.sqrt(du*du+dv*dv)||1, nu=dv/L, nv=-du/L;
+    this.face([[x+a[0],y+a[1],z+hz-ins],[x+a[0],y+a[1],z-hz+ins],[x+b[0],y+b[1],z-hz+ins],[x+b[0],y+b[1],z+hz-ins]],[nu,nv,0],rgb);
+    if(ins>0){
+      var ia=inner[i], ib=inner[(i+1)%n], Q=0.7071;
+      this.face([[x+a[0],y+a[1],z+hz-ins],[x+b[0],y+b[1],z+hz-ins],[x+ib[0],y+ib[1],z+hz],[x+ia[0],y+ia[1],z+hz]],[nu*Q,nv*Q,Q],rgb);
+      this.face([[x+b[0],y+b[1],z-hz+ins],[x+a[0],y+a[1],z-hz+ins],[x+ia[0],y+ia[1],z-hz],[x+ib[0],y+ib[1],z-hz]],[nu*Q,nv*Q,-Q],rgb);
+    }
+  }
+  var cap=ins>0?inner:prof;
+  for(i=1;i<n-1;i++){
+    this.face([[x+cap[0][0],y+cap[0][1],z+hz],[x+cap[i][0],y+cap[i][1],z+hz],[x+cap[i+1][0],y+cap[i+1][1],z+hz]],[0,0,1],rgb);
+    this.face([[x+cap[0][0],y+cap[0][1],z-hz],[x+cap[i+1][0],y+cap[i+1][1],z-hz],[x+cap[i][0],y+cap[i][1],z-hz]],[0,0,-1],rgb);
+  }
+};
+/* 叶团：几张互相穿插的方形叶片卡（贴图是一簇叶子，透明的地方镂空），中心 (x,y,z)、半径 r。
+   法线按「从树冠中心 (ox,oy,oz) 往外」给，整个树冠的明暗像一团体积，而不是一张张纸片。
+   n 张竖卡均匀转开，再加一张斜卡；rot 让每团的朝向不一样。 */
+GeoBuilder.prototype.leafCards=function(x,y,z,r,col,shade,n,rot,ox,oy,oz){
+  var rgb=this._rgb(col,shade), k, UV=[[0,0],[1,0],[1,1],[0,1]];
+  var T=this.tf();
+  function W(p){ return [T.x+p[0]*T.c+p[2]*T.s, T.y+p[1], T.z-p[0]*T.s+p[2]*T.c]; }
+  for(k=0;k<=n;k++){
+    var a=rot+k*Math.PI/n, ca=Math.cos(a)*r, sa=Math.sin(a)*r, P;
+    if(k<n) P=[[x-ca,y-r,z-sa],[x+ca,y-r,z+sa],[x+ca,y+r,z+sa],[x-ca,y+r,z-sa]];
+    else{ var t=r*0.35; P=[[x-ca,y-t,z-sa],[x+sa,y+t*0.2,z-ca],[x+ca,y+t,z+sa],[x-sa,y-t*0.2,z+ca]]; }   /* 斜着的一张，从上往下看也不空 */
+    var WP=P.map(W), wo=W([ox,oy,oz]);
+    var VN=WP.map(function(p){ var dx=p[0]-wo[0], dy=(p[1]-wo[1])*1.3, dz=p[2]-wo[2], l=Math.sqrt(dx*dx+dy*dy+dz*dz)||1; return [dx/l,dy/l,dz/l]; });
+    var e1=[WP[1][0]-WP[0][0],WP[1][1]-WP[0][1],WP[1][2]-WP[0][2]], e2=[WP[3][0]-WP[0][0],WP[3][1]-WP[0][1],WP[3][2]-WP[0][2]];
+    var fn=[e1[1]*e2[2]-e1[2]*e2[1], e1[2]*e2[0]-e1[0]*e2[2], e1[0]*e2[1]-e1[1]*e2[0]], fl=Math.sqrt(fn[0]*fn[0]+fn[1]*fn[1]+fn[2]*fn[2])||1;
+    this.face(WP,[fn[0]/fl,fn[1]/fl,fn[2]/fl],rgb,true,VN,UV);
+    /* 背面再来一张（顶点顺序反过来、法线不变）：材质只画正面，两面的明暗都按树冠的体积算 */
+    this.face([WP[1],WP[0],WP[3],WP[2]],[-fn[0]/fl,-fn[1]/fl,-fn[2]/fl],rgb,true,[VN[1],VN[0],VN[3],VN[2]],[UV[1],UV[0],UV[3],UV[2]]);
   }
 };
 /* 地面四边形（一定朝上；顶点顺序反了会自动纠正） */
@@ -342,6 +445,13 @@ var KIT_CHUNK_V=20000, KIT_CHUNK_MAX=8;   /* 切得太碎绘制次数会变多�
 Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder(matUV(key),this); return this.B[key]; };
 Kit.prototype.frame=function(x,z,rot,y){ this.T.x=x||0; this.T.z=z||0; this.T.y=y||0; this.T.c=Math.cos(rot||0); this.T.s=Math.sin(rot||0); return this; };
 Kit.prototype.unframe=function(){ return this.frame(0,0,0,0); };
+/* 嵌套的局部坐标：在当前坐标系里再平移、转一下（小物件放在家具上时用），返回旧的，用完 restore 回去 */
+Kit.prototype.sub=function(x,z,rot,y){
+  var T=this.T, old={x:T.x,y:T.y,z:T.z,c:T.c,s:T.s}, a=Math.atan2(T.s,T.c)+(rot||0);
+  T.x=old.x+x*old.c+z*old.s; T.z=old.z-x*old.s+z*old.c; T.y=old.y+(y||0); T.c=Math.cos(a); T.s=Math.sin(a);
+  return old;
+};
+Kit.prototype.restore=function(o){ var T=this.T; T.x=o.x; T.y=o.y; T.z=o.z; T.c=o.c; T.s=o.s; return this; };
 /* 占地记录：cap 不为空时，每个图元在人身高范围（0.10–1.85 米）内的水平外包矩形记进去，
    房间生成拿它当家具的碰撞（room.js），以前碰撞是每种字符一个固定比例的方块，和模型对不上 */
 var CAP_Y0=0.10, CAP_Y1=1.85;
@@ -358,6 +468,9 @@ Kit.prototype._cap=function(b,v0,m){
 };
 Kit.prototype.box=function(m,x,y,z,sx,sy,sz,col,sh){ var b=this.g(m), v=b.v; b.box(x,y,z,sx,sy,sz,col,sh); this._cap(b,v,m); };
 Kit.prototype.bevel=function(m,x,y,z,sx,sy,sz,col,sh,r){ var b=this.g(m), v=b.v; b.bevel(x,y,z,sx,sy,sz,col,sh,r); this._cap(b,v,m); };
+Kit.prototype.leafCards=function(m,x,y,z,r,col,sh,n,rot,ox,oy,oz){ var b=this.g(m); b.leafCards(x,y,z,r,col,sh,n,rot,ox,oy,oz); };
+Kit.prototype.lathe=function(m,x,y,z,prof,seg,col,sh){ var b=this.g(m), v=b.v; b.lathe(x,y,z,prof,seg,col,sh); this._cap(b,v,m); };
+Kit.prototype.prism=function(m,x,y,z,prof,depth,col,sh,r){ var b=this.g(m), v=b.v; b.prism(x,y,z,prof,depth,col,sh,r); this._cap(b,v,m); };
 Kit.prototype.cyl=function(m,x,y,z,rb,rt,h,seg,col,sh,caps){ var b=this.g(m), v=b.v; b.cyl(x,y,z,rb,rt,h,seg,col,sh,caps); this._cap(b,v,m); };
 Kit.prototype.rod=function(m,x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh){ var b=this.g(m), v=b.v; b.rod(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh); this._cap(b,v,m); };
 Kit.prototype.blob=function(m,x,y,z,rx,ry,rz,col,sh,seg,jit,seed){ var b=this.g(m), v=b.v; b.blob(x,y,z,rx,ry,rz,col,sh,seg,jit,seed); this._cap(b,v,m); };

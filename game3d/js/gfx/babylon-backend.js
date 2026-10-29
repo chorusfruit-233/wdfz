@@ -136,6 +136,9 @@
     }
     var tx=m.map?texOf(m.map):null;
     if(bm.albedoTexture!==tx) bm.albedoTexture=tx;
+    var nt=(!unlit&&m.normalMap)?texOf(m.normalMap):null;     /* 浮雕：法线贴图（没有切线数据，两边都按屏幕导数算切线空间） */
+    if(bm.bumpTexture!==nt) bm.bumpTexture=nt;
+    if(nt){ nt.level=m.normalScale?m.normalScale.x:1; bm.invertNormalMapY=BK.flipNY!==false; }
     bm.alpha=m.transparent?opa:1;
     var add=(m.blending===THREE.AdditiveBlending);
     bm.alphaMode=add?B.Engine.ALPHA_ADD:B.Engine.ALPHA_COMBINE;
