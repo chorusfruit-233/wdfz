@@ -587,9 +587,10 @@ Kit.prototype._buildInstances=function(grp){
         if(!mk) continue;
         var geo=Assets.groupGeometry(pk,name,gi,mk), mesh=new THREE.InstancedMesh(geo,matOf(mk),list.length), j;
         for(j=0;j<list.length;j++){
-          var X=list[j].X, sc=X.k||1;
-          /* 绕 y 转：three.js 的 rotation.y=a 时 x'=x·cos a+z·sin a、z'=−x·sin a+z·cos a，和 Kit 的 frame 一样 */
-          M.set(X.c*sc,0,X.s*sc,X.x, 0,sc,0,X.y, -X.s*sc,0,X.c*sc,X.z, 0,0,0,1);
+          var X=list[j].X, sc=X.k||1, sq=sc*(X.q||1);
+          /* 绕 y 转：three.js 的 rotation.y=a 时 x'=x·cos a+z·sin a、z'=−x·sin a+z·cos a，和 Kit 的 frame 一样；
+             模型自己的 x 先拉长 sx 倍（着色器按实例矩阵的各列长度修正法线） */
+          M.set(X.c*sq,0,X.s*sc,X.x, 0,sc,0,X.y, -X.s*sq,0,X.c*sc,X.z, 0,0,0,1);
           mesh.setMatrixAt(j,M);
           var hx=list[j].cols[gi], f=g[6]*list[j].shade;
           col.setRGB(((hx>>16)&255)/255*f,((hx>>8)&255)/255*f,(hx&255)/255*f,THREE.LinearSRGBColorSpace);
@@ -628,17 +629,18 @@ Kit.prototype.build=function(group){
 GeoBuilder.prototype.appendAsset=function(pk,b,g,X,rgbMul,uo,vo){
   var nv=g[3], ni=g[5], v=this.v, i0=this.ni, k;
   this._grow(v+nv,i0+ni);
-  var POS=pk.pos, NRM=pk.nrm, COL=pk.col, UVS=pk.uv, IDX=pk.idx, s=X.k||1;
+  var POS=pk.pos, NRM=pk.nrm, COL=pk.col, UVS=pk.uv, IDX=pk.idx, s=X.k||1, q=X.q||1;
   var P=this.P, N=this.N, C=this.C, U=this.U, I=this.I;
   var bx=b[0], by=b[1], bz=b[2], ex=(b[3]-b[0])/65535, ey=(b[4]-b[1])/65535, ez=(b[5]-b[2])/65535;
   var cc=X.c, ss=X.s, ox=X.x, oy=X.y, oz=X.z, inv=1/this.uv;
   var cs=g[6]/255, cr=cs*rgbMul[0], cg=cs*rgbMul[1], cb=cs*rgbMul[2];
   var src=g[2]*3, src2=g[2]*2, dst=v*3, dst2=v*2;
   for(k=0;k<nv;k++,src+=3,src2+=2,dst+=3,dst2+=2){
-    var lx=(bx+POS[src]*ex)*s, ly=(by+POS[src+1]*ey)*s, lz=(bz+POS[src+2]*ez)*s;
+    var lx=(bx+POS[src]*ex)*s*q, ly=(by+POS[src+1]*ey)*s, lz=(bz+POS[src+2]*ez)*s;
     P[dst]=ox+lx*cc+lz*ss; P[dst+1]=oy+ly; P[dst+2]=oz-lx*ss+lz*cc;
-    var nx=NRM[src], nz=NRM[src+2];
-    N[dst]=Math.round(nx*cc+nz*ss); N[dst+1]=NRM[src+1]; N[dst+2]=Math.round(-nx*ss+nz*cc);
+    var nx=NRM[src], ny=NRM[src+1], nz=NRM[src+2];
+    if(q!==1){ nx/=q; var nl=127/Math.sqrt(nx*nx+ny*ny+nz*nz); nx*=nl; ny*=nl; nz*=nl; }   /* 沿 x 拉伸：法线按逆转置变换 */
+    N[dst]=Math.round(nx*cc+nz*ss); N[dst+1]=Math.round(ny); N[dst+2]=Math.round(-nx*ss+nz*cc);
     C[dst]=COL[src]*cr; C[dst+1]=COL[src+1]*cg; C[dst+2]=COL[src+2]*cb;
     U[dst2]=(UVS[src2]/1024*s+uo)*inv; U[dst2+1]=(UVS[src2+1]/1024*s+vo)*inv;
   }
@@ -654,7 +656,7 @@ Kit.prototype.asset=function(name,x,y,z,rot,opt){
   opt=opt||{};
   var T=this.T, pk=a.pk, m=a.m, ca=Math.cos(rot||0), sa=Math.sin(rot||0), s=opt.s||1, i;
   x=x||0; y=y||0; z=z||0;
-  var X={x:T.x+x*T.c+z*T.s, y:T.y+y, z:T.z-x*T.s+z*T.c, c:T.c*ca-T.s*sa, s:T.s*ca+T.c*sa, k:s};
+  var X={x:T.x+x*T.c+z*T.s, y:T.y+y, z:T.z-x*T.s+z*T.c, c:T.c*ca-T.s*sa, s:T.s*ca+T.c*sa, k:s, q:opt.sx||1};   /* sx：沿模型自己的 x 拉长（一段段的栏杆、门扇） */
   var uo=opt.uo!==undefined?opt.uo:hash2(Math.round(X.x*7)+311,Math.round(X.z*7)+97)*3.7;
   var vo=opt.vo!==undefined?opt.vo:hash2(Math.round(X.z*5)+13,Math.round(X.x*5)+71)*3.1;
   var tint=opt.tint||{}, remap=opt.mat||null, G=m.g, first=null;
@@ -691,11 +693,13 @@ Kit.prototype.asset=function(name,x,y,z,rot,opt){
 };
 /* 代理 → 场景坐标（穿模审查的格式），顺便给出外包盒 */
 function assetProxyWorld(q,X){
-  var s=X.k||1, c=X.c, sn=X.s;
-  function W(p){ var lx=p[0]*s, lz=p[2]*s; return [X.x+lx*c+lz*sn, X.y+p[1]*s, X.z-lx*sn+lz*c]; }
+  var s=X.k||1, c=X.c, sn=X.s, sq=X.q||1;
+  function W(p){ var lx=p[0]*s*sq, lz=p[2]*s; return [X.x+lx*c+lz*sn, X.y+p[1]*s, X.z-lx*sn+lz*c]; }
   var p, bb, ex, ez;
   if(q.t==='box'||q.t==='blob'){
-    var a=(q.a||0)+Math.atan2(sn,c), h=(q.t==='box'?q.h:q.r).map(function(v){ return v*s; }), cc=W(q.c);
+    /* 拉长时盒子按它自己的转角把 x、z 两个半边长分摊（转角是 0 或 90° 时是准的） */
+    var a=(q.a||0)+Math.atan2(sn,c), qa=q.a||0, fx=Math.abs(Math.cos(qa))*sq+Math.abs(Math.sin(qa)), fz=Math.abs(Math.sin(qa))*sq+Math.abs(Math.cos(qa));
+    var h=(q.t==='box'?q.h:q.r).map(function(v,i){ return v*s*(i===0?fx:(i===2?fz:1)); }), cc=W(q.c);
     p=q.t==='box'?{t:'box',c:cc,h:h,tc:Math.cos(a),ts:Math.sin(a)}:{t:'blob',c:cc,r:h,tc:Math.cos(a),ts:Math.sin(a),jit:q.jit||0};
     ex=Math.abs(h[0]*Math.cos(a))+Math.abs(h[2]*Math.sin(a)); ez=Math.abs(h[0]*Math.sin(a))+Math.abs(h[2]*Math.cos(a));
     bb=[cc[0]-ex,cc[1]-h[1],cc[2]-ez,cc[0]+ex,cc[1]+h[1],cc[2]+ez];

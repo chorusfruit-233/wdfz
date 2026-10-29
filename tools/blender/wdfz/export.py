@@ -136,6 +136,7 @@ def extract(A):
     spec = A.spec
     ground = spec.get('ground', True)
     ceil = spec.get('ceil')
+    wall = spec.get('wall')
     acc = {}
     for pi, p in enumerate(A.parts):
         me = p.ob.data
@@ -170,6 +171,11 @@ def extract(A):
         if ceil is not None:
             ymin = np.minimum(np.minimum(a[:, 1], b[:, 1]), c[:, 1])
             keep &= ~((fn[:, 1] > 0.9) & (ymin >= ceil - 0.003))
+        if wall is not None:
+            # 贴着墙、朝墙里的背面看不见，不导出
+            zmin = np.minimum(np.minimum(a[:, 2], b[:, 2]), c[:, 2])
+            zmax = np.maximum(np.maximum(a[:, 2], b[:, 2]), c[:, 2])
+            keep &= ~((fn[:, 2] < -0.9) & (np.abs(zmin - wall) <= 0.003) & (np.abs(zmax - wall) <= 0.003))
         if not keep.any():
             continue
         tk = np.repeat(keep, 3)
