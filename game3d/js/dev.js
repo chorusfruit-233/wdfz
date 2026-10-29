@@ -78,7 +78,7 @@ var Dev={
   },
   hide:function(k){
     DEV_HIDE[k]=DEV_HIDE[k]?0:1;
-    try{ if(S.mode==='out'){ clearWorldMesh(); enterWorldOut(); } }catch(e){}
+    try{ if(S.mode==='out'){ clearWorldMesh(); sceneCacheClear(); enterWorldOut(); } }catch(e){}   /* 缓存里那份是旧的：清掉重建 */
     toast(k+' '+(DEV_HIDE[k]?'隐藏':'显示'));
   },
   look:function(){

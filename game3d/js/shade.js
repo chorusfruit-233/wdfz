@@ -11,6 +11,15 @@ var SHADE={shadows:false,shaftMat:null,shaftGrp:null,pools:[],poolTex:null,shaft
 
 /* ---------- 实时阴影 ---------- */
 function shadeWantShadows(){ return (QUALITY|0)>=2; }
+function shadeRelease(light){
+  if(light.shadow.map){light.shadow.map.dispose();light.shadow.map=null;}
+  if(light.shadow.mapPass){light.shadow.mapPass.dispose();light.shadow.mapPass=null;}
+}
+function shadeSize(light,size){
+  if(light.shadow.mapSize.x===size)return;
+  shadeRelease(light);
+  light.shadow.mapSize.set(size,size);
+}
 function shadeApplyQuality(){
   if(!GLR.renderer) return;
   var on=shadeWantShadows();
@@ -24,18 +33,38 @@ function shadeApplyQuality(){
   var m=GLR.moon;
   m.castShadow=on;
   if(on){
-    m.shadow.mapSize.set(2048,2048);
+    shadeSize(m,Math.min(Quality.get().shadow,GLR.renderer.capabilities.maxTextureSize));
     var sc=m.shadow.camera; sc.left=-30; sc.right=30; sc.top=30; sc.bottom=-30; sc.near=1; sc.far=90;
     sc.updateProjectionMatrix();
     m.shadow.bias=-0.0006; m.shadow.normalBias=0.04;
     if(!m.target.parent) GLR.scene.add(m.target);
   }else{
+    shadeRelease(m);shadeRelease(GLR.torch);
     /* 不跟随玩家时，日月光按相对于原点的方向照射。 */
     m.target.position.set(0,0,0);
     m.target.updateMatrixWorld();
   }
   GLR.torch.castShadow=on;
+  if(on)shadeSize(GLR.torch,Math.min(Quality.get().torchShadow,GLR.renderer.capabilities.maxTextureSize));
+  shadeRoomLights();
   shadeMarkMesh(GLR.roomMesh); shadeMarkMesh(GLR.outMesh);
+}
+/* 超精细只让距相机最近的一盏顶灯投影，限制点光源的六面阴影开销。 */
+function shadeRoomLights(){
+  var lights=GLR.roomLights||[],size=Quality.get().ceilingShadow,best=-1,dist=Infinity;
+  lights.forEach(function(l,i){
+    var d=l.position.distanceToSquared(GLR.cam.position);
+    if(size&&l.position.y>=2&&l.position.y<=4&&d<dist){dist=d;best=i;}
+  });
+  lights.forEach(function(l,i){
+    l.castShadow=i===best;
+    if(l.castShadow){
+      /* PointLight 的图集为 4×2 面；尺寸仍须服从设备上限。 */
+      shadeSize(l,Math.min(size,Math.floor(GLR.renderer.capabilities.maxTextureSize/4)));
+      l.shadow.camera.near=0.15;l.shadow.camera.far=l.distance||18;
+      l.shadow.bias=-0.001;l.shadow.normalBias=0.025;
+    }else shadeRelease(l);
+  });
 }
 /* 新建好的场景网格：精细画质下投影、接收阴影 */
 function shadeMarkMesh(g){
@@ -124,6 +153,7 @@ function shadeBuildPools(){
 /* 每帧：光柱跟天色，光斑跟着灯 */
 function shadeTick(st){
   shadeFollow();
+  if(Quality.get().ceilingShadow)shadeRoomLights();
   if(SHADE.shaftMat){
     var day=st?st.day:0, k=st&&st.indoor?day:0;
     var dust=0.92+0.08*Math.sin((GLR.time||0)*0.7);

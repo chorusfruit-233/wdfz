@@ -33,16 +33,26 @@ function updateDialog(dt){
   }
 }
 
-var UI={ bagDirty:true, spotsDirty:true, openPanel:null, chooseOpen:false, choiceTimer:0, choiceTicker:0, choiceId:0, choiceDeadline:0 };
+var UI={ bagDirty:true, spotsDirty:true, openPanel:null, chooseOpen:false, choiceTimer:0, choiceTicker:0, choiceId:0, choiceDeadline:0, lastTab:'bag' };
 
+/* 随身手册：背包、思索、笔记、地图是同一个面板的四个页签。
+   UI.openPanel 仍然记的是具体页签（'bag' / 'think' / 'note' / 'mapv'），Tab / H / J / M 打开或切换，同一个键再按一次合上。 */
+var JOURNAL_TABS={bag:1,think:1,note:1,mapv:1};
 UI.anyOpen=function(){ return !!UI.openPanel||UI.chooseOpen; };
 UI.open=function(id){
   var el=document.getElementById(id);
   if(!el) return;
   var previous=UI.openPanel;
-  UI.openPanel=id;
   if(previous&&previous!==id)UI.close(previous,false);
-  el.style.display=(id==='think'||id==='bag'||id==='note')?'block':'flex';
+  UI.openPanel=id;
+  if(JOURNAL_TABS[id]){
+    UI.lastTab=id;
+    var jr=document.getElementById('journal'); if(jr) jr.style.display='flex';
+    var tabs=document.querySelectorAll('#journal .jtabs button');
+    for(var i=0;i<tabs.length;i++){ var on=tabs[i].getAttribute('data-tab')===id; tabs[i].classList.toggle('on',on); tabs[i].setAttribute('aria-selected',String(on)); }
+    el.style.display='block';
+    document.body.classList.add('jopen');
+  }else el.style.display='flex';
   resetInputState();releaseMouseLook();
   if(id==='bag') UI.renderBag();
   if(id==='note') UI.renderNote();
@@ -51,9 +61,11 @@ UI.open=function(id){
   updateTouchUI();
 };
 UI.close=function(id,resume){
+  if(!id) return;
   var el=document.getElementById(id);
   if(el) el.style.display='none';
   if(UI.openPanel===id){
+    if(JOURNAL_TABS[id]){ var jr=document.getElementById('journal'); if(jr) jr.style.display='none'; document.body.classList.remove('jopen'); }
     UI.openPanel=null;resetInputState();
     if(resume!==false)resumeMouseLook();
     updateTouchUI();
@@ -69,7 +81,7 @@ UI.choice=function(text,opts,options){
   var el=document.getElementById('choices');
   el.innerHTML='';
   var t=document.createElement('div');
-  t.style.cssText='font-size:14px;text-align:center;margin-bottom:6px;opacity:.9;line-height:1.9';
+  t.className='ctext';
   t.textContent=text;
   el.appendChild(t);
   function select(i){
@@ -81,24 +93,30 @@ UI.choice=function(text,opts,options){
   for(var i=0;i<opts.length;i++){
     (function(o,idx){
       var b=document.createElement('button');
-      b.textContent=o.label;
+      b.type='button';
+      b.innerHTML='<kbd>'+(idx+1)+'</kbd>';                 /* 键盘按数字直接选 */
+      b.appendChild(document.createTextNode(o.label));
       b.onclick=function(){ select(idx); };
       el.appendChild(b);
     })(opts[i],i);
   }
   el.style.display='flex';
-  UI.chooseOpen=true;
+  UI.chooseOpen=true; document.body.classList.add('chopen');
   if(options&&options.timeoutMs>0&&opts.length){
     var end=performance.now()+options.timeoutMs;
     UI.choiceDeadline=end;
     var timer=document.createElement('div'); timer.className='choice-timer';
     timer.setAttribute('role','status'); el.appendChild(timer);
+    var bar=document.createElement('div'); bar.className='choice-bar'; bar.innerHTML='<i></i>'; el.appendChild(bar);
+    var fill=bar.firstChild, total=options.timeoutMs;
     function paintTimer(){
-      var label='剩余 '+Math.max(0,Math.ceil((end-performance.now())/1000))+' 秒 · 超时随机选择';
+      var left=Math.max(0,end-performance.now());
+      var label='剩余 '+Math.ceil(left/1000)+' 秒 · 超时随机选择';
       if(timer.textContent!==label) timer.textContent=label;
+      fill.style.width=(left/total*100).toFixed(1)+'%';
     }
     paintTimer();
-    UI.choiceTicker=setInterval(paintTimer,200);
+    UI.choiceTicker=setInterval(paintTimer,100);
     UI.choiceTimer=setTimeout(function(){ select(Math.floor(Math.random()*opts.length)); },options.timeoutMs);
   }
   resetInputState();releaseMouseLook();
@@ -108,9 +126,16 @@ UI.clearChoiceTimer=function(){
   clearTimeout(UI.choiceTimer); clearInterval(UI.choiceTicker);
   UI.choiceTimer=0; UI.choiceTicker=0; UI.choiceDeadline=0;
 };
+/* 选择框打开时按数字键选第 n 项 */
+UI.choiceKey=function(n){
+  if(!UI.chooseOpen) return false;
+  var bs=document.querySelectorAll('#choices button');
+  if(n<1||n>bs.length) return false;
+  bs[n-1].click(); return true;
+};
 UI.closeChoice=function(){
   UI.clearChoiceTimer(); UI.choiceId++;
-  UI.chooseOpen=false;
+  UI.chooseOpen=false; document.body.classList.remove('chopen');
   var el=document.getElementById('choices');
   el.style.display='none';
   updateTouchUI();
@@ -138,12 +163,28 @@ function hotToggle(slot,i){
 function bagDescAt(i){
   var id=S.bag[i];
   if(!id) return '第 '+(i+1)+' 格是空的。';
-  var on=[];
-  if(S.hot[0]===id) on.push('①');
-  if(S.hot[1]===id) on.push('②');
-  var hint=on.length ? ('已在快捷栏 '+on.join(' ') + '　·　' + (USE.brollyShield&&id==='brolly'?'已撑开':'按 ' + (S.hot[0]===id?'1':'2') + ' 使用'))
-                     : '点右上角 ① ② 放进快捷栏';
-  return ITEMS[id].n+'：'+ITEMS[id].d+'\n双击（或再点一次）使用　·　'+hint;
+  var st=[];
+  if(S.hot[0]===id) st.push('在快捷栏 1');
+  if(S.hot[1]===id) st.push('在快捷栏 2');
+  if(id==='torch'&&USE.torch) st.push('开着');
+  if(id==='brolly'&&USE.brollyShield) st.push('撑开着');
+  return ITEMS[id].d+(st.length?'\n'+st.join(' · '):'');
+}
+/* 选中格子的操作按钮：使用、放进 / 取下快捷栏、丢弃。以前只有格子右上角很小的 ①② 和「丢」 */
+function bagActions(i){
+  var box=document.getElementById('bagacts'); if(!box) return;
+  box.innerHTML='';
+  var id=S.bag[i]; if(!id) return;
+  function btn(label,cls,fn){
+    var b=document.createElement('button'); b.type='button'; b.className=cls||''; b.innerHTML=label;
+    b.onclick=function(ev){ if(ev&&ev.stopPropagation) ev.stopPropagation(); fn(); };
+    box.appendChild(b);
+  }
+  btn('使用','primary',function(){ BAGTAP.i=-1; useItem(id); if(UI.openPanel==='bag') UI.renderBag(); });
+  for(var s=0;s<2;s++)(function(s){
+    btn(S.hot[s]===id?'从快捷栏 '+(s+1)+' 取下':'放到快捷栏 '+(s+1),S.hot[s]===id?'on':'',function(){ hotToggle(s,i); });
+  })(s);
+  btn('丢弃','danger',function(){ dropAt(i); });
 }
 UI.renderBag=function(){
   var g=document.getElementById('bags');
@@ -152,34 +193,24 @@ UI.renderBag=function(){
   for(var i=0;i<8;i++){
     (function(i){
       var d=document.createElement('div');
-      d.className='s'+(S.bagSel===i?' on':'');
-      d.innerHTML=S.bag[i]?
-        ('<span class="item"><span class="ic" style="color:'+itemColor(S.bag[i])+'">'+itemGlyph(S.bag[i])+'</span>'+
-         '<span class="nm">'+ITEMS[S.bag[i]].n+'</span></span>'):'—';
-      var hd=document.createElement('span'); hd.className='hb';
-      if(S.bag[i]){
-        var dr=document.createElement('b');
-        dr.className='dr'; dr.textContent='丢';
-        dr.onclick=function(ev){ if(ev&&ev.stopPropagation) ev.stopPropagation(); dropAt(i); return false; };
-        hd.appendChild(dr);
-      }
-      for(var s=0;s<2;s++){
-        (function(s){
-          var b=document.createElement('b');
-          var has=!!(S.bag[i]&&S.hot[s]===S.bag[i]);
-          b.className=has?'has':'';
-          b.textContent=(s?'②':'①');
-          b.onclick=function(ev){ if(ev&&ev.stopPropagation) ev.stopPropagation(); hotToggle(s,i); return false; };
-          hd.appendChild(b);
-        })(s);
-      }
-      if(S.bag[i]) d.appendChild(hd);
+      var id=S.bag[i];
+      d.className='s'+(S.bagSel===i?' on':'')+(id?'':' empty');
+      d.innerHTML=id?
+        ('<span class="item"><span class="ic" style="color:'+itemColor(id)+'">'+itemGlyph(id)+'</span>'+
+         '<span class="nm">'+ITEMS[id].n+'</span></span>'+
+         ((S.hot[0]===id||S.hot[1]===id)?'<span class="hk">'+(S.hot[0]===id?'1':'')+(S.hot[1]===id?'2':'')+'</span>':'')):'';
       d.onclick=function(){ bagUse(i); };
       g.appendChild(d);
     })(i);
   }
+  var sel=S.bag[S.bagSel];
+  var nm=document.getElementById('bagname');
+  if(nm) nm.textContent=sel?ITEMS[sel].n:'　';
   var de=document.getElementById('bagdesc');
-  if(de) de.textContent=bagDescAt(S.bagSel);
+  if(de) de.textContent=sel?bagDescAt(S.bagSel):(S.bag.length?'点一格看看。':'背包是空的。到处翻翻：抽屉、柜子、讲台。');
+  bagActions(S.bagSel);
+  var cap=document.querySelector('#journal .jtabs [data-tab="bag"]');
+  if(cap) cap.setAttribute('data-count',S.bag.length+'/8');
   UI.bagDirty=false;
   UI.renderHot();
 };
@@ -196,7 +227,7 @@ UI.renderHot=function(){
       d.className='hslot'+(S.hot[i]?' on':'');
       d.innerHTML='<span class="k">'+(i+1)+'</span>'+(S.hot[i]?
         ('<span class="ic" style="color:'+itemColor(S.hot[i])+'">'+itemGlyph(S.hot[i])+'</span>'+
-         '<span class="nm">'+ITEMS[S.hot[i]].n+'</span>'):'—');
+         '<span class="nm">'+ITEMS[S.hot[i]].n+'</span>'):'<span class="nm">空</span>');
       d.onclick=function(){ useHot(i); };
       hot.appendChild(d);
     })(i);
@@ -205,14 +236,16 @@ UI.renderHot=function(){
 UI.renderNote=function(){
   var h='';
   var ideas=ideasAvailable();
-  h+='<h2 style="font-size:15px;letter-spacing:3px;color:#9fe3c2;font-weight:400;margin-bottom:12px">目标</h2>';
-  h+='<div style="font-size:13px;opacity:.8;line-height:2;margin-bottom:22px">找到一条离开学校的路。在理智耗尽之前。</div>';
-  h+='<h2 style="font-size:15px;letter-spacing:3px;color:#9fe3c2;font-weight:400;margin-bottom:12px">想到的办法</h2>';
-  if(!ideas.length) h+='<div style="font-size:13px;opacity:.4">（一条都没有。得先走过那些地方。）</div>';
-  for(var i=0;i<ideas.length;i++) h+='<div style="font-size:13px;padding:6px 0;opacity:.85">· '+ideas[i].n+'</div>';
-  h+='<h2 style="font-size:15px;letter-spacing:3px;color:#9fe3c2;font-weight:400;margin:24px 0 12px">注意到的事</h2>';
+  function sec(t){ h+='<h3>'+t+'</h3>'; }
+  function li(t,cls){ h+='<div class="nl'+(cls?' '+cls:'')+'">'+t+'</div>'; }
+  sec('目标');
+  li('找到一条离开学校的路。在理智耗尽之前。','goal');
+  sec('想到的办法');
+  if(!ideas.length) li('（一条都没有。得先走过那些地方。）','dim');
+  for(var i=0;i<ideas.length;i++) li(ideas[i].n);
+  sec('注意到的事');
   var any=false;
-  for(var k in S.spots){ h+='<div style="font-size:13px;padding:4px 0;opacity:.7">· '+kLabel(k)+'</div>'; any=true; }
+  for(var k in S.spots){ li(kLabel(k)); any=true; }
   var CLUE_NOTE=[
     ['roomkey','网络中心的门锁着 —— 钥匙可能在行政楼五楼的校长办公室。'],
     ['stall','教学楼一楼厕所，第三个隔间：「11:45:00　放下一样东西」。要精确到秒：手表，或者「秒表」天赋。'],
@@ -224,10 +257,10 @@ UI.renderNote=function(){
     ['bell','钟楼的钟是哑的。可它和十三下钟声有关系。']
   ], ci;
   for(ci=0;ci<CLUE_NOTE.length;ci++){
-    if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0])){ h+='<div style="font-size:13px;padding:4px 0;opacity:.7">· '+CLUE_NOTE[ci][1]+'</div>'; any=true; }
+    if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0])){ li(CLUE_NOTE[ci][1]); any=true; }
   }
-  if(!any) h+='<div style="font-size:13px;opacity:.4">（还没注意到什么。）</div>';
-  if(!hasItem('notebook')||!hasItem('pen')) h+='<div style="font-size:12px;opacity:.55;margin-top:20px">我：感觉头不舒服，很多东西都容易忘了。</div>';
+  if(!any) li('（还没注意到什么。）','dim');
+  if(!hasItem('notebook')||!hasItem('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';
   document.getElementById('notein').innerHTML=h;
 };
 function kLabel(k){
@@ -243,7 +276,8 @@ UI.renderThink=function(){
   el.innerHTML='';
   for(var i=0;i<ideas.length;i++){
     (function(it){
-      var d=document.createElement('div');
+      var d=document.createElement('button');
+      d.type='button';
       d.className='idea';
       d.textContent=it.n;
       d.onclick=function(){ chooseIdea(it.id); };
@@ -259,11 +293,13 @@ function mapLabel(c,txt,x,y,cw,ch){
 UI.renderMap=function(){
   var el=document.getElementById('mapc');
   var bw=BOUND.x1-BOUND.x0, bh=BOUND.y1-BOUND.y0;
-  var availW=Math.min(window.innerWidth*0.60,720);
-  var availH=window.innerHeight*0.76;
+  /* 按手册内容区的实际大小铺满（以前固定取窗口的 60% × 76%） */
+  var body=el.parentElement&&el.parentElement.parentElement;
+  var availW=Math.max(160,Math.min((body?body.clientWidth:window.innerWidth*0.6)-24,900));
+  var availH=Math.max(160,(body?body.clientHeight:window.innerHeight*0.76)-48);
   var sc=Math.min(availW/bw,availH/bh);
   var cw=Math.round(bw*sc), ch=Math.round(bh*sc);
-  el.innerHTML='<canvas id="mapcv" width="'+cw+'" height="'+ch+'" style="display:block;margin:0 auto;border:1px solid rgba(130,180,155,.28);background:#0a1210"></canvas>';
+  el.innerHTML='<canvas id="mapcv" width="'+cw+'" height="'+ch+'"></canvas>';
   var cv=document.getElementById('mapcv'); if(!cv) return;
   var c=cv.getContext('2d'); if(!c) return;
   function X(v){ return (v-BOUND.x0)*sc; }

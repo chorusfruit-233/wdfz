@@ -2,6 +2,7 @@
 'use strict';
 
 var USE={torch:false,phone:false,brollyShield:false};
+var PILL_SEC=30, PILL_RATE=2;              /* 药片：30 秒里每秒回 2 点 SAN（再吃一片从头算，不叠加） */
 var OPENDOORS={};
 var DOOR_LOCKS={'lab3:41:15':'roomkey'};
 function doorLockNeed(R,c,r){ return DOOR_LOCKS[R.id+':'+c+':'+r]||null; }
@@ -18,7 +19,7 @@ function syncUseState(){
   USE.torch=!!USE.torch&&hasItem('torch');
   USE.phone=false;
   USE.brollyShield=!!USE.brollyShield&&hasItem('brolly');
-  if(GLR.torch) GLR.torch.intensity=USE.torch?55:0;
+  Engine.torch(USE.torch);
 }
 function addItem(id){
   if(!id||id==='nothing') return false;
@@ -55,7 +56,7 @@ function toggleTorch(){
 }
 function useHot(i){
   var id=S.hot[i];
-  if(!id){ toast('快捷栏 '+(i+1)+' 是空的 —— Tab 打开背包，点格子右上角 '+(i?'②':'①')); return; }
+  if(!id){ toast('快捷栏 '+(i+1)+' 是空的 —— 打开手册背包，选中物品后点「放到快捷栏 '+(i+1)+'」'); return; }
   if(!hasItem(id)){ S.hot[i]=null; var el=document.getElementById('hot'); if(el) el._sig=''; toast('「'+ITEMS[id].n+'」已经不在了'); UI.renderHot(); return; }
   useItem(id);
 }
@@ -66,7 +67,7 @@ function useItem(id){
   if(id==='phone'){ PHONE.start(); return; }
   if(id==='leave'){ useLeave(); return; }
   if(id==='brolly'){ USE.brollyShield=!USE.brollyShield; toast(USE.brollyShield?'撑开伞':'收起伞'); return; }
-  if(id==='pill'){ S.san=Math.min(100,S.san+18); removeItem('pill'); os('我：药片很苦。手不抖了。',3); toast('药片 · SAN +18'); return; }
+  if(id==='pill'){ S.pillT=PILL_SEC; removeItem('pill'); os('我：药片很苦。手慢慢不抖了。',3); toast('药片 · '+PILL_SEC+' 秒内每秒 SAN +'+PILL_RATE); return; }
   if(id==='snack'){ S.snackT=SNACK_SEC; removeItem('snack'); os('我：甜的。腿一下子轻了。',2.4); toast('士力架 · '+SNACK_SEC+' 秒内疾跑不耗体力'); return; }
   if(id==='coin'){ throwCoin(); return; }
   if(id==='atlas'){

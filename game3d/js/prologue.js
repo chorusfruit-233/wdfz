@@ -33,7 +33,7 @@ function proWake(then){
   try{ SFX.resume(); }catch(e){}
   eyelid(460, function(){
     try{ ncFlip(); }catch(e){}
-    try{ GLR.worldNorm=0; }catch(e){}
+    try{ VisualState.worldNorm=0; }catch(e){}
     try{ SFX.blink(); }catch(e){}
     PRO.see=true;
     var el=document.getElementById('pro');
@@ -48,7 +48,7 @@ function proShow(){
   var el=document.getElementById('pro');
   if(!el){ proEnd(); return; }
   PRO.on=true; PRO.i=0; PRO.woke=false; PRO.see=false; PRO.busy=false;
-  try{ GLR.worldNorm=1; }catch(e){}          /* 先按"正常世界"渲染 */
+  try{ VisualState.worldNorm=1; }catch(e){}          /* 先按"正常世界"渲染 */
   try{ if(el.classList) el.classList.remove('see'); }catch(e){}
   try{ document.body.classList.add('pro'); }catch(e){}
   PRO.seen=proSeen();
@@ -62,7 +62,7 @@ function proEnd(){
   if(el){ el.classList.remove('on'); el.classList.remove('see'); el.style.display='none'; }
   try{ document.body.classList.remove('pro'); }catch(e){}
   proMark();
-  try{ GLR.worldNorm=0; }catch(e){}
+  try{ VisualState.worldNorm=0; }catch(e){}
   try{ ncFlip(); }catch(e){}
   try{ os('我：11:40。第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8); }catch(e){}
 }

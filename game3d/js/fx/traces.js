@@ -38,7 +38,7 @@ function traceAdd(id){
 function tracesBuild(force){
   var key=(S.mode==='in'?S.room:'out')+'|'+((RT.traces&&RT.traces.length)||0);
   if(!force&&TR.key===key&&TR.g&&TR.g.parent) return;
-  if(TR.g){ try{ GLR.scene.remove(TR.g); }catch(e){} }
+  if(TR.g){GLR.scene.remove(TR.g);ThreeBackend.disposeGroup(TR.g);}
   TR.key=key;
   var g=new THREE.Group(); TR.g=g;
   var room=(S.mode==='in')?S.room:null, R=room?INTERIORS[room]:null;
@@ -119,4 +119,57 @@ function hallucTick(dt){
     break;
   }
   HALLU.next=4;
+}
+/* 远处的人影（不看 SAN 也会有）：隔一两分钟，正前方走廊 / 路的尽头站着一个黑影，一动不动地朝着你。
+   走近到 6 米多、手电照到它、或者盯着它看超过一秒多，它就不在了；再过一会儿自己也会不见。
+   只是吓人，不扣 SAN、不算异象；有异象、被巡察者盯着、打开界面时不出现。 */
+var APPAR={g:null,next:40,life:0,stare:0};
+function apparTick(dt){
+  var on=(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&!UI.anyOpen()&&!(typeof PAT!=='undefined'&&PAT.locked)&&!(typeof HIDE!=='undefined'&&HIDE.on)&&!(typeof PHONE!=='undefined'&&PHONE.on));
+  if(!APPAR.g){
+    APPAR.g=new THREE.Group();
+    anfxFigure(APPAR.g,new THREE.MeshBasicMaterial({color:0x030405,fog:true}),0,0,1.0,false,'person');
+    APPAR.g.visible=false; GLR.scene.add(APPAR.g);
+  }
+  if(APPAR.g.parent!==GLR.scene){ GLR.scene.add(APPAR.g); APPAR.g.visible=false; }   /* 换了场景：不跟过去 */
+  if(!on){ APPAR.g.visible=false; return; }
+  var dark=(S.mode==='in')||(typeof dayLight==='function'&&dayLight()<0.4);   /* 白天的室外不出现 */
+  if(APPAR.g.visible){
+    APPAR.life-=dt;
+    var hp=APPAR.g.position, cp=GLR.cam.position, dx=hp.x-cp.x, dz=hp.z-cp.z, dist=Math.hypot(dx,dz);
+    var look=angDiff(Math.atan2(dz,dx),S.ang);
+    if(look<0.10) APPAR.stare+=dt; else APPAR.stare=Math.max(0,APPAR.stare-dt*0.5);
+    var lit=(typeof USE!=='undefined'&&USE.torch&&look<0.16);
+    if(dist<6.5||lit||APPAR.stare>1.3||APPAR.life<=0){
+      APPAR.g.visible=false;
+      APPAR.next=rnd(50,120)*(0.6+0.4*clamp(S.san,0,100)/100);
+      if(look<0.5){ try{ SFX.vanish(); }catch(e){} }
+    }
+    return;
+  }
+  APPAR.next-=dt;
+  if(APPAR.next>0) return;
+  APPAR.next=6;                                      /* 这次没找到地方：过一会儿再试 */
+  if(!dark) return;
+  /* 10–16 米外、视线里没有遮挡、站得住的点里，挑离顶灯 / 路灯最近的：站在一小片光里，黑影才看得出来 */
+  var k, best=null, bestS=1e9, LT=(S.mode==='in')?(GLR.roomLights||[]).map(function(L){ return L.position; }):(typeof OUT_LAMPS!=='undefined'?OUT_LAMPS:[]);
+  for(k=0;k<10;k++){
+    var a=S.ang+(Math.random()-0.5)*0.5, d, ok, s2;
+    for(d=145;d>=90;d-=11){
+      ok=true;
+      for(s2=12;s2<=d;s2+=6){ if(solidAt(S.x+Math.cos(a)*s2,S.y+Math.sin(a)*s2)){ ok=false; break; } }
+      if(!ok) continue;
+      var wx=S.x+Math.cos(a)*d, wy=S.y+Math.sin(a)*d;
+      if(solidAt(wx+4,wy)||solidAt(wx-4,wy)||solidAt(wx,wy+4)||solidAt(wx,wy-4)) continue;
+      var q=anfxW2S(wx,wy), sc=6, li;
+      for(li=0;li<LT.length;li++) sc=Math.min(sc,Math.hypot(LT[li].x-q.x,LT[li].z-q.z));
+      sc+=Math.random()*0.8;
+      if(sc<bestS){ bestS=sc; best=[wx,wy]; }
+    }
+  }
+  if(!best) return;
+  var p=anfxW2S(best[0],best[1]);
+  APPAR.g.position.set(p.x,0,p.z);
+  APPAR.g.rotation.y=Math.atan2(GLR.cam.position.x-p.x,GLR.cam.position.z-p.z);
+  APPAR.g.visible=true; APPAR.life=rnd(3,6); APPAR.stare=0;
 }

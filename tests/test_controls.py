@@ -1,97 +1,9 @@
-"""Input/fullscreen browser regressions. Run: python -m unittest discover -s tests -v"""
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
-import os
-import shutil
-import threading
+"""操作、剧情与存档回归。"""
 import unittest
-
-from playwright.sync_api import sync_playwright
-
-
-class QuietHandler(SimpleHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
+from browser_case import BrowserCase
 
 
-class ControlsTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        root = Path(__file__).resolve().parents[1]
-        cls.server = ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=str(root)))
-        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
-        cls.thread.start()
-        cls.url = f'http://127.0.0.1:{cls.server.server_port}/'
-        cls.playwright = sync_playwright().start()
-        executable = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
-        cls.browser = cls.playwright.chromium.launch(
-            executable_path=executable,
-            headless=True,
-            args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
-        )
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.browser.close()
-        cls.playwright.stop()
-        cls.server.shutdown()
-        cls.server.server_close()
-        cls.thread.join()
-
-    def setUp(self):
-        self.contexts = []
-        self.errors = []
-
-    def tearDown(self):
-        for context in self.contexts:
-            context.close()
-        self.assertEqual(self.errors, [], 'Unexpected page errors')
-
-    def page(self, touch=False, hybrid=False):
-        context = self.browser.new_context(
-            viewport={'width': 390, 'height': 844} if touch else {'width': 1000, 'height': 700},
-            has_touch=touch, is_mobile=touch, device_scale_factor=1,
-        )
-        self.contexts.append(context)
-        context.add_init_script("""
-            localStorage.setItem('wdfz_pro','1');
-            localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));
-        """)
-        if hybrid:
-            context.add_init_script("""
-                Object.defineProperty(navigator,'maxTouchPoints',{value:5,configurable:true});
-                Object.defineProperty(window,'ontouchstart',{value:null,configurable:true});
-            """)
-        page = context.new_page()
-        page.on('pageerror', lambda e: self.errors.append(str(e)))
-        page.goto(self.url, wait_until='load')
-        # Freeze simulation so hazards and clocks cannot interfere with input assertions.
-        # The final smoke test also creates and renders a real room.
-        page.evaluate("""
-            PHOTO_TRIED=true;running=false;document.getElementById('menu').style.display='none';
-            S.screen='play';S.mode='out';S.room=null;
-            S.x=1580;S.y=1800;S.ang=0;S.pitch=0;S.seated=false;S.intro=0;
-            PRO.on=false;PAUSE.on=false;syncCamera(0);updateHUD();
-            CUT.enabled=false;SEARCH.on=false;
-        """)
-        return page
-
-    def assert_js(self, page, expression):
-        self.assertTrue(page.evaluate(expression), expression)
-
-    def touch(self, page, kind, points):
-        session = getattr(page, '_controls_cdp', None)
-        if session is None:
-            session = page.context.new_cdp_session(page)
-            page._controls_cdp = session
-        session.send('Input.dispatchTouchEvent', {'type': kind, 'touchPoints': points})
-
-    def swipe(self, page, start=(205, 290), end=(250, 315)):
-        self.touch(page, 'touchStart', [{'x': start[0], 'y': start[1]}])
-        self.touch(page, 'touchMove', [{'x': end[0], 'y': end[1]}])
-        self.touch(page, 'touchEnd', [])
-
+class ControlsTest(BrowserCase):
     def test_homepage_and_legacy_3d_link(self):
         page = self.page()
         failed_assets = []
@@ -296,7 +208,7 @@ class ControlsTest(unittest.TestCase):
         before = page.evaluate('S.ang')
         self.swipe(page)
         self.assertEqual(page.evaluate('S.ang'), before)
-        page.locator('#bag .close').tap()
+        page.locator('#journal .jclose').tap()
         self.swipe(page)
         self.assertGreater(page.evaluate('S.ang'), before + .1)
         page.locator('#fullscreen-toggle').tap()
@@ -901,12 +813,12 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, "!SHADE.shaftGrp&&__poolCount>0&&INTERIORS.teach1.shafts.length>0")
         page.evaluate("Settings.q(1);updateLighting()")
         self.assert_js(page, "SHADE.shaftGrp&&SHADE.shaftGrp.parent===GLR.scene&&SHADE.shaftGrp.children.length===INTERIORS.teach1.shafts.length")
-        self.assert_js(page, "SHADE.shaftMat.opacity>0&&SHADE.pools.length===__poolCount&&GLR.roomMesh===__roomMesh&&S.x===__pos[0]&&S.y===__pos[1]")
+        self.assert_js(page, "SHADE.shaftMat.opacity>0&&SHADE.pools.length===__poolCount&&GLR.roomMesh!==__roomMesh&&S.x===__pos[0]&&S.y===__pos[1]")
         page.evaluate("""window.__disposed=0;SHADE.shaftGrp.children[0].geometry.addEventListener('dispose',function(){__disposed++});
             Settings.q(0);updateLighting();""")
-        self.assert_js(page, "!SHADE.shaftGrp&&SHADE.pools.length===__poolCount&&__disposed===1&&GLR.roomMesh===__roomMesh")
+        self.assert_js(page, "!SHADE.shaftGrp&&SHADE.pools.length===__poolCount&&__disposed===1&&GLR.roomMesh!==__roomMesh")
         page.evaluate("Settings.q(2);updateLighting()")
-        self.assert_js(page, "SHADE.shadows&&SHADE.shaftGrp&&SHADE.pools.length===__poolCount&&GLR.roomMesh===__roomMesh")
+        self.assert_js(page, "SHADE.shadows&&SHADE.shaftGrp&&SHADE.pools.length===__poolCount&&GLR.roomMesh!==__roomMesh")
 
     def test_rain_streaks_splashes_lightning_and_cleanup(self):
         page = self.page()
@@ -1137,7 +1049,8 @@ class ControlsTest(unittest.TestCase):
         page.evaluate("""S.mode='in';S.room='garage1';S.x=400;S.y=400;S.ang=Math.PI/2;
             S.bag=['coin'];S.enterCool=999;USE={torch:false,phone:false,brollyShield:false};
             RT=newRT();ROAM.on=true;ROAM.stage='approach';ROAM.x=500;ROAM.y=400;ROAM.cd=0;ROAM.litAcc=0;
-            solidAtInterior=function(){return false};Math.random=function(){return 0.5};throwCoin();roamTick(.1);""")
+            solidAtInterior=function(){return false};roamBlocked=function(){return false};
+            Math.random=function(){return 0.5};throwCoin();roamTick(.1);""")
         self.assert_js(page, "!hasItem('coin')&&RT.lure&&ROAM.y>400&&ROAM.lureTold===1")
         page.evaluate("window.__y=ROAM.y;RT.lure.t=.01;ROAM.cd=0;roamTick(.1)")
         self.assert_js(page, 'RT.lure===null&&ROAM.y<__y')
@@ -1236,7 +1149,7 @@ class ControlsTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('banner').textContent==='教学楼 1F'&&UI.chooseOpen")
         self.assert_js(page, "AN.id==='roster'&&UI.choiceTimer>0&&document.getElementById('choices').textContent.includes('名单上')")
         page.evaluate("""UI.closeChoice();Math.random=function(){return .5};useRoster(80);""")
-        page.wait_for_timeout(150)
+        page.wait_for_function('!UI.chooseOpen&&AN.data.done', timeout=2000)
         self.assert_js(page, '!UI.chooseOpen&&AN.data.done')
 
     def test_only_hard_to_prevent_anomalies_are_forecast(self):
@@ -1272,6 +1185,8 @@ class ControlsTest(unittest.TestCase):
         mins = page.evaluate("""(()=>{var t=SCHED.reduce((n,p)=>n+(p[1]-p[0])/p[4],0);
             return t+(BEAST_T1-BEAST_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
         self.assertTrue(10 <= mins <= 20, mins)
+        free = page.evaluate("SCHED.filter(p=>p[3]==='自由'&&p[0]<LIGHTS_OUT).reduce((n,p)=>n+(p[1]-p[0])/p[4],0)")
+        self.assertGreaterEqual(free, 10)          # 一天至少 10 分钟自由时间
 
     def test_full_violation_no_longer_kills_but_blocks_leave(self):
         page = self.page()
@@ -1388,6 +1303,162 @@ class ControlsTest(unittest.TestCase):
         self.assert_js(page, "monoTier()==='breaking'&&MONO_LINES.breaking.any.concat(MONO_LINES.breaking.outNight||[]).indexOf(monoPick())>=0")
         page.evaluate("DLG.open=false;AN.active=false;MONO.t=0;MONO.recent=[];monoTick(0.1)")
         self.assert_js(page, "MONO.recent.length===1&&document.getElementById('sub').textContent===MONO.recent[0]&&MONO.t>=40")
+
+    def test_journal_tabs_share_one_panel_and_keys_switch_or_close(self):
+        page = self.page()
+        page.keyboard.press('Tab')
+        self.assert_js(page, "UI.openPanel==='bag'&&document.getElementById('journal').style.display==='flex'&&document.querySelector('.jtabs .on').dataset.tab==='bag'")
+        page.keyboard.press('h')
+        self.assert_js(page, "UI.openPanel==='think'&&document.getElementById('bag').style.display==='none'&&document.getElementById('think').style.display==='block'")
+        page.locator('#journal .jtabs button', has_text='地图').click()
+        self.assert_js(page, "UI.openPanel==='mapv'&&!!document.getElementById('mapcv')")
+        page.keyboard.press('m')
+        self.assert_js(page, "!UI.anyOpen()&&document.getElementById('journal').style.display==='none'")
+
+    def test_journal_hides_when_replaced_by_pause(self):
+        page = self.page()
+        page.keyboard.press('Tab')
+        page.evaluate('Game.pause()')
+        self.assertTrue(page.locator('#pause').is_visible())
+        self.assertFalse(page.locator('#journal').is_visible())
+        page.locator('#pause button', has_text='继续').click()
+        page.evaluate("os('恢复后字幕可见',3)")
+        self.assertTrue(page.locator('#sub').is_visible())
+        self.assert_js(page, "!UI.anyOpen()&&!document.body.classList.contains('jopen')")
+
+    def test_narrow_portrait_hotbar_is_visible_and_tappable(self):
+        page = self.page(touch=True)
+        for height in (568, 480):
+            with self.subTest(height=height):
+                page.set_viewport_size({'width': 320, 'height': height})
+                page.evaluate("S.bag=['brolly','torch','watch'];S.hot=['brolly','torch'];USE.brollyShield=false;USE.torch=false;UI.renderHot();updateHUD()")
+                status = page.locator('#status').bounding_box()
+                book = page.locator('#tBook').bounding_box()
+                seconds = page.locator('#secclock').bounding_box()
+                self.assertLess(status['x']+status['width'], book['x'])
+                self.assertLessEqual(seconds['x']+seconds['width'], status['x']+status['width'])
+                stick = page.locator('#stick').bounding_box()
+                for selector in ('#hot .hslot', '#tTorch'):
+                    for control in page.locator(selector).all():
+                        rect = control.bounding_box()
+                        self.assertGreaterEqual(rect['x'], 0)
+                        self.assertLessEqual(rect['x']+rect['width'], 320)
+                        self.assertLess(rect['y']+rect['height'], stick['y'])
+                page.locator('#hot .hslot').nth(0).tap()
+                self.assert_js(page, 'USE.brollyShield')
+                page.locator('#hot .hslot').nth(1).tap()
+                self.assert_js(page, 'USE.torch')
+                page.locator('#tBook').tap()
+                self.assertTrue(page.locator('#journal').is_visible())
+                page.locator('#journal .jclose').tap()
+
+    def test_bell_platform_opening_clearance_and_collision(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+            doEnterRoom('bell1');running=false;
+            const R=INTERIORS.bell1,s=SPIRAL;
+            GLR.roomMesh.updateMatrixWorld(true);
+            function point(a,r=1.6){
+                return {x:s.cx+Math.cos(a)*r,z:s.cz+Math.sin(a)*r};
+            }
+            const a=s.th0+s.amax-3.5,p=point(a),floor=(s.amax-3.5)/TAU*s.turnH;
+            const ray=new THREE.Raycaster(new THREE.Vector3(p.x,floor+.35,p.z),
+                new THREE.Vector3(0,1,0),0,EYE-.35);
+            const headHits=ray.intersectObject(GLR.roomMesh,true).length;
+            SP.state='top';SP.a=s.amax;
+            function blocked(offset){
+                const p=point(s.th0+s.amax+offset);
+                return spiralSolid(R,R.ox+(p.x+R.cols/2)*9,R.oy+(p.z+R.rows/2)*9);
+            }
+            const result={headHits,holeBlocked:blocked(-3.5),platformFree:!blocked(.5),
+                stairFree:!blocked(-.2)};
+            function world(a,r=1.6){const p=point(a,r);return {x:R.ox+(p.x+R.cols/2)*9,y:R.oy+(p.z+R.rows/2)*9};}
+            function walk(target){
+                for(let i=0;i<1000;i++){
+                    const dx=target.x-S.x,dy=target.y-S.y,len=Math.hypot(dx,dy);
+                    if(len<.02) return;
+                    moveBy(dx/len*Math.min(len,.3),dy/len*Math.min(len,.3));spiralUpdate();
+                }
+                throw Error('Stairs blocked at '+JSON.stringify(target));
+            }
+            // Only the starting position is placed; ascent/descent must obey player collision.
+            const start=world(s.th0,3);S.x=start.x;S.y=start.y;spiralReset();
+            walk(world(s.th0));
+            for(let a=s.th0+.04;a<s.th0+s.amax+.6;a+=.04) walk(world(a));
+            result.reachedBell=bellReach()&&S.floorY===s.topH;
+            for(let a=s.th0+s.amax+.55;a>s.th0+s.amax-.4;a-=.04) walk(world(a));
+            result.descended=SP.state==='stair'&&S.floorY<s.topH;
+            return result;
+        }""")
+        self.assertEqual(result, {'headHits': 0, 'holeBlocked': True,
+                                  'platformFree': True, 'stairFree': True,
+                                  'reachedBell': True, 'descended': True})
+
+    def test_pill_effect_survives_reload_and_old_saves_default_to_zero(self):
+        page = self.page()
+        page.evaluate("S.tsec=760;S.san=10;S.bag=['pill'];useItem('pill');updateSystems(.5);saveGame()")
+        saved = page.evaluate('({time:S.pillT,san:S.san})')
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        self.assertEqual(page.evaluate('({time:S.pillT,san:S.san})'), saved)
+        page.keyboard.press('Tab')
+        page.evaluate('update(1)')
+        self.assertEqual(page.evaluate('S.pillT'), saved['time'])
+        page.keyboard.press('Tab')
+        page.evaluate('updateSystems(.5)')
+        self.assertAlmostEqual(page.evaluate('S.pillT'), saved['time']-.5)
+        page.evaluate("const d=loadGame();delete d.pillT;localStorage.setItem('wdfz3d',JSON.stringify(d));Game.continue_();running=false")
+        self.assert_js(page, 'S.pillT===0')
+
+    def test_bag_detail_buttons_use_hotbar_and_drop(self):
+        page = self.page()
+        page.evaluate("S.bag=['coin','chalk'];S.hot=[null,null];S.bagSel=1;UI.open('bag')")
+        self.assertEqual(page.locator('#bagname').inner_text(), '粉笔')
+        page.locator('#bagacts button', has_text='放到快捷栏 2').click()
+        self.assert_js(page, "S.hot[1]==='chalk'&&document.querySelector('#bags .s.on .hk').textContent==='2'")
+        page.locator('#bagacts button', has_text='丢弃').click()
+        self.assert_js(page, "S.bag.join()==='coin'&&S.hot[1]===null")
+
+    def test_choice_number_keys_pick_option(self):
+        page = self.page()
+        page.evaluate("window.picked=0;UI.choice('选',[{label:'甲',fn:function(){picked=1}},{label:'乙',fn:function(){picked=2}}])")
+        page.keyboard.press('2')
+        self.assert_js(page, "picked===2&&!UI.chooseOpen")
+
+    def test_touch_action_button_shows_current_action_and_book_opens_journal(self):
+        page = self.page(touch=True)
+        page.evaluate("S.seated=true;updateHUD()")
+        self.assertEqual(page.locator('#tActL').inner_text(), '站起来')
+        self.assert_js(page, "document.getElementById('tAct').classList.contains('live')")
+        page.evaluate("S.seated=false;S.mode='out';S.x=1580;S.y=1800;updateHUD()")
+        page.locator('#tBook').tap()
+        self.assert_js(page, "UI.openPanel==='bag'")
+
+    def test_slow_touch_action_still_fires_once(self):
+        page = self.page(touch=True)
+        # 处理按钮要大半秒（手机上坐下、进房间）时，浏览器补发的 click 不能再触发一次
+        page.evaluate("window.actions=0;tryInteract=function(){actions++;var e=performance.now()+900;while(performance.now()<e){}};void 0")
+        page.locator('#tAct').tap()
+        page.wait_for_timeout(1200)
+        self.assert_js(page, 'actions===1')
+
+    def test_portrait_subtitle_uses_full_width(self):
+        page = self.page(touch=True)
+        page.evaluate("os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',5)")
+        self.assert_js(page, "document.getElementById('sub').getBoundingClientRect().width>300")
+
+    def test_pill_heals_over_time_snack_lasts_thirty_seconds_and_day_is_brighter(self):
+        page = self.page()
+        # 午饭时间（自由时段）：先量 10 秒自然回复，再吃药片比较，多出来的就是药片的 2 点 / 秒
+        page.evaluate("""S.tsec=760;S.san=20;for(var i=0;i<20;i++) updateSystems(0.5);window._base=S.san-20;
+            S.tsec=760;S.san=20;S.bag=['pill','snack'];useItem('pill');for(i=0;i<20;i++) updateSystems(0.5);""")
+        self.assert_js(page, "Math.abs((S.san-20)-_base-20)<0.01&&S.pillT===20")
+        page.evaluate("S.san=10;for(var i=0;i<60;i++) updateSystems(0.5)")
+        self.assert_js(page, "S.pillT===0&&S.san>=50")
+        page.evaluate("useItem('snack')")
+        self.assert_js(page, "SNACK_SEC===30&&S.snackT===30")
+        page.evaluate("S.tsec=720;S.mode='out';updateLighting()")
+        self.assert_js(page, "Math.abs(GLR.dayExpo-0.6)<0.03")
 
 
 if __name__ == '__main__':

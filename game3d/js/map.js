@@ -129,8 +129,8 @@ function dormFloor(f){
     g[6][C+4]='=';
     g[9][C+4]='=';
   }
-  g[8][40]='S'; g[8][41]='S';
-  g[8][42]='.';
+  g[8][41]='S'; g[8][42]='S';         /* 以前在 40–41 列，正好堵住东南角那间宿舍的门（9 行 40 列），那间进不去 */
+  g[9][40]='#'; g[9][39]='=';         /* 那间的门再往西挪一格，门框不贴着楼梯 */
   if(f===1){ g[7][43]='O'; g[8][43]='O'; }
   return g;
 }
@@ -229,8 +229,10 @@ function buildInteriorData(){
   }
   for(mr=4;mr<=10;mr+=2){ for(mc=2;mc<=15;mc+=3){ if(gl5[mr][mc]==='.') gl5[mr][mc]='P'; } }
   var ga3=INTERIORS['admin3'].grid;
-  var a3r=Math.floor(ga3.length*0.5);
-  ga3[a3r][Math.floor(ga3[0].length*0.5)]='D';
+  /* 数据终端：以前塞在两排工位中间（a3r 行），前后的工位和椅子把它夹住，椅子还插进机箱里；
+     挪到南边走廊靠墙，屏幕朝北对着走廊 */
+  var a3c=Math.floor(ga3[0].length*0.5)+1;
+  ga3[ga3.length-2][a3c]='D';
   mkFloor('canteen1','食堂 1F','canteen',1,canteenFloor());
   /* 北宿舍 dorm1–3、南宿舍 dorm4–6，各自 1–3 层。以前南宿舍一楼的 floor 是 4，出口提示"窗子封死了"，出不去 */
   for(f=1;f<=6;f++){

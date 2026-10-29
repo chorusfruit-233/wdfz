@@ -1,95 +1,10 @@
 /* 里世界 3D · 场景切换、碰撞、移动、镜头 */
 'use strict';
 
-function clearWorldMesh(){
-  var i;
-  function disposeGroup(g){
-    if(!g) return;
-    if(g.geometry&&g.geometry.dispose) g.geometry.dispose();
-    if(g.material&&g.material.dispose&&!(g.material.userData&&g.material.userData.shared)) g.material.dispose();   /* 共享材质（materials.js）不能销毁 */
-    if(g.children){ for(var k=0;k<g.children.length;k++) disposeGroup(g.children[k]); }
-  }
-  if(GLR.roamFig){ GLR.scene.remove(GLR.roamFig); GLR.roamFig=null; }
-  if(typeof TR!=='undefined'&&TR.g){ try{ GLR.scene.remove(TR.g); }catch(e){} TR.g=null; TR.key=''; }
-  try{ shadeClearRoom(); }catch(e){}
-  if(GLR.roomMesh){ GLR.scene.remove(GLR.roomMesh); disposeGroup(GLR.roomMesh); GLR.roomMesh=null; }
-  if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); disposeGroup(GLR.outMesh); GLR.outMesh=null; }
-  if(GLR.roomLights){
-    for(i=0;i<GLR.roomLights.length;i++) GLR.scene.remove(GLR.roomLights[i]);
-    GLR.roomLights=[]; GLR.roomLightBase=[]; GLR.roomLightCol=[];
-    try{ FLK_PREV=[]; }catch(e){}
-  }
-}
-function addRoomLights(R){
-  var W=R.cols*TTILE*U2M, H=R.rows*TTILE*U2M, i;
-  function addLight(x,y,z,col,inten,dist,decay){
-    var pl=new THREE.PointLight(col,inten,dist,decay);
-    pl.position.set(x,y,z);
-    GLR.scene.add(pl);
-    GLR.roomLights.push(pl);
-    GLR.roomLightBase.push(inten);
-    (GLR.roomLightCol||(GLR.roomLightCol=[])).push(new THREE.Color(col));
-  }
-  if(R.host==='teach'&&R.floor>=1&&R.floor<=5){
-    var spans2=[[5,11],[21,27],[45,51]];
-    for(i=0;i<spans2.length;i++){
-      var cxm=((spans2[i][0]+spans2[i][1])/2+0.5)*TTILE*U2M - W*0.5;
-      addLight(cxm, 2.75, (7.5)*TTILE*U2M - H*0.5, 0xffe9c8, LCFG.ptI*1.55, 16, 2.0);
-    }
-    addLight(0, 2.75, (18.5)*TTILE*U2M - H*0.5, 0xf2dcc0, LCFG.ptI*1.2, 18, 2.0);
-    return;
-  }
-  if(R.id==='lab3'){
-    /* 学生机房是冷白的日光灯；隔壁上锁的网络中心只有机柜的红光 */
-    addLight(-16, 2.70, -2.0, 0xc8dce8, LCFG.ptI*1.3, 18, 2.0);
-    addLight( -3, 2.70, -2.0, 0xc8dce8, LCFG.ptI*1.1, 18, 2.0);
-    addLight( 17, 2.60, -2.5, 0x8a2418, LCFG.ptI*1.6, 16, 2.0);
-    addLight(0, 2.60, H*0.40, 0xc07a4a, LCFG.ptI*0.8, 14, 2.0);
-    return;
-  }
-  if(R.host==='bell'){                                            /* 底下只有蜡烛；楼顶从钟口漏下一点天光 */
-    addLight(0,2.4,2.5,0xffa860,LCFG.ptI*0.9,12,2.0);
-    if(R.spiral){ addLight(SPIRAL.cx,SPIRAL.topH/2,SPIRAL.cz+2.0,0xd8b080,LCFG.ptI*0.5,9,2.0); addLight(SPIRAL.cx,SPIRAL.topH+2.6,SPIRAL.cz,0xc8d0d8,LCFG.ptI*0.8,10,2.0); }
-    return;
-  }
-  if(R.host==='trash'){ addLight(0,2.6,0,0xb8d0a8,LCFG.ptI*0.7,10,2.0); return; }
-  var n=2;
-  for(i=0;i<n;i++){
-    var lx=(i/(n-1||1)-0.5)*W*0.66;
-    var lz=(i%2?0.28:-0.24)*H;
-    addLight(lx, 2.75, lz, i%2?0xffe9c8:0xf2dcc0, LCFG.ptI*1.7, 16, 2.0);
-  }
-}
-function enterWorldRoom(roomId){
-  clearWorldMesh();
-  var R=INTERIORS[roomId];
-  GLR.roomMesh=buildRoomGeometry(R);
-  GLR.scene.add(GLR.roomMesh);
-  if(roomId==='garage1'){
-    GLR.roamFig=buildRoamFigure();
-    if(GLR.roamFig){ GLR.roamFig.visible=false; GLR.scene.add(GLR.roamFig); }
-  }
-  var dens=roomId==='garage1'?0.082:0.050;
-  GLR.scene.fog=new THREE.FogExp2(FOG_COL,dens);
-  addRoomLights(R);
-  try{ shadeMarkMesh(GLR.roomMesh); shadeBuildRoom(R); shadeBuildPools(); }catch(e){}
-  try{ tracesBuild(); }catch(e){}
-  try{ ncBuild(R); }catch(e){}
-  try{ skipClear(); }catch(e){}
-}
-function enterWorldOut(){
-  clearWorldMesh();
-  try{ ncClear(); }catch(e){}      /* 出去就没有同班同学了 */
-  GLR.outMesh=buildOutdoorGeometry();
-  GLR.outMesh.userData=GLR.outMesh.userData||{};
-  GLR.outMesh.userData.__outworld=1;
-  GLR.scene.add(GLR.outMesh);
-  try{ shadeMarkMesh(GLR.outMesh); }catch(e){}
-  GLR.scene.fog=new THREE.FogExp2(FOG_COL,0.020);
-  GLR.skyHour=-1; refreshSky();
-  GLR.lampPick=0;
-  try{ tracesBuild(); }catch(e){}
-}
+function clearWorldMesh(){ return Engine.clearWorld(); }
+function addRoomLights(R){ return Engine.addRoomLights(R); }
+function enterWorldRoom(roomId){ return Engine.enterRoom(roomId); }
+function enterWorldOut(){ return Engine.enterOutside(); }
 
 function worldToScene(wx,wy,roomR){
   if(roomR){
@@ -152,6 +67,14 @@ function solidAtInterior(R,wx,wy){
     }
   }
   if(R.spiral&&typeof spiralSolid==='function'&&spiralSolid(R,wx,wy)) return true;
+  if(R.foot){                        /* 房间建过模型：按模型真实占地（本格和周围一圈的家具都可能伸过来） */
+    var c0=Math.floor((wx-R.ox)/R.tw), r0=Math.floor((wy-R.oy)/R.th), dc, dr, F, fi;
+    for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++){
+      F=R.foot[(c0+dc)+','+(r0+dr)]; if(!F) continue;
+      for(fi=0;fi<F.length;fi++){ sb=F[fi]; if(lx>sb.x0&&lx<sb.x1&&lz>sb.z0&&lz<sb.z1) return true; }
+    }
+    return false;
+  }
   var f=FURN_SOLID[t];
   if(f!==undefined){
     var c=Math.floor((wx-R.ox)/R.tw), r=Math.floor((wy-R.oy)/R.th);
@@ -183,15 +106,20 @@ function solidAt(wx,wy){
   return solidAtOutdoor(wx,wy);
 }
 function canStand(wx,wy){
-  if(solidAt(wx,wy)) return false;
-  if(!solidAt(wx+PRAD,wy)) { if(!solidAt(wx-PRAD,wy)) { if(!solidAt(wx,wy+PRAD)) { if(!solidAt(wx,wy-PRAD)) return true; } } }
-  return false;
+  return Collision.depth(wx,wy,PRAD)<1e-7;
 }
-function moveBy(dx,dy){
-  var stuck=!canStand(S.x,S.y);
-  var nx=S.x+dx, ny=S.y+dy;
-  if(stuck||canStand(nx,S.y)) S.x=nx;
-  if(stuck||canStand(S.x,ny)) S.y=ny;
+function moveBy(dx,dy,dt){
+  if(!Number.isFinite(dx)||!Number.isFinite(dy))return;
+  var n=Math.max(1,Math.ceil((dt||1/60)*Physics.hz),Math.ceil(Math.hypot(dx,dy)/(PRAD*0.5)));
+  dx/=n;dy/=n;
+  for(var i=0;i<n;i++){
+    var before=Collision.depth(S.x,S.y,PRAD),nx=S.x+dx,ny=S.y+dy;
+    var ax=Collision.depth(nx,S.y,PRAD);
+    if(ax<1e-7||ax<before-1e-7){S.x=nx;before=ax;}
+    var ay=Collision.depth(S.x,ny,PRAD);
+    if(ay<1e-7||ay<before-1e-7)S.y=ny;
+    spiralUpdate();
+  }
 }
 
 function doorWorld(o){
@@ -243,7 +171,7 @@ function entryNear(R,chs){
 }
 function unstick(){
   try{
-    if(S.mode!=='in') return;
+    if(S.mode!=='in'||S.seated) return;
     var R=INTERIORS[S.room]; if(!R) return;
     if(!solidAt(S.x,S.y)) return;
     var c=Math.floor((S.x-R.ox)/R.tw), r=Math.floor((S.y-R.oy)/R.th), rad, dr, dc;
@@ -287,7 +215,7 @@ function doEnterRoom(id,spawn){
     if(en){ S.x=en.x; S.y=en.y; S.ang=en.ang; }
   }
   try{ unstick(); }catch(e){}
-  GLR.hurt=0;
+  VisualState.hurt=0;
   showBanner(INTERIORS[id].name);
   onEnterRoom(id);
   autoSave();
@@ -306,39 +234,4 @@ function doExitRoom(){
   autoSave();
 }
 
-function syncCamera(dt){
-  var p;
-  if(S.mode==='in'){
-    var R=INTERIORS[S.room];
-    p=worldToScene(S.x,S.y,R);
-  }else{
-    p=worldToScene(S.x,S.y,null);
-  }
-  var bob=0;
-  if(S.moving&&!S.seated){
-    S.walkPhase+=dt*(S.run?13.5:8.5);
-    bob=Math.sin(S.walkPhase)*(S.run?0.052:0.030);
-  }
-  var dyOff=0, dzOff=0, shake=0;
-  if(S.dead){
-    var k=S.deadT||0;
-    if(S.death==='floor'||S.death==='deep'){ dyOff=-Math.min(1.25,k*0.62); }
-    shake=Math.max(0,1-k*0.5);
-  }
-  if(GLR.gazeShake&&!S.dead) shake=Math.max(shake,GLR.gazeShake);   /* 被盯着的时候，镜头在抖 */
-  if(typeof SHAKE_ON!=='undefined' && !SHAKE_ON) shake=0;
-  if(shake>0){
-    dyOff+=(Math.random()-0.5)*0.06*shake;
-  }
-  if(typeof SHAKE_ON!=='undefined' && !SHAKE_ON){ bob=0; }
-  var eyeTarget=S.seated?1.12:EYE;
-  S.eyeH=(S.eyeH===undefined)?EYE:S.eyeH;
-  S.eyeH+= (eyeTarget-S.eyeH)*Math.min(1,dt*9);
-  GLR.cam.position.set(p.x, S.eyeH+bob+dyOff+(S.eyeLift||0)+(S.floorY||0), p.z+dzOff);   /* floorY：钟楼楼梯上的高度 */
-  var targetFov=72+(S.run&&S.moving?9:0);
-  S.fov=lerp(S.fov,targetFov,Math.min(1,dt*8));
-  if(Math.abs(GLR.cam.fov-S.fov)>0.01){ GLR.cam.fov=S.fov; GLR.cam.updateProjectionMatrix(); }
-  var spitch=S.pitch+(S.seated?-0.06:0);
-  var dir=new THREE.Vector3(Math.cos(S.ang)*Math.cos(spitch),Math.sin(spitch),Math.sin(S.ang)*Math.cos(spitch));
-  GLR.cam.lookAt(p.x+dir.x, S.eyeH+bob+dir.y+(S.floorY||0), p.z+dir.z);
-}
+function syncCamera(dt){ return Engine.syncCamera(dt); }

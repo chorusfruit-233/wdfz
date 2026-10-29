@@ -8,15 +8,8 @@
 'use strict';
 
 function roomTheme(R){
-  var t={floor:'ftile', fcol:PALETTE.floor, wall:PALETTE.wall, wallMat:'plaster', low:0x8b867e, skirt:0x242c32, ceil:0x3a4248, rail:0x6a5a48};
-  if(R.id==='garage1'){ t.floor='fconcrete'; t.fcol=0x6a6a66; t.wall=0x8a8a84; t.wallMat='concrete'; t.low=0x4a4a46; t.ceil=0x2a2e30; }
-  else if(R.id==='trash1'){ t.floor='fconcrete'; t.fcol=0x7a7a72; t.wall=0xa8aca0; t.low=0x6a7068; }
-  else if(R.host==='bell'){ t.floor='fstone'; t.fcol=0x8a8478; t.low=0x6a5a4a; t.ceil=0x2a2420; }
-  else if(R.id==='gear1'){ t.floor='fwood'; t.fcol=0x9a7a52; t.wall=0x27502f; t.low=0x1e3e24; }
-  else if(R.id==='teach6'){ t.floor='fconcrete'; t.fcol=0x8a8680; t.wall=0xa8a49c; t.wallMat='concrete'; }
-  else if(R.host==='c1'||R.host==='c2'){ t.floor='fterrazzo'; t.fcol=0x9a968e; }
-  else if(R.host==='canteen'){ t.fcol=0x9a968e; t.low=0x7a8a84; }
-  return t;
+  return Object.assign({floor:'ftile',fcol:PALETTE.floor,wall:PALETTE.wall,wallMat:'plaster',low:0x8b867e,
+    skirt:0x242c32,ceil:0x9a9e9e,ceilMat:'ceiling',rail:0x6a5a48},ROOM_THEMES[R.id]||ROOM_THEMES[R.host]||{});
 }
 
 function buildRoomGeometry(R){
@@ -25,15 +18,17 @@ function buildRoomGeometry(R){
   R.stats={desk:0, cubicle:0, chair:0, seat:0};
   R.stairExtra=[];                 /* 以前每进一次房间都往里追加一遍，越积越多 */
   R.propExtra=[];                  /* 大件家具的真实占地（米，房间中心为原点） */
-  var K=new Kit();
+  R.foot={};                       /* 每格家具模型在人身高范围内的占地矩形（米），碰撞用它 */
   var W=R.cols,H=R.rows,tw=TTILE*U2M,th=TTILE*U2M;
   var halfW=W*tw*0.5, halfH=H*th*0.5;
   var isRoof=(R.host==='teach'&&R.floor===6);
   var RWH=R.spiral?SPIRAL.wallH:WALLH;           /* 钟楼里面是通高的 */
+  /* 贴地朝下的面不建；有吊顶的房间，贴吊顶朝上的面也不建；顶点多的材质按 16 米切块 */
+  var K=new Kit({cull:isRoof?{floor:0.002}:{floor:0.002,ceil:RWH-0.002},chunk:16});
   var TH=roomTheme(R);
   function CX(c){ return (c+0.5)*tw-halfW; }
   function CZ(r){ return (r+0.5)*th-halfH; }
-  var c={R:R,K:K,W:W,H:H,tw:tw,th:th,halfW:halfW,halfH:halfH,CX:CX,CZ:CZ,theme:TH,
+  var c={R:R,K:K,W:W,H:H,tw:tw,th:th,halfW:halfW,halfH:halfH,CX:CX,CZ:CZ,theme:TH,doors:[],meshes:[],RWH:RWH,
     solid:function(cx,cz,sx,sz){ R.propExtra.push({x0:cx-sx/2,x1:cx+sx/2,z0:cz-sz/2,z1:cz+sz/2}); },
     ao:function(cx,cz,sx,sz,s){ K.g('decal').aoPatch(cx,cz,sx,sz,s); }};
   function G(y,x){ return (y>=0&&x>=0&&y<H&&x<W)?R.grid[y][x]:null; }
@@ -69,7 +64,7 @@ function buildRoomGeometry(R){
   }
   /* ---- 吊顶 ---- */
   if(!isRoof){
-    K.g('ceiling').quadN([-halfW,RWH,-halfH],[halfW,RWH,-halfH],[halfW,RWH,halfH],[-halfW,RWH,halfH],0,-1,0,TH.ceil);
+    K.g(TH.ceilMat).quadN([-halfW,RWH,-halfH],[halfW,RWH,-halfH],[halfW,RWH,halfH],[-halfW,RWH,halfH],0,-1,0,TH.ceil);
   }
 
   /* ---- 墙：贪心合并成矩形块 ---- */
@@ -125,8 +120,11 @@ function buildRoomGeometry(R){
       if(ch==='=') { roomDoor(c,x,y,cx,cz); continue; }
       if(ch==='O') { roomExit(c,x,y,cx,cz); continue; }
       if(ch==='S') { roomStairs(c,x,y,cx,cz); continue; }
+      K.cap=[];
       if(FURN[ch]) FURN[ch](c,x,y,cx,cz);
       else furnFallback(c,x,y,cx,cz,ch);
+      if(K.cap.length&&FOOT_SKIP.indexOf(ch)<0) R.foot[x+','+y]=footMerge(K.cap);
+      K.cap=null;
     }
   }
   roomDecor(c,isRoof);
@@ -136,18 +134,21 @@ function buildRoomGeometry(R){
     buildSpiral(c);
   }
   R.shafts=SHAFT_ACC||[]; SHAFT_ACC=null;
-  return K.build();
+  R.doorSpecs=c.doors;
+  var grp=K.build();
+  grp.add(buildDoorLeaves(R));
+  c.meshes.forEach(function(m){ grp.add(m); });                 /* 黑板上的粉笔字这种单独的网格 */
+  return grp;
 }
 
 /* ---- 门：墙厚 1 米，门洞两侧有门套；门扇在 +z 一侧（走廊那边）；开着的门扇转 90° 贴在门洞边 ---- */
 function roomDoor(c,x,y,cx,cz){
   var K=c.K, R=c.R;
-  var isOpen=(typeof OPENDOORS!=='undefined')?!!OPENDOORS[S.room+':'+x+':'+y]:false;
   var l=R.grid[y][x-1], r=R.grid[y][x+1];
   var horiz=(l==='#'||l==='='||r==='#'||r==='=');
   K.frame(cx,cz,horiz?0:Math.PI/2);
   var DTOP=2.10, TH=c.theme;
-  K.g(TH.wallMat).boxFaces(0,(DTOP+WALLH)/2,0,1,WALLH-DTOP,1,TH.wall,0.94,'nsd');                 /* 过梁 */
+  K.g(TH.wallMat).boxFaces(0,(DTOP+WALLH)/2,0,1,WALLH-DTOP,1,TH.wall,0.94,'ns');                  /* 过梁（底面被下面的门框木条整个盖住，不画，免得两面重合闪烁） */
   var dbl=(l==='='), dbr=(r==='=');                                                              /* 双开门：只在外侧立门套 */
   if(!dbl) K.bevel('wood',-0.47,DTOP/2,0,0.06,DTOP,1.0,0x3d474e,1.06,0.01);
   if(!dbr) K.bevel('wood', 0.47,DTOP/2,0,0.06,DTOP,1.0,0x3d474e,1.06,0.01);
@@ -159,6 +160,18 @@ function roomDoor(c,x,y,cx,cz){
     K.box('wood',0,DTOP+0.11,s*0.507,1.13,0.07,0.014,0x4a545c,1.1);
   }
   K.box('stone',0,0.01,0,0.94,0.02,1.0,0x5a6268,1.05);                                         /* 门槛 */
+  if(R.host==='teach'||R.host==='lab'||R.host==='admin'||R.host==='dormN'||R.host==='dormS'){     /* 门牌 */
+    if(!dbl){ K.box('plastic',-0.1,2.32,0.52,0.36,0.14,0.02,0xe8e4dc,1.05); K.box('dark',-0.1,2.32,0.531,0.26,0.06,0.002,0x2a3a4a,1); }
+  }
+  K.unframe();
+  /* 门扇单独成一块（buildDoorLeaf）：开门时只重建这一扇，不用整层楼重建 */
+  if(c.doors) c.doors.push({x:x,y:y,cx:cx,cz:cz,horiz:horiz,dbl:dbl,dbr:dbr});
+}
+/* 门扇：关着的在门洞里；开着的转 90° 贴着门洞边。一间房所有的门扇画进同一个 Kit（只多几次绘制） */
+function buildDoorLeaf(K,R,d){
+  var isOpen=(typeof OPENDOORS!=='undefined')?!!OPENDOORS[doorKeyAt(R,d.x,d.y)]:false;
+  var dbl=d.dbl, dbr=d.dbr;
+  K.frame(d.cx,d.cz,d.horiz?0:Math.PI/2);
   var hingeX=dbl?0.47:-0.43, sw=dbl?-1:1;                     /* 双开门的右扇铰链在右边 */
   if(dbr&&!dbl){ hingeX=-0.47; sw=1; }
   var lw=0.86, lz=0.38, lh=2.04;
@@ -178,10 +191,22 @@ function roomDoor(c,x,y,cx,cz){
     K.bevel('wood',hingeX+sw*0.03,lh/2+0.01,oz,0.045,lh,lw,0x222a30,1.0,0.008);
     K.box('glass',hingeX+sw*0.03,1.55,oz,0.05,0.42,0.28,0x5a7080,1.0);
   }
-  if(R.host==='teach'||R.host==='lab'||R.host==='admin'||R.host==='dormN'||R.host==='dormS'){     /* 门牌 */
-    if(!dbl){ K.box('plastic',-0.1,2.32,0.52,0.36,0.14,0.02,0xe8e4dc,1.05); K.box('dark',-0.1,2.32,0.531,0.26,0.06,0.002,0x2a3a4a,1); }
-  }
   K.unframe();
+}
+function buildDoorLeaves(R){
+  var K=new Kit({cull:{floor:0.002}});
+  (R.doorSpecs||[]).forEach(function(d){ buildDoorLeaf(K,R,d); });
+  var g=K.build(); g.name='doorleaves';
+  return g;
+}
+/* 开门 / 读档以后：只把门扇按 OPENDOORS 重建（以前整层楼重建）；x、y 留着兼容调用处 */
+function roomDoorRefresh(R,x,y){
+  var grp=GLR.roomMesh; if(!grp||!R||!R.doorSpecs) return;
+  var old=grp.getObjectByName('doorleaves');
+  if(old){ grp.remove(old); old.traverse(function(o){ if(o.geometry) o.geometry.dispose(); }); }
+  var g=buildDoorLeaves(R);
+  try{ shadeMarkMesh(g); }catch(e){}
+  grp.add(g);
 }
 /* ---- 外墙上的出口：门框 + 两扇玻璃门 + 推杠 + 门上的安全出口灯 ---- */
 function roomExit(c,x,y,cx,cz){
@@ -208,6 +233,19 @@ function roomExit(c,x,y,cx,cz){
   K.unframe();
 }
 /* ---- 楼梯：踏步（水磨石 + 防滑条 + 踢面）、两侧栏杆和木扶手、梯井挡墙 ---- */
+/* 不按模型占地挡人的：门垫吊牌（L）、讲台旁的东西走得过去的那些在这里列 */
+var FOOT_SKIP=['L'];
+/* 合并：被别的矩形整个包住的去掉，剩下的按面积从大到小，碰撞先查大的 */
+function footMerge(L){
+  var out=[], i, j;
+  L.sort(function(a,b){ return (b.x1-b.x0)*(b.z1-b.z0)-(a.x1-a.x0)*(a.z1-a.z0); });
+  for(i=0;i<L.length;i++){
+    var a=L[i], inside=false;
+    for(j=0;j<out.length;j++){ var b=out[j]; if(a.x0>=b.x0-0.01&&a.x1<=b.x1+0.01&&a.z0>=b.z0-0.01&&a.z1<=b.z1+0.01){ inside=true; break; } }
+    if(!inside) out.push(a);
+  }
+  return out;
+}
 function roomStairs(c,x,y,cx,cz){
   var K=c.K, R=c.R, tw=c.tw, th=c.th;
   if((x>0&&R.grid[y][x-1]==='S')||(y>0&&R.grid[y-1][x]==='S')) return;   /* 一组只建一次 */
@@ -234,12 +272,14 @@ function roomStairs(c,x,y,cx,cz){
     bx(runOff-tread*0.44,hgt-0.003,0.05,0.008,wid*0.96,0x5a5e60,1.0,'metal');                     /* 防滑条 */
     bx(runOff-tread*0.5+0.004,hgt-rise/2,0.008,rise-0.04,wid,0xd8d4cc,1.0,'plaster');            /* 踢面 */
   }
-  /* 栏杆：每两级一根立杆，顶上一根连续的木扶手 */
-  var s2;
+  /* 栏杆：每两级一根立杆，顶上一根连续的木扶手。扶手到 2.2 米就停：
+     再往上会穿过楼梯下沿那道 2.3 米高的梁（以前最上面两级的扶手和立杆都插进梁里） */
+  var s2, railTop=2.20-0.92;
   for(s2=-1;s2<=1;s2+=2){
     var pts=[];
     for(st2=0; st2<nR; st2++){
       runOff=baseOff+st2*tread+tread*0.5; hgt=(st2+1)*rise;
+      if(hgt>railTop) break;
       var p=P(runOff), side=s2*halfW2;
       var px=p.x+(ax==='z'?side:0), pz=p.z+(ax==='x'?side:0);
       if(st2%2===0) K.rod('metal',px,hgt,pz,px,hgt+0.92,pz,0.016,0.016,5,0x6d7376,1.0);
@@ -252,14 +292,28 @@ function roomStairs(c,x,y,cx,cz){
     }
   }
   var shaftD=nR*tread, farOff=baseOff+shaftD;
-  bx(farOff+0.06,WALLH*0.5,0.12,WALLH,wid+0.12,0x0d1114,0.75,'dark');                         /* 梯井尽头：黑的 */
+  bx(farOff+0.06,WALLH*0.5,0.12,WALLH,wid,0x0d1114,0.75,'dark');                             /* 不再比梯井宽：旁边墙上有门时会插进门框 */                         /* 梯井尽头：黑的 */
   var midOff=baseOff+shaftD*0.5, mp=P(midOff), TH=c.theme;
-  if(ax==='z'){
-    K.box(TH.wallMat,mp.x-halfW2-0.11,WALLH*0.5,mp.z,0.12,WALLH,shaftD,PALETTE.wall,0.88);
-    K.box(TH.wallMat,mp.x+halfW2+0.11,WALLH*0.5,mp.z,0.12,WALLH,shaftD,PALETTE.wall,0.82);
-  }else{
-    K.box(TH.wallMat,mp.x,WALLH*0.5,mp.z-halfW2-0.11,shaftD,WALLH,0.12,PALETTE.wall,0.88);
-    K.box(TH.wallMat,mp.x,WALLH*0.5,mp.z+halfW2+0.11,shaftD,WALLH,0.12,PALETTE.wall,0.82);
+  /* 梯井两侧的挡墙：那一侧本来就是墙（或门）就不再建，以前贴着外墙那面会把墙上的门框、窗戳穿 */
+  function sideOpen(sd){
+    var k, off, p2, gx, gy, ch;
+    for(k=0;k<3;k++){
+      off=baseOff+shaftD*(k+0.5)/3; p2=P(off);
+      if(ax==='z') p2.x+=sd*(halfW2+0.11); else p2.z+=sd*(halfW2+0.11);
+      gx=Math.floor((p2.x+c.halfW)/tw); gy=Math.floor((p2.z+c.halfH)/th);
+      ch=R.grid[gy]&&R.grid[gy][gx];
+      if(ch&&ch!=='#'&&ch!=='='&&ch!=='O') return true;
+    }
+    return false;
+  }
+  var sd2;
+  for(sd2=-1;sd2<=1;sd2+=2){
+    if(!sideOpen(sd2)) continue;
+    /* 只建在楼梯自己那几格里：梯井伸进后面墙里的那一截有墙挡着，挡墙再往里伸会戳穿墙上的门框 */
+    var runCells=(bestBlock===-2)?99:(ax==='z'?gd*th:gw*tw), sLo=Math.max(Math.min(baseOff,farOff),-runCells*0.5), sHi=Math.min(Math.max(baseOff,farOff),runCells*0.5);
+    var sp2=P((sLo+sHi)*0.5), sLen=sHi-sLo;
+    if(ax==='z') K.box(TH.wallMat,sp2.x+sd2*(halfW2+0.11),WALLH*0.5,sp2.z,0.12,WALLH,sLen,PALETTE.wall,sd2<0?0.88:0.82);
+    else K.box(TH.wallMat,sp2.x,WALLH*0.5,sp2.z+sd2*(halfW2+0.11),sLen,WALLH,0.12,PALETTE.wall,sd2<0?0.88:0.82);
   }
   bx(midOff,2.30-0.07,shaftD,0.14,wid+0.14,0x2c3034,0.72,'concrete');                        /* 楼梯下沿的梁 */
   bx(baseOff-0.06,(2.30+WALLH)*0.5,0.10,WALLH-2.30,wid+0.10,PALETTE.wall,0.90,TH.wallMat);
@@ -287,10 +341,10 @@ function wallWindow(K,x,z,nx,nz,w,y0,y1,mull){
   K.unframe();
 }
 /* 吸顶灯盘：金属框 + 发光面 */
-function ceilingLight(K,x,z,lw,ld,rot){
+function ceilingLight(K,x,z,lw,ld,rot,state){
   K.frame(x,z,rot||0);
   K.box('metal',0,WALLH-0.025,0,lw+0.08,0.05,ld+0.08,0x9aa4a8,1.0);
-  K.g('emit').quadN([-lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,ld/2],[-lw/2,WALLH-0.052,ld/2],0,-1,0,0xdcecf4);
+  K.g(lampMat(state)).quadN([-lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,ld/2],[-lw/2,WALLH-0.052,ld/2],0,-1,0,state==='off'?0x8a9094:0xdcecf4);
   K.unframe();
 }
 
@@ -310,8 +364,13 @@ function roomDecor(c,isRoof){
         if(R.grid[rr][x]!=='#'||R.grid[rr][x-1]!=='#'||R.grid[rr][x+1]!=='#') continue;
         var ic=R.grid[inner][x];
         if(ic==='#'||ic==='S'||R.grid[inner][x-1]==='#'||R.grid[inner][x+1]==='#') continue;
+        if(R.grid[inner][x-1]==='S'||R.grid[inner][x+1]==='S') continue;     /* 窗有 1.5 米宽：旁边一格是楼梯也不开，梯井的梁会插进窗里 */
         if(R.grid[inner][x]==='O') continue;
         wallWindow(K,CX(x),CZ(rr)+nz*th*0.5,0,nz,1.5,1.0,2.25,2);
+        if(R.host==='dormN'||R.host==='dormS'||R.host==='admin'){                 /* 宿舍、办公室挂窗帘（拉在两边） */
+          var ccol=(R.host==='admin')?0x8a8e88:[0x5a7a9a,0x9a7a5a,0x7a8a6a,0xb8a890,0x8a6a7a][(x*7+rr)%5];
+          propCurtains(K,CX(x),CZ(rr)+nz*th*0.5,nz>0?0:Math.PI,1.5,1.02,2.42,ccol,x+rr);
+        }
       }
     }
   }
@@ -421,7 +480,9 @@ function roomDecor(c,isRoof){
       K.bevel('board',bbx,1.55,zWallS-0.02,2.2,1.05,0.04,0x23302a,1.0,0.01);
       var bk;
       for(bk=0;bk<6;bk++) K.box('emit',bbx-0.8+bk*0.3,1.75-((bk*7)%4)*0.12,zWallS-0.042,0.20+hash2(bk,i)*0.1,0.03,0.002,[0xe8e0c8,0xd8a0a0,0xa8c8e0][bk%3],0.55);
+      classroomExtras(c,i,c0,c1b,bcx,wz,zWallS);
     }
+    corridorExtras(c,zWallS,zWallN);
   }
 
   if(R.id==='gear1'){
@@ -457,23 +518,217 @@ function roomDecor(c,isRoof){
         for(kb=0;kb<4;kb++) K.box('plastic',pcx,0.15+kb*0.25,pcz,1.02,0.12,1.02,kb%2?0x1a1a18:0xc8a830,1.0);
       }
     }
-    for(gy=3;gy<H-2;gy+=7) K.rod('metal',-halfW+1,2.82,CZ(gy),halfW-1,2.82,CZ(gy),0.08,0.08,8,0x4a4e50);
+    for(gy=3;gy<H-2;gy+=7){
+      K.rod('metal',-halfW+1,2.82,CZ(gy),halfW-1,2.82,CZ(gy),0.08,0.08,8,0x4a4e50);             /* 排风管 */
+      K.rod('metal',-halfW+1,2.90,CZ(gy)+1.2,halfW-1,2.90,CZ(gy)+1.2,0.035,0.035,8,0xa83228,1.0); /* 消防喷淋管（红） */
+      if(!lodLow()) for(gxx=-halfW+3;gxx<halfW-2;gxx+=3){
+        K.rod('metal',gxx,2.90,CZ(gy)+1.2,gxx,2.80,CZ(gy)+1.2,0.012,0.012,6,0xa83228,1.0);
+        K.lathe('metal',gxx,2.76,CZ(gy)+1.2,[[0.0,0],[0.03,0.01],[0.012,0.04]],8,0xc8b06a,1.2);  /* 喷头 */
+      }
+    }
     K.g('decal').quad(-halfW+1,CZ(13)-0.06,halfW-4,CZ(13)-0.06,halfW-4,CZ(13)+0.06,-halfW+1,CZ(13)+0.06,0.006,0xc8b24a);   /* 车道中线 */
   }
 
+  toiletTiles(c);
+  if(R.host==='admin') officePlants(c);
+  if(!isRoof&&R.host!=='bell') roomDecay(c);
   /* 吸顶灯盘 */
   if(!isRoof&&R.host!=='bell'){
+    /* 灯管：真开着灯的地方（world.js 的点光源）亮着，别处的熄着或快坏了——一层楼不会是整整齐齐一片亮 */
     if(teachFl){
-      for(x=3;x<W-3;x+=9) ceilingLight(K,CX(x),CZ(18),1.8,0.24,0);
-      var cs=CLS_SPAN, ci;
-      for(ci=0;ci<cs.length;ci++){
-        var mx=(CX(cs[ci][0])+CX(cs[ci][1]))/2;
-        ceilingLight(K,mx,CZ(4),2.2,0.32,0); ceilingLight(K,mx,CZ(10),2.2,0.32,0);
+      var nl=0;
+      for(x=3;x<W-3;x+=9){ var near=Math.abs(CX(x))<10; ceilingLight(K,CX(x),CZ(18),1.8,0.24,0,near?(nl++===1?'dying':'on'):((x/9|0)%2?'dying':'off')); }
+      var cs=CLS_SPAN, ci, LIT={5:1,21:1,45:1};
+      for(ci=0;ci<cs.length;ci++){                       /* 教室：吊装的护眼灯，两排各三盏；没开灯的教室全熄着，只剩一盏在抽 */
+        var mx=(CX(cs[ci][0])+CX(cs[ci][1]))/2, lr, lc, lit=!!LIT[cs[ci][0]];
+        for(lr=0;lr<2;lr++) for(lc=-1;lc<=1;lc++){
+          var dying=((lr*3+lc+1+ci*2)%6)===4;
+          propHangLamp(K,mx+lc*2.2,CZ(lr?10:4),1.2,0.22,WALLH,2.68,Math.PI/2,dying?'dying':(lit?'on':'off'));
+        }
       }
     }else if(R.id!=='garage1'){
-      for(x=3;x<W-3;x+=9) ceilingLight(K,CX(x),CZ(Math.floor(H*0.5)),1.8,0.24,0);
+      var nk=0;
+      for(x=3;x<W-3;x+=9) ceilingLight(K,CX(x),CZ(Math.floor(H*0.5)),1.8,0.24,0,(nk++%3===2)?'dying':'on');
     }else{
       ceilingLight(K,CX(W-6),CZ(13),1.2,0.20,0);       /* 车库最里面那一盏 */
     }
+  }
+}
+
+/* ---- 教室里的东西：吊扇、投影机、烟感、柜式空调、卫生角、垃圾桶、开关插座、墙上的标语框 ----
+   c0..c1b：这间教室的列；bcx：黑板中心；wz：前墙（黑板那面）内表面；zWallS：后墙内表面 */
+function classroomExtras(c,i,c0,c1b,bcx,wz,zWallS){
+  var K=c.K, CX=c.CX, CZ=c.CZ, xl=CX(c0)-0.5, xr=CX(c1b)+0.5, mx=(xl+xr)/2;
+  propCeilFan(K,mx-1.8,CZ(7),WALLH,i*3+1); propCeilFan(K,mx+1.8,CZ(7),WALLH,i*3+2);
+  c.meshes.push(chalkBoard(bcx,1.70,wz+0.0815,(c1b-c0+1)*0.72*0.96,0.98,(c.R.floor||1)*7+i));
+  propProjector(K,mx,CZ(6),WALLH,0);
+  propSmoke(K,mx,CZ(8.5),WALLH);
+  /* 前面左边角上一台柜式空调 */
+  propACCabinet(K,xl+0.30,wz,0); c.solid(xl+0.30,wz+0.15,0.52,0.32);
+  /* 后面右边角：卫生角 + 垃圾桶 */
+  var cz2=zWallS;
+  propCleaning(K,xr-0.62,cz2,Math.PI); c.solid(xr-0.62,cz2-0.22,1.0,0.44);
+  K.lathe('plastic',xr-1.45,0,cz2-0.22,[[0.15,0],[0.19,0.55],[0.20,0.56]],14,0x3a6a4a,1.0);
+  K.lathe('dark',xr-1.45,0.50,cz2-0.22,[[0.0,0],[0.18,0]],12,0x1a1e1c,1.0);
+  c.solid(xr-1.45,cz2-0.22,0.42,0.42);
+  /* 后门旁的开关、前墙下的插座 */
+  var dx=CX(c0+4)+0.5;
+  propSwitch(K,dx+0.28,1.35,zWallS,Math.PI,3);
+  propSocket(K,mx+2.9,0.30,wz,0); propSocket(K,mx-2.9,0.30,wz,0);
+  /* 两侧墙上的标语框（名人名言、课程表、班级公约） */
+  var papers=[0xe8d8a8,0xc8d8e0,0xe0d0c0], k;
+  for(k=0;k<2;k++){
+    propFrame(K,xl,1.75,CZ(5+k*5),Math.PI/2,0.62,0.82,papers[(i+k)%3],0x3a3028,i*4+k);
+    propFrame(K,xr,1.75,CZ(5+k*5),-Math.PI/2,0.62,0.82,papers[(i+k+1)%3],0x3a3028,i*4+k+2);
+  }
+}
+/* ---- 教学楼走廊：楼梯口和出口挂的安全出口灯、应急灯、饮水机、分类垃圾桶、监控、烟感 ---- */
+function corridorExtras(c,zWallS,zWallN){
+  var K=c.K, R=c.R, CX=c.CX, CZ=c.CZ, W=c.W, H=c.H, x, k;
+  var zc=(zWallS+1+zWallN)/2;
+  /* 楼梯、出口：在格子 21 行（南外墙）上。门洞前面吊一块双面的出口灯，顺着走廊的方向看得见 */
+  for(x=0;x<W-1;x++){
+    var ch=R.grid[H-1][x];
+    if((ch==='S'||ch==='O')&&R.grid[H-1][x+1]===ch&&(x===0||R.grid[H-1][x-1]!==ch)){
+      var sx=CX(x)+0.5, sz=zWallN-0.6;
+      K.rod('metal',sx,2.80,sz-0.1,sx,WALLH,sz-0.1,0.004,0.004,4,0x9aa0a4,1.0);
+      K.rod('metal',sx,2.80,sz+0.1,sx,WALLH,sz+0.1,0.004,0.004,4,0x9aa0a4,1.0);
+      propExitSign(K,sx,2.72,sz-0.022,0,ch==='O'); propExitSign(K,sx,2.72,sz+0.022,Math.PI,ch==='O');
+    }
+  }
+  /* 应急灯：教室门之间、走廊北墙上 */
+  for(k=0;k<CLS_SPAN.length;k++) propEmergencyLight(K,CX(CLS_SPAN[k][0])+1.0,2.62,zWallS+1,0);
+  /* 厕所隔墙外面：饮水机 + 分类垃圾桶 */
+  var tx=-1;
+  for(x=W-2;x>0;x--) if(R.grid[H-5]&&R.grid[H-5][x]==='#'&&R.grid[H-5][x-1]==='.'){ tx=x; break; }
+  if(tx>0){
+    var fx=CX(tx)-0.5;
+    propWaterDispenser(K,fx-0.19,CZ(H-5),-Math.PI/2); c.solid(fx-0.19,CZ(H-5),0.36,0.36);
+    propBinPair(K,fx-0.19,CZ(H-6)+0.1,-Math.PI/2); c.solid(fx-0.19,CZ(H-6)+0.1,0.36,0.82);
+  }
+  propCamDome(K,CX(2),CZ(H-5),WALLH); propCamDome(K,CX(W-8),CZ(H-5),WALLH);
+  for(x=8;x<W-6;x+=9) propSmoke(K,CX(x),zc,WALLH);
+}
+
+/* ---- 厕所：隔间附近（3 格内）露在外面的墙面贴 1.6 米高的白瓷砖 ---- */
+function toiletTiles(c){
+  var R=c.R, K=c.K, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, x, y, near={}, any=false;
+  for(y=0;y<H;y++) for(x=0;x<W;x++) if(R.grid[y][x]==='B'||R.grid[y][x]==='G'){
+    any=true; var a, b; for(b=-3;b<=3;b++) for(a=-3;a<=3;a++) near[(x+a)+','+(y+b)]=1;
+  }
+  if(!any) return;
+  var D=[[0,-1],[0,1],[-1,0],[1,0]], d;
+  for(y=0;y<H;y++) for(x=0;x<W;x++){
+    if(R.grid[y][x]!=='#') continue;
+    for(d=0;d<4;d++){
+      var nx=x+D[d][0], ny=y+D[d][1], ch=R.grid[ny]&&R.grid[ny][nx];
+      if(!ch||ch==='#'||ch==='='||ch==='O'||ch==='S'||!near[nx+','+ny]) continue;
+      var fx=CX(x)+D[d][0]*0.5, fz=CZ(y)+D[d][1]*0.5;
+      if(D[d][1]!==0) K.box('tile',fx,0.80,fz+D[d][1]*0.006,1.0,1.6,0.012,0xe8ecea,1.0);
+      else K.box('tile',fx+D[d][0]*0.006,0.80,fz,0.012,1.6,1.0,0xe8ecea,1.0);
+    }
+  }
+}
+/* ---- 行政楼：每间办公室靠前墙的角上一盆绿植 ---- */
+function officePlants(c){
+  var R=c.R, K=c.K, W=c.W, CX=c.CX, CZ=c.CZ, x;
+  for(x=1;x<W-1;x++){
+    if(R.grid[1][x-1]!=='#'||R.grid[1][x]!=='.') continue;
+    if(R.grid[2]&&R.grid[2][x]!=='.') continue;
+    var px=CX(x)-0.18, pz=CZ(1)-0.18;
+    propPlant(K,px,pz,1.1,x); c.solid(px,pz,0.38,0.38);
+  }
+}
+
+/* ---- 黑板上的粉笔字 ----
+   大部分是平常的（值日、课表、作业、倒计时），有几块不太对。字一笔笔有点断（粉笔的颗粒），擦过的地方留着白印。
+   贴图、材质按内容缓存，所有楼层共用，不随房间销毁 */
+var CHALK_TEXTS=[
+  ['值日生：周  林','今日课表：语文 数学 英语 物理 自习'],
+  ['距 离 高 考 还 有  0  天'],
+  ['今天的作业：','数一数，班上到底有几个人'],
+  ['晚自习 19:00 — 22:00','保持安静'],
+  ['点名：到 到 到 到 到 到 到 到 到','到'],
+  ['第三排靠窗那个座位','不要坐'],
+  ['不 要 回 头'],
+  ['放学后不要留在教室','（再说一遍：不要留在教室）'],
+  ['数学作业：P.83  1—12 题','明天早读前交'],
+  ['他一直坐在最后一排','你们看不见吗']
+];
+var CHALK_MAT={};
+function chalkBoard(x,y,z,w,h,seed){
+  var lines=CHALK_TEXTS[seed%CHALK_TEXTS.length], key=lines.join('|');
+  var m=CHALK_MAT[key];
+  if(!m){
+    var cv=document.createElement('canvas'); cv.width=1024; cv.height=Math.round(1024*h/w);
+    var g=cv.getContext('2d'), H=cv.height, i, j;
+    g.clearRect(0,0,1024,H);
+    for(i=0;i<4;i++){ g.fillStyle='rgba(255,255,255,0.025)'; g.beginPath(); g.ellipse(Math.random()*1024,Math.random()*H,120+Math.random()*200,30+Math.random()*50,(Math.random()-0.5)*0.4,0,6.283); g.fill(); }   /* 擦过的白印 */
+    var fs=Math.round(H/(lines.length+1.6)*0.62), red=/不要|回头|看不见|0  天/.test(key);
+    g.font='600 '+fs+'px "KaiTi","STKaiti","Kaiti SC","Noto Serif SC","SimSun",serif'; g.textBaseline='middle';
+    for(i=0;i<lines.length;i++){
+      var ly=H*(i+1)/(lines.length+1), lx=60+Math.random()*30;
+      for(j=0;j<3;j++){ g.fillStyle=(red&&i===lines.length-1&&lines.length>1)?'rgba(220,120,110,0.55)':'rgba(236,236,228,0.55)'; g.fillText(lines[i],lx+(Math.random()-0.5)*2.5,ly+(Math.random()-0.5)*2.5); }
+    }
+    g.globalCompositeOperation='destination-out';                 /* 粉笔的断续：随机擦掉一些点 */
+    for(i=0;i<5000;i++){ g.fillStyle='rgba(0,0,0,'+(0.3+Math.random()*0.7).toFixed(2)+')'; g.fillRect(Math.random()*1024,Math.random()*H,1.5,1.5); }
+    g.globalCompositeOperation='source-over';
+    var t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
+    m=new THREE.MeshLambertMaterial({map:t,transparent:true,depthWrite:false});
+    m.userData.shared=true;
+    CHALK_MAT[key]=m;
+  }
+  var me=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);
+  me.position.set(x,y,z);
+  return me;
+}
+/* ---- 破败：吊顶上的水渍、掉下来半块的吊顶板、墙脚的霉斑、墙上往下淌的水痕、几只手印、地上散落的纸和蹭痕、洗手池边的水 ----
+   都是贴花（没有碰撞、不挡路），位置按房间 id 固定，每次进来一样 */
+function roomDecay(c){
+  var K=c.K, R=c.R, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, RWH=c.RWH||WALLH, x, y, d;
+  var sd=0, i; for(i=0;i<R.id.length;i++) sd=sd*31+R.id.charCodeAt(i); sd=Math.abs(sd)%9973;
+  var low=lodLow(), kq=low?0.5:1, garage=(R.id==='garage1');
+  function hz(a,b,k){ return hash2(a*13+sd+(k||0)*101,b*17+sd*3); }
+  function G(yy,xx){ return (yy>=0&&xx>=0&&yy<H&&xx<W)?R.grid[yy][xx]:null; }
+  /* 吊顶水渍 */
+  for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){
+    if(G(y,x)!=='.') continue;
+    if(hz(x,y,1)<0.035*kq) propDecal(K,0,'d',CX(x)+hz(x,y,2)-0.5,RWH-0.002,CZ(y)+hz(x,y,3)-0.5,0.8+hz(x,y,4)*1.0,0.8+hz(x,y,5)*0.9,garage?0x3a3428:0x6e5a3c,hz(x,y,6)*6.28);
+  }
+  /* 墙：脚下的霉斑、顶上往下淌的水痕、偶尔一只手印 */
+  var D=[[0,-1,'s'],[0,1,'n'],[-1,0,'e'],[1,0,'w']];
+  for(y=0;y<H;y++) for(x=0;x<W;x++){
+    if(G(y,x)!=='#') continue;
+    for(d=0;d<4;d++){
+      var nx=x+D[d][0], ny=y+D[d][1], ch=G(ny,nx);
+      if(!ch||ch==='#'||ch==='='||ch==='O'||ch==='S') continue;
+      var fx=CX(x)+D[d][0]*0.503, fz=CZ(y)+D[d][1]*0.503, f=D[d][2], r1=hz(x*4+d,y,7);
+      if(r1<0.07*kq) propDecal(K,1,f,fx,0.95+hz(x,y+d,8)*0.25,fz,0.6+hz(x,d,9)*0.5,0.55+hz(d,y,10)*0.3,0x1c261a);
+      else if(r1<0.12*kq) propDecal(K,0,f,fx,RWH-0.45,fz,0.7+hz(x,d,11)*0.5,0.9,garage?0x2a2620:0x5a4a32);
+      else if(r1<0.135&&!garage) propDecal(K,2,f,fx,1.15+hz(x,d,12)*0.3,fz,0.20,0.26,0x3a1812);
+    }
+  }
+  /* 地上：散落的纸、蹭痕；洗手池周围的水 */
+  for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){
+    var gc=G(y,x);
+    if(gc==='w'){ propDecal(K,0,'u',CX(x)+0.2,0.005,CZ(y)+0.45,1.1,0.8,0x1a2228,hz(x,y,13)*6.28); continue; }
+    if(gc!=='.') continue;
+    var r2=hz(x,y,14);
+    if(!garage&&r2<0.025*kq) propFloorPaper(K,CX(x)+hz(x,y,15)-0.5,CZ(y)+hz(x,y,16)-0.5,hz(x,y,17)*6.28,(x+y)|0);
+    else if(r2>0.95-0.05*kq) propDecal(K,3,'u',CX(x),0.0045,CZ(y),0.9,0.9,0x2a2622,hz(x,y,18)*6.28);
+  }
+  /* 教学楼走廊：掉了一块的吊顶，半块板吊下来，一根电线垂着 */
+  if(R.host==='teach'&&R.floor>=1&&R.floor<=5){
+    [5,23,41].forEach(function(col,k){
+      if(hz(col,k,19)>0.66) return;
+      var hx=Math.round(CX(col)/0.6)*0.6+0.3, hzc=Math.round(CZ(17)/0.6)*0.6+0.3;
+      K.g('dark').face([[hx-0.3,RWH-0.003,hzc-0.3],[hx+0.3,RWH-0.003,hzc-0.3],[hx+0.3,RWH-0.003,hzc+0.3],[hx-0.3,RWH-0.003,hzc+0.3]],[0,-1,0],[0.02,0.02,0.025]);
+      var a=0.85, z1=hzc-0.29+0.58*Math.cos(a), y1=RWH-0.01-0.58*Math.sin(a), P=[[hx-0.28,RWH-0.01,hzc-0.29],[hx+0.28,RWH-0.01,hzc-0.29],[hx+0.28,y1,z1],[hx-0.28,y1,z1]];
+      var cb=K.g('plastic'), rgb=cb._rgb(0xa8acac,1.0);
+      cb.face(P,[0,-Math.cos(a),Math.sin(a)],rgb);                               /* 板面朝下、朝走廊 */
+      cb.face([P[1],P[0],P[3],P[2]],[0,Math.cos(a),-Math.sin(a)],cb._rgb(0x6a6e6e,0.8));
+      K.rod('dark',hx+0.12,RWH-0.01,hzc+0.1,hx+0.18,2.72,hzc+0.18,0.006,0.006,4,0x15181a,1);   /* 垂下来的电线 */
+      propDecal(K,0,'d',hx+0.2,RWH-0.002,hzc+0.2,1.6,1.4,0x5a4a32,1.3);
+    });
   }
 }

@@ -227,26 +227,6 @@ function anEnd(){
   anScheduleNext();
 }
 
-var ENTS=[];
-function entAdd(color,w,h,x,y,z){
-  var geo=new THREE.PlaneGeometry(w,h);
-  var mat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.85,side:THREE.DoubleSide,depthWrite:false});
-  var m=new THREE.Mesh(geo,mat);
-  m.position.set(x,y,z);
-  GLR.scene.add(m);
-  ENTS.push(m);
-  return m;
-}
-function entClear(){
-  for(var i=0;i<ENTS.length;i++){ GLR.scene.remove(ENTS[i]); ENTS[i].geometry.dispose(); ENTS[i].material.dispose(); }
-  ENTS=[];
-}
-function entFace(){
-  for(var i=0;i<ENTS.length;i++){
-    ENTS[i].quaternion.copy(GLR.cam.quaternion);
-  }
-}
-
 var HAS_FX={rain:1,moth:1,exercise:1,necker:1,twin:1,hand:1,shadow:1,
   leak:1,rite:1,feast:1,lamps:1,chalk:1,roster:1,broad:1,repeat:1,shifting:1,cold:1,raindots:1,stare:1,cup:1};
 /* 选一个在玩家前方、站得住的点（世界单位） */
@@ -318,9 +298,9 @@ function anHurt(msg,loss,opt){
   opt=opt||{};
   var k=(S.diff==='hard')?1.25:0.9;
   S.san=Math.max(0,S.san-loss*k);
-  GLR.hurt=Math.max(GLR.hurt||0,0.65);
+  VisualState.hurt=Math.max(VisualState.hurt||0,0.65);
   if(!opt.quiet){                           /* quiet：不闪白、不加刺耳的音效，只留画面暗下去那一下 */
-    GLR.flash=Math.max(GLR.flash||0,0.25);
+    VisualState.flash=Math.max(VisualState.flash||0,0.25);
     try{ SFX.sting&&SFX.sting(); }catch(e){}
   }
   os(msg,4.4);

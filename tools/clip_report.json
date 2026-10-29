@@ -1,0 +1,41 @@
+{
+ "version": 1,
+ "scope": {
+  "quality": 1,
+  "rooms": [
+   "teach1",
+   "teach2",
+   "teach3",
+   "teach4",
+   "teach5",
+   "teach6",
+   "admin1",
+   "admin2",
+   "admin3",
+   "admin4",
+   "admin5",
+   "lab1",
+   "lab2",
+   "lab3",
+   "lab4",
+   "lab5",
+   "canteen1",
+   "dorm1",
+   "dorm2",
+   "dorm3",
+   "dorm4",
+   "dorm5",
+   "dorm6",
+   "garage1",
+   "trash1",
+   "link1",
+   "link2",
+   "bell1",
+   "guard1",
+   "gear1",
+   "out"
+  ]
+ },
+ "counts": {},
+ "issues": []
+}

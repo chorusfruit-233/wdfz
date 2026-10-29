@@ -6,7 +6,7 @@ function saveGame(){
     var d={
       v:1, clockVersion:2, mode:S.mode, room:S.room, x:S.x, y:S.y, ang:S.ang, pitch:S.pitch,
       tsec:S.tsec, day:S.day, diff:S.diff, san:S.san, viol:S.viol, stam:S.stam, tt:S.tt,
-      tired:!!S.tired, snackT:Math.max(0,S.snackT||0), phoneCool:Math.max(0,PHONE.cool||0),
+      tired:!!S.tired, snackT:Math.max(0,S.snackT||0), pillT:Math.max(0,S.pillT||0), phoneCool:Math.max(0,PHONE.cool||0),
       actCool:S.actCool||{}, immuneUsed:!!S.immuneUsed,
       spiral:spiralHere()?{state:SP.state,a:SP.a,th:SP.th}:null,
       bag:S.bag, hot:S.hot, talent:S.talent, spots:S.spots, clues:S.clues,

@@ -8,11 +8,12 @@
 
 var CUP_H=10.6;          /* 四楼窗台离地（米）：教学楼每层 3.2 米 */
 var CUP_R=0.95;          /* 砸中半径（米），地上的影子就画这么大 */
-var CUP_GEO=null;
+var CUP_GEO={};
 function cupFallTime(){ return Math.sqrt(2*CUP_H/9.8); }
 /* 一只保温杯：清华紫的杯身、一圈白色字带（"清华大学"）、银色杯盖和杯底 */
 function cupGeo(){
-  if(CUP_GEO) return CUP_GEO;
+  var key=Quality.get().segments;
+  if(CUP_GEO[key]) return CUP_GEO[key];
   var K=new Kit(), m='dark';
   K.cyl(m,0,0,0,0.040,0.040,0.012,12,0xb8bec4,1.1);                 /* 杯底 */
   K.cyl(m,0,0.012,0,0.042,0.044,0.17,12,0x5b2a86,1.0);              /* 杯身 */
@@ -20,8 +21,9 @@ function cupGeo(){
   K.cyl(m,0,0.182,0,0.045,0.045,0.012,12,0xb8bec4,1.15);            /* 杯口银圈 */
   K.cyl(m,0,0.194,0,0.044,0.040,0.045,12,0x4a2270,0.95);            /* 杯盖 */
   K.cyl(m,0,0.239,0,0.026,0.024,0.012,10,0xb8bec4,1.1);
-  CUP_GEO=K.mergedGeometry();
-  return CUP_GEO;
+  CUP_GEO[key]=K.mergedGeometry();
+  CUP_GEO[key].userData={shared:true,cup:true};
+  return CUP_GEO[key];
 }
 /* 落点的地面高度：路、球场、楼前铺装都比草地高一点，影子和杯子要放在最上面那层 */
 var CUP_RAY=null;

@@ -21,17 +21,17 @@ var FIG_SPEC={
   sit:    {leg:0.44, torso:0.58, arm:0.62, head:0.21, w:0.36, neck:0.07, thin:1.00}
 };
 function figGeo(kind){
-  var key=kind+'|'+(QUALITY===0?0:1);
+  var key=kind+'|'+Quality.get().segments;
   if(FIG_GEO[key]) return FIG_GEO[key];
   var sp=FIG_SPEC[kind]||FIG_SPEC.tall, K=new Kit(), m='dark', c=0xffffff, t=sp.thin;
   var sit=(kind==='sit');
-  var hipY=sit?0.47:sp.leg, sh=hipY+sp.torso, hx=sp.w/2;
+  var hipY=sit?0.535:sp.leg, sh=hipY+sp.torso, hx=sp.w/2;
   /* 腿 */
   var s;
   for(s=-1;s<=1;s+=2){
     var lx=s*0.095*t;
     if(sit){
-      K.rod(m,lx,hipY,-0.02, lx,hipY+0.02,0.40, 0.075,0.062,7,c);        /* 大腿往前平伸 */
+      K.rod(m,lx,hipY,-0.02, lx,hipY+0.02,0.40, 0.07,0.06,7,c);        /* 大腿往前平伸 */
       K.rod(m,lx,hipY+0.02,0.40, lx*1.05,0.08,0.44, 0.058,0.046,7,c);   /* 小腿垂下 */
       K.bevel(m,lx*1.05,0.045,0.50,0.11,0.09,0.25,c,1,0.03);
     }else{
@@ -42,15 +42,15 @@ function figGeo(kind){
     }
   }
   /* 胯、腹、胸 */
-  K.bevel(m,0,hipY+0.04,0,0.32*t,0.16,0.20*t,c,1,0.05);
+  K.blob(m,0,hipY+0.04,0,0.17*t,0.10,0.11*t,c,1,10);                         /* 胯（椭球，平滑着色：像人，不像箱子） */
   var abdH=sp.torso*0.42, chH=sp.torso*0.58;
   if(sit){
     K.frame(0,0,0,0);
-    K.bevel(m,0,hipY+abdH/2+0.08,-0.03,0.30*t,abdH,0.19*t,c,1,0.05);
-    K.bevel(m,0,hipY+abdH+chH/2+0.02,0.06,0.38*t,chH,0.21*t,c,1,0.06);     /* 往前趴 */
+    K.blob(m,0,hipY+abdH/2+0.08,-0.03,0.155*t,abdH*0.56,0.10*t,c,1,10);
+    K.blob(m,0,hipY+abdH+chH/2+0.02,0.06,0.20*t,chH*0.55,0.11*t,c,1,10);  /* 往前趴 */
   }else{
-    K.bevel(m,0,hipY+abdH/2+0.06,0,0.30*t,abdH,0.19*t,c,1,0.05);
-    K.bevel(m,0,hipY+abdH+chH/2+0.03,0,0.40*t,chH,0.22*t,c,1,0.07);
+    K.blob(m,0,hipY+abdH/2+0.06,0,0.155*t,abdH*0.58,0.10*t,c,1,10);
+    K.blob(m,0,hipY+abdH+chH/2+0.03,0,0.21*t,chH*0.56,0.115*t,c,1,10);
   }
   K.blob(m,-hx*0.82,sh-0.03,sit?0.06:0,0.08,0.06,0.08,c,1,6);               /* 肩头 */
   K.blob(m, hx*0.82,sh-0.03,sit?0.06:0,0.08,0.06,0.08,c,1,6);
@@ -59,7 +59,7 @@ function figGeo(kind){
   K.cyl(m,0,sh-0.02,nz,0.05,0.045,sp.neck+0.04,6,c);
   var hy=sh+sp.neck+sp.head*0.5;
   K.blob(m,0,hy,nz+(sit?0.04:0.01),sp.head*0.40,sp.head*0.5,sp.head*0.44,c,1,8);
-  K.bevel(m,0,hy-sp.head*0.30,nz+0.04,sp.head*0.42,sp.head*0.22,sp.head*0.40,c,1,0.03);   /* 下巴 */
+  K.blob(m,0,hy-sp.head*0.28,nz+0.035,sp.head*0.24,sp.head*0.15,sp.head*0.23,c,1,8);       /* 下巴 */
   /* 手臂 */
   for(s=-1;s<=1;s+=2){
     var ax=s*hx*0.95, up=sp.arm*0.47, fo=sp.arm*0.53;
@@ -77,6 +77,7 @@ function figGeo(kind){
     }
   }
   var g=K.mergedGeometry();
+  g.userData={shared:true,figKind:kind};
   FIG_GEO[key]=g;
   return g;
 }
@@ -91,7 +92,8 @@ function figMesh(kind,mat,scale){
 var FX_GEO={}, FX_VC_MAT=null;
 function fxVCMat(){ if(!FX_VC_MAT) FX_VC_MAT=new THREE.MeshBasicMaterial({vertexColors:true,fog:true,side:THREE.DoubleSide});   /* 镜头钻进去也看得见（钟罩下来的时候） */ return FX_VC_MAT; }
 function fxGeo(name){
-  if(FX_GEO[name]) return FX_GEO[name];
+  var key=name+'|'+Quality.get().segments;
+  if(FX_GEO[key]) return FX_GEO[key];
   var K=new Kit(), m='dark', i;
   if(name==='hand'){                        /* 从地下伸出来的手：掌心朝下、五指往前抓，后面拖着一截小臂 */
     var sk=0x6f6a63;
@@ -155,7 +157,8 @@ function fxGeo(name){
     K.cyl(m,0,2.18,0,0.12,0.12,0.04,10,0xf2dca8);
     K.rod(m,0,2.18,0,0,1.92,0,0.03,0.015,5,0xe8c05a);
   }
-  FX_GEO[name]=K.mergedGeometry();
-  return FX_GEO[name];
+  FX_GEO[key]=K.mergedGeometry();
+  FX_GEO[key].userData={shared:true,fxKind:name};
+  return FX_GEO[key];
 }
 function fxMesh(name){ return new THREE.Mesh(fxGeo(name),fxVCMat()); }
