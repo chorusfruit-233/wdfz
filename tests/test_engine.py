@@ -29,6 +29,31 @@ class EngineTest(BrowserCase):
         self.assert_js(page, "MATS.plaster.map.image.width===256&&!SHADE.shadows&&GLR.roomLights.every(l=>!l.castShadow)")
         self.assertEqual(gl_errors, [])
 
+    def test_realistic_tier_rounds_every_box_and_uses_physical_rendering(self):
+        page = self.page()
+        gl_errors = []
+        page.on('console', lambda msg: gl_errors.append(msg.text) if msg.type == 'error' else None)
+        # 圆角盒：法线不止 6 个方向（棱和角上连续过渡），顶点都在盒子范围内
+        page.evaluate("""Settings.q(4);var K=new Kit();K.box('wood',0,0.5,0,0.6,0.04,0.4,0xffffff,1);
+            var g=K.mergedGeometry(),n=g.attributes.normal,p=g.attributes.position,dirs={},inside=true;
+            for(var i=0;i<n.count;i++){dirs[[n.getX(i),n.getY(i),n.getZ(i)].map(v=>Math.round(v*10)).join()]=1;
+              if(Math.abs(p.getX(i))>0.3001||Math.abs(p.getY(i)-0.5)>0.0201||Math.abs(p.getZ(i))>0.2001)inside=false;}
+            window.box4={dirs:Object.keys(dirs).length,inside:inside};""")
+        self.assert_js(page, 'box4.dirs>20&&box4.inside')
+        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=760;S.intro=0;Settings.q(3);
+            window.tri=g=>{let n=0;g.traverse(o=>{if(o.geometry&&o.geometry.index)n+=o.geometry.index.count/3});return n};
+            window.t3=tri(GLR.roomMesh);Settings.q(4);syncCamera(0);render(.016);window.t4=tri(GLR.roomMesh);""")
+        self.assert_js(page, "QUALITY===4&&Quality.get().label==='真实'&&t4>t3*1.5")
+        self.assert_js(page, "GLR.roomMesh.children.some(o=>o.material&&o.material.isMeshStandardMaterial)&&!!GLR.scene.environment")
+        self.assert_js(page, "GLR.postMat.uniforms.uBloom.value>0&&GLR.postMat.uniforms.uAO.value>=0.5&&!document.getElementById('errbox')")
+        # 混响跟着空间走（关掉「音乐/环境」也一样，只要有音效）；回到别的档位用回通用混响，材质也换回原来那批
+        page.evaluate("""Settings.amb(0);SFX.resume();SFX.click();S.screen='play';var R=INTERIORS.teach1;S.x=R.ox+30*R.tw;S.y=R.oy+18*R.th;
+            SFX.tick(.1);window.sp=[SFX.space()];doEnterRoom('garage1');running=false;SFX.tick(.1);sp.push(SFX.space());
+            Settings.q(2);SFX.tick(.1);sp.push(SFX.space());render(.016);""")
+        self.assertEqual(page.evaluate('sp'), ['hall', 'garage', None])
+        self.assert_js(page, "GLR.roomMesh.children.every(o=>!o.material||!o.material.isMeshStandardMaterial)&&!GLR.scene.environment")
+        self.assertEqual(gl_errors, [])
+
     def test_quality_switch_preserves_live_story_and_actor_state(self):
         page = self.page()
         page.evaluate("""doEnterRoom('teach1');running=false;S.intro=0;
@@ -66,12 +91,12 @@ class EngineTest(BrowserCase):
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
         page.evaluate("PHOTO_TRIED=true;running=false")
-        self.assert_js(page, "QUALITY===1&&document.querySelectorAll('#mq option').length===4&&document.querySelectorAll('#sQ button').length===4")
+        self.assert_js(page, "QUALITY===1&&document.querySelectorAll('#mq option').length===5&&document.querySelectorAll('#sQ button').length===5")
         page.select_option('#mq', '3')
         page.reload(wait_until='load')
         page.evaluate('PHOTO_TRIED=true;running=false')
         self.assert_js(page, "QUALITY===3&&SET.q===3&&document.getElementById('mq').value==='3'")
-        for q, expected in ((0, 0), (1, 1), (2, 2), (3, 3), (99, 1), ('3', 1), (None, 1)):
+        for q, expected in ((0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 1), (99, 1), ('3', 1), (None, 1)):
             page.evaluate("q=>{localStorage.setItem('zw3d_set',JSON.stringify({q:q}));loadSet()}", q)
             self.assertEqual(page.evaluate('[QUALITY,SET.q]'), [expected, expected])
 

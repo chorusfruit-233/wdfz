@@ -22,8 +22,8 @@ function phoneEl(){
 }
 PHONE.start=function(){
   if(PHONE.on) return;
-  if(typeof AN!=='undefined'&&AN.active){ os('我：现在不是看手机的时候。',2.2); return; }
-  if(typeof PAT!=='undefined'&&PAT.locked){ os('我：它在看着我。我不敢低头。',2.2); return; }
+  if(AN.active){ os('我：现在不是看手机的时候。',2.2); return; }
+  if(PAT.locked){ os('我：它在看着我。我不敢低头。',2.2); return; }
   PHONE.on=true; PHONE.reset();
   if(UI.openPanel==='bag') UI.close('bag',false);
   resetInputState(); releaseMouseLook();
@@ -74,7 +74,7 @@ PHONE.end=function(){
 PHONE.tick=function(dt){
   if(PHONE.cool>0) PHONE.cool=Math.max(0,PHONE.cool-dt);
   if(!PHONE.on) return;
-  if(S.dead||S.screen!=='play'||(typeof AN!=='undefined'&&AN.active)||(typeof PAT!=='undefined'&&PAT.locked)){ PHONE.stop(!S.dead); return; }
+  if(S.dead||S.screen!=='play'||AN.active||PAT.locked){ PHONE.stop(!S.dead); return; }
   if(PHONE.st==='fly'){
     PHONE.vy+=PH_G*dt; PHONE.y+=PHONE.vy*dt; PHONE.t+=dt;
     if(!PHONE.pipes.length||PHONE.pipes[PHONE.pipes.length-1].x<PH_W-120)

@@ -49,8 +49,8 @@ var VIO_ON=0;
 /* ---------- 考试模式 ----------
    在钟楼顶上撞钟以后，当天剩下的所有"在教室"的时段（上课和晚自习）都变成考试，到熄灯为止：
      离开座位，SAN 和违规涨得更快；异象只出教室里的那几种；
-     一场考完，大部分时间坐着的，给一次 SAN。 */
-var EXAM_AN={stare:1,chalk:1,repeat:1,roster:1,shifting:1,broad:1};
+     一场考完，大部分时间坐着的，给一次 SAN。
+   考试时能出的异象见 anomaly.js 注册表里的 exam（派生出 EXAM_AN）。 */
 function examStart(){
   if(isNight()){ os('我：钟声荡出去，很快就被夜吞掉了。整座学校都睡着，没有人回应。',4); return; }
   S.exam=true; S.examCur=null; S.examSeat=0; S.examTot=0;
@@ -112,41 +112,54 @@ function rewindGameTime(minutes){
     if(before>=LIGHTS_OUT+10&&S.tsec<LIGHTS_OUT+10&&S.day>1) S.day--;
   }
 }
-function updateSystems(dt){
-  if(S.dead||S.screen!=='play') return;
-  var rate=rateAt(S.tsec), _t0=S.tsec;
-  advanceGameTime(dt*rate/60);
-  if(_t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
-    os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
-
-  try{ fnTick(dt); }catch(e){}
-  if(S.exam&&(S.tsec>=LIGHTS_OUT||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
-  examTick(dt);
-  var exam=examNow();
-
-  var nw=needWhere(S.tsec);
-  if(nw==='教室'){
-    var ek=exam?1.8:1;                        /* 考试时离开座位扣得更快 */
-    if(S.seated){ S.san+=0.42*dt; }
-    else if(inClassroomHere()){ S.san-=0.9*dt*dif().san*ek; }
-    else { S.san-=2.4*dt*dif().san*ek; }
-  }else if(nw==='宿舍'){
-    if(inDorm()){ S.san+=0.22*dt; }
-    else { S.san-=1.4*dt*dif().san; }
-  }else if(nw==='操场'){
-    if(onField()){ S.san+=0.5*dt; }
-    else { S.san-=1.2*dt*dif().san; }
-  }else{
-    S.san+=0.8*dt;
+/* 每个时段规定待在哪里（needWhere 的四种结果）：在不在该在的地方、SAN 每秒怎么变 */
+var NEED_RULE={
+  '教室':{
+    there:function(){ return atMySeat(); },
+    san:function(dt,exam){
+      var ek=exam?1.8:1;                        /* 考试时离开座位扣得更快 */
+      if(S.seated){ S.san+=0.42*dt; }
+      else if(inClassroomHere()){ S.san-=0.9*dt*dif().san*ek; }
+      else { S.san-=2.4*dt*dif().san*ek; }
+    }
+  },
+  '宿舍':{
+    there:function(){ return inDorm(); },
+    san:function(dt){ if(inDorm()){ S.san+=0.22*dt; } else { S.san-=1.4*dt*dif().san; } }
+  },
+  '操场':{
+    there:function(){ return onField(); },
+    san:function(dt){ if(onField()){ S.san+=0.5*dt; } else { S.san-=1.2*dt*dif().san; } }
+  },
+  '自由':{
+    there:function(){ return true; },
+    san:function(dt){ S.san+=0.8*dt; }
   }
+};
+/* 同化值每满 20 说一句 */
+var TT_LINES=['我：最近睡得挺好。铃一响就醒，不用闹钟。醒的时候，我已经坐在位子上了。',
+  '我：课表不用看了。我知道下一节是什么。我还知道下下节、下下下节。',
+  '我：……今天几号来着？黑板右上角的日期，我从来没见它变过。',
+  '我：走廊里的人走得真整齐。我低头看了一眼——我的脚也在跟着拍子。',
+  '我：座位表上，我的名字在哪一格？……哪一格都是我的名字。',
+  '我：我好像一直都在这里。在我转来之前，就在这里。'];
+/* 时间往前走；《先辈》那十秒开始时提醒一句 */
+function clockTick(dt){
+  var t0=S.tsec;
+  advanceGameTime(dt*rateAt(S.tsec)/60);
+  if(t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
+    os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
+}
+/* SAN：按时段规则涨跌，药片回复，归零就死 */
+function sanTick(dt,rule,exam){
+  rule.san(dt,exam);
   if(S.pillT>0){ var pd=Math.min(dt,S.pillT); S.san+=PILL_RATE*pd; S.pillT-=pd; }
   S.san=clamp(S.san,0,100);
   if(S.san<=0&&!S.dead) kill('你在一个不该睡着的地方睡着了。梦里有人一直在叫你的名字，叫得很温柔。','vignette');
-
-  var wrong=false;
-  if(nw==='教室'&&!atMySeat()) wrong=true;
-  else if(nw==='宿舍'&&!inDorm()) wrong=true;
-  else if(nw==='操场'&&!onField()) wrong=true;
+}
+/* 违规：不在该在的地方（或熄灯后）就涨，否则慢慢降；请假中不算 */
+function violTick(dt,nw,rule,exam){
+  var wrong=!rule.there();
   var vioMul=1;
   if(nw==='教室') vioMul=exam?2.4:1.4;
   if(S.mode==='out'&&isNight()) vioMul*=0.5;
@@ -165,7 +178,9 @@ function updateSystems(dt){
     os('我：走廊那头，班主任看了我一眼，在本子上划了一笔。违规记满了——以后的请假条，他不会再签。',5,OS_KEEP);
     toast('违规已满 · 不能请假');
   }else if(RT.violFull&&S.viol<60) RT.violFull=0;
-
+}
+/* 同化：坐得住、按时回宿舍就涨；满了给一次隐藏的选择 */
+function ttTick(dt,nw){
   if(S.seated&&nw==='教室') S.tt+=1.5*dt;
   else if(inDorm()&&S.tsec>=EVENING) S.tt+=1.0*dt;
   else S.tt=Math.max(0,S.tt-0.35*dt);
@@ -181,16 +196,20 @@ function updateSystems(dt){
   var tier=Math.floor(S.tt/20);
   if(tier>0&&tier!==S.ttTier){
     S.ttTier=tier;
-    var lines=['我：最近睡得挺好。铃一响就醒，不用闹钟。醒的时候，我已经坐在位子上了。',
-      '我：课表不用看了。我知道下一节是什么。我还知道下下节、下下下节。',
-      '我：……今天几号来着？黑板右上角的日期，我从来没见它变过。',
-      '我：走廊里的人走得真整齐。我低头看了一眼——我的脚也在跟着拍子。',
-      '我：座位表上，我的名字在哪一格？……哪一格都是我的名字。',
-      '我：我好像一直都在这里。在我转来之前，就在这里。'];
-    if(tier<=6) os(lines[tier-1],4.4);
+    if(tier<=6) os(TT_LINES[tier-1],4.4);
   }
   if(S.tt<100) S.hiddenLatch=false;
-
+}
+function updateSystems(dt){
+  if(S.dead||S.screen!=='play') return;
+  clockTick(dt);
+  try{ fnTick(dt); }catch(e){}
+  if(S.exam&&(S.tsec>=LIGHTS_OUT||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
+  examTick(dt);
+  var exam=examNow(), nw=needWhere(S.tsec), rule=NEED_RULE[nw];
+  sanTick(dt,rule,exam);
+  violTick(dt,nw,rule,exam);
+  ttTick(dt,nw);
   dangerTick(dt);
   roamTick(dt);
   try{ patTick(dt); }catch(e){}

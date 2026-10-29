@@ -207,6 +207,47 @@ function useRoster(timeoutMs){
     {label:'不管它',fn:function(){ UI.closeChoice(); }}
   ],{timeoutMs:Number.isFinite(timeoutMs)?Math.max(1,timeoutMs):5000});
 }
+/* 准星下面那行「E 做什么」。判断顺序和下面的 tryInteract 一致：改了其中一个，另一个要对照着改。 */
+function canteenHint(h,R){ return (R.host==='canteen'&&!mealNow())?(hasItem('coin')?'投币买饭':'打饭窗口'):'翻找'; }
+var TILE_HINT={
+  '=':function(h,R){ var need=doorLockNeed(R,h.c,h.r); return (need&&!hasItem(need))?'开门（锁着）':'开门'; },
+  O:'出去', H:'躲进柜子',
+  M:function(){ return hasItem('coin')?'投币（售货机）':'售货机'; },
+  k:canteenHint, t:canteenHint,
+  L:'走连廊', Q:'看服务器终端', S:'上下楼', P:'坐下', c:'上车', V:'上车',
+  D:function(){ return (S.room==='lab3')?'门禁管理终端':'使用终端'; },
+  X:'钻进去',
+  K:function(h,R){ return (R&&R.host==='admin')?'看办公桌':'看实验台'; },
+  Z:'放开单摆', C:'开离心机', N:'看显微镜', Y:'转地球仪', p:'弹琴', U:'撞钟', A:'看供桌', x:'看挂图',
+  B:'隔间', G:'隔间', w:'洗把脸',
+  b:function(h,R){ return sanActFor(R,h)?'躺一会儿':'床'; },
+  n:'用电脑'
+};
+var GATE_HINT=[[GATE_N,'校门'],[GATE_W,'西小门'],[GATE_S,'南门']];
+function interactHint(){
+  if(S.dead||S.screen!=='play'||UI.anyOpen()||PAUSE.on) return '';
+  var R=S.mode==='in'?INTERIORS[S.room]:null, h=R?nearWorld(24):null;
+  var first=h&&(FAC_CD[h.ch]!==undefined||sanActFor(R,h));   /* 设施、恢复 SAN 的动作排在"坐下"前面 */
+  if(HIDE.on) return '出来';
+  if(bellReach()) return '撞钟';
+  if(nearRoster()) return '那张名单';
+  if(S.seated) return '站起来';
+  if(R&&!first&&hit2_seatNear(R)) return '坐下';
+  if(S.mode==='in'){
+    if(!h) return '';
+    var th=TILE_HINT[h.ch];
+    if(th===undefined) return '翻找';
+    return (typeof th==='function')?th(h,R):th;
+  }
+  var nb=nearWorld(0), act=nb?null:sanActFor(null,null), i;
+  if(nb) return '进入 '+nb.obj.n;
+  if(act) return SAN_ACTS[act].n+'（SAN +'+SAN_ACTS[act].san+'，'+SAN_ACTS[act].min+' 分钟）';
+  for(i=0;i<GATE_HINT.length;i++){
+    var g=GATE_HINT[i][0];
+    if(Math.sqrt(dist2(g.x*SC,g.y*SC,S.x,S.y))<70) return GATE_HINT[i][1];
+  }
+  return '';
+}
 function tryInteract(){
   if(S.screen!=='play'||S.dead||PAUSE.on||UI.anyOpen()) return;
   if(S.seated){ S.seated=false; os('我站了起来。',1.6); S.enterCool=0.4; return; }
@@ -474,14 +515,17 @@ function stairGo(){
   if(dn){ ENTER_VIA='stair'; enterRoom(dn); return; }
   exitRoom();
 }
+/* 实验楼各层抽屉里的东西（累计概率） */
+var LAB_LOOT={
+  1:[[0.22,'battery'],[0.40,'chalk'],[0.52,'pen']],
+  2:[[0.20,'goggles'],[0.40,'pill'],[0.58,'battery']],
+  3:[[0.20,'usb'],[0.40,'battery'],[0.52,'phone']],
+  4:[[0.22,'compass'],[0.36,'map']],
+  5:[[0.22,'metronome'],[0.36,'snack']]
+};
 function labLoot(floor){
-  var r=Math.random();
-  if(floor===1) return r<0.22?'battery':(r<0.40?'chalk':(r<0.52?'pen':null));
-  if(floor===2) return r<0.20?'goggles':(r<0.40?'pill':(r<0.58?'battery':null));
-  if(floor===3) return r<0.20?'usb':(r<0.40?'battery':(r<0.52?'phone':null));
-  if(floor===4) return r<0.22?'compass':(r<0.36?'map':null);
-  if(floor===5) return r<0.22?'metronome':(r<0.36?'snack':null);
-  return null;
+  var r=Math.random(), t=LAB_LOOT[floor];
+  return t?rollLoot(t,r):null;
 }
 /* 翻找要花 0.8 秒：站着别动，准星外面那一圈走满才算翻完；走开就断了。DEV 里可以关掉 */
 var SEARCH={on:true,dur:0.8,job:null};
@@ -491,7 +535,7 @@ function clearSearch(){
 }
 function searchContainer(c,r){
   var key=S.room+':'+c+':'+r;
-  if(typeof ncOccupied==='function'&&ncOccupied(c,r)){
+  if(ncOccupied(c,r)){
     os('我：他坐在这儿。我不能翻他的抽屉。',3.0);
     return;
   }
@@ -532,6 +576,13 @@ function searchLoot(key,id){
     if(RT.pendingLoot) delete RT.pendingLoot[key];
   }
 }
+/* 普通抽屉、柜子、货架翻出来的东西：累计概率，没落在表里就是空的 */
+var DESK_LOOT=[[0.16,'coin'],[0.28,'chalk'],[0.36,'snack'],[0.44,'battery'],[0.50,'pill'],[0.56,'pen'],[0.62,'notebook'],
+  [0.66,'memo'],[0.70,'brolly'],[0.74,'coat'],[0.78,'torch'],[0.82,'phone'],[0.86,'watch'],[0.90,'compass'],[0.93,'leave']];
+function rollLoot(table,roll){
+  for(var i=0;i<table.length;i++) if(roll<table[i][0]) return table[i][1];
+  return null;
+}
 function doSearch(c,r){
   var key=S.room+':'+c+':'+r;
   if(RT.deskUsed[key]) return;
@@ -563,23 +614,7 @@ function doSearch(c,r){
     if(lv) searchLoot(key,lv); else os('我：空的。抽屉里只有一层灰。',2.0);
     return;
   }
-  var roll=Math.random();
-  var give=null;
-  if(roll<0.16) give='coin';
-  else if(roll<0.28) give='chalk';
-  else if(roll<0.36) give='snack';
-  else if(roll<0.44) give='battery';
-  else if(roll<0.50) give='pill';
-  else if(roll<0.56) give='pen';
-  else if(roll<0.62) give='notebook';
-  else if(roll<0.66) give='memo';
-  else if(roll<0.70) give='brolly';
-  else if(roll<0.74) give='coat';
-  else if(roll<0.78) give='torch';
-  else if(roll<0.82) give='phone';
-  else if(roll<0.86) give='watch';
-  else if(roll<0.90) give='compass';
-  else if(roll<0.93) give='leave';
+  var give=rollLoot(DESK_LOOT,Math.random());
   if(S.room==='teach1'&&!RT.hwTaken&&r>1&&r<14){
     RT.hwTaken=true; give='hw';
   }

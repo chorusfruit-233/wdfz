@@ -14,7 +14,7 @@ var SFX=(function(){
     try{ ac=new (window.AudioContext||window.webkitAudioContext)(); ready=true; }catch(e){ ready=false; }
     return ac;
   }
-  var mg=null, vol=0.7, rev=null, revIn=null, NB=null, L=null, bgOn=false;
+  var mg=null, vol=0.7, rev=null, revIn=null, revG=null, NB=null, L=null, bgOn=false;
   function ctx(){ if(!ready) ensure(); if(ac&&ac.state==='suspended'){ try{ac.resume();}catch(e){} } return ac; }
   function master(){
     var a=ctx(); if(!a) return null;
@@ -30,7 +30,8 @@ var SFX=(function(){
         for(ch=0;ch<2;ch++){ var dd=ib.getChannelData(ch); for(i=0;i<len;i++) dd[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6); }
         rev.buffer=ib;
         revIn=a.createGain(); revIn.gain.value=0.9;
-        revIn.connect(rev); rev.connect(mg);
+        revG=a.createGain(); revG.gain.value=1;
+        revIn.connect(rev); rev.connect(revG); revG.connect(mg);
       }catch(e){ return a.destination; }
     }
     return mg;
@@ -41,6 +42,74 @@ var SFX=(function(){
     var g=a.createGain(); g.gain.value=1; g.connect(d);
     if(wet&&revIn){ var w=a.createGain(); w.gain.value=wet; g.connect(w); w.connect(revIn); }
     return g;
+  }
+  /* 「真实」档：按空间生成的混响。教室短而亮，走廊长、有来回的回声，车库和钟楼很空，宿舍闷，室外几乎只有远处的一点回响。
+     两个卷积器轮流用，换地方时交叉淡入；其它档位仍是原来那一个通用混响。 */
+  var SPACES={
+    room:  {len:1.1,pw:3.2,damp:0.35,pre:0.008,er:[[0.011,0.5],[0.017,0.38],[0.026,0.3],[0.034,0.22]]},
+    hall:  {len:2.6,pw:2.4,damp:0.28,pre:0.012,er:[[0.009,0.45],[0.021,0.4],[0.042,0.34],[0.063,0.28],[0.084,0.22],[0.105,0.16]]},
+    garage:{len:3.6,pw:2.1,damp:0.22,pre:0.02,er:[[0.027,0.42],[0.051,0.34],[0.078,0.26]]},
+    bell:  {len:4.8,pw:1.9,damp:0.30,pre:0.03,er:[[0.04,0.4],[0.083,0.32],[0.125,0.25]]},
+    out:   {len:0.9,pw:4.5,damp:0.12,pre:0.045,er:[[0.06,0.18]]},
+    dorm:  {len:0.8,pw:3.6,damp:0.30,pre:0.006,er:[[0.008,0.45],[0.014,0.32]]}
+  };
+  var SP_IR={}, spRev=null, spCur=null;
+  function makeIR(a,sp){
+    var sr=a.sampleRate, len=Math.floor(sr*sp.len), b=a.createBuffer(2,len,sr), ch, i;
+    for(ch=0;ch<2;ch++){
+      var d=b.getChannelData(ch), y=0, pre=Math.floor(sp.pre*sr);
+      for(i=pre;i<len;i++){                      /* 尾巴：越往后高频衰减得越多 */
+        var t=(i-pre)/(len-pre), k=0.85+(sp.damp-0.85)*t;
+        y+=k*((Math.random()*2-1)-y);
+        d[i]=y*Math.pow(1-t,sp.pw)*0.6;
+      }
+      sp.er.forEach(function(e,j){                /* 早期反射：左右耳错开一点 */
+        var at=Math.floor(e[0]*(1+(ch?0.07:-0.05)*((j%2)?1:-1))*sr);
+        if(at<len) d[at]+=e[1]*(ch===j%2?1:0.7);
+      });
+    }
+    return b;
+  }
+  function spaceKind(){
+    if(S.screen!=='play'||S.mode==='out'||S.room==='teach6') return 'out';
+    if(S.room==='garage1') return 'garage';
+    if(S.room==='bell1') return 'bell';
+    var R=INTERIORS[S.room];
+    if(R&&/^dorm/.test(R.host)) return 'dorm';
+    if(corridorHere()) return 'hall';
+    return 'room';
+  }
+  function realRev(){
+    var a=ac; if(!a||!revIn) return;
+    var want=Quality.get().realAudio?spaceKind():null;
+    if(want===spCur) return;
+    spCur=want;
+    if(!want){                                   /* 回到通用混响 */
+      if(spRev) spRev.forEach(function(r){ setG(r.g.gain,0,0.25); });
+      setG(revG.gain,1,0.25);
+      return;
+    }
+    if(!spRev){
+      spRev=[0,1].map(function(){ var c=a.createConvolver(), g=a.createGain(); g.gain.value=0; revIn.connect(c); c.connect(g); g.connect(mg); return {c:c,g:g}; });
+      spRev.i=0;
+    }
+    var next=spRev[1-spRev.i];
+    next.c.buffer=SP_IR[want]||(SP_IR[want]=makeIR(a,SPACES[want]));
+    setG(next.g.gain,1,0.25); setG(spRev[spRev.i].g.gain,0,0.25); setG(revG.gain,0,0.25);
+    spRev.i=1-spRev.i;
+  }
+  /* 有方位的声音：真实档用 HRTF（戴耳机能听出前后左右），其它档位是左右声像 */
+  function panNode(a,pan){
+    var p=clamp(pan||0,-1,1);
+    if(Quality.get().realAudio&&a.createPanner){
+      var pz=a.createPanner(), az=p*PI/2;
+      pz.panningModel='HRTF'; pz.distanceModel='inverse'; pz.refDistance=1; pz.rolloffFactor=0.6;
+      var px=Math.sin(az)*1.6, py=0, pzz=-Math.cos(az)*1.6;
+      if(pz.positionX){ pz.positionX.value=px; pz.positionY.value=py; pz.positionZ.value=pzz; } else pz.setPosition(px,py,pzz);
+      return pz;
+    }
+    if(a.createStereoPanner){ var pn=a.createStereoPanner(); pn.pan.value=p; return pn; }
+    return null;
   }
   function noiseBuf(){
     var a=ctx(); if(!a) return null;
@@ -87,7 +156,7 @@ var SFX=(function(){
     g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
     s.connect(f); f.connect(g);
     var last=g;
-    if(a.createStereoPanner){ var pn=a.createStereoPanner(); pn.pan.value=clamp(pan||0,-1,1); g.connect(pn); last=pn; }
+    var pn=panNode(a,pan); if(pn){ g.connect(pn); last=pn; }
     var _d=out(wet||0); if(_d) last.connect(_d);
     s.start(t0,Math.random()*1.5); s.stop(t0+dur+0.05);
   }
@@ -173,12 +242,11 @@ var SFX=(function(){
   }
   /* 脚下是什么：瓷砖、水磨石楼梯、车库水泥、天台碎石、草、塑胶跑道、球场、水泥路 */
   function stepSurface(){
-    if(typeof S==='undefined') return 'tile';
     if(S.mode==='in'){
       if(S.room==='garage1') return 'garage';
       if(S.room==='teach6') return 'roof';
-      var R=(typeof INTERIORS!=='undefined')&&INTERIORS[S.room];
-      if(R&&R.spiral&&typeof SP!=='undefined'&&SP.state==='stair') return 'stair';
+      var R=INTERIORS[S.room];
+      if(R&&R.spiral&&SP.state==='stair') return 'stair';
       return 'tile';
     }
     var mx=S.x/SC, my=S.y/SC, i, o, hit='road';
@@ -191,7 +259,7 @@ var SFX=(function(){
     return hit;
   }
   function stepWet(){
-    return typeof AN!=='undefined'&&AN.active&&(AN.id==='rain'||AN.id==='raindots')&&S.mode==='out'&&!(typeof underCover==='function'&&underCover());
+    return AN.active&&(AN.id==='rain'||AN.id==='raindots')&&S.mode==='out'&&!underCover();
   }
   /* 一步：k 是响度（跑起来更响），pan 左右，behind 背后（发闷） */
   function stepSound(sf,k,pan,behind,wet){
@@ -208,12 +276,12 @@ var SFX=(function(){
   }
   /* 混响量：按场景 */
   function spaceWet(){
-    if(typeof S==='undefined'||S.screen!=='play') return 0.9;
+    if(S.screen!=='play') return 0.9;
     if(S.mode==='out') return 0.35;
     if(S.room==='garage1') return 1.7;
     if(S.room==='bell1') return 1.9;
     if(S.room==='teach6') return 0.4;
-    var R=(typeof INTERIORS!=='undefined')&&INTERIORS[S.room];
+    var R=INTERIORS[S.room];
     return R&&R.cols*R.rows>900?1.15:0.9;              /* 大的楼层（走廊长）回声多一点 */
   }
   function setG(param,v,tc){ try{ param.setTargetAtTime(v,ac.currentTime,tc||0.6); }catch(e){} }
@@ -239,11 +307,11 @@ var SFX=(function(){
   function tick(dt){
     var a=ctx(); if(!a||!L) return;
     L.t+=dt;
-    var play=(typeof S!=='undefined'&&S.screen==='play');
+    var play=(S.screen==='play');
     var on=play&&(typeof AMB_ON==='undefined'||AMB_ON)&&!S.dead;
     var out_=play&&S.mode==='out', night=1;
     try{ night=1-sunAt(hourNow()).day; }catch(e){}
-    var anomaly=(typeof AN!=='undefined'&&AN.active), id=anomaly?AN.id:null;
+    var anomaly=AN.active, id=anomaly?AN.id:null;
     var san=play?clamp(S.san,0,100):100;
     var tension=clamp((anomaly?0.55:0)+(100-san)/160+(S.viol||0)/220,0,1);
     var garage=play&&S.mode==='in'&&S.room==='garage1';
@@ -285,10 +353,10 @@ var SFX=(function(){
     if(garage){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.8,3.0); tone(rnd(900,1500),0.12,'sine',0.03,400,0,0.8); } }
     if(id==='leak'){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.3,0.8); tone(rnd(700,1300),0.10,'sine',0.04,300,0,0.6); } }
     /* 雷声由 fx/weather.js 跟着闪电一起放（SFX.thunder）。打着伞：雨点敲在伞面上；檐下：水往下滴 */
-    if(rainOn&&!cover&&typeof USE!=='undefined'&&USE.brollyShield){
+    if(rainOn&&!cover&&USE.brollyShield){
       var nPat=Math.floor(dt*28+Math.random());
       for(var pi_=0;pi_<nPat;pi_++) tone(rnd(2600,4200),0.03,'sine',rnd(0.004,0.010),rnd(1800,2400),Math.random()*dt);
-    }else if(rainOn&&!cover&&typeof underCover==='function'&&underCover()){
+    }else if(rainOn&&!cover&&underCover()){
       L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.15,0.6); tone(rnd(1100,1800),0.08,'sine',0.02,500,0,0.3); }
     }
     if(id==='chalk'&&Math.random()<dt*3) noise(rnd(0.08,0.2),0.015,3200,0,'bandpass',4);
@@ -296,12 +364,12 @@ var SFX=(function(){
     if(id==='rite'&&Math.random()<dt*0.4) vowel(rnd(98,110),3.2,0.02,0,520,860,1.5);
     /* 蛾群：离得越近扑翅声越密、越响，左右乱飞 */
     if(id==='moth'){
-      var md=(typeof wxMothDist==='function')?wxMothDist():6, mk=clamp(1-md/12,0,1);
+      var md=wxMothDist(), mk=clamp(1-md/12,0,1);
       if(Math.random()<dt*(5+mk*40)) noiseP(rnd(0.03,0.07),0.006+mk*0.03,rnd(1400,2800),0,'bandpass',3,rnd(-1,1),0.15);
       if(mk>0.6&&Math.random()<dt*6) noise(0.12,0.01+mk*0.02,rnd(180,260),0,'lowpass',2);   /* 贴脸时的一团闷响 */
     }
     /* 被巡察者盯上：心跳顶上来 */
-    if(typeof PAT!=='undefined'&&PAT.locked&&S.mode===(PAT.room==='out'?'out':'in')){
+    if(PAT.locked&&S.mode===(PAT.room==='out'?'out':'in')){
       L.nextPatBeat=(L.nextPatBeat||0)-dt;
       if(L.nextPatBeat<=0){ L.nextPatBeat=60/124; tone(60,0.16,'sine',0.09,40); tone(54,0.18,'sine',0.065,36,0.15); }
     }
@@ -358,11 +426,15 @@ var SFX=(function(){
     resume:function(){ ctx(); },
     ambient:function(){ var a=ctx(); if(!a) return; try{ buildLayers(); }catch(e){} bgOn=true; },
     stopAmbient:function(){ bgOn=false; },
-    tick:function(dt){ try{ if(L) tick(dt); else if(bgOn) buildLayers(); }catch(e){} },
+    tick:function(dt){
+      try{ realRev(); }catch(e){}                       /* 空间混响不依赖背景音：关掉「音乐/环境」时脚步等音效也要跟着空间变 */
+      try{ if(L) tick(dt); else if(bgOn) buildLayers(); }catch(e){}
+    },
     setVol:function(v){ vol=Math.max(0,Math.min(1,v)); if(mg){ try{ mg.gain.value=vol; }catch(e){} } },
     getVol:function(){ return vol; },
     surface:function(){ return stepSurface(); },
-    step:function(){ stepSound(stepSurface(),(typeof S!=='undefined'&&S.run)?1.35:1,0,0,stepWet()); },
+    space:function(){ return spCur; },                /* 真实档当前用的混响空间（测试用） */
+    step:function(){ stepSound(stepSurface(),S.run?1.35:1,0,0,stepWet()); },
     /* 巡察者的脚步：按方位分左右，越近越响，背后的发闷 */
     patStep:function(pan,k,behind,locked){ stepSound(stepSurface(),(locked?1.5:1.1)*k,pan,behind,stepWet()); },
     /* 灯管接触不良：噼啪 + 一下 50Hz 的嗡 */

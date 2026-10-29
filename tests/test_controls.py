@@ -1238,7 +1238,8 @@ class ControlsTest(BrowserCase):
         page.wait_for_function("document.getElementById('banner').textContent==='教学楼 1F'&&UI.chooseOpen")
         self.assert_js(page, "AN.id==='roster'&&UI.choiceTimer>0&&document.getElementById('choices').textContent.includes('名单上')")
         page.evaluate("""UI.closeChoice();Math.random=function(){return .5};useRoster(80);""")
-        page.wait_for_function('!UI.chooseOpen&&AN.data.done', timeout=2000)
+        # 按固定间隔轮询：无头浏览器在画面不变时很少刷新，按画面刷新轮询会偶尔等满 2 秒还没检查到。
+        page.wait_for_function('!UI.chooseOpen&&AN.data.done', timeout=2000, polling=50)
         self.assert_js(page, '!UI.chooseOpen&&AN.data.done')
 
     def test_only_hard_to_prevent_anomalies_are_forecast(self):

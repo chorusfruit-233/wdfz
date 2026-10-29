@@ -355,11 +355,43 @@ function matRefreshQuality(){
     if(m.isMeshPhongMaterial){m.normalMap=matNormal(kind);if(m.normalMap)m.normalScale.set(RELIEF[kind],RELIEF[kind]);}
     m.needsUpdate=true;
   });
+  Object.keys(MATS_PBR).forEach(function(k){
+    var m=MATS_PBR[k],kind=(MAT_DEF[k]||MAT_DEF.plaster)[0];
+    if(m.map)m.map=matTex(k==='foliage'||k==='grime'?k:kind);
+    if(m.normalMap!==undefined&&k!=='foliage'&&k!=='grime'&&k!=='glass'){m.normalMap=matNormal(kind);if(m.normalMap)m.normalScale.set(RELIEF[kind]*1.4,RELIEF[kind]*1.4);}
+    m.needsUpdate=true;
+  });
   Object.keys(old).forEach(function(k){if(old[k])old[k].dispose();});
+}
+/* 「真实」档的物理材质：粗糙度、金属度按原来的高光换算，法线贴图更深，吃环境反射（scene.environment）。
+   单独一套缓存：切回别的档位时仍用原来的那批，不来回改同一个材质。发光、窗外天光这些不吃光的材质两边共用。 */
+var MATS_PBR={}, PBR_SKIP={emit:1,emitDying:1,lamp:1,litwin:1,sky:1};
+function matPBR(key){
+  if(MATS_PBR[key]) return MATS_PBR[key];
+  var d=MAT_DEF[key]||MAT_DEF.plaster, m, o;
+  var rough=Math.max(0.22,Math.min(0.96,1-Math.sqrt((d[2]||0)/90))), metal=(key==='metal')?0.7:0;
+  if(key==='glass'){
+    m=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:0.34,roughness:0.05,metalness:0,depthWrite:false,envMapIntensity:1.4});
+  }else if(key==='grime'){
+    m=new THREE.MeshStandardMaterial({vertexColors:true,map:matTex('grime'),transparent:true,depthWrite:false,roughness:1,metalness:0,
+      polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
+  }else if(key==='foliage'){
+    m=new THREE.MeshStandardMaterial({vertexColors:true,map:matTex('foliage'),alphaTest:0.42,roughness:0.82,metalness:0});
+  }else{
+    o={vertexColors:true,roughness:rough,metalness:metal,envMapIntensity:0.55};
+    var t=matTex(d[0]); if(t) o.map=t;
+    var nt=matNormal(d[0]); if(nt){ o.normalMap=nt; var ns=RELIEF[d[0]]*1.4; o.normalScale=new THREE.Vector2(ns,ns); }
+    if(d[4]){ o.polygonOffset=true; o.polygonOffsetFactor=d[4]; o.polygonOffsetUnits=d[4]*2; }
+    m=new THREE.MeshStandardMaterial(o);
+  }
+  m.userData.shared=true;
+  MATS_PBR[key]=m;
+  return m;
 }
 /* 共享材质：所有房间、室外都用同一批，切场景时不销毁（userData.shared） */
 function matOf(key){
   if(!MAT_TEX_SIZE)MAT_TEX_SIZE=texSize();
+  if(Quality.get().pbr&&!PBR_SKIP[key]) return matPBR(key);
   if(MATS[key]) return MATS[key];
   var d=MAT_DEF[key]||MAT_DEF.plaster, m;
   if(key==='glass'){
