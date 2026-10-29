@@ -25,5 +25,8 @@ var Engine={
   remotePose:function(id,pose,name){if(this.ready())ThreeBackend.remotePose(id,pose,name);},
   remoteRemove:function(id){if(ThreeBackend.remoteRemove)ThreeBackend.remoteRemove(id);},
   remoteClear:function(){if(ThreeBackend.remoteClear)ThreeBackend.remoteClear();},
-  remoteTick:function(dt,zone,waiting){if(this.ready())ThreeBackend.remoteTick(dt,zone,waiting);}
+  remoteTick:function(dt,zone,waiting){if(this.ready())ThreeBackend.remoteTick(dt,zone,waiting);},
+  worldItems:function(drops){if(this.ready())ThreeBackend.worldItems(drops);},
+  worldItemsTick:function(zone,waiting){if(this.ready())ThreeBackend.worldItemsTick(zone,waiting);},
+  worldItemsClear:function(){if(ThreeBackend.worldItemsClear)ThreeBackend.worldItemsClear();}
 };

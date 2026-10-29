@@ -54,7 +54,28 @@ class MultiplayerBrowserTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.host_url, wait_until='load')
+        page.evaluate("DEV.god=true")
         return page
+
+    def face_target(self, page, tile):
+        """只布置客户端位置，操作仍通过真实房主协议结算。"""
+        page.bring_to_front()
+        return page.evaluate("""tile=>{
+            if(PAUSE.on)Game.resume();UI.closePanelAll();S.seated=false;
+            let r=INTERIORS[S.room];
+            for(let row=1;row<r.rows-1;row++)for(let col=1;col<r.cols-1;col++){
+                if(r.grid[row][col]!==tile)continue;
+                let x=r.ox+(col+.5)*r.tw,y=r.oy+(row+.5)*r.th;
+                for(let dy of [9,-9,18,-18,0])for(let dx of [0,9,-9,18,-18]){
+                    if(!dx&&!dy||Math.hypot(dx,dy)>=24)continue;
+                    if(Collision.depth(x+dx,y+dy,PRAD,r)>1e-7)continue;
+                    S.x=x+dx;S.y=y+dy;S.ang=Math.atan2(-dy,-dx);
+                    let hit=nearWorld(24);
+                    if(hit&&hit.c===col&&hit.r===row){Multiplayer.sendPose();return {c:col,r:row,key:r.id+':'+col+':'+row};}
+                }
+            }
+            throw new Error('找不到可接近目标 '+tile);
+        }""", tile)
 
     def test_two_browsers_join_move_reconnect_and_keep_solo_saves(self):
         host, guest = self.client(), self.client()
@@ -94,9 +115,10 @@ class MultiplayerBrowserTest(BrowserCase):
         host.locator('#mpStart').click()
 
         for page in (host, guest):
+            page.bring_to_front()
             page.wait_for_function("Multiplayer.playing&&!Multiplayer.waitingForScene&&S.room==='teach1'"
-                                   "&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=20000)
-            page.wait_for_function("Object.values(ThreeBackend.remoteActors).some(a=>a.mesh.visible)", timeout=20000)
+                                   "&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=20000, polling=100)
+            page.wait_for_function("Object.values(ThreeBackend.remoteActors).some(a=>a.mesh.visible)", timeout=20000, polling=100)
         self.assert_js(host, "Array.from({length:4},(_,slot)=>{let r=INTERIORS.teach1;"
                        "return Collision.depth(r.ox+(45+slot*2+.5)*r.tw,r.oy+18.5*r.th,PRAD,r)<1e-7;})"
                        ".every(Boolean)")
@@ -105,38 +127,108 @@ class MultiplayerBrowserTest(BrowserCase):
         host.locator('#cv').focus()
         host.keyboard.down('w')
         try:
-            host.wait_for_function("Math.hypot(S.x-_before[0],S.y-_before[1])>2", timeout=20000)
+            host.wait_for_function("Math.hypot(S.x-_before[0],S.y-_before[1])>2", timeout=20000, polling=100)
         finally:
             host.keyboard.up('w')
         moved = host.evaluate('({x:S.x,y:S.y})')
         guest.wait_for_function("p=>Object.values(Multiplayer.peerPoses).some(a=>"
-                                "Math.hypot(a.x-p.x,a.y-p.y)<3)", arg=moved, timeout=8000)
+                                "Math.hypot(a.x-p.x,a.y-p.y)<3)", arg=moved, timeout=8000, polling=100)
+
+        clock_before = host.evaluate("S.tsec")
+        host.evaluate("UI.open('bag')")
+        host.wait_for_function("t=>S.tsec>t+.5", arg=clock_before, timeout=8000, polling=100)
+        self.assertTrue(host.evaluate("UI.openPanel==='bag'"))
+        host.evaluate("UI.closePanelAll()")
+        door = self.face_target(host, '=')
+        host.evaluate("tryInteract()")
+        guest.wait_for_function("key=>!!OPENDOORS[key]", arg=door['key'], timeout=8000, polling=100)
+
+        for page in (host, guest):
+            page.evaluate("doEnterRoom('lab3')")
+            page.wait_for_function("S.room==='lab3'&&GLR.roomMesh.userData.roomId==='lab3'", timeout=20000, polling=100)
+        rack = self.face_target(host, 'R')
+        host.evaluate("tryInteract()")
+        host.wait_for_function("S.bag.includes('usb')", timeout=10000, polling=100)
+        guest.wait_for_function("key=>!!RT.deskUsed[key]", arg=rack['key'], timeout=8000, polling=100)
+        self.assertFalse(guest.evaluate("S.bag.includes('usb')"))
+        usb_id = host.evaluate("Coop.self.inventory.find(i=>i.type==='usb').id")
+        # 丢弃已被房主处理，但人为丢掉确认并断线，验证客户端会用原序号重发。
+        host.evaluate("""id=>{
+            const send=WebSocket.prototype.send;
+            WebSocket.prototype.send=function(data){window._testSocket=this;return send.call(this,data);};
+            Multiplayer.sendPose();WebSocket.prototype.send=send;
+            const ws=window._testSocket,handler=ws.onmessage;
+            ws.onmessage=function(event){
+                const msg=JSON.parse(event.data);
+                if(msg.type==='result'&&msg.world?.drops.some(d=>d.id===id)){
+                    window._droppedAck=true;ws.close();return;
+                }
+                handler(event);
+            };
+            UI.open('bag');S.bagSel=S.bag.indexOf('usb');dropSelected();
+        }""", usb_id)
+        host.wait_for_function("window._droppedAck&&Multiplayer.connected&&Object.keys(Coop.pending).length===0",
+                               timeout=15000, polling=100)
+        guest.wait_for_function("id=>Coop.world.drops.some(d=>d.id===id)", arg=usb_id, timeout=8000, polling=100)
+        self.assertEqual(guest.evaluate("id=>Coop.world.drops.filter(d=>d.id===id).length", usb_id), 1)
+        self.assertFalse(host.evaluate("S.bag.includes('usb')"))
+        guest.bring_to_front()
+        guest.wait_for_function("id=>ThreeBackend.worldItemActors[id]?.mesh.visible",
+                                arg=usb_id, timeout=8000, polling=100)
+        guest.evaluate("""id=>{
+            let d=Coop.world.drops.find(d=>d.id===id);S.x=d.x;S.y=d.y;S.seated=false;S.ang=0;
+            Multiplayer.sendPose();tryInteract();
+        }""", usb_id)
+        guest.wait_for_function("id=>Coop.self.inventory.some(i=>i.id===id)", arg=usb_id, timeout=8000, polling=100)
+        host.wait_for_function("id=>!Coop.world.drops.some(d=>d.id===id)", arg=usb_id, timeout=8000, polling=100)
+        self.assert_js(guest, "Object.keys(ThreeBackend.worldItemActors).length===0")
+        host.evaluate("UI.closePanelAll();doEnterRoom('teach1')")
+        host.wait_for_function("S.room==='teach1'&&GLR.roomMesh.userData.roomId==='teach1'", timeout=20000, polling=100)
 
         guest_id = guest.evaluate('Multiplayer.selfId')
         guest.evaluate("doEnterRoom('lab1')")
-        host.wait_for_function("id=>Multiplayer.peerPoses[id]&&Multiplayer.peerPoses[id].zone==='lab1'&&"
-                               "ThreeBackend.remoteActors[id]&&!ThreeBackend.remoteActors[id].mesh.visible",
-                               arg=guest_id, timeout=12000)
+        host.bring_to_front()
+        try:
+            host.wait_for_function("id=>Multiplayer.peerPoses[id]&&Multiplayer.peerPoses[id].zone==='lab1'&&"
+                                   "ThreeBackend.remoteActors[id]&&!ThreeBackend.remoteActors[id].mesh.visible",
+                                   arg=guest_id, timeout=12000, polling=100)
+        except Exception:
+            print("跨区诊断", host.evaluate("({connected:Multiplayer.connected,room:S.room,peers:Multiplayer.peerPoses})"),
+                  guest.evaluate("({connected:Multiplayer.connected,room:S.room,dead:S.dead,hidden:HIDE.on})"), flush=True)
+            raise
         guest.evaluate("doEnterRoom('teach1')")
         host.wait_for_function("id=>Multiplayer.peerPoses[id]&&Multiplayer.peerPoses[id].zone==='teach1'&&"
                                "ThreeBackend.remoteActors[id]&&ThreeBackend.remoteActors[id].mesh.visible",
-                               arg=guest_id, timeout=12000)
+                               arg=guest_id, timeout=12000, polling=100)
         host.evaluate("Settings.q(1);render(.016)")
         self.assert_js(host, "Object.values(ThreeBackend.remoteActors).every(a=>"
                        "a.mesh.geometry===figGeo(a.seated?'sit':'person'))")
         guest.reload(wait_until='load')
-        host.wait_for_function("id=>Multiplayer.room.players.some(p=>p.id===id&&!p.connected)", arg=guest_id, timeout=8000)
+        guest.evaluate("DEV.god=true")
+        host.wait_for_function("id=>Multiplayer.room.players.some(p=>p.id===id&&!p.connected)", arg=guest_id, timeout=8000, polling=100)
         guest.locator('#mpOpen').click()
         guest.locator('#mpResume').click()
-        guest.wait_for_function("id=>Multiplayer.selfId===id&&Multiplayer.playing&&!Multiplayer.waitingForScene",
-                                arg=guest_id, timeout=20000)
+        try:
+            guest.wait_for_function("id=>Multiplayer.selfId===id&&Multiplayer.playing&&!Multiplayer.waitingForScene",
+                                    arg=guest_id, timeout=30000, polling=100)
+        except Exception:
+            print("恢复诊断，预期身份", guest_id, guest.evaluate("""({
+                connected:Multiplayer.connected,playing:Multiplayer.playing,waiting:Multiplayer.waitingForScene,
+                selfId:Multiplayer.selfId,room:S.room,screen:S.screen,bag:S.bag,
+                message:document.getElementById('mpMessage').innerText,
+                error:document.getElementById('errbox')?.innerText
+            })"""), flush=True)
+            raise
+        self.assert_js(guest, "Coop.self.inventory.some(i=>i.id==="+json.dumps(usb_id)+")")
+        self.assert_js(guest, "!!OPENDOORS["+json.dumps(door['key'])+"]")
+        self.assertFalse(guest.evaluate("Coop.world.drops.some(d=>d.id==="+json.dumps(usb_id)+")"))
         for page, marker in ((host, 'host'), (guest, 'guest')):
             self.assertFalse(page.evaluate('saveGame()'))
             page.evaluate("clearSave();endMark('car')")
             self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('wdfz3d')).marker"), marker)
             self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('wdfz3d_ends')).marker"), marker)
         guest.evaluate('Game.quit()')
-        host.wait_for_function('Multiplayer.room.players.length===1', timeout=8000)
+        host.wait_for_function('Multiplayer.room.players.length===1', timeout=8000, polling=100)
         self.assert_js(host, "Object.keys(ThreeBackend.remoteActors).length===0")
         host.evaluate('Game.quit()')
 

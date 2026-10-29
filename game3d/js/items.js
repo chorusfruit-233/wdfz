@@ -4,16 +4,18 @@
 var USE={torch:false,phone:false,brollyShield:false};
 var PILL_SEC=30, PILL_RATE=2;              /* 药片：30 秒里每秒回 2 点 SAN（再吃一片从头算，不叠加） */
 var OPENDOORS={};
-var DOOR_LOCKS={'lab3:41:15':'roomkey'};
 function doorLockNeed(R,c,r){ return DOOR_LOCKS[R.id+':'+c+':'+r]||null; }
-function doorKeyAt(R,c,r){ return S.room+':'+c+':'+r; }
+function doorKeyAt(R,c,r){ return R.id+':'+c+':'+r; }
 function doorKey(R,wx,wy){
   var c=Math.floor((wx-R.ox)/R.tw), r=Math.floor((wy-R.oy)/R.th);
   return doorKeyAt(R,c,r);
 }
 function doorIsOpen(R,wx,wy){ return !!OPENDOORS[doorKey(R,wx,wy)]; }
 
-function hasItem(id){ return S.bag.indexOf(id)>=0; }
+function hasItem(id){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing)return !!Coop.item(id);
+  return S.bag.indexOf(id)>=0;
+}
 /* 手机只剩小游戏，不再当光源；USE.phone 留着只为兼容旧存档，始终为 false */
 function syncUseState(){
   USE.torch=!!USE.torch&&hasItem('torch');
@@ -22,6 +24,7 @@ function syncUseState(){
   Engine.torch(USE.torch);
 }
 function addItem(id){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){toast('这处物品来源尚未接入共享规则');return false;}
   if(!id||id==='nothing') return false;
   if(S.bag.indexOf(id)>=0) return false;
   if(S.bag.length>=8){ os('我：装不下了。',2.4); return false; }
@@ -32,6 +35,7 @@ function addItem(id){
   return true;
 }
 function removeItem(id){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing)return Coop.consume(id);
   var i=S.bag.indexOf(id);
   if(i<0) return false;
   S.bag.splice(i,1);
@@ -97,6 +101,7 @@ var ITEM_USE={
 var ITEM_READ={card:1,notebook:1,hw:1,usb:1,key:1,roomkey:1,metronome:1,goggles:1,coat:1,battery:1,chalk:1,pen:1};
 function useItem(id){
   if(!id||!hasItem(id)) return;
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing&&Coop.use(id))return;
   var nm=ITEMS[id]?ITEMS[id].n:id;
   if(ITEM_USE.hasOwnProperty(id)){ ITEM_USE[id](id,nm); return; }
   if(ITEM_READ[id]){
@@ -161,6 +166,7 @@ function dropAt(i){
 function dropSelected(){
   var id=S.bag[S.bagSel];
   if(!id){ return; }
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){Coop.drop(id);return;}
   removeItem(id);
   /* 独有的门材料丢弃后可回原处重取，避免误丢断掉整条路线。 */
   if(id==='coil') RT.coilTaken=0;

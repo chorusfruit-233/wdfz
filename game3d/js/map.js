@@ -1,6 +1,8 @@
 /* 里世界 3D · 地图数据：室内网格、校园物件、校门与边界 */
 'use strict';
 
+var DOOR_LOCKS={'lab3:41:15':'roomkey'};
+
 function blank(w,h,c){
   var g=[],y,x;
   for(y=0;y<h;y++){ var r=[]; for(x=0;x<w;x++) r.push(c||'.'); g.push(r); }

@@ -81,7 +81,7 @@ test('四人房间的准备、开始、位置广播和断线重连',async t=>{
   host.m.send({type:'start'});
   assert.equal((await host.m.wait('started')).difficulty,'easy');
   for(const p of peers)await p.m.wait('started');
-  const pose={seq:1,zone:'teach1',x:900,y:1800,angle:1,floor:0,seated:false,moving:true,visible:true};
+  const pose={seq:1,zone:'teach1',x:900,y:1800,angle:1,floor:0,seated:false,moving:true,visible:true,active:true};
   peers[0].m.send({type:'pose',id:'伪造的角色',pose});
   const got=await host.m.wait('pose',m=>m.id===peers[0].w.selfId);
   assert.deepEqual(got.pose,pose);
@@ -122,4 +122,42 @@ test('使用恢复凭证替换尚未检测到断开的旧连接',async t=>{
   assert.equal(code,4001);
   replacement.m.send({type:'ready',ready:true});
   await replacement.m.wait('state',m=>m.room.players.length===1&&m.room.players[0].ready);
+});
+
+test('共享物品通过连接身份结算，重发和刷新恢复均保留同一实例',async t=>{
+  const {connect}=await start(t,{graceMs:400});
+  const host=await connect(),h=await hello(host,'create',{name:'房主',difficulty:'easy'});
+  const guest=await connect(),g=await hello(guest,'join',{name:'队友',code:h.room.code});
+  host.m.send({type:'ready',ready:true});guest.m.send({type:'ready',ready:true});
+  await host.m.wait('state',m=>m.room.players.length===2&&m.room.players.every(p=>p.ready));
+  host.m.send({type:'start'});
+  const begun=await host.m.wait('started');await guest.m.wait('started');
+  const epoch=begun.world.epoch,r=require('../../server/world').rooms.guard1;
+  let c,row;
+  for(let y=0;y<r.rows;y++)for(let x=0;x<r.cols;x++)if(r.grid[y][x]==='k'){c=x;row=y;}
+  const pose={seq:0,zone:'guard1',x:r.ox+(c+.5)*r.tw,y:r.oy+(row+1.5)*r.th,
+    angle:-Math.PI/2,floor:0,seated:false,moving:false,visible:true,active:true};
+  host.m.send({type:'pose',pose});guest.m.send({type:'pose',pose});
+  host.m.send({type:'op',epoch,seq:1,action:'claim',zone:'guard1',c,r:row});
+  const taken=await host.m.wait('result',m=>m.seq===1);assert.equal(taken.ok,true);
+  const torch=taken.self.inventory.find(i=>i.type==='torch').id;
+  const drop={type:'op',epoch,seq:2,action:'drop',itemId:torch};
+  host.m.send(drop);const dropped=await host.m.wait('result',m=>m.seq===2);assert.equal(dropped.ok,true);
+  guest.m.send({type:'op',epoch,seq:1,action:'pickup',itemId:torch,id:h.selfId});
+  const pickup=await guest.m.wait('result',m=>m.seq===1);assert.equal(pickup.ok,true);
+  assert.ok(pickup.self.inventory.some(i=>i.id===torch));
+  assert.equal(pickup.world.drops.length,0);
+  host.m.send(drop);const replay=await host.m.wait('result',m=>m.seq===2);
+  assert.equal(replay.ok,true);assert.equal(replay.world.drops.length,0);
+  assert.equal(replay.self.inventory.some(i=>i.id===torch),false);
+  guest.ws.terminate();
+  await host.m.wait('state',m=>m.room.players.some(p=>p.id===g.selfId&&!p.connected));
+  const fresh=await connect(),resumed=await hello(fresh,'resume',{token:g.token});
+  assert.equal(resumed.world.epoch,epoch);
+  assert.equal(resumed.self.inventory.find(i=>i.type==='torch').id,torch);
+  assert.equal(resumed.self.inventory.filter(i=>i.type==='torch').length,1);
+  fresh.ws.terminate();
+  await host.m.wait('state',m=>m.room.phase==='playing'&&m.room.players.length===1);
+  const recovered=await host.m.wait('world',m=>m.world.revision>pickup.world.revision&&m.world.drops.some(d=>d.id===torch));
+  assert.equal(recovered.world.drops.filter(d=>d.id===torch).length,1);
 });

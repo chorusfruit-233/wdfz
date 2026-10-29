@@ -16,7 +16,7 @@ context.buildInteriorData();
 const rooms=Object.create(null);
 for(const id of Object.keys(context.INTERIORS)){
   const r=context.INTERIORS[id];
-  rooms[id]={id:r.id,host:r.host,floor:r.floor,cols:r.cols,rows:r.rows,tw:r.tw,th:r.th,
+  rooms[id]={id:r.id,host:r.host,floor:r.floor,principal:!!r.principal,cols:r.cols,rows:r.rows,tw:r.tw,th:r.th,
     grid:Array.from(r.grid,row=>row.join('')),...shared.bounds(r,context.OBJ,context.SC)};
 }
 const expected=zones.ids.filter(id=>id!=='out').slice().sort().join(',');
@@ -29,4 +29,8 @@ function contains(zone,x,y){
   const r=rooms[zone];
   return !!r&&x>=r.ox&&x<=r.ox+r.w&&y>=r.oy&&y<=r.oy+r.h;
 }
-module.exports={rooms,outdoor,contains};
+const clockConfig=JSON.parse(JSON.stringify({schedule:context.SCHED,slowStart:context.BEAST_T0,
+  slowEnd:context.BEAST_T1,slowRate:context.BEAST_RATE,dayAt:context.LIGHTS_OUT+10}));
+const items=JSON.parse(JSON.stringify(context.ITEMS));
+const locks=JSON.parse(JSON.stringify(context.DOOR_LOCKS));
+module.exports={rooms,outdoor,contains,clockConfig,items,locks};

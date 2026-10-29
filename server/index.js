@@ -1,4 +1,4 @@
-/* 玩家电脑上的联机连接原型。当前仅同步角色位置，不结算共享剧情或物品。 */
+/* 玩家电脑上的共享探索原型。剧情与危险尚未由服务端统一结算。 */
 'use strict';
 
 const http = require('node:http');
@@ -8,8 +8,9 @@ const crypto = require('node:crypto');
 const {WebSocket, WebSocketServer} = require('ws');
 const zones = require('../shared/content/zones');
 const world = require('./world');
+const {Session} = require('./session');
 
-const VERSION = 1;
+const VERSION = 2;
 const MAX_PLAYERS = 4;
 const MAX_MESSAGE = 8192;
 const ROOT = fs.realpathSync(path.join(__dirname, '..'));
@@ -23,7 +24,7 @@ function allowedFile(urlPath){
   if(urlPath==='/wiki/'||urlPath==='/wiki/index.html')return 'wiki/index.html';
   if(urlPath==='/wiki/wiki.css')return 'wiki/wiki.css';
   if(/^\/game3d\/(css|js|lib)\/[A-Za-z0-9_./-]+$/.test(urlPath))return urlPath.slice(1);
-  if(urlPath==='/shared/simulation/physics.js'||urlPath==='/shared/content/zones.js'||urlPath==='/shared/content/room-bounds.js')return urlPath.slice(1);
+  if(/^\/shared\/(simulation\/(physics|clock)|content\/(zones|room-bounds|loot))\.js$/.test(urlPath))return urlPath.slice(1);
   return null;
 }
 
@@ -76,7 +77,8 @@ function validPose(p){
     Number.isSafeInteger(p.seq)&&p.seq>=0&&
     ['x','y','angle','floor'].every(k=>typeof p[k]==='number'&&Number.isFinite(p[k]))&&
     world.contains(p.zone,p.x,p.y)&&Math.abs(p.angle)<=1000000&&
-    p.floor>=-10&&p.floor<=100&&typeof p.seated==='boolean'&&typeof p.moving==='boolean'&&typeof p.visible==='boolean';
+    p.floor>=-10&&p.floor<=100&&typeof p.seated==='boolean'&&typeof p.moving==='boolean'&&typeof p.visible==='boolean'&&
+    (p.active===undefined||typeof p.active==='boolean');
 }
 
 function createHostServer(options={}){
@@ -84,6 +86,7 @@ function createHostServer(options={}){
   const server=http.createServer(staticRequest);
   const wss=new WebSocketServer({noServer:true,maxPayload:MAX_MESSAGE,perMessageDeflate:false});
   let room=null;
+  let lastSimAt=performance.now(),lastClockAt=0;
 
   function send(ws,msg){
     if(!ws||ws.readyState!==WebSocket.OPEN)return;
@@ -105,6 +108,29 @@ function createHostServer(options={}){
     for(const p of room.players.values())if(p.ws&&p.ws!==except)send(p.ws,msg);
   }
   function sendState(){if(room)broadcast({type:'state',room:publicState()});}
+  function sendSimulation(){
+    if(!room||!room.sim)return;
+    const sim=room.sim;
+    if(room.sentRevision!==sim.revision){
+      room.sentRevision=sim.revision;broadcast({type:'world',world:sim.snapshot()});
+    }
+    for(const p of room.players.values()){
+      if(!p.ws)continue;
+      const state=sim.self(p.id);
+      if(p.sentSelf!==state.revision){
+        p.sentSelf=state.revision;
+        send(p.ws,{type:'self',epoch:sim.epoch,self:state,notices:sim.drainNotices(p.id)});
+      }
+    }
+  }
+  function simulationTick(){
+    const now=performance.now(),dt=(now-lastSimAt)/1000;lastSimAt=now;
+    if(!room||!room.sim)return;
+    for(const p of room.players.values())if(p.pose&&now-p.poseAt>1500)room.sim.pose(p.id,null);
+    room.sim.advance(dt,Array.from(room.players.values()).some(p=>p.ws));
+    sendSimulation();
+    if(now-lastClockAt>=250){lastClockAt=now;broadcast({type:'clock',epoch:room.sim.epoch,clock:room.sim.time()});}
+  }
   function chooseHost(){
     if(!room)return;
     const old=room.players.get(room.hostId);
@@ -114,25 +140,29 @@ function createHostServer(options={}){
   }
   function removePlayer(p){
     if(!room||!room.players.has(p.id))return;
+    if(room.sim)room.sim.removePlayer(p.id,p.lastPose);
     clearTimeout(p.timer);room.players.delete(p.id);chooseHost();
     if(!room.players.size){room=null;return;}
-    sendState();
+    sendState();sendSimulation();
   }
   function welcome(peer,p){
     clearTimeout(p.timer);p.timer=null;p.ws=peer.ws;p.lastSeq=-1;p.pose=null;peer.player=p;
+    p.sentSelf=-1;
+    if(room.sim)room.sim.pose(p.id,null);
     if(!room.hostId)room.hostId=p.id;
     clearTimeout(peer.helloTimer);
-    send(peer.ws,{type:'welcome',selfId:p.id,token:p.token,room:publicState()});
+    send(peer.ws,{type:'welcome',selfId:p.id,token:p.token,room:publicState(),
+      world:room.sim?room.sim.snapshot():null,self:room.sim?room.sim.self(p.id):null});
     for(const other of room.players.values())if(other!==p&&other.ws&&other.pose)
       send(peer.ws,{type:'pose',id:other.id,pose:other.pose});
-    sendState();
+    sendState();sendSimulation();
   }
   function hello(peer,msg){
     if(msg.type!=='hello'||msg.version!==VERSION){error(peer.ws,'version','联机版本不匹配。',true);return;}
     if(msg.action==='resume'){
       const token=typeof msg.token==='string'?msg.token:'';
       const p=room&&Array.from(room.players.values()).find(x=>x.token===token);
-      if(!p){error(peer.ws,'resume_failed','连接已失效，请重新加入。',true);return;}
+      if(!p){error(peer.ws,'resume_failed','身份已失效，请返回主菜单；已开始的房间需要重新开局。',true);return;}
       if(p.ws){const old=p.ws;p.ws=null;old.close(4001,'replaced');}
       welcome(peer,p);return;
     }
@@ -141,7 +171,7 @@ function createHostServer(options={}){
     if(msg.action==='create'){
       if(room){error(peer.ws,'room_exists','房主电脑已有房间，请输入房间码加入。',true);return;}
       if(msg.difficulty!=='easy'&&msg.difficulty!=='hard'){error(peer.ws,'difficulty','请选择难度。',true);return;}
-      room={code:newCode(),phase:'lobby',difficulty:msg.difficulty,hostId:null,players:new Map()};
+      room={code:newCode(),phase:'lobby',difficulty:msg.difficulty,hostId:null,players:new Map(),sim:null,sentRevision:-1};
     }else if(msg.action==='join'){
       if(!room||typeof msg.code!=='string'||msg.code.trim().toUpperCase()!==room.code){error(peer.ws,'room_not_found','房间码不正确，或房间已关闭。',true);return;}
       if(room.phase!=='lobby'){error(peer.ws,'started','房间已经开始，暂不支持中途加入。',true);return;}
@@ -150,7 +180,7 @@ function createHostServer(options={}){
     const used=new Set(Array.from(room.players.values()).map(p=>p.slot));
     let slot=0;while(used.has(slot))slot++;
     const p={id:crypto.randomUUID(),token:crypto.randomBytes(24).toString('hex'),name,slot,
-      ready:false,ws:null,timer:null,pose:null,lastSeq:-1};
+      ready:false,ws:null,timer:null,pose:null,lastPose:null,poseAt:0,lastSeq:-1,sentSelf:-1};
     room.players.set(p.id,p);welcome(peer,p);
   }
   function message(peer,msg){
@@ -170,14 +200,28 @@ function createHostServer(options={}){
       if(members.length<2||members.some(x=>!x.ws||!x.ready)){
         error(peer.ws,'not_ready','至少需要两人，并且所有成员都已连接和准备。');return;
       }
-      room.phase='playing';broadcast({type:'started',difficulty:room.difficulty});sendState();return;
+      room.phase='playing';room.sim=new Session();
+      for(const m of members)room.sim.addPlayer(m.id);
+      lastSimAt=performance.now();lastClockAt=0;
+      for(const m of members)send(m.ws,{type:'started',difficulty:room.difficulty,world:room.sim.snapshot(),self:room.sim.self(m.id)});
+      sendState();sendSimulation();return;
     }
     if(msg.type==='pose'){
       if(room.phase!=='playing'||!validPose(msg.pose)||msg.pose.seq<=p.lastSeq)return;
       p.lastSeq=msg.pose.seq;
       p.pose={seq:msg.pose.seq,zone:msg.pose.zone,x:msg.pose.x,y:msg.pose.y,
-        angle:msg.pose.angle,floor:msg.pose.floor,seated:msg.pose.seated,moving:msg.pose.moving,visible:msg.pose.visible};
-      broadcast({type:'pose',id:p.id,pose:p.pose},peer.ws);return;
+        angle:msg.pose.angle,floor:msg.pose.floor,seated:msg.pose.seated,moving:msg.pose.moving,visible:msg.pose.visible,
+        active:msg.pose.active!==false};
+      p.poseAt=performance.now();p.lastPose=p.pose;room.sim.pose(p.id,p.pose);
+      broadcast({type:'pose',id:p.id,pose:p.pose},peer.ws);sendSimulation();return;
+    }
+    if(msg.type==='op'){
+      if(!room.sim){error(peer.ws,'not_started','房间还未开始。');return;}
+      simulationTick();
+      const result=performance.now()-p.poseAt>1500||!p.pose?
+        {seq:msg.seq,ok:false,code:'inactive',text:'连接尚未就绪，请稍后重试。'}:room.sim.act(p.id,msg);
+      send(p.ws,{type:'result',epoch:room.sim.epoch,...result,self:room.sim.self(p.id),world:room.sim.snapshot()});
+      sendSimulation();return;
     }
     error(peer.ws,'message','无法识别的操作。');
   }
@@ -206,7 +250,9 @@ function createHostServer(options={}){
       clearTimeout(peer.helloTimer);
       const p=peer.player;
       if(!p||!room||room.players.get(p.id)!==p||p.ws!==ws)return;
-      p.ws=null;p.pose=null;p.ready=false;chooseHost();sendState();
+      p.ws=null;p.pose=null;p.ready=false;
+      if(room.sim)room.sim.pose(p.id,null);
+      chooseHost();sendState();sendSimulation();
       p.timer=setTimeout(()=>{if(!p.ws)removePlayer(p);},graceMs);p.timer.unref();
     });
     ws.on('error',()=>{});
@@ -220,9 +266,11 @@ function createHostServer(options={}){
     }
   },10000);
   heartbeat.unref();
+  const simulation=setInterval(simulationTick,50);simulation.unref();
 
   function close(){
     clearInterval(heartbeat);
+    clearInterval(simulation);
     if(room)for(const p of room.players.values())clearTimeout(p.timer);
     for(const ws of wss.clients)ws.terminate();
     wss.close();
@@ -241,7 +289,7 @@ function cli(){
   if(!Number.isInteger(port)||port<1||port>65535){console.error('端口须为 1–65535。');process.exitCode=2;return;}
   const app=createHostServer();
   app.server.on('error',err=>{console.error('房间服务启动失败：'+err.message);process.exitCode=1;});
-  app.server.listen(port,host,()=>console.log('联机原型已启动：http://'+host+':'+port+'/\n仅同步角色位置；剧情和物品尚未联机。'));
+  app.server.listen(port,host,()=>console.log('共享探索原型已启动：http://'+host+':'+port+'/\n已共享时间、门、搜索和物品；剧情与危险尚未统一。'));
   process.on('SIGINT',()=>app.close().then(()=>process.exit(0)));
   process.on('SIGTERM',()=>app.close().then(()=>process.exit(0)));
 }

@@ -229,7 +229,10 @@ var Game={
     clearIntroTimers();
     var firstTime=false;
     try{ firstTime=!proSeen()&&!(options&&options.skipPrologue); }catch(e){}
-    if(firstTime){
+    if(options&&options.skipPrologue){
+      try{ VisualState.worldNorm=0; }catch(e){}
+      os('我：走廊里还有别人。这一次，至少不是一个人。',4.8);
+    }else if(firstTime){
       setTimeout(function(){ try{ proShow(); }catch(e){} },320);
     }else{
       try{ VisualState.worldNorm=0; }catch(e){}      /* 老玩家直接进里世界，没有"正常世界"那一段 */

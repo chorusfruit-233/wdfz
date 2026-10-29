@@ -1,7 +1,7 @@
-/* 房间连接原型：只同步位置；共享世界、剧情与存档尚未实现。 */
+/* 房间连接及共享探索原型；剧情、AI 与结局仍待接入。 */
 'use strict';
 var Multiplayer=(function(){
-  var VERSION=1, STORAGE='wdfz3d_multiplayer_prototype';
+  var VERSION=2, STORAGE='wdfz3d_multiplayer_prototype';
   var socket=null,token=null,manual=false,lastError='',reconnectTimer=0,reconnectUntil=0,sendTimer=0,seq=0;
   var api={playing:false,connected:false,selfId:null,room:null,peerPoses:Object.create(null)};
   function el(id){return document.getElementById(id);}
@@ -10,7 +10,7 @@ var Multiplayer=(function(){
     var e=el('mpHud');e.hidden=!api.playing;
     if(api.playing){
       var online=api.room?api.room.players.filter(function(p){return p.connected;}).length:0;
-      e.textContent='联机原型 · '+online+'/4 在线'+(text?' · '+text:'');
+      e.textContent='共享探索 · '+online+'/4 在线 · 公共时间继续'+(text?' · '+text:'');
     }
   }
   function saved(){
@@ -20,7 +20,8 @@ var Multiplayer=(function(){
     }catch(e){return null;}
   }
   function storeSession(){
-    try{sessionStorage.setItem(STORAGE,JSON.stringify({token:token,code:api.room.code}));}catch(e){}
+    if(!token||!api.room)return;
+    try{sessionStorage.setItem(STORAGE,JSON.stringify({token:token,code:api.room.code,coop:Coop.persistence()}));}catch(e){}
   }
   function forgetSession(){try{sessionStorage.removeItem(STORAGE);}catch(e){}}
   function send(obj){
@@ -72,7 +73,8 @@ var Multiplayer=(function(){
     if(!SharedZones.has(zone))return;
     send({type:'pose',pose:{seq:seq++,zone:zone,x:S.x,y:S.y,angle:S.ang%(Math.PI*2),
       floor:Number.isFinite(S.floorY)?S.floorY:0,seated:!!S.seated,moving:!!S.moving,
-      visible:S.screen==='play'&&!S.dead&&!HIDE.on}});
+      visible:S.screen==='play'&&!S.dead&&!HIDE.on,
+      active:S.screen==='play'&&!S.dead&&!HIDE.on&&!PAUSE.on&&!UI.anyOpen()&&!PC.on&&!PHONE.on}});
   }
   function startGame(diff){
     if(api.playing)return;
@@ -80,11 +82,11 @@ var Multiplayer=(function(){
     var player=api.room&&api.room.players.find(function(p){return p.id===api.selfId;});
     Game.start(diff,{skipPrologue:true,onEntered:function(){
       if(!api.playing)return;
-      spawn(player?player.slot:0);api.waitingForScene=false;sendPose();
+      spawn(player?player.slot:0);api.waitingForScene=false;Coop.entered();sendPose();
     }});
     var canvas=el('cv');if(canvas)canvas.focus({preventScroll:true});
     clearInterval(sendTimer);sendTimer=setInterval(sendPose,50);
-    hud('仅同步位置');
+    hud('时间、门和物品已共享');
   }
   function onMessage(msg){
     if(!msg||typeof msg!=='object')return;
@@ -95,27 +97,42 @@ var Multiplayer=(function(){
     }
     if(msg.type==='welcome'){
       api.connected=true;api.selfId=msg.selfId;api.room=msg.room;token=msg.token;
-      reconnectUntil=0;seq=0;lastError='';storeSession();renderRoom();message('已连接');
+      reconnectUntil=0;seq=0;lastError='';
+      Coop.receiveWorld(msg.world);Coop.receiveSelf(msg.self);
+      storeSession();renderRoom();message('已连接');
       if(api.room.phase==='playing')startGame(api.room.difficulty);
+      Coop.resend();
       return;
     }
     if(msg.type==='state'){api.room=msg.room;renderRoom();return;}
-    if(msg.type==='started'){startGame(msg.difficulty);return;}
+    if(msg.type==='started'){
+      Coop.receiveWorld(msg.world);Coop.receiveSelf(msg.self);startGame(msg.difficulty);return;
+    }
+    if(msg.type==='world'){Coop.receiveWorld(msg.world);return;}
+    if(msg.type==='clock'){if(Coop.world&&msg.epoch===Coop.world.epoch)Coop.receiveClock(msg.clock);return;}
+    if(msg.type==='self'){
+      if(Coop.world&&msg.epoch===Coop.world.epoch){
+        Coop.receiveSelf(msg.self);
+        (msg.notices||[]).forEach(function(n){toast(n);});
+      }
+      return;
+    }
+    if(msg.type==='result'){if(Coop.world&&msg.epoch===Coop.world.epoch)Coop.receiveResult(msg);return;}
     if(msg.type==='pose'){receivePose(msg.id,msg.pose);}
   }
   function retry(){
     if(manual||!token)return;
     if(!reconnectUntil)reconnectUntil=Date.now()+55000;
-    if(Date.now()>=reconnectUntil){token=null;forgetSession();message('重连超时，请退出后重新加入。');return;}
+    if(Date.now()>=reconnectUntil){token=null;forgetSession();message('重连超时，请返回主菜单；已开始的房间需要重新开局。');return;}
     clearTimeout(reconnectTimer);reconnectTimer=setTimeout(function(){connect('resume');},1000);
   }
   function connect(action){
     if(socket&&(socket.readyState===WebSocket.OPEN||socket.readyState===WebSocket.CONNECTING))return;
     if(location.protocol!=='http:'&&location.protocol!=='https:'){message('请通过房主程序提供的地址打开游戏。');return;}
     if(action==='create'||action==='join'){
-      token=null;api.room=null;api.selfId=null;forgetSession();renderRoom();
+      token=null;api.room=null;api.selfId=null;Coop.reset();forgetSession();renderRoom();
     }
-    if(action==='resume'&&!token){var d=saved();token=d&&d.token;}
+    if(action==='resume'&&!token){var d=saved();token=d&&d.token;if(d)Coop.restore(d.coop);}
     if(action==='resume'&&!token){message('没有可恢复的连接。');return;}
     manual=false;lastError='';message(action==='resume'?'正在重新连接…':'正在连接房主…');
     var scheme=location.protocol==='https:'?'wss:':'ws:';
@@ -134,6 +151,7 @@ var Multiplayer=(function(){
     ws.onerror=function(){if(ws===socket&&!lastError)message('连接失败，请确认从房主地址打开且已加入虚拟网络。');};
     ws.onclose=function(e){
       if(ws!==socket)return;socket=null;api.connected=false;renderRoom();
+      Coop.disconnected();
       if(manual)return;
       if(e.code===4001){token=null;forgetSession();message('此角色已在另一个窗口连接。');return;}
       if(token){message('连接中断，正在重连…');retry();}
@@ -149,12 +167,14 @@ var Multiplayer=(function(){
     send({type:'leave'});if(socket){socket.close();socket=null;}
     token=null;forgetSession();api.playing=false;api.waitingForScene=false;api.connected=false;
     api.selfId=null;api.room=null;seq=0;api.peerPoses=Object.create(null);Engine.remoteClear();
+    Coop.reset();
     el('mpLobby').hidden=true;renderRoom();message('');
   }
   function tick(dt){
     if(!api.playing)return;
     var zone=S.mode==='out'?'out':S.room;
     Engine.remoteTick(dt,zone,api.waitingForScene||!api.connected);
+    Coop.tick(dt,zone,api.waitingForScene||!api.connected);
   }
   function init(){
     el('mpOpen').addEventListener('click',open);
@@ -175,6 +195,6 @@ var Multiplayer=(function(){
     }catch(e){}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-  api.open=open;api.leave=leave;api.tick=tick;
+  api.open=open;api.leave=leave;api.tick=tick;api.send=send;api.sendPose=sendPose;api.persist=storeSession;
   return api;
 })();

@@ -50,6 +50,7 @@ function facRoll(n){
   return Math.floor(r*n);
 }
 function useFacility(ch,R){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){toast('这处设施尚未接入共享规则');return true;}
   var cool=S.actCool||(S.actCool={});
   var key='fac'+ch;
   var cd=FAC_CD[ch]||60;
@@ -152,6 +153,7 @@ function sanActFor(R,hit){
   return null;
 }
 function doSanAct(key){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){toast('共享探索暂不支持跳过时间的活动');return;}
   var a=SAN_ACTS[key]; if(!a) return;
   S.actCool=S.actCool||{};
   var clockNow=gameClock();
@@ -226,12 +228,20 @@ var TILE_HINT={
 var GATE_HINT=[[GATE_N,'校门'],[GATE_W,'西小门'],[GATE_S,'南门']];
 function interactHint(){
   if(S.dead||S.screen!=='play'||UI.anyOpen()||PAUSE.on) return '';
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing&&!S.seated){
+    var drop=Coop.nearestDrop();if(drop)return '拾取「'+ITEMS[drop.type].n+'」';
+  }
   var R=S.mode==='in'?INTERIORS[S.room]:null, h=R?nearWorld(24):null;
   var first=h&&(FAC_CD[h.ch]!==undefined||sanActFor(R,h));   /* 设施、恢复 SAN 的动作排在"坐下"前面 */
   if(HIDE.on) return '出来';
   if(bellReach()) return '撞钟';
   if(nearRoster()) return '那张名单';
   if(S.seated) return '站起来';
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing&&h){
+    if(h.ch==='=')return doorIsOpen(R,h.x,h.y)?'门开着':'开门';
+    if(['d','f','R','q'].indexOf(h.ch)>=0)return '翻找';
+    var fixed=SharedLoot.fixed(R,h.ch);if(fixed)return '拿取「'+ITEMS[fixed].n+'」';
+  }
   if(R&&!first&&hit2_seatNear(R)) return '坐下';
   if(S.mode==='in'){
     if(!h) return '';
@@ -252,6 +262,7 @@ function tryInteract(){
   if(S.screen!=='play'||S.dead||PAUSE.on||UI.anyOpen()) return;
   if(S.seated){ S.seated=false; os('我站了起来。',1.6); S.enterCool=0.4; return; }
   if(HIDE.on){ hideOut(); return; }
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing&&Coop.pickup())return;
   if(nearRoster()){ useRoster(); return; }
 
   if(S.mode==='out'){
@@ -280,6 +291,7 @@ function tryInteract(){
   var R=INTERIORS[S.room];
   if(bellReach()){ useBell(); return; }
   var _sa=sanActFor(R,null), _hit0=nearWorld(24);
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing&&Coop.handleHit(_hit0,R))return;
   if(_hit0&&FAC_CD[_hit0.ch]!==undefined){ if(useFacility(_hit0.ch,R)) return; }
   if(_hit0){ var _k=sanActFor(R,_hit0); if(_k){ doSanAct(_k); return; } }
   if(hit2_seatNear(R)){ sitDown(); return; }
@@ -385,6 +397,7 @@ function useGeoMap(){
   toast('记下了：'+sp.n);
 }
 function useBell(){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){toast('考试和钟声事件尚未接入共享规则');return;}
   if(AN.active&&AN.id==='bell13'){
     os('我：我抱住撞木，用力撞了一下。钟声和那第十三下撞在一起——两边都没了。',4.6);
     S.san=Math.min(100,S.san+8);
@@ -516,13 +529,7 @@ function stairGo(){
   exitRoom();
 }
 /* 实验楼各层抽屉里的东西（累计概率） */
-var LAB_LOOT={
-  1:[[0.22,'battery'],[0.40,'chalk'],[0.52,'pen']],
-  2:[[0.20,'goggles'],[0.40,'pill'],[0.58,'battery']],
-  3:[[0.20,'usb'],[0.40,'battery'],[0.52,'phone']],
-  4:[[0.22,'compass'],[0.36,'map']],
-  5:[[0.22,'metronome'],[0.36,'snack']]
-};
+var LAB_LOOT=SharedLoot.lab;
 function labLoot(floor){
   var r=Math.random(), t=LAB_LOOT[floor];
   return t?rollLoot(t,r):null;
@@ -530,10 +537,12 @@ function labLoot(floor){
 /* 翻找要花 0.8 秒：站着别动，准星外面那一圈走满才算翻完；走开就断了。DEV 里可以关掉 */
 var SEARCH={on:true,dur:0.8,job:null};
 function clearSearch(){
+  if(SEARCH.job&&SEARCH.job.network)Coop.cancelSearch();
   SEARCH.job=null;
   var el=document.getElementById('searchring'); if(el) el.style.display='none';
 }
 function searchContainer(c,r){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){Coop.target('search',c,r);return;}
   var key=S.room+':'+c+':'+r;
   if(ncOccupied(c,r)){
     os('我：他坐在这儿。我不能翻他的抽屉。',3.0);
@@ -547,6 +556,7 @@ function searchContainer(c,r){
   doSearch(c,r);
 }
 function searchTick(dt){
+  if(SEARCH.job&&SEARCH.job.network){Coop.searchTick();return;}
   var j=SEARCH.job, el=document.getElementById('searchring');
   if(j&&(S.dead||S.mode!=='in'||S.room!==j.room||Math.hypot(S.x-j.x,S.y-j.y)>5)){
     SEARCH.job=null; os(j.done?'我：手一松，钥匙从锁孔里滑了出来。':'我：手一松，没翻完。',1.4); j=null;
@@ -577,13 +587,10 @@ function searchLoot(key,id){
   }
 }
 /* 普通抽屉、柜子、货架翻出来的东西：累计概率，没落在表里就是空的 */
-var DESK_LOOT=[[0.16,'coin'],[0.28,'chalk'],[0.36,'snack'],[0.44,'battery'],[0.50,'pill'],[0.56,'pen'],[0.62,'notebook'],
-  [0.66,'memo'],[0.70,'brolly'],[0.74,'coat'],[0.78,'torch'],[0.82,'phone'],[0.86,'watch'],[0.90,'compass'],[0.93,'leave']];
-function rollLoot(table,roll){
-  for(var i=0;i<table.length;i++) if(roll<table[i][0]) return table[i][1];
-  return null;
-}
+var DESK_LOOT=SharedLoot.desk;
+function rollLoot(table,roll){return SharedLoot.roll(table,roll);}
 function doSearch(c,r){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){Coop.target('search',c,r);return;}
   var key=S.room+':'+c+':'+r;
   if(RT.deskUsed[key]) return;
   /* 满包不能占用容器，否则钥匙或固定的 U 盘会消失。 */

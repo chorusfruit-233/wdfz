@@ -2,7 +2,7 @@
   "name": "wdfz-3d",
   "version": "0.1.0",
   "private": true,
-  "description": "武大附中 · 里世界 3D 联机房间原型",
+  "description": "武大附中 · 里世界 3D 联机共享探索原型",
   "engines": {"node": ">=20"},
   "scripts": {
     "host": "node server/index.js",

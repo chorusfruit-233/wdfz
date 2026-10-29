@@ -307,7 +307,7 @@ function kill(msg,fx){
   var _ep=(DFX_EPI[S.death]||'');
   var _hold=(S.death==='neck')?3000:((S.death==='grip'||S.death==='gaze'||S.death==='stare'||S.death==='ring'||S.death==='lamps'||S.death==='follow')?2600:2000);
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
-  var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3);
+  var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3&&!(typeof Multiplayer!=='undefined'&&Multiplayer.playing));
   if(!wake) clearSave();                 /* 没有下一次了：不能再读档回来 */
   if(!wake) setTimeout(function(){
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
@@ -345,6 +345,7 @@ function survivalReset(){
   try{ SFX.wake&&SFX.wake(); }catch(e){}
 }
 function dreamWake(){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){toast('共享探索暂不支持预知梦回退');return;}
   RT.wakes=(RT.wakes||0)+1;
   var left=3-RT.wakes;
   eyelid(700,function(){
@@ -379,6 +380,7 @@ var ENDINGS={
   portal:{t:'《门》',true:1,l:['光圈合上之前，你回头看了一眼。','实验台、显微镜、离心机，还有教室里那一排排低着的头——都在原地，一动不动。','你没有再回头。','门的那一边是一个普通的下午。铃响了，有人在走廊里叫你的名字，你答应了一声。']}
 };
 function triggerEnding(id){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){toast('合作结局尚未开放');return;}
   if(S.screen==='cut'||S.screen==='end') return;
   RT.end=id;
   var e=ENDINGS[id];

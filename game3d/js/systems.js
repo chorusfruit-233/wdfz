@@ -78,6 +78,7 @@ function gameClock(){
   return (day-1-(late?1:0))*1440+S.tsec;
 }
 function advanceGameTime(minutes){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){Coop.syncClock();return;}
   var remaining=Math.max(0,minutes||0);
   while(remaining>0){
     var before=S.tsec, step=Math.min(remaining,Math.max(0,1500-before));
@@ -104,6 +105,7 @@ function advanceGameTime(minutes){
   }
 }
 function rewindGameTime(minutes){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){Coop.syncClock();return;}
   var remaining=Math.max(0,minutes||0);
   while(remaining>0){
     if(S.tsec<=440) S.tsec=1500;
@@ -145,6 +147,7 @@ var TT_LINES=['我：最近睡得挺好。铃一响就醒，不用闹钟。醒�
   '我：我好像一直都在这里。在我转来之前，就在这里。'];
 /* 时间往前走；《先辈》那十秒开始时提醒一句 */
 function clockTick(dt){
+  if(typeof Multiplayer!=='undefined'&&Multiplayer.playing){Coop.syncClock();return;}
   var t0=S.tsec;
   advanceGameTime(dt*rateAt(S.tsec)/60);
   if(t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
