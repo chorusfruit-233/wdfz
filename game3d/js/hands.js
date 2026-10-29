@@ -12,7 +12,6 @@ var HANDS={built:false,L:null,R:null,items:{},meshes:{L:null,R:null}};
 var HAND_GEO={};
 
 /* ---- 向量小工具 ---- */
-function hv(x,y,z){ return [x,y,z]; }
 function hAdd(a,b){ return [a[0]+b[0],a[1]+b[1],a[2]+b[2]]; }
 function hSub(a,b){ return [a[0]-b[0],a[1]-b[1],a[2]-b[2]]; }
 function hMul(a,s){ return [a[0]*s,a[1]*s,a[2]*s]; }
@@ -121,7 +120,7 @@ HMesh.prototype.geometry=function(mirror){
 /* ---- 手的骨架 ----
    手的坐标（右手）：l 从手腕指向指根，n 手背朝外，w 指向拇指一侧；原点在手腕中心，单位米。
    换成右手系的坐标是 [l, n, -w]。 */
-function hp(l,n,w){ return [l,n,-w]; }
+function handAt(l,n,w){ return [l,n,-w]; }
 var HAND_FINGERS=[            /* 指根位置 (l, w)、三节长度、粗细 */
   {l:0.084,w: 0.026,len:[0.041,0.024,0.019],r:0.0089},     /* 食指 */
   {l:0.088,w: 0.008,len:[0.045,0.027,0.020],r:0.0092},     /* 中指 */
@@ -149,19 +148,19 @@ function handFinger(M,pts,dors,r,C){
 function handPalm(M,C){
   var U=[0,1,0];
   M.sweep([
-    {p:hp(-0.012,0.000,0.000),a:0.026,b:0.018,up:U,c:C.skin},
-    {p:hp( 0.012,0.000,0.002),a:0.034,b:0.0175,up:U,c:C.skin},
-    {p:hp( 0.040,0.000,0.000),a:0.040,b:0.0160,up:U,c:C.skin},
-    {p:hp( 0.066,0.000,-0.001),a:0.042,b:0.0145,up:U,c:C.skin},
-    {p:hp( 0.080,0.000,-0.001),a:0.040,b:0.0125,up:U,c:C.skin}
+    {p:handAt(-0.012,0.000,0.000),a:0.026,b:0.018,up:U,c:C.skin},
+    {p:handAt( 0.012,0.000,0.002),a:0.034,b:0.0175,up:U,c:C.skin},
+    {p:handAt( 0.040,0.000,0.000),a:0.040,b:0.0160,up:U,c:C.skin},
+    {p:handAt( 0.066,0.000,-0.001),a:0.042,b:0.0145,up:U,c:C.skin},
+    {p:handAt( 0.080,0.000,-0.001),a:0.040,b:0.0125,up:U,c:C.skin}
   ],14,0,0.7);
-  M.ellipsoid(hp(0.026,-0.009,0.022),hp(0.026,0,0.006),hp(0,0.012,0),hp(-0.004,0,0.016),C.palm,10);     /* 大鱼际 */
-  M.ellipsoid(hp(0.036,-0.007,-0.027),hp(0.030,0,0),hp(0,0.011,0),hp(0,0,0.012),C.palm,10);             /* 小鱼际 */
+  M.ellipsoid(handAt(0.026,-0.009,0.022),handAt(0.026,0,0.006),handAt(0,0.012,0),handAt(-0.004,0,0.016),C.palm,10);     /* 大鱼际 */
+  M.ellipsoid(handAt(0.036,-0.007,-0.027),handAt(0.030,0,0),handAt(0,0.011,0),handAt(0,0,0.012),C.palm,10);             /* 小鱼际 */
   for(var i=0;i<HAND_FINGERS.length;i++){                                                                /* 手背上的指根骨节 */
     var f=HAND_FINGERS[i];
-    M.ellipsoid(hp(f.l-0.005,0.0030,f.w),hp(0.010,0,0),hp(0,0.0075,0),hp(0,0,f.r*1.05),C.knuckle,8);
+    M.ellipsoid(handAt(f.l-0.005,0.0030,f.w),handAt(0.010,0,0),handAt(0,0.0075,0),handAt(0,0,f.r*1.05),C.knuckle,8);
   }
-  M.ellipsoid(hp(-0.006,0.004,-0.022),hp(0.008,0,0),hp(0,0.007,0),hp(0,0,0.007),C.skin,6);            /* 腕骨的小鼓包 */
+  M.ellipsoid(handAt(-0.006,0.004,-0.022),handAt(0.008,0,0),handAt(0,0.007,0),handAt(0,0,0.007),C.skin,6);            /* 腕骨的小鼓包 */
 }
 /* 拇指：腕掌关节 → 掌指关节 → 指间关节 → 指尖 */
 function handThumb(M,pts,dors,C){
@@ -201,7 +200,7 @@ function handSleeve(M,back,C){
 
 /* 一根手指绕着圆柱握住：C 是指根所在平面里圆柱的中心（l, n），R 是指心到圆柱轴的距离 */
 function wrapFinger(f,Cl,Cn,R){
-  var m=[f.l,0], pts=[hp(f.l-0.012,0,f.w),hp(f.l,0,f.w)], dors=[[0,1,0],[0,1,0]];
+  var m=[f.l,0], pts=[handAt(f.l-0.012,0,f.w),handAt(f.l,0,f.w)], dors=[[0,1,0],[0,1,0]];
   var dx=Cl-m[0], dy=Cn-m[1], d=Math.sqrt(dx*dx+dy*dy), L1=f.len[0];
   /* 第一节：从指根出发，落到圆上（两圆求交，取靠前的那个交点） */
   var a=(L1*L1-R*R+d*d)/(2*d), h=Math.sqrt(Math.max(0,L1*L1-a*a));
@@ -212,7 +211,7 @@ function wrapFinger(f,Cl,Cn,R){
   var list=[p1];
   for(i=1;i<3;i++){ ang-=2*Math.asin(Math.min(1,f.len[i]/(2*R))); cur=[Cl+R*Math.cos(ang),Cn+R*Math.sin(ang)]; list.push(cur); }
   for(i=0;i<list.length;i++){
-    pts.push(hp(list[i][0],list[i][1],f.w));
+    pts.push(handAt(list[i][0],list[i][1],f.w));
     var r=hNorm([list[i][0]-Cl,list[i][1]-Cn]); dors.push([r[0],r[1],0]);
   }
   dors[1]=hNorm(hAdd(dors[1],dors[2]));
@@ -220,19 +219,19 @@ function wrapFinger(f,Cl,Cn,R){
 }
 /* 按指节弯曲角度摆一根手指（在 l-n 平面里往掌心弯），spread 是往两边张开的角度 */
 function bendFinger(f,ang,spread){
-  var p=[f.l,0,f.w], th=0, pts=[hp(f.l-0.012,0,f.w),hp(p[0],p[1],p[2])], dors=[[0,1,0],[0,1,0]], i, sp=spread||0;
+  var p=[f.l,0,f.w], th=0, pts=[handAt(f.l-0.012,0,f.w),handAt(p[0],p[1],p[2])], dors=[[0,1,0],[0,1,0]], i, sp=spread||0;
   for(i=0;i<3;i++){
     th+=ang[i];
     var dl=Math.cos(th)*Math.cos(sp), dn=-Math.sin(th), dw=Math.cos(th)*Math.sin(sp);
     p=[p[0]+dl*f.len[i],p[1]+dn*f.len[i],p[2]+dw*f.len[i]];
-    pts.push(hp(p[0],p[1],p[2])); dors.push([Math.sin(th),Math.cos(th),0]);
+    pts.push(handAt(p[0],p[1],p[2])); dors.push([Math.sin(th),Math.cos(th),0]);
   }
   dors[1]=hNorm(hAdd(dors[1],dors[2]));
   return {pts:pts,dors:dors};
 }
 /* 小臂往回的方向：dev 是手往小指一侧偏（尺偏）的角度，ext 是手背往后翘（背伸）的角度 */
 function handForearm(dev,ext){
-  return hMul(hNorm(hp(Math.cos(dev)*Math.cos(ext),-Math.sin(ext),Math.sin(dev))),-1);
+  return hMul(hNorm(handAt(Math.cos(dev)*Math.cos(ext),-Math.sin(ext),Math.sin(dev))),-1);
 }
 /* 拿法：grip 圆柱的中心、轴向（手的坐标）、半径；手指、拇指的摆法 */
 var HAND_POSES={
@@ -245,7 +244,7 @@ var HAND_POSES={
 };
 function handGripFrame(pose){
   /* 圆柱轴：从小指根部那头斜着穿到食指根部，跟指根连线成 tilt 角 */
-  var t=pose.tilt, g=hNorm(hp(Math.sin(t),0,Math.cos(t))), c=hp(0.058,-(0.0145+pose.rc+0.0015),0);
+  var t=pose.tilt, g=hNorm(handAt(Math.sin(t),0,Math.cos(t))), c=handAt(0.058,-(0.0145+pose.rc+0.0015),0);
   return {g:g,c:c};
 }
 function handBuild(poseName){
@@ -256,14 +255,14 @@ function handBuild(poseName){
     frame=handGripFrame(pose);
     /* grip 坐标：圆柱轴朝 -z，拇指那一面（筒身的"上面"）朝 +y，手背朝 +x */
     var Z=hMul(frame.g,-1), Y=hNorm(hCross(Z,[0,1,0])); Y=hMul(Y,-1);
-    if(hDot(Y,hp(-1,0,1))<0) Y=hMul(Y,-1);
+    if(hDot(Y,handAt(-1,0,1))<0) Y=hMul(Y,-1);
     var X=hCross(Y,Z), c0=frame.c;
     tf={p:function(p){ var d=hSub(p,c0); return [hDot(d,X),hDot(d,Y),hDot(d,Z)]; },
         n:function(n){ return [hDot(n,X),hDot(n,Y),hDot(n,Z)]; },
         inv:function(v){ return hAdd(hAdd(hMul(X,v[0]),hMul(Y,v[1])),hMul(Z,v[2])); }};
   }else{
     /* 手机：手的坐标直接当 grip 坐标，原点在手机中心 */
-    var pc=hp(0.058,-0.026,0.034);
+    var pc=handAt(0.058,-0.026,0.034);
     tf={p:function(p){ return hSub(p,pc); },n:function(n){ return n; },inv:function(v){ return v; }};
   }
   var M=new HMesh(tf), i;
@@ -276,10 +275,10 @@ function handBuild(poseName){
       handFinger(M,fw.pts,fw.dors,f.r,C);
     }
     /* 拇指：贴着筒身的上面，顺着轴往前压 */
-    var top=hNorm(hCross(g,[0,1,0])); if(hDot(top,hp(-1,0,1))<0) top=hMul(top,-1);
+    var top=hNorm(hCross(g,[0,1,0])); if(hDot(top,handAt(-1,0,1))<0) top=hMul(top,-1);
     var Rt=R0+0.0095, base=hAdd(c,hMul(top,Rt));
-    var tp=[hp(0.010,-0.010,0.020),hAdd(base,hMul(g,-0.004)),hAdd(base,hMul(g,0.028)),hAdd(hAdd(base,hMul(g,0.052)),hMul(top,-0.002))];
-    var td=[hp(0,1,0.4),top,top,top];
+    var tp=[handAt(0.010,-0.010,0.020),hAdd(base,hMul(g,-0.004)),hAdd(base,hMul(g,0.028)),hAdd(hAdd(base,hMul(g,0.052)),hMul(top,-0.002))];
+    var td=[handAt(0,1,0.4),top,top,top];
     for(i=0;i<td.length;i++) td[i]=hNorm(td[i]);
     handThumb(M,tp,td,C);
     handSleeve(M,handForearm(pose.dev,pose.ext),C);
@@ -288,8 +287,8 @@ function handBuild(poseName){
       var f2=HAND_FINGERS[i], bf=bendFinger(f2,[1.40-i*0.04,1.62,0.12+i*0.05],(i-1.5)*-0.05);
       handFinger(M,bf.pts,bf.dors,f2.r,C);
     }
-    handThumb(M,[hp(0.010,-0.010,0.020),hp(0.022,-0.030,0.045),hp(0.031,-0.040,0.071),hp(0.038,-0.041,0.094)],
-              [hNorm(hp(0,1,0.4)),hNorm(hp(0,-1,0.6)),hNorm(hp(0,-1,0.1)),hNorm(hp(0,-1,0))],C);
+    handThumb(M,[handAt(0.010,-0.010,0.020),handAt(0.022,-0.030,0.045),handAt(0.031,-0.040,0.071),handAt(0.038,-0.041,0.094)],
+              [hNorm(handAt(0,1,0.4)),hNorm(handAt(0,-1,0.6)),hNorm(handAt(0,-1,0.1)),hNorm(handAt(0,-1,0))],C);
     handSleeve(M,handForearm(HAND_POSES.phone.dev,HAND_POSES.phone.ext),C);
   }
   return M;
@@ -433,7 +432,7 @@ function handHold(hand,item){
 function handsTick(dt){
   if(!GLR.cam) return;
   buildHands();
-  var show=S.screen==='play'&&!S.dead&&!(typeof HIDE!=='undefined'&&HIDE.on)&&!(typeof CUT!=='undefined'&&CUT.on);
+  var show=S.screen==='play'&&!S.dead&&!HIDE.on&&!(typeof CUT!=='undefined'&&CUT.on);
   var torchOn=show&&USE.torch&&hasItem('torch'), brollyOn=show&&USE.brollyShield&&hasItem('brolly'), phoneOn=show&&typeof PHONE!=='undefined'&&PHONE.on;       /* 手机只在玩小游戏时拿在手上 */
   var it=HANDS.items, leftUse=null, rightUse=null;
   if(brollyOn) leftUse='brolly';

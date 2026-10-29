@@ -136,7 +136,7 @@ function initInput(){
   var cv=document.getElementById('cv'),stick=document.getElementById('stick');
   initTouchActivation();
   document.addEventListener('pointerdown',function(e){
-    if(typeof S!=='undefined'&&S.screen==='cut'){ cutSkip(); return; }
+    if(S.screen==='cut'){ cutSkip(); return; }
     if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();
     else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen'&&INPUT.stickId===null)useMouseInput();
   },{capture:true,passive:true});
@@ -292,7 +292,7 @@ function updatePlayer(dt){
   if(S.dead||S.screen!=='play'||(S.intro||0)>0)return;
   var snack=(S.snackT||0)>0;
   if(snack) S.snackT=Math.max(0,S.snackT-dt);
-  if(typeof HIDE!=='undefined'&&HIDE.on){ S.moving=false; S.run=false; S.stam=Math.min(100,S.stam+11*dt); syncCamera(dt); return; }   /* 躲在柜子里：不能动 */
+  if(HIDE.on){ S.moving=false; S.run=false; S.stam=Math.min(100,S.stam+11*dt); syncCamera(dt); return; }   /* 躲在柜子里：不能动 */
   var locked=!playerInputAllowed(),fw=0,sd=0;
   if(!locked){
     if(KEY.w||KEY.arrowup)fw++;

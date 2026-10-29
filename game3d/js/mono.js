@@ -62,8 +62,8 @@ function monoPlace(){
   if(S.room==='teach6') return 'roof';
   if(R.host==='canteen') return 'canteen';
   if(R.host==='dormN'||R.host==='dormS') return 'dorm';
-  if(typeof inToiletHere==='function'&&inToiletHere()) return 'toilet';
-  if(R.host==='teach'){ return (typeof corridorHere==='function'&&corridorHere())?'hall':'class'; }
+  if(inToiletHere()) return 'toilet';
+  if(R.host==='teach'){ return (corridorHere())?'hall':'class'; }
   return 'any';
 }
 /* 这一刻会说哪一句（测试也用） */
@@ -77,7 +77,7 @@ function monoPick(){
 function monoTick(dt){
   MONO.t-=dt;
   if(MONO.t>0) return;
-  if(DLG.open||AN.active||UI.chooseOpen||UI.anyOpen()||(typeof PHONE!=='undefined'&&PHONE.on)||S.seated&&needWhere(S.tsec)==='教室'&&Math.random()<0.5){ MONO.t=6; return; }
+  if(DLG.open||AN.active||UI.chooseOpen||UI.anyOpen()||PHONE.on||S.seated&&needWhere(S.tsec)==='教室'&&Math.random()<0.5){ MONO.t=6; return; }
   var line=monoPick();
   MONO.recent.push(line); if(MONO.recent.length>8) MONO.recent.shift();
   os(line,3.6);

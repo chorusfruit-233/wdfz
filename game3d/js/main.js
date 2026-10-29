@@ -51,13 +51,13 @@ function render(dt){
       S.stuckT=(S.stuckT||0)+dt;
       if(S.stuckT>0.5){
         S.stuckT=0;
-        if(typeof solidAt==='function'&&solidAt(S.x,S.y)){ unstick(); }
+        if(solidAt(S.x,S.y)){ unstick(); }
       }
     }
   }catch(e){}
   try{ if(DEV.on) Dev.pos(); }catch(e){}
   try{ if(DEV.on&&VisualState.time%0.4<0.05) Dev.look(); }catch(e){}
-  try{ if(typeof AMB_ON!=='undefined'){ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } } }catch(e){}
+  try{ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
   Engine.draw(dt); updateHUD(); drawMini(dt);
 }
@@ -84,8 +84,7 @@ function drawMini(dt){
   miniT=0.18;
   var cv=document.getElementById('mini');
   if(!cv||!cv.getContext) return;
-  var c=cv.getContext('2d'); if(!c) return;
-  if(!c||!c.clearRect) return;
+  var c=cv.getContext('2d'); if(!c||!c.clearRect) return;
   var W=cv.width, H=cv.height;
   var bw=BOUND.x1-BOUND.x0, bh=BOUND.y1-BOUND.y0;
   var sc=Math.min((W-8)/bw,(H-8)/bh);
@@ -118,105 +117,57 @@ function drawMini(dt){
 var hudT=0;
 
 var markT=0, dtG=0.016;
+/* 界面节点每帧都要用：取一次存起来（节点被换掉时重新取） */
+var HUD_EL={};
+function hudEl(id){
+  var e=HUD_EL[id];
+  if(!e||!e.isConnected) e=HUD_EL[id]=document.getElementById(id);
+  return e;
+}
 function updateHUD(){
-  var san=document.getElementById('sanbar');
+  var san=hudEl('sanbar');
   if(san){
     san.style.width=clamp(S.san,0,100)+'%';
     san.style.background=S.san>60?'#79c8a4':(S.san>30?'#c8b24a':'#c8554a');
   }
-  document.getElementById('clock').textContent=fmtClock(S.tsec);
-  var _sc=document.getElementById('secclock');                /* 手表 / 秒表天赋：右上角显示到秒 */
-  if(_sc){ var _hs=hasSeconds(); _sc.hidden=!_hs; if(_hs) _sc.textContent=fmtClockS(S.tsec); }
-  var cr=document.getElementById('cross');
+  hudEl('clock').textContent=fmtClock(S.tsec);
+  var sc=hudEl('secclock');                                   /* 手表 / 秒表天赋：右上角显示到秒 */
+  if(sc){ var hs=hasSeconds(); sc.hidden=!hs; if(hs) sc.textContent=fmtClockS(S.tsec); }
+  var cr=hudEl('cross');
   if(cr){ cr.style.display=playerInputAllowed()?'block':'none'; }
-  var sn=document.getElementById('sannum');
+  var sn=hudEl('sannum');
   if(sn) sn.textContent=Math.round(S.san);
   try{ anwTick(dtG); }catch(e){}
   try{ updateMarker(dtG); }catch(e){}
-  document.getElementById('place').textContent=currentPlaceName();
-  var p=periodAt(S.tsec);
-  var _pe=document.getElementById('period');
-  _pe.textContent=onLeave()?('请假中 · 还剩 '+leaveLeft()+' 分钟'):((S.exam&&p[3]==='教室')?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec)));
+  hudEl('place').textContent=currentPlaceName();
+  var p=periodAt(S.tsec), pe=hudEl('period'), leave=onLeave(), examing=S.exam&&p[3]==='教室';
+  pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec)));
   /* 时段前面的小圆点：绿 = 在该在的地方；黄 = 不在，违规在涨；蓝 = 请假中；红 = 考试 */
-  var _pc=onLeave()?'leave':(S.wrong?'warn':(S.exam&&p[3]==='教室'?'exam':'ok'));
-  if(_pe.className!==_pc) _pe.className=_pc;
-  var sw=document.getElementById('stamwrap');
-  if(sw){ var _sn=(S.snackT||0)>0;          /* 士力架起效时，体力条变成金色的剩余时间 */
-    var _sr=document.getElementById('stamrow'), _show=(S.stam<99.5||_sn);
-    if(_sr&&_sr.hidden===_show) _sr.hidden=!_show;
-    var _sb=document.getElementById('stambar');
-    _sb.style.width=(_sn?clamp(S.snackT/SNACK_SEC*100,0,100):clamp(S.stam,0,100))+'%';
-    _sb.style.background=_sn?'#d8b45a':(S.tired?'#b0705a':''); }   /* 喘气时变红，回到能跑才变回蓝 */
+  var pc=leave?'leave':(S.wrong?'warn':(examing?'exam':'ok'));
+  if(pe.className!==pc) pe.className=pc;
+  if(hudEl('stamwrap')){
+    var snack=(S.snackT||0)>0;                                  /* 士力架起效时，体力条变成金色的剩余时间 */
+    var sr=hudEl('stamrow'), show=(S.stam<99.5||snack);
+    if(sr&&sr.hidden===show) sr.hidden=!show;
+    var sb=hudEl('stambar');
+    sb.style.width=(snack?clamp(S.snackT/SNACK_SEC*100,0,100):clamp(S.stam,0,100))+'%';
+    sb.style.background=snack?'#d8b45a':(S.tired?'#b0705a':'');   /* 喘气时变红，回到能跑才变回蓝 */
+  }
   UI.renderHot();
   updateTouchUI();
-  var pr=document.getElementById('prompt');
-  var hint='';
   /* 字幕显示时也要给提示：字幕很频繁，以前站在门口常常看不到"E 开门" */
-  if(!S.dead&&S.screen==='play'&&!UI.anyOpen()&&!PAUSE.on){
-    var _R=S.mode==='in'?INTERIORS[S.room]:null, _h0=_R?nearWorld(24):null;
-    /* 和 tryInteract 的先后一致：设施、恢复 SAN 的动作排在"坐下"前面 */
-    var _first=_h0&&(FAC_CD[_h0.ch]!==undefined||sanActFor(_R,_h0));
-    if(HIDE.on) hint='E 出来';
-    else if(bellReach()) hint='E 撞钟';
-    else if(nearRoster()) hint='E 那张名单';
-    else if(S.seated) hint='E 站起来';
-    else if(_R&&!_first&&hit2_seatNear(_R)) hint='E 坐下';
-    else if(S.mode==='in'){
-      var h=nearWorld(24);
-      if(h){
-        if(h.ch==='='){
-          var _nd=doorLockNeed(INTERIORS[S.room],h.c,h.r);
-          hint=(_nd&&!hasItem(_nd))?'E 开门（锁着）':'E 开门';
-        }
-        else if(h.ch==='O') hint='E 出去';
-        else if(h.ch==='H') hint='E 躲进柜子';
-        else if(h.ch==='M') hint=hasItem('coin')?'E 投币（售货机）':'E 售货机';
-        else if(INTERIORS[S.room].host==='canteen'&&(h.ch==='k'||h.ch==='t')&&!mealNow()) hint=hasItem('coin')?'E 投币买饭':'E 打饭窗口';
-      else if(h.ch==='L') hint='E 走连廊';
-      else if(h.ch==='Q') hint='E 看服务器终端';
-        else if(h.ch==='S') hint='E 上下楼';
-        else if(h.ch==='P') hint='E 坐下';
-        else if(h.ch==='c') hint='E 上车';
-        else if(h.ch==='D') hint=(S.room==='lab3')?'E 门禁管理终端':'E 使用终端';
-        else if(h.ch==='X') hint='E 钻进去';
-        else if(h.ch==='K') hint=(INTERIORS[S.room]&&INTERIORS[S.room].host==='admin')?'E 看办公桌':'E 看实验台';
-        else if(h.ch==='Z') hint='E 放开单摆';
-        else if(h.ch==='C') hint='E 开离心机';
-        else if(h.ch==='N') hint='E 看显微镜';
-        else if(h.ch==='Y') hint='E 转地球仪';
-        else if(h.ch==='p') hint='E 弹琴';
-        else if(h.ch==='U') hint='E 撞钟';
-        else if(h.ch==='A') hint='E 看供桌';
-        else if(h.ch==='x') hint='E 看挂图';
-        else if(h.ch==='V') hint='E 上车';
-        else if(h.ch==='B'||h.ch==='G') hint='E 隔间';
-        else if(h.ch==='w') hint='E 洗把脸';
-        else if(h.ch==='b') hint=(sanActFor(INTERIORS[S.room],h)?'E 躺一会儿':'E 床');
-        else if(h.ch==='n') hint='E 用电脑';
-        else hint='E 翻找';
-      }
-    }else{
-      var nb=nearWorld(0);
-      var oact=nb?null:sanActFor(null,null);
-      if(nb) hint='E 进入 '+nb.obj.n;
-      else if(oact) hint='E '+SAN_ACTS[oact].n+'（SAN +'+SAN_ACTS[oact].san+'，'+SAN_ACTS[oact].min+' 分钟）';
-      else if(Math.sqrt(dist2(GATE_N.x*SC,GATE_N.y*SC,S.x,S.y))<70) hint='E 校门';
-      else if(Math.sqrt(dist2(GATE_W.x*SC,GATE_W.y*SC,S.x,S.y))<70) hint='E 西小门';
-      else if(Math.sqrt(dist2(GATE_S.x*SC,GATE_S.y*SC,S.x,S.y))<70) hint='E 南门';
-    }
-  }
-  var label=hint.replace(/^E /,'');
+  var label=interactHint(), pr=hudEl('prompt');
   if(pr){
-    if(hint){ if(pr._l!==label){ pr._l=label; pr.innerHTML='<kbd>E</kbd>'+label; } pr.style.display='block'; }
+    if(label){ if(pr._l!==label){ pr._l=label; pr.innerHTML='<kbd>E</kbd>'+label; } pr.style.display='block'; }
     else { pr._l=''; pr.style.display='none'; }
   }
   /* 触屏：交互键上直接写当前能做的事（「坐下」「开门」…），没有可做的事就变暗 */
-  var ta=document.getElementById('tActL');
+  var ta=hudEl('tActL');
   if(ta){
     var short=label.replace(/（.*$/,'').replace(/^进入 /,'进 ')||'交互';
     if(ta.textContent!==short){ ta.textContent=short; ta.parentNode.className='tbtn'+(label?' live':'')+(short.length>4?' long':''); }
   }
-  var tt=document.getElementById('tTorch');
+  var tt=hudEl('tTorch');
   if(tt){ var tc='tsm'+(USE.torch?' on':'')+(hasItem('torch')?'':' off'); if(tt.className!==tc) tt.className=tc; }
 }
 
@@ -293,51 +244,7 @@ var Game={
     if(!d){ toast('没有存档'); return; }
     clearIntroTimers();
     freshState(d.diff);
-    S.mode=d.mode||'out'; S.room=d.room||null;
-    S.x=d.x; S.y=d.y; S.ang=d.ang||0; S.pitch=d.pitch||0;
-    S.tsec=d.tsec; S.day=d.day; S.san=d.san; S.viol=d.viol; S.stam=d.stam;
-    if(d.clockVersion!==2&&S.tsec>=0&&S.tsec<60) S.tsec+=1440;
-    S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
-    S.snackT=Number.isFinite(d.snackT)?clamp(d.snackT,0,SNACK_SEC):0;
-    S.pillT=Number.isFinite(d.pillT)?clamp(d.pillT,0,PILL_SEC):0;
-    PHONE.cool=Number.isFinite(d.phoneCool)?clamp(d.phoneCool,0,PH_COOL):0;
-    S.actCool=(d.actCool&&typeof d.actCool==='object'&&!Array.isArray(d.actCool))?Object.assign({},d.actCool):{};
-    if(d.clockVersion!==2){
-      var oldClock=(d.day||1)*1440+d.tsec, newClock=gameClock();
-      Object.keys(S.actCool).forEach(function(k){ if(Number.isFinite(S.actCool[k])) S.actCool[k]=newClock+Math.max(0,S.actCool[k]-oldClock); });
-    }
-    S.immuneUsed=!!d.immuneUsed;
-    S.tt=d.tt||0; S.ttTier=d.ttTier||0;
-    S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0;
-    S.bag=d.bag||[]; S.hot=d.hot||[null,null];
-    S.talent=d.talent||S.talent; S.spots=d.spots||{}; S.clues=d.clues||{};
-    S.seated=!!d.seated;
-    S.hiddenLatch=!!d.hiddenLatch; S.hiddenAsked=false;
-    S.hiddenWindow=Number.isFinite(d.hiddenWindow)?d.hiddenWindow:(S.hiddenLatch?3.2:0);
-    if(d.hiddenAsked&&S.hiddenLatch) S.hiddenWindow=0; /* 读档后重新呈现尚未回答的选择 */
-    if(d.fn) S.fn=Object.assign({v:0,on:false,note:false,n:0,next:0,shown:false},d.fn);
-    if(d.rt) RT=Object.assign(newRT(),d.rt);
-    if(d.use) USE=d.use;
-    syncUseState();
-    if(d.openDoors) OPENDOORS=d.openDoors;
-    AN.id=d.anId||null; AN.t=d.anT||0; AN.acc=d.anAcc||0;
-    AN.data=(d.anData&&typeof d.anData==='object')?d.anData:{};
-    AN.next=(typeof d.anNext==='number')?d.anNext:45;
-    AN.rained=!!d.anRained; AN.cool=d.anCool||{};
-    if(d.clockVersion!==2){
-      var savedClock=gameClock();
-      Object.keys(AN.cool).forEach(function(k){
-        if(Number.isFinite(AN.cool[k])) AN.cool[k]=savedClock-((S.tsec-AN.cool[k]+1440)%1440);
-      });
-    }
-    AN.pre=d.anPre||null; AN.preNext=d.anPreNext||0; AN.locked=!!d.anLocked; AN.lockWait=d.anLockWait||0;
-    AN.lastBig=!!d.anLastBig; AN.active=!!d.anId;
-    if(AN.active&&AN.data.asked&&AN.data.chosen===null&&['turn','hand','repeat','cold'].indexOf(AN.id)>=0){
-      AN.data.asked=false;
-      if(Number.isFinite(d.anChoiceMs)) AN.data.choiceRemaining=d.anChoiceMs;
-    }
-    AN.sub=0;
-    if(S.mode==='in'&&S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign(ROAM,d.roam);
+    applySave(d);
     function restoreAnomalyFX(){
       if(!AN.id||!AN.active) return;
       try{
@@ -404,7 +311,7 @@ var Game={
 var MENU_PHOTO=null, PHOTO_TRIED=false;
 function captureMenuPhoto(){
   if(PHOTO_TRIED) return;
-  if(typeof S==='undefined'||S.screen!=='menu'){ PHOTO_TRIED=true; return; }
+  if(S.screen!=='menu'){ PHOTO_TRIED=true; return; }
   PHOTO_TRIED=true;
   try{
     if(!Engine.ready()) return;

@@ -32,7 +32,7 @@ function hex2rgb(h){
 }
 var SKY_STORM=['#2a3036','#353d43','#444c52','#4e575d'];
 function skyRGB(hour){
-  var s=sunAt(hour), out=[], j, k, oc=(typeof GLR!=='undefined'&&GLR.overcast)||0;
+  var s=sunAt(hour), out=[], j, k, oc=GLR.overcast||0;
   for(j=0;j<4;j++){
     var n=hex2rgb(SKY_NIGHT[j]), d=hex2rgb(SKY_DAY[j]), g=hex2rgb(SKY_GOLD[j]), st=hex2rgb(SKY_STORM[j]), c=[];
     for(k=0;k<3;k++){
@@ -93,7 +93,7 @@ function lightState(){
   var roof=indoor&&S.room==='teach6';
   if(roof) indoor=false;                     /* 天台上头顶就是天 */
   var day=sun.day;
-  var wn=(typeof GLR!=='undefined'&&GLR.worldNorm)?GLR.worldNorm:0;
+  var wn=GLR.worldNorm||0;
   if(wn>0) day=day+(1-day)*0.6*wn;           /* "正常世界"那一段总是亮一点 */
   var fnl=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
   if(fnl) day=Math.max(day,0.85);
@@ -170,10 +170,10 @@ function updateLighting(){
     if(bc) GLR.roomLights[i].color.setRGB(bc.r+(1-bc.r)*pr, bc.g*(1-0.92*pr), bc.b*(1-0.95*pr));   /* 被它盯上：灯变红 */
   }
   /* 灯盘本身（自发光材质）跟着一起闪、一起变红 */
-  var em=(typeof MATS!=='undefined')&&MATS.emit;
+  var em=MATS.emit;
   if(em){ var k=GLR.roomLights.length?clamp(sum/GLR.roomLights.length,0.2,1):1; em.color.setRGB(k,k*(1-0.9*pr),k*(1-0.92*pr)); }
   /* 快坏的灯管（单独一种材质）：大部分时间暗着发灰，隔一阵抽搐似的亮几下 */
-  var ed=(typeof MATS!=='undefined')&&MATS.emitDying;
+  var ed=MATS.emitDying;
   if(ed){ var dk=dyingTube(tt); ed.color.setRGB(dk,dk*(1-0.9*pr),dk*(0.97-0.9*pr)); }
   lampTick(s);
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */

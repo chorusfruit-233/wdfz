@@ -489,7 +489,7 @@ function pickAnomaly(){
     pool.push(id);
   }
   if(!pool.length) return null;
-  if(typeof examNow==='function'&&examNow()){       /* 考试时只出教室里的那几种 */
+  if(examNow()){       /* 考试时只出教室里的那几种 */
     pool=pool.filter(function(a){ return EXAM_AN[a]; });
     if(!pool.length) return null;
   }
@@ -541,7 +541,7 @@ function anScheduleNext(){
 function anStart(){
   var id=null, planned=AN.pre;
   /* 进入考试后，之前预告的异象也必须受考试候选限制。 */
-  var examRestricted=typeof examNow==='function'&&examNow();
+  var examRestricted=examNow();
   if((S.diff==='easy'||AN.locked||AN_WARN[AN.pre])&&AN.pre&&(!examRestricted||EXAM_AN[AN.pre])){
     if(anAllowed(AN.pre)) id=AN.pre;
     else if(AN.locked&&!AN.lockWait){ AN.lockWait=1; AN.next=4; return; }   /* 预报过的那个，等你走到它能出现的地方 */
