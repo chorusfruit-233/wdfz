@@ -285,6 +285,23 @@ class EngineTest(unittest.TestCase):
         self.assertLess(n['indoor'], 2300000, '流畅档（手机）全校室内的顶点数')
         self.assertLess(n['outdoor'], 270000, '流畅档室外的顶点数')
 
+    # ---------- 氛围：远处的人影 ----------
+    def test_far_figure_appears_down_the_corridor_and_vanishes_up_close(self):
+        page = self.page(q=1)
+        page.evaluate("Game.start('easy');running=false;clearIntroTimers();S.screen='play'")
+        r = page.evaluate("""(function(){
+          S.mode='in'; S.room='teach1'; doEnterRoom('teach1'); running=false; AN.active=false;
+          var R=INTERIORS['teach1']; S.x=R.ox+50.5*R.tw; S.y=R.oy+18.5*R.th; S.ang=Math.PI; syncCamera(0.016);
+          GLR.cam.updateMatrixWorld(); APPAR.next=0; apparTick(0.016);
+          var g=APPAR.g, cp=GLR.cam.position, d=Math.hypot(g.position.x-cp.x,g.position.z-cp.z);
+          var shown=g.visible, inScene=g.parent===GLR.scene;
+          var p=g.position; GLR.cam.position.set(p.x+5,1.6,p.z); apparTick(0.016);
+          return {shown:shown, inScene:inScene, d:d, gone:!g.visible};
+        })()""")
+        self.assertTrue(r['shown'] and r['inScene'], '正前方走廊尽头站着一个人影')
+        self.assertTrue(9 < r['d'] < 17, r)
+        self.assertTrue(r['gone'], '走近就不见了')
+
 
 if __name__ == '__main__':
     unittest.main()

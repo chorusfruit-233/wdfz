@@ -37,7 +37,9 @@ var MAT_DEF={
   fjoint:   [null,      1.0, 0,  0x000000, 2],  /* 室外铺地的砖缝 */
   paving:   ['concrete',1.6, 0,  0x000000],     /* 室外铺地的方砖 */
   court:    [null,      1.0, 2,  0x101010],     /* 球场、跑道的面层 */
-  foliage:  ['foliage', 1.0, 0,  0x000000]      /* 树冠、灌木的叶片卡：一簇叶子的贴图，透明处镂空 */
+  foliage:  ['foliage', 1.0, 0,  0x000000],     /* 树冠、灌木的叶片卡：一簇叶子的贴图，透明处镂空 */
+  dead:     [null,      1.0, 30, 0x30363a],     /* 熄掉的灯管：灰白的磨砂面，有一点反光 */
+  grime:    ['grime',   1.0, 0,  0x000000]      /* 污渍贴花：水渍、霉斑、手印、蹭痕（四格图集，带透明） */
 };
 var MATS={}, TEXS={};
 
@@ -186,7 +188,49 @@ function makeFoliageTex(){
   t.colorSpace=THREE.SRGBColorSpace;
   return t;
 }
+/* 污渍图集：2×2 格——左上水渍（一圈圈晕开、边上一道深的水线）、右上霉斑（一片细密的点）、
+   左下手印（掌心 + 五个指头，往下拖出几道）、右下蹭痕（一道道短的刮擦）。白色画、颜色由顶点色给 */
+function makeGrimeTex(){
+  var SZ=Math.max(256,Math.min(512,texSize())), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
+  var c=cv.getContext('2d'), h=SZ/2, k=h/256, i, j;
+  function R(){ return Math.random(); }
+  c.clearRect(0,0,SZ,SZ);
+  /* 水渍 */
+  for(i=0;i<9;i++){
+    var x=h*0.5+(R()-0.5)*h*0.30, y=h*0.5+(R()-0.5)*h*0.30, r=(40+R()*55)*k;
+    var g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,'rgba(255,255,255,0.22)'); g.addColorStop(0.8,'rgba(255,255,255,0.32)'); g.addColorStop(1,'rgba(255,255,255,0)');
+    c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,6.283); c.fill();
+    c.strokeStyle='rgba(255,255,255,'+(0.40+R()*0.3).toFixed(2)+')'; c.lineWidth=(1.5+R()*2.5)*k;
+    c.beginPath(); for(j=0;j<=24;j++){ var a=j/24*6.283, rr=r*(0.80+0.12*Math.sin(a*3+i)+R()*0.05); c[j?'lineTo':'moveTo'](x+Math.cos(a)*rr,y+Math.sin(a)*rr); } c.stroke();
+  }
+  /* 霉斑 */
+  for(i=0;i<1400;i++){
+    var a2=R()*6.283, d=Math.pow(R(),0.7)*h*0.44, mx=h+h*0.5+Math.cos(a2)*d, my=h*0.5+Math.sin(a2)*d*0.8+d*0.2;
+    c.fillStyle='rgba(255,255,255,'+(0.45+R()*0.55*(1-d/(h*0.44))).toFixed(2)+')';
+    c.beginPath(); c.arc(mx,my,(0.6+R()*2.2)*k*(1-d/(h*0.5)+0.3),0,6.283); c.fill();
+  }
+  /* 手印 */
+  var px=h*0.5, py=h+h*0.56;
+  c.fillStyle='rgba(255,255,255,0.78)';
+  c.beginPath(); c.ellipse(px,py,26*k,32*k,0,0,6.283); c.fill();
+  [[-22,-50,-0.35,26],[-8,-62,-0.1,34],[7,-64,0.05,36],[21,-56,0.2,31],[32,-14,0.9,22]].forEach(function(f){
+    c.save(); c.translate(px+f[0]*k,py+f[1]*k); c.rotate(f[2]); c.beginPath(); c.ellipse(0,0,6*k,f[3]*0.55*k,0,0,6.283); c.fill(); c.restore();
+  });
+  for(i=0;i<4;i++){ c.fillStyle='rgba(255,255,255,'+(0.25+R()*0.2).toFixed(2)+')'; var dx=px+(-14+i*9)*k; c.fillRect(dx,py+20*k,(2+R()*2)*k,(30+R()*55)*k); }   /* 往下淌 */
+  /* 蹭痕 */
+  for(i=0;i<70;i++){
+    var sx=h+h*0.12+R()*h*0.76, sy=h+h*0.12+R()*h*0.76, sa=(R()-0.5)*0.8, sl=(10+R()*40)*k;
+    c.strokeStyle='rgba(255,255,255,'+(0.10+R()*0.35).toFixed(2)+')'; c.lineWidth=(0.8+R()*2.2)*k;
+    c.beginPath(); c.moveTo(sx,sy); c.lineTo(sx+Math.cos(sa)*sl,sy+Math.sin(sa)*sl); c.stroke();
+  }
+  var t=new THREE.CanvasTexture(cv);
+  t.wrapS=THREE.ClampToEdgeWrapping; t.wrapT=THREE.ClampToEdgeWrapping;
+  t.generateMipmaps=true; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
+  t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
 function matTex(kind){
+  if(kind==='grime'){ if(!TEXS[kind]) TEXS[kind]=makeGrimeTex(); return TEXS[kind]; }      /* 贴花离不开贴图（关贴图也要） */
   if(kind==='foliage'){ if(!TEXS[kind]) TEXS[kind]=makeFoliageTex(); return TEXS[kind]; }    /* 叶片卡离不开贴图（关贴图也要） */
   if(!kind||NOTEX) return null;
   if(!TEXS[kind]) TEXS[kind]=makeMatTex(kind);
@@ -306,6 +350,11 @@ function matOf(key){
   var d=MAT_DEF[key]||MAT_DEF.plaster, m;
   if(key==='glass'){
     m=new THREE.MeshPhongMaterial({vertexColors:true,transparent:true,opacity:0.42,shininess:d[2],specular:d[3],depthWrite:false});
+  }else if(key==='grime'){
+    m=new THREE.MeshLambertMaterial({vertexColors:true,map:matTex('grime'),transparent:true,depthWrite:false,
+      polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
+  }else if(key==='emitDying'){
+    m=new THREE.MeshBasicMaterial({vertexColors:true,fog:true});                            /* 快坏的灯管：lighting.js 每帧调颜色 */
   }else if(key==='emit'){
     m=new THREE.MeshBasicMaterial({vertexColors:true,fog:true});
   }else if(key==='lamp'){

@@ -68,6 +68,7 @@ function render(dt){
   try{ patRender(); }catch(e){}
   try{ handsTick(dt); }catch(e){}
   try{ hallucTick(dt); }catch(e){}
+  try{ apparTick(dt); }catch(e){}
   try{ PCGAME.tick(dt); }catch(e){}
   try{ updateIntro(dt); }catch(e){}
   try{

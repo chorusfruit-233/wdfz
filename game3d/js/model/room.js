@@ -37,7 +37,7 @@ function buildRoomGeometry(R){
   var TH=roomTheme(R);
   function CX(c){ return (c+0.5)*tw-halfW; }
   function CZ(r){ return (r+0.5)*th-halfH; }
-  var c={R:R,K:K,W:W,H:H,tw:tw,th:th,halfW:halfW,halfH:halfH,CX:CX,CZ:CZ,theme:TH,doors:[],
+  var c={R:R,K:K,W:W,H:H,tw:tw,th:th,halfW:halfW,halfH:halfH,CX:CX,CZ:CZ,theme:TH,doors:[],meshes:[],RWH:RWH,
     solid:function(cx,cz,sx,sz){ R.propExtra.push({x0:cx-sx/2,x1:cx+sx/2,z0:cz-sz/2,z1:cz+sz/2}); },
     ao:function(cx,cz,sx,sz,s){ K.g('decal').aoPatch(cx,cz,sx,sz,s); }};
   function G(y,x){ return (y>=0&&x>=0&&y<H&&x<W)?R.grid[y][x]:null; }
@@ -146,6 +146,7 @@ function buildRoomGeometry(R){
   R.doorSpecs=c.doors;
   var grp=K.build();
   grp.add(buildDoorLeaves(R));
+  c.meshes.forEach(function(m){ grp.add(m); });                 /* 黑板上的粉笔字这种单独的网格 */
   return grp;
 }
 
@@ -349,10 +350,10 @@ function wallWindow(K,x,z,nx,nz,w,y0,y1,mull){
   K.unframe();
 }
 /* 吸顶灯盘：金属框 + 发光面 */
-function ceilingLight(K,x,z,lw,ld,rot){
+function ceilingLight(K,x,z,lw,ld,rot,state){
   K.frame(x,z,rot||0);
   K.box('metal',0,WALLH-0.025,0,lw+0.08,0.05,ld+0.08,0x9aa4a8,1.0);
-  K.g('emit').quadN([-lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,ld/2],[-lw/2,WALLH-0.052,ld/2],0,-1,0,0xdcecf4);
+  K.g(lampMat(state)).quadN([-lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,-ld/2],[lw/2,WALLH-0.052,ld/2],[-lw/2,WALLH-0.052,ld/2],0,-1,0,state==='off'?0x8a9094:0xdcecf4);
   K.unframe();
 }
 
@@ -539,17 +540,24 @@ function roomDecor(c,isRoof){
 
   toiletTiles(c);
   if(R.host==='admin') officePlants(c);
+  if(!isRoof&&R.host!=='bell') roomDecay(c);
   /* 吸顶灯盘 */
   if(!isRoof&&R.host!=='bell'){
+    /* 灯管：真开着灯的地方（world.js 的点光源）亮着，别处的熄着或快坏了——一层楼不会是整整齐齐一片亮 */
     if(teachFl){
-      for(x=3;x<W-3;x+=9) ceilingLight(K,CX(x),CZ(18),1.8,0.24,0);
-      var cs=CLS_SPAN, ci;
-      for(ci=0;ci<cs.length;ci++){                       /* 教室：吊装的护眼灯，两排各三盏 */
-        var mx=(CX(cs[ci][0])+CX(cs[ci][1]))/2, lr, lc;
-        for(lr=0;lr<2;lr++) for(lc=-1;lc<=1;lc++) propHangLamp(K,mx+lc*2.2,CZ(lr?10:4),1.2,0.22,WALLH,2.68,Math.PI/2);
+      var nl=0;
+      for(x=3;x<W-3;x+=9){ var near=Math.abs(CX(x))<10; ceilingLight(K,CX(x),CZ(18),1.8,0.24,0,near?(nl++===1?'dying':'on'):((x/9|0)%2?'dying':'off')); }
+      var cs=CLS_SPAN, ci, LIT={5:1,21:1,45:1};
+      for(ci=0;ci<cs.length;ci++){                       /* 教室：吊装的护眼灯，两排各三盏；没开灯的教室全熄着，只剩一盏在抽 */
+        var mx=(CX(cs[ci][0])+CX(cs[ci][1]))/2, lr, lc, lit=!!LIT[cs[ci][0]];
+        for(lr=0;lr<2;lr++) for(lc=-1;lc<=1;lc++){
+          var dying=((lr*3+lc+1+ci*2)%6)===4;
+          propHangLamp(K,mx+lc*2.2,CZ(lr?10:4),1.2,0.22,WALLH,2.68,Math.PI/2,dying?'dying':(lit?'on':'off'));
+        }
       }
     }else if(R.id!=='garage1'){
-      for(x=3;x<W-3;x+=9) ceilingLight(K,CX(x),CZ(Math.floor(H*0.5)),1.8,0.24,0);
+      var nk=0;
+      for(x=3;x<W-3;x+=9) ceilingLight(K,CX(x),CZ(Math.floor(H*0.5)),1.8,0.24,0,(nk++%3===2)?'dying':'on');
     }else{
       ceilingLight(K,CX(W-6),CZ(13),1.2,0.20,0);       /* 车库最里面那一盏 */
     }
@@ -561,6 +569,7 @@ function roomDecor(c,isRoof){
 function classroomExtras(c,i,c0,c1b,bcx,wz,zWallS){
   var K=c.K, CX=c.CX, CZ=c.CZ, xl=CX(c0)-0.5, xr=CX(c1b)+0.5, mx=(xl+xr)/2;
   propCeilFan(K,mx-1.8,CZ(7),WALLH,i*3+1); propCeilFan(K,mx+1.8,CZ(7),WALLH,i*3+2);
+  c.meshes.push(chalkBoard(bcx,1.70,wz+0.0815,(c1b-c0+1)*0.72*0.96,0.98,(c.R.floor||1)*7+i));
   propProjector(K,mx,CZ(6),WALLH,0);
   propSmoke(K,mx,CZ(8.5),WALLH);
   /* 前面左边角上一台柜式空调 */
@@ -637,5 +646,98 @@ function officePlants(c){
     if(R.grid[2]&&R.grid[2][x]!=='.') continue;
     var px=CX(x)-0.18, pz=CZ(1)-0.18;
     propPlant(K,px,pz,1.1,x); c.solid(px,pz,0.38,0.38);
+  }
+}
+
+/* ---- 黑板上的粉笔字 ----
+   大部分是平常的（值日、课表、作业、倒计时），有几块不太对。字一笔笔有点断（粉笔的颗粒），擦过的地方留着白印。
+   贴图、材质按内容缓存，所有楼层共用，不随房间销毁 */
+var CHALK_TEXTS=[
+  ['值日生：周  林','今日课表：语文 数学 英语 物理 自习'],
+  ['距 离 高 考 还 有  0  天'],
+  ['今天的作业：','数一数，班上到底有几个人'],
+  ['晚自习 19:00 — 22:00','保持安静'],
+  ['点名：到 到 到 到 到 到 到 到 到','到'],
+  ['第三排靠窗那个座位','不要坐'],
+  ['不 要 回 头'],
+  ['放学后不要留在教室','（再说一遍：不要留在教室）'],
+  ['数学作业：P.83  1—12 题','明天早读前交'],
+  ['他一直坐在最后一排','你们看不见吗']
+];
+var CHALK_MAT={};
+function chalkBoard(x,y,z,w,h,seed){
+  var lines=CHALK_TEXTS[seed%CHALK_TEXTS.length], key=lines.join('|');
+  var m=CHALK_MAT[key];
+  if(!m){
+    var cv=document.createElement('canvas'); cv.width=1024; cv.height=Math.round(1024*h/w);
+    var g=cv.getContext('2d'), H=cv.height, i, j;
+    g.clearRect(0,0,1024,H);
+    for(i=0;i<4;i++){ g.fillStyle='rgba(255,255,255,0.025)'; g.beginPath(); g.ellipse(Math.random()*1024,Math.random()*H,120+Math.random()*200,30+Math.random()*50,(Math.random()-0.5)*0.4,0,6.283); g.fill(); }   /* 擦过的白印 */
+    var fs=Math.round(H/(lines.length+1.6)*0.62), red=/不要|回头|看不见|0  天/.test(key);
+    g.font='600 '+fs+'px "KaiTi","STKaiti","Kaiti SC","Noto Serif SC","SimSun",serif'; g.textBaseline='middle';
+    for(i=0;i<lines.length;i++){
+      var ly=H*(i+1)/(lines.length+1), lx=60+Math.random()*30;
+      for(j=0;j<3;j++){ g.fillStyle=(red&&i===lines.length-1&&lines.length>1)?'rgba(220,120,110,0.55)':'rgba(236,236,228,0.55)'; g.fillText(lines[i],lx+(Math.random()-0.5)*2.5,ly+(Math.random()-0.5)*2.5); }
+    }
+    g.globalCompositeOperation='destination-out';                 /* 粉笔的断续：随机擦掉一些点 */
+    for(i=0;i<5000;i++){ g.fillStyle='rgba(0,0,0,'+(0.3+Math.random()*0.7).toFixed(2)+')'; g.fillRect(Math.random()*1024,Math.random()*H,1.5,1.5); }
+    g.globalCompositeOperation='source-over';
+    var t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
+    m=new THREE.MeshLambertMaterial({map:t,transparent:true,depthWrite:false});
+    m.userData.shared=true;
+    CHALK_MAT[key]=m;
+  }
+  var me=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);
+  me.position.set(x,y,z);
+  return me;
+}
+/* ---- 破败：吊顶上的水渍、掉下来半块的吊顶板、墙脚的霉斑、墙上往下淌的水痕、几只手印、地上散落的纸和蹭痕、洗手池边的水 ----
+   都是贴花（没有碰撞、不挡路），位置按房间 id 固定，每次进来一样 */
+function roomDecay(c){
+  var K=c.K, R=c.R, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, RWH=c.RWH||WALLH, x, y, d;
+  var sd=0, i; for(i=0;i<R.id.length;i++) sd=sd*31+R.id.charCodeAt(i); sd=Math.abs(sd)%9973;
+  var low=lodLow(), kq=low?0.5:1, garage=(R.id==='garage1');
+  function hz(a,b,k){ return hash2(a*13+sd+(k||0)*101,b*17+sd*3); }
+  function G(yy,xx){ return (yy>=0&&xx>=0&&yy<H&&xx<W)?R.grid[yy][xx]:null; }
+  /* 吊顶水渍 */
+  for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){
+    if(G(y,x)!=='.') continue;
+    if(hz(x,y,1)<0.035*kq) propDecal(K,0,'d',CX(x)+hz(x,y,2)-0.5,RWH-0.002,CZ(y)+hz(x,y,3)-0.5,0.8+hz(x,y,4)*1.0,0.8+hz(x,y,5)*0.9,garage?0x3a3428:0x6e5a3c,hz(x,y,6)*6.28);
+  }
+  /* 墙：脚下的霉斑、顶上往下淌的水痕、偶尔一只手印 */
+  var D=[[0,-1,'s'],[0,1,'n'],[-1,0,'e'],[1,0,'w']];
+  for(y=0;y<H;y++) for(x=0;x<W;x++){
+    if(G(y,x)!=='#') continue;
+    for(d=0;d<4;d++){
+      var nx=x+D[d][0], ny=y+D[d][1], ch=G(ny,nx);
+      if(!ch||ch==='#'||ch==='='||ch==='O'||ch==='S') continue;
+      var fx=CX(x)+D[d][0]*0.503, fz=CZ(y)+D[d][1]*0.503, f=D[d][2], r1=hz(x*4+d,y,7);
+      if(r1<0.07*kq) propDecal(K,1,f,fx,0.95+hz(x,y+d,8)*0.25,fz,0.6+hz(x,d,9)*0.5,0.55+hz(d,y,10)*0.3,0x1c261a);
+      else if(r1<0.12*kq) propDecal(K,0,f,fx,RWH-0.45,fz,0.7+hz(x,d,11)*0.5,0.9,garage?0x2a2620:0x5a4a32);
+      else if(r1<0.135&&!garage) propDecal(K,2,f,fx,1.15+hz(x,d,12)*0.3,fz,0.20,0.26,0x3a1812);
+    }
+  }
+  /* 地上：散落的纸、蹭痕；洗手池周围的水 */
+  for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){
+    var gc=G(y,x);
+    if(gc==='w'){ propDecal(K,0,'u',CX(x)+0.2,0.005,CZ(y)+0.45,1.1,0.8,0x1a2228,hz(x,y,13)*6.28); continue; }
+    if(gc!=='.') continue;
+    var r2=hz(x,y,14);
+    if(!garage&&r2<0.025*kq) propFloorPaper(K,CX(x)+hz(x,y,15)-0.5,CZ(y)+hz(x,y,16)-0.5,hz(x,y,17)*6.28,(x+y)|0);
+    else if(r2>0.95-0.05*kq) propDecal(K,3,'u',CX(x),0.0045,CZ(y),0.9,0.9,0x2a2622,hz(x,y,18)*6.28);
+  }
+  /* 教学楼走廊：掉了一块的吊顶，半块板吊下来，一根电线垂着 */
+  if(R.host==='teach'&&R.floor>=1&&R.floor<=5){
+    [5,23,41].forEach(function(col,k){
+      if(hz(col,k,19)>0.66) return;
+      var hx=Math.round(CX(col)/0.6)*0.6+0.3, hzc=Math.round(CZ(17)/0.6)*0.6+0.3;
+      K.g('dark').face([[hx-0.3,RWH-0.003,hzc-0.3],[hx+0.3,RWH-0.003,hzc-0.3],[hx+0.3,RWH-0.003,hzc+0.3],[hx-0.3,RWH-0.003,hzc+0.3]],[0,-1,0],[0.02,0.02,0.025]);
+      var a=0.85, z1=hzc-0.29+0.58*Math.cos(a), y1=RWH-0.01-0.58*Math.sin(a), P=[[hx-0.28,RWH-0.01,hzc-0.29],[hx+0.28,RWH-0.01,hzc-0.29],[hx+0.28,y1,z1],[hx-0.28,y1,z1]];
+      var cb=K.g('plastic'), rgb=cb._rgb(0xa8acac,1.0);
+      cb.face(P,[0,-Math.cos(a),Math.sin(a)],rgb);                               /* 板面朝下、朝走廊 */
+      cb.face([P[1],P[0],P[3],P[2]],[0,Math.cos(a),-Math.sin(a)],cb._rgb(0x6a6e6e,0.8));
+      K.rod('dark',hx+0.12,RWH-0.01,hzc+0.1,hx+0.18,2.72,hzc+0.18,0.006,0.006,4,0x15181a,1);   /* 垂下来的电线 */
+      propDecal(K,0,'d',hx+0.2,RWH-0.002,hzc+0.2,1.6,1.4,0x5a4a32,1.3);
+    });
   }
 }

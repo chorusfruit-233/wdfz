@@ -27,7 +27,8 @@ function propCeilFan(K,x,z,ceilY,seed){
 
 /* ---- 吊装的灯具：两根吊线、铝外壳、朝下的发光面（教室护眼灯 / 走廊灯）。
    长 len、宽 wid，灯面离地 lampY ---- */
-function propHangLamp(K,x,z,len,wid,ceilY,lampY,rot){
+/* state：'off' 熄掉的（灰白磨砂面）、'dying' 快坏的（一阵阵抽搐），其余是亮的 */
+function propHangLamp(K,x,z,len,wid,ceilY,lampY,rot,state){
   var F=K.sub(x,z,rot||0);
   var hy=lampY+0.03, s;
   for(s=-1;s<=1;s+=2){
@@ -37,7 +38,7 @@ function propHangLamp(K,x,z,len,wid,ceilY,lampY,rot){
   K.bevel('metal',0,hy+0.015,0,len,0.05,wid,0xd8dcdc,1.05,0.012);                                    /* 外壳 */
   K.box('metal',-len/2-0.004,hy+0.01,0,0.01,0.05,wid*0.9,0xa8aeb0,1.0);                              /* 两头的端盖 */
   K.box('metal', len/2+0.004,hy+0.01,0,0.01,0.05,wid*0.9,0xa8aeb0,1.0);
-  K.g('emit').quadN([-len/2+0.02,lampY-0.012,-wid/2+0.015],[len/2-0.02,lampY-0.012,-wid/2+0.015],[len/2-0.02,lampY-0.012,wid/2-0.015],[-len/2+0.02,lampY-0.012,wid/2-0.015],0,-1,0,0xe4f0f6);
+  K.g(lampMat(state)).quadN([-len/2+0.02,lampY-0.012,-wid/2+0.015],[len/2-0.02,lampY-0.012,-wid/2+0.015],[len/2-0.02,lampY-0.012,wid/2-0.015],[-len/2+0.02,lampY-0.012,wid/2-0.015],0,-1,0,state==='off'?0x8a9094:0xe4f0f6);
   if(!lodLow()){                                                                                     /* 格栅：几道横向的反光条 */
     var n=Math.max(2,Math.round(len/0.3)), k;
     for(k=1;k<n;k++) K.box('metal',-len/2+len*k/n,lampY-0.006,0,0.012,0.012,wid-0.03,0xc8ccce,1.1);
@@ -45,6 +46,7 @@ function propHangLamp(K,x,z,len,wid,ceilY,lampY,rot){
   K.restore(F);
 }
 
+function lampMat(state){ return state==='off'?'dead':(state==='dying'?'emitDying':'emit'); }
 /* ---- 安全出口灯：绿色灯箱，白色的人往门跑 ---- */
 function propExitSign(K,x,y,z,rot,arrow){
   var F=K.sub(x,z,rot||0);
@@ -245,5 +247,32 @@ function propFrame(K,x,y,z,rot,w,h,paper,frame,seed){
   var k, n=Math.max(3,Math.round(h/0.09));
   for(k=0;k<n;k++){ var ly=top-0.09-k*(h-0.20)/n; if(ly<y-h/2+0.06) break;
     K.box('paper',(hash2(k,sd)>0.5?0.04:0)+((hash2(sd,5)>0.4&&ly>y-0.11&&ly<y+0.19)?iw*0.24:0),ly,0.0262,(hash2(sd,5)>0.4&&ly>y-0.11&&ly<y+0.19)?iw*0.42:iw*(0.6+hash2(k,sd+2)*0.3),0.012,0.001,0x4a4a46,1.0); }
+  K.restore(F);
+}
+
+/* ---- 污渍贴花：kind 0 水渍、1 霉斑、2 手印、3 蹭痕（图集里的一格）。
+   face：'u' 地上（朝上）、'd' 吊顶（朝下）、'n'/'s'/'e'/'w' 墙面（法线朝 -z/+z/+x/-x）。
+   (x,y,z) 是中心，w×h 是大小，rot 在面内转（只对地上、吊顶有效） ---- */
+var DECAL_UV=[[0,0.5],[0.5,0.5],[0,0],[0.5,0]];
+function propDecal(K,kind,face,x,y,z,w,h,col,rot){
+  var o=DECAL_UV[kind], u0=o[0]+0.01, v0=o[1]+0.01, u1=o[0]+0.49, v1=o[1]+0.49, UV=[[u0,v0],[u1,v0],[u1,v1],[u0,v1]];
+  var c=Math.cos(rot||0), s=Math.sin(rot||0), hw=w/2, hh=h/2, P, n;
+  function F(a,b){ return [a*c-b*s, a*s+b*c]; }
+  if(face==='u'||face==='d'){
+    var q=[F(-hw,hh),F(hw,hh),F(hw,-hh),F(-hw,-hh)];
+    P=q.map(function(p){ return [x+p[0],y,z+p[1]]; });
+    n=[0,1,0];
+    if(face==='d'){ P=[P[1],P[0],P[3],P[2]]; UV=[UV[1],UV[0],UV[3],UV[2]]; n=[0,-1,0]; }
+  }else if(face==='s'){ P=[[x-hw,y-hh,z],[x+hw,y-hh,z],[x+hw,y+hh,z],[x-hw,y+hh,z]]; n=[0,0,1]; }
+  else if(face==='n'){ P=[[x+hw,y-hh,z],[x-hw,y-hh,z],[x-hw,y+hh,z],[x+hw,y+hh,z]]; n=[0,0,-1]; }
+  else if(face==='e'){ P=[[x,y-hh,z+hw],[x,y-hh,z-hw],[x,y+hh,z-hw],[x,y+hh,z+hw]]; n=[1,0,0]; }
+  else { P=[[x,y-hh,z-hw],[x,y-hh,z+hw],[x,y+hh,z+hw],[x,y+hh,z-hw]]; n=[-1,0,0]; }
+  var b=K.g('grime'); b.face(P,n,b._rgb(col,1),false,null,UV);
+}
+/* ---- 地上一张纸（卷子、通知、作业本撕下来的一页），随便一个角度 ---- */
+function propFloorPaper(K,x,z,rot,seed){
+  var F=K.sub(x,z,rot);
+  K.g('paper').boxFaces(0,0.0035,0,0.21,0.003,0.297,[0xe8e4d8,0xdcd6c4,0xd4dce0][seed%3],0.95,'u');
+  if(seed%4===0) K.g('paper').boxFaces(0.03,0.0062,0.05,0.21,0.003,0.297,0xe2ddd0,0.9,'u');
   K.restore(F);
 }

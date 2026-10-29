@@ -220,7 +220,15 @@ var SFX=(function(){
   var MEL=[[220,261.6,293.7,311.1,392,440,523.3],[207.7,246.9,277.2,311.1,370,415.3,493.9]];
   /* 远处的怪声：随机挑一种 */
   function stinger(){
-    var k=Math.floor(Math.random()*6), i;
+    var k=Math.floor(Math.random()*11), i, pan=rnd(-0.9,0.9);
+    if(k>=6){                                                                                          /* 新的几种：有方位（左右） */
+      if(k===6){ for(i=0;i<3;i++) noiseP(rnd(0.5,0.9),0.035,rnd(220,360),i*rnd(0.9,1.4),'lowpass',2.5,pan,0.5,0.15); }   /* 楼上有人在拖椅子 */
+      else if(k===7){ var t0=0, g0=0.05; for(i=0;i<9;i++){ noiseP(0.05,g0,600,t0,'lowpass',3,pan,0.6); t0+=0.42*Math.pow(0.78,i); g0*=0.82; } }   /* 一个球在地上弹，越弹越快、越轻 */
+      else if(k===8){ for(i=0;i<4;i++) vowel(rnd(330,420),0.12,0.010,i*0.16,900,1500,6); }            /* 很轻的一串笑 */
+      else if(k===9){ tone(95,1.6,'sawtooth',0.012,140,0,0.6); noiseP(1.4,0.02,700,0.1,'bandpass',4,pan,0.6,0.4); }   /* 一扇门慢慢被推开 */
+      else { for(i=0;i<10;i++) noiseP(0.08,0.03,rnd(250,380),i*0.21,'lowpass',2,pan*(1-i/12),0.7); }   /* 头顶上有人跑过去 */
+      return;
+    }
     if(k===0){ for(i=0;i<3;i++) noise(0.09,0.06,260,i*0.32,'lowpass',2,0.7); }                     /* 三下敲门 */
     else if(k===1){ for(i=0;i<6;i++) noise(0.3,0.012,1800+Math.random()*900,i*0.18,'bandpass',6,0.8,0.12); } /* 低语 */
     else if(k===2){ for(i=0;i<5;i++) noise(0.12,0.03,380,i*0.52,'lowpass',1,0.6); }                 /* 背后有脚步 */
@@ -314,7 +322,13 @@ var SFX=(function(){
       L.lastPeriod=per;
     }catch(e){}
     L.nextStinger-=dt*(1+tension*1.5);
-    if(L.nextStinger<=0){ L.nextStinger=rnd(28,60); stinger(); }
+    if(L.nextStinger<=0){ L.nextStinger=rnd(16,40); stinger(); }
+    /* 屋里夜里：不知道哪儿在滴水；偶尔一声暖气片 / 墙里的「咔」 */
+    if(!out_&&!garage&&night>0.5){
+      L.nextIndoorDrip=(L.nextIndoorDrip||2)-dt;
+      if(L.nextIndoorDrip<=0){ L.nextIndoorDrip=rnd(2.5,7); tone(rnd(1100,1700),0.10,'sine',0.010,500,0,0.9); }
+      if(Math.random()<dt*0.03) noiseP(0.03,0.04,1800,0,'highpass',1,rnd(-1,1),0.7);
+    }
   }
   function schoolBell(v){
     v=v===undefined?1:v;
@@ -405,6 +419,7 @@ var SFX=(function(){
     bell:function(){ bellHit(220,0.05,0); },
     bigBell:function(v){ bellHit(98,0.12*(v===undefined?1:v),0,0.7); },
     schoolBell:schoolBell,
+    vanish:function(){ noise(0.5,0.035,140,0,'lowpass',1,0.7,0.05); tone(52,0.6,'sine',0.03,38,0,0.5); },   /* 远处的人影不见了的那一下 */
     alarm:function(){ tone(520,0.8,'square',0.05,180); },
     anomaly:function(id){
       var i;
