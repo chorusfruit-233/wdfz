@@ -1049,7 +1049,8 @@ class ControlsTest(BrowserCase):
         page.evaluate("""S.mode='in';S.room='garage1';S.x=400;S.y=400;S.ang=Math.PI/2;
             S.bag=['coin'];S.enterCool=999;USE={torch:false,phone:false,brollyShield:false};
             RT=newRT();ROAM.on=true;ROAM.stage='approach';ROAM.x=500;ROAM.y=400;ROAM.cd=0;ROAM.litAcc=0;
-            roamBlocked=function(){return false};Math.random=function(){return 0.5};throwCoin();roamTick(.1);""")
+            solidAtInterior=function(){return false};roamBlocked=function(){return false};
+            Math.random=function(){return 0.5};throwCoin();roamTick(.1);""")
         self.assert_js(page, "!hasItem('coin')&&RT.lure&&ROAM.y>400&&ROAM.lureTold===1")
         page.evaluate("window.__y=ROAM.y;RT.lure.t=.01;ROAM.cd=0;roamTick(.1)")
         self.assert_js(page, 'RT.lure===null&&ROAM.y<__y')

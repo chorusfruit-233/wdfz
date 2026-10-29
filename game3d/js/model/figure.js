@@ -42,15 +42,15 @@ function figGeo(kind){
     }
   }
   /* 胯、腹、胸 */
-  K.bevel(m,0,hipY+0.04,0,0.32*t,0.16,0.20*t,c,1,0.05);
+  K.blob(m,0,hipY+0.04,0,0.17*t,0.10,0.11*t,c,1,10);                         /* 胯（椭球，平滑着色：像人，不像箱子） */
   var abdH=sp.torso*0.42, chH=sp.torso*0.58;
   if(sit){
     K.frame(0,0,0,0);
-    K.bevel(m,0,hipY+abdH/2+0.08,-0.03,0.30*t,abdH,0.19*t,c,1,0.05);
-    K.bevel(m,0,hipY+abdH+chH/2+0.02,0.06,0.38*t,chH,0.21*t,c,1,0.06);     /* 往前趴 */
+    K.blob(m,0,hipY+abdH/2+0.08,-0.03,0.155*t,abdH*0.56,0.10*t,c,1,10);
+    K.blob(m,0,hipY+abdH+chH/2+0.02,0.06,0.20*t,chH*0.55,0.11*t,c,1,10);  /* 往前趴 */
   }else{
-    K.bevel(m,0,hipY+abdH/2+0.06,0,0.30*t,abdH,0.19*t,c,1,0.05);
-    K.bevel(m,0,hipY+abdH+chH/2+0.03,0,0.40*t,chH,0.22*t,c,1,0.07);
+    K.blob(m,0,hipY+abdH/2+0.06,0,0.155*t,abdH*0.58,0.10*t,c,1,10);
+    K.blob(m,0,hipY+abdH+chH/2+0.03,0,0.21*t,chH*0.56,0.115*t,c,1,10);
   }
   K.blob(m,-hx*0.82,sh-0.03,sit?0.06:0,0.08,0.06,0.08,c,1,6);               /* 肩头 */
   K.blob(m, hx*0.82,sh-0.03,sit?0.06:0,0.08,0.06,0.08,c,1,6);
@@ -59,7 +59,7 @@ function figGeo(kind){
   K.cyl(m,0,sh-0.02,nz,0.05,0.045,sp.neck+0.04,6,c);
   var hy=sh+sp.neck+sp.head*0.5;
   K.blob(m,0,hy,nz+(sit?0.04:0.01),sp.head*0.40,sp.head*0.5,sp.head*0.44,c,1,8);
-  K.bevel(m,0,hy-sp.head*0.30,nz+0.04,sp.head*0.42,sp.head*0.22,sp.head*0.40,c,1,0.03);   /* 下巴 */
+  K.blob(m,0,hy-sp.head*0.28,nz+0.035,sp.head*0.24,sp.head*0.15,sp.head*0.23,c,1,8);       /* 下巴 */
   /* 手臂 */
   for(s=-1;s<=1;s+=2){
     var ax=s*hx*0.95, up=sp.arm*0.47, fo=sp.arm*0.53;

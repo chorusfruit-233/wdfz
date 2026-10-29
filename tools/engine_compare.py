@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 import shutil
+import subprocess
 import threading
 from playwright.sync_api import sync_playwright
 
@@ -103,7 +104,9 @@ def main():
             browser.close()
     report = {'viewport': [960, 540], 'dpr': 1, 'frames_per_case': args.frames,
               'method': 'Chromium SwiftShader; render + synchronous readPixels; 固定机位，冻结游戏逻辑；倒数为等效渲染帧率，非真实游玩 FPS',
-              'before_root': str(args.before) if args.before else None, 'samples': rows}
+              'before_root': str(args.before) if args.before else None,
+              'before_commit': subprocess.check_output(['git','-C',str(args.before),'rev-parse','HEAD'],text=True).strip() if args.before else None,
+              'actors': '按固定格点取最多 20 个座位同学；材质细节仍为程序生成', 'samples': rows}
     (ROOT / 'docs' / '引擎性能对照.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
 
 if __name__ == '__main__':

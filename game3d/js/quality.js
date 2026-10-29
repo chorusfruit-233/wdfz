@@ -8,7 +8,7 @@ var Quality=(function(){
     {id:2,label:'精细',dpr:1.4,scale:1,texture:512,segments:1,grass:9000,rain:1500,moths:120,shadow:2048,torchShadow:1024,ceilingShadow:0,samples:0,ao:0},
     {id:3,label:'超精细',dpr:2,scale:1,texture:1024,segments:1.75,grass:14000,rain:2200,moths:180,shadow:4096,torchShadow:2048,ceilingShadow:512,samples:4,ao:0.38}
   ].map(function(p,i){
-    Object.assign(p,{fenceStep:[0.9,0.6,0.45,0.3][i],facadeDetail:i>=2,
+    Object.assign(p,{lodLow:i===0,relief:i>=1,fenceStep:[0.9,0.6,0.45,0.3][i],facadeDetail:i>=2,
       gazeEyes:[14,24,24,36][i],gazeFloat:[4,8,8,12][i],flowers:[7,14,14,28][i]});
     return Object.freeze(p);
   });
@@ -25,7 +25,7 @@ var QualityWatch={warm:5,elapsed:0,frames:0,shown:false,
   tick:function(dt,active){
     if(!active||QUALITY===0){this.elapsed=0;this.frames=0;return;}
     if(this.shown)return;
-    if(!Number.isFinite(dt)||dt<=0||dt>1){this.warm=5;this.elapsed=0;this.frames=0;return;}
+    if(!Number.isFinite(dt)||dt<=0||dt>5){this.warm=5;this.elapsed=0;this.frames=0;return;}
     if(this.warm>0){this.warm-=dt;return;}
     this.elapsed+=dt;this.frames++;
     if(this.elapsed<10)return;

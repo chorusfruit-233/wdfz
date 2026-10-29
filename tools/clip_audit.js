@@ -23,6 +23,15 @@ var ClipAudit=(function(){
   G.cyl=function(x,y,z,rb,rt,h){ if(REC) rec({t:'cyl',c:this._pt(x,y,z),rb:rb,rt:rt,hh:h}); return orig.cyl.apply(this,arguments); };
   G.rod=function(x0,y0,z0,x1,y1,z1,r0,r1){ if(REC) rec({t:'rod',a:this._pt(x0,y0,z0),b:this._pt(x1,y1,z1),r0:r0,r1:r1}); return orig.rod.apply(this,arguments); };
   G.blob=function(x,y,z,rx,ry,rz,col,sh,seg,jit){ if(REC){ var t=T(this); rec({t:'blob',c:this._pt(x,y,z),r:[rx,ry,rz],tc:t.c,ts:t.s,jit:jit||0}); } return orig.blob.apply(this,arguments); };
+  /* 旋转体：轮廓每一段记成一节圆台；挤出体：记成它的外包盒 */
+  orig.lathe=G.lathe; orig.prism=G.prism;
+  G.lathe=function(x,y,z,prof){ if(REC){ for(var i=0;i<prof.length-1;i++){ var a=prof[i], b=prof[i+1], lo=a[1]<b[1]?a:b, hi=a[1]<b[1]?b:a;
+      if(hi[1]-lo[1]>0.005&&Math.max(a[0],b[0])>0.002) rec({t:'cyl',c:this._pt(x,y+lo[1],z),rb:lo[0],rt:hi[0],hh:hi[1]-lo[1]}); } }
+    return orig.lathe.apply(this,arguments); };
+  G.prism=function(x,y,z,prof,depth){ if(REC){ var t=T(this), u0=1e9,u1=-1e9,v0=1e9,v1=-1e9;
+      prof.forEach(function(q){ u0=Math.min(u0,q[0]); u1=Math.max(u1,q[0]); v0=Math.min(v0,q[1]); v1=Math.max(v1,q[1]); });
+      rec({t:'box',c:this._pt(x+(u0+u1)/2,y+(v0+v1)/2,z),h:[(u1-u0)/2,(v1-v0)/2,depth/2],tc:t.c,ts:t.s}); }
+    return orig.prism.apply(this,arguments); };
   /* Kit.g(key) 记材质（墙、地面这类结构件按材质认） */
   var kg=Kit.prototype.g;
   Kit.prototype.g=function(key){ if(REC) REC.mat=key; return kg.apply(this,arguments); };
@@ -38,7 +47,7 @@ var ClipAudit=(function(){
     w.__clip=1; holder[name]=w;
   }
   Object.keys(FURN).forEach(function(ch){ wrapFn(FURN,ch,function(c,x,y){ return 'furn:'+ch+'@'+x+','+y; }); });
-  [['roomDoor','door'],['roomExit','exit'],['roomStairs','stair'],['wallWindow','window'],['ceilingLight','light'],['buildSpiral','spiral'],['roomDecor','decor'],
+  [['roomDoor','door'],['buildDoorLeaf','door'],['roomExit','exit'],['roomStairs','stair'],['wallWindow','window'],['ceilingLight','light'],['buildSpiral','spiral'],['roomDecor','decor'],
    ['buildTree','tree'],['bldClassroom','bld'],['bldDorm','bld'],['bldBell','bld'],['bldCanteen','bld'],['bldSmall','bld'],['bldShed','shed'],['bldLink','link'],
    ['garageRamp','ramp'],['garagePed','garageped'],['fieldModel','field'],['courtModel','court'],['courtGear','courtgear'],['fenceRun','fence'],['gateModel','gate'],
    ['acUnit','ac'],['addEntrance','entrance'],['addSmallDoor','smalldoor'],['roofTop','rooftop'],['facadeWindows','facadewin'],['bandAround','band']

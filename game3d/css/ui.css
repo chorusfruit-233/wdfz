@@ -207,7 +207,7 @@ body.touch .bagacts kbd{display:none}
 .seg button{flex:1;min-height:38px;padding:6px 0;font-size:13px}
 .srow.snote{min-height:24px;margin-top:-6px}
 .srow.snote b{width:auto;flex:1;text-align:left;font-size:12px}
-#sQ button,#sEng button{font-size:12px;padding:6px 2px;white-space:nowrap}
+#sQ button{font-size:12px;padding:6px 2px;white-space:nowrap}
 .seg button.on{background:var(--ui-acc-bg);border-color:var(--ui-acc);color:#effbf4}
 
 /* ---------- 全屏键 ---------- */

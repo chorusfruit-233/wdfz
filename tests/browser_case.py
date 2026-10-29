@@ -77,8 +77,8 @@ class BrowserCase(unittest.TestCase):
         """)
         return page
 
-    def assert_js(self, page, expression):
-        self.assertTrue(page.evaluate(expression), expression)
+    def assert_js(self, page, expression, message=None):
+        self.assertTrue(page.evaluate(expression), message or expression)
 
     def touch(self, page, kind, points):
         session = getattr(page, '_controls_cdp', None)

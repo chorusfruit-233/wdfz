@@ -82,7 +82,7 @@ var DAY_K=0.5, DAY_BOOST=0.2;
 var LCFG={
   ptI:26, ptDist:14, ptDecay:2.0,
   lampI:15, lampDist:15,
-  camI:1.6, camIk:1.4, camDist:12, camDecay:1.5
+  camI:1.9, camIk:1.1, camDist:10, camDecay:1.6      /* 身边的补光：照得到脚下和眼前，再远就是黑的 */
 };
 var MOON_DIR=[-0.42,0.80,0.43];
 var _lc1=null,_lc2=null;
@@ -100,9 +100,11 @@ function lightState(){
   var st={ day:day, gold:sun.gold, sun:sun, indoor:indoor };
   if(indoor){
     var g=(S.room==='garage1');
-    st.amb = g?0.06:(0.15+0.22*day);
-    st.hemi= g?0.04:(0.08+0.17*day);
-    st.dir = g?0.03:(0.05+0.20*day);
+    /* 室内的环境光压得很低：亮的只有灯底下和身边（镜头上那盏补光），没开灯的教室、走廊尽头、墙角都沉在暗里。
+       白天也只靠窗透进来的阴天的光 */
+    st.amb = g?0.05:(0.08+0.11*day);
+    st.hemi= g?0.03:(0.03+0.10*day);
+    st.dir = g?0.03:(0.04+0.17*day);
     st.ptK = g?1:(0.42+0.58*day);            /* 夜里的灯还亮着，只是暗、会闪 */
   }else{
     st.amb = 0.07+0.22*day;
@@ -149,8 +151,10 @@ function updateLighting(){
       fog.color.setRGB(fr,fgc,fb,THREE.SRGBColorSpace);
       fog.density=dens;
     }else{
-      fog.color.setHex(FOG_COL);
-      fog.density=(S.room==='garage1')?0.082:0.050;
+      /* 屋里的雾：远处是黑的。夜里更近，走廊十几米外就看不清了 */
+      var fn=1-s.day;
+      fog.color.setRGB(0.075-0.03*fn,0.090-0.035*fn,0.100-0.035*fn,THREE.SRGBColorSpace);
+      fog.density=(S.room==='garage1')?0.082:(0.050+0.022*fn);
     }
   }
   var tt=GLR.time||0;
@@ -168,6 +172,9 @@ function updateLighting(){
   /* 灯盘本身（自发光材质）跟着一起闪、一起变红 */
   var em=(typeof MATS!=='undefined')&&MATS.emit;
   if(em){ var k=GLR.roomLights.length?clamp(sum/GLR.roomLights.length,0.2,1):1; em.color.setRGB(k,k*(1-0.9*pr),k*(1-0.92*pr)); }
+  /* 快坏的灯管（单独一种材质）：大部分时间暗着发灰，隔一阵抽搐似的亮几下 */
+  var ed=(typeof MATS!=='undefined')&&MATS.emitDying;
+  if(ed){ var dk=dyingTube(tt); ed.color.setRGB(dk,dk*(1-0.9*pr),dk*(0.97-0.9*pr)); }
   lampTick(s);
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
   var wn=GLR.worldNorm||0;
@@ -200,6 +207,12 @@ function roomFlicker(i,tt,day){
   }
   if(day<0.3&&Math.sin(tt*0.37+ph*5.3)>0.985) f*=0.15;
   return f;
+}
+function dyingTube(tt){
+  var seg=Math.floor(tt/2.3), r=lhash(seg,91), u=tt-seg*2.3;
+  if(r<0.45&&u<0.5) return (Math.sin(u*70+r*9)>0.2)?0.95:0.18;            /* 一阵抽搐 */
+  if(r>0.9&&u<1.6) return 0.75+0.2*Math.sin(u*120);                        /* 偶尔亮一会儿，在嗡嗡地抖 */
+  return 0.16+0.04*Math.sin(tt*31);
 }
 /* 巡察者出现前的节拍：两下短闪、一下长暗，像心跳 */
 function patrolBeat(tt){

@@ -7,20 +7,22 @@
   "frames_per_case": 3,
   "method": "Chromium SwiftShader; render + synchronous readPixels; 固定机位，冻结游戏逻辑；倒数为等效渲染帧率，非真实游玩 FPS",
   "before_root": "/workspace/wdfz-pr7-before",
+  "before_commit": "ee42a2b8c6d524db4661407275a466b1e0e72a51",
+  "actors": "按固定格点取最多 20 个座位同学；材质细节仍为程序生成",
   "samples": [
     {
       "version": "重构前",
       "scene": "教室",
       "quality": 0,
       "milliseconds": [
-        186.70000000298023,
-        167.79999999701977,
-        208.29999999701977
+        171.40000000596046,
+        206.5,
+        193.8999999910593
       ],
-      "median_ms": 186.7,
-      "equivalent_fps": 5.4,
-      "calls": 23,
-      "triangles": 42400,
+      "median_ms": 193.9,
+      "equivalent_fps": 5.2,
+      "calls": 21,
+      "triangles": 41616,
       "memory": {
         "geometries": 21,
         "textures": 14
@@ -37,12 +39,12 @@
       "scene": "校园",
       "quality": 0,
       "milliseconds": [
-        183.6000000089407,
-        161.09999999403954,
-        125.70000000298023
+        227.20000000298023,
+        218.09999999403954,
+        177.5
       ],
-      "median_ms": 161.1,
-      "equivalent_fps": 6.2,
+      "median_ms": 218.1,
+      "equivalent_fps": 4.6,
       "calls": 29,
       "triangles": 110862,
       "memory": {
@@ -61,14 +63,14 @@
       "scene": "教室",
       "quality": 1,
       "milliseconds": [
-        246.6000000089407,
-        300.5,
-        265.29999999701977
+        298.59999999403954,
+        257.5,
+        305.6000000089407
       ],
-      "median_ms": 265.3,
-      "equivalent_fps": 3.8,
-      "calls": 28,
-      "triangles": 69642,
+      "median_ms": 298.6,
+      "equivalent_fps": 3.3,
+      "calls": 25,
+      "triangles": 67482,
       "memory": {
         "geometries": 23,
         "textures": 15
@@ -85,12 +87,12 @@
       "scene": "校园",
       "quality": 1,
       "milliseconds": [
-        352.8999999910593,
-        253.1000000089407,
-        356.70000000298023
+        337.80000001192093,
+        362.59999999403954,
+        324.59999999403954
       ],
-      "median_ms": 352.9,
-      "equivalent_fps": 2.8,
+      "median_ms": 337.8,
+      "equivalent_fps": 3.0,
       "calls": 30,
       "triangles": 218262,
       "memory": {
@@ -109,14 +111,14 @@
       "scene": "教室",
       "quality": 2,
       "milliseconds": [
-        421.79999999701977,
-        487.59999999403954,
-        449.90000000596046
+        501.20000000298023,
+        549.2000000029802,
+        431.70000000298023
       ],
-      "median_ms": 449.9,
-      "equivalent_fps": 2.2,
-      "calls": 63,
-      "triangles": 203162,
+      "median_ms": 501.2,
+      "equivalent_fps": 2.0,
+      "calls": 60,
+      "triangles": 201002,
       "memory": {
         "geometries": 24,
         "textures": 17
@@ -133,12 +135,12 @@
       "scene": "校园",
       "quality": 2,
       "milliseconds": [
-        953.3999999910593,
-        966.7000000029802,
-        921.0999999940395
+        1134.7000000029802,
+        947,
+        866.7999999970198
       ],
-      "median_ms": 953.4,
-      "equivalent_fps": 1.0,
+      "median_ms": 947,
+      "equivalent_fps": 1.1,
       "calls": 77,
       "triangles": 920379,
       "memory": {
@@ -157,41 +159,41 @@
       "scene": "教室",
       "quality": 0,
       "milliseconds": [
-        148.5,
-        202.1000000089407,
-        180.19999998807907
+        157.09999999403954,
+        180.59999999403954,
+        184.19999998807907
       ],
-      "median_ms": 180.2,
+      "median_ms": 180.6,
       "equivalent_fps": 5.5,
-      "calls": 28,
-      "triangles": 44360,
-      "memory": {
-        "geometries": 21,
-        "textures": 14
-      },
-      "target": [
-        528,
-        297
-      ],
-      "samples": 0,
-      "renderer": "WebKit WebGL"
-    },
-    {
-      "version": "重构后",
-      "scene": "校园",
-      "quality": 0,
-      "milliseconds": [
-        188.6000000089407,
-        155.3999999910593,
-        176.40000000596046
-      ],
-      "median_ms": 176.4,
-      "equivalent_fps": 5.7,
-      "calls": 29,
-      "triangles": 121230,
+      "calls": 31,
+      "triangles": 57549,
       "memory": {
         "geometries": 31,
-        "textures": 23
+        "textures": 18
+      },
+      "target": [
+        528,
+        297
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "校园",
+      "quality": 0,
+      "milliseconds": [
+        194,
+        260.40000000596046,
+        178.09999999403954
+      ],
+      "median_ms": 194,
+      "equivalent_fps": 5.2,
+      "calls": 29,
+      "triangles": 124501,
+      "memory": {
+        "geometries": 31,
+        "textures": 26
       },
       "target": [
         528,
@@ -205,17 +207,17 @@
       "scene": "教室",
       "quality": 1,
       "milliseconds": [
-        227.40000000596046,
-        281.59999999403954,
-        280.90000000596046
+        306.70000000298023,
+        320.79999999701977,
+        337.29999999701977
       ],
-      "median_ms": 280.9,
-      "equivalent_fps": 3.6,
-      "calls": 28,
-      "triangles": 69642,
+      "median_ms": 320.8,
+      "equivalent_fps": 3.1,
+      "calls": 39,
+      "triangles": 78666,
       "memory": {
-        "geometries": 23,
-        "textures": 15
+        "geometries": 37,
+        "textures": 28
       },
       "target": [
         672,
@@ -229,17 +231,17 @@
       "scene": "校园",
       "quality": 1,
       "milliseconds": [
-        392.70000000298023,
-        417.59999999403954,
-        425.20000000298023
+        432.6000000089407,
+        497.20000000298023,
+        344.19999998807907
       ],
-      "median_ms": 417.6,
-      "equivalent_fps": 2.4,
-      "calls": 30,
-      "triangles": 219990,
+      "median_ms": 432.6,
+      "equivalent_fps": 2.3,
+      "calls": 46,
+      "triangles": 279795,
       "memory": {
-        "geometries": 32,
-        "textures": 24
+        "geometries": 48,
+        "textures": 41
       },
       "target": [
         672,
@@ -253,17 +255,17 @@
       "scene": "教室",
       "quality": 2,
       "milliseconds": [
-        580.5,
-        688.1999999880791,
-        902.3999999910593
+        642.1000000089407,
+        506.90000000596046,
+        594.2000000029802
       ],
-      "median_ms": 688.2,
-      "equivalent_fps": 1.5,
-      "calls": 64,
-      "triangles": 203882,
+      "median_ms": 594.2,
+      "equivalent_fps": 1.7,
+      "calls": 107,
+      "triangles": 274800,
       "memory": {
-        "geometries": 24,
-        "textures": 17
+        "geometries": 48,
+        "textures": 30
       },
       "target": [
         960,
@@ -277,17 +279,17 @@
       "scene": "校园",
       "quality": 2,
       "milliseconds": [
-        1153.9000000059605,
-        1129.7000000029802,
-        1089.2999999970198
+        1638.2999999970198,
+        1596,
+        1592.2000000029802
       ],
-      "median_ms": 1129.7,
-      "equivalent_fps": 0.9,
-      "calls": 77,
-      "triangles": 920379,
+      "median_ms": 1596,
+      "equivalent_fps": 0.6,
+      "calls": 119,
+      "triangles": 1016069,
       "memory": {
-        "geometries": 32,
-        "textures": 26
+        "geometries": 48,
+        "textures": 43
       },
       "target": [
         960,
@@ -301,17 +303,17 @@
       "scene": "教室",
       "quality": 3,
       "milliseconds": [
-        811.6999999880791,
-        961.3999999910593,
-        846.9000000059605
+        1063.3999999910593,
+        1099.2000000029802,
+        1106.8999999910593
       ],
-      "median_ms": 846.9,
-      "equivalent_fps": 1.2,
-      "calls": 166,
-      "triangles": 754075,
+      "median_ms": 1099.2,
+      "equivalent_fps": 0.9,
+      "calls": 309,
+      "triangles": 905883,
       "memory": {
-        "geometries": 24,
-        "textures": 19
+        "geometries": 53,
+        "textures": 32
       },
       "target": [
         960,
@@ -325,17 +327,17 @@
       "scene": "校园",
       "quality": 3,
       "milliseconds": [
-        2212.7999999970198,
-        2189.7000000029802,
-        2240.6000000089407
+        4489,
+        4613.100000008941,
+        4563.5
       ],
-      "median_ms": 2212.8,
-      "equivalent_fps": 0.5,
-      "calls": 77,
-      "triangles": 2039223,
+      "median_ms": 4563.5,
+      "equivalent_fps": 0.2,
+      "calls": 132,
+      "triangles": 1425930,
       "memory": {
-        "geometries": 32,
-        "textures": 27
+        "geometries": 56,
+        "textures": 44
       },
       "target": [
         960,

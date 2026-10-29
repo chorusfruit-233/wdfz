@@ -1,21 +1,58 @@
 /* Three.js 场景生命周期、灯光与相机。 */
 'use strict';
-ThreeBackend.disposeGroup=function(g){
+/* ---- 场景缓存 ----
+   房间、室外的模型只和画质、门开没开有关，每次进出都整个重建很浪费（室外一次一两百毫秒）。
+   离开时把网格从场景里拿掉、释放显存（geometry.dispose 只删显卡上的缓冲，数据还在），
+   再回来直接用，显卡那边自动重新上传。最多留室外 + 最近 3 个房间；换画质、换贴图分辨率时清空。
+   门扇单独成块，回来时按当时开没开重建（room.js 的 roomDoorRefresh）。 */
+var SCENE_CACHE={key:'',out:null,rooms:{},order:[]};
+var SCENE_CACHE_ROOMS=3;
+function sceneCacheKey(){ return QUALITY+'|'+(NOTEX?1:0); }
+function disposeGroup(g,keepData){return ThreeBackend.disposeGroup(g,keepData);}
+function sceneCacheCheck(){
+  var k=sceneCacheKey(); if(SCENE_CACHE.key===k) return;
+  sceneCacheClear(); SCENE_CACHE.key=k;
+}
+function sceneCacheClear(){
+  var id;
+  if(SCENE_CACHE.out&&SCENE_CACHE.out!==GLR.outMesh) disposeGroup(SCENE_CACHE.out);
+  for(id in SCENE_CACHE.rooms) if(SCENE_CACHE.rooms[id]!==GLR.roomMesh) disposeGroup(SCENE_CACHE.rooms[id]);
+  if(GLR.outMesh) GLR.outMesh.userData.uncached=1;            /* 正在用的这份离开时直接销毁 */
+  if(GLR.roomMesh) GLR.roomMesh.userData.uncached=1;
+  SCENE_CACHE.out=null; SCENE_CACHE.rooms={}; SCENE_CACHE.order=[]; SCENE_CACHE.key='';
+}
+function sceneCacheRoom(id,g){
+  var previous=SCENE_CACHE.rooms[id];
+  if(previous&&previous!==g)disposeGroup(previous);
+  SCENE_CACHE.rooms[id]=g;
+  SCENE_CACHE.order=SCENE_CACHE.order.filter(function(x){ return x!==id; }); SCENE_CACHE.order.push(id);
+  while(SCENE_CACHE.order.length>SCENE_CACHE_ROOMS){
+    var old=SCENE_CACHE.order.shift(), og=SCENE_CACHE.rooms[old]; delete SCENE_CACHE.rooms[old];
+    if(og&&og!==GLR.roomMesh) disposeGroup(og);
+  }
+}
+function releaseSceneMesh(g){
+  var cached=!g.userData.uncached&&(g===SCENE_CACHE.out||SCENE_CACHE.rooms[g.userData.roomId]===g);
+  disposeGroup(g,cached);
+}
+
+ThreeBackend.disposeGroup=function(g,keepData){
   if(!g)return;
   var geometries=new Set(),materials=new Set();
   g.traverse(function(o){
     if(o.geometry&&!(o.geometry.userData&&o.geometry.userData.shared))geometries.add(o.geometry);
-    if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){if(!(m.userData&&m.userData.shared))materials.add(m);});
+    if(!keepData&&o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){if(!(m.userData&&m.userData.shared))materials.add(m);});
   });
   geometries.forEach(function(g){g.dispose();});materials.forEach(function(m){m.dispose();});
 };
 ThreeBackend.clearWorld=function(){
   var i;
+  if(typeof APPAR!=='undefined'&&APPAR.g)APPAR.g.visible=false;
   if(GLR.roamFig){GLR.scene.remove(GLR.roamFig);ThreeBackend.disposeGroup(GLR.roamFig);GLR.roamFig=null;}
   if(typeof TR!=='undefined'&&TR.g){GLR.scene.remove(TR.g);ThreeBackend.disposeGroup(TR.g);TR.g=null;TR.key='';}
   try{ shadeClearRoom(); }catch(e){}
-  if(GLR.roomMesh){ GLR.scene.remove(GLR.roomMesh); ThreeBackend.disposeGroup(GLR.roomMesh); GLR.roomMesh=null; }
-  if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); ThreeBackend.disposeGroup(GLR.outMesh); GLR.outMesh=null; }
+  if(GLR.roomMesh){ GLR.scene.remove(GLR.roomMesh); releaseSceneMesh(GLR.roomMesh); GLR.roomMesh=null; }
+  if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); releaseSceneMesh(GLR.outMesh); GLR.outMesh=null; }
   if(GLR.roomLights){
     for(i=0;i<GLR.roomLights.length;i++){GLR.roomLights[i].dispose();GLR.scene.remove(GLR.roomLights[i]);}
     GLR.roomLights=[]; GLR.roomLightBase=[]; GLR.roomLightCol=[];
@@ -24,7 +61,7 @@ ThreeBackend.clearWorld=function(){
 };
 /* 仅替换静态模型，避免切档重置同学位置、堵门、追逐、异象、门和计时器。 */
 ThreeBackend.applyQuality=function(){
-  ThreeBackend.resize();matRefreshQuality();
+  ThreeBackend.resize();sceneCacheClear();sceneCacheCheck();matRefreshQuality();
   var old=GLR.roomMesh||GLR.outMesh;
   if(old){
     GLR.scene.remove(old);ThreeBackend.disposeGroup(old);
@@ -43,6 +80,8 @@ ThreeBackend.applyQuality=function(){
     if(d&&d.patGear)o.geometry=patGearGeo();
     if(d&&d.cup)o.geometry=cupGeo();
   });
+  if(GLR.roomMesh){GLR.roomMesh.userData.roomId=S.room;GLR.roomMesh.userData.roomData=INTERIORS[S.room];sceneCacheRoom(S.room,GLR.roomMesh);}
+  if(GLR.outMesh){SCENE_CACHE.out=GLR.outMesh;GLR.outMesh.userData.layout={solid:OUT_SOLID,lamps:OUT_LAMPS};}
   shadeApplyQuality();
 };
 ThreeBackend.addRoomLights=function(R){
@@ -70,9 +109,11 @@ ThreeBackend.addRoomLights=function(R){
   }
 };
 ThreeBackend.enterRoom=function(roomId){
-  clearWorldMesh();
-  var R=INTERIORS[roomId];
-  GLR.roomMesh=buildRoomGeometry(R);
+  clearWorldMesh();sceneCacheCheck();
+  var R=INTERIORS[roomId],cached=SCENE_CACHE.rooms[roomId];
+  if(cached&&cached.userData.roomData===R){GLR.roomMesh=cached;roomDoorRefresh(R);}
+  else{GLR.roomMesh=buildRoomGeometry(R);GLR.roomMesh.userData.roomId=roomId;GLR.roomMesh.userData.roomData=R;}
+  sceneCacheRoom(roomId,GLR.roomMesh);
   GLR.scene.add(GLR.roomMesh);
   if(roomId==='garage1'){
     GLR.roamFig=buildRoamFigure();
@@ -87,11 +128,13 @@ ThreeBackend.enterRoom=function(roomId){
   try{ skipClear(); }catch(e){}
 };
 ThreeBackend.enterOutside=function(){
-  clearWorldMesh();
+  clearWorldMesh();sceneCacheCheck();
   try{ ncClear(); }catch(e){}      /* 出去就没有同班同学了 */
-  GLR.outMesh=buildOutdoorGeometry();
-  GLR.outMesh.userData=GLR.outMesh.userData||{};
-  GLR.outMesh.userData.__outworld=1;
+  if(SCENE_CACHE.out){GLR.outMesh=SCENE_CACHE.out;OUT_SOLID=GLR.outMesh.userData.layout.solid;OUT_LAMPS=GLR.outMesh.userData.layout.lamps;}
+  else{
+    GLR.outMesh=buildOutdoorGeometry();GLR.outMesh.userData.__outworld=1;
+    GLR.outMesh.userData.layout={solid:OUT_SOLID,lamps:OUT_LAMPS};SCENE_CACHE.out=GLR.outMesh;
+  }
   GLR.scene.add(GLR.outMesh);
   try{ shadeMarkMesh(GLR.outMesh); }catch(e){}
   GLR.scene.fog=new THREE.FogExp2(FOG_COL,0.020);
@@ -168,6 +211,7 @@ ThreeBackend.draw=function(dt){
   try{ patRender(); }catch(e){}
   try{ handsTick(dt); }catch(e){}
   try{ hallucTick(dt); }catch(e){}
+  try{ apparTick(dt); }catch(e){}
   GLR.cam.updateMatrixWorld();
   entFace();
   var u=GLR.postMat.uniforms;

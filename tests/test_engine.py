@@ -131,6 +131,9 @@ class EngineTest(BrowserCase):
         self.assert_js(page, "QUALITY===2&&SET.q===2&&document.getElementById('qualityHint').hidden")
         page.evaluate('QualityWatch.reset();QualityWatch.tick(30,true)')
         self.assert_js(page, "document.getElementById('qualityHint').hidden&&QualityWatch.elapsed===0")
+        # 持续极慢（每帧 2 秒）也要提供降档，不能把每一帧都当成一次加载停顿。
+        page.evaluate('for(let i=0;i<12;i++)QualityWatch.tick(2,true)')
+        self.assert_js(page, "!document.getElementById('qualityHint').hidden&&QUALITY===2")
 
     def test_circle_collision_corners_sliding_and_large_steps(self):
         page = self.page()
@@ -158,3 +161,20 @@ class EngineTest(BrowserCase):
         for name in ('main', 'world', 'input', 'systems', 'anomaly', 'story', 'items', 'patrol', 'spiral', 'save', 'state', 'interact', 'prologue'):
             source = (root / f'{name}.js').read_text()
             self.assertIsNone(re.search(r'\b(?:THREE|GLR)\s*\.', source), name)
+
+    def test_high_dpi_switch_resizes_targets_with_the_new_profile(self):
+        context = self.browser.new_context(viewport={'width': 800, 'height': 450}, device_scale_factor=2)
+        self.contexts.append(context)
+        context.add_init_script("localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}))")
+        page = context.new_page()
+        page.on('pageerror', lambda e: self.errors.append(str(e)))
+        page.goto(self.url, wait_until='load')
+        page.evaluate('PHOTO_TRIED=true;running=false')
+        for q in (3, 0, 2, 1, 3, 0):
+            page.evaluate('q=>Settings.q(q)', q)
+            self.assert_js(page, """(()=>{
+                let p=Quality.get(),d=Math.min(devicePixelRatio,p.dpr,Math.sqrt(5000000/(innerWidth*innerHeight)));
+                return GLR.renderer.getPixelRatio()===d&&GLR.rt.width===Math.round(innerWidth*d*p.scale)
+                  &&GLR.rt.height===Math.round(innerHeight*d*p.scale)&&GLR.handRT.width===GLR.rt.width
+                  &&GLR.handRT.height===GLR.rt.height;
+            })()""")
