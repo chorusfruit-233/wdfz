@@ -35,6 +35,9 @@ class ControlsTest(BrowserCase):
                     link.click()
                 page.wait_for_url('**/wiki/index.html')
                 self.assertTrue(page.get_by_role('heading', name='里世界游戏 Wiki').is_visible())
+                item_row = page.locator('#items tbody tr').filter(has_text='药片 / 士力架')
+                self.assertIn('每秒回复 2 点 SAN', item_row.inner_text())
+                self.assertIn('士力架让你 30 秒内', item_row.inner_text())
                 spoiler = page.locator('#anomalies details')
                 self.assertIsNone(spoiler.get_attribute('open'))
                 self.assertFalse(spoiler.locator('table').is_visible())
@@ -364,6 +367,62 @@ class ControlsTest(BrowserCase):
         self.assert_js(page, 'S.run&&S.stam===2&&S.snackT>9')
         page.evaluate("S.snackT=0;S.stam=STAM_BACK+1;updatePlayer(.05);KEY.w=false;KEY.shift=false")
         self.assert_js(page, 'S.run&&!S.tired')
+
+    def test_snack_expires_while_hiding_but_not_while_game_is_paused(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=760;S.san=50;S.bag=['snack','pill'];
+            S.intro=0;AN.active=false;AN.next=9999;PAT.next=9999;
+            var R=INTERIORS.teach1,locker=null;
+            for(var r=0;r<R.rows&&!locker;r++)for(var c=0;c<R.cols;c++)
+                if(R.grid[r][c]==='H'){locker={c:c,r:r};break;}
+            if(!locker) throw new Error('locker not found');
+            useItem('snack');useItem('pill');hideIn(locker);window._hideClock=S.tsec;
+            for(var i=0;i<600;i++)update(1/60);""")
+        self.assert_js(page, "HIDE.on&&!S.dead&&S.tsec>_hideClock&&Math.abs(S.snackT-20)<.02&&Math.abs(S.pillT-20)<.02")
+        page.evaluate("UI.open('bag');for(var i=0;i<300;i++)update(1/60)")
+        self.assert_js(page, 'Math.abs(S.snackT-20)<.02&&Math.abs(S.pillT-20)<.02')
+        page.evaluate("UI.closePanelAll();for(var i=0;i<1201;i++)update(1/60);hideOut();"
+                      "S.stam=0;S.tired=true;KEY.w=true;KEY.shift=true;updatePlayer(1/60)")
+        self.assert_js(page, 'S.snackT===0&&!S.run&&S.tired')
+
+    def test_snack_and_world_time_keep_pace_at_low_frame_rates(self):
+        for interval in (200, 1000):
+            with self.subTest(frame_interval_ms=interval):
+                page = self.page()
+                result = page.evaluate("""interval => {
+                    S.tsec=760;S.san=80;S.dead=false;S.intro=0;S.snackT=30;
+                    AN.active=false;AN.next=9999;PAT.next=9999;HIDE.on=false;
+                    const oldRaf=window.requestAnimationFrame,oldRender=render;
+                    window.requestAnimationFrame=()=>0;render=()=>{};
+                    lastT=0;accum=0;running=true;
+                    try{
+                        for(let t=interval;t<=10000;t+=interval)frame(t);
+                        const elapsed={snack:S.snackT,clock:S.tsec,backlog:accum};
+                        PAUSE.on=true;
+                        for(let t=10000+interval;t<=12000;t+=interval)frame(t);
+                        return {elapsed,paused:{snack:S.snackT,clock:S.tsec},dead:S.dead};
+                    }finally{
+                        running=false;PAUSE.on=false;window.requestAnimationFrame=oldRaf;render=oldRender;
+                    }
+                }""", interval)
+                self.assertFalse(result['dead'])
+                self.assertAlmostEqual(result['elapsed']['snack'], 20, delta=.02)
+                self.assertAlmostEqual(result['elapsed']['clock'] - 760, 10 * page.evaluate('rateAt(760)') / 60, delta=.02)
+                self.assertLess(result['elapsed']['backlog'], .017)
+                self.assertEqual(result['paused']['snack'], result['elapsed']['snack'])
+                self.assertEqual(result['paused']['clock'], result['elapsed']['clock'])
+
+    def test_long_frame_has_bounded_catchup(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+            S.tsec=760;S.san=80;S.snackT=30;AN.active=false;AN.next=9999;PAT.next=9999;
+            const oldRaf=window.requestAnimationFrame,oldRender=render;
+            window.requestAnimationFrame=()=>0;render=()=>{};lastT=0;accum=0;running=true;
+            try{frame(5000);return {snack:S.snackT,backlog:accum};}
+            finally{running=false;window.requestAnimationFrame=oldRaf;render=oldRender;}
+        }""")
+        self.assertAlmostEqual(result['snack'], 29, delta=.02)
+        self.assertLess(result['backlog'], .017)
 
     def test_ancestor_window_is_slowed_and_dropping_item_ends(self):
         page = self.page()
@@ -769,6 +828,36 @@ class ControlsTest(BrowserCase):
         self.assert_js(page, "!RT.deskUsed['lab3:'+__shelf[0]+':'+__shelf[1]]&&!hasItem('usb')")
         page.evaluate("removeItem('coin');doSearch(__shelf[0],__shelf[1])")
         self.assert_js(page, "hasItem('usb')")
+
+    def test_duplicate_search_result_is_retained_and_saved(self):
+        page = self.page()
+        hit = page.evaluate("""() => {
+            doEnterRoom('dorm1');running=false;RT.deskUsed={};RT.pendingLoot={};S.bag=['snack'];
+            const R=INTERIORS.dorm1;let hit=null;
+            for(let r=0;r<R.rows&&!hit;r++)for(let c=0;c<R.cols;c++)
+                if(['d','f','R'].includes(R.grid[r][c])){hit={c,r};break;}
+            if(!hit)throw new Error('searchable container not found');
+            Math.random=()=>.30;searchContainer(hit.c,hit.r);return hit;
+        }""")
+        self.assert_js(page, "RT.pendingLoot['dorm1:%d:%d']==='snack'&&!RT.deskUsed['dorm1:%d:%d']"
+                       % (hit['c'], hit['r'], hit['c'], hit['r']))
+        self.assertIn('先把它留在这里', page.locator('#sub').inner_text())
+        page.evaluate("hit => {Math.random=()=>.99;searchContainer(hit.c,hit.r);saveGame();}", hit)
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false;SEARCH.on=false')
+        page.wait_for_function("S.mode==='in'&&S.room==='dorm1'&&!!GLR.roomMesh", timeout=8000)
+        self.assert_js(page, "RT.pendingLoot['dorm1:%d:%d']==='snack'&&hasItem('snack')" % (hit['c'], hit['r']))
+        page.evaluate("hit => {removeItem('snack');Math.random=()=>.99;searchContainer(hit.c,hit.r);}", hit)
+        self.assert_js(page, "hasItem('snack')&&!RT.pendingLoot['dorm1:%d:%d']&&RT.deskUsed['dorm1:%d:%d']"
+                       % (hit['c'], hit['r'], hit['c'], hit['r']))
+        page.evaluate("hit => {removeItem('snack');searchContainer(hit.c,hit.r);}", hit)
+        self.assertIn('翻过了', page.locator('#sub').inner_text())
+
+        page.evaluate("""doEnterRoom('lab5');running=false;RT.deskUsed={};RT.pendingLoot={};S.bag=['snack'];
+            Math.random=()=>.30;doSearch(3,2);""")
+        self.assert_js(page, "RT.pendingLoot['lab5:3:2']==='snack'&&!RT.deskUsed['lab5:3:2']")
+        page.evaluate("removeItem('snack');Math.random=()=>.99;doSearch(3,2)")
+        self.assert_js(page, "hasItem('snack')&&RT.deskUsed['lab5:3:2']&&!RT.pendingLoot['lab5:3:2']")
 
     def test_search_job_is_cleared_when_quitting_or_starting_new_game(self):
         page = self.page()

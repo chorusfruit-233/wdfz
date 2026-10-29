@@ -12,15 +12,15 @@ function frame(t){
   if(!running) { lastT=t; return; }
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
-  if(dt>0.25) dt=0.25;
   QualityWatch.tick(dtG,S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!document.hidden);
-  accum+=dt;
+  /* 允许一秒内的慢帧按真实时间补齐固定步；更长的卡顿仍有上限，避免恢复时跑出大量积压。 */
+  accum+=Math.min(dt,1);
   var step=1/60, guard=0;
-  while(accum>=step&&guard++<6){
+  while(accum>=step&&guard++<60){
     try{ update(step); }catch(e){ try{ showErr('update: '+e.message); }catch(_e){} break; }
     accum-=step;
   }
-  try{ render(dt); }catch(e){ try{ showErr('render: '+e.message); }catch(_e){} }
+  try{ render(Math.min(dt,0.25)); }catch(e){ try{ showErr('render: '+e.message); }catch(_e){} }
 }
 function update(dt){
   PHONE.checkInterrupt();
