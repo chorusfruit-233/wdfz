@@ -158,7 +158,29 @@ def human(A, kind):
             limb(A, [(elx, ely, 0.02), (elx + s * 0.006, ely - fo * 0.4, 0.03), (wx, wy + 0.03, 0.03), (wx, wy, 0.03)],
                  [(0.043 * t, 0.042 * t), (0.042 * t, 0.038 * t), (0.034 * t, 0.032 * t), (0.03 * t, 0.028 * t)], na, name='forearm')
             hand(A, (wx, wy, 0.03), s, hk * 0.95)
-    A.proxy_box((0, (sh + sp['neck'] + H) / 2, 0.05 if sit else 0), (sp['w'] + 0.1, sh + sp['neck'] + H, 0.5 if sit else 0.3))
+    # ---- 碰撞代理贴着身体走（穿模审查拿它和课桌、椅子比）：四肢是胶囊，躯干、鞋是盒子，头是椭球；手不算
+    for s in (-1, 1):
+        lx = s * 0.095 * t
+        ax = s * hx * 0.95
+        if sit:
+            A.proxy_rod((lx, hipY, -0.06), (lx, hipY + 0.02, 0.40), 0.085, 0.062)
+            A.proxy_rod((lx, hipY + 0.02, 0.40), (lx * 1.05, 0.11, 0.44), 0.066, 0.05)
+            A.proxy_box((lx * 1.05, 0.05 * hk, 0.48 + 0.02 * hk), (0.11 * hk, 0.1 * hk, 0.28 * hk))
+            ex, ey, ez = s * hx * 1.02, sh - sp['arm'] * 0.47 * 0.75, 0.24
+            A.proxy_rod((ax, sh - 0.06, 0.06), (ex, ey, ez), 0.052, 0.046)
+            A.proxy_rod((ex, ey, ez), (s * 0.10, 0.80, ez + 0.22), 0.046, 0.034)
+        else:
+            kneeY = hipY * 0.52
+            A.proxy_rod((lx, hipY + 0.02, 0.0), (lx * 1.05, kneeY, 0.014), 0.088 * t, 0.062 * t)
+            A.proxy_rod((lx * 1.05, kneeY, 0.012), (lx * 1.1, 0.10, -0.01), 0.066 * t, 0.05 * t)
+            A.proxy_box((lx * 1.1, 0.05 * hk, 0.04 + 0.02 * hk), (0.11 * hk, 0.1 * hk, 0.28 * hk))
+            elx, ely = ax + s * 0.03 * t, sh - 0.05 - sp['arm'] * 0.47
+            A.proxy_rod((ax, sh - 0.05, 0.0), (elx, ely, 0.02), 0.052 * t, 0.046 * t)
+            A.proxy_rod((elx, ely, 0.02), (elx + s * 0.01, ely - sp['arm'] * 0.53, 0.03), 0.046 * t, 0.034 * t)
+    A.proxy_box((0, (hipY - 0.03 + sh + 0.01) / 2, lean / 2), (0.41 * t + 0.02, sh - hipY + 0.04, 0.236 * t + lean))
+    A.proxy_rod((0, sh - 0.04, nz * 0.6), (0, sh + sp['neck'] + 0.03, nz + 0.01), 0.055)
+    hz = nz + (0.04 if sit else 0.01)
+    A.proxies.append({'t': 'blob', 'c': list(A.P((0, hy + H * 0.02, hz - H * 0.02))), 'r': [H * 0.44, H * 0.53, H * 0.5], 'a': A.yaw(), 'jit': 0.0})
 
 
 for _k in SPEC:

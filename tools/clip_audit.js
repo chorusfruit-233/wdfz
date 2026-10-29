@@ -331,10 +331,10 @@ var ClipAudit=(function(){
     if(!cell) return out;
     var tag='furn:d@'+cell[0]+','+cell[1]+'#', desk=list.filter(function(p){ return p.o.indexOf(tag)===0; });
     var saved={}, k;
-    for(k in FIG_GEO) if(/^sit\|/.test(k)){ saved[k]=FIG_GEO[k]; delete FIG_GEO[k]; }
+    for(k in FIG_GEO) if(/^(sit|A\|fig_sit)\|/.test(k)){ saved[k]=FIG_GEO[k]; delete FIG_GEO[k]; }
     REC={list:[],mat:'',outdoor:false}; OWN=['npc'];
     try{ figGeo('sit'); }finally{ var fl=REC.list; REC=null; OWN=[]; }
-    for(k in FIG_GEO) if(/^sit\|/.test(k)) delete FIG_GEO[k];
+    for(k in FIG_GEO) if(/^(sit|A\|fig_sit)\|/.test(k)) delete FIG_GEO[k];
     for(k in saved) FIG_GEO[k]=saved[k];
     var x0=(cell[0]+0.5)*tw-halfW, z0=(cell[1]+0.82)*tw-halfH;
     function tp(q){ return [x0-q[0],q[1],z0-q[2]]; }
