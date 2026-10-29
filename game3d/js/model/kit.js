@@ -680,7 +680,8 @@ Kit.prototype.asset=function(name,x,y,z,rot,opt){
     if(tag){ var tc=tint[tag]!==undefined?tint[tag]:(m.t&&m.t[tag]!==undefined?m.t[tag]:0xffffff); mul=Assets.rgb(tc); }
     if(opt.shade) mul=[mul[0]*opt.shade,mul[1]*opt.shade,mul[2]*opt.shade];
     var gb=this.g(key); if(!first) first=gb;
-    gb.appendAsset(pk,m.b,g,X,mul,uo,vo);
+    var fixed=(key==='foliage'||key==='grime');               /* 叶片卡、污渍是整张图集：贴图不能错开 */
+    gb.appendAsset(pk,m.b,g,X,mul,fixed?0:uo,fixed?0:vo);
   }
   if(m.p){
     for(i=0;i<m.p.length;i++){
