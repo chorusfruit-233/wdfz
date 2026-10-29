@@ -17,7 +17,9 @@ function shadeHex(col,s){
   return (r<<16)|(g<<8)|b;
 }
 function lodLow(){ return Quality.get().lodLow; }
-/* 圆柱、杆、椭球的分段数按档位缩放：流畅 0.6 倍、超精细 1.6 倍 */
+/* 「真实」档：没有硬棱——盒子都是圆角盒，圆柱两头收圆边，杆和圆柱一律平滑着色 */
+function lodSmooth(){ return Quality.get().smooth; }
+/* 圆柱、杆、椭球的分段数按档位缩放：流畅 0.6 倍、超精细 1.75 倍、真实 2.6 倍 */
 function lodSeg(seg,min){ return Math.max(min||4,Math.round(seg*Quality.get().segments)); }
 
 var UVTILE=2.4;
@@ -105,6 +107,7 @@ GeoBuilder.prototype.face=function(pts,n,rgb,noTf,vn,uvs){
   this.v=v+m;
 };
 GeoBuilder.prototype.box=function(x,y,z,sx,sy,sz,col,shade){
+  if(lodSmooth()){ var md=Math.min(sx,sy,sz); if(md>=0.008){ this.roundBox(x,y,z,sx,sy,sz,col,shade,Math.min(0.01,md*0.2),1); return; } }
   var rgb=this._rgb(col,shade), hx=sx/2,hy=sy/2,hz=sz/2;
   this.face([[x-hx,y-hy,z+hz],[x+hx,y-hy,z+hz],[x+hx,y+hy,z+hz],[x-hx,y+hy,z+hz]],[0,0,1],rgb);
   this.face([[x+hx,y-hy,z-hz],[x-hx,y-hy,z-hz],[x-hx,y+hy,z-hz],[x+hx,y+hy,z-hz]],[0,0,-1],rgb);
@@ -123,10 +126,45 @@ GeoBuilder.prototype.boxFaces=function(x,y,z,sx,sy,sz,col,shade,faces){
   if(faces.indexOf('u')>=0) this.face([[x-hx,y+hy,z+hz],[x+hx,y+hy,z+hz],[x+hx,y+hy,z-hz],[x-hx,y+hy,z-hz]],[0,1,0],rgb);
   if(faces.indexOf('d')>=0) this.face([[x-hx,y-hy,z-hz],[x+hx,y-hy,z-hz],[x+hx,y-hy,z+hz],[x-hx,y-hy,z+hz]],[0,-1,0],rgb);
 };
+/* 圆角盒（真实档）：六个面各是一张网格，棱和角上的点"推到内盒表面再沿法线走 r"，
+   得到半径 r 的圆角；法线就是推出去的方向，整块连续，没有一条硬棱。seg 是每个面上圆角分几步（一条棱共 2×seg 步） */
+GeoBuilder.prototype.roundBox=function(x,y,z,sx,sy,sz,col,shade,r,seg){
+  var H=[sx/2,sy/2,sz/2], rgb=this._rgb(col,shade), i, j, k, u, v;
+  r=Math.min(r,H[0],H[1],H[2]); seg=seg||2;
+  var A=[H[0]-r,H[1]-r,H[2]-r];
+  function list(h,a){
+    var o=[-h], q;
+    for(q=seg-1;q>=1;q--) o.push(-a-r*Math.tan(q/seg*Math.PI/4));
+    if(a>1e-6){ o.push(-a); o.push(a); } else o.push(0);
+    for(q=1;q<seg;q++) o.push(a+r*Math.tan(q/seg*Math.PI/4));
+    o.push(h);
+    return o;
+  }
+  var LS=[list(H[0],A[0]),list(H[1],A[1]),list(H[2],A[2])];
+  function map(p){
+    var c=[Math.max(-A[0],Math.min(A[0],p[0])),Math.max(-A[1],Math.min(A[1],p[1])),Math.max(-A[2],Math.min(A[2],p[2]))];
+    var d=[p[0]-c[0],p[1]-c[1],p[2]-c[2]], l=Math.sqrt(d[0]*d[0]+d[1]*d[1]+d[2]*d[2])||1;
+    var n=[d[0]/l,d[1]/l,d[2]/l];
+    return {p:[x+c[0]+n[0]*r,y+c[1]+n[1]*r,z+c[2]+n[2]*r],n:n};
+  }
+  for(i=0;i<3;i++) for(var sgn=-1;sgn<=1;sgn+=2){
+    j=(i+1)%3; k=(i+2)%3;
+    var LU=LS[j], LV=LS[k], fn=[0,0,0]; fn[i]=sgn;
+    for(u=0;u<LU.length-1;u++) for(v=0;v<LV.length-1;v++){
+      var Q=[[u,v],[u+1,v],[u+1,v+1],[u,v+1]].map(function(t){ var p=[0,0,0]; p[i]=sgn*H[i]; p[j]=LU[t[0]]; p[k]=LV[t[1]]; return map(p); });
+      var P=Q.map(function(m){ return m.p; }), N=Q.map(function(m){ return m.n; });
+      var nx=N[0][0]+N[1][0]+N[2][0]+N[3][0], ny=N[0][1]+N[1][1]+N[2][1]+N[3][1], nz=N[0][2]+N[1][2]+N[2][2]+N[3][2], nl=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;
+      var e1=[P[1][0]-P[0][0],P[1][1]-P[0][1],P[1][2]-P[0][2]], e2=[P[3][0]-P[0][0],P[3][1]-P[0][1],P[3][2]-P[0][2]];
+      if((e1[1]*e2[2]-e1[2]*e2[1])*nx+(e1[2]*e2[0]-e1[0]*e2[2])*ny+(e1[0]*e2[1]-e1[1]*e2[0])*nz<0){ P.reverse(); N.reverse(); }
+      this.face(P,[nx/nl,ny/nl,nz/nl],rgb,false,N);
+    }
+  }
+};
 /* 倒角盒：12 条棱切成 45°，8 个角是三角面 */
 GeoBuilder.prototype.bevel=function(x,y,z,sx,sy,sz,col,shade,r){
   r=r===undefined?0.02:r;
   r=Math.min(r,sx*0.3,sy*0.3,sz*0.3);
+  if(lodSmooth()){ var rr=Math.max(r,Math.min(0.01,Math.min(sx,sy,sz)*0.2)); this.roundBox(x,y,z,sx,sy,sz,col,shade,rr,rr>=0.02?2:1); return; }
   if(lodLow()||r<0.004){ this.box(x,y,z,sx,sy,sz,col,shade); return; }
   var rgb=this._rgb(col,shade), hx=sx/2,hy=sy/2,hz=sz/2, a=hx-r,b=hy-r,c=hz-r, s, t, q;
   var Q=0.7071, Tq=0.5774;
@@ -163,7 +201,16 @@ GeoBuilder.prototype.bevel=function(x,y,z,sx,sy,sz,col,shade,r){
 };
 /* 竖直的圆柱 / 圆台（y 为底面中心） */
 GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
-  var smooth=(seg>=6);                           /* 4、5 段的是故意做成棱柱 / 棱锥的（攒尖顶、矛尖），不抹平 */
+  if(lodSmooth()&&seg>=6&&caps!==false&&caps!=='top'&&h>0.004){        /* 真实档：两头的边收成圆角 */
+    var f=Math.min(0.008,h*0.25,rb>0.001?rb*0.3:1,rt>0.001?rt*0.3:1), prof=[], t;
+    if(rb>0.001){ prof.push([0,0]); for(t=0;t<=3;t++) prof.push([rb-f+f*Math.sin(t*PI/6),f-f*Math.cos(t*PI/6)]); }
+    else prof.push([0,0]);
+    if(rt>0.001){ for(t=3;t>=0;t--) prof.push([rt-f+f*Math.sin(t*PI/6),h-f+f*Math.cos(t*PI/6)]); prof.push([0,h]); }
+    else prof.push([0,h]);
+    this.lathe(x,y,z,prof,Math.max(seg,10),col,shade);
+    return;
+  }
+  var smooth=(seg>=6)||(lodSmooth()&&seg>=4&&caps===false);                           /* 4、5 段的是故意做成棱柱 / 棱锥的（攒尖顶、矛尖），不抹平 */
   seg=lodSeg(seg,lodLow()?4:5);
   var rgb=this._rgb(col,shade), k, a0, a1;
   var slope=(rb-rt)/h, nl=Math.sqrt(1+slope*slope), ny=slope/nl;
@@ -180,7 +227,8 @@ GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
 };
 /* 两点之间的杆（任意方向），r0、r1 两端半径 */
 GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
-  seg=lodSeg(seg,4);
+  var real=lodSmooth();
+  seg=lodSeg(seg,real?10:4);
   var dx=x1-x0, dy=y1-y0, dz=z1-z0, L=Math.sqrt(dx*dx+dy*dy+dz*dz)||1e-6;
   var ax=dx/L, ay=dy/L, az=dz/L;
   var ux,uy,uz;                                  /* 找一根垂直的轴 */
@@ -188,7 +236,7 @@ GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
   var ul=Math.sqrt(ux*ux+uy*uy+uz*uz)||1; ux/=ul; uy/=ul; uz/=ul;
   var vx=ay*uz-az*uy, vy=az*ux-ax*uz, vz=ax*uy-ay*ux;
   var rgb=this._rgb(col,shade), k, caps=(Math.max(r0,r1)>=0.04);
-  var smooth=(seg>=5||Math.max(r0,r1)<0.03);    /* 粗的四棱杆是方料（横梁、撞木以外的），细杆一律当圆管 */
+  var smooth=real||(seg>=5||Math.max(r0,r1)<0.03);    /* 粗的四棱杆是方料（横梁、撞木以外的），细杆一律当圆管 */
   var tl=(r0-r1)/L, tn=Math.sqrt(1+tl*tl);       /* 两头粗细不同：法线往细的那头偏 */
   function P(c,s,r,bx,by,bz){ return [bx+(ux*c+vx*s)*r, by+(uy*c+vy*s)*r, bz+(uz*c+vz*s)*r]; }
   function NR(c,s){ return [(ux*c+vx*s+ax*tl)/tn, (uy*c+vy*s+ay*tl)/tn, (uz*c+vz*s+az*tl)/tn]; }
@@ -198,11 +246,25 @@ GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
     var n=NR(Math.cos(am),Math.sin(am));
     var vn=null; if(smooth){ var n0=NR(c0,s0), n1=NR(c1,s1); vn=[n0,n1,n1,n0]; }
     this.face([P(c0,s0,r0,x0,y0,z0),P(c1,s1,r0,x0,y0,z0),P(c1,s1,r1,x1,y1,z1),P(c0,s0,r1,x1,y1,z1)],n,rgb,false,vn);
-    if(caps){                                     /* 细杆的两头看不见，不封口（省一半三角形） */
+    if(caps&&real){                               /* 真实档：两头是微微鼓起的圆角，不是一刀切的平面 */
+      this.rodCap(x1,y1,z1,ax,ay,az,r1,c0,s0,c1,s1,P,rgb);
+      this.rodCap(x0,y0,z0,-ax,-ay,-az,r0,c1,s1,c0,s0,P,rgb);
+    }else if(caps){                               /* 细杆的两头看不见，不封口（省一半三角形） */
       this.face([[x1,y1,z1],P(c0,s0,r1,x1,y1,z1),P(c1,s1,r1,x1,y1,z1)],[ax,ay,az],rgb);
       this.face([[x0,y0,z0],P(c1,s1,r0,x0,y0,z0),P(c0,s0,r0,x0,y0,z0)],[-ax,-ay,-az],rgb);
     }
   }
+};
+/* 杆的圆头：端面往外鼓 0.25r，边缘一圈法线从侧面过渡到端面 */
+GeoBuilder.prototype.rodCap=function(cx,cy,cz,ax,ay,az,r,c0,s0,c1,s1,P,rgb){
+  var tip=[cx+ax*r*0.25,cy+ay*r*0.25,cz+az*r*0.25];
+  var b0=P(c0,s0,r,cx,cy,cz), b1=P(c1,s1,r,cx,cy,cz);
+  var m0=P(c0,s0,r*0.72,cx+ax*r*0.17,cy+ay*r*0.17,cz+az*r*0.17), m1=P(c1,s1,r*0.72,cx+ax*r*0.17,cy+ay*r*0.17,cz+az*r*0.17);
+  function rn(p){ var dx=p[0]-cx,dy=p[1]-cy,dz=p[2]-cz,l=Math.sqrt(dx*dx+dy*dy+dz*dz)||1; return [dx/l,dy/l,dz/l]; }
+  function mix(a,b,t){ var v=[a[0]*(1-t)+b[0]*t,a[1]*(1-t)+b[1]*t,a[2]*(1-t)+b[2]*t], l=Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2])||1; return [v[0]/l,v[1]/l,v[2]/l]; }
+  var A=[ax,ay,az], n0=rn(b0), n1=rn(b1);
+  this.face([b0,b1,m1,m0],A,rgb,false,[mix(n0,A,0.15),mix(n1,A,0.15),mix(n1,A,0.7),mix(n0,A,0.7)]);
+  this.face([m0,m1,tip],A,rgb,false,[mix(n0,A,0.7),mix(n1,A,0.7),A]);
 };
 /* 低多边形椭球：jit>0 时每个顶点随机抖一下（树冠、灌木），面是平的 */
 GeoBuilder.prototype.blob=function(x,y,z,rx,ry,rz,col,shade,seg,jit,seed){
@@ -244,7 +306,7 @@ GeoBuilder.prototype.lathe=function(x,y,z,prof,seg,col,shade){
     var a=SN[i], j=atEnd?i+1:i-1;
     if(j<0||j>=SN.length) return a;
     var b=SN[j], d=a[0]*b[0]+a[1]*b[1];
-    if(d<0.82) return a;
+    if(d<(lodSmooth()?0.45:0.82)) return a;           /* 真实档：60° 以内的折角都抹圆 */
     var mx=a[0]+b[0], my=a[1]+b[1], ml=Math.sqrt(mx*mx+my*my)||1;
     return [mx/ml,my/ml];
   }
@@ -276,6 +338,7 @@ GeoBuilder.prototype.lathe=function(x,y,z,prof,seg,col,shade){
 GeoBuilder.prototype.prism=function(x,y,z,prof,depth,col,shade,r){
   var rgb=this._rgb(col,shade), n=prof.length, hz=depth/2, i, ins=Math.min(r||0,hz*0.4);
   if(lodLow()) ins=0;
+  if(lodSmooth()) ins=Math.max(ins,Math.min(0.01,hz*0.3));             /* 真实档：挤出体的两侧也收一道边 */
   var cu=0, cv=0; for(i=0;i<n;i++){ cu+=prof[i][0]/n; cv+=prof[i][1]/n; }
   /* 倒角：两个端面往里缩 ins，侧面和端面之间加一圈斜面 */
   function shrink(p){ var du=p[0]-cu, dv=p[1]-cv, l=Math.sqrt(du*du+dv*dv)||1, s=Math.max(0,1-ins/l); return [cu+du*s,cv+dv*s]; }

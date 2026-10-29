@@ -84,7 +84,7 @@
   <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
     <button onclick="Settings.sub(0)">短</button><button onclick="Settings.sub(1)">标准</button><button onclick="Settings.sub(2)">长</button></div></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
-    <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button><button onclick="Settings.q(3)">超精细</button></div></div>
+    <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button><button onclick="Settings.q(3)">超精细</button><button onclick="Settings.q(4)">真实</button></div></div>
   <div class="srow"><span>镜头晃动</span><div class="seg" id="sShake">
     <button onclick="Settings.shake(0)">开</button><button onclick="Settings.shake(1)">关</button></div></div>
   <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
@@ -116,7 +116,7 @@
     <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
     <div class="mctl">
       <label>画面 <select id="mq" onchange="Settings.q(+this.value)">
-        <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option></select></label>
+        <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option><option value="4">真实</option></select></label>
       <label class="mbr">亮度 <input type="range" id="mb" min="60" max="150" value="100" oninput="Settings.bright(this.value)"></label>
       <a class="mwiki" href="wiki/index.html">游戏 Wiki <span aria-hidden="true">↗</span></a>
     </div>

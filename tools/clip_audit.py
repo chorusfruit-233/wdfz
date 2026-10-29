@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('rooms', nargs='*', help='房间 id，out 表示室外；省略则扫描全校')
     parser.add_argument('--out', type=Path, default=ROOT / 'tools' / 'clip_report.json')
-    parser.add_argument('--quality', type=int, choices=(0, 1, 2, 3), default=os.environ.get('Q', '1'))
+    parser.add_argument('--quality', type=int, choices=(0, 1, 2, 3, 4), default=os.environ.get('Q', '1'))
     args = parser.parse_args()
     srv = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT)))
     thread = threading.Thread(target=srv.serve_forever, daemon=True)
