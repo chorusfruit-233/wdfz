@@ -317,7 +317,6 @@ var SFX=(function(){
     var garage=play&&S.mode==='in'&&S.room==='garage1';
     /* 混响跟着空间走：车库、钟楼里很空，教室一般，室外几乎没有 */
     if(revIn) setG(revIn.gain,spaceWet(),0.4);
-    realRev();
     /* 铺底 */
     setG(L.padG.gain,on?0.045+0.05*tension:0,1.2);
     setG(L.padF.frequency,on?(180+tension*700+(out_?0:-40)):200,1.5);
@@ -427,7 +426,10 @@ var SFX=(function(){
     resume:function(){ ctx(); },
     ambient:function(){ var a=ctx(); if(!a) return; try{ buildLayers(); }catch(e){} bgOn=true; },
     stopAmbient:function(){ bgOn=false; },
-    tick:function(dt){ try{ if(L) tick(dt); else if(bgOn) buildLayers(); }catch(e){} },
+    tick:function(dt){
+      try{ realRev(); }catch(e){}                       /* 空间混响不依赖背景音：关掉「音乐/环境」时脚步等音效也要跟着空间变 */
+      try{ if(L) tick(dt); else if(bgOn) buildLayers(); }catch(e){}
+    },
     setVol:function(v){ vol=Math.max(0,Math.min(1,v)); if(mg){ try{ mg.gain.value=vol; }catch(e){} } },
     getVol:function(){ return vol; },
     surface:function(){ return stepSurface(); },

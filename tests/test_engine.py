@@ -46,8 +46,8 @@ class EngineTest(BrowserCase):
         self.assert_js(page, "QUALITY===4&&Quality.get().label==='真实'&&t4>t3*1.5")
         self.assert_js(page, "GLR.roomMesh.children.some(o=>o.material&&o.material.isMeshStandardMaterial)&&!!GLR.scene.environment")
         self.assert_js(page, "GLR.postMat.uniforms.uBloom.value>0&&GLR.postMat.uniforms.uAO.value>=0.5&&!document.getElementById('errbox')")
-        # 混响跟着空间走；回到别的档位用回通用混响，材质也换回原来那批
-        page.evaluate("""SFX.resume();SFX.ambient();S.screen='play';var R=INTERIORS.teach1;S.x=R.ox+30*R.tw;S.y=R.oy+18*R.th;
+        # 混响跟着空间走（关掉「音乐/环境」也一样，只要有音效）；回到别的档位用回通用混响，材质也换回原来那批
+        page.evaluate("""Settings.amb(0);SFX.resume();SFX.click();S.screen='play';var R=INTERIORS.teach1;S.x=R.ox+30*R.tw;S.y=R.oy+18*R.th;
             SFX.tick(.1);window.sp=[SFX.space()];doEnterRoom('garage1');running=false;SFX.tick(.1);sp.push(SFX.space());
             Settings.q(2);SFX.tick(.1);sp.push(SFX.space());render(.016);""")
         self.assertEqual(page.evaluate('sp'), ['hall', 'garage', None])
