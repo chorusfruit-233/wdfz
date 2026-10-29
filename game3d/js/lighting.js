@@ -77,12 +77,12 @@ function refreshSky(){
   if(GLR.skyTex) GLR.scene.background=GLR.skyTex;
 }
 function dayLight(){ return sunAt(hourNow()).day; }
-/* 白天室外的画面亮度减半（render.js 后期里乘 GLR.dayExpo）。屋里的灯保持原亮度，但会闪 */
-var DAY_K=0.5, DAY_BOOST=0.2;
+/* 白天室外的画面压到六成（后期里乘 GLR.dayExpo）：阴天，没有一点晴朗的感觉 */
+var DAY_K=0.6;
 var LCFG={
   ptI:26, ptDist:14, ptDecay:2.0,
   lampI:15, lampDist:15,
-  camI:1.9, camIk:1.1, camDist:10, camDecay:1.6      /* 身边的补光：照得到脚下和眼前，再远就是黑的 */
+  camI:0.9, camIk:0.45, camDist:6.5, camDecay:1.8    /* 身边的补光：只够看清脚下和眼前一两米，再远就是黑的 */
 };
 var MOON_DIR=[-0.42,0.80,0.43];
 var _lc1=null,_lc2=null;
@@ -102,14 +102,14 @@ function lightState(){
     var g=(S.room==='garage1');
     /* 室内的环境光压得很低：亮的只有灯底下和身边（镜头上那盏补光），没开灯的教室、走廊尽头、墙角都沉在暗里。
        白天也只靠窗透进来的阴天的光 */
-    st.amb = g?0.05:(0.08+0.11*day);
-    st.hemi= g?0.03:(0.03+0.10*day);
-    st.dir = g?0.03:(0.04+0.17*day);
-    st.ptK = g?1:(0.42+0.58*day);            /* 夜里的灯还亮着，只是暗、会闪 */
+    st.amb = g?0.025:(0.048+0.028*day);    /* 夜里不开手电也认得出桌椅、门框的轮廓 */
+    st.hemi= g?0.015:(0.022+0.030*day);
+    st.dir = g?0.015:(0.02+0.09*day);
+    st.ptK = g?0.8:(0.30+0.34*day);          /* 灯管老了：白天也只亮一半，夜里更暗、会闪 */
   }else{
-    st.amb = 0.07+0.22*day;
-    st.hemi= 0.10+0.40*day;
-    st.dir = day>0.02 ? (0.15+0.42*day) : 0.15;   /* 云层后面的太阳：光是散的，影子很淡 */
+    st.amb = 0.075+0.12*day;
+    st.hemi= 0.10+0.24*day;
+    st.dir = day>0.02 ? (0.11+0.27*day) : 0.11;   /* 云层很厚的阴天：光是散的、灰的，影子很淡 */
     st.ptK = 1;
   }
   return st;
@@ -145,7 +145,7 @@ function updateLighting(){
       var hz=skyRGB(hourNow())[3];
       var fk=0.86;
       var fr=hz[0]/255*fk, fgc=hz[1]/255*fk, fb=hz[2]/255*fk;
-      var dens=0.030+(0.0115-0.030)*s.day;    /* 白天也有一层潮气，远处的楼发灰 */
+      var dens=0.034+(0.019-0.034)*s.day;     /* 白天也有一层潮气，几十米外的楼就灰了 */
       if(AN&&AN.active&&AN.id==='rain'){ dens+=0.030; fr=fr*0.6+0.09; fgc=fgc*0.6+0.10; fb=fb*0.6+0.12; }
       if(S.mode==='in') dens*=1.4;            /* 天台：雾近一点，楼底下看不清 */
       fog.color.setRGB(fr,fgc,fb,THREE.SRGBColorSpace);
@@ -153,21 +153,24 @@ function updateLighting(){
     }else{
       /* 屋里的雾：远处是黑的。夜里更近，走廊十几米外就看不清了 */
       var fn=1-s.day;
-      fog.color.setRGB(0.075-0.03*fn,0.090-0.035*fn,0.100-0.035*fn,THREE.SRGBColorSpace);
-      fog.density=(S.room==='garage1')?0.082:(0.050+0.022*fn);
+      fog.color.setRGB(0.032-0.02*fn,0.040-0.024*fn,0.042-0.024*fn,THREE.SRGBColorSpace);
+      fog.density=(S.room==='garage1')?0.09:(0.072+0.03*fn);
     }
   }
   var tt=GLR.time||0;
   var pf=GLR.patrolFlick||0, pr=GLR.patrolRed||0, sum=0;
   for(i=0;i<GLR.roomLights.length;i++){
     var base=GLR.roomLightBase[i]*s.ptK;
-    var flick=roomFlicker(i,tt,s.day);
+    var flick=roomFlicker(i,tt,s.day)*lampHealth(i);
     if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
     lightCrackle(i,flick);
     sum+=flick;
     GLR.roomLights[i].intensity=base*Math.max(0.05,flick)*(1+0.3*pr)*gz;
     var bc=GLR.roomLightCol&&GLR.roomLightCol[i];
-    if(bc) GLR.roomLights[i].color.setRGB(bc.r+(1-bc.r)*pr, bc.g*(1-0.92*pr), bc.b*(1-0.95*pr));   /* 被它盯上：灯变红 */
+    if(bc){                                               /* 老灯管偏青绿；被它盯上：灯变红 */
+      var lr=bc.r*0.86, lg=bc.g*0.98, lb=bc.b*0.84;
+      GLR.roomLights[i].color.setRGB(lr+(1-lr)*pr, lg*(1-0.92*pr), lb*(1-0.95*pr));
+    }
   }
   /* 灯盘本身（自发光材质）跟着一起闪、一起变红 */
   var em=MATS.emit;
@@ -178,7 +181,7 @@ function updateLighting(){
   lampTick(s);
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
   var wn=GLR.worldNorm||0;
-  GLR.dayExpo=(s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn))*(1+DAY_BOOST*sun.day*(1-wn));   /* 白天整体再亮 20% */
+  GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
   GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
   try{ shadeTick(s); }catch(e){}
 }
@@ -207,6 +210,14 @@ function roomFlicker(i,tt,day){
   }
   if(day<0.3&&Math.sin(tt*0.37+ph*5.3)>0.985) f*=0.15;
   return f;
+}
+/* 每盏灯的寿命：大约三成已经坏了（只剩一点余光，偶尔抽一下），两成半亮不亮，其余正常。按房间和序号固定，进出房间不会变 */
+function lampHealth(i){
+  var r=lhash(i*3.1,(S.room||'').length*7.7+(S.room?S.room.charCodeAt(S.room.length-1):0));
+  if(i===0) return 1;                                   /* 每间屋第一盏总是好的（教室讲台上方那盏），不至于全黑 */
+  if(r<0.3) return 0.06+0.9*Math.max(0,Math.sin((GLR.time||0)*0.8+i*4.1)-0.97)*30;
+  if(r<0.55) return 0.45;
+  return 1;
 }
 function dyingTube(tt){
   var seg=Math.floor(tt/2.3), r=lhash(seg,91), u=tt-seg*2.3;
