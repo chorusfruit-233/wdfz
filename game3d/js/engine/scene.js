@@ -186,13 +186,31 @@ ThreeBackend.draw=function(dt){
   if(typeof GLRTEST!=='undefined'&&GLRTEST.nopost){
     GLR.renderer.setRenderTarget(null);
     GLR.renderer.render(GLR.scene,GLR.cam);
+    ThreeBackend.drawHands();
     return;
   }
   GLR.renderer.setRenderTarget(GLR.rt);
   GLR.renderer.clear();
   GLR.renderer.render(GLR.scene,GLR.cam);
+  ThreeBackend.drawHands();
   GLR.renderer.setRenderTarget(null);
   GLR.renderer.render(GLR.postScene,GLR.postCam);
+};
+/* 手持物使用独立目标，保留世界深度供 AO 读取，再在后期合成。 */
+ThreeBackend.drawHands=function(){
+  var root=GLR.handRoot,r=GLR.renderer;
+  var on=!!(root&&root.visible);
+  GLR.postMat.uniforms.uHands.value=on?1:0;
+  if(!on)return;
+  root.matrix.copy(GLR.cam.matrixWorld);root.matrixWorldNeedsUpdate=true;
+  if(GLRTEST.nopost){
+    var clear=r.autoClear;r.autoClear=false;r.clearDepth();
+    r.render(GLR.handScene,GLR.cam);r.autoClear=clear;return;
+  }
+  var color=r.getClearColor(new THREE.Color()),alpha=r.getClearAlpha();
+  r.setRenderTarget(GLR.handRT);r.setClearColor(0x000000,0);
+  r.clear();r.render(GLR.handScene,GLR.cam);
+  r.setClearColor(color,alpha);r.setRenderTarget(GLR.rt);
 };
 
 ThreeBackend.captureMenu=function(){
@@ -202,7 +220,7 @@ ThreeBackend.captureMenu=function(){
     c.fov=74; c.updateProjectionMatrix();
     c.lookAt(66.7+Math.cos(yaw)*12, 6.4, 133.3+Math.sin(yaw)*12);
     var u=GLR.postMat.uniforms;
-    u.uTime.value=0.6; u.uHurt.value=0; u.uFlash.value=0; u.uSan.value=0.62;
+    u.uTime.value=0.6; u.uHurt.value=0; u.uFlash.value=0; u.uSan.value=0.62;u.uHands.value=0;
     GLR.renderer.setRenderTarget(GLR.rt);
     GLR.renderer.clear();
     GLR.renderer.render(GLR.scene,c);

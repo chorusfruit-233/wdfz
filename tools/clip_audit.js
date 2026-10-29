@@ -275,7 +275,8 @@ var ClipAudit=(function(){
       var m=o.match(/^furn:(.)@(\d+),(\d+)/), ch=m[1], c=+m[2], r=+m[3];
       var cx=(c+0.5)*tw-halfW, cz=(r+0.5)*tw-halfH, f=FURN_SOLID[ch];
       var col=[];
-      if(f!==undefined) col.push([cx-tw*f/2,cx+tw*f/2,cz-tw*f/2,cz+tw*f/2]);
+      if(R.foot){ var dc, dr; for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++) (R.foot[(c+dc)+','+(r+dr)]||[]).forEach(function(b){ col.push([b.x0,b.x1,b.z0,b.z1]); }); }
+      else if(f!==undefined) col.push([cx-tw*f/2,cx+tw*f/2,cz-tw*f/2,cz+tw*f/2]);
       (R.propExtra||[]).forEach(function(b){ if(b.x1>cx-tw*2&&b.x0<cx+tw*2&&b.z1>cz-tw*2&&b.z0<cz+tw*2) col.push([b.x0,b.x1,b.z0,b.z1]); });
       var worst=0, wq=null;
       byOwner[o].forEach(function(p){
@@ -291,24 +292,94 @@ var ClipAudit=(function(){
       if(!col.length&&worst>0) issues.push({type:'walk',room:id,a:o,depth:'无碰撞',at:wq&&wq.map(function(v){ return +v.toFixed(2); })});
       else if(worst>PRAD*U2M-0.03&&worst<50) issues.push({type:'walk',room:id,a:o,depth:+(worst-(PRAD*U2M-0.03)).toFixed(2),at:wq.map(function(v){ return +v.toFixed(2); })});
     });
-    /* 巡察者：沿可走格子中心之间的连线走，身体半径 0.28 */
+    /* 巡察者：按它真实用的细网格（patrol.js 的 patNav，门都当开着），能站的小格中心离物件不到 0.28 米就是擦到了 */
     if(R.host==='teach'||R.host==='admin'||R.host==='lab'){
-      var segs=[], cc2, rr2;
-      for(rr2=0;rr2<R.rows;rr2++) for(cc2=0;cc2<R.cols;cc2++){
-        if(!patWalkable(R,cc2,rr2)) continue;
-        [[1,0],[0,1]].forEach(function(d){ if(patWalkable(R,cc2+d[0],rr2+d[1])) segs.push([(cc2+0.5)*tw-halfW,(rr2+0.5)*tw-halfH,(cc2+d[0]+0.5)*tw-halfW,(rr2+d[1]+0.5)*tw-halfH]); });
-      }
-      var pseen={};
+      var nv=patNav(R), N=PAT_NAV_N, pseen={};
+      function freeAt(i,j){ if(i<0||j<0||i>=nv.W||j>=nv.H) return false; return !nv.blk[i+j*nv.W]; }
       list.forEach(function(p){
         if(p.wall||!/^furn:/.test(p.o)) return;
         samples(p).forEach(function(q){
           if(q[1]<0.1||q[1]>2.4||pseen[p.o]) return;
-          for(var i=0;i<segs.length;i++){ var s=segs[i], vx=s[2]-s[0], vz=s[3]-s[1], u=((q[0]-s[0])*vx+(q[2]-s[1])*vz)/(vx*vx+vz*vz);
-            u=Math.max(0,Math.min(1,u)); if(Math.hypot(s[0]+vx*u-q[0],s[1]+vz*u-q[2])<0.28){ pseen[p.o]=1; issues.push({type:'patrol',room:id,a:p.o,at:q.map(function(v){ return +v.toFixed(2); })}); break; } }
+          var gi=(q[0]+halfW)/tw*N-0.5, gj=(q[2]+halfH)/tw*N-0.5, a, b;
+          for(b=Math.floor(gj)-2;b<=Math.ceil(gj)+2;b++) for(a=Math.floor(gi)-2;a<=Math.ceil(gi)+2;a++){
+            if(pseen[p.o]||!freeAt(a,b)) continue;
+            var nx=(a+0.5)/N*tw-halfW, nz=(b+0.5)/N*tw-halfH;
+            if(Math.hypot(nx-q[0],nz-q[2])<0.28){ pseen[p.o]=1; issues.push({type:'patrol',room:id,a:p.o,at:q.map(function(v){ return +v.toFixed(2); })}); }
+          }
         });
       });
     }
+    reach(R).forEach(function(x){ issues.push(x); });
+    if(R.host==='teach'&&R.floor>=1&&R.floor<=5) npcSeat(R,list,halfW,halfH,tw).forEach(function(x){ issues.push(x); });
     return issues;
+  }
+  /* 坐着的同学（classroom.js 的 ncSeatFigure）和他面前的课桌、身下的椅子：人形转半圈、放在格子中心往后 0.32 格 */
+  function npcSeat(R,list,halfW,halfH,tw){
+    var out=[], r, c, cell=null;
+    for(r=0;r<R.rows&&!cell;r++) for(c=0;c<R.cols&&!cell;c++) if(R.grid[r][c]==='d') cell=[c,r];
+    if(!cell) return out;
+    var tag='furn:d@'+cell[0]+','+cell[1]+'#', desk=list.filter(function(p){ return p.o.indexOf(tag)===0; });
+    var saved={}, k;
+    for(k in FIG_GEO) if(/^sit\|/.test(k)){ saved[k]=FIG_GEO[k]; delete FIG_GEO[k]; }
+    REC={list:[],mat:'',outdoor:false}; OWN=['npc'];
+    try{ figGeo('sit'); }finally{ var fl=REC.list; REC=null; OWN=[]; }
+    for(k in FIG_GEO) if(/^sit\|/.test(k)) delete FIG_GEO[k];
+    for(k in saved) FIG_GEO[k]=saved[k];
+    var x0=(cell[0]+0.5)*tw-halfW, z0=(cell[1]+0.82)*tw-halfH;
+    function tp(q){ return [x0-q[0],q[1],z0-q[2]]; }
+    fl.forEach(function(p){
+      if(p.c) p.c=tp(p.c); if(p.a) p.a=tp(p.a); if(p.b) p.b=tp(p.b);
+      if(p.tc!==undefined){ p.tc=-p.tc; p.ts=-p.ts; }
+      desk.forEach(function(d){
+        var hit=collide(p,d,false);
+        if(hit) out.push({type:'npc',room:R.id,a:'npc',b:d.o,pa:desc(p),pb:desc(d),at:hit.map(function(v){ return +v.toFixed(2); })});
+      });
+    });
+    return out;
+  }
+  /* 可达性：门全开，玩家（半径 PRAD）从出口、楼梯、门口出发能走到的地方里，
+     每个能交互的东西（门、出口、楼梯、座位、柜子、能搜的家具、设施……）旁边 1.2 米内要有能站的点 */
+  var REACH_CH='=OSPHqdfRDQxAMKVTZCNYwbXk';
+  function reach(R){
+    var id=R.id, out=[], step=3, W=Math.ceil(R.w/step), H=Math.ceil(R.h/step), seen=new Uint8Array(W*H), q=[], head=0;
+    if(R.spiral) return out;                                        /* 钟楼：旋梯另有自己的高度逻辑 */
+    var saved=OPENDOORS, fake={}, r, c, k;
+    for(r=0;r<R.rows;r++) for(c=0;c<R.cols;c++) if(R.grid[r][c]==='=') fake[doorKey(R,R.ox+(c+0.5)*R.tw,R.oy+(r+0.5)*R.th)]=1;
+    OPENDOORS=fake;
+    try{
+      function stand(x,y){ return Collision.depth(x,y,PRAD,R)<1e-7; }
+      function P(i,j){ return [R.ox+(i+0.5)*step,R.oy+(j+0.5)*step]; }
+      for(r=0;r<R.rows;r++) for(c=0;c<R.cols;c++){
+        var ch=R.grid[r][c]; if(ch!=='O'&&ch!=='S') continue;
+        var i0=Math.floor((c-1.5)*R.tw/step), i1=Math.ceil((c+2.5)*R.tw/step), j0=Math.floor((r-1.5)*R.th/step), j1=Math.ceil((r+2.5)*R.th/step), i, j;
+        for(j=Math.max(0,j0);j<Math.min(H,j1);j++) for(i=Math.max(0,i0);i<Math.min(W,i1);i++){
+          var p=P(i,j); if(!seen[i+j*W]&&stand(p[0],p[1])){ seen[i+j*W]=1; q.push(i+j*W); }
+        }
+      }
+      while(head<q.length){
+        k=q[head++]; var ci=k%W, cj=(k-ci)/W;
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){
+          var ni=ci+d[0], nj=cj+d[1], nk=ni+nj*W; if(ni<0||nj<0||ni>=W||nj>=H||seen[nk]) return;
+          var p=P(ni,nj); if(!stand(p[0],p[1])) return; seen[nk]=1; q.push(nk);
+        });
+      }
+      var tw=R.tw*U2M, halfW=R.cols*tw/2, halfH=R.rows*tw/2;
+      for(r=0;r<R.rows;r++) for(c=0;c<R.cols;c++){
+        var ch2=R.grid[r][c]; if(REACH_CH.indexOf(ch2)<0) continue;
+        if(ch2==='S'&&((c>0&&R.grid[r][c-1]==='S')||(r>0&&R.grid[r-1][c]==='S'))) continue;   /* 楼梯按一组算，只查第一格 */
+        var F=(R.foot&&R.foot[c+','+r])||null, cx=(c+0.5)*tw-halfW, cz=(r+0.5)*tw-halfH, ok=false;
+        if(ch2==='S'){ var si2=stairInfo(R,c,r); cx+=(si2.gw-1)*tw/2; cz+=(si2.gd-1)*tw/2; }
+        var ri0=Math.max(0,Math.floor((c-2)*R.tw/step)), ri1=Math.min(W,Math.ceil((c+3)*R.tw/step)), rj0=Math.max(0,Math.floor((r-2)*R.th/step)), rj1=Math.min(H,Math.ceil((r+3)*R.th/step)), a, b;
+        for(b=rj0;b<rj1&&!ok;b++) for(a=ri0;a<ri1&&!ok;a++){
+          if(!seen[a+b*W]) continue;
+          var pp=P(a,b), mx=(pp[0]-R.ox)*U2M-halfW, mz=(pp[1]-R.oy)*U2M-halfH, d=Math.hypot(mx-cx,mz-cz);
+          if(F) F.forEach(function(q2){ d=Math.min(d,Math.hypot(Math.max(q2.x0-mx,0,mx-q2.x1),Math.max(q2.z0-mz,0,mz-q2.z1))+0.3); });
+          if(d<=1.2) ok=true;
+        }
+        if(!ok) out.push({type:'reach',room:id,a:ch2+'@'+c+','+r,at:[+cx.toFixed(2),0,+cz.toFixed(2)]});
+      }
+    }finally{ OPENDOORS=saved; }
+    return out;
   }
   /* ---------- 室外 ---------- */
   function outdoor(){

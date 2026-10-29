@@ -39,12 +39,12 @@ class EngineTest(BrowserCase):
             window.oldNC=NC.grp;window.oldFX=ANFX.grp;
             window.snapshot=()=>JSON.stringify([S.x,S.y,S.tsec,S.san,S.viol,AN,ROAM,OPENDOORS,SP,PAT,
               NC.blocking,NC.t,NC.occ,NC.list.map(f=>f.position.toArray()),ANFX.t]);
-            window.before=snapshot();window.collider=JSON.stringify([INTERIORS.teach1.propExtra,INTERIORS.teach1.stairExtra]);
+            window.before=snapshot();window.collider=JSON.stringify([INTERIORS.teach1.foot,INTERIORS.teach1.propExtra,INTERIORS.teach1.stairExtra]);
             window.oldFigure=NC.list[0].children[0].geometry;""")
         for q in (3, 1, 2, 0):
             page.evaluate('q=>Settings.q(q)', q)
             self.assert_js(page, 'snapshot()===before&&NC.grp===oldNC&&ANFX.grp===oldFX')
-            self.assert_js(page, 'JSON.stringify([INTERIORS.teach1.propExtra,INTERIORS.teach1.stairExtra])===collider')
+            self.assert_js(page, 'JSON.stringify([INTERIORS.teach1.foot,INTERIORS.teach1.propExtra,INTERIORS.teach1.stairExtra])===collider')
             if q == 3:
                 self.assert_js(page, 'NC.list[0].children[0].geometry.attributes.position.count>oldFigure.attributes.position.count')
         self.assert_js(page, 'NC.list[0].children[0].geometry===oldFigure')

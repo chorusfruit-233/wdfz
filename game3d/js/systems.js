@@ -227,6 +227,17 @@ function useLeave(){
 
 var ROAM_LIT_NEED=1.6, ROAM_REACH=26, ROAM_CAR=200;
 var ROAM={on:false,x:0,y:0,cd:0,seen:0,litAcc:0,stage:'approach',waitT:0,lureTold:0};
+/* 车库里那个人使用约 0.28 米身体半径，与玩家共用圆形障碍检测。 */
+function roamBlocked(R,x,y){
+  return Collision.depth(x,y,2.5,R)>1e-7;
+}
+function roamMove(R,dx,dy){
+  var n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/1.25));dx/=n;dy/=n;
+  for(var i=0;i<n;i++){
+    if(!roamBlocked(R,ROAM.x+dx,ROAM.y))ROAM.x+=dx;
+    if(!roamBlocked(R,ROAM.x,ROAM.y+dy))ROAM.y+=dy;
+  }
+}
 function dangerAt(){
   if(S.mode==='in'){
     if(S.room==='garage1') return 'garage';
@@ -279,13 +290,16 @@ function roamTick(dt){
         var a=rnd(0,TAU), far=rnd(300,460);
         bx=clamp(S.x+Math.cos(a)*far,R.ox+24,R.ox+R.w-24);
         by=clamp(S.y+Math.sin(a)*far,R.oy+24,R.oy+R.h-24);
-        if(dist2(bx,by,S.x,S.y)>250*250){ ok=true; break; }
+        if(dist2(bx,by,S.x,S.y)>250*250&&!roamBlocked(R,bx,by)){ ok=true; break; }
       }
-      if(!ok){ /* 房间太小兜底：放到离玩家最远的角 */
-        var cs=[[R.ox+30,R.oy+30],[R.ox+R.w-30,R.oy+30],[R.ox+30,R.oy+R.h-30],[R.ox+R.w-30,R.oy+R.h-30]];
+      if(!ok){ /* 兜底仍须在可站立的车道里，不能直接塞进墙角或车内。 */
         var best=-1;
-        for(var i=0;i<4;i++){ var d=dist2(cs[i][0],cs[i][1],S.x,S.y); if(d>best){best=d;bx=cs[i][0];by=cs[i][1];} }
+        for(var row=1;row<R.rows-1;row++)for(var col=1;col<R.cols-1;col++){
+          var px=R.ox+(col+0.5)*R.tw,py=R.oy+(row+0.5)*R.th,d=dist2(px,py,S.x,S.y);
+          if(d>best&&!roamBlocked(R,px,py)){best=d;bx=px;by=py;ok=true;}
+        }
       }
+      if(!ok){ROAM.waitT=1;return;}
       ROAM.x=bx; ROAM.y=by; ROAM.stage='approach';
       if(!ROAM.backTold){ ROAM.backTold=1; os('我：……后面又有脚步声了。',3.8); }
     }
@@ -295,7 +309,7 @@ function roamTick(dt){
   if(lit){
     ROAM.cd=Math.max(ROAM.cd,0.55);
     var bdx=ROAM.x-S.x, bdy=ROAM.y-S.y, bd=Math.hypot(bdx,bdy)||1;
-    ROAM.x+=bdx/bd*13*dt; ROAM.y+=bdy/bd*13*dt;
+    roamMove(R,bdx/bd*13*dt,bdy/bd*13*dt);
   }else if(ROAM.cd<=0){
     /* 以前每 1.15–2.45 秒挪一步，平均比走路还慢，跑起来就能甩开，直接冲过去开车。
        现在近了、或者听见你在跑，就挪得比你跑得还快：只能拿光把它定住。 */
@@ -304,9 +318,7 @@ function roamTick(dt){
     SFX.step();
     var tx=lure?lure.x:S.x, ty=lure?lure.y:S.y;
     var dx=tx-ROAM.x, dy=ty-ROAM.y, dl=Math.hypot(dx,dy)||1, step=Math.min(34,dl);
-    var nx=ROAM.x+dx/dl*step, ny=ROAM.y+dy/dl*step;
-    if(!solidAtInterior(R,nx,ROAM.y)) ROAM.x=nx;
-    if(!solidAtInterior(R,ROAM.x,ny)) ROAM.y=ny;
+    roamMove(R,dx/dl*step,dy/dl*step);
     if(lure&&!ROAM.lureTold){ ROAM.lureTold=1; os('我：那东西停了一下，脚步朝硬币落地的方向去了。',3.6); }
   }
   var ddx=S.x-ROAM.x, ddy=S.y-ROAM.y;

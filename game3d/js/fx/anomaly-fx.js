@@ -254,7 +254,7 @@ function anfxSpawn(kind,wx,wy){
     }
   } else if(kind==='stare'){
     /* 全体回头：教室四面墙上一只只睁开眼睛（参考《废墟图书馆》"目光"） */
-    var spots=gazeWallSpots(INTERIORS[S.room],QUALITY===0?14:24,12), gi;
+    var spots=gazeWallSpots(INTERIORS[S.room],Quality.get().gazeEyes,12), gi;
     for(gi=0;gi<spots.length;gi++){
       var gs=spots[gi], gq=anfxW2S(gs.wx,gs.wy);
       var ge=gazeEye(0.8+Math.random()*0.9);
@@ -263,7 +263,7 @@ function anfxSpawn(kind,wx,wy){
       ge.userData={d:0.2+Math.random()*1.4, w:ge.scale.x, ph:Math.random()*6.283};
       grp.add(ge); ANFX.items.push(ge);
     }
-    for(gi=0;gi<(QUALITY===0?4:8);gi++){       /* 还有几只就浮在你面前的半空里 */
+    for(gi=0;gi<Quality.get().gazeFloat;gi++){       /* 还有几只就浮在你面前的半空里 */
       var fa3=S.ang+(Math.random()-0.5)*1.9, fr3=2.6+Math.random()*3.2;
       var fq3=anfxW2S(S.x+Math.cos(fa3)*fr3/U2M, S.y+Math.sin(fa3)*fr3/U2M);
       var fe=gazeEye(0.6+Math.random()*0.7);

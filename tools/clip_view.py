@@ -4,7 +4,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import os, shutil, sys, threading, time
 from playwright.sync_api import sync_playwright
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get('WDFZ_ROOT') or Path(__file__).resolve().parents[1])   # WDFZ_ROOT：拍另一份代码（比如修复前的 worktree）
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *_a): pass
 def main():
@@ -40,7 +40,7 @@ def main():
               S.tsec=760; for(var k=0;k<2;k++) render(0.016);
             }""", [room, x, y, z, dist, yaw])
             time.sleep(0.3)
-            p.screenshot(path=str(out / f'{i:02d}_{room}.png'))
+            p.screenshot(path=str(out / (os.environ.get('NAMES','').split(',')[i] + '.png' if os.environ.get('NAMES') else f'{i:02d}_{room}.png')))
         b.close()
     srv.shutdown()
 if __name__ == '__main__':

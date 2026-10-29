@@ -47,7 +47,15 @@ function buildHands(){
   canopy.position.set(0,0.98,-0.12); brolly.add(canopy);
   brolly.rotation.set(-0.42,0,-0.12);                    /* 往前、往里倾：抬头能看见伞沿 */
   HANDS.items={torch:torch,phone:phone,brolly:brolly};
-  [HANDS.L,HANDS.R].forEach(function(h){ h.visible=false; GLR.cam.add(h); h.traverse(function(o){ o.renderOrder=20; }); });
+  /* 手单独放一个场景，渲染层独立绘制再合成（engine/scene.js）：贴着墙也不会被截断。
+     灯光照着主场景的环境光、天光、身边的补光每帧抄一份。 */
+  var hs=new THREE.Scene(), root=new THREE.Group();
+  root.matrixAutoUpdate=false; root.visible=false; root.userData.overlay=true;
+  HANDS.amb=new THREE.AmbientLight(0xffffff,0); HANDS.hemi=new THREE.HemisphereLight(0xffffff,0x000000,0);
+  HANDS.near=new THREE.PointLight(0xffffff,0,3,1.5); HANDS.near.position.set(0.1,0.25,0.1);
+  hs.add(HANDS.amb); hs.add(HANDS.hemi); root.add(HANDS.near); hs.add(root);
+  GLR.handScene=hs; GLR.handRoot=root;
+  [HANDS.L,HANDS.R].forEach(function(h){ h.visible=false; root.add(h); });
 }
 function handHold(hand,item){
   var it=HANDS.items[item]; if(!it) return;
@@ -65,6 +73,12 @@ function handsTick(dt){
   if(phoneOn){ if(!leftUse) leftUse='phone'; else if(!rightUse) rightUse='phone'; }
   for(var k in it) it[k].visible=false;
   HANDS.L.visible=!!leftUse; HANDS.R.visible=!!rightUse;
+  GLR.handRoot.visible=!!(leftUse||rightUse);
+  if(GLR.handRoot.visible){
+    HANDS.amb.color.copy(GLR.amb.color); HANDS.amb.intensity=GLR.amb.intensity;
+    HANDS.hemi.color.copy(GLR.hemi.color); HANDS.hemi.groundColor.copy(GLR.hemi.groundColor); HANDS.hemi.intensity=GLR.hemi.intensity;
+    HANDS.near.color.copy(GLR.camLight.color); HANDS.near.intensity=GLR.camLight.intensity*0.6+(USE.torch?0.8:0);
+  }
   if(leftUse) handHold(HANDS.L,leftUse);
   if(rightUse) handHold(HANDS.R,rightUse);
   /* 走路时轻轻晃，跑起来晃得大一点 */

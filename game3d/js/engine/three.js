@@ -60,7 +60,7 @@ ThreeBackend.boot=function(){
   var postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   var postMat=new THREE.ShaderMaterial({
     uniforms:{
-      tDiffuse:{value:rt.texture},tDepth:{value:rt.texture},uAO:{value:0},uNear:{value:cam.near},uFar:{value:cam.far},uAA:{value:0},
+      tDiffuse:{value:rt.texture},tDepth:{value:rt.texture},tHands:{value:rt.texture},uHands:{value:0},uAO:{value:0},uNear:{value:cam.near},uFar:{value:cam.far},uAA:{value:0},
       uTime:{value:0}, uRes:{value:new THREE.Vector2(2,2)},
       uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0},
       uFx:{value:GLRTEST.nofx?1.0:0.0}
@@ -70,6 +70,7 @@ ThreeBackend.boot=function(){
 'precision highp float;',
 'uniform sampler2D tDiffuse;uniform float uTime;uniform vec2 uRes;',
 'uniform sampler2D tDepth;uniform float uAO;uniform float uNear;uniform float uFar;uniform float uAA;',
+'uniform sampler2D tHands;uniform float uHands;',
 'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;',
 'varying vec2 vUv;',
 'float hash(vec2 p){',
@@ -105,6 +106,7 @@ ThreeBackend.boot=function(){
 '  float wob=(1.0-uSan);',
 '  uv.x+=sin(uv.y*11.0+uTime*0.9)*0.0012*wob;',
 '  vec3 col=sceneColor(uv)*contactAO(uv);',
+'  if(uHands>0.5){vec4 hand=texture2D(tHands,uv);col=mix(col,hand.rgb,hand.a);}',
 '  col=aces(col*uBright*uExpo*1.12);',
 '  float lum=dot(col,vec3(0.2126,0.7152,0.0722));',
 '  col=mix(vec3(lum),col,0.70+0.25*uGaze);',
@@ -198,5 +200,11 @@ ThreeBackend.resize=function(){
   var RTS=(GLRTEST&&GLRTEST.hq)?1:q.scale;
   var rw=Math.max(2,Math.round(w*dpr*RTS)), rh=Math.max(2,Math.round(h*dpr*RTS));
   GLR.rt.setSize(rw,rh);
+  if(!GLR.handRT||GLR.handRT.samples!==samples){
+    if(GLR.handRT)GLR.handRT.dispose();
+    GLR.handRT=new THREE.WebGLRenderTarget(2,2,{depthBuffer:true,stencilBuffer:false});
+    GLR.handRT.samples=samples;
+  }
+  GLR.handRT.setSize(rw,rh);u.tHands.value=GLR.handRT.texture;
   GLR.postMat.uniforms.uRes.value.set(rw,rh);
 };

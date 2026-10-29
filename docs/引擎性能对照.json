@@ -1,0 +1,348 @@
+{
+  "viewport": [
+    960,
+    540
+  ],
+  "dpr": 1,
+  "frames_per_case": 3,
+  "method": "Chromium SwiftShader; render + synchronous readPixels; 固定机位，冻结游戏逻辑；倒数为等效渲染帧率，非真实游玩 FPS",
+  "before_root": "/workspace/wdfz-pr7-before",
+  "samples": [
+    {
+      "version": "重构前",
+      "scene": "教室",
+      "quality": 0,
+      "milliseconds": [
+        186.70000000298023,
+        167.79999999701977,
+        208.29999999701977
+      ],
+      "median_ms": 186.7,
+      "equivalent_fps": 5.4,
+      "calls": 23,
+      "triangles": 42400,
+      "memory": {
+        "geometries": 21,
+        "textures": 14
+      },
+      "target": [
+        528,
+        297
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构前",
+      "scene": "校园",
+      "quality": 0,
+      "milliseconds": [
+        183.6000000089407,
+        161.09999999403954,
+        125.70000000298023
+      ],
+      "median_ms": 161.1,
+      "equivalent_fps": 6.2,
+      "calls": 29,
+      "triangles": 110862,
+      "memory": {
+        "geometries": 31,
+        "textures": 23
+      },
+      "target": [
+        528,
+        297
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构前",
+      "scene": "教室",
+      "quality": 1,
+      "milliseconds": [
+        246.6000000089407,
+        300.5,
+        265.29999999701977
+      ],
+      "median_ms": 265.3,
+      "equivalent_fps": 3.8,
+      "calls": 28,
+      "triangles": 69642,
+      "memory": {
+        "geometries": 23,
+        "textures": 15
+      },
+      "target": [
+        672,
+        378
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构前",
+      "scene": "校园",
+      "quality": 1,
+      "milliseconds": [
+        352.8999999910593,
+        253.1000000089407,
+        356.70000000298023
+      ],
+      "median_ms": 352.9,
+      "equivalent_fps": 2.8,
+      "calls": 30,
+      "triangles": 218262,
+      "memory": {
+        "geometries": 32,
+        "textures": 24
+      },
+      "target": [
+        672,
+        378
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构前",
+      "scene": "教室",
+      "quality": 2,
+      "milliseconds": [
+        421.79999999701977,
+        487.59999999403954,
+        449.90000000596046
+      ],
+      "median_ms": 449.9,
+      "equivalent_fps": 2.2,
+      "calls": 63,
+      "triangles": 203162,
+      "memory": {
+        "geometries": 24,
+        "textures": 17
+      },
+      "target": [
+        960,
+        540
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构前",
+      "scene": "校园",
+      "quality": 2,
+      "milliseconds": [
+        953.3999999910593,
+        966.7000000029802,
+        921.0999999940395
+      ],
+      "median_ms": 953.4,
+      "equivalent_fps": 1.0,
+      "calls": 77,
+      "triangles": 920379,
+      "memory": {
+        "geometries": 32,
+        "textures": 26
+      },
+      "target": [
+        960,
+        540
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "教室",
+      "quality": 0,
+      "milliseconds": [
+        148.5,
+        202.1000000089407,
+        180.19999998807907
+      ],
+      "median_ms": 180.2,
+      "equivalent_fps": 5.5,
+      "calls": 28,
+      "triangles": 44360,
+      "memory": {
+        "geometries": 21,
+        "textures": 14
+      },
+      "target": [
+        528,
+        297
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "校园",
+      "quality": 0,
+      "milliseconds": [
+        188.6000000089407,
+        155.3999999910593,
+        176.40000000596046
+      ],
+      "median_ms": 176.4,
+      "equivalent_fps": 5.7,
+      "calls": 29,
+      "triangles": 121230,
+      "memory": {
+        "geometries": 31,
+        "textures": 23
+      },
+      "target": [
+        528,
+        297
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "教室",
+      "quality": 1,
+      "milliseconds": [
+        227.40000000596046,
+        281.59999999403954,
+        280.90000000596046
+      ],
+      "median_ms": 280.9,
+      "equivalent_fps": 3.6,
+      "calls": 28,
+      "triangles": 69642,
+      "memory": {
+        "geometries": 23,
+        "textures": 15
+      },
+      "target": [
+        672,
+        378
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "校园",
+      "quality": 1,
+      "milliseconds": [
+        392.70000000298023,
+        417.59999999403954,
+        425.20000000298023
+      ],
+      "median_ms": 417.6,
+      "equivalent_fps": 2.4,
+      "calls": 30,
+      "triangles": 219990,
+      "memory": {
+        "geometries": 32,
+        "textures": 24
+      },
+      "target": [
+        672,
+        378
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "教室",
+      "quality": 2,
+      "milliseconds": [
+        580.5,
+        688.1999999880791,
+        902.3999999910593
+      ],
+      "median_ms": 688.2,
+      "equivalent_fps": 1.5,
+      "calls": 64,
+      "triangles": 203882,
+      "memory": {
+        "geometries": 24,
+        "textures": 17
+      },
+      "target": [
+        960,
+        540
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "校园",
+      "quality": 2,
+      "milliseconds": [
+        1153.9000000059605,
+        1129.7000000029802,
+        1089.2999999970198
+      ],
+      "median_ms": 1129.7,
+      "equivalent_fps": 0.9,
+      "calls": 77,
+      "triangles": 920379,
+      "memory": {
+        "geometries": 32,
+        "textures": 26
+      },
+      "target": [
+        960,
+        540
+      ],
+      "samples": 0,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "教室",
+      "quality": 3,
+      "milliseconds": [
+        811.6999999880791,
+        961.3999999910593,
+        846.9000000059605
+      ],
+      "median_ms": 846.9,
+      "equivalent_fps": 1.2,
+      "calls": 166,
+      "triangles": 754075,
+      "memory": {
+        "geometries": 24,
+        "textures": 19
+      },
+      "target": [
+        960,
+        540
+      ],
+      "samples": 4,
+      "renderer": "WebKit WebGL"
+    },
+    {
+      "version": "重构后",
+      "scene": "校园",
+      "quality": 3,
+      "milliseconds": [
+        2212.7999999970198,
+        2189.7000000029802,
+        2240.6000000089407
+      ],
+      "median_ms": 2212.8,
+      "equivalent_fps": 0.5,
+      "calls": 77,
+      "triangles": 2039223,
+      "memory": {
+        "geometries": 32,
+        "textures": 27
+      },
+      "target": [
+        960,
+        540
+      ],
+      "samples": 4,
+      "renderer": "WebKit WebGL"
+    }
+  ]
+}

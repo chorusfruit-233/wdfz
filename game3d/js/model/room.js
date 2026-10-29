@@ -18,6 +18,7 @@ function buildRoomGeometry(R){
   R.stats={desk:0, cubicle:0, chair:0, seat:0};
   R.stairExtra=[];                 /* 以前每进一次房间都往里追加一遍，越积越多 */
   R.propExtra=[];                  /* 大件家具的真实占地（米，房间中心为原点） */
+  R.foot={};                       /* 每格家具模型在人身高范围内的占地矩形（米），碰撞用它 */
   var K=new Kit();
   var W=R.cols,H=R.rows,tw=TTILE*U2M,th=TTILE*U2M;
   var halfW=W*tw*0.5, halfH=H*th*0.5;
@@ -118,8 +119,11 @@ function buildRoomGeometry(R){
       if(ch==='=') { roomDoor(c,x,y,cx,cz); continue; }
       if(ch==='O') { roomExit(c,x,y,cx,cz); continue; }
       if(ch==='S') { roomStairs(c,x,y,cx,cz); continue; }
+      K.cap=[];
       if(FURN[ch]) FURN[ch](c,x,y,cx,cz);
       else furnFallback(c,x,y,cx,cz,ch);
+      if(K.cap.length&&FOOT_SKIP.indexOf(ch)<0) R.foot[x+','+y]=footMerge(K.cap);
+      K.cap=null;
     }
   }
   roomDecor(c,isRoof);
@@ -201,6 +205,19 @@ function roomExit(c,x,y,cx,cz){
   K.unframe();
 }
 /* ---- 楼梯：踏步（水磨石 + 防滑条 + 踢面）、两侧栏杆和木扶手、梯井挡墙 ---- */
+/* 不按模型占地挡人的：门垫吊牌（L）、讲台旁的东西走得过去的那些在这里列 */
+var FOOT_SKIP=['L'];
+/* 合并：被别的矩形整个包住的去掉，剩下的按面积从大到小，碰撞先查大的 */
+function footMerge(L){
+  var out=[], i, j;
+  L.sort(function(a,b){ return (b.x1-b.x0)*(b.z1-b.z0)-(a.x1-a.x0)*(a.z1-a.z0); });
+  for(i=0;i<L.length;i++){
+    var a=L[i], inside=false;
+    for(j=0;j<out.length;j++){ var b=out[j]; if(a.x0>=b.x0-0.01&&a.x1<=b.x1+0.01&&a.z0>=b.z0-0.01&&a.z1<=b.z1+0.01){ inside=true; break; } }
+    if(!inside) out.push(a);
+  }
+  return out;
+}
 function roomStairs(c,x,y,cx,cz){
   var K=c.K, R=c.R, tw=c.tw, th=c.th;
   if((x>0&&R.grid[y][x-1]==='S')||(y>0&&R.grid[y-1][x]==='S')) return;   /* 一组只建一次 */

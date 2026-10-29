@@ -67,6 +67,14 @@ function solidAtInterior(R,wx,wy){
     }
   }
   if(R.spiral&&typeof spiralSolid==='function'&&spiralSolid(R,wx,wy)) return true;
+  if(R.foot){                        /* 房间建过模型：按模型真实占地（本格和周围一圈的家具都可能伸过来） */
+    var c0=Math.floor((wx-R.ox)/R.tw), r0=Math.floor((wy-R.oy)/R.th), dc, dr, F, fi;
+    for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++){
+      F=R.foot[(c0+dc)+','+(r0+dr)]; if(!F) continue;
+      for(fi=0;fi<F.length;fi++){ sb=F[fi]; if(lx>sb.x0&&lx<sb.x1&&lz>sb.z0&&lz<sb.z1) return true; }
+    }
+    return false;
+  }
   var f=FURN_SOLID[t];
   if(f!==undefined){
     var c=Math.floor((wx-R.ox)/R.tw), r=Math.floor((wy-R.oy)/R.th);
@@ -163,7 +171,7 @@ function entryNear(R,chs){
 }
 function unstick(){
   try{
-    if(S.mode!=='in') return;
+    if(S.mode!=='in'||S.seated) return;
     var R=INTERIORS[S.room]; if(!R) return;
     if(!solidAt(S.x,S.y)) return;
     var c=Math.floor((S.x-R.ox)/R.tw), r=Math.floor((S.y-R.oy)/R.th), rad, dr, dc;

@@ -196,11 +196,43 @@ function Kit(){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; }
 Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder(matUV(key),this); return this.B[key]; };
 Kit.prototype.frame=function(x,z,rot,y){ this.T.x=x||0; this.T.z=z||0; this.T.y=y||0; this.T.c=Math.cos(rot||0); this.T.s=Math.sin(rot||0); return this; };
 Kit.prototype.unframe=function(){ return this.frame(0,0,0,0); };
-Kit.prototype.box=function(m,x,y,z,sx,sy,sz,col,sh){ this.g(m).box(x,y,z,sx,sy,sz,col,sh); };
-Kit.prototype.bevel=function(m,x,y,z,sx,sy,sz,col,sh,r){ this.g(m).bevel(x,y,z,sx,sy,sz,col,sh,r); };
-Kit.prototype.cyl=function(m,x,y,z,rb,rt,h,seg,col,sh,caps){ this.g(m).cyl(x,y,z,rb,rt,h,seg,col,sh,caps); };
-Kit.prototype.rod=function(m,x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh){ this.g(m).rod(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh); };
-Kit.prototype.blob=function(m,x,y,z,rx,ry,rz,col,sh,seg,jit,seed){ this.g(m).blob(x,y,z,rx,ry,rz,col,sh,seg,jit,seed); };
+/* 由建模尺寸记录解析包围盒，不读取渲染顶点；改变分段/倒角不改变碰撞。
+   各图元在 0.10–1.85 米内的投影用于家具占地，frame 变换与模型一致。 */
+var CAP_Y0=0.10,CAP_Y1=1.85;
+Kit.prototype._capBounds=function(m,x0,y0,z0,x1,y1,z1,sceneSpace){
+  if(!this.cap||m==='decal')return;
+  var T=this.T;if(!sceneSpace){y0+=T.y;y1+=T.y;}
+  if(y1<CAP_Y0||y0>CAP_Y1)return;
+  if(!sceneSpace){
+    var ax0=Infinity,ax1=-Infinity,az0=Infinity,az1=-Infinity;
+    [x0,x1].forEach(function(x){[z0,z1].forEach(function(z){
+      var xx=T.x+x*T.c+z*T.s,zz=T.z-x*T.s+z*T.c;
+      ax0=Math.min(ax0,xx);ax1=Math.max(ax1,xx);az0=Math.min(az0,zz);az1=Math.max(az1,zz);
+    });});
+    x0=ax0;x1=ax1;z0=az0;z1=az1;
+  }
+  this.cap.push({x0:x0,x1:x1,z0:z0,z1:z1});
+};
+Kit.prototype.box=function(m,x,y,z,sx,sy,sz,col,sh){
+  this.g(m).box(x,y,z,sx,sy,sz,col,sh);this._capBounds(m,x-sx/2,y-sy/2,z-sz/2,x+sx/2,y+sy/2,z+sz/2);
+};
+Kit.prototype.bevel=function(m,x,y,z,sx,sy,sz,col,sh,r){
+  this.g(m).bevel(x,y,z,sx,sy,sz,col,sh,r);this._capBounds(m,x-sx/2,y-sy/2,z-sz/2,x+sx/2,y+sy/2,z+sz/2);
+};
+Kit.prototype.cyl=function(m,x,y,z,rb,rt,h,seg,col,sh,caps){
+  var b=this.g(m);b.cyl(x,y,z,rb,rt,h,seg,col,sh,caps);
+  if(this.cap){var p=b._pt(x,y,z),r=Math.max(rb,rt);this._capBounds(m,p[0]-r,p[1],p[2]-r,p[0]+r,p[1]+h,p[2]+r,true);}
+};
+Kit.prototype.rod=function(m,x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh){
+  var b=this.g(m);b.rod(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,sh);
+  if(this.cap){var a=b._pt(x0,y0,z0),c=b._pt(x1,y1,z1),r=Math.max(r0,r1);
+    this._capBounds(m,Math.min(a[0],c[0])-r,Math.min(a[1],c[1])-r,Math.min(a[2],c[2])-r,
+      Math.max(a[0],c[0])+r,Math.max(a[1],c[1])+r,Math.max(a[2],c[2])+r,true);}
+};
+Kit.prototype.blob=function(m,x,y,z,rx,ry,rz,col,sh,seg,jit,seed){
+  this.g(m).blob(x,y,z,rx,ry,rz,col,sh,seg,jit,seed);
+  var k=1+(jit||0)/2;this._capBounds(m,x-rx*k,y-ry*k,z-rz*k,x+rx*k,y+ry*k,z+rz*k);
+};
 Kit.prototype.build=function(group){
   var grp=group||new THREE.Group(), k;
   for(k in this.B){

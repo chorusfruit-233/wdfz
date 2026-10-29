@@ -102,7 +102,7 @@ function facadeWindows(K,face,px,pz,sw,sd,u0,u1,y,ww,wh,spacing,litKey){
     B('dark',0,0,0.022,ww,wh,0.01,WIN_DARK,1.0);                 /* 窗洞 */
     if(!low) B('glass',0,0,0.030,ww*0.96,wh*0.96,0.006,0x6a8494,1.1);   /* 玻璃（有高光） */
     B('stone',0,-wh/2-0.10,0.07,ww+0.26,0.07,0.14,0xd8d4cb,1.05); /* 窗台 */
-    if(QUALITY>1){
+    if(Quality.get().facadeDetail){
       B('metal',0,0,0.034,0.05,wh*0.96,0.02,0xb8b3aa,1.04);        /* 竖梃 */
       B('metal',0,wh*0.18,0.034,ww*0.96,0.04,0.02,0xb8b3aa,1.04);
     }
@@ -614,10 +614,10 @@ function fenceRun(K,fx,fz,len,horiz){
   B('stone',0,baseH+0.06,0,len+0.02,0.12,t+0.10,0x8f938f,1.05);
   B('metal',0,baseH+railH,0,len,0.06,0.06,0x2f6b3f,1.0);
   B('metal',0,baseH+0.30,0,len,0.05,0.05,0x2f6b3f,1.0);
-  var n=Math.max(2,Math.round(len/(low?0.9:(QUALITY>1?0.45:0.6)))), k;
+  var n=Math.max(2,Math.round(len/Quality.get().fenceStep)), k;
   for(k=0;k<=n;k++){
     var u=-len/2+(len/n)*k;
-    var spear=(QUALITY>1);                                         /* 矛尖只在"精细"画 */
+    var spear=Quality.get().facadeDetail;                                   /* 矛尖只在「精细」及以上画 */
     if(horiz){ K.rod('metal',fx+u,baseH+0.12,fz,fx+u,baseH+railH+0.12,fz,0.016,0.016,4,0x2f6b3f); if(spear) K.cyl('metal',fx+u,baseH+railH+0.12,fz,0.03,0.0,0.12,4,0x2f6b3f); }
     else { K.rod('metal',fx,baseH+0.12,fz+u,fx,baseH+railH+0.12,fz+u,0.016,0.016,4,0x2f6b3f); if(spear) K.cyl('metal',fx,baseH+railH+0.12,fz+u,0.03,0.0,0.12,4,0x2f6b3f); }
   }
@@ -676,6 +676,26 @@ function gateModel(K,grp,wx,wy,wide,tallSign,vert,name){
   K.unframe();
 }
 
+/* 每个地图对象用哪个建模函数：先按 id，再按种类（k），再看是不是有柱廊的教学类楼，最后是小平房。
+   以前是一长串 if；加一种楼只要在表里加一行 */
+var BLD_BY_ID={
+  garage:function(K,grp,o,px,pz,sw,sd){ garageRamp(K,px,pz,sw,sd); },
+  garw:  function(K,grp,o,px,pz,sw,sd){ garagePed(K,px,pz,sw,sd); },
+  bell:   function(K,grp,o,px,pz,sw,sd){ bldBell(K,grp,o,px,pz,sw,sd); },
+  dormN:  function(K,grp,o,px,pz,sw,sd){ bldDorm(K,grp,o,px,pz,sw,sd); },
+  canteen:function(K,grp,o,px,pz,sw,sd){ bldCanteen(K,grp,o,px,pz,sw,sd); },
+  shed:  function(K,grp,o,px,pz,sw,sd){ bldShed(K,o,px,pz,sw,sd); }
+};
+var BLD_BY_KIND={
+  field: function(K,grp,o,px,pz,sw,sd){ fieldModel(K,o,px,pz,sw,sd); },
+  court: function(K,grp,o,px,pz,sw,sd){ courtModel(K,o,px,pz,sw,sd); },
+  link:  function(K,grp,o,px,pz,sw,sd){ bldLink(K,o,px,pz,sw,sd); }
+};
+BLD_BY_KIND.track=BLD_BY_KIND.court; BLD_BY_KIND.garden=BLD_BY_KIND.court; BLD_BY_ID.dormS=BLD_BY_ID.dormN;
+function bldBuilderOf(o){
+  return BLD_BY_ID[o.id]||BLD_BY_KIND[o.k]||(o.open1f?function(K,grp,o2,px,pz,sw,sd){ bldClassroom(K,grp,o2,px,pz,sw,sd); }
+                                                    :function(K,grp,o2,px,pz,sw,sd){ bldSmall(K,grp,o2,px,pz,sw,sd); });
+}
 function buildOutdoorGeometry(){
   var K=new Kit(), grp=new THREE.Group(), i;
   var x0=BOUND.x0*SC*U2M, y0=BOUND.y0*SC*U2M;
@@ -690,17 +710,8 @@ function buildOutdoorGeometry(){
     var px=(ow.x+ow.w/2)*U2M, pz=(ow.y+ow.h/2)*U2M;
     var sw=ow.w*U2M, sd=ow.h*U2M;
     FAC.o=o; FAC.gap=null;
-    if(o.k==='field'){ fieldModel(K,o,px,pz,sw,sd); continue; }
-    if(o.k==='court'||o.k==='track'||o.k==='garden'){ courtModel(K,o,px,pz,sw,sd); continue; }
-    if(o.k==='link'){ if(!DEV_HIDE.link) bldLink(K,o,px,pz,sw,sd); continue; }
-    if(o.open1f){ bldClassroom(K,grp,o,px,pz,sw,sd); continue; }
-    if(o.id==='garage'){ garageRamp(K,px,pz,sw,sd); continue; }
-    if(o.id==='garw'){ garagePed(K,px,pz,sw,sd); continue; }
-    if(o.id==='bell'){ bldBell(K,grp,o,px,pz,sw,sd); continue; }
-    if(o.id==='dormN'||o.id==='dormS'){ bldDorm(K,grp,o,px,pz,sw,sd); continue; }
-    if(o.id==='canteen'){ bldCanteen(K,grp,o,px,pz,sw,sd); continue; }
-    if(o.id==='shed'){ bldShed(K,o,px,pz,sw,sd); continue; }
-    bldSmall(K,grp,o,px,pz,sw,sd);
+    if(o.k==='link'&&DEV_HIDE.link) continue;
+    bldBuilderOf(o)(K,grp,o,px,pz,sw,sd);
   }
   FAC.o=null; FAC.gap=null;
   if(!DEV_HIDE.fence){

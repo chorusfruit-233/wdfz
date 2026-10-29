@@ -387,10 +387,16 @@ function sitDown(){
   var myCol=MY_COL, myRow=MY_ROW;
   var col=Math.floor((S.x-R.ox)/R.tw), row=Math.floor((S.y-R.oy)/R.th);
   var isMine=(S.room==='teach1'&&Math.abs(col-myCol)<=1&&Math.abs(row-myRow)<=1);
-  if(tileAt(R,S.x,S.y)!=='P'){
-    var col=Math.floor((S.x-R.ox)/R.tw), row=Math.floor((S.y-R.oy)/R.th);
-    S.x=R.ox+(col+0.5)*R.tw; S.y=R.oy+(row+0.5)*R.th;
+  /* 坐到旁边那把椅子上（椅子现在有碰撞，人站不到椅子格里去了） */
+  var best=null, bd=1e9, dr, dc;
+  for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++){
+    var rr=row+dr, cc=col+dc;
+    if(rr<0||cc<0||rr>=R.rows||cc>=R.cols||R.grid[rr][cc]!=='P') continue;
+    var px=R.ox+(cc+0.5)*R.tw, py=R.oy+(rr+0.5)*R.th, d=Math.hypot(px-S.x,py-S.y);
+    if(d<bd){ bd=d; best=[px,py]; }
   }
+  if(best){ S.x=best[0]; S.y=best[1]; S.ang=-PI/2; }
+  else{ S.x=R.ox+(col+0.5)*R.tw; S.y=R.oy+(row+0.5)*R.th; }
   S.seated=true; S.enterCool=0.5;
   S.eyeH=EYE;
   if(isMine) os('我坐下了。这是我自己的位子。',2.4);
