@@ -191,10 +191,9 @@ var Dev={
   san:function(){ if(!Dev.canUse())return;S.san=100; S.stam=100;S.tired=false; Dev.report('SAN / 体力已恢复');Dev.refresh(); },
   time:function(min){ if(!Dev.canUse())return;if(min>=0) advanceGameTime(min); else rewindGameTime(-min);patEndIfInvalid();Dev.report('时间 '+(min>0?'+':'')+min+' 分钟');Dev.refresh(); },
   endActiveAnomaly:function(){
-    if(!AN.active)return;
-    if(UI.chooseOpen)UI.closeChoice();
-    var id=AN.id;anEnd();
-    if(id==='turn')smileClear();
+    if(AN.active){if(UI.chooseOpen)UI.closeChoice();anEnd();}
+    /* 拍肩异象结束后笑脸仍可能停留数秒，切场景或替换时一并移除。 */
+    smileClear();
   },
   prepareTeleport:function(){
     Dev.clearPreview();if(UI.chooseOpen)UI.closeChoice();Dev.endActiveAnomaly();
@@ -224,7 +223,7 @@ var Dev={
   triggerAnomaly:function(id){
     try{
       Dev.clearPreview();
-      if(AN.active)Dev.endActiveAnomaly();
+      Dev.endActiveAnomaly();
       AN.id=id; AN.t=0; AN.acc=0; AN.active=true; AN.data={}; AN.sub=0;
       AN.lastBig=!AN_SMALL[id];
       os('【Dev】'+((AN_NAME&&AN_NAME[id])||id),2.6);
@@ -234,7 +233,7 @@ var Dev={
   },
   anomEnd:function(){
     if(!Dev.canUse())return;
-    try{ if(AN.active) Dev.endActiveAnomaly(); Dev.report('异象已结束');Dev.refresh(); }catch(e){ AN.active=false; AN.id=null;Dev.report('异象结束失败'); }
+    try{ Dev.endActiveAnomaly(); Dev.report('异象已结束');Dev.refresh(); }catch(e){ AN.active=false; AN.id=null;Dev.report('异象结束失败'); }
   },
   anim:function(mode){
     if(!Dev.canUse()||[1,2,3].indexOf(mode)<0)return;

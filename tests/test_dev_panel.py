@@ -242,6 +242,13 @@ class DebugPanelTest(BrowserCase):
                 page.wait_for_timeout(220)
                 self.assert_js(page,'S.viol===28&&S.san===80&&!UI.chooseOpen')
 
+    def test_teleport_clears_a_finished_shoulder_visual(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""Dev.triggerAnomaly('turn');smileShow('jump');anEnd();
+          window.hadSmile=!!SMILE.grp;document.getElementById('devout').value='0';Dev.tpo();""")
+        self.assert_js(page,"hadSmile&&S.mode==='out'&&!SMILE.grp&&!AN.active")
+
     def test_debug_freeze_holds_ambient_events_but_allows_previews(self):
         page = self.game()
         self.open_panel(page)
@@ -252,6 +259,9 @@ class DebugPanelTest(BrowserCase):
         self.assert_js(page,'ANFX.t===fxTime')
         page.evaluate("Dev.anomEnd();document.getElementById('devdeath').value='grip';Dev.previewDeath();render(.5)")
         self.assert_js(page,"ANFX.kind==='death'&&ANFX.t>.4")
+        page.evaluate("window.picked=0;window.frozenTime=S.tsec;UI.choice('限时选择',[{label:'确认',fn:function(){picked++}}],{timeoutMs:80})")
+        page.wait_for_function('picked===1',timeout=2000)
+        self.assert_js(page,'DEV.freeze&&S.tsec===frozenTime&&!UI.chooseOpen')
         page.evaluate('Dev.clearPreview();Dev.toggleFreeze();render(.5)')
         self.assert_js(page,'HALLU.next<h&&APPAR.next<a')
 
