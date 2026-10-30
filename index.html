@@ -134,33 +134,76 @@
   <div class="pcf" id="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" id="pcexit" onclick="PCGAME.stop()">退出电脑</button>
   <button type="button" class="pcx" onclick="PCGAME.stop()" aria-label="退出电脑">✕ 退出</button>
   <div id="pcpad"><button type="button" data-d="0,-1" aria-label="上">▲</button><button type="button" data-d="-1,0" aria-label="左">◀</button><button type="button" data-d="1,0" aria-label="右">▶</button><button type="button" data-d="0,1" aria-label="下">▼</button></div></div>
-<div id="dev">
-  <div class="dh">DEV MODE <span id="devst"></span></div>
-  <div class="drow"><b>位置</b><span id="devpos" style="flex:1;font-size:10px;opacity:.85;line-height:1.7"></span></div>
-  <div class="drow"><b>准星</b><span id="devlook" style="flex:1;font-size:10px;opacity:.9;line-height:1.7">—</span></div>
-  <div class="drow"><b>室内</b><select id="devroom"></select><button onclick="Dev.tp()">传送</button></div>
-  <div class="drow"><b>室外</b><select id="devout"></select><button onclick="Dev.tpo()">传送</button></div>
-  <div class="drow"><b>异象</b><select id="devanom"></select><button onclick="Dev.anom()">触发</button><button onclick="Dev.anomEnd()">结束</button></div>
-  <div class="drow"><b>演出</b><select id="devanim"><option value="1">assimilate</option><option value="2">rain</option><option value="3">mirror</option></select><button onclick="Dev.anim(+document.getElementById('devanim').value)">播放</button></div>
-  <div class="drow"><b>死亡</b><select id="devdeath"></select><button onclick="Dev.death()">播放</button></div>
-  <div class="drow2">
-    <button id="devfast" onclick="Dev.fast()">快跑 ×2.6</button>
-    <button id="devgod" onclick="Dev.god()">无敌</button>
-    <button id="devsearch" onclick="Dev.search()">翻找读条</button>
-    <button onclick="Dev.san()">SAN 满</button>
-    <button onclick="Dev.revive()">复活</button>
-    <button onclick="Dev.time(30)">+30 分</button>
-    <button onclick="Dev.time(-30)">−30 分</button>
-    <button onclick="Dev.hide('canopy')">切柱廊顶</button>
-    <button onclick="Dev.hide('sign')">切花园牌</button>
-    <button onclick="Dev.hide('link')">切连廊</button>
-    <button onclick="Dev.hide('fence')">切围墙</button>
-    <button onclick="Dev.fakeNormal()">假正常 开/关</button>
-    <button onclick="Dev.prologue()">重看前情提要</button>
-    <button onclick="Dev.lamps()">灯下站死</button>
-    <button onclick="Dev.status()">状态</button>
-    <button onclick="Dev.close()">关闭</button>
+<div id="devbackdrop" aria-hidden="true"></div>
+<div id="dev" role="dialog" aria-modal="true" aria-labelledby="devTitle">
+  <header class="devhead">
+    <div><div class="deveye">DEVELOPER CONSOLE <span id="devst">· ON</span></div><h2 id="devTitle">调试面板</h2></div>
+    <button type="button" class="devclose" onclick="Dev.close()" aria-label="关闭调试面板">×</button>
+  </header>
+  <div class="devrun"><span id="devrun" role="status"></span><button type="button" id="devfreeze" onclick="Dev.toggleFreeze()">继续模拟</button></div>
+  <nav class="devtabs" aria-label="调试功能">
+    <button type="button" data-dev-tab="status" aria-controls="dev-page-status" aria-pressed="true" onclick="Dev.tab('status')">状态</button>
+    <button type="button" data-dev-tab="scene" aria-controls="dev-page-scene" aria-pressed="false" onclick="Dev.tab('scene')">场景</button>
+    <button type="button" data-dev-tab="events" aria-controls="dev-page-events" aria-pressed="false" onclick="Dev.tab('events')">事件</button>
+    <button type="button" data-dev-tab="tools" aria-controls="dev-page-tools" aria-pressed="false" onclick="Dev.tab('tools')">工具</button>
+  </nav>
+  <div class="devbody" id="devbody" onscroll="Dev.scrollHint()">
+    <section class="devpage" id="dev-page-status">
+      <div class="devsection"><div><h3>当前状态</h3><p>数值随游戏刷新</p></div><span id="devclock"></span></div>
+      <div class="devstats">
+        <div><span>SAN</span><strong id="devsanValue">—</strong></div>
+        <div><span>体力</span><strong id="devstamValue">—</strong></div>
+        <div><span>违规</span><strong id="devviolValue">—</strong></div>
+        <div><span>同化</span><strong id="devttValue">—</strong></div>
+      </div>
+      <div class="devread"><span>当前位置</span><b id="devpos">—</b></div>
+      <div class="devread"><span>准星探测</span><b id="devlook">—</b></div>
+      <div class="devread"><span>当前异象</span><b id="devactive">—</b></div>
+      <div class="devsection"><div><h3>设定数值</h3><p>范围 0–100；归零或满值可能触发死亡</p></div></div>
+      <div class="devrow"><select id="devstatkey" aria-label="选择要设定的数值"><option value="san">SAN</option><option value="stam">体力</option><option value="viol">违规</option><option value="tt">同化</option></select><input id="devstatvalue" type="number" min="0" max="100" step="any" value="50" aria-label="数值"><button type="button" onclick="Dev.setStat()">设定</button></div>
+      <div class="devbuttons"><button type="button" onclick="Dev.san()">恢复 SAN / 体力</button><button type="button" onclick="Dev.revive()">复活角色</button></div>
+    </section>
+    <section class="devpage" id="dev-page-scene" hidden>
+      <div class="devsection"><div><h3>场景传送</h3><p>室内传送会按游戏规则自动存档</p></div></div>
+      <label for="devroomFilter">室内位置</label><input id="devroomFilter" type="search" placeholder="搜索名称或 ID" oninput="Dev.filter('room')">
+      <div class="devrow"><select id="devroom" aria-label="室内位置"></select><button type="button" id="devroomGo" onclick="Dev.tp()">传送</button></div><small id="devroomCount"></small>
+      <label for="devoutFilter">室外位置</label><input id="devoutFilter" type="search" placeholder="搜索地点" oninput="Dev.filter('out')">
+      <div class="devrow"><select id="devout" aria-label="室外位置"></select><button type="button" id="devoutGo" onclick="Dev.tpo()">传送</button></div><small id="devoutCount"></small>
+      <div class="devsection"><div><h3>调整时间</h3><p>游戏内时间；跨日规则照常生效</p></div></div>
+      <div class="devbuttons"><button type="button" onclick="Dev.time(-30)">−30 分钟</button><button type="button" onclick="Dev.time(30)">+30 分钟</button></div>
+    </section>
+    <section class="devpage" id="dev-page-events" hidden>
+      <div class="devsection"><div><h3>异象</h3><p>触发会结束当前异象并跳过正常出现条件</p></div></div>
+      <label for="devanomFilter">选择异象</label><input id="devanomFilter" type="search" placeholder="搜索名称或 ID" oninput="Dev.filter('anom')">
+      <div class="devrow"><select id="devanom" aria-label="选择异象"></select><button type="button" id="devanomGo" onclick="Dev.anom()">触发</button><button type="button" onclick="Dev.anomEnd()">结束</button></div><small id="devanomCount"></small>
+      <div class="devsection"><div><h3>画面演出</h3><p>仅播放画面效果</p></div></div>
+      <div class="devrow"><select id="devanim" aria-label="选择画面演出"><option value="1">融入</option><option value="2">雨</option><option value="3">镜面</option></select><button type="button" onclick="Dev.anim(+document.getElementById('devanim').value)">播放</button></div>
+      <div class="devsection"><div><h3>死亡效果</h3><p>预览不会消耗道具或删除存档</p></div></div>
+      <label for="devdeathFilter">选择死亡效果</label><input id="devdeathFilter" type="search" placeholder="搜索效果" oninput="Dev.filter('death')">
+      <div class="devrow"><select id="devdeath" aria-label="选择死亡效果"></select><button type="button" id="devdeathGo" onclick="Dev.previewDeath()">预览</button></div><small id="devdeathCount"></small>
+      <button type="button" class="devdanger" onclick="Dev.death()">触发实际死亡</button><p class="devhint">实际死亡遵循救命道具和存档规则，可能删除存档。</p>
+    </section>
+    <section class="devpage" id="dev-page-tools" hidden>
+      <div class="devsection"><div><h3>调试开关</h3><p>当前开关状态会高亮显示</p></div></div>
+      <div class="devbuttons">
+        <button type="button" id="devfast" aria-pressed="false" onclick="Dev.fast()">快跑 ×2.6</button>
+        <button type="button" id="devgod" aria-pressed="false" onclick="Dev.god()">无敌</button>
+        <button type="button" id="devsearch" aria-pressed="false" onclick="Dev.search()">翻找读条</button>
+        <button type="button" id="devfake" aria-pressed="false" onclick="Dev.fakeNormal()">假正常</button>
+      </div>
+      <div class="devsection"><div><h3>场景显示</h3><p>高亮表示该部分已隐藏</p></div></div>
+      <div class="devbuttons">
+        <button type="button" id="devhide-canopy" aria-pressed="false" onclick="Dev.hide('canopy')">柱廊顶</button>
+        <button type="button" id="devhide-sign" aria-pressed="false" onclick="Dev.hide('sign')">花园牌</button>
+        <button type="button" id="devhide-link" aria-pressed="false" onclick="Dev.hide('link')">连廊</button>
+        <button type="button" id="devhide-fence" aria-pressed="false" onclick="Dev.hide('fence')">围墙</button>
+      </div>
+      <div class="devsection"><div><h3>其他操作</h3></div></div>
+      <div class="devbuttons"><button type="button" onclick="Dev.lamps()">触发走廊灯异象</button><button type="button" onclick="Dev.prologue()">重看前情提要</button></div>
+    </section>
+    <p class="devhint">打开面板时默认暂停游戏模拟；真实时间倒计时仍会继续。<span class="devkbd">F2 或 Esc 可关闭。</span></p>
   </div>
+  <div class="devfooter"><span id="devmessage" role="status" aria-live="polite">调试操作会改变当前游戏状态。</span><span id="devscroll" hidden>↓ 可滚动</span></div>
 </div>
 <div id="touch">
   <div id="stick" role="group" aria-label="移动摇杆"><div id="knob"></div></div>

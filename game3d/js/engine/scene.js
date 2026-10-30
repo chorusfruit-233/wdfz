@@ -222,6 +222,12 @@ ThreeBackend.draw=function(dt){
   entFace();
   var u=GLR.postMat.uniforms;
   u.uTime.value=GLR.time;
+  var preview=VisualState.deathAnim;
+  if(preview){
+    preview.t=Math.min(preview.dur,preview.t+dt);
+    u.uDm.value=preview.mode;u.uDt.value=preview.t/preview.dur;
+    if(preview.t>=preview.dur){VisualState.deathAnim=null;u.uDm.value=0;u.uDt.value=0;}
+  }else{u.uDm.value=0;u.uDt.value=0;}
   var _fnOn=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
   GLR.fnNorm=GLR.fnNorm===undefined?0:GLR.fnNorm;
   GLR.fnNorm+= (_fnOn-GLR.fnNorm)*Math.min(1,dt*1.6);

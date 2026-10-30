@@ -1163,7 +1163,7 @@ class ControlsTest(BrowserCase):
         page.evaluate('Dev.open()')
         self.assert_js(page, '!DEV.on')
         page.evaluate('Dev.open()')
-        self.assert_js(page, "DEV.on&&document.getElementById('dev').style.display==='block'")
+        self.assert_js(page, "DEV.on&&getComputedStyle(document.getElementById('dev')).display!=='none'")
         page.evaluate('Dev.close()')
 
     def test_anomaly_choice_uses_real_time_and_random_option(self):

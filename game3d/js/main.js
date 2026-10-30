@@ -12,7 +12,7 @@ function frame(t){
   if(!running) { lastT=t; return; }
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
-  QualityWatch.tick(dtG,S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!document.hidden);
+  QualityWatch.tick(dtG,S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!(DEV.on&&DEV.freeze)&&!document.hidden);
   /* 允许一秒内的慢帧按真实时间补齐固定步；更长的卡顿仍有上限，避免恢复时跑出大量积压。 */
   accum+=Math.min(dt,1);
   var step=1/60, guard=0;
@@ -27,6 +27,7 @@ function update(dt){
   LESSON.checkInterrupt();
   if(S.screen!=='play') return;
   if(PRO.on) return;                     /* 前情提要期间世界不动 */
+  if(DEV.on&&DEV.freeze) return;        /* 调试暂停只影响打开面板期间的模拟 */
   VisualState.time+=dt;
   updateDialog(dt);
   if(S.dead){
@@ -58,8 +59,7 @@ function render(dt){
       }
     }
   }catch(e){}
-  try{ if(DEV.on) Dev.pos(); }catch(e){}
-  try{ if(DEV.on&&VisualState.time%0.4<0.05) Dev.look(); }catch(e){}
+  try{ if(DEV.on){DEV.refreshT-=dt;if(DEV.refreshT<=0){DEV.refreshT=.3;Dev.refresh();}} }catch(e){}
   try{ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
   Engine.draw(dt); updateHUD(); drawMini(dt);
@@ -178,6 +178,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  if(DEV.on)Dev.close(false);Dev.clearPreview();
   LESSON.close(false);
   clearSearch();
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
@@ -309,6 +310,7 @@ var Game={
     Game.resume();
   },
   quit:function(){
+    if(DEV.on)Dev.close(false);Dev.clearPreview();
     LESSON.close(false);
     running=true;
     clearSearch();
