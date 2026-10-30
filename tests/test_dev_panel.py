@@ -138,6 +138,28 @@ class DebugPanelTest(BrowserCase):
         page.wait_for_timeout(2900)
         self.assert_js(page,"!S.dead&&getComputedStyle(document.getElementById('die')).display==='none'")
 
+    def test_revive_prevents_an_old_death_epitaph_overwriting_a_new_one(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""window.savedTimeout=window.setTimeout;window.deathTimers=[];
+          window.setTimeout=function(fn,ms){if(ms===3000||ms===2000){deathTimers.push({fn,ms});return 999;}return savedTimeout(fn,ms)};
+          window.confirm=()=>true;S.day=2;S.diff='hard';S.talent='code';S.bag=[];
+          document.getElementById('devdeath').value='neck';Dev.death();Dev.revive();
+          document.getElementById('devdeath').value='vignette';Dev.death();
+          document.getElementById('dieepi').textContent='新死亡';
+          deathTimers.find(x=>x.ms===3000).fn();window.setTimeout=savedTimeout;""")
+        self.assert_js(page,"S.dead&&S.death==='vignette'&&document.getElementById('dieepi').textContent==='新死亡'")
+
+    def test_effect_preview_does_not_leak_into_a_new_session(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate('Dev.anim(2);render(.3)')
+        self.assert_js(page,'GLR.postMat.uniforms.uDm.value===2')
+        page.evaluate('Game.quit()')
+        self.assert_js(page,'!VisualState.deathAnim&&GLR.postMat.uniforms.uDm.value===0&&GLR.postMat.uniforms.uDt.value===0')
+        page.evaluate("SFX.anim(1);freshState('hard');running=false;render(0)")
+        self.assert_js(page,'!VisualState.deathAnim&&GLR.postMat.uniforms.uDm.value===0')
+
     def test_cancelled_prologue_restart_keeps_current_save(self):
         page = self.game()
         page.evaluate("saveGame();window.saved=localStorage.getItem('wdfz3d');localStorage.setItem('wdfz_pro','1');window.confirm=()=>false")

@@ -309,11 +309,12 @@ function kill(msg,fx){
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
   var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3);
   if(!wake) clearSave();                 /* 没有下一次了：不能再读档回来 */
+  var _deadId=S.deadId=(S.deadId||0)+1;
   if(!wake) setTimeout(function(){
+    if(S.deadId!==_deadId||!S.dead) return;
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
   },_hold);
   os(msg,2.6,OS_FORCE);
-  var _deadId=S.deadId=(S.deadId||0)+1;
   setTimeout(function(){
     if(S.deadId!==_deadId||!S.dead) return;
     if(wake){ dreamWake(); return; }

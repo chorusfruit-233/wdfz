@@ -236,6 +236,10 @@ var Dev={
     var fx=DEV.previewFx;DEV.previewFx=null;
     if(fx){if(ANFX.grp===fx)anfxClear();ThreeBackend.disposeGroup(fx);}
   },
+  clearAnimation:function(){
+    VisualState.deathAnim=null;
+    if(GLR.postMat){GLR.postMat.uniforms.uDm.value=0;GLR.postMat.uniforms.uDt.value=0;}
+  },
   previewDeath:function(){
     if(!Dev.canUse())return;
     if(AN.active){Dev.report('请先结束当前异象，再预览死亡效果。');return;}
@@ -268,8 +272,7 @@ var Dev={
     var dEl=document.getElementById('die'); if(dEl) dEl.style.display='none';
     var fEl=document.getElementById('flash'); if(fEl) fEl.style.opacity='0';
     Dev.clearPreview();try{ if(ANFX.kind==='death')anfxClear(); }catch(e){}
-    try{ if(GLR.postMat){ GLR.postMat.uniforms.uDm.value=0; GLR.postMat.uniforms.uDt.value=0; } }catch(e){}
-    GLR.deathAnim=null;VisualState.hurt=0;VisualState.flash=0;
+    Dev.clearAnimation();VisualState.hurt=0;VisualState.flash=0;
     Dev.report('已复活');Dev.refresh();updateTouchUI();
   }
 };

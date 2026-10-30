@@ -178,7 +178,8 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
-  if(DEV.on)Dev.close(false);Dev.clearPreview();
+  if(DEV.on)Dev.close(false);
+  Dev.clearPreview();Dev.clearAnimation();
   LESSON.close(false);
   clearSearch();
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
@@ -310,7 +311,8 @@ var Game={
     Game.resume();
   },
   quit:function(){
-    if(DEV.on)Dev.close(false);Dev.clearPreview();
+    if(DEV.on)Dev.close(false);
+    Dev.clearPreview();Dev.clearAnimation();
     LESSON.close(false);
     running=true;
     clearSearch();

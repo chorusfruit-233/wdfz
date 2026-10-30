@@ -131,6 +131,7 @@ body.touch #pcgame>button:not(.pcx){display:none}
 body.dev-open #devbackdrop{display:block}body.dev-open #toast{z-index:130}
 #dev{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:120;display:none;
   flex-direction:column;overflow:hidden;width:min(460px,calc(100vw - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));
+  max-height:calc(100vh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
   max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
   background:rgba(7,17,14,.98);border:1px solid rgba(130,180,155,.38);border-radius:14px;
   box-shadow:0 18px 60px rgba(0,0,0,.55);font:13px/1.5 var(--ui-font);letter-spacing:.2px;color:#d6e8df}
