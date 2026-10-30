@@ -54,8 +54,29 @@ function addSolidM(cx,cz,hw,hd){          /* 以米为单位登记一个实心�
   OUT_SOLID.push({x0:(cx-hw)*k,y0:(cz-hd)*k,x1:(cx+hw)*k,y1:(cz+hd)*k});
 }
 /* ---- 树：分段的树干、几根主枝、几团椭球树冠（以前全是方块） ---- */
+/* 树种（Blender 建模，tools/blender/assets/nature.py）：香樟多、法国梧桐、银杏（十月底叶子黄了）、水杉；各两种长法 */
+var TREE_KIND=[['camphor',0.40,0x2f5530],['plane',0.25,0x4d6a36],['ginkgo',0.20,0xb09a3a],['meta',0.15,0x4a5a30]];
+/* 挑树种用的整数散列（hash2 里的乘法超出双精度，低位丢了，连着的种子挑出来几乎一样） */
+function treeHash(n){ n=Math.imul(n^0x9e3779b9,0x85ebca6b); n^=n>>>13; n=Math.imul(n,0xc2b2ae35); n^=n>>>16; return (n>>>0)/4294967296; }
 function buildTree(K, tx, tz, seed, lod){
-  var r=function(k){ return hash2(seed*13+k, k*7+3); };
+  var r=function(k){ return hash2(seed*13+k, k*7+3); }, th2=function(k){ return treeHash(seed*31+k); };
+  var pick=th2(1), ti, acc=0;
+  for(ti=0;ti<TREE_KIND.length-1;ti++){ acc+=TREE_KIND[ti][1]; if(pick<acc) break; }
+  var tk=TREE_KIND[ti], tname='tree_'+tk[0]+'_'+(th2(2)<0.5?'a':'b');
+  if(Assets.has(tname)){
+    K.asset(tname,tx,0,tz,th2(3)*6.283,{s:0.85+th2(4)*0.35,tint:{f:shadeHex(tk[2],0.88+th2(5)*0.24)}});
+    K.box('concrete',tx,0.04,tz,1.2,0.08,1.2,0x8a847a,1.0);                            /* 树池 */
+    K.g('decal').quad(tx-0.5,tz-0.5,tx+0.5,tz-0.5,tx+0.5,tz+0.5,tx-0.5,tz+0.5,0.081,0x3a2e22);
+    if(lod>0){                                                                          /* 落叶 */
+      var nl2=lod>1?16:9, LD2=K.g('decal'), lc2=tk[0]==='ginkgo'?[0xb09a3a,0x9a8a30,0xc8b04a,0x8a7a2a]:[0x6a5a2a,0x7a6630,0x4a5a30,0x5a4426], li;
+      for(li=0;li<nl2;li++){
+        var la2=r(130+li)*6.283, lr2=0.7+r(140+li)*1.8, lx2=tx+Math.cos(la2)*lr2, lz2=tz+Math.sin(la2)*lr2, ls2=0.05+r(150+li)*0.05, lo2=r(160+li)*3.14;
+        var c2=Math.cos(lo2)*ls2, s2=Math.sin(lo2)*ls2;
+        LD2.quad(lx2-c2,lz2-s2*0.5, lx2-s2*0.5,lz2+c2, lx2+c2,lz2+s2*0.5, lx2+s2*0.5,lz2-c2, 0.012+li*0.0002, lc2[li%4]);
+      }
+    }
+    return;
+  }
   var th=2.0+r(17)*1.3;                    /* 分枝高度 2.0–3.3m */
   var lean=(r(23)-0.5)*0.5;
   var lay=[[0x2b3f2e,0x36523a,0x3f5f3f],[0x264a2c,0x2f5733,0x3a6a3c],[0x2f4a32,0x3d5f3e,0x4a7048]][Math.floor(r(11)*3)];
@@ -134,6 +155,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
     var rd=ROADS[i], rh=(rd[2]-rd[0])>(rd[3]-rd[1]), ra=rh?rd[0]:rd[1], rb=rh?rd[2]:rd[3], rc=rh?(rd[1]+rd[3])/2:(rd[0]+rd[2])/2, tq;
     for(tq=ra+40;tq<rb-20;tq+=110){
       var mhx=M(rh?tq:rc+6), mhz=M(rh?rc+6:tq);
+      if(K.asset('manhole',mhx,0.008,mhz,hash2(tq|0,i)*6.283)) continue;
       K.lathe('metal',mhx,0.008,mhz,[[0.36,0],[0.36,0.012],[0.33,0.016],[0.0,0.016]],14,0x3a3c3e,1.0);
       if(!lodLow()) for(var mk=0;mk<3;mk++) K.box('metal',mhx,0.025,mhz-0.16+mk*0.16,0.44,0.004,0.025,0x4a4c4e,1.05);   /* 防滑纹 */
     }
@@ -196,11 +218,13 @@ function addOutdoorProps(K, x0, y0, x1, y1){
     K.bevel('stone',gx,0.30,gz,24.0,0.60,3.0,0xb8b2a8,1.0,0.06);
     addSolidM(gx,gz,12.0,1.5);
     var sx3=gx-12.0;
+    if(!K.asset('sculpture_ring',sx3,0.09,gz,0)){                                           /* 坐在长石台上 */
     K.bevel('stone',sx3,0.30,gz,2.8,0.42,2.8,0xa8a298,1.0,0.05);
     K.rod('metal',sx3,0.5,gz,sx3+0.4,3.4,gz+0.2,0.12,0.06,8,0x9aa0a4,1.1);
     K.rod('metal',sx3,0.5,gz,sx3-0.6,2.6,gz-0.3,0.10,0.05,8,0x9aa0a4,1.05);
     var k; for(k=0;k<16;k++){ var a=k/16*6.283, b=(k+1)/16*6.283;
       K.rod('metal',sx3+0.4+Math.cos(a)*0.9,3.4+Math.sin(a)*0.9,gz+0.2,sx3+0.4+Math.cos(b)*0.9,3.4+Math.sin(b)*0.9,gz+0.2,0.07,0.07,6,0xb8c0c4,1.15); }
+    }
     addSolidM(sx3,gz,1.4,1.4);
     K.bevel('stone',gx,1.35,gz+1.6,11.0,1.9,0.34,0xcfc9be,1.0,0.04);                 /* 校训牌的底板 */
     K.bevel('stone',gx,0.17,gz+1.6,11.6,0.34,0.9,0xa8a298,1.0,0.04);
@@ -219,6 +243,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
     if(!inGarden&&(inObj(fmx,fmy,8,true)||!outFree(fmx,fmy,4,3))) continue;   /* 以前这里条件写反了：落在楼、车库坡道上的也照建 */
     if(onRoad(fmx,fmy,3)) continue;
     var fx0=M(fmx), fz0=M(fmy);
+    if(K.asset('flowerbed',fx0,0,fz0,0)){ addSolidM(fx0,fz0,1.4,0.7); continue; }            /* 砖砌花坛、土、一丛丛花（花的多少随画质） */
     K.box('brick',fx0,0.20,fz0-0.65,2.8,0.40,0.12,0x8a8478,1.0);
     K.box('brick',fx0,0.20,fz0+0.65,2.8,0.40,0.12,0x8a8478,1.0);
     K.box('brick',fx0-1.34,0.20,fz0,0.12,0.40,1.18,0x8a8478,1.0);
@@ -236,6 +261,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
   /* ---- 旗杆：北门广场东侧 ---- */
   (function(){
     var fx=M(538), fz=M(160);
+    if(K.asset('flagpole',fx,0,fz,0)){ addSolidM(fx,fz,1.1,1.1); return; }
     K.bevel('stone',fx,0.15,fz,2.2,0.30,2.2,0xb2ada4,1.0,0.04);
     K.bevel('stone',fx,0.38,fz,1.4,0.16,1.4,0xc2bdb4,1.0,0.03);
     K.cyl('metal',fx,0.46,fz,0.09,0.05,10.0,8,0xb8bcbe,1.06);
@@ -249,13 +275,18 @@ function addOutdoorProps(K, x0, y0, x1, y1){
   function board(mx,my){
     var bx=M(mx), bz=M(my);
     K.frame(bx,bz,Math.PI/2);
+    var k;
+    if(K.asset('board_outdoor',0,0,0,0)){                                                     /* 立柱、框、玻璃、雨檐是模型，海报按位置贴 */
+      for(k=0;k<6;k++) K.box('paper',-1.6+k*0.64,1.35+(hash2(k,mx)-0.5)*0.4,0.045,0.52,0.70,0.004,[0xe8e4dc,0xc8d8e0,0xd8c8a8][k%3],1);
+    }else{
     K.rod('metal',-2.0,0,0,-2.0,2.3,0,0.05,0.05,6,0x2a3238);
     K.rod('metal', 2.0,0,0, 2.0,2.3,0,0.05,0.05,6,0x2a3238);
     K.bevel('metal',0,1.35,0,4.1,1.5,0.10,0x2a3238,1.0,0.02);
     K.box('paper',0,1.35,0.06,3.9,1.3,0.01,0xd8d2c4,1.0);
-    var k; for(k=0;k<6;k++) K.box('paper',-1.6+k*0.64,1.35+(hash2(k,mx)-0.5)*0.4,0.067,0.52,0.70,0.004,[0xe8e4dc,0xc8d8e0,0xd8c8a8][k%3],1);
+    for(k=0;k<6;k++) K.box('paper',-1.6+k*0.64,1.35+(hash2(k,mx)-0.5)*0.4,0.067,0.52,0.70,0.004,[0xe8e4dc,0xc8d8e0,0xd8c8a8][k%3],1);
     K.box('glass',0,1.35,0.08,3.9,1.3,0.01,0xb8c8d0,1.1);
     K.bevel('plastic',0,2.20,0,4.5,0.14,0.5,0x8b3a2e,1.0,0.03);
+    }
     K.unframe();
     addSolidM(bx,bz,0.2,2.1);
   }
@@ -282,6 +313,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
         var hx=lx+dx*0.95, hz=lz+dz*0.95;
         /* LED 路灯：带检修门的底座、上细下粗的灯杆、弯过去的灯臂、扁的灯头（局部 +x 朝路面） */
         K.frame(lx,lz,Math.atan2(-dz,dx));
+        if(K.asset('street_lamp',0,0,0,0)){ K.unframe(); OUT_LAMPS.push({x:hx,y:4.82,z:hz}); addSolidM(lx,lz,0.2,0.2); break; }
         K.lathe('metal',0,0,0,[[0.17,0],[0.17,0.06],[0.12,0.10],[0.11,0.62],[0.095,0.66]],12,0x3a4146,1.0);
         K.box('metal',0.112,0.36,0,0.012,0.30,0.12,0x30373c,1.0);                       /* 检修门 */
         K.lathe('metal',0,0.66,0,[[0.085,0],[0.05,4.0],[0.045,4.12]],10,0x252c31,1.0);
@@ -305,12 +337,14 @@ function addOutdoorProps(K, x0, y0, x1, y1){
     var inGarden=inRect(bmx,bmy,[400,1000,670,1078],0);
     if(!inGarden&&!outFree(bmx,bmy,3,1)) continue;
     var px2=M(bmx), pz2=M(bmy), sl;
+    if(!K.asset('bench_park',px2,0,pz2,0)){
     for(sl=0;sl<4;sl++) K.bevel('wood',px2,0.44,pz2-0.18+sl*0.12,2.0,0.04,0.09,0x7a5434,1.0,0.01);
     for(sl=0;sl<3;sl++) K.bevel('wood',px2,0.62+sl*0.12,pz2-0.30-sl*0.02,2.0,0.08,0.03,0x7a5434,0.95,0.01);
     var lg;
     for(lg=-1;lg<=1;lg+=2){
       K.box('metal',px2+lg*0.85,0.22,pz2,0.06,0.44,0.46,0x2a2622,0.9);
       K.rod('metal',px2+lg*0.85,0.42,pz2-0.22,px2+lg*0.85,0.90,pz2-0.34,0.03,0.03,5,0x2a2622);
+    }
     }
     addSolidM(px2,pz2,1.0,0.3);
     propBinPair(K,px2+1.75,pz2-0.05,0);                                             /* 分类垃圾桶：可回收 / 其他 */
@@ -321,8 +355,14 @@ function addOutdoorProps(K, x0, y0, x1, y1){
   function hedgeSeg(ax,az,bx,bz){
     var hx=(ax+bx)/2, hz=(az+bz)/2;
     var hw=Math.max(0.7,Math.abs(bx-ax)), hd=Math.max(0.7,Math.abs(bz-az));
+    if(Assets.has('hedge_200')){                                    /* 两米一段的绿篱（叶片卡），按长度等分、拉伸 */
+      var along=hw>=hd, L=along?hw:hd, n=Math.max(1,Math.round(L/2)), sl2=L/n, k2;
+      for(k2=0;k2<n;k2++){ var u=-L/2+(k2+0.5)*sl2;
+        K.asset('hedge_200',along?hx+u:hx,0,along?hz:hz+u,along?0:Math.PI/2,{sx:sl2/2,tint:{f:shadeHex(0x2f5232,0.92+hash2(k2,(hx*3)|0)*0.16)}}); }
+    }else{
     K.bevel('leaf',hx,0.42,hz,hw,0.84,hd,0x2c4a30,0.96,0.12);
     K.bevel('leaf',hx,0.86,hz,hw*0.94,0.10,hd*0.94,0x385a38,1.06,0.04);
+    }
     addSolidM(hx,hz,hw/2,hd/2);
   }
   function hedgeLine(mxa,mya,mxb,myb){
@@ -376,6 +416,10 @@ function addOutdoorProps(K, x0, y0, x1, y1){
     var smy=BOUND.y0+12+hash2(i,137)*(BOUND.y1-BOUND.y0-24);
     if(!outFree(smx,smy,6,4)) continue;
     var stx=M(smx), stz=M(smy), si;
+    if(Assets.has('shrub_cluster')){
+      K.asset('shrub_cluster',stx,0,stz,hash2(i,151)*6.283,{s:0.75+hash2(i,153)*0.4,tint:{f:shadeHex(0x2f5232,0.9+hash2(i,157)*0.2)}});
+      addSolidM(stx,stz,0.8,0.6); made++; continue;
+    }
     for(si=0;si<3;si++){
       var sc2=0.55+hash2(i*3+si,149)*0.45, sxx=stx+(si-1)*0.42, szz=stz+(si%2?0.30:-0.26);
       if(q>0){                                                /* 灌木：里面一团暗的 + 两层叶片卡 */

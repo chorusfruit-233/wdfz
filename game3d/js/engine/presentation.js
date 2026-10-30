@@ -58,6 +58,7 @@ function fnPeopleTick(){
 
 var PAT_GEAR={};
 function patGearGeo(){
+  var ag=figAssetGeo('pat_gear','patGear',true); if(ag) return ag;      /* 大衣、大檐帽、袖章、夹板（figures.py） */
   var key=Quality.get().segments;
   if(PAT_GEAR[key]) return PAT_GEAR[key];
   var K=new Kit(), m='dark', coat=0x1c2026, sp=FIG_SPEC.teacher, t=sp.thin;

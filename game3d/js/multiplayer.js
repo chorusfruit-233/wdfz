@@ -160,6 +160,7 @@ var Multiplayer=(function(){
   }
   function open(){
     if(S.screen!=='menu')return;
+    if(waitForGameAssets(open))return;
     el('mpLobby').hidden=false;renderRoom();el('mpName').focus();
   }
   function leave(){

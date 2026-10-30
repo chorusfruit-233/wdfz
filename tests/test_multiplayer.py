@@ -54,6 +54,7 @@ class MultiplayerBrowserTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.host_url, wait_until='load')
+        self.assert_js(page, 'Assets.ready(3)')
         page.evaluate("DEV.god=true")
         return page
 
@@ -76,6 +77,25 @@ class MultiplayerBrowserTest(BrowserCase):
             }
             throw new Error('找不到可接近目标 '+tile);
         }""", tile)
+
+    def test_lobby_waits_until_a_missing_model_pack_is_retried(self):
+        context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
+        self.contexts.append(context)
+        context.add_init_script("localStorage.setItem('wdfz_pro','1');"
+                                "localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));")
+        page = context.new_page()
+        page.on('pageerror', lambda e: self.errors.append(str(e)))
+        pattern = '**/game3d/assets/models_l3.js'
+        context.route(pattern, lambda route: route.abort())
+        page.goto(self.host_url, wait_until='load')
+        page.locator('#mpOpen').click()
+        page.wait_for_function('ASSETS.errors[3]&&!ASSETS.loading[3]')
+        self.assertTrue(page.locator('#mpLobby').is_hidden())
+        context.unroute(pattern)
+        page.locator('#assetRetry').click()
+        page.wait_for_function('Assets.ready(3)', timeout=30000)
+        page.locator('#mpOpen').click()
+        page.locator('#mpLobby').wait_for(state='visible')
 
     def test_two_browsers_join_move_reconnect_and_keep_solo_saves(self):
         host, guest = self.client(), self.client()

@@ -24,6 +24,7 @@ function allowedFile(urlPath){
   if(urlPath==='/wiki/'||urlPath==='/wiki/index.html')return 'wiki/index.html';
   if(urlPath==='/wiki/wiki.css')return 'wiki/wiki.css';
   if(/^\/game3d\/(css|js|lib)\/[A-Za-z0-9_./-]+$/.test(urlPath))return urlPath.slice(1);
+  if(/^\/game3d\/assets\/(models_l[0-3]|textures_(512|1024))\.js$/.test(urlPath))return urlPath.slice(1);
   if(/^\/shared\/(simulation\/(physics|clock)|content\/(zones|room-bounds|loot))\.js$/.test(urlPath))return urlPath.slice(1);
   return null;
 }

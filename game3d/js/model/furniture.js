@@ -1,72 +1,29 @@
 /* 里世界 3D · 家具与室内设施
-   每种格子字符一个建模函数：FURN[ch](c, x, y, cx, cz)
+   每种格子字符一个摆放函数：FURN[ch](c, x, y, cx, cz)
      c  —— 当前房间的上下文（Kit、尺寸、坐标换算、碰撞登记、接触阴影）
      x,y —— 网格坐标；cx,cz —— 这一格中心（米，房间中心为原点）
-   占地、高度、主色都沿用原来的模型，只是不再用整块长方体：
-   课桌是木面板 + 金属框 + 桌斗，椅子有椅腿，车有轮子、车窗和车灯，柜子有门缝和把手…… */
+   模型都在 Blender 里建（tools/blender/assets：classroom / office / lab / misc / dorm / vehicles），
+   这里只管摆：放在哪、转多少、按格子坐标挑款式和颜色（被子、车身、货架上的东西）、登记碰撞和接触阴影。
+   占地、高度沿用原来的，碰撞由模型带的碰撞代理算（kit.js 的 Kit.asset）。 */
 'use strict';
 
 var FURN={};
 var C_DESK=0x86653c, C_SEAT=0x785b34, C_FRAME=0x3a3f44, C_STEEL=0x9aa4a8, C_DARKP=0x2e3438;
 
-/* 一把学生椅：座面、靠背、四条腿。正面朝 -z（人面向 -z 坐） */
-function chairModel(K,x,z,rot,seatY,col){
-  K.frame(x,z,rot||0);
-  var sy=seatY||0.44;
-  K.bevel('wood',0,sy,0,0.40,0.04,0.38,col||C_SEAT,1.1,0.012);
-  K.bevel('wood',0,sy+0.28,0.19,0.40,0.22,0.03,col||C_SEAT,1.0,0.01);
-  var lx, lz;
-  for(lx=-1;lx<=1;lx+=2) for(lz=-1;lz<=1;lz+=2){
-    K.rod('metal',lx*0.17,0,lz*0.16, lx*0.17,sy-0.02,lz*0.16, 0.013,0.013,5,C_FRAME);
-  }
-  K.rod('metal',-0.17,sy-0.02,0.218,-0.17,sy+0.38,0.218,0.012,0.012,5,C_FRAME);   /* 靠背立杆：贴在靠背板后面（以前从板子中间穿过去） */
-  K.rod('metal', 0.17,sy-0.02,0.218, 0.17,sy+0.38,0.218,0.012,0.012,5,C_FRAME);
-  K.rod('metal',-0.17,0.12,-0.16,0.17,0.12,-0.16,0.01,0.01,4,C_FRAME);    /* 横撑 */
-  K.unframe();
+/* 一把学生椅（Blender 建模：弯木椅面、弯靠背、钢管架）。正面朝 -z（人面向 -z 坐） */
+function chairModel(K,x,z,rot,seatY){
+  K.asset(seatY>0.45?'chair_student_tall':'chair_student',x,0,z,rot||0);
 }
-/* 办公转椅 */
-function officeChair(K,x,z,rot){
-  K.frame(x,z,rot||0);
-  var k;
-  for(k=0;k<5;k++){ var a=k/5*6.283; K.rod('metal',0,0.06,0,Math.cos(a)*0.28,0.04,Math.sin(a)*0.28,0.018,0.014,4,0x1d2226); K.box('plastic',Math.cos(a)*0.28,0.025,Math.sin(a)*0.28,0.05,0.05,0.05,0x111418,1); }
-  K.cyl('metal',0,0.06,0,0.03,0.025,0.36,6,0x1d2226);
-  K.bevel('fabric',0,0.46,0,0.46,0.08,0.44,C_DARKP,1,0.03);
-  K.bevel('fabric',0,0.80,0.21,0.44,0.52,0.07,C_DARKP,1.02,0.03);
-  K.unframe();
-}
-/* 一摞书 */
-function bookStack(K,x,y,z,n,seed){
-  var i, h=y;
-  for(i=0;i<n;i++){
-    var t=0.02+hash2(seed,i)*0.025, col=[0x6a2a2a,0x2a4a6a,0xc8b890,0x3a5a3a,0x8a6a2a][(seed+i)%5];
-    K.box('paper',x+(hash2(i,seed)-0.5)*0.03,h+t/2,z,0.21,t,0.15+hash2(seed+3,i)*0.04,col,1.0);
-    h+=t;
-  }
-}
+/* 办公转椅：五星脚、气杆、软垫、靠背、扶手。正面朝 -z */
+function officeChair(K,x,z,rot){ K.asset('chair_office',x,0,z,rot||0); }
 
 /* ---- 课桌（教学楼）/ 办公工位（行政楼） ---- */
 FURN.d=function(c,x,y,cx,cz){
   var K=c.K;
   if(c.R.host==='admin'){
     c.R.stats.cubicle++;
-    K.frame(cx,cz,0);
-    /* 人坐在北边（-z），面朝隔板；以前显示器屏幕朝外、椅子在背面，坐下只能看见显示器的后壳 */
-    K.bevel('plastic',0,0.73,0.30,0.98,1.45,0.06,0x9aa4a8,1.02,0.02);            /* 隔板 */
-    K.bevel('metal',0,1.46,0.30,1.00,0.04,0.09,0xb8c0c2,1.08,0.012);
-    K.bevel('wood',0,0.74,-0.06,0.86,0.04,0.64,C_DESK,1.06,0.012);                /* 桌面 */
-    K.box('wood',0,0.50,0.25,0.80,0.40,0.02,0x6a4c30,0.92);                        /* 挡板 */
-    K.bevel('metal',-0.26,0.38,0.06,0.30,0.70,0.36,0x8b867e,0.95,0.015);           /* 抽屉柜 */
-    for(var dk=0;dk<3;dk++) K.box('metal',-0.26,0.18+dk*0.22,-0.125,0.16,0.02,0.01,0xb8c0c2,1.15);
-    K.bevel('plastic',0,1.03,0.12,0.46,0.30,0.03,0x1d262b,1.0,0.01);               /* 显示器，屏幕朝人 */
-    K.box('sky',0,1.04,0.103,0.42,0.25,0.004,0x9fc4dc,0.9);
-    K.cyl('plastic',0,0.76,0.13,0.06,0.03,0.12,6,0x39434a);
-    K.bevel('plastic',0,0.765,-0.14,0.36,0.015,0.12,0x2a3238,1.0,0.004);          /* 键盘 */
-    K.bevel('paper',0.30,0.80,-0.04,0.22,0.08,0.26,0xd8d4c6,1.05,0.01);            /* 文件盘 */
-    K.bevel('metal',0.46,0.90,0,0.34,1.80,0.86,0x6e7a80,1.02,0.02);                /* 文件柜 */
-    K.box('metal',0.46,0.90,-0.432,0.30,0.004,0.004,0x3a4246,1);
-    K.box('metal',0.29,1.20,-0.25,0.01,0.03,0.10,0xb8c0c2,1.2);
-    K.box('metal',0.29,0.60,-0.25,0.01,0.03,0.10,0xb8c0c2,1.2);
-    K.unframe();
+    /* 人坐在北边（-z），面朝隔板；显示器屏幕朝人 */
+    K.asset('cubicle_admin',cx,0,cz,0);
     officeChair(K,cx,cz-0.50,Math.PI);
     c.ao(cx,cz,0.98,0.90,0.9);
     return;
@@ -74,14 +31,7 @@ FURN.d=function(c,x,y,cx,cz){
   c.R.stats.desk++; c.R.stats.chair++;
   var dz=cz-0.10;
   K.frame(cx,dz,0);
-  K.bevel('wood',0,0.74,0,0.78,0.035,0.52,C_DESK,1.06,0.012);                      /* 桌面 */
-  K.bevel('wood',0,0.675,0.02,0.64,0.09,0.40,0x6a4f30,0.82,0.01);                  /* 桌斗：收在四条桌腿里面（以前 0.72 宽，桌腿从侧板里穿过去）；
-                                                                                       底板抬到 0.63 米，坐着的人膝盖不再顶进去 */
-  K.box('dark',0,0.675,0.225,0.58,0.06,0.01,0x1a1612,1);                           /* 桌斗开口（朝人） */
-  var lx, lz;
-  for(lx=-1;lx<=1;lx+=2) for(lz=-1;lz<=1;lz+=2) K.rod('metal',lx*0.35,0,lz*0.22, lx*0.35,0.72,lz*0.22,0.014,0.014,5,C_FRAME);
-  K.rod('metal',-0.35,0.12,-0.22,-0.35,0.12,0.22,0.011,0.011,4,C_FRAME);
-  K.rod('metal', 0.35,0.12,-0.22, 0.35,0.12,0.22,0.011,0.011,4,C_FRAME);
+  K.asset('desk_student',0,0,0,0);                                               /* 木纹桌面、钢框、可调高的腿、铁皮桌斗、挂钩 */
   /* 桌面：高中生的桌子——前沿一排书立着（书立夹着），一摞练习册、卷子、水杯、笔 */
   var hh=hash2(x*3+7,y*5+11), h2=hash2(y*7+3,x*11+5), top=0.7575;
   if(hh>0.15) propBooksUpright(K,(h2-0.5)*0.1+0.04,top,-0.175,0.26+hh*0.2,x*7+y*3,0);
@@ -90,106 +40,38 @@ FURN.d=function(c,x,y,cx,cz){
   if(h2<0.35) propBottle(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
   if(hh<0.30) K.rod('plastic',-0.2,top+0.006,0.05,-0.05,top+0.006,0.08,0.006,0.006,6,0x2a4a8a);  /* 一支笔 */
   K.unframe();
-  chairModel(K,cx,cz+0.30,0,0.44,C_SEAT);
+  chairModel(K,cx,cz+0.30,0,0.44);
   c.ao(cx,cz,0.96,0.70,1.0);
 };
 FURN.P=function(c,x,y,cx,cz){
   if(c.R.stats) c.R.stats.seat++;
-  chairModel(c.K,cx,cz,0,0.46,C_SEAT);
+  chairModel(c.K,cx,cz,0,0.46);
   c.ao(cx,cz,0.5,0.5,0.7);
 };
-/* 讲台 */
+/* 讲台：木柜体（正面朝学生），老师那面开口；台上教案、粉笔盒、板擦 */
 FURN.T=function(c,x,y,cx,cz){
-  var K=c.K;
   c.ao(cx,cz,0.9,0.8,0.9);
-  K.bevel('wood',cx,0.46,cz,0.72,0.92,0.66,0x765a35,1.0,0.02);
-  K.bevel('wood',cx,0.955,cz,0.82,0.05,0.76,0x8a6a40,1.1,0.015);
-  K.box('wood',cx,0.50,cz+0.335,0.56,0.62,0.01,0x5e4628,1.0);                       /* 正面的凹板 */
-  K.box('paper',cx-0.1,0.985,cz-0.05,0.30,0.01,0.22,0xe0dcd0,1.0);                  /* 教案 */
-  K.box('plastic',cx+0.22,0.995,cz-0.12,0.14,0.03,0.05,0xd8d8d0,1.0);               /* 粉笔盒 */
+  c.K.asset('podium',cx,0,cz,0);
 };
-/* ---- 车库里的车：车身、车舱、车窗、四个轮子、车灯、车牌 ---- */
+/* ---- 车库里的车（三厢轿车，车头朝 +x），车尾两块挡车器 ---- */
+var CAR_COLS=[0x39424a,0x4a3a36,0x2e3a44,0x5a5e62,0x30343a];
 FURN.V=function(c,x,y,cx,cz){
-  var K=c.K, col=[0x39424a,0x4a3a36,0x2e3a44,0x5a5e62,0x30343a][(x*3+y)%5], g=c.R.grid, k2;
-  /* 车身 3.7×1.8 米，比一格大得多：前后左右两格内有柱子就往反方向让 0.4 米（以前车尾插进柱子里） */
+  var K=c.K, col=CAR_COLS[(x*3+y)%5], g=c.R.grid, k2;
+  /* 车身 3.78×1.78 米，比一格大得多：前后左右两格内有柱子就往反方向让 0.4 米 */
   for(k2=-2;k2<=2;k2++){
     if(g[y+1]&&g[y+1][x+k2]==='#'){ cz-=0.40; break; }
     if(g[y-1]&&g[y-1][x+k2]==='#'){ cz+=0.40; break; }
   }
   c.ao(cx,cz,3.9,2.3,1.0);
-  c.solid(cx,cz,3.70,1.85);              /* 以前碰撞只有一格的 0.82，人能直接走进车身里 */
+  c.solid(cx,cz,3.70,1.85);              /* 碰撞按整个车身，不止一格 */
   K.frame(cx,cz,0);
-  carModel(K,col,x*3+y,lodLow());
-  K.box('concrete',-2.02,0.045,-0.52,0.14,0.09,0.50,0xc8a830,1.0);             /* 车尾后面的两块挡车器 */
-  K.box('concrete',-2.02,0.045,0.52,0.14,0.09,0.50,0xc8a830,1.0);
+  K.asset('car_sedan',0,0,0,0,{tint:{body:col}});
+  K.asset('wheel_stop',-2.02,0,-0.52,0);
+  K.asset('wheel_stop',-2.02,0,0.52,0);
   K.unframe();
 };
-/* 一辆三厢轿车（车头朝 +x，长 3.76、宽 1.78、高 1.43）：
-   车身是侧面轮廓挤出来的（发动机盖、前后挡风玻璃的斜面、后备箱），车窗是深色玻璃，
-   A/B/C 柱和车顶是车身色；轮胎是圆的（平滑着色），有轮辋、轮毂盖；大灯、尾灯、格栅、牌照、后视镜、门把手、门缝 */
-function carModel(K,col,seed,low){
-  var dk=shadeHex(col,0.7), sd, wx, wz, k;
-  /* 下车身：前后保险杠、发动机盖、腰线以下 */
-  K.prism('metal',0,0,0,[[-1.86,0.30],[1.86,0.30],[1.89,0.50],[1.84,0.70],[1.62,0.80],[0.95,0.88],[-1.25,0.93],[-1.76,0.90],[-1.88,0.72],[-1.89,0.50]],1.76,col,1.04,0.07);
-  /* 车舱：深色玻璃（半透明，看得见里面的座椅） */
-  K.prism('glass',0,0,0,[[-1.27,0.92],[0.93,0.88],[0.22,1.38],[-0.86,1.40],[-1.22,1.02]],1.48,0x141c24,1.2,0);
-  /* 车顶、A/B/C 柱（车身色） */
-  K.bevel('metal',-0.33,1.415,0,1.12,0.05,1.40,col,1.06,0.02);
-  for(sd=-1;sd<=1;sd+=2){
-    K.rod('metal',0.93,0.89,sd*0.75,0.20,1.40,sd*0.75,0.035,0.035,6,col,1.02);     /* A 柱 */
-    K.box('metal',-0.30,1.15,sd*0.735,0.09,0.50,0.03,col,1.0);                    /* B 柱 */
-    K.rod('metal',-1.25,0.93,sd*0.75,-0.86,1.40,sd*0.75,0.06,0.05,6,col,1.0);       /* C 柱 */
-    K.box('dark',-0.15,0.62,sd*0.885,0.012,0.50,0.006,0x101316,1);                  /* 前后门缝 */
-    K.box('dark',0.88,0.62,sd*0.885,0.012,0.50,0.006,0x101316,1);
-    K.box('dark',-1.12,0.66,sd*0.885,0.012,0.44,0.006,0x101316,1);
-    K.box('metal',0.55,0.80,sd*0.89,0.14,0.025,0.02,shadeHex(col,1.3),1.1);         /* 门把手 */
-    K.box('metal',-0.68,0.80,sd*0.89,0.14,0.025,0.02,shadeHex(col,1.3),1.1);
-    K.box('plastic',-0.15,0.36,sd*0.885,2.3,0.07,0.02,0x15191c,1);                  /* 侧裙 */
-    K.box('metal',-0.15,0.86,sd*0.888,2.2,0.012,0.004,shadeHex(col,1.25),1.0);     /* 腰线的反光 */
-    /* 后视镜 */
-    K.bevel('plastic',0.80,0.98,sd*0.95,0.10,0.10,0.14,dk,1.0,0.02);
-    K.rod('plastic',0.84,0.95,sd*0.86,0.82,0.97,sd*0.90,0.012,0.012,4,dk,1.0);
-  }
-  /* 轮子：轮胎（平滑的圆）、轮辋、轮毂盖；轮拱里是黑的 */
-  for(wx=-1;wx<=1;wx+=2) for(wz=-1;wz<=1;wz+=2){
-    var ax=wx*(wx>0?1.24:1.20);
-    K.rod('dark',ax,0.33,wz*0.76,ax,0.33,wz*0.95,0.33,0.33,low?10:16,0x0e1114,1.0);
-    K.rod('metal',ax,0.33,wz*0.95,ax,0.33,wz*0.955,0.22,0.22,low?8:14,0x9aa2a8,1.15);
-    if(!low) for(k=0;k<5;k++){ var a=k/5*6.283;                                    /* 五辐轮辋 */
-      K.rod('metal',ax,0.33,wz*0.958,ax+Math.cos(a)*0.19,0.33+Math.sin(a)*0.19,wz*0.958,0.022,0.018,4,0xb8c0c4,1.2); }
-    K.rod('metal',ax,0.33,wz*0.955,ax,0.33,wz*0.962,0.06,0.06,10,0x707880,1.2);
-    var na=low?4:7, a0, a1;                                                         /* 轮拱：车身侧面沿轮子上半圈一道黑边 */
-    for(k=0;k<na;k++){ a0=Math.PI*k/na; a1=Math.PI*(k+1)/na;
-      K.rod('plastic',ax+Math.cos(a0)*0.41,0.33+Math.sin(a0)*0.41,wz*0.886,ax+Math.cos(a1)*0.41,0.33+Math.sin(a1)*0.41,wz*0.886,0.04,0.04,5,0x111417,1); }
-  }
-  /* 车头：大灯、格栅、车标、前牌 */
-  for(sd=-1;sd<=1;sd+=2){
-    K.prism('metal',0,0,sd*0.60,[[1.76,0.66],[1.885,0.66],[1.85,0.74],[1.70,0.775]],0.36,0xb8c2c8,1.15,0);   /* 大灯：反光的灯罩（熄着） */
-    K.box('emit',1.872,0.70,sd*0.60,0.012,0.035,0.12,0xa8b0b4,0.5);
-    K.prism('emit',0,0,sd*0.62,[[-1.885,0.70],[-1.80,0.70],[-1.78,0.86],[-1.86,0.86]],0.30,0x7a1c16,1.0,0);    /* 尾灯 */
-  }
-  K.box('dark',1.885,0.55,0,0.02,0.13,0.80,0x0d1013,1);                            /* 进气格栅 */
-  if(!low) for(k=0;k<3;k++) K.box('metal',1.892,0.51+k*0.04,0,0.008,0.01,0.78,0x5a6266,1);
-  K.lathe('metal',1.885,0.62,0,[[0.04,0],[0.04,0.012]],10,0xb8c0c4,1.2);
-  K.box('paper',1.893,0.40,0,0.01,0.12,0.42,0x2a5a9a,1);                            /* 蓝牌 */
-  K.box('paper',-1.893,0.48,0,0.01,0.12,0.42,0x2a5a9a,1);
-  K.box('plastic',1.89,0.33,0,0.04,0.06,1.60,0x15191c,1);                            /* 下护板 */
-  K.rod('metal',-1.86,0.26,-0.55,-1.96,0.26,-0.55,0.03,0.03,8,0x5a5e62,1);           /* 排气管 */
-  K.rod('dark',0.98,0.905,-0.58,0.94,0.93,-0.06,0.01,0.008,4,0x0c0e10,1);             /* 雨刮 */
-  K.rod('dark',0.98,0.905,0.06,0.94,0.93,0.58,0.01,0.008,4,0x0c0e10,1);
-  if(!low){                                                                         /* 车里：仪表台、前排两张座椅、后排长座、方向盘 */
-    K.bevel('plastic',0.66,0.92,0,0.32,0.12,1.40,0x15181b,1,0.03);
-    for(sd=-1;sd<=1;sd+=2){
-      K.bevel('plastic',0.18,0.62,sd*0.36,0.48,0.12,0.46,0x24282c,1,0.04);
-      K.bevel('plastic',-0.06,0.92,sd*0.36,0.10,0.52,0.44,0x24282c,1,0.04);
-      K.bevel('plastic',-0.08,1.24,sd*0.36,0.08,0.13,0.22,0x24282c,1,0.03);
-    }
-    K.bevel('plastic',-0.76,0.62,0,0.46,0.12,1.36,0x24282c,1,0.04);
-    K.bevel('plastic',-1.00,0.92,0,0.10,0.48,1.36,0x24282c,1,0.04);
-    K.rod('dark',0.50,0.98,0.36,0.47,1.02,0.36,0.17,0.17,14,0x0c0e10,1);
-  }
-}
-/* ---- 宿舍床：上下铺铁架床（立柱、上下两层床板床垫、上铺护栏、床尾的梯子） ---- */
+/* ---- 宿舍床：上下铺铁架床，床垫枕头，被子叠成长条或豆腐块（颜色按格子挑） ---- */
+var QUILT_COLS=[0x7a8a96,0x8a7a6a,0x6a7a8a,0x9a8a7a,0x6a8a7a];
 FURN.b=function(c,x,y,cx,cz){
   var K=c.K, R=c.R, bdir;
   if(R.grid[y-1]&&R.grid[y-1][x]==='#') bdir=1;
@@ -200,93 +82,29 @@ FURN.b=function(c,x,y,cx,cz){
   var nbL=(R.grid[y][x-1]==='b'), nbR=(R.grid[y][x+1]==='b');
   c.ao(cx,bcz,bw*0.98,bl*0.98,0.9);
   c.solid(cx,bcz,bw*0.94,bl);
-  /* 床离墙留 16 厘米（墙上有窗台、窗帘），碰撞照旧按整个占地 */
-  bl-=0.16; K.frame(cx,bcz+bdir*0.08,bdir>0?0:Math.PI);   /* 床头朝 -z */
-  var col=0x4a5058, lx, lz, k, hx=0.44, hz=bl/2-0.03, TOP=1.86, low=lodLow();
-  for(lx=-1;lx<=1;lx+=2) for(lz=-1;lz<=1;lz+=2) K.box('metal',lx*hx,TOP/2,lz*hz,0.04,TOP,0.04,col,1.0);    /* 方管立柱 */
-  var lv, LV=[0.30,1.38];
-  for(lv=0;lv<2;lv++){
-    var y0=LV[lv];
-    for(lx=-1;lx<=1;lx+=2) K.box('metal',lx*hx,y0-0.04,0,0.035,0.06,bl-0.08,col,1.0);                  /* 长边横梁 */
-    for(lz=-1;lz<=1;lz+=2) K.box('metal',0,y0-0.04,lz*hz,bw*0.9,0.06,0.03,col,1.0);
-    K.box('wood',0,y0,0,bw*0.88,0.02,bl-0.10,0x8a6a48,1.0);                                          /* 床板 */
-    K.bevel('fabric',0,y0+0.07,0,bw*0.84,0.12,bl-0.14,0xd8d4c8,1.05,0.04);                            /* 床垫 */
-    K.bevel('fabric',0,y0+0.17,-bl*0.38,bw*0.56,0.09,bl*0.16,0xe8e4d8,1.1,0.04);                      /* 枕头 */
-    var qc=[0x7a8a96,0x8a7a6a,0x6a7a8a,0x9a8a7a,0x6a8a7a][(x*3+y*5+lv)%5];
-    if(hash2(x+lv*7,y)>0.3) K.bevel('fabric',0,y0+0.17,bl*0.12,bw*0.80,0.10,bl*0.52,qc,1.02,0.05);   /* 叠着的被子 */
-    else K.bevel('fabric',0,y0+0.16,bl*0.18,bw*0.40,0.20,bl*0.26,qc,1.0,0.06);                       /* 豆腐块 */
-  }
-  for(lz=-1;lz<=1;lz+=2) for(k=0;k<(low?1:3);k++) K.box('metal',0,0.50+k*0.16+(lz<0?0:-0.08),lz*hz,bw*0.86,0.02,0.02,col,1.0);   /* 床头床尾的横杆 */
-  K.box('metal',0,TOP-0.02,-hz,bw*0.86,0.035,0.035,col,1.0);
-  K.box('metal',0,TOP-0.02,hz,bw*0.86,0.035,0.035,col,1.0);
-  /* 上铺护栏：外侧一整条（梯子那一段留口） */
-  var gs=nbR?-1:1;                                         /* 护栏装在没挨着别的床的那一侧 */
-  if(!(nbL&&nbR)){
-    K.box('metal',gs*hx,1.70,-bl*0.15,0.03,0.03,bl*0.66,col,1.0);
-    K.box('metal',gs*hx,1.55,-bl*0.15,0.025,0.025,bl*0.66,col,1.0);
-    if(!low) for(k=0;k<4;k++) K.box('metal',gs*hx,1.53,-bl*0.45+k*bl*0.2,0.02,0.32,0.02,col,1.0);
-    /* 梯子：贴着床尾那根立柱，竖着几级 */
-    var ladZ=bl/2-0.28;
-    K.box('metal',gs*hx,0.95,ladZ-0.15,0.03,1.80,0.03,col,1.0);
-    K.box('metal',gs*hx,0.95,ladZ+0.15,0.03,1.80,0.03,col,1.0);
-    for(k=0;k<4;k++) K.box('metal',gs*hx,0.50+k*0.30,ladZ,0.03,0.025,0.30,col,1.05);
-  }
+  /* 床离墙留 16 厘米（墙上有窗台、窗帘），碰撞照旧按整个占地；床头朝 -z */
+  K.frame(cx,bcz+bdir*0.08,bdir>0?0:Math.PI);
+  K.asset((nbL&&nbR)?'bunk_frame_n':(nbR?'bunk_frame_l':'bunk_frame_r'),0,0,0,0);
+  [0.30,1.38].forEach(function(y0,lv){
+    K.asset('bed_mattress',0,y0,0,0);
+    K.asset(hash2(x+lv*7,y)>0.3?'quilt_folded':'quilt_block',0,y0,0,0,{tint:{q:QUILT_COLS[(x*3+y*5+lv)%5]}});
+  });
   K.unframe();
 };
-/* ---- 物理实验台 ---- */
-FURN.q=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.96,0.82,0.9);
-  K.bevel('metal',cx,0.44,cz,0.86,0.86,0.70,0x7d878c,1.05,0.015);
-  K.bevel('stone',cx,0.90,cz,0.92,0.05,0.78,0x4c5a60,1.25,0.012);
-  K.box('dark',cx,0.44,cz+0.352,0.004,0.78,0.004,0x30383c,1);                       /* 两扇柜门的缝 */
-  K.box('metal',cx-0.06,0.62,cz+0.355,0.02,0.10,0.01,0xc0c8cc,1.2);
-  K.box('metal',cx+0.06,0.62,cz+0.355,0.02,0.10,0.01,0xc0c8cc,1.2);
-  K.bevel('metal',cx,1.10,cz-0.30,0.86,0.36,0.06,0x55605f,1.0,0.01);                /* 背后的电源板 */
-  K.box('emit',cx-0.25,1.18,cz-0.268,0.04,0.04,0.004,0xd84a3a,0.9);
-  K.box('plastic',cx+0.15,1.06,cz-0.268,0.08,0.06,0.006,0xe0dcd0,1.0);
-  K.cyl('metal',cx+0.20,0.925,cz+0.05,0.06,0.05,0.10,8,0x8a8a7a);                    /* 小砝码盒 / 电表 */
-};
-/* ---- 学生机 ---- */
-FURN.n=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.92,0.80,0.9);
-  K.bevel('wood',cx,0.74,cz,0.88,0.035,0.62,C_DESK,1.05,0.012);
-  K.bevel('wood',cx-0.40,0.37,cz,0.04,0.72,0.56,C_DESK,0.82,0.01);
-  K.bevel('wood',cx+0.40,0.37,cz,0.04,0.72,0.56,C_DESK,0.82,0.01);
-  K.bevel('plastic',cx+0.26,0.24,cz-0.04,0.18,0.42,0.40,0x2a3036,1,0.015);          /* 主机箱 */
-  K.box('emit',cx+0.26,0.40,cz+0.162,0.02,0.02,0.004,0x3ad08a,1);
-  K.bevel('plastic',cx,1.06,cz-0.13,0.48,0.32,0.04,0x1d262b,1.0,0.012);             /* 显示器 */
-  K.box('sky',cx,1.07,cz-0.108,0.43,0.27,0.004,0x7fb0c8,0.8);
-  K.cyl('plastic',cx,0.76,cz-0.14,0.07,0.03,0.14,6,0x39434a);
-  K.bevel('plastic',cx,0.765,cz+0.08,0.40,0.015,0.13,0x2a3036,1,0.004);
-  K.bevel('plastic',cx+0.27,0.765,cz+0.10,0.05,0.02,0.08,0x2a3036,1,0.008);
-  officeChair(K,cx,cz+0.48,0);
-};
-/* ---- 地理挂图架：三脚架 + 一幅旧地图 ---- */
-FURN.x=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.7,0.6,0.7);
-  K.rod('metal',cx-0.30,0,cz+0.22,cx-0.06,1.9,cz,0.015,0.012,5,0x4a5450);
-  K.rod('metal',cx+0.30,0,cz+0.22,cx+0.06,1.9,cz,0.015,0.012,5,0x4a5450);
-  K.rod('metal',cx,0,cz-0.30,cx,1.9,cz,0.015,0.012,5,0x4a5450);
-  K.bevel('wood',cx,1.82,cz+0.03,0.92,0.04,0.05,0x5a4632,1,0.01);
-  K.box('paper',cx,1.20,cz+0.04,0.86,1.20,0.01,0xb9c8b8,1.0);                     /* 海是浅蓝绿 */
-  var k;
-  for(k=0;k<7;k++) K.box('paper',cx-0.32+hash2(x,k)*0.6,0.80+hash2(k,y)*0.8,cz+0.047,0.08+hash2(k,x)*0.18,0.06+hash2(y,k)*0.16,0.004,[0xc8b88a,0x9aaa7a,0xb8a070][k%3],1);
-  K.box('emit',cx+0.1,1.30,cz+0.05,0.03,0.03,0.003,0xb02a22,1);                    /* 红笔圈 */
-};
-/* ---- 音乐教室：第一个 'p' 是立式钢琴，其余是琴凳 ---- */
+/* ---- 实验楼 ---- */
+FURN.q=function(c,x,y,cx,cz){ c.ao(cx,cz,0.96,0.82,0.9); c.K.asset('bench_physics',cx,0,cz,0); };          /* 物理实验台 */
+FURN.n=function(c,x,y,cx,cz){ c.ao(cx,cz,0.92,0.80,0.9); c.K.asset('desk_computer',cx,0,cz,0); officeChair(c.K,cx,cz+0.48,0); };   /* 学生机 */
+FURN.x=function(c,x,y,cx,cz){ c.ao(cx,cz,0.7,0.6,0.7); c.K.asset('map_stand',cx,0,cz,0); };                /* 地理挂图架 */
+/* ---- 音乐教室：第一个 'p' 是立式钢琴（琴背靠墙）和琴凳，其余是圆琴凳 ---- */
 FURN.p=function(c,x,y,cx,cz){
   var K=c.K, R=c.R;
   if(S.__pianoPlaced){
-    K.cyl('wood',cx,0,cz,0.16,0.18,0.42,8,0x4a3c2c);
-    K.cyl('fabric',cx,0.42,cz,0.19,0.19,0.05,10,0x3a1e1e);
+    K.asset('stool_piano',cx,0,cz,0);
     c.ao(cx,cz,0.4,0.4,0.6);
     return;
   }
   S.__pianoPlaced=1;
-  var rot=0;                                 /* 琴背靠墙：正面朝房间 */
+  var rot=0;
   if(R.grid[y-1]&&R.grid[y-1][x]==='#') rot=Math.PI;
   else if(R.grid[y+1]&&R.grid[y+1][x]==='#') rot=0;
   else if(R.grid[y]&&R.grid[y][x-1]==='#') rot=-Math.PI/2;
@@ -294,28 +112,9 @@ FURN.p=function(c,x,y,cx,cz){
   var pD=0.62, back=0.5-pD*0.5;
   c.ao(cx,cz,1.5,1.0,0.85);
   if(Math.abs(Math.sin(rot))<0.5) c.solid(cx,cz-Math.cos(rot)*back,1.48,pD+0.04); else c.solid(cx-Math.sin(rot)*back,cz,pD+0.04,1.48);
-  /* 局部坐标：琴背在 -z（靠墙），人坐在 +z */
-  K.frame(cx,cz,rot);
-  var bz=-back;
-  K.bevel('wood',0,0.62,bz,1.44,1.24,pD,0x23282b,1.0,0.02);                       /* 琴体 */
-  K.bevel('wood',0,1.25,bz,1.48,0.04,pD+0.03,0x2e3539,1.08,0.012);                 /* 顶盖 */
-  K.bevel('wood',-0.70,0.40,bz+0.36,0.06,0.80,0.14,0x23282b,1.0,0.01);              /* 两侧扶手 */
-  K.bevel('wood', 0.70,0.40,bz+0.36,0.06,0.80,0.14,0x23282b,1.0,0.01);
-  K.bevel('wood',0,0.70,bz+0.39,1.36,0.07,0.22,0x14181a,1.0,0.01);                 /* 键盘托 */
-  K.box('plastic',0,0.745,bz+0.40,1.26,0.02,0.15,0xe8e4d8,1.12);                   /* 白键 */
-  var bk;
-  for(bk=0;bk<35;bk++){                     /* 一个八度七个白键，E、B 后面没有黑键 */
-    if((bk%7)===2||(bk%7)===6) continue;
-    K.box('plastic',-0.63+(bk+1)*0.035,0.765,bz+0.37,0.018,0.018,0.085,0x101314,0.9);
-  }
-  K.box('wood',0,1.05,bz+0.32,0.92,0.30,0.02,0x1a1f22,1.02);                       /* 谱架 */
-  K.box('paper',-0.12,1.06,bz+0.333,0.26,0.28,0.004,0xe8e4d4,1);                    /* 摊开的谱子 */
-  K.box('paper', 0.14,1.06,bz+0.333,0.26,0.28,0.004,0xe2ddcc,1);
-  K.box('metal',-0.10,0.10,bz+0.36,0.06,0.03,0.14,0xa8913f,1.25);                  /* 踏板 */
-  K.box('metal', 0.10,0.10,bz+0.36,0.06,0.03,0.14,0xa8913f,1.25);
-  K.bevel('wood',0,0.46,bz+0.88,0.80,0.05,0.32,0x5a4a36,1.0,0.012);                /* 琴凳 */
-  var sl;
-  for(sl=-1;sl<=1;sl+=2){ K.rod('wood',sl*0.34,0,bz+0.76,sl*0.34,0.44,bz+0.76,0.02,0.02,5,0x4a3c2c); K.rod('wood',sl*0.34,0,bz+1.00,sl*0.34,0.44,bz+1.00,0.02,0.02,5,0x4a3c2c); }
+  K.frame(cx,cz,rot);                        /* 局部：琴背在 -z（靠墙），人坐在 +z */
+  K.asset('piano_upright',0,0,0,0);
+  K.asset('piano_bench',0,0,-back+0.88,0);
   K.unframe();
 };
 /* ---- 'K'：行政楼的大办公桌 / 实验楼的教师演示台 ---- */
@@ -323,312 +122,78 @@ FURN.K=function(c,x,y,cx,cz){
   var K=c.K;
   if(c.R.host==='admin'){
     var adw=1.15, add=0.86;
-    if(c.R.grid[y][x-1]==='#') cx+=0.10;           /* 桌子比一格宽：靠西墙时往东让一点，左边抽屉柜以前插进墙脚线 */
+    if(c.R.grid[y][x-1]==='#') cx+=0.10;           /* 桌子比一格宽：靠西墙时往东让一点 */
     c.ao(cx,cz,adw*1.02,add*1.02,0.9);
     c.solid(cx,cz,adw,add);
-    K.bevel('wood',cx,0.72,cz,adw,0.05,add,0x7a5a38,1.08,0.015);
-    K.bevel('wood',cx-adw*0.34,0.36,cz,0.36,0.68,add*0.92,0x6a4c30,0.93,0.012);   /* 左边抽屉柜 */
-    K.bevel('wood',cx+adw*0.40,0.36,cz,0.22,0.68,add*0.92,0x6a4c30,0.93,0.012);
-    K.box('wood',cx,0.42,cz-add*0.44,adw*0.90,0.54,0.02,0x53401f,0.86);            /* 挡板 */
-    for(var dk=0;dk<3;dk++) K.box('metal',cx-adw*0.34,0.20+dk*0.20,cz+add*0.462,0.18,0.02,0.01,0xb8a060,1.1);
-    K.box('paper',cx+adw*0.16,0.755,cz-add*0.10,0.30,0.02,0.22,0xd8d4c6,1.05);
-    K.cyl('plastic',cx+adw*0.02,0.745,cz-add*0.24,0.04,0.045,0.12,8,0xe8e4dc);       /* 茶杯 */
-    K.bevel('plastic',cx-adw*0.06,1.06,cz-add*0.18,0.44,0.28,0.03,0x1d262b,1.0,0.01);
-    K.box('sky',cx-adw*0.06,1.07,cz-add*0.18+0.017,0.40,0.24,0.004,0x8fb8c8,0.85);
-    K.cyl('plastic',cx-adw*0.06,0.745,cz-add*0.18,0.06,0.03,0.18,6,0x39434a);
+    K.asset('desk_office',cx,0,cz,0);
     officeChair(K,cx,cz+add*0.78,0);
     return;
   }
-  var lw=1.30, ld=0.82;
-  c.ao(cx,cz,lw*1.02,ld*1.02,0.9);
-  c.solid(cx,cz,lw,ld);
-  K.bevel('metal',cx,0.44,cz,lw*0.94,0.86,ld*0.90,0x7d878c,1.0,0.015);              /* 柜体 */
-  K.bevel('stone',cx,0.90,cz,lw,0.06,ld,0x333d3b,1.16,0.015);                        /* 黑色台面 */
-  K.box('dark',cx,0.44,cz+ld*0.452,0.004,0.78,0.004,0x30383c,1);
-  K.box('metal',cx-lw*0.20,0.44,cz+ld*0.46,lw*0.30,0.02,0.015,0x9aa4a8,1.1);
-  K.box('metal',cx+lw*0.20,0.44,cz+ld*0.46,lw*0.30,0.02,0.015,0x9aa4a8,1.1);
-  K.bevel('metal',cx,1.34,cz-ld*0.34,lw*0.90,0.04,0.14,0x55605f,1.0,0.01);          /* 试剂架 */
-  K.rod('metal',cx-lw*0.42,0.93,cz-ld*0.34,cx-lw*0.42,1.34,cz-ld*0.34,0.012,0.012,4,0x55605f);
-  K.rod('metal',cx+lw*0.42,0.93,cz-ld*0.34,cx+lw*0.42,1.34,cz-ld*0.34,0.012,0.012,4,0x55605f);
-  var bc=[0x8ab8a0,0xc8a24a,0x9fb0c8,0xbc8a8a], k;
-  for(k=0;k<4;k++){
-    var bx=cx-lw*0.30+k*lw*0.18;
-    K.cyl('glass',bx,1.36,cz-ld*0.34,0.04,0.04,0.14,8,bc[k],1.3);
-    K.cyl('plastic',bx,1.50,cz-ld*0.34,0.02,0.02,0.04,6,0x2a2a2a);
-  }
-  K.box('metal',cx+lw*0.24,0.935,cz+ld*0.10,0.30,0.01,0.24,0x2a3230,1.0);            /* 水槽 */
-  K.box('dark',cx+lw*0.24,0.936,cz+ld*0.10,0.24,0.01,0.18,0x161d1c,1.0);
-  K.rod('metal',cx+lw*0.24,0.93,cz-0.06,cx+lw*0.24,1.22,cz-0.06,0.015,0.015,6,0xb8bdb8);
-  K.rod('metal',cx+lw*0.24,1.22,cz-0.06,cx+lw*0.24,1.18,cz+0.08,0.013,0.013,6,0xb8bdb8);
-  K.cyl('glass',cx-lw*0.22,0.93,cz+ld*0.08,0.06,0.06,0.13,10,0x9fd0b8,1.25);          /* 烧杯 */
+  c.ao(cx,cz,1.30*1.02,0.82*1.02,0.9);
+  c.solid(cx,cz,1.30,0.82);
+  K.asset('bench_demo',cx,0,cz,0);
 };
-/* ---- 离心机 ---- */
-FURN.C=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.92,0.92,0.9);
-  K.bevel('metal',cx,0.30,cz,0.78,0.60,0.78,0x8a9298,1.02,0.06);
-  K.cyl('metal',cx,0.60,cz,0.36,0.36,0.08,14,0xb4bcc0,1.10);
-  K.cyl('plastic',cx,0.68,cz,0.24,0.26,0.03,14,0x2b3237,1.0);                        /* 盖子 */
-  K.box('emit',cx+0.22,0.62,cz-0.30,0.04,0.02,0.02,0x7fd0a8,1);                      /* 指示灯 */
-  K.box('plastic',cx,0.40,cz-0.395,0.36,0.22,0.01,0x1b2226,1.0);                     /* 控制面板 */
-  K.cyl('plastic',cx-0.09,0.40,cz-0.40,0.025,0.025,0.02,8,0xc85a4a,1.3);
-};
-/* ---- 显微镜（放在小台子上） ---- */
-FURN.N=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.8,0.8,0.85);
-  K.bevel('metal',cx,0.38,cz,0.66,0.76,0.62,0x6e7a80,1.0,0.015);
-  K.bevel('stone',cx,0.785,cz,0.70,0.03,0.66,0x9aa4a8,1.12,0.01);
-  K.bevel('metal',cx,0.82,cz+0.02,0.20,0.05,0.24,0x2b3237,1.05,0.015);               /* 底座 */
-  K.rod('metal',cx,0.84,cz+0.10,cx,1.06,cz+0.06,0.03,0.028,6,0x33383c);              /* 镜臂 */
-  K.rod('metal',cx,1.08,cz+0.04,cx,1.20,cz-0.05,0.022,0.018,8,0x1f262a);             /* 镜筒 */
-  K.rod('metal',cx,1.20,cz-0.05,cx,1.24,cz-0.06,0.014,0.014,6,0x1f262a);             /* 目镜 */
-  K.box('metal',cx,0.95,cz-0.02,0.16,0.015,0.13,0x3a4247,1.15);                       /* 载物台 */
-  K.box('glass',cx,0.962,cz-0.02,0.06,0.004,0.025,0xb8c8c0,1.3);                     /* 玻片 */
-  K.box('emit',cx,0.86,cz-0.02,0.03,0.01,0.03,0xffe9b0,0.9);                          /* 光源 */
-};
-/* ---- 物理装置：杠杆 + 单摆（玩法里它能"预报"下一次） ---- */
-FURN.Z=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.95,0.95,0.9);
-  K.bevel('wood',cx,0.06,cz,0.80,0.12,0.72,0x4a5450,1.0,0.02);                       /* 底座 */
-  K.cyl('metal',cx,0.12,cz-0.06,0.035,0.03,0.90,8,0x8a9298,1.05);                     /* 立柱 */
-  K.rod('metal',cx-0.43,0.98,cz-0.06,cx+0.43,0.98,cz-0.06,0.018,0.018,6,0xb8c0c2,1.15);   /* 横梁 */
-  K.rod('metal',cx-0.40,0.98,cz-0.06,cx-0.40,0.76,cz-0.06,0.004,0.004,4,0x8a9298);   /* 吊盘线 */
-  K.cyl('metal',cx-0.40,0.72,cz-0.06,0.10,0.10,0.02,10,0xa8b0a8,1.1);
-  K.rod('metal',cx+0.40,0.98,cz-0.06,cx+0.40,0.76,cz-0.06,0.004,0.004,4,0x8a9298);
-  K.cyl('metal',cx+0.40,0.72,cz-0.06,0.10,0.10,0.02,10,0xa8b0a8,1.1);
-  K.cyl('metal',cx+0.40,0.74,cz-0.06,0.04,0.035,0.08,8,0x8a7a52,1.15);                /* 砝码 */
-  K.rod('metal',cx+0.06,0.98,cz+0.02,cx+0.16,0.42,cz+0.08,0.003,0.003,4,0xd8d8d0);   /* 单摆的线，停在一个角度上 */
-  K.blob('metal',cx+0.16,0.40,cz+0.08,0.05,0.05,0.05,0x6a5a3a,1.2,8);
-};
-/* ---- 地球仪 ---- */
-FURN.Y=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.8,0.8,0.85);
-  K.cyl('wood',cx,0,cz,0.20,0.16,0.08,10,0x4a3c2c);
-  K.cyl('metal',cx,0.08,cz,0.025,0.025,0.62,6,0x8a7a52,1.05);
-  var k, n=14;
-  for(k=0;k<n;k++){                                       /* 子午圈：一段段的杆 */
-    var a0=-0.4+k/n*3.4, a1=-0.4+(k+1)/n*3.4;
-    K.rod('metal',cx+Math.sin(a0)*0.28,0.92+Math.cos(a0)*0.28,cz,cx+Math.sin(a1)*0.28,0.92+Math.cos(a1)*0.28,cz,0.012,0.012,4,0xa8913f,1.2);
-  }
-  K.blob('plastic',cx,0.92,cz,0.24,0.24,0.24,0x2f5f7a,1.05,10);
-  K.blob('plastic',cx+0.10,0.98,cz+0.12,0.13,0.10,0.10,0x6b8f4a,1.15,7,0.4,x);       /* 陆地 */
-  K.blob('plastic',cx-0.12,0.86,cz-0.08,0.11,0.09,0.12,0x6b8f4a,1.1,7,0.4,y);
-};
-/* ---- 食堂：'t' 餐桌（带四个固定圆凳）、'k' 打饭窗口 / 保安岗的值班柜台 ---- */
-FURN.t=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.9,0.86,0.9);
-  K.bevel('plastic',cx,0.74,cz,0.86,0.04,0.80,0xc8c0b0,1.02,0.015);
-  K.cyl('metal',cx,0,cz,0.06,0.04,0.72,8,0x6a6e72);
-  K.rod('metal',cx-0.32,0.02,cz,cx+0.32,0.02,cz,0.02,0.02,4,0x6a6e72);
-  K.rod('metal',cx,0.02,cz-0.30,cx,0.02,cz+0.30,0.02,0.02,4,0x6a6e72);
-  var sx, sz;
-  for(sx=-1;sx<=1;sx+=2) for(sz=-1;sz<=1;sz+=2){
-    K.rod('metal',cx+sx*0.18,0.02,cz,cx+sx*0.22,0.44,cz+sz*0.52,0.012,0.012,4,0x6a6e72);
-    K.cyl('plastic',cx+sx*0.22,0.44,cz+sz*0.52,0.13,0.13,0.035,10,0x8a2a22,1.0);
-  }
-};
+FURN.C=function(c,x,y,cx,cz){ c.ao(cx,cz,0.92,0.92,0.9); c.K.asset('centrifuge',cx,0,cz,0); };            /* 离心机 */
+FURN.N=function(c,x,y,cx,cz){ c.ao(cx,cz,0.8,0.8,0.85); c.K.asset('microscope_stand',cx,0,cz,0); };        /* 显微镜 */
+FURN.Z=function(c,x,y,cx,cz){ c.ao(cx,cz,0.95,0.95,0.9); c.K.asset('physics_apparatus',cx,0,cz,0); };      /* 杠杆 + 单摆（玩法里它能"预报"下一次） */
+FURN.Y=function(c,x,y,cx,cz){ c.ao(cx,cz,0.8,0.8,0.85); c.K.asset('globe',cx,0,cz,0); };                    /* 地球仪 */
+/* ---- 食堂：'t' 连体餐桌、'k' 打饭台（菜按位置换） / 保安岗的值班台 ---- */
+FURN.t=function(c,x,y,cx,cz){ c.ao(cx,cz,0.9,0.86,0.9); c.K.asset('canteen_table',cx,0,cz,0); };
+var FOODS=[[0x8a5a2a,0x6a3a1a],[0x4a7a2a,0x3a6a22],[0xe8e2d0,0xd8d0c0],[0xd8a83a,0xc84a2a]];
 FURN.k=function(c,x,y,cx,cz){
   var K=c.K;
   c.ao(cx,cz,0.9,0.86,0.9);
-  if(c.R.host==='guard'){
-    K.bevel('wood',cx,0.48,cz,0.86,0.94,0.80,0x6a5a48,1.0,0.02);
-    K.bevel('wood',cx,0.97,cz,0.94,0.04,0.88,0x8a7a62,1.1,0.012);
-    K.box('paper',cx-0.1,1.0,cz,0.32,0.02,0.24,0xe0dcd0,1);                          /* 值班登记本 */
-    K.bevel('plastic',cx+0.18,1.12,cz-0.22,0.34,0.24,0.04,0x1d262b,1,0.01);
-    K.box('sky',cx+0.18,1.125,cz-0.198,0.30,0.20,0.004,0x6a8a9a,0.6);
-    var hk;
-    for(hk=0;hk<4;hk++) K.rod('metal',cx-0.30+hk*0.12,0.80,cz+0.41,cx-0.30+hk*0.12,0.74,cz+0.45,0.006,0.006,4,0xc8a24a);   /* 柜台下挂的钥匙 */
-    return;
-  }
-  /* 不锈钢打饭台：台面上嵌两个方菜盆（盛着菜）、一把大勺，上面是防喷溅玻璃罩 */
-  K.bevel('metal',cx,0.45,cz,0.86,0.90,0.80,0xa8aeb0,1.05,0.012);
-  K.box('metal',cx,0.915,cz,0.90,0.03,0.84,0xc8ced0,1.15);
-  var food=[[0x8a5a2a,0x6a3a1a],[0x4a7a2a,0x3a6a22],[0xe8e2d0,0xd8d0c0],[0xd8a83a,0xc84a2a]][(x+y)%4], food2=[[0xd8a83a,0xc84a2a],[0x8a5a2a,0x6a3a1a],[0x4a7a2a,0x3a6a22],[0xe8e2d0,0xd8d0c0]][(x*3+y)%4], k;
-  for(k=-1;k<=1;k+=2){
-    var px=cx+k*0.20, fc=k<0?food:food2;
-    K.box('metal',px,0.925,cz+0.04,0.36,0.012,0.50,0xd8dcde,1.2);                      /* 菜盆沿 */
-    K.box('dark',px,0.928,cz+0.04,0.32,0.006,0.46,0x1a1c1e,1.0);
-    if(!lodLow()) for(var b=0;b<5;b++) K.blob('plastic',px-0.10+(b%3)*0.10,0.93,cz-0.10+Math.floor(b/3)*0.16+(b%2)*0.04,0.075,0.03,0.07,fc[b%2],1.0,7,0.4,x*5+b+k);
-    else K.box('plastic',px,0.933,cz+0.04,0.30,0.01,0.44,fc[0],1.0);
-  }
-  K.rod('metal',cx+0.35,0.94,cz+0.20,cx+0.28,1.12,cz+0.32,0.008,0.008,6,0xc8ccce,1.25);    /* 大勺 */
-  K.lathe('metal',cx+0.36,0.925,cz+0.18,[[0.0,0],[0.045,0.01],[0.05,0.035]],10,0xc8ccce,1.25);
-  K.rod('metal',cx-0.42,0.93,cz-0.30,cx-0.42,1.42,cz-0.30,0.012,0.012,6,0xc8ccce,1.2);     /* 玻璃罩的立柱 */
-  K.rod('metal',cx+0.42,0.93,cz-0.30,cx+0.42,1.42,cz-0.30,0.012,0.012,6,0xc8ccce,1.2);
-  K.box('glass',cx,1.18,cz-0.30,0.82,0.46,0.01,0xb8c8c8,1.2);                         /* 防喷溅玻璃 */
-  K.box('glass',cx,1.42,cz-0.10,0.86,0.01,0.40,0xb8c8c8,1.2);
-  K.box('emit',cx,1.405,cz-0.10,0.70,0.006,0.04,0xf8e8c8,0.9);                        /* 保温灯 */
+  if(c.R.host==='guard'){ K.asset('counter_guard',cx,0,cz,0); return; }
+  K.asset('counter_serving',cx,0,cz,0);
+  var f1=FOODS[(x+y)%4], f2=FOODS[(x*3+y+1)%4];
+  K.asset('food_pan_fill',cx-0.20,0.935,cz+0.04,0,{tint:{a:f1[0],b:f1[1]}});
+  K.asset('food_pan_fill',cx+0.20,0.935,cz+0.04,Math.PI,{tint:{a:f2[0],b:f2[1]}});
 };
-/* ---- 服务器机柜（机房网络中心） ---- */
-FURN.f=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.9,0.8,0.85);
-  K.bevel('metal',cx,1.06,cz,0.74,2.12,0.78,0x2b2f33,1.02,0.015);
-  K.box('metal',cx,1.06,cz+0.392,0.66,1.96,0.004,0x1a1d20,1.0);                       /* 网孔门 */
-  var q, side;
-  for(side=-1;side<=1;side+=2){
-    for(q=0;q<6;q++){
-      var qy=0.30+q*0.30, fz=cz+side*0.396;
-      K.box('dark',cx,qy,fz,0.58,0.09,0.004,0x2e1210,1.0);
-      K.box('emit',cx-0.20,qy,fz+side*0.002,0.03,0.03,0.003,(q%2?0xd8543a:0x4fd08a),1);
-      K.box('emit',cx-0.14,qy,fz+side*0.002,0.03,0.03,0.003,0xe0b040,1);
-      if(hash2(x+q,y)>0.5) K.box('emit',cx-0.08,qy,fz+side*0.002,0.03,0.03,0.003,0x4fd08a,1);
-    }
-  }
-  K.box('metal',cx+0.30,1.06,cz+0.40,0.02,0.20,0.02,0x8a9298,1.2);                    /* 门把 */
-};
-/* ---- 服务器控制台 ---- */
-FURN.Q=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.9,0.8,0.85);
-  K.bevel('metal',cx,0.62,cz,0.80,1.24,0.70,0x521c1a,1.02,0.02);
-  K.bevel('metal',cx,1.29,cz,0.86,0.08,0.76,0x2a0f0e,1.0,0.012);
-  K.bevel('plastic',cx,1.60,cz-0.02,0.62,0.42,0.05,0x1a2024,1.0,0.012);
-  K.box('emit',cx,1.60,cz+0.008,0.56,0.34,0.004,0x5ad0a0,0.9);                         /* 屏幕上滚着门禁记录 */
-  var k; for(k=0;k<8;k++) K.box('emit',cx-0.20+hash2(k,x)*0.1,1.72-k*0.035,cz+0.011,0.18+hash2(x,k)*0.18,0.008,0.002,0x1a4a34,1);
-  K.bevel('plastic',cx,1.34,cz+0.18,0.50,0.02,0.16,0x1d2226,1,0.006);
-};
-/* ---- 货架 ---- */
+/* ---- 机房 ---- */
+FURN.f=function(c,x,y,cx,cz){ c.ao(cx,cz,0.9,0.8,0.85); c.K.asset('server_rack',cx,0,cz,hash2(x,y)>0.5?Math.PI:0); };   /* 服务器机柜 */
+FURN.Q=function(c,x,y,cx,cz){ c.ao(cx,cz,0.9,0.8,0.85); c.K.asset('server_console',cx,0,cz,0); };          /* 门禁控制台 */
+/* ---- 货架：器材室放球，别处放纸箱（哪层哪格有、是哪种按格子坐标定） ---- */
 FURN.R=function(c,x,y,cx,cz){
-  var K=c.K, k, sx, sz;
+  var K=c.K, k, j;
   c.ao(cx,cz,0.86,0.72,0.8);
-  for(sx=-1;sx<=1;sx+=2) for(sz=-1;sz<=1;sz+=2) K.box('metal',cx+sx*0.40,0.92,cz+sz*0.32,0.04,1.84,0.04,0xa8a196,1.0);
+  K.asset('shelf_metal',cx,0,cz,0);
   for(k=0;k<4;k++){
-    var sy=0.10+k*0.56;
-    K.box('metal',cx,sy,cz,0.84,0.025,0.68,0xa8a196,1.05);
-    var j;
+    var sy=0.106+k*0.56;
     for(j=0;j<3;j++){
       if(hash2(x*7+k,y*3+j)<0.35) continue;
-      var bw=0.18+hash2(j,k+x)*0.12;
-      if(c.R.id==='gear1') K.blob('plastic',cx-0.26+j*0.26,sy+0.13,cz,0.11,0.11,0.11,[0xc0602a,0xe8e8e0,0x3a5a8a][j],1,7);   /* 球 */
-      else K.bevel('paper',cx-0.26+j*0.26,sy+0.10,cz,bw,0.17,0.40,[0xb8a07a,0xa89a80,0xd8d0c0][(j+k)%3],1,0.01);              /* 纸箱 */
+      var bx=cx-0.26+j*0.26;
+      if(c.R.id==='gear1') K.asset(['ball_basket','ball_soccer','ball_volley'][(j+k)%3],bx,sy,cz,hash2(j,k)*6.28);
+      else K.asset('carton_'+((j+k+x)%3),bx,sy,cz+(hash2(k,j+y)-0.5)*0.06,(hash2(j,x+k)-0.5)*0.12);
     }
   }
 };
-/* ---- 化学实验台（带水槽、试剂架、凳子） ---- */
-FURN.l=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.96,0.92,0.9);
-  K.bevel('metal',cx,0.44,cz,0.86,0.80,0.60,0x8b9498,1.02,0.012);
-  K.bevel('stone',cx,0.88,cz,0.92,0.06,0.70,0x5b6a72,1.28,0.012);
-  K.box('dark',cx,0.44,cz+0.302,0.004,0.70,0.004,0x3a4246,1);
-  K.box('dark',cx-0.24,0.912,cz,0.28,0.01,0.22,0x39434a,0.95);                         /* 水槽 */
-  K.rod('metal',cx-0.24,0.91,cz-0.15,cx-0.24,1.08,cz-0.15,0.012,0.012,6,0xa8b2b6,1.35);   /* 鹅颈水龙头 */
-  K.rod('metal',cx-0.24,1.08,cz-0.15,cx-0.24,1.06,cz-0.04,0.011,0.011,6,0xa8b2b6,1.35);
-  K.rod('metal',cx-0.38,0.91,cz-0.32,cx-0.38,1.26,cz-0.32,0.015,0.015,5,0x59636a);
-  K.rod('metal',cx+0.38,0.91,cz-0.32,cx+0.38,1.26,cz-0.32,0.015,0.015,5,0x59636a);
-  K.bevel('metal',cx,1.26,cz-0.32,0.86,0.03,0.13,0x59636a,1.05,0.008);
-  K.cyl('glass',cx-0.26,1.275,cz-0.32,0.035,0.035,0.20,8,0x86b4c8,1.45);
-  K.cyl('glass',cx+0.03,1.275,cz-0.32,0.03,0.03,0.18,8,0xc6ae66,1.45);
-  K.cyl('glass',cx+0.28,1.275,cz-0.32,0.025,0.025,0.16,8,0xd8d2c4,1.30);
-  K.cyl('wood',cx+0.02,0,cz+0.46,0.10,0.12,0.42,8,0x4a4034);                           /* 凳子 */
-  K.cyl('wood',cx+0.02,0.42,cz+0.46,0.14,0.14,0.04,10,0x6a5a44,1.02);
-};
-/* ---- 洗手台 ---- */
-FURN.w=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.8,0.7,0.8);
-  K.bevel('stone',cx,0.80,cz,0.80,0.06,0.62,0xc2c8cb,1.05,0.02);
-  K.cyl('plastic',cx,0.70,cz,0.20,0.16,0.12,12,0xe8ecec,1.05,'top');
-  K.box('dark',cx,0.832,cz,0.30,0.004,0.26,0x6a7478,1);
-  K.bevel('stone',cx,0.40,cz,0.20,0.78,0.20,0xb8bec0,1.0,0.02);
-  K.rod('metal',cx,0.83,cz-0.22,cx,0.98,cz-0.22,0.014,0.014,6,0xc0c8cc,1.3);
-  K.rod('metal',cx,0.98,cz-0.22,cx,0.96,cz-0.12,0.012,0.012,6,0xc0c8cc,1.3);
-};
-FURN.v=function(c,x,y,cx,cz){ c.K.bevel('metal',cx,0.85,cz,0.70,1.70,0.55,0x9aa0a4,1.0,0.015); };
-/* ---- 终端（行政楼三楼的数据终端 / 机房的门禁管理终端） ---- */
-FURN.D=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.8,0.7,0.8);
-  K.bevel('metal',cx,0.50,cz,0.70,1.00,0.60,0x8f9aa2,1.05,0.02);
-  K.bevel('metal',cx,1.02,cz,0.74,0.04,0.64,0x6a747c,1.0,0.01);
-  K.bevel('plastic',cx,1.28,cz-0.12,0.52,0.38,0.05,0x1d262b,1,0.012);
-  K.box('emit',cx,1.29,cz-0.093,0.46,0.32,0.004,0x3a6a8a,0.8);
-  K.box('emit',cx-0.12,1.36,cz-0.090,0.14,0.012,0.002,0xc8e8f0,1);                     /* 光标那一行 */
-  K.bevel('plastic',cx,1.05,cz+0.12,0.44,0.02,0.16,0x2a3238,1,0.006);
-  K.box('plastic',cx+0.27,0.80,cz+0.302,0.06,0.10,0.01,0x1a1e22,1);                     /* U 盘口 */
-  K.box('paper',cx-0.18,0.90,cz+0.302,0.12,0.08,0.002,0xe8d870,1);                      /* 便签 */
-};
-/* ---- 带轮子的大垃圾桶 ---- */
-FURN.X=function(c,x,y,cx,cz){
-  var K=c.K;
-  c.ao(cx,cz,0.9,0.9,0.9);
-  K.bevel('plastic',cx,0.64,cz,0.80,1.04,0.78,0x2f5a3a,1.0,0.04);
-  K.bevel('plastic',cx,1.19,cz-0.02,0.86,0.07,0.84,0x24482e,1.0,0.02);                  /* 盖子没盖严 */
-  K.rod('plastic',cx-0.35,1.12,cz-0.43,cx+0.35,1.12,cz-0.43,0.02,0.02,5,0x1a2a1e);      /* 把手 */
-  K.rod('dark',cx-0.30,0.07,cz+0.30,cx-0.24,0.07,cz+0.30,0.07,0.07,8,0x111418);
-  K.rod('dark',cx+0.24,0.07,cz+0.30,cx+0.30,0.07,cz+0.30,0.07,0.07,8,0x111418);
-  K.box('paper',cx,0.85,cz+0.392,0.30,0.30,0.004,0xd8d4c6,1.0);                         /* 白色编号：3 */
-  K.box('dark',cx,0.85,cz+0.395,0.10,0.22,0.002,0x2a2a2a,1);
-};
-/* ---- 厕所隔间：两侧隔板 + 一扇关着的门，上下留空 ---- */
-FURN.B=function(c,x,y,cx,cz){
-  var K=c.K;
-  K.bevel('plastic',cx-0.47,1.05,cz,0.04,1.80,0.92,PALETTE.wall2,1.0,0.008);
-  K.bevel('plastic',cx+0.47,1.05,cz,0.04,1.80,0.92,PALETTE.wall2,1.0,0.008);
-  K.bevel('plastic',cx,1.05,cz+0.44,0.86,1.70,0.04,0x8a948e,1.0,0.008);
-  K.rod('metal',cx-0.47,0.12,cz+0.44,cx-0.47,0.2,cz+0.44,0.02,0.02,5,0xb8c0c2);
-  K.rod('metal',cx+0.30,1.05,cz+0.47,cx+0.30,1.05,cz+0.52,0.015,0.015,6,0xb8c0c2,1.2);
-  K.box('emit',cx+0.36,1.05,cz+0.465,0.07,0.05,0.004,0xc04a3a,1);                      /* 红色"有人" */
-  K.cyl('plastic',cx,0,cz-0.18,0.18,0.16,0.40,10,0xe8ecec,1.0);                          /* 门缝底下看得见的马桶 */
-  K.box('emit',cx,0.004,cz,0.6,0.002,0.6,0x050506,1);                                    /* 门缝底下很暗 */
-};
+FURN.l=function(c,x,y,cx,cz){ c.ao(cx,cz,0.96,0.92,0.9); c.K.asset('bench_chem',cx,0,cz,0); };             /* 化学实验台（带凳子） */
+FURN.w=function(c,x,y,cx,cz){ c.ao(cx,cz,0.8,0.7,0.8); c.K.asset('washbasin',cx,0,cz,0); };               /* 洗手台 */
+FURN.v=function(c,x,y,cx,cz){ c.K.asset('cabinet_tall',cx,0,cz,0); };                                     /* 铁皮立柜 */
+FURN.D=function(c,x,y,cx,cz){ c.ao(cx,cz,0.8,0.7,0.8); c.K.asset('terminal_data',cx,0,cz,0); };            /* 数据终端 / 门禁管理终端 */
+FURN.X=function(c,x,y,cx,cz){ c.ao(cx,cz,0.9,0.9,0.9); c.K.asset('bin_wheelie',cx,0,cz,0); };             /* 带轮子的大垃圾桶 */
+/* ---- 厕所隔间：两侧隔板 + 一扇关着的门，门缝底下看得见蹲坑的台阶 ---- */
+FURN.B=function(c,x,y,cx,cz){ c.K.asset('toilet_stall',cx,0,cz,0); };
 FURN.G=FURN.B;
-/* ---- 钟楼的铜钟：横梁吊着，下沿是喇叭口 ---- */
+/* ---- 钟楼的铜钟：横梁吊着（梁的长短看房间），旁边吊着撞木 ---- */
 FURN.U=function(c,x,y,cx,cz){
   var K=c.K;
   K.bevel('wood',cx,2.82,cz,c.beamW||2.6,0.18,0.22,0x3a2a1c,1.0,0.03);              /* 横梁 */
-  K.rod('metal',cx,2.72,cz,cx,2.50,cz,0.04,0.04,6,0x2a2018);
-  K.cyl('metal',cx,2.36,cz,0.30,0.20,0.18,14,0x7c5c2c,1.0);
-  K.cyl('metal',cx,1.62,cz,0.62,0.32,0.74,16,0x6e5228,1.05);                              /* 钟身 */
-  K.cyl('metal',cx,1.40,cz,0.70,0.62,0.22,16,0x5a4220,1.0,false);                          /* 钟口外翻 */
-  K.box('dark',cx,1.401,cz,0.9,0.002,0.9,0x0a0806,1);
-  K.rod('metal',cx,1.62,cz,cx,1.30,cz,0.02,0.02,5,0x2a2018);                               /* 钟舌 */
-  K.blob('metal',cx,1.27,cz,0.07,0.07,0.07,0x2a2018,1,6);
-  K.rod('wood',cx+0.75,2.02,cz,cx+1.70,1.95,cz,0.09,0.09,8,0x5a4632);                     /* 撞木 */
-  K.rod('metal',cx+1.00,2.80,cz,cx+1.00,2.02,cz,0.008,0.008,4,0x8a8478);
-  K.rod('metal',cx+1.50,2.80,cz,cx+1.50,1.96,cz,0.008,0.008,4,0x8a8478);
-  var k; for(k=0;k<8;k++){ var a=k/8*6.283; K.box('metal',cx+Math.cos(a)*0.50,1.90,cz+Math.sin(a)*0.50,0.06,0.06,0.06,0x8a6a32,1.2); }   /* 钟乳 */
+  K.asset('bell_bronze',cx,0,cz,0);
   c.ao(cx,cz,1.5,1.5,0.8);
   c.solid(cx,cz,1.3,1.3);
 };
 /* ---- 供桌：香炉、白蜡烛、一碗插着筷子的饭、剪掉脸的照片 ---- */
 FURN.A=function(c,x,y,cx,cz){
-  var K=c.K;
   c.ao(cx,cz,1.3,0.8,0.9);
-  K.bevel('wood',cx,0.80,cz,1.30,0.06,0.70,0x5a2a20,1.05,0.015);
-  var lx, lz;
-  for(lx=-1;lx<=1;lx+=2) for(lz=-1;lz<=1;lz+=2) K.bevel('wood',cx+lx*0.58,0.39,cz+lz*0.28,0.07,0.78,0.07,0x4a2018,0.95,0.01);
-  K.box('fabric',cx,0.56,cz+0.33,1.24,0.46,0.01,0x8a2a22,1.0);                         /* 红桌围 */
-  K.cyl('metal',cx,0.83,cz-0.10,0.10,0.12,0.10,10,0x6a5a3a,1.1);                       /* 香炉 */
-  K.rod('wood',cx-0.03,0.90,cz-0.10,cx-0.04,1.12,cz-0.10,0.004,0.004,4,0x9a7a4a);
-  K.rod('wood',cx+0.03,0.90,cz-0.10,cx+0.05,1.10,cz-0.10,0.004,0.004,4,0x9a7a4a);
-  K.cyl('plastic',cx-0.45,0.83,cz,0.03,0.03,0.30,8,0xf0e8d8,1.1);                      /* 蜡烛 */
-  K.cyl('plastic',cx+0.45,0.83,cz,0.03,0.03,0.30,8,0xf0e8d8,1.1);
-  K.blob('emit',cx-0.45,1.16,cz,0.018,0.035,0.018,0xffc860,1,5);
-  K.blob('emit',cx+0.45,1.16,cz,0.018,0.035,0.018,0xffc860,1,5);
-  K.cyl('plastic',cx+0.2,0.83,cz+0.12,0.05,0.08,0.06,10,0xe8e2d4,1.1);                 /* 饭碗 */
-  K.blob('fabric',cx+0.2,0.89,cz+0.12,0.07,0.03,0.07,0xf4f0e6,1,6);
-  K.rod('wood',cx+0.195,0.89,cz+0.12,cx+0.19,1.08,cz+0.12,0.005,0.005,4,0x3a2a1a);     /* 筷子竖着 */
-  K.rod('wood',cx+0.215,0.89,cz+0.12,cx+0.22,1.08,cz+0.12,0.005,0.005,4,0x3a2a1a);
-  K.frame(cx-0.18,cz+0.05,0.25);
-  K.box('wood',0,0.95,0,0.16,0.22,0.015,0x2a2018,1);                                    /* 相框 */
-  K.box('paper',0,0.95,0.009,0.12,0.17,0.002,0xd8d4c6,1);
-  K.box('dark',0,0.99,0.011,0.06,0.06,0.001,0x0a0a0a,1);                                /* 脸被剪掉了 */
-  K.unframe();
+  c.K.asset('altar_table',cx,0,cz,0);
   c.solid(cx,cz,1.3,0.7);
 };
-/* ---- 连廊入口（'L'）：门垫 + 吊牌 ---- */
+/* ---- 连廊入口（'L'）：门垫 + 吊牌（吊高到 2.65 米以上：巡察者 2.6 米高） ---- */
 FURN.L=function(c,x,y,cx,cz){
   var K=c.K;
   K.g('decal').quad(cx-0.45,cz-0.35,cx+0.45,cz-0.35,cx+0.45,cz+0.35,cx-0.45,cz+0.35,0.004,0x6a2a22);
-  K.rod('metal',cx,WALLH-0.02,cz,cx,2.85,cz,0.006,0.006,4,0x6a6e72);
-  K.bevel('plastic',cx,2.75,cz,0.70,0.20,0.03,0x2a6a4a,1,0.01);                   /* 吊高到 2.65 米以上：巡察者 2.6 米高，以前从牌子里穿过去 */
-  K.box('emit',cx,2.75,cz+0.017,0.56,0.12,0.002,0xd8f0e0,0.8);
+  K.asset('sign_hanging',cx,WALLH-3.0,cz,0);
 };
 /* 没有专门模型的字符：一个按原色的倒角块（不该出现，留着兜底） */
 function furnFallback(c,x,y,cx,cz,ch){

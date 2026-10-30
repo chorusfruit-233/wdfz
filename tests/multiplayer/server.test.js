@@ -51,7 +51,11 @@ test('只提供游戏资源，拒绝目录、敏感文件和非同源连接',asy
   for(const url of ['/','/game3d/js/main.js','/shared/simulation/physics.js','/shared/content/room-bounds.js','/wiki/']){
     const res=await fetch(origin+url);assert.equal(res.status,200,url);
   }
-  for(const url of ['/.git/config','/server/index.js','/package.json','/docs/README.md','/game3d/js/%2e%2e/%2e%2e/.git/config']){
+  for(const asset of ['models_l0','models_l1','models_l2','models_l3','textures_512','textures_1024']){
+    const url='/game3d/assets/'+asset+'.js',res=await fetch(origin+url,{method:'HEAD'});
+    assert.equal(res.status,200,url);assert.match(res.headers.get('content-type'),/javascript/);
+  }
+  for(const url of ['/.git/config','/server/index.js','/package.json','/docs/README.md','/game3d/assets/models_l4.js','/game3d/assets/source.js','/game3d/js/%2e%2e/%2e%2e/.git/config']){
     const res=await fetch(origin+url);assert.equal(res.status,404,url);
   }
   assert.equal((await fetch(origin+'/',{method:'POST'})).status,405);
