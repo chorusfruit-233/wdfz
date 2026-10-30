@@ -55,9 +55,8 @@ body.touch .hud-card{max-width:min(260px,calc(100vw - 164px - var(--sl) - var(--
 .hc-meter{display:flex;align-items:center;gap:8px;margin-top:8px}
 .hc-meter[hidden]{display:none}
 .hc-meter>span{flex:none;width:28px;font:600 10px/1 var(--ui-mono);letter-spacing:1px;color:var(--ui-dim)}
-#sanwrap,#stamwrap{flex:1;height:7px;border-radius:4px;background:rgba(0,0,0,.55);overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+#stamwrap{flex:1;height:7px;border-radius:4px;background:rgba(0,0,0,.55);overflow:hidden;border:1px solid rgba(255,255,255,.06)}
 #stamwrap{height:5px}
-#sanbar{height:100%;width:100%;border-radius:4px;background:#79c8a4;transition:width .16s linear,background .3s}
 #stambar{height:100%;width:100%;background:#7f9fbf;transition:width .1s linear}
 /* 小地图 */
 .bl{position:absolute;left:calc(16px + var(--sl));bottom:calc(16px + var(--sb))}
@@ -93,7 +92,7 @@ body.touch #prompt{display:none!important}
   font:15px/1.75 var(--ui-font);letter-spacing:.5px;text-align:center;color:#e3eee8;
   background:linear-gradient(90deg,transparent,rgba(0,0,0,.55) 12%,rgba(0,0,0,.55) 88%,transparent);
   text-shadow:0 1px 4px #000;transition:opacity .22s ease}
-body.paused #sub,body.jopen #sub,body.chopen #sub{visibility:hidden}   /* 字幕计时在面板打开时本来就停着 */
+body.paused #sub,body.jopen #sub,body.chopen #sub,body.lesson-open #sub{visibility:hidden}   /* 字幕计时在面板打开时本来就停着 */
 #toast{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;top:calc(30% - 20px);z-index:90;pointer-events:none;opacity:0;
   padding:8px 16px;max-width:86vw;font:13px/1.5 var(--ui-font);letter-spacing:.5px;text-align:center;color:var(--ui-text);
   background:var(--ui-bg2);border:1px solid var(--ui-line2);border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,.5);transition:opacity .3s}

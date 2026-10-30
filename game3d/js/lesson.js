@@ -17,7 +17,7 @@ LESSON.open=function(){
   var key=LESSON.currentKey();RT.lessons=RT.lessons||{};
   if(RT.lessons[key]&&RT.lessons[key].done)return;
   if(!RT.lessons[key])RT.lessons[key]={task:(S.day+Math.floor(periodAt(S.tsec)[0]/5))%LESSON_TASKS.length,left:12,done:false};
-  LESSON.key=key;LESSON.on=true;
+  LESSON.key=key;LESSON.on=true;document.body.classList.add('lesson-open');
   var record=LESSON.record(),task=LESSON_TASKS[record.task],el=document.getElementById('lesson');
   el.querySelector('.lesson-title').textContent=examNow()?'答卷边上的字':'课桌上的字';
   el.querySelector('.lesson-text').textContent=task.text;
@@ -27,13 +27,13 @@ LESSON.open=function(){
     button.addEventListener('click',function(){LESSON.answer(index);});opts.appendChild(button);
   });
   resetInputState();releaseMouseLook();el.hidden=false;
-  updateTouchUI();opts.querySelector('button').focus({preventScroll:true});LESSON.paint();
+  LESSON.paintButton();updateTouchUI();opts.querySelector('button').focus({preventScroll:true});LESSON.paint();
 };
 LESSON.close=function(abandon){
   if(!LESSON.on)return;
   if(abandon){var r=LESSON.record();if(r)r.done=true;}
-  LESSON.on=false;document.getElementById('lesson').hidden=true;
-  resetInputState();resumeMouseLook();updateTouchUI();
+  LESSON.on=false;document.body.classList.remove('lesson-open');document.getElementById('lesson').hidden=true;
+  resetInputState();resumeMouseLook();LESSON.paintButton();updateTouchUI();
 };
 LESSON.answer=function(index){
   if(!LESSON.on||!LESSON.available())return;
@@ -60,5 +60,6 @@ LESSON.paint=function(){
 LESSON.paintButton=function(){
   var button=document.getElementById('lessonOpen');if(!button)return;
   var r=RT.lessons&&RT.lessons[LESSON.currentKey()];
+  button.textContent=IS_TOUCH?'看课桌':'看课桌 · R';
   button.hidden=LESSON.on||!LESSON.available()||!!(r&&r.done);
 };

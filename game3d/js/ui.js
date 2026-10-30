@@ -26,7 +26,7 @@ function toast(msg){
   clearTimeout(el._t); el._t=setTimeout(function(){ el.style.opacity='0'; },1500);
 }
 function updateDialog(dt){
-  if(DLG.open && !UI.anyOpen() && !PAUSE.on){
+  if(DLG.open && !UI.anyOpen() && !PAUSE.on && !(typeof LESSON!=='undefined'&&LESSON.on)){
     DLG.timer-=dt;
     if(DLG.timer<=0&&DLG.queue.length){ var n=DLG.queue.shift(); DLG.keep=false; os(n[0],n[1],n[2]); return; }
     if(DLG.timer<=0){ DLG.open=false; DLG.keep=false; var _e=document.getElementById('sub'); _e.style.opacity='0'; setTimeout(function(){ if(!DLG.open) _e.style.display='none'; },240); }

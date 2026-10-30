@@ -294,3 +294,5 @@ body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';positio
 .lesson-card h2{font-size:17px;letter-spacing:2px;margin:0 0 16px}.lesson-card p{font-size:13px;line-height:1.8}
 .lesson-card button{display:block;width:100%;min-height:44px;margin-top:9px;padding:10px;border:1px solid #4b6558;background:#16261e;color:#d2e1d8;cursor:pointer;text-align:left;font:inherit;font-size:13px}
 #lessonTime{font-size:11px;color:#9ab6a5}
+
+body.lesson-open #hud .bc,body.lesson-open #prompt{visibility:hidden}

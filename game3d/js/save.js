@@ -99,6 +99,15 @@ var SAVE_SCHEMA=[
       AN.sub=0;
     }
   },
+  { /* 躲藏与被发现状态跟随巡察存档；缺少此字段的旧档仍按未躲藏恢复。 */
+    save:function(d){d.hiding=HIDE.on?{c:HIDE.c,r:HIDE.r,seen:HIDE.seen,t:HIDE.t}:null;},
+    load:function(d){
+      var h=d.hiding,R=S.mode==='in'&&INTERIORS[S.room];
+      HIDE.on=!!(h&&R&&Number.isInteger(h.c)&&Number.isInteger(h.r)&&R.grid[h.r]&&R.grid[h.r][h.c]==='H');
+      if(HIDE.on){HIDE.c=h.c;HIDE.r=h.r;HIDE.seen=!!h.seen;HIDE.t=saveNum(h.t,0,1e8);}
+      var el=document.getElementById('hideslits');if(el)el.style.display=HIDE.on?'block':'none';
+    }
+  },
   { /* 巡察者的瞬移间隔和追逐状态；路径由当前几何重新计算，不序列化。 */
     save:function(d){
       d.patrol={};

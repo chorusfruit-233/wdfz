@@ -36,7 +36,7 @@ class PressureBrowserTest(BrowserCase):
     def classroom(self, touch=False):
         page=self.page(touch=touch)
         page.evaluate("Game.start('hard');clearIntroTimers();running=false")
-        page.wait_for_function("GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'")
+        page.wait_for_function("GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'&&GLR.roomMesh.userData.roomData===INTERIORS.teach1")
         page.evaluate("S.intro=0;S.day=2;S.talent='code';S.tt=0;S.san=70;S.bag=[];AN.active=false;PAT.locked=false;PAT.next=1000;updateHUD()")
         return page
 
@@ -123,23 +123,69 @@ class PressureBrowserTest(BrowserCase):
     def test_lesson_keeps_time_and_survives_reload_without_duplicate_reward(self):
         for touch in (False,True):
             page=self.classroom(touch)
-            page.locator('#lessonOpen').click()
+            (page.locator('#lessonOpen').tap() if touch else page.locator('#lessonOpen').click())
             self.assert_js(page,'LESSON.on&&!PAUSE.on&&!UI.anyOpen()&&!playerInputAllowed()')
             page.evaluate('window.before=S.tsec;window.pos=S.x;update(1);saveGame()')
             self.assert_js(page,'S.tsec>before&&S.x===pos&&LESSON.record().left===11')
             page.reload(wait_until='load')
             page.evaluate('Game.continue_();running=false;S.intro=0;updateHUD()')
             page.wait_for_function("S.room==='teach1'&&GLR.roomMesh")
-            page.locator('#lessonOpen').click()
+            (page.locator('#lessonOpen').tap() if touch else page.locator('#lessonOpen').click())
             self.assert_js(page,'LESSON.record().left===11')
             answer=page.evaluate('LESSON_TASKS[LESSON.record().task].answer')
             page.evaluate('window.sanBefore=S.san')
-            page.locator('.lesson-options button').nth(answer).click()
+            (page.locator('.lesson-options button').nth(answer).tap() if touch else page.locator('.lesson-options button').nth(answer).click())
             self.assert_js(page,'!LESSON.on&&playerInputAllowed()&&S.san===sanBefore+2')
             page.evaluate('LESSON.open()')
             self.assert_js(page,'!LESSON.on')
             page.evaluate('updateHUD()')
             self.assertTrue(page.locator('#lessonOpen').is_hidden())
+
+    def test_lesson_interrupts_without_freezing_and_expires(self):
+        page=self.classroom()
+        page.evaluate("os('课桌旁的声音',4)")
+        page.keyboard.press('r')
+        self.assert_js(page,'LESSON.on')
+        self.assertTrue(page.locator('#sub').is_hidden())
+        page.evaluate("AN.active=true;AN.id='turn';LESSON.checkInterrupt()")
+        self.assert_js(page,'!LESSON.on&&!LESSON.record().done')
+        self.assertTrue(page.locator('#sub').is_visible())
+        page.evaluate("AN.active=false;AN.id=null;updateHUD()")
+        page.keyboard.press('r')
+        page.evaluate('window.left=LESSON.record().left;Game.pause();update(.1)')
+        self.assert_js(page,'!LESSON.on&&PAUSE.on&&LESSON.record().left===left')
+        page.evaluate('Game.resume();LESSON.open();LESSON.tick(13);updateHUD()')
+        self.assert_js(page,'!LESSON.on&&LESSON.record().done&&playerInputAllowed()')
+        self.assertTrue(page.locator('#lessonOpen').is_hidden())
+
+    def test_patrol_chase_and_blink_timer_survive_save_reload(self):
+        page=self.classroom()
+        page.evaluate("""S.seated=false;let r=INTERIORS.teach1;
+          PAT.room='teach1';PAT.state='walk';PAT.x=r.ox+30.5*r.tw;PAT.y=r.oy+18.5*r.th;
+          PAT.tx=PAT.x+18;PAT.ty=PAT.y;PAT.locked=true;PAT.lock=1;PAT.lost=.7;
+          PAT.blinkCD=.42;PAT.afterBlink=.1;window.savedPose=[PAT.x,PAT.y];saveGame();""")
+        saved=page.evaluate('savedPose')
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'&&GLR.patFig")
+        self.assertEqual(page.evaluate('[PAT.x,PAT.y]'),saved)
+        self.assert_js(page,"PAT.locked&&PAT.lost===.7&&PAT.blinkCD===.42&&PAT.afterBlink===.1&&VisualState.patrolRed===1")
+
+    def test_hiding_is_not_lost_when_restoring_a_patrol_save(self):
+        page=self.classroom()
+        page.evaluate("""S.seated=false;PAT.state='idle';hideIn({c:28,r:16});let r=INTERIORS.teach1;
+          PAT.room='teach1';PAT.state='walk';PAT.x=r.ox+30.5*r.tw;PAT.y=r.oy+18.5*r.th;
+          PAT.tx=PAT.x+18;PAT.ty=PAT.y;PAT.locked=false;PAT.lock=0;PAT.blinkCD=.55;
+          window.hiddenPose=[S.x,S.y];saveGame();""")
+        pos=page.evaluate('hiddenPose')
+        page.reload(wait_until='load')
+        page.evaluate('Game.continue_();running=false')
+        page.wait_for_function("GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'&&GLR.patFig")
+        self.assert_js(page,"HIDE.on&&!HIDE.seen&&HIDE.c===28&&HIDE.r===16&&PAT.blinkCD===.55")
+        self.assertEqual(page.evaluate('[S.x,S.y]'),pos)
+        self.assertTrue(page.locator('#hideslits').is_visible())
+        page.evaluate('tryInteract()')
+        self.assert_js(page,'!HIDE.on')
 
     def test_san_is_readable_when_muted_without_a_numeric_bar(self):
         page=self.page(touch=True)

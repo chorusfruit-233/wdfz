@@ -783,7 +783,10 @@ class ControlsTest(BrowserCase):
         page.evaluate("hideIn({c:28,r:16});saveGame();Game.quit()")
         self.assert_js(page, "!HIDE.on&&document.getElementById('hideslits').style.display==='none'")
         page.evaluate("Game.continue_();running=false")
-        page.wait_for_function("S.room==='teach1'&&!HIDE.on&&!solidAt(S.x,S.y)")
+        page.wait_for_function("S.room==='teach1'&&HIDE.on")
+        self.assert_js(page,"S.x===__hiddenX&&S.y===__hiddenY&&document.getElementById('hideslits').style.display==='block'")
+        page.evaluate('tryInteract()')
+        self.assert_js(page,'!HIDE.on&&canStand(S.x,S.y)')
 
     def test_patroller_reaches_seen_locker_without_crossing_walls(self):
         page = self.page()

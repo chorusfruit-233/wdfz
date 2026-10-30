@@ -171,7 +171,7 @@ function entryNear(R,chs){
 }
 function unstick(){
   try{
-    if(S.mode!=='in'||S.seated) return;
+    if(S.mode!=='in'||S.seated||HIDE.on) return;
     var R=INTERIORS[S.room]; if(!R) return;
     if(!solidAt(S.x,S.y)) return;
     var c=Math.floor((S.x-R.ox)/R.tw), r=Math.floor((S.y-R.oy)/R.th), rad, dr, dc;
