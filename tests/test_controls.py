@@ -47,6 +47,7 @@ class ControlsTest(BrowserCase):
                 spoiler.locator('summary').click()
                 self.assertTrue(spoiler.locator('table').is_visible())
                 self.assertEqual(spoiler.locator('tbody tr').count(), 24)
+                self.assertIn('模型加载失败', page.locator('#faq').inner_text())
                 page.get_by_role('link', name='← 返回游戏').click()
                 page.wait_for_url('**/index.html')
                 self.assertTrue(page.locator('#btncont').is_visible())
