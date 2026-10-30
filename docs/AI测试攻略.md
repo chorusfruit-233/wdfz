@@ -24,7 +24,7 @@ command -v chromium
 | 渲染、画质、引擎、离线资源 | `game3d/js/engine/`、`render.js`、`quality.js`、`settings.js` | `PYTHONPATH=tests python3 -m unittest test_engine -v` |
 | 模型包、贴图包、实例化与室外合批 | `game3d/js/model/assets.js`、`kit.js`、`materials.js`；建模脚本 `tools/blender/`，贴图 `tools/textures/` | `PYTHONPATH=tests python3 -m unittest test_assets test_asset_batching -v`；改了建模脚本要用 `python3 tools/blender/build.py [--only 名字]` 重新打包（需要 `pip install bpy==5.2.3`，只支持 Python 3.13），改了贴图脚本运行 `python3 tools/textures/build_textures.py` |
 | 建模、碰撞、楼梯、空间可达性 | `game3d/js/model/`、`collision.js`、`spiral.js`、`world.js` | `PYTHONPATH=tests python3 -m unittest test_geometry test_model -v`；必要时做下面的几何扫描 |
-| 穿模审查工具 | `tools/clip_audit.py`、`tools/clip_audit.js` | `PYTHONPATH=tests python3 -m unittest test_clip_audit -v` |
+| 穿模审查工具（仅建模或玩法更新时） | `tools/clip_audit.py`、`tools/clip_audit.js` | `PYTHONPATH=tests python3 -m unittest test_clip_audit -v` |
 | 宣传片输出安全 | `video/render.py` | `PYTHONPATH=tests python3 -m unittest test_video -v` |
 
 查找已有用例，避免重写同一场景；单项示例：
@@ -34,7 +34,7 @@ rg -n 'def test_.*(touch|save|quality|collision)' tests
 PYTHONPATH=tests python3 -m unittest test_engine.EngineTest.test_ultra_real_render_and_resource_release -v
 ```
 
-完成相关专项后，涉及游戏代码的改动运行全量检查并保留汇总：
+完成相关专项后，建模或玩法更新可运行全量检查并保留汇总；全量检查包含穿模检查，其他类型的更新不要运行全量命令，应选择不包含穿模检查的相关测试：
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -62,6 +62,8 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## 5. 几何扫描与证据
 
+只有更新了建模或玩法时才进行穿模检查，包括下列几何扫描和相关的自动化穿模用例；其他更新不运行这些检查。
+
 指定输出到临时路径，避免默认覆盖仓库内的 `tools/clip_report.json`：
 
 ```bash
@@ -79,4 +81,4 @@ python3 tools/clip_audit.py --quality 3 --out /tmp/wdfz-all-clip.json
 
 ## 6. 交付记录
 
-说明问题或需求、修改位置、复现与验证命令、实际结果和未验证范围。失败时保留报错、浏览器与环境、复现步骤；先区分依赖或环境限制与产品缺陷，不靠多次盲目重试。玩法或交互变更同步检查玩家 Wiki、产品文档和测试说明；代码改动按 `CLAUDE.md` 先提 PR，不要合并。
+说明问题或需求、修改位置、复现与验证命令、实际结果和未验证范围。失败时保留报错、浏览器与环境、复现步骤；先区分依赖或环境限制与产品缺陷，不靠多次盲目重试。每次更新完成后逐一检查并对齐仓库中的所有文档，更新所有需要调整的内容，包括玩家 Wiki、产品文档和测试说明；历史记录保留当时背景和事实。代码改动按 `CLAUDE.md` 先提 PR，不要合并。
