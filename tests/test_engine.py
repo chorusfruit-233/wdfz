@@ -84,10 +84,12 @@ class EngineTest(BrowserCase):
         page.evaluate("""S.mode='out';S.room=null;enterWorldOut();window.colliders=JSON.stringify(OUT_SOLID);
             window.trees=OUTX.treeN;window.pos=[S.x,S.y];window.counts=[];""")
         for q in (0, 1, 2, 3, 0):
-            page.evaluate('q=>Settings.q(q)', q)
+            self.set_quality(page, q)
             self.assert_js(page, 'JSON.stringify(OUT_SOLID)===colliders&&OUTX.treeN===trees&&S.x===pos[0]&&S.y===pos[1]')
-            page.evaluate('counts.push(GLR.outMesh.children.reduce((n,o)=>n+(o.geometry?o.geometry.attributes.position.count:0),0))')
-        self.assert_js(page, 'counts[3]>counts[2]&&counts[0]===counts[4]')
+            page.evaluate('counts.push(GLR.outMesh.children.reduce((n,o)=>n+(o.geometry?o.geometry.attributes.position.count*(o.isInstancedMesh?o.count:1):0),0))')
+        counts = page.evaluate('counts')
+        self.assertGreater(counts[3], counts[2], counts)
+        self.assertEqual(counts[0], counts[4], counts)
 
     def test_ultra_settings_persist_and_old_values_normalize(self):
         context = self.browser.new_context(viewport={'width': 800, 'height': 600})
