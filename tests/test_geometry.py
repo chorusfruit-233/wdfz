@@ -17,7 +17,7 @@ class GeometryTest(BrowserCase):
 
     def test_clip_audit_ultra_modeling_is_clean_too(self):
         """超精细的分段数更高，模型形状不变：抽几间房再查一遍"""
-        page = self.page(); page.evaluate("Settings.q(3)")
+        page = self.page(); self.set_quality(page, 3)
         page.add_script_tag(path=str(ROOT / 'tools' / 'clip_audit.js'))
         issues = page.evaluate("['teach1','admin3','dorm1','garage1','bell1'].flatMap(id=>ClipAudit.room(id)).concat(ClipAudit.outdoor())")
         self.assertEqual([(x['type'], x.get('room'), x.get('a')) for x in issues][:8], [])
@@ -45,7 +45,7 @@ class GeometryTest(BrowserCase):
         self.assertEqual(bad, [])
 
     def test_ultra_exact_circle_collision_slides_along_walls(self):
-        page = self.page(); page.evaluate("Settings.q(3)")
+        page = self.page(); self.set_quality(page, 3)
         # 贴着走廊北墙斜着往墙里走：x 方向照样前进，y 方向被挡住，人和墙之间不会少于半径
         page.evaluate("doEnterRoom('dorm1');running=false")
         r = page.evaluate("""(()=>{var R=INTERIORS.dorm1;S.mode='in';S.room='dorm1';S.seated=false;
