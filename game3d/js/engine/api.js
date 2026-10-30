@@ -14,6 +14,7 @@ var Engine={
   ready:function(){return !!GLR.renderer;},
   resize:function(){if(this.ready())ThreeBackend.resize();},
   draw:function(dt){if(this.ready())ThreeBackend.draw(dt);},
+  resetSan:function(value){ThreeBackend.resetSan(value);},
   clearWorld:function(){return ThreeBackend.clearWorld();},
   addRoomLights:function(R){return ThreeBackend.addRoomLights(R);},
   enterRoom:function(id){QualityWatch.reset();return ThreeBackend.enterRoom(id);},

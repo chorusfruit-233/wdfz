@@ -7,6 +7,11 @@
    门扇单独成块，回来时按当时开没开重建（room.js 的 roomDoorRefresh）。 */
 var SCENE_CACHE={key:'',out:null,rooms:{},order:[]};
 var SCENE_CACHE_ROOMS=3;
+/* 换新局或读档时从当前 SAN 起步；同一局内仍按帧平滑变化。 */
+ThreeBackend.resetSan=function(value){
+  GLR.sanSense=clamp(Number.isFinite(value)?value/100:1,0,1);
+  if(GLR.postMat) GLR.postMat.uniforms.uSan.value=GLR.sanSense;
+};
 function sceneCacheKey(){ return QUALITY+'|'+(NOTEX?1:0); }
 function disposeGroup(g,keepData){return ThreeBackend.disposeGroup(g,keepData);}
 function sceneCacheCheck(){

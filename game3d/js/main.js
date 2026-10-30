@@ -190,6 +190,7 @@ function freshState(diff){
   S.talent=t;
   S.tsec=700; S.day=1;
   S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.pillT=0; S.tt=0; S.ttTier=0;
+  Engine.resetSan(S.san);
   S.actCool={}; S.immuneUsed=false;
   S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
   try{ patReset(); PAT.next=45; }catch(e){}
@@ -259,6 +260,7 @@ var Game={
     clearIntroTimers();
     freshState(d.diff);
     applySave(d);
+    Engine.resetSan(S.san);
     function restoreAnomalyFX(){
       if(PAT.state==='walk'){
         var room=PAT.room==='out'?null:INTERIORS[PAT.room];

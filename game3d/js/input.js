@@ -80,7 +80,7 @@ function updateInputUI(){
 }
 function physicalKey(e){
   var codes={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyF:'f',KeyG:'g',
-    KeyH:'h',KeyJ:'j',KeyM:'m',Digit1:'1',Digit2:'2'};
+    KeyH:'h',KeyJ:'j',KeyM:'m',KeyR:'r',Digit1:'1',Digit2:'2',Digit3:'3'};
   return codes[e.code]||e.key.toLowerCase();
 }
 function initTouchActivation(){

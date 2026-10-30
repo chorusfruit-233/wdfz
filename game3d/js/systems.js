@@ -217,6 +217,7 @@ function ttTick(dt,nw){
 function updateSystems(dt){
   if(S.dead||S.screen!=='play') return;
   clockTick(dt);
+  try{ patEndIfInvalid(); }catch(e){}
   try{ fnTick(dt); }catch(e){}
   if(S.exam&&(S.tsec>=LIGHTS_OUT||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
   examTick(dt);

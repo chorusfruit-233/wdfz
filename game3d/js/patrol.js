@@ -320,15 +320,26 @@ function patBlink(distance){
   }
   return Math.hypot(PAT.x-oldX,PAT.y-oldY)>0.01;
 }
-function patTick(dt){
-  if(isNight()&&S.mode==='in'&&PAT.state!=='idle'){patEnd(null);return;}
-  PAT.afterBlink=Math.max(0,(PAT.afterBlink||0)-dt);
+/* 先清理失效巡察，再结算 SAN；patTick 也调用此检查以覆盖直接更新。 */
+function patEndIfInvalid(){
+  if(PAT.state==='idle')return false;
   var here=patRoomHere();
-  if(PAT.state!=='idle'&&PAT.room!==here){
+  if(PAT.room!==here){
     if(PAT.room==='out'||here==='out'||PAT.state==='walk') patEnd(PAT.locked?'我：门在身后合上。脚步声停在了门外。':null);
     else patEnd(null);
-    return;
+    return true;
   }
+  /* 时段或地点不再允许巡察时，预警和追逐都立即结束；坐回座位或请假仍走躲避规则。 */
+  if(!patEligible()){
+    patEnd(PAT.state==='walk'&&S.mode==='in'&&!isNight()&&S.screen==='play'&&!S.dead?
+      '我：铃响了。灯一下子正常了，走廊又空了。':null);
+    return true;
+  }
+  return false;
+}
+function patTick(dt){
+  if(patEndIfInvalid())return;
+  PAT.afterBlink=Math.max(0,(PAT.afterBlink||0)-dt);
   if(PAT.state==='idle'){
     VisualState.patrolFlick=Math.max(0,(VisualState.patrolFlick||0)-dt); VisualState.patrolRed=Math.max(0,(VisualState.patrolRed||0)-dt);
     if(!patEligible()||patIgnores()) return;
@@ -404,7 +415,6 @@ function patTick(dt){
     return;
   }
   if(!PAT.locked&&PAT.walkT>45) patEnd('我：灯恢复了。脚步声往楼梯那边去了。');
-  if(!PAT.locked&&!patEligible()) patEnd('我：铃响了。灯一下子正常了，走廊又空了。');
 }
 
 /* ---------- 模型：比老师还高的无面黑影 ---------- */
