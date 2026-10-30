@@ -142,11 +142,14 @@ function initInput(){
   },{capture:true,passive:true});
   window.addEventListener('keydown',function(e){
     var k=physicalKey(e);
-    if(e.target.matches('input,select,textarea,[contenteditable="true"]')){
+    var editing=e.target.matches('input,select,textarea,[contenteditable="true"]');
+    if(e.key==='F2'&&(!editing||DEV.on)){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
+    if(k==='tab'&&DEV.on){Dev.focusTrap(e);return;}
+    if(editing){
       if(k!=='escape')return;
       e.target.blur();
     }
-    if(e.key==='F2'){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
+    if(k==='escape'&&DEV.on){e.preventDefault();if(!e.repeat)Dev.close();return;}
     if(PRO.on){
       if(k===' '||k==='enter'){e.preventDefault();if(!e.repeat)proNext();}
       return;
@@ -158,7 +161,6 @@ function initInput(){
       if(PC.on){PCGAME.stop();return;}
       if(PHONE.on){PHONE.stop();return;}
       if(LESSON.on){LESSON.close(true);return;}
-      if(DEV.on){Dev.close();return;}
       if(UI.openPanel==='set'){UI.close('set',false);if(PAUSE.on)UI.open('pause');return;}
       if(UI.openPanel&&UI.openPanel!=='pause'){UI.close(UI.openPanel);return;}
       if(PAUSE.on&&performance.now()-INPUT.unlockedAt<200)return;

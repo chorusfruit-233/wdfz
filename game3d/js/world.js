@@ -234,4 +234,4 @@ function doExitRoom(){
   autoSave();
 }
 
-function syncCamera(dt){ return Engine.syncCamera(dt); }
+function syncCamera(dt,view){ return Engine.syncCamera(dt,view); }

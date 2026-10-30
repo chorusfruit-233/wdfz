@@ -149,7 +149,7 @@ ThreeBackend.enterOutside=function(){
   try{ tracesBuild(); }catch(e){}
 };
 
-ThreeBackend.syncCamera=function(dt){
+ThreeBackend.syncCamera=function(dt,view){
   var p;
   if(S.mode==='in'){
     var R=INTERIORS[S.room];
@@ -177,7 +177,8 @@ ThreeBackend.syncCamera=function(dt){
   var eyeTarget=S.seated?1.12:EYE;
   S.eyeH=(S.eyeH===undefined)?EYE:S.eyeH;
   S.eyeH+= (eyeTarget-S.eyeH)*Math.min(1,dt*9);
-  GLR.cam.position.set(p.x, S.eyeH+bob+dyOff+(S.eyeLift||0)+(S.floorY||0), p.z+dzOff);   /* floorY：钟楼楼梯上的高度 */
+  var cameraLift=view?view.eyeLift:S.eyeLift;
+  GLR.cam.position.set(p.x, S.eyeH+bob+dyOff+(cameraLift||0)+(S.floorY||0), p.z+dzOff);   /* floorY：钟楼楼梯上的高度 */
   var targetFov=72+(S.run&&S.moving?9:0);
   S.fov=lerp(S.fov,targetFov,Math.min(1,dt*8));
   /* 超宽屏的近平面角不能越过角色碰撞圆。普通屏保持原来的 0.08 米。 */
@@ -186,8 +187,8 @@ ThreeBackend.syncCamera=function(dt){
     GLR.cam.fov=S.fov;GLR.cam.near=near;GLR.cam.updateProjectionMatrix();
     GLR.postMat.uniforms.uNear.value=near;
   }
-  var spitch=S.pitch+(S.seated?-0.06:0);
-  var dir=new THREE.Vector3(Math.cos(S.ang)*Math.cos(spitch),Math.sin(spitch),Math.sin(S.ang)*Math.cos(spitch));
+  var angle=view?view.ang:S.ang, spitch=(view?view.pitch:S.pitch)+(S.seated?-0.06:0);
+  var dir=new THREE.Vector3(Math.cos(angle)*Math.cos(spitch),Math.sin(spitch),Math.sin(angle)*Math.cos(spitch));
   GLR.cam.lookAt(p.x+dir.x, S.eyeH+bob+dir.y+(S.floorY||0), p.z+dir.z);
 };
 
@@ -212,16 +213,24 @@ ThreeBackend.draw=function(dt){
       GLR.roamFig.lookAt(GLR.cam.position.x,0,GLR.cam.position.z);
     } else { GLR.roamFig.visible=false; }
   }
-  try{ anfxUpdate(dt); }catch(e){}
-  try{ smileTick(dt); }catch(e){}
+  var debugFrozen=typeof DEV!=='undefined'&&DEV.on&&DEV.freeze;
+  /* 调试暂停冻结异象和环境幻觉；主动触发的死亡演出仍可预览。 */
+  try{ if(!debugFrozen||(typeof ANFX!=='undefined'&&ANFX.kind==='death'))anfxUpdate(dt); }catch(e){}
+  try{ if(!debugFrozen)smileTick(dt); }catch(e){}
   try{ patRender(); }catch(e){}
   try{ handsTick(dt); }catch(e){}
-  try{ hallucTick(dt); }catch(e){}
-  try{ apparTick(dt); }catch(e){}
+  try{ if(!debugFrozen)hallucTick(dt); }catch(e){}
+  try{ if(!debugFrozen)apparTick(dt); }catch(e){}
   GLR.cam.updateMatrixWorld();
   entFace();
   var u=GLR.postMat.uniforms;
   u.uTime.value=GLR.time;
+  var preview=VisualState.deathAnim;
+  if(preview){
+    preview.t=Math.min(preview.dur,preview.t+dt);
+    u.uDm.value=preview.mode;u.uDt.value=preview.t/preview.dur;
+    if(preview.t>=preview.dur){VisualState.deathAnim=null;u.uDm.value=0;u.uDt.value=0;}
+  }else{u.uDm.value=0;u.uDt.value=0;}
   var _fnOn=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
   GLR.fnNorm=GLR.fnNorm===undefined?0:GLR.fnNorm;
   GLR.fnNorm+= (_fnOn-GLR.fnNorm)*Math.min(1,dt*1.6);
