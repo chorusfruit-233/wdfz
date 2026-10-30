@@ -227,7 +227,9 @@ ThreeBackend.draw=function(dt){
   u.uFlash.value=GLR.flash;
   u.uExpo.value=(GLR.dayExpo===undefined)?1:GLR.dayExpo;
   u.uRed.value=GLR.patrolRed||0;
-  u.uSan.value=clamp(S.san/100,0,1);
+  var targetSan=clamp(S.san/100,0,1);
+  GLR.sanSense=GLR.sanSense===undefined?targetSan:GLR.sanSense+(targetSan-GLR.sanSense)*(1-Math.exp(-dt*2));
+  u.uSan.value=GLR.sanSense;
   if(GLRTEST.nopost){
     GLR.renderer.setRenderTarget(null);
     GLR.renderer.render(GLR.scene,GLR.cam);

@@ -247,6 +247,7 @@ UI.renderNote=function(){
   var any=false;
   for(var k in S.spots){ li(kLabel(k)); any=true; }
   var CLUE_NOTE=[
+    ['lesson','课桌上的字会变。上课时可以低头看一看，但别忘了抬头。'],
     ['roomkey','网络中心的门锁着 —— 钥匙可能在行政楼五楼的校长办公室。'],
     ['stall','教学楼一楼厕所，第三个隔间：「11:45:00　放下一样东西」。要精确到秒：手表，或者「秒表」天赋。'],
     ['trash','垃圾房的桶盖上写着：清运 17:30。'],

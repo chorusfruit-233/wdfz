@@ -566,7 +566,7 @@ function anEnd(){
   var id=AN.id;
   anOff(id);
   if(id==='roster'&&!AN.data.done){
-    S.viol=Math.min(100,S.viol+18);
+    addViolation(18);
     os('我：那张名单我没动。走开的时候，我听见身后有笔尖划过纸的声音。',4.0);
   }
   try{ traceAdd(id); }catch(e){}
@@ -673,7 +673,7 @@ function turnSmileTick(dt,d){
   }else if(d.chosen==='no'&&AN.acc>1.0){
     d.done=1;
     smileShow('jump');
-    S.viol=Math.min(100,S.viol+15);
+    addViolation(15);
     anHurt('我没有回头。它等不及了——那张脸从我肩膀上绕过来，贴着我的鼻尖，一点一点咧开了嘴。',30);
   }
 }

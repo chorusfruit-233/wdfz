@@ -24,6 +24,7 @@ function frame(t){
 }
 function update(dt){
   PHONE.checkInterrupt();
+  LESSON.checkInterrupt();
   if(S.screen!=='play') return;
   if(PRO.on) return;                     /* 前情提要期间世界不动 */
   VisualState.time+=dt;
@@ -39,6 +40,8 @@ function update(dt){
   try{ searchTick(dt); }catch(e){}
   updateSystems(dt);
   anDrive(dt);
+  settleSan();
+  LESSON.tick(dt);
   PHONE.checkInterrupt();                         /* 世界更新中可能死亡、开始异象或打开选择 */
   try{ monoTick(dt); }catch(e){}
   spotTick();
@@ -125,18 +128,13 @@ function hudEl(id){
   return e;
 }
 function updateHUD(){
-  var san=hudEl('sanbar');
-  if(san){
-    san.style.width=clamp(S.san,0,100)+'%';
-    san.style.background=S.san>60?'#79c8a4':(S.san>30?'#c8b24a':'#c8554a');
-  }
+  var feel=hudEl('sanfeel'),stage=sanityStage();
+  if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=SAN_FEEL[stage];}
   hudEl('clock').textContent=fmtClock(S.tsec);
   var sc=hudEl('secclock');                                   /* 手表 / 秒表天赋：右上角显示到秒 */
   if(sc){ var hs=hasSeconds(); sc.hidden=!hs; if(hs) sc.textContent=fmtClockS(S.tsec); }
   var cr=hudEl('cross');
   if(cr){ cr.style.display=playerInputAllowed()?'block':'none'; }
-  var sn=hudEl('sannum');
-  if(sn) sn.textContent=Math.round(S.san);
   try{ anwTick(dtG); }catch(e){}
   try{ updateMarker(dtG); }catch(e){}
   hudEl('place').textContent=currentPlaceName();
@@ -153,6 +151,7 @@ function updateHUD(){
     sb.style.width=(snack?clamp(S.snackT/SNACK_SEC*100,0,100):clamp(S.stam,0,100))+'%';
     sb.style.background=snack?'#d8b45a':(S.tired?'#b0705a':'');   /* 喘气时变红，回到能跑才变回蓝 */
   }
+  LESSON.paintButton();
   UI.renderHot();
   updateTouchUI();
   /* 字幕显示时也要给提示：字幕很频繁，以前站在门口常常看不到"E 开门" */
@@ -179,6 +178,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  LESSON.close(false);
   clearSearch();
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
   spiralReset();
@@ -260,6 +260,11 @@ var Game={
     freshState(d.diff);
     applySave(d);
     function restoreAnomalyFX(){
+      if(PAT.state==='walk'){
+        var room=PAT.room==='out'?null:INTERIORS[PAT.room];
+        if(Collision.depth(PAT.x,PAT.y,PAT_BODY/U2M,room)>1e-7)patReset();
+        else patAddFig();
+      }
       if(!AN.id||!AN.active) return;
       try{
         if(HAS_FX[AN.id]) anfxSpawn(AN.id,S.x,S.y);      /* 和 anOn 共用一张表：以前这里另抄了一份，新异象（水杯、雨点成字）读档后看不见 */
@@ -302,6 +307,7 @@ var Game={
     Game.resume();
   },
   quit:function(){
+    LESSON.close(false);
     running=true;
     clearSearch();
     try{ patReset(); }catch(e){}

@@ -103,7 +103,7 @@ ThreeBackend.boot=function(){
 '}',
 'void main(){',
 '  vec2 uv=vUv;',
-'  float wob=(1.0-uSan);',
+'  float wob=clamp((0.75-uSan)/0.75,0.0,1.0);',
 '  uv.x+=sin(uv.y*11.0+uTime*0.9)*0.0012*wob;',
 '  float tear=step(0.993-0.02*wob*wob,hash(vec2(floor(uv.y*70.0),floor(uTime*14.0))));',
 '  uv.x+=tear*(hash(vec2(floor(uTime*14.0),3.0))-0.5)*0.03*wob*(1.0-uFx);',
@@ -112,6 +112,7 @@ ThreeBackend.boot=function(){
 '  vec3 col=sceneColor(uv);',
 '  col.r=sceneColor(uv+dc*ca).r;col.b=sceneColor(uv-dc*ca).b;',
 '  col*=contactAO(uv);',
+'  col*=1.0-0.20*wob*smoothstep(0.18,0.7,distance(uv,vec2(0.5)));',
 '  if(uHands>0.5){vec4 hand=texture2D(tHands,uv);col=mix(col,hand.rgb,hand.a);}',
 /* 「真实」档的辉光：灯管、手电光斑、亮窗周围晕开一圈（三圈采样，只取超过阈值的部分） */
 '  if(uBloom>0.0){vec3 bl=vec3(0.0);vec2 asp=vec2(uRes.y/uRes.x,1.0);',

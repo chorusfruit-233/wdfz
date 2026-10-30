@@ -48,7 +48,7 @@ var VIO_ON=0;
 
 /* ---------- 考试模式 ----------
    在钟楼顶上撞钟以后，当天剩下的所有"在教室"的时段（上课和晚自习）都变成考试，到熄灯为止：
-     离开座位，SAN 和违规涨得更快；异象只出教室里的那几种；
+     离开座位，违规涨得更快；异象只出教室里的那几种；
      一场考完，大部分时间坐着的，给一次 SAN。
    考试时能出的异象见 anomaly.js 注册表里的 exam（派生出 EXAM_AN）。 */
 function examStart(){
@@ -116,20 +116,15 @@ function rewindGameTime(minutes){
 var NEED_RULE={
   '教室':{
     there:function(){ return atMySeat(); },
-    san:function(dt,exam){
-      var ek=exam?1.8:1;                        /* 考试时离开座位扣得更快 */
-      if(S.seated){ S.san+=0.42*dt; }
-      else if(inClassroomHere()){ S.san-=0.9*dt*dif().san*ek; }
-      else { S.san-=2.4*dt*dif().san*ek; }
-    }
+    san:function(dt){ if(atMySeat()) S.san+=0.42*dt; }
   },
   '宿舍':{
     there:function(){ return inDorm(); },
-    san:function(dt){ if(inDorm()){ S.san+=0.22*dt; } else { S.san-=1.4*dt*dif().san; } }
+    san:function(dt){ if(inDorm()) S.san+=0.22*dt; }
   },
   '操场':{
     there:function(){ return onField(); },
-    san:function(dt){ if(onField()){ S.san+=0.5*dt; } else { S.san-=1.2*dt*dif().san; } }
+    san:function(dt){ if(onField()) S.san+=0.5*dt; }
   },
   '自由':{
     there:function(){ return true; },
@@ -144,18 +139,41 @@ var TT_LINES=['我：最近睡得挺好。铃一响就醒，不用闹钟。醒�
   '我：座位表上，我的名字在哪一格？……哪一格都是我的名字。',
   '我：我好像一直都在这里。在我转来之前，就在这里。'];
 /* 时间往前走；《先辈》那十秒开始时提醒一句 */
+/* 跨时段时分段消耗真实秒；不能把整步时间按旧时速推进，尤其是 11:45 的慢速窗。 */
 function clockTick(dt){
-  var t0=S.tsec;
-  advanceGameTime(dt*rateAt(S.tsec)/60);
-  if(t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
-    os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
+  var left=Math.max(0,dt);
+  while(left>1e-9){
+    var t0=S.tsec, boundary=periodAt(t0)[1];
+    if(t0<BEAST_T0-1e-9)boundary=Math.min(boundary,BEAST_T0);
+    else if(t0<BEAST_T1-1e-9)boundary=Math.min(boundary,BEAST_T1);
+    var rate=rateAt(t0), seconds=Math.max(0,(boundary-t0)*60/rate);
+    if(seconds<1e-9){advanceGameTime(1e-8);continue;}
+    var used=Math.min(left,seconds);
+    advanceGameTime(used===seconds?boundary-t0:used*rate/60);left-=used;
+    if(t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
+      os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
+  }
 }
-/* SAN：按时段规则涨跌，药片回复，归零就死 */
+function sanityStage(value){var n=value===undefined?S.san:value;return n>60?0:n>30?1:n>12?2:3;}
+var SAN_FEEL=['呼吸平稳','有些恍惚','心跳很乱','快撑不住了'];
+function staminaMax(){return 40+0.6*clamp(Number.isFinite(S.san)?S.san:100,0,100);}
+function capStamina(){S.stam=clamp(Number.isFinite(S.stam)?S.stam:0,0,staminaMax());}
+function restoreStamina(amount){S.stam=Math.min(staminaMax(),S.stam+amount);capStamina();}
+function settleSan(){
+  S.san=clamp(Number.isFinite(S.san)?S.san:100,0,100);capStamina();
+  if(S.san<=0&&!S.dead){kill('你一直撑着的那根弦，断了。','vignette');if(!S.dead&&S.san<=0)S.san=1;}
+}
+/* 仅保留日常恢复；危险环境、异象和躲避巡察者期间不能由课表恢复抵消伤害。 */
 function sanTick(dt,rule,exam){
-  rule.san(dt,exam);
-  if(S.pillT>0){ var pd=Math.min(dt,S.pillT); S.san+=PILL_RATE*pd; S.pillT-=pd; }
-  S.san=clamp(S.san,0,100);
-  if(S.san<=0&&!S.dead) kill('你在一个不该睡着的地方睡着了。梦里有人一直在叫你的名字，叫得很温柔。','vignette');
+  if(S.san<=0){settleSan();if(S.dead)return;}
+  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on)rule.san(dt,exam);
+  if(S.pillT>0){var pd=Math.min(dt,S.pillT);S.san+=PILL_RATE*pd;S.pillT-=pd;}
+  if(PAT.state==='walk'&&(PAT.locked||HIDE.on))S.san-=dt*(PAT.locked?0.35:0.18);
+  settleSan();
+}
+function addViolation(amount){
+  if(amount>0&&(eveningActivity(S.tsec)||onLeave()))return;
+  S.viol=clamp(S.viol+amount,0,100);
 }
 /* 违规：不在该在的地方（或熄灯后）就涨，否则慢慢降；请假中不算 */
 function violTick(dt,nw,rule,exam){
@@ -164,10 +182,10 @@ function violTick(dt,nw,rule,exam){
   if(nw==='教室') vioMul=exam?2.4:1.4;
   if(S.mode==='out'&&isNight()) vioMul*=0.5;
   /* 熄灯后即使在宿舍也会累积违规；在室外仍沿用原来的夜间倍率。 */
-  if(onLeave()) wrong=false;                      /* 请假中：不用待在规定的地方 */
+  if(onLeave()||eveningActivity(S.tsec)) wrong=false;                      /* 请假中：不用待在规定的地方 */
   S.wrong=wrong;
   leaveTick();
-  if(!onLeave()&&(wrong||nw==='宿舍')){ S.viol+=dt*0.85*vioMul; }
+  if(!onLeave()&&!eveningActivity(S.tsec)&&(wrong||nw==='宿舍')){ addViolation(dt*0.85*vioMul); }
   else { S.viol=Math.max(0,S.viol-dt*3.2); }
   try{ skipTick(dt); }catch(e){}
   try{ ncUpdate(dt); }catch(e){}
@@ -179,19 +197,15 @@ function violTick(dt,nw,rule,exam){
     toast('违规已满 · 不能请假');
   }else if(RT.violFull&&S.viol<60) RT.violFull=0;
 }
-/* 同化：坐得住、按时回宿舍就涨；满了给一次隐藏的选择 */
+/* 同化：坐得住、按时回宿舍就涨；满值直接融入。 */
 function ttTick(dt,nw){
+  if(S.tt>=100){resolveAssimilation();return;}
   if(S.seated&&nw==='教室') S.tt+=1.5*dt;
   else if(inDorm()&&S.tsec>=EVENING) S.tt+=1.0*dt;
   else S.tt=Math.max(0,S.tt-0.35*dt);
   S.tt=clamp(S.tt,0,100);
-  if(S.tt>=100&&!S.hiddenLatch){ S.hiddenLatch=true; S.hiddenWindow=3.2; }
-  if(S.hiddenLatch){
-    S.hiddenWindow-=dt;
-    if(S.hiddenWindow<=0&&!S.dead&&!S.hiddenAsked){
-      S.hiddenAsked=true;
-      askHiddenChoice();
-    }
+  if(S.tt>=100){
+    resolveAssimilation();return;
   }
   var tier=Math.floor(S.tt/20);
   if(tier>0&&tier!==S.ttTier){
@@ -208,24 +222,22 @@ function updateSystems(dt){
   examTick(dt);
   var exam=examNow(), nw=needWhere(S.tsec), rule=NEED_RULE[nw];
   sanTick(dt,rule,exam);
+  if(S.dead)return;
   violTick(dt,nw,rule,exam);
   ttTick(dt,nw);
+  if(S.dead)return;
   dangerTick(dt);
   roamTick(dt);
   try{ patTick(dt); }catch(e){}
+  settleSan();
 }
 
-function askHiddenChoice(){
-  PAUSE.on=true;
-  UI.choice('第 3 节。我的位子空着。\n全班都转过头来，等我坐回去。',[
-    {label:'回教室去',fn:function(){ S.tt=86; S.hiddenLatch=false; S.hiddenAsked=false; PAUSE.on=false; }},
-    {label:'……',fn:function(){
-      S.hiddenAsked=false;
-      kill('你在自己的位子上坐好了。椅子很合身，像是照着你做的。这一次，不用再起来了。','names');
-      /* 药丸、天赋或调试无敌挡下死亡时，不能留下无面板的暂停或立即重触发的隐性压力。 */
-      if(!S.dead){ S.tt=86; S.hiddenLatch=false; S.hiddenWindow=0; PAUSE.on=false; }
-    }}
-  ]);
+function resolveAssimilation(){
+  S.hiddenLatch=false;S.hiddenAsked=false;S.hiddenWindow=0;
+  if(S.dead)return;
+  kill('你在自己的位子上坐好了。椅子很合身，像是照着你做的。这一次，不用再起来了。','names');
+  /* 免疫、药丸或调试无敌挡下后回落，避免每帧再次触发；不提供人为脱身选项。 */
+  if(!S.dead){S.tt=86;S.ttTier=4;}
 }
 
 /* 请假：两个小时（游戏时间）内不用待在规定的地方，巡察者也不管。RT.leaveUntil 用连续的游戏分钟 */

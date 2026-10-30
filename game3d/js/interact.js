@@ -162,7 +162,7 @@ function doSanAct(key){
   var _before=S.tsec;
   advanceGameTime(a.min);
   S.actCool[key]=gameClock()+a.cd;
-  S.stam=Math.min(100,S.stam+25);
+  restoreStamina(25);
   if(key==='piano'){ try{ SFX.resume(); SFX.moonlight(); }catch(e){} }
   else if(key==='pc'){ try{ PCGAME.start(); }catch(e){} }
   if(a.min>=4){
@@ -200,7 +200,7 @@ function useRoster(timeoutMs){
     return;
   }
   UI.choice('名单上，我的名字被一道红线划掉了。手边没有笔。',[
-    {label:'把它撕下来',fn:function(){ UI.closeChoice(); d.done=true; S.viol=Math.min(100,S.viol+8); S.san=Math.max(0,S.san-5);
+    {label:'把它撕下来',fn:function(){ UI.closeChoice(); d.done=true; addViolation(8); S.san=Math.max(0,S.san-5);
       os('我：纸撕下来的时候，下面还贴着一张。一模一样，连那道红线都是新的。……至少我把它撕了。',4.6); }},
     {label:'用指甲把名字刻回去',fn:function(){ UI.closeChoice(); d.done=true; S.san=Math.max(0,S.san-10);
       os('我：指甲劈了。名字刻上去了，歪歪扭扭的，渗着一点红。',4.0); }},
@@ -591,10 +591,10 @@ function doSearch(c,r){
   if(RT.pendingLoot&&RT.pendingLoot[key]){ searchLoot(key,RT.pendingLoot[key]); return; }
   RT.deskUsed[key]=1;
   var _R=INTERIORS[S.room];
-  /* 车钥匙和机房钥匙：校长办公室的容器 18%，别的老师办公室 1%（以前直接挂在保安岗） */
+  /* 车钥匙和机房钥匙：校长办公室的容器 45%，别的老师办公室 1%（以前直接挂在保安岗） */
   if(_R&&_R.host==='admin'){
     var miss=['key','roomkey'].filter(function(k){ return !hasItem(k); });
-    if(miss.length&&Math.random()<(_R.principal?0.18:0.01)){
+    if(miss.length&&Math.random()<(_R.principal?0.45:0.01)){
       var kk=miss[Math.floor(Math.random()*miss.length)];
       os(kk==='key'?'我：抽屉最里面压着一串车钥匙，牌号刻在环上。':'我：抽屉里有一把铜钥匙，塑料标签上写着「机房」。',3.6);
       addItem(kk); return;

@@ -22,7 +22,7 @@ var SAVE_SCHEMA=[
       d.snackT=Math.max(0,S.snackT||0); d.pillT=Math.max(0,S.pillT||0); d.phoneCool=Math.max(0,PHONE.cool||0);
     },
     load:function(d){
-      S.san=d.san; S.viol=d.viol; S.stam=d.stam;
+      S.san=saveNum(d.san,0,100); S.viol=saveNum(d.viol,0,100); S.stam=saveNum(d.stam,0,staminaMax());
       S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
       S.snackT=saveNum(d.snackT,0,SNACK_SEC); S.pillT=saveNum(d.pillT,0,PILL_SEC); PHONE.cool=saveNum(d.phoneCool,0,PH_COOL);
     }
@@ -39,7 +39,7 @@ var SAVE_SCHEMA=[
   },
   { /* 天赋免疫、课表违规的计时与档位 */
     save:function(d){ d.immuneUsed=!!S.immuneUsed; d.tt=S.tt; d.ttTier=S.ttTier; },
-    load:function(d){ S.immuneUsed=!!d.immuneUsed; S.tt=d.tt||0; S.ttTier=d.ttTier||0; }
+    load:function(d){ S.immuneUsed=!!d.immuneUsed; S.tt=saveNum(d.tt,0,100); S.ttTier=d.ttTier||0; }
   },
   { /* 考试模式 */
     save:function(d){ d.exam=!!S.exam; d.examCur=S.examCur; d.examSeat=S.examSeat||0; d.examTot=S.examTot||0; },
@@ -53,13 +53,9 @@ var SAVE_SCHEMA=[
       S.seated=!!d.seated;
     }
   },
-  { /* 隐藏的选择：读档后重新给出还没回答的那一次 */
-    save:function(d){ d.hiddenAsked=S.hiddenAsked; d.hiddenLatch=S.hiddenLatch; d.hiddenWindow=Number.isFinite(S.hiddenWindow)?S.hiddenWindow:0; },
-    load:function(d){
-      S.hiddenLatch=!!d.hiddenLatch; S.hiddenAsked=false;
-      S.hiddenWindow=Number.isFinite(d.hiddenWindow)?d.hiddenWindow:(S.hiddenLatch?3.2:0);
-      if(d.hiddenAsked&&S.hiddenLatch) S.hiddenWindow=0;
-    }
+  { /* 老存档的同化选择已取消：保留同化值，首个有效更新按满值结果结算。 */
+    save:function(d){ d.hiddenAsked=false; d.hiddenLatch=false; d.hiddenWindow=0; },
+    load:function(){ S.hiddenLatch=false;S.hiddenAsked=false;S.hiddenWindow=0; }
   },
   { /* 假正常 */
     save:function(d){ d.fn=S.fn; },
@@ -101,6 +97,20 @@ var SAVE_SCHEMA=[
         if(Number.isFinite(d.anChoiceMs)) AN.data.choiceRemaining=d.anChoiceMs;
       }
       AN.sub=0;
+    }
+  },
+  { /* 巡察者的瞬移间隔和追逐状态；路径由当前几何重新计算，不序列化。 */
+    save:function(d){
+      d.patrol={};
+      ['state','room','next','t','x','y','lock','locked','lost','still','tx','ty','walkT','step','blinkCD','afterBlink'].forEach(function(k){d.patrol[k]=PAT[k];});
+    },
+    load:function(d){
+      var p=d.patrol;if(!p||!['idle','warn','walk'].includes(p.state))return;
+      if(p.state!=='idle'&&(p.room!==patRoomHere()||!patEligible()))return;
+      if(![p.x,p.y,p.tx,p.ty].every(Number.isFinite))return;
+      ['next','t','x','y','lock','lost','still','tx','ty','walkT','step','blinkCD','afterBlink'].forEach(function(k){if(Number.isFinite(p[k]))PAT[k]=p[k];});
+      PAT.state=p.state;PAT.room=p.room;PAT.locked=!!p.locked;PAT.path=null;
+      VisualState.patrolRed=PAT.locked?1:0;
     }
   },
   { /* 车库里那个东西（只在车库里存）；钟楼旋梯上的位置（进房间时由 enterRoom 读） */

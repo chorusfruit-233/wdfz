@@ -97,9 +97,6 @@ function patAddFig(){
     g.add(body);
     var gear=new THREE.Mesh(patGearGeo(),new THREE.MeshBasicMaterial({vertexColors:true,color:0x555555,fog:true})   /* 顶点色当线性值用，整体压暗 */);
     gear.scale.setScalar(1.12); g.add(gear);
-    var em=new THREE.MeshBasicMaterial({color:0xff2a1a,fog:false});
-    for(var s=-1;s<=1;s+=2){ var e=new THREE.Mesh(new THREE.SphereGeometry(0.035,6,4),em); e.position.set(s*0.065,2.6,0.15); g.add(e); }
-    g.userData.eye=em;
     GLR.patFig=g; GLR.scene.add(g);
   }catch(e){ GLR.patFig=null; }
 }
@@ -110,7 +107,6 @@ function patRender(){
   var p=PAT.room==='out'?worldToScene(PAT.x,PAT.y,null):worldToScene(PAT.x,PAT.y,INTERIORS[PAT.room]);
   g.visible=true; g.position.set(p.x,PAT.room==='out'?0:0,p.z);
   g.lookAt(GLR.cam.position.x,0,GLR.cam.position.z);  /* 人形正面朝 +z，lookAt 正好让它面朝你 */
-  if(g.userData.eye) g.userData.eye.color.setRGB(1,PAT.locked?0.05:0.25,PAT.locked?0.02:0.12);
 }
 
 function updateMarker(dt){
