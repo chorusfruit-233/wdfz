@@ -22,7 +22,6 @@ command -v chromium
 | --- | --- | --- |
 | 输入、菜单、触屏、存档、玩法、异象、结局 | `game3d/js/input.js`、`ui.js`、`mobile.js`、`save.js`、相关玩法模块 | `PYTHONPATH=tests python3 -m unittest test_controls -v`；再按用例名定位 |
 | 渲染、画质、引擎、离线资源 | `game3d/js/engine/`、`render.js`、`quality.js`、`settings.js` | `PYTHONPATH=tests python3 -m unittest test_engine -v` |
-| 模型包、贴图包、实例化与室外合批 | `game3d/js/model/assets.js`、`kit.js`、`materials.js`；建模脚本 `tools/blender/`，贴图 `tools/textures/` | `PYTHONPATH=tests python3 -m unittest test_assets test_asset_batching -v`；改了建模脚本要用 `python3 tools/blender/build.py [--only 名字]` 重新打包（需要 `pip install bpy==5.2.3`，只支持 Python 3.13），改了贴图脚本运行 `python3 tools/textures/build_textures.py` |
 | 建模、碰撞、楼梯、空间可达性 | `game3d/js/model/`、`collision.js`、`spiral.js`、`world.js` | `PYTHONPATH=tests python3 -m unittest test_geometry test_model -v`；必要时做下面的几何扫描 |
 | 穿模审查工具 | `tools/clip_audit.py`、`tools/clip_audit.js` | `PYTHONPATH=tests python3 -m unittest test_clip_audit -v` |
 | 宣传片输出安全 | `video/render.py` | `PYTHONPATH=tests python3 -m unittest test_video -v` |
@@ -56,7 +55,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## 4. 自动化复现与结果边界
 
-`tests/browser_case.py` 是浏览器公共夹具：每个用例的新上下文监听 `pageerror`，预设看过前情、流畅画质和静音，并将 `running=false`，固定初始位置；换画质用 `self.set_quality(page, q)`，它会等这一档的模型包读好再返回；它使输入断言稳定，但不会自然推进游戏。需要验证正常启动、时间、声音、随机事件或真实渲染时，应建立对应条件并明确是否恢复循环，不要把注入状态的测试当作自然试玩通关。`Game.start('easy')` 会进入 `teach1`；如直接调用内部函数设置场景，应注明注入状态以及验证的边界。
+`tests/browser_case.py` 是浏览器公共夹具：每个用例的新上下文监听 `pageerror`，预设看过前情、流畅画质和静音，并将 `running=false`，固定初始位置；它使输入断言稳定，但不会自然推进游戏。需要验证正常启动、时间、声音、随机事件或真实渲染时，应建立对应条件并明确是否恢复循环，不要把注入状态的测试当作自然试玩通关。`Game.start('easy')` 会进入 `teach1`；如直接调用内部函数设置场景，应注明注入状态以及验证的边界。
 
 桌面和触屏的浏览器模拟可验证布局与事件分发，不等同于实体设备；WebKit 接口模拟不等于真实 Safari/iPhone。SwiftShader 截图和耗时不代表真实 GPU、亮度或实际游戏帧率。涉及设备兼容、性能、完整剧情或音频时，说明尚未覆盖的实机检查。
 
@@ -69,9 +68,7 @@ python3 tools/clip_audit.py bell1 --quality 3 --out /tmp/wdfz-bell1-clip.json
 python3 tools/clip_audit.py --quality 3 --out /tmp/wdfz-all-clip.json
 ```
 
-`out` 是室外，省略房间时扫描全校；画质为 0–4（4 是「真实」）。检查报告的 `scope`、`counts` 和 `issues`：成功退出不等于候选数为零，候选也不自动等于真实穿模，需结合场景和[第七轮 PR 审查](第七轮PR审查.md)判断。只扫描一个房间不能声称全校通过。
-
-建模统计 `python3 tools/model_stats.py /tmp/wdfz-stats.json` 五档各建一遍全校、在 10 个固定机位各画一帧，实例化的按个数算顶点；对比别的版本时用 `WDFZ_ROOT=<检出目录>`。仓库里的 `docs/建模统计.json` 是记录，输出写到临时路径，别无意覆盖。
+`out` 是室外，省略房间时扫描全校；画质为 0–3。检查报告的 `scope`、`counts` 和 `issues`：成功退出不等于候选数为零，候选也不自动等于真实穿模，需结合场景和[第七轮 PR 审查](第七轮PR审查.md)判断。只扫描一个房间不能声称全校通过。
 
 `tools/engine_compare.py` 会写入 `docs/引擎性能对照.json` 和 `pictures/引擎重构/` 下的截图；需要对比时先检查现有文件和工作区，在隔离副本中运行，勿无意覆盖证据。软件渲染的采样仅适合在相同环境和固定机位比较，不代表实机帧率。
 
