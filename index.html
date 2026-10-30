@@ -26,7 +26,8 @@
     <div class="hc-top"><div id="clock">11:40</div><div id="secclock" hidden></div></div>
     <div id="period" class="ok">早读 · 教室</div>
     <div id="place">武大附中 · 校园</div>
-    <div class="hc-meter"><span>SAN</span><div id="sanwrap"><div id="sanbar"></div></div></div>
+    <div id="sanfeel" role="status" aria-live="polite">呼吸平稳</div>
+    <button id="lessonOpen" type="button" onclick="LESSON.open()" hidden>看课桌 · R</button>
     <div class="hc-meter" id="stamrow" hidden><span>体力</span><div id="stamwrap"><div id="stambar"></div></div></div>
   </div>
   <div class="bl"><canvas id="mini" width="150" height="150"></canvas></div>
@@ -41,6 +42,10 @@
 <div id="prompt"></div>
 <div id="sub"></div>
 <div id="choices"></div>
+<div id="lesson" role="dialog" aria-labelledby="lessonTitle" hidden><div class="lesson-card">
+  <h2 class="lesson-title" id="lessonTitle">课桌上的字</h2><p class="lesson-text"></p><div class="lesson-options"></div>
+  <p id="lessonTime"></p><button type="button" onclick="LESSON.close(true)">放下 · Esc</button>
+</div></div>
 <div id="toast"></div>
 
 <div id="journal" role="dialog" aria-label="随身手册">
@@ -215,6 +220,7 @@
 <script src="game3d/js/dev.js"></script>
 <script src="game3d/js/pcgame.js"></script>
 <script src="game3d/js/phone.js"></script>
+<script src="game3d/js/lesson.js"></script>
 <script src="game3d/js/mono.js"></script>
 <script src="game3d/js/mobile.js"></script>
 <script src="game3d/js/prologue.js"></script>

@@ -783,7 +783,10 @@ class ControlsTest(BrowserCase):
         page.evaluate("hideIn({c:28,r:16});saveGame();Game.quit()")
         self.assert_js(page, "!HIDE.on&&document.getElementById('hideslits').style.display==='none'")
         page.evaluate("Game.continue_();running=false")
-        page.wait_for_function("S.room==='teach1'&&!HIDE.on&&!solidAt(S.x,S.y)")
+        page.wait_for_function("S.room==='teach1'&&HIDE.on")
+        self.assert_js(page,"S.x===__hiddenX&&S.y===__hiddenY&&document.getElementById('hideslits').style.display==='block'")
+        page.evaluate('tryInteract()')
+        self.assert_js(page,'!HIDE.on&&canStand(S.x,S.y)')
 
     def test_patroller_reaches_seen_locker_without_crossing_walls(self):
         page = self.page()
@@ -962,7 +965,7 @@ class ControlsTest(BrowserCase):
     def test_patroller_has_its_own_uniform(self):
         page = self.page()
         page.evaluate("doEnterRoom('teach1');running=false;patAddFig()")
-        self.assert_js(page, "GLR.patFig.children.length===4&&GLR.patFig.children[1].geometry.attributes.position.count>500")
+        self.assert_js(page, "GLR.patFig.children.length===2&&!GLR.patFig.userData.eye&&GLR.patFig.children[1].geometry.attributes.position.count>500")
         self.assert_js(page, "GLR.patFig.children[1].material.vertexColors===true")
 
     def test_tsinghua_cup_only_falls_along_tall_outer_walls(self):
@@ -1089,7 +1092,7 @@ class ControlsTest(BrowserCase):
             for(var i=0;i<80&&!S.immuneUsed;i++) anTick(.05);""")
         self.assert_js(page, "S.immuneUsed&&!S.dead&&!AN.active&&RT.traces.some(function(t){return t.k==='cup'})")
 
-    def test_hidden_choice_resumes_after_a_death_is_prevented(self):
+    def test_assimilation_death_can_be_prevented_without_a_choice(self):
         for protection in ('elixir', 'immune', 'god'):
             with self.subTest(protection=protection):
                 page = self.page()
@@ -1098,9 +1101,8 @@ class ControlsTest(BrowserCase):
                     S.hiddenLatch=true;S.hiddenAsked=true;S.hiddenWindow=0;
                     S.talent=protection==='immune'?'immune':'code';S.immuneUsed=false;
                     S.bag=protection==='elixir'?['elixir']:[];DEV.god=protection==='god';
-                    AN.active=false;ROAM.on=false;askHiddenChoice();
+                    AN.active=false;ROAM.on=false;resolveAssimilation();
                 }""", protection)
-                page.locator('#choices button').nth(1).click()
                 self.assert_js(page, '!S.dead&&!PAUSE.on&&!UI.chooseOpen&&S.tt===86&&!S.hiddenLatch&&!S.hiddenAsked')
                 if protection == 'elixir':
                     self.assert_js(page, "!hasItem('elixir')")
@@ -1111,9 +1113,8 @@ class ControlsTest(BrowserCase):
 
         page = self.page()
         page.evaluate("""S.diff='hard';S.day=2;S.talent='code';S.bag=[];DEV.god=false;
-            S.tt=100;S.hiddenLatch=true;S.hiddenAsked=true;askHiddenChoice();""")
-        page.locator('#choices button').nth(1).click()
-        self.assert_js(page, "S.dead&&S.death==='names'")
+            S.tt=100;S.hiddenLatch=true;S.hiddenAsked=true;resolveAssimilation();""")
+        self.assert_js(page, "S.dead&&S.death==='names'&&!UI.chooseOpen")
 
     def test_lights_out_hud_debug_minutes_and_podium_text(self):
         page = self.page()
@@ -1205,7 +1206,7 @@ class ControlsTest(BrowserCase):
         page.evaluate('Game.continue_();running=false')
         self.assert_js(page, 'S.actCool.wash-gameClock()===20&&gameClock()-AN.cool.rain===50')
 
-    def test_reload_keeps_follower_previews_and_hidden_window(self):
+    def test_reload_keeps_follower_and_previews_and_discards_old_hidden_choice(self):
         page = self.page()
         page.evaluate("""doEnterRoom('garage1');running=false;S.tsec=760;S.day=2;
             ROAM.on=true;ROAM.stage='approach';ROAM.x=S.x+55;ROAM.y=S.y+12;ROAM.cd=3;ROAM.litAcc=.7;
@@ -1215,13 +1216,13 @@ class ControlsTest(BrowserCase):
         page.evaluate('Game.continue_();running=false')
         page.wait_for_function("document.getElementById('banner').textContent==='地下车库'")
         self.assert_js(page, "ROAM.on&&ROAM.stage==='approach'&&ROAM.x===S.x+55&&ROAM.y===S.y+12&&ROAM.cd===3&&ROAM.litAcc===.7")
-        self.assert_js(page, "AN.pre==='moth'&&AN.preNext===17&&AN.locked&&AN.lockWait===1&&AN.next===19&&S.hiddenLatch&&S.hiddenWindow===1.7")
-        page.evaluate('S.hiddenAsked=true;saveGame()')
+        self.assert_js(page, "AN.pre==='moth'&&AN.preNext===17&&AN.locked&&AN.lockWait===1&&AN.next===19&&!S.hiddenLatch&&S.hiddenWindow===0")
+        page.evaluate('S.tt=100;S.hiddenAsked=true;saveGame()')
         page.reload(wait_until='load')
         page.evaluate('Game.continue_();running=false')
         page.wait_for_function("document.getElementById('banner').textContent==='地下车库'")
         page.evaluate('updateSystems(.01)')
-        self.assert_js(page, "S.hiddenAsked&&UI.chooseOpen&&document.getElementById('choices').textContent.includes('我的位子空着')")
+        self.assert_js(page, "S.dead&&S.death==='names'&&!UI.chooseOpen")
 
     def test_reload_restores_timed_anomaly_choice_and_indoor_effect(self):
         page = self.page()
@@ -1281,13 +1282,13 @@ class ControlsTest(BrowserCase):
         page.evaluate("AN.data={};pickAnomaly=function(){return 'rain'};anOn('chalk')")
         self.assert_js(page, "AN.pre==='rain'&&AN.locked&&AN.preNext>0&&AN.data.until>S.tsec")
 
-    def test_one_day_lasts_ten_to_twenty_real_minutes(self):
+    def test_day_budget_reflects_three_minute_breaks_and_eight_minute_activities(self):
         page = self.page()
         mins = page.evaluate("""(()=>{var t=SCHED.reduce((n,p)=>n+(p[1]-p[0])/p[4],0);
             return t+(BEAST_T1-BEAST_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
-        self.assertTrue(10 <= mins <= 20, mins)
+        self.assertTrue(43.7 <= mins <= 43.9, mins)
         free = page.evaluate("SCHED.filter(p=>p[3]==='自由'&&p[0]<LIGHTS_OUT).reduce((n,p)=>n+(p[1]-p[0])/p[4],0)")
-        self.assertGreaterEqual(free, 10)          # 一天至少 10 分钟自由时间
+        self.assertGreaterEqual(free, 34)          # 六次课间加午、晚活动
 
     def test_full_violation_no_longer_kills_but_blocks_leave(self):
         page = self.page()
@@ -1349,13 +1350,13 @@ class ControlsTest(BrowserCase):
                 page = self.page()
                 page.evaluate("S.diff='hard';S.day=2;S.tsec=700;S.bag=['phone'];S.san=80;AN.active=false;PAT.locked=false;useItem('phone')")
                 if situation == 'choice':
-                    page.evaluate("S.tt=100;S.hiddenLatch=true;S.hiddenWindow=0;S.hiddenAsked=false;update(.1)")
-                    self.assert_js(page, 'UI.chooseOpen&&PAUSE.on&&!PHONE.on')
+                    page.evaluate("UI.choice('纸条', [{label:'收起',fn:function(){}}]);update(.1)")
+                    self.assert_js(page, 'UI.chooseOpen&&!PHONE.on')
                 elif situation == 'anomaly':
                     page.evaluate("spotTick=function(){};AN.pre='turn';AN.locked=true;anStart();window._message=document.getElementById('sub').textContent;update(.1)")
                     self.assert_js(page, "!PHONE.on&&AN.active&&document.getElementById('sub').textContent===_message")
                 elif situation == 'death':
-                    page.evaluate("S.san=.01;update(.1)")
+                    page.evaluate("S.san=0;update(.1)")
                     self.assert_js(page, 'S.dead&&!PHONE.on')
                 else:
                     page.evaluate('Game.quit();update(.1)')

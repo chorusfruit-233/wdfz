@@ -200,7 +200,7 @@ function canteenWindow(){
   UI.choice('窗口里还剩一点饭菜。「一个硬币一份。」',[
     {label:'投一枚硬币买饭（SAN +24）',fn:function(){
       UI.closeChoice(); removeItem('coin');
-      S.san=Math.min(100,S.san+24); S.stam=Math.min(100,S.stam+30);
+      S.san=Math.min(100,S.san+24); restoreStamina(30);
       advanceGameTime(10);
       os('我：硬币落进铁盒子里，响了很久。饭是热的——这里第一次有热的东西。',3.8); toast('买饭 · SAN +24');
       try{ SFX.click(); }catch(e){}

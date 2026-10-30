@@ -280,3 +280,19 @@ body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';positio
 #phone .phx{pointer-events:auto;position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));
   min-width:64px;min-height:44px;padding:8px 14px;font:inherit;font-size:14px;letter-spacing:2px;color:#e6f2ec;
   background:rgba(20,30,38,.8);border:1px solid rgba(140,190,210,.45);border-radius:4px}
+
+/* 理智以身体反应呈现；体力条仍保留，低 SAN 时最大可用长度下降。 */
+#sanfeel{margin-top:10px;font-size:11px;letter-spacing:1px;color:#8fa89d}
+#sanfeel[data-stage="1"]{color:#c4b88f}
+#sanfeel[data-stage="2"]{color:#d1a478}
+#sanfeel[data-stage="3"]{color:#df8b7a}
+
+#lessonOpen{pointer-events:auto;margin-top:8px;padding:7px 12px;min-height:36px;border:1px solid #698c7b;background:#111e19;color:#c8d8cf;cursor:pointer;font:inherit;font-size:11px}
+#lessonOpen[hidden],#lesson[hidden]{display:none}
+#lesson{position:fixed;inset:0;z-index:32;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.45)}
+.lesson-card{width:min(440px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:20px;background:#111915;border:1px solid #597365;color:#c8d8cf}
+.lesson-card h2{font-size:17px;letter-spacing:2px;margin:0 0 16px}.lesson-card p{font-size:13px;line-height:1.8}
+.lesson-card button{display:block;width:100%;min-height:44px;margin-top:9px;padding:10px;border:1px solid #4b6558;background:#16261e;color:#d2e1d8;cursor:pointer;text-align:left;font:inherit;font-size:13px}
+#lessonTime{font-size:11px;color:#9ab6a5}
+
+body.lesson-open #hud .bc,body.lesson-open #prompt{visibility:hidden}

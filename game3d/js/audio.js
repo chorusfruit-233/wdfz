@@ -313,6 +313,7 @@ var SFX=(function(){
     try{ night=1-sunAt(hourNow()).day; }catch(e){}
     var anomaly=AN.active, id=anomaly?AN.id:null;
     var san=play?clamp(S.san,0,100):100;
+    var sanityStress=clamp((75-san)/75,0,1);
     var tension=clamp((anomaly?0.55:0)+(100-san)/160+(S.viol||0)/220,0,1);
     var garage=play&&S.mode==='in'&&S.room==='garage1';
     /* 混响跟着空间走：车库、钟楼里很空，教室一般，室外几乎没有 */
@@ -323,8 +324,8 @@ var SFX=(function(){
     var root=garage?41.2:(out_?(night>0.5?49:55):46.25);
     L.osc[0].frequency.setTargetAtTime(root,a.currentTime,2);
     L.osc[1].frequency.setTargetAtTime(root*1.5*(tension>0.6?0.944:1),a.currentTime,2);   /* 紧张时五度降成三全音 */
-    L.osc[2].frequency.setTargetAtTime(root*1.01,a.currentTime,2);
-    L.osc[3].frequency.setTargetAtTime(root*2,a.currentTime,2);
+    L.osc[2].frequency.setTargetAtTime(root*(1.01+sanityStress*0.045),a.currentTime,2);
+    L.osc[3].frequency.setTargetAtTime(root*(2-sanityStress*0.11),a.currentTime,2);
     setG(L.tenG.gain,on?Math.max(0,tension-0.45)*0.05:0,0.8);
     /* 环境 */
     var rainOn=on&&anomaly&&(id==='rain'||id==='raindots');

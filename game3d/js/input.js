@@ -10,7 +10,7 @@ var INPUT={mode:'mouse',lookId:null,lookType:null,stickId:null,stickCenter:null,
 function playerInputAllowed(){
   return S.screen==='play'&&!S.dead&&!PAUSE.on&&!UI.anyOpen()&&
     !(typeof PRO!=='undefined'&&PRO.on)&&!(typeof PC!=='undefined'&&PC.on)&&!(typeof PHONE!=='undefined'&&PHONE.on)&&
-    !(typeof DEV!=='undefined'&&DEV.on)&&!(S.intro>0);
+    !(typeof LESSON!=='undefined'&&LESSON.on)&&!(typeof DEV!=='undefined'&&DEV.on)&&!(S.intro>0);
 }
 function pointerIsLocked(){return document.pointerLockElement===document.getElementById('cv');}
 function releaseCapture(el,id){
@@ -80,7 +80,7 @@ function updateInputUI(){
 }
 function physicalKey(e){
   var codes={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyF:'f',KeyG:'g',
-    KeyH:'h',KeyJ:'j',KeyM:'m',Digit1:'1',Digit2:'2'};
+    KeyH:'h',KeyJ:'j',KeyM:'m',KeyR:'r',Digit1:'1',Digit2:'2',Digit3:'3'};
   return codes[e.code]||e.key.toLowerCase();
 }
 function initTouchActivation(){
@@ -157,6 +157,7 @@ function initInput(){
       e.preventDefault();if(e.repeat)return;
       if(PC.on){PCGAME.stop();return;}
       if(PHONE.on){PHONE.stop();return;}
+      if(LESSON.on){LESSON.close(true);return;}
       if(DEV.on){Dev.close();return;}
       if(UI.openPanel==='set'){UI.close('set',false);if(PAUSE.on)UI.open('pause');return;}
       if(UI.openPanel&&UI.openPanel!=='pause'){UI.close(UI.openPanel);return;}
@@ -168,6 +169,7 @@ function initInput(){
       if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){KEY[k]=true;e.preventDefault();}
       return;
     }
+    if(LESSON.on){if(/^[1-3]$/.test(k)){e.preventDefault();if(!e.repeat)LESSON.answer(+k-1);}return;}
     if(PHONE.on){
       if([' ','w','arrowup','enter'].indexOf(k)>=0){e.preventDefault();if(!e.repeat)PHONE.flap();}
       return;
@@ -181,6 +183,7 @@ function initInput(){
     if(['w','a','s','d',' ','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0)e.preventDefault();
     KEY[k]=true;if(e.repeat)return;
     if(k==='e')tryInteract();
+    if(k==='r')LESSON.open();
     if(k==='f')toggleTorch();
     if(k==='g')dropSelected();
     if(k==='1')useHot(0);
@@ -292,7 +295,8 @@ function updatePlayer(dt){
   if(S.dead||S.screen!=='play'||(S.intro||0)>0)return;
   var snack=(S.snackT||0)>0;
   if(snack) S.snackT=Math.max(0,S.snackT-dt);
-  if(HIDE.on){ S.moving=false; S.run=false; S.stam=Math.min(100,S.stam+11*dt); syncCamera(dt); return; }   /* 躲在柜子里：不能动 */
+  capStamina();
+  if(HIDE.on){ S.moving=false; S.run=false; restoreStamina(11*dt); syncCamera(dt); return; }   /* 躲在柜子里：不能动 */
   var locked=!playerInputAllowed(),fw=0,sd=0;
   if(!locked){
     if(KEY.w||KEY.arrowup)fw++;
@@ -325,7 +329,7 @@ function updatePlayer(dt){
     if(S.stepT<=0){S.stepT=S.run?.30:.46;SFX.step();}
   }else S.stepT=0;
   if(S.run&&S.moving){if(!snack)S.stam=Math.max(0,S.stam-17*dt);}
-  else S.stam=Math.min(100,S.stam+11*dt);
+  else restoreStamina(11*dt);
   if(S.enterCool>0)S.enterCool-=dt;
   syncCamera(dt);
 }

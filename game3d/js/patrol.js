@@ -6,7 +6,7 @@
      · 跑出它的视线，跟丢 2.5 秒它就放弃；
      · 提前钻进储物柜（H）。被它看见你钻进去的话，没用；
      · 难的那个：被锁定以后背对着它、一动不动站 2.5 秒，它会从你身边走过去。
-   校长办公室（行政楼 5F）：抽屉里有车钥匙和机房钥匙（每个容器 18%），但巡察者常驻、异象也来得勤。 */
+   校长办公室（行政楼 5F）：抽屉里有车钥匙和机房钥匙（每个容器 45%），但巡察者常驻、异象也来得勤。 */
 'use strict';
 
 /* ---------- 储物柜 ---------- */
@@ -81,6 +81,7 @@ var PAT={state:'idle',next:45,t:0,x:0,y:0,room:null,lock:0,locked:false,lost:0,s
 var PAT_SPEED=16, PAT_CHASE=31, PAT_SEE=135, PAT_CATCH=19;
 function patReset(keepHiding){
   patRemoveFig();
+  PAT.blinkCD=0.8;PAT.afterBlink=0;
   PAT.state='idle'; PAT.t=0; PAT.lock=0; PAT.locked=false; PAT.lost=0; PAT.still=0; PAT.room=null;
   VisualState.patrolFlick=0; VisualState.patrolRed=0;
   if(HIDE.on&&!keepHiding){ HIDE.on=false; var el=document.getElementById('hideslits'); if(el) el.style.display='none'; }
@@ -89,6 +90,7 @@ function patRoomHere(){ return S.mode==='in'?S.room:'out'; }
 /* 现在这个地方，它会不会来 */
 function patEligible(){
   if(S.dead||S.screen!=='play') return false;
+  if(isNight())return S.mode==='out';
   if(S.mode==='in'){
     var R=INTERIORS[S.room]; if(!R) return false;
     if(R.principal) return true;                                    /* 校长办公室：一直在 */
@@ -261,7 +263,7 @@ function patPickSpot(far){
     if(PAT.room==='out'){
       var a=rnd(0,TAU), r=far?rnd(260,420):rnd(60,240);
       x=S.x+Math.cos(a)*r; y=S.y+Math.sin(a)*r;
-      if(solidAtOutdoor(x,y)) continue;
+      if(Collision.depth(x,y,PAT_BODY/U2M)>1e-7) continue;
     }else{
       var R=INTERIORS[PAT.room], c, r2;
       if(!far&&Math.random()<0.6){               /* 一多半时候往你附近转 */
@@ -283,24 +285,61 @@ function patStart(){
 }
 function patAppear(){
   var p=patPickSpot(true); if(!p){ patReset(true); PAT.next=10; return; }
+  PAT.blinkCD=0.8;PAT.afterBlink=0;
   PAT.x=p.x; PAT.y=p.y; PAT.state='walk'; PAT.t=0; PAT.walkT=0; PAT.lock=0; PAT.locked=false;
   var q=patPickSpot(false)||p; PAT.tx=q.x; PAT.ty=q.y;
   patAddFig();
   PAT.path=null;
-  os('我：走廊那头多了一个人。很高，走路一点声音都没有。它在一间一间地往里看。',4.2,OS_KEEP);
+  os('我：那边多了一个很高的人影。我眨了一下眼，它已经站在更近的地方。',4.2,OS_KEEP);
 }
 function patEnd(msg){
   if(msg) os(msg,3.2);
   patReset(S.mode==='in'&&PAT.room===S.room);
   PAT.next=patInterval();
 }
-function patTick(dt){
+/* 以完整路径验证一跳，视觉上瞬移，碰撞仍沿路径细分；关门或薄障碍不能穿过。 */
+function patBlink(distance){
+  var R=PAT.room==='out'?null:INTERIORS[PAT.room],route;
+  if(R){route=patPath(PAT.tx,PAT.ty);if(!route)return false;}
+  else route=[{x:PAT.tx,y:PAT.ty}];
+  var oldX=PAT.x,oldY=PAT.y,left=distance;
+  for(var i=0;i<route.length&&left>1e-5;i++){
+    var dx=route[i].x-PAT.x,dy=route[i].y-PAT.y,len=Math.hypot(dx,dy);
+    if(len<1e-5)continue;
+    var step=Math.min(left,len),n=Math.max(1,Math.ceil(step/1.1)),mx=dx/len*step/n,my=dy/len*step/n;
+    for(var j=0;j<n;j++){
+      if(Collision.depth(PAT.x+mx,PAT.y+my,PAT_BODY/U2M,R)>1e-7){
+        if(R)return Math.hypot(PAT.x-oldX,PAT.y-oldY)>0.01;
+        if(Collision.depth(PAT.x+mx,PAT.y,PAT_BODY/U2M)<=1e-7)PAT.x+=mx;
+        if(Collision.depth(PAT.x,PAT.y+my,PAT_BODY/U2M)<=1e-7)PAT.y+=my;
+        continue;
+      }
+      PAT.x+=mx;PAT.y+=my;
+    }
+    left-=step;
+  }
+  return Math.hypot(PAT.x-oldX,PAT.y-oldY)>0.01;
+}
+/* 先清理失效巡察，再结算 SAN；patTick 也调用此检查以覆盖直接更新。 */
+function patEndIfInvalid(){
+  if(PAT.state==='idle')return false;
   var here=patRoomHere();
-  if(PAT.state!=='idle'&&PAT.room!==here){
+  if(PAT.room!==here){
     if(PAT.room==='out'||here==='out'||PAT.state==='walk') patEnd(PAT.locked?'我：门在身后合上。脚步声停在了门外。':null);
     else patEnd(null);
-    return;
+    return true;
   }
+  /* 时段或地点不再允许巡察时，预警和追逐都立即结束；坐回座位或请假仍走躲避规则。 */
+  if(!patEligible()){
+    patEnd(PAT.state==='walk'&&S.mode==='in'&&!isNight()&&S.screen==='play'&&!S.dead?
+      '我：铃响了。灯一下子正常了，走廊又空了。':null);
+    return true;
+  }
+  return false;
+}
+function patTick(dt){
+  if(patEndIfInvalid())return;
+  PAT.afterBlink=Math.max(0,(PAT.afterBlink||0)-dt);
   if(PAT.state==='idle'){
     VisualState.patrolFlick=Math.max(0,(VisualState.patrolFlick||0)-dt); VisualState.patrolRed=Math.max(0,(VisualState.patrolRed||0)-dt);
     if(!patEligible()||patIgnores()) return;
@@ -347,61 +386,37 @@ function patTick(dt){
       return;
     }
   }
-  /* 走路：锁定了就直奔你（躲进柜子被看见，它去开柜门），否则在各处转 */
-  var sp=PAT_SPEED, tx, ty;
-  if(PAT.locked){
-    sp=PAT_CHASE*(PAT.still>0?0.35:1);
-    /* 被看见时去柜门前，而不是向不可行走的柜子格直线穿墙。 */
-    var target=HIDE.on&&HIDE.seen&&PAT.room!=='out'?lockerFront(INTERIORS[PAT.room],HIDE.c,HIDE.r):{x:S.x,y:S.y};
-    PAT.tx=target.x; PAT.ty=target.y;
-  }
-  if(PAT.room!=='out'){
-    PAT.repath=(PAT.repath||0)-dt;
-    if(!PAT.path||!PAT.path.length||PAT.repath<=0){
-      PAT.repath=PAT.locked?0.5:3;
-      var route=patPath(PAT.tx,PAT.ty);
-      PAT.pathBlocked=!route; PAT.path=route||[];
-      if(!PAT.path.length&&!PAT.locked){
-        var q0=patPickSpot(false);
-        if(q0){ PAT.tx=q0.x; PAT.ty=q0.y; route=patPath(q0.x,q0.y); PAT.pathBlocked=!route; PAT.path=route||[]; }
-      }
+  /* 平时停住，只在短促的脚步后瞬移一小段；背对静止的逃脱窗口中不逼近。 */
+  PAT.blinkCD=(PAT.blinkCD===undefined?0.8:PAT.blinkCD)-dt;
+  if(PAT.blinkCD<=0){
+    var interval=PAT.locked?0.75:1.1;
+    PAT.blinkCD=interval;
+    if(PAT.locked){
+      var target=HIDE.on&&HIDE.seen&&PAT.room!=='out'?lockerFront(INTERIORS[PAT.room],HIDE.c,HIDE.r):{x:S.x,y:S.y};
+      PAT.tx=target.x;PAT.ty=target.y;
     }
-    var wp=PAT.path[0]||(PAT.pathBlocked?{x:PAT.x,y:PAT.y}:{x:PAT.tx,y:PAT.ty});
-    if(PAT.path.length&&Math.hypot(wp.x-PAT.x,wp.y-PAT.y)<0.05){ PAT.path.shift(); wp=PAT.path[0]||{x:PAT.tx,y:PAT.ty}; }
-    if(PAT.locked&&d<14&&!HIDE.on&&!PAT.pathBlocked&&patLOS()){ wp={x:S.x,y:S.y}; }
-    tx=wp.x; ty=wp.y;
-  }else{ tx=PAT.tx; ty=PAT.ty; }
-  var dx=tx-PAT.x, dy=ty-PAT.y, dl=Math.hypot(dx,dy)||1, st=Math.min(dl,sp*dt);
-  var mvx=dx/dl*st, mvy=dy/dl*st, moved=false;
-  if(PAT.room!=='out'){
-    var room=INTERIORS[PAT.room],n=Math.max(1,Math.ceil(Math.hypot(mvx,mvy)/(PAT_BODY/U2M*0.5)));
-    for(var mi=0;mi<n;mi++){
-      var nx=PAT.x+mvx/n,ny=PAT.y+mvy/n;
-      if(Collision.depth(nx,ny,PAT_BODY/U2M,room)>1e-7){PAT.path=null;PAT.repath=0;break;}
-      PAT.x=nx;PAT.y=ny;moved=true;
+    if(PAT.still<=0||HIDE.on){
+      var moved=patBlink((PAT.locked?PAT_CHASE:PAT_SPEED)*interval);
+      if(moved)PAT.afterBlink=0.22;
+      var arrived=Math.hypot(PAT.tx-PAT.x,PAT.ty-PAT.y)<6;
+      if(!PAT.locked&&(arrived||!moved)){var next=patPickSpot(false);if(next){PAT.tx=next.x;PAT.ty=next.y;}}
     }
   }
-  else{
-    if(!patSolid(PAT.x+mvx,PAT.y)){ PAT.x+=mvx; moved=true; }
-    if(!patSolid(PAT.x,PAT.y+mvy)){ PAT.y+=mvy; moved=true; }
-  }
-  var arrived=Math.hypot(PAT.tx-PAT.x,PAT.ty-PAT.y)<6;
-  if(!PAT.locked&&(arrived||!moved)){ var q=patPickSpot(false); if(q){ PAT.tx=q.x; PAT.ty=q.y; PAT.path=null; } }
   PAT.step-=dt;
   if(PAT.step<=0&&d<200){                                        /* 脚步：按它在你哪一边分左右声道，背后的发闷 */
     PAT.step=PAT.locked?0.32:0.7;
     var rel=Math.atan2(PAT.y-S.y,PAT.x-S.x)-S.ang;
     try{ SFX.patStep(Math.sin(rel)*0.9,Math.pow(1-d/200,1.4),Math.cos(rel)<-0.2,PAT.locked); }catch(e){}
   }
-  if(d<PAT_CATCH&&patLOS()&&!patIgnores()&&(!HIDE.on||HIDE.seen)&&!S.dead){
+  d=Math.hypot(S.x-PAT.x,S.y-PAT.y);
+  if(PAT.afterBlink<=0&&d<PAT_CATCH&&patLOS()&&!patIgnores()&&(!HIDE.on||HIDE.seen)&&!S.dead){
     kill(HIDE.on?'柜门被拉开了。外面没有光，只有它弯下来的脸，和一只伸进来的手。'
                 :'一只手从后面按住了我的头顶，很轻，像在点名。灯全红了。我被它带走了，带回了那个空着的座位。','grip');
     return;
   }
   if(!PAT.locked&&PAT.walkT>45) patEnd('我：灯恢复了。脚步声往楼梯那边去了。');
-  if(!PAT.locked&&!patEligible()) patEnd('我：铃响了。灯一下子正常了，走廊又空了。');
 }
 
-/* ---------- 模型：比老师还高的黑影，两点红光 ---------- */
+/* ---------- 模型：比老师还高的无面黑影 ---------- */
 /* 巡察者的行头（和 teacher 人形同一套比例，再整体放大 1.12）：
    过膝的长大衣、立领、一排扣子；大檐帽；左臂一圈红袖章；右手夹着点名用的夹板。 */
