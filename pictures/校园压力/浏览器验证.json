@@ -1,0 +1,45 @@
+{
+  "desktop_input": {
+    "clock": 705.0056878306871,
+    "seated": false,
+    "x": 1275,
+    "y": 1803.5499999999938,
+    "taskDone": true,
+    "clock_advanced": true
+  },
+  "low_san": {
+    "label": "快撑不住了",
+    "stamina": 44.8,
+    "cap": 44.8,
+    "numericBar": false
+  },
+  "patrol": {
+    "start": [
+      1183,
+      1917.5
+    ],
+    "waiting": [
+      1183,
+      1917.5
+    ],
+    "jumped": [
+      1162.0529681674243,
+      1918.2786185423383
+    ],
+    "red": 1,
+    "eyes": false,
+    "playerClear": true,
+    "brightness": 150
+  },
+  "touch_input": {
+    "closed": true,
+    "controls": true,
+    "done": true
+  },
+  "controlled_route": {
+    "ending": "portal",
+    "screen": "end",
+    "materialsConsumed": true
+  },
+  "limitations": "课堂和移动使用真实键鼠/触屏输入；低 SAN 和巡察者画面由场景布置产生；传送门在准备材料、位置和状态后通过真实选项完成，不能视为自然收集通关。未自然游玩完整约44分钟的一天，未进行真机或音乐听感评估。"
+}
