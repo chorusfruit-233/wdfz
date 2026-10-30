@@ -190,8 +190,15 @@ var Dev={
   god:function(){ DEV.god=!DEV.god; Dev.paint(); Dev.report(DEV.god?'无敌：开':'无敌：关'); },
   san:function(){ if(!Dev.canUse())return;S.san=100; S.stam=100;S.tired=false; Dev.report('SAN / 体力已恢复');Dev.refresh(); },
   time:function(min){ if(!Dev.canUse())return;if(min>=0) advanceGameTime(min); else rewindGameTime(-min);patEndIfInvalid();Dev.report('时间 '+(min>0?'+':'')+min+' 分钟');Dev.refresh(); },
+  endActiveAnomaly:function(){
+    if(!AN.active)return;
+    if(UI.chooseOpen)UI.closeChoice();
+    var id=AN.id;anEnd();
+    if(id==='turn')smileClear();
+  },
   prepareTeleport:function(){
-    Dev.clearPreview();clearSearch();patReset();spiralReset();resetInputState();
+    Dev.clearPreview();if(UI.chooseOpen)UI.closeChoice();Dev.endActiveAnomaly();
+    clearSearch();patReset();spiralReset();resetInputState();
   },
   tp:function(){
     if(!Dev.canUse())return;
@@ -202,10 +209,12 @@ var Dev={
     if(!Dev.canUse())return;
     var value=document.getElementById('devout').value;if(value==='')return;
     var i=+value, p=DEV_POI[i]; if(!p) return;
-    Dev.prepareTeleport();
-    S.mode='out'; S.room=null;
-    S.x=p[1]*SC; S.y=p[2]*SC; S.ang=Math.PI/2; S.pitch=0; S.seated=false;
-    try{ enterWorldOut();syncCamera(0); }catch(e){ Dev.report('传送失败');return; }
+    try{
+      Dev.prepareTeleport();
+      S.mode='out'; S.room=null;
+      S.x=p[1]*SC; S.y=p[2]*SC; S.ang=Math.PI/2; S.pitch=0; S.seated=false;
+      enterWorldOut();syncCamera(0);
+    }catch(e){ Dev.report('传送失败');return; }
     Dev.report('传送 → '+p[0]);Dev.refresh();
   },
   anom:function(){
@@ -215,7 +224,7 @@ var Dev={
   triggerAnomaly:function(id){
     try{
       Dev.clearPreview();
-      if(AN.active){ try{ anEnd(); }catch(e){} }
+      if(AN.active)Dev.endActiveAnomaly();
       AN.id=id; AN.t=0; AN.acc=0; AN.active=true; AN.data={}; AN.sub=0;
       AN.lastBig=!AN_SMALL[id];
       os('【Dev】'+((AN_NAME&&AN_NAME[id])||id),2.6);
@@ -225,7 +234,7 @@ var Dev={
   },
   anomEnd:function(){
     if(!Dev.canUse())return;
-    try{ if(AN.active) anEnd(); Dev.report('异象已结束');Dev.refresh(); }catch(e){ AN.active=false; AN.id=null;Dev.report('异象结束失败'); }
+    try{ if(AN.active) Dev.endActiveAnomaly(); Dev.report('异象已结束');Dev.refresh(); }catch(e){ AN.active=false; AN.id=null;Dev.report('异象结束失败'); }
   },
   anim:function(mode){
     if(!Dev.canUse()||[1,2,3].indexOf(mode)<0)return;
@@ -234,7 +243,10 @@ var Dev={
   clearPreview:function(){
     if(DEV.previewTimer)clearTimeout(DEV.previewTimer);DEV.previewTimer=0;
     var fx=DEV.previewFx;DEV.previewFx=null;
-    if(fx){if(ANFX.grp===fx)anfxClear();ThreeBackend.disposeGroup(fx);}
+    if(fx){
+      if(ANFX.grp===fx){anfxClear();if(S.screen==='play'&&!S.dead)syncCamera(0);}
+      ThreeBackend.disposeGroup(fx);
+    }
   },
   clearAnimation:function(){
     VisualState.deathAnim=null;
@@ -244,7 +256,7 @@ var Dev={
     if(!Dev.canUse())return;
     if(AN.active){Dev.report('请先结束当前异象，再预览死亡效果。');return;}
     var t=document.getElementById('devdeath').value;if(!t)return;
-    Dev.clearPreview();deathFX(t);
+    Dev.clearPreview();deathFX(t,{preview:true});
     if(ANFX.kind!=='death'||!ANFX.grp){Dev.report('死亡效果预览失败');return;}
     DEV.previewFx=ANFX.grp;
     try{SFX.deathFx(t);}catch(e){}
@@ -265,14 +277,16 @@ var Dev={
     if(S.screen!=='play'){Dev.report('请先开始游戏。');return;}
     if(!S.dead&&!S.death){Dev.report('角色尚未死亡。');return;}
     S.deadId=(S.deadId||0)+1;
+    var view=S.deathView;S.deathView=null;
     S.dead=false; S.death=null; S.deadT=0;
+    if(view){S.ang=view.ang;S.pitch=view.pitch;S.eyeLift=view.eyeLift;}else S.eyeLift=0;
     if(S.san<=0)S.san=45;
     if(S.tt>=100){S.tt=86;S.ttTier=4;}
     capStamina();
     var dEl=document.getElementById('die'); if(dEl) dEl.style.display='none';
     var fEl=document.getElementById('flash'); if(fEl) fEl.style.opacity='0';
     Dev.clearPreview();try{ if(ANFX.kind==='death')anfxClear(); }catch(e){}
-    Dev.clearAnimation();VisualState.hurt=0;VisualState.flash=0;
+    Dev.clearAnimation();VisualState.hurt=0;VisualState.flash=0;syncCamera(0);
     Dev.report('已复活');Dev.refresh();updateTouchUI();
   }
 };

@@ -198,7 +198,7 @@ function freshState(diff){
   try{ patReset(); PAT.next=45; }catch(e){}
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
   S.spots={}; S.clues={}; S.notes={}; S.marks={};
-  S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.seated=false; S.intro=0;
+  S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.deathView=null; S.seated=false; S.intro=0;
   S.fn={v:0,on:false,note:false,n:0,next:0,shown:false};
   S.mode='out'; S.room=null;
   S.x=GATE_N.x*SC; S.y=(GATE_N.y+40)*SC;

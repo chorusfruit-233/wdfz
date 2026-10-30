@@ -164,7 +164,7 @@
       <div class="devbuttons"><button type="button" onclick="Dev.san()">恢复 SAN / 体力</button><button type="button" onclick="Dev.revive()">复活角色</button></div>
     </section>
     <section class="devpage" id="dev-page-scene" hidden>
-      <div class="devsection"><div><h3>场景传送</h3><p>室内传送会按游戏规则自动存档</p></div></div>
+      <div class="devsection"><div><h3>场景传送</h3><p>传送会结束并结算异象、关闭选择；室内会自动存档</p></div></div>
       <label for="devroomFilter">室内位置</label><input id="devroomFilter" type="search" placeholder="搜索名称或 ID" oninput="Dev.filter('room')">
       <div class="devrow"><select id="devroom" aria-label="室内位置"></select><button type="button" id="devroomGo" onclick="Dev.tp()">传送</button></div><small id="devroomCount"></small>
       <label for="devoutFilter">室外位置</label><input id="devoutFilter" type="search" placeholder="搜索地点" oninput="Dev.filter('out')">

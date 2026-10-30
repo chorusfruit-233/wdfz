@@ -9,7 +9,7 @@ function buildRoamFigure(){
     return grp;
   }catch(e){ return null; }
 }
-var ANFX={kind:null,grp:null,items:[],t:0,src:null};
+var ANFX={kind:null,grp:null,items:[],t:0,src:null,preview:false};
 function anfxW2S(wx,wy){
   if(S.mode==='in'&&INTERIORS[S.room]) return worldToScene(wx,wy,INTERIORS[S.room]);
   return worldToScene(wx,wy,null);
@@ -17,7 +17,7 @@ function anfxW2S(wx,wy){
 function anfxClear(){
   try{ wxClear(); }catch(e){}
   if(ANFX.grp){ GLR.scene.remove(ANFX.grp); ANFX.grp=null; }
-  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;
+  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
 function anfxMat(col,op){
@@ -281,12 +281,12 @@ function anfxSpawn(kind,wx,wy){
   }
   GLR.scene.add(grp);
 }
-function deathFX(type){
+function deathFX(type,options){
   try{
     anfxClear();
     var p=anfxW2S(S.x,S.y);
     var grp=new THREE.Group();
-    ANFX.kind='death'; ANFX.grp=grp; ANFX.t=0; ANFX.deathType=type||'vignette';
+    ANFX.kind='death'; ANFX.grp=grp; ANFX.t=0; ANFX.deathType=type||'vignette';ANFX.preview=!!(options&&options.preview);
     ANFX.mx=undefined; ANFX.mz=undefined; ANFX.flashed=0;
     var i, m;
     var dark=anfxMat(0x04060a,1.0);
@@ -617,6 +617,8 @@ function anfxUpdate(dt){
     for(i=1;i<ANFX.items.length;i+=2) ANFX.items[i].scale.setScalar(0.8+pulse*0.3);
   } else if(ANFX.kind==='death'){
     var dtp=ANFX.deathType||'vignette', kk=ANFX.t, it, ob;
+    /* 预览只改变渲染镜头；玩家可以在预览期间移动或转头。 */
+    var preview=ANFX.preview, view=preview?{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift}:S;
     if(dtp==='floor'||dtp==='deep'){
       /* 镜头往下沉，黑水一样的地面往上漫，在 1.8 秒左右合上 */
       for(it=0;it<ANFX.items.length;it++){
@@ -752,12 +754,12 @@ function anfxUpdate(dt){
           var cx3=GLR.cam.position.x, cy3=GLR.cam.position.y, cz3=GLR.cam.position.z;
           hd.position.set(nk.x+(cx3-nk.x)*e2, topY+(cy3-topY)*e2, nk.z+(cz3-nk.z)*e2);
           if(hd.scale&&hd.scale.setScalar) hd.scale.setScalar(1+e2*0.85);
-          if(kk>1.55){ S.pitch=Math.min(0.35,S.pitch+dt*0.6); try{ syncCamera(0); }catch(e){} }
+          if(kk>1.55){ view.pitch=Math.min(0.35,view.pitch+(preview?(kk-1.55)*0.6:dt*0.6)); try{ syncCamera(0,preview?view:null); }catch(e){} }
         }else{
           var k3=Math.min(1,(kk-2.15)/0.95);
-          S.eyeLift=k3*2.5;
-          S.pitch=0.35+k3*0.55;
-          try{ syncCamera(0); }catch(e){}
+          view.eyeLift=k3*2.5;
+          view.pitch=0.35+k3*0.55;
+          try{ syncCamera(0,preview?view:null); }catch(e){}
           hd.position.set(GLR.cam.position.x,GLR.cam.position.y+0.25,GLR.cam.position.z);
           hd.visible=(k3<0.88);
         }
@@ -791,7 +793,7 @@ function anfxUpdate(dt){
       }
     } else if(dtp==='grip'){
       var sinkT=Math.min(1,kk/2.4);
-      S.eyeLift=-(sinkT*1.25);
+      view.eyeLift=-(sinkT*1.25);
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it]; var gu=ob.userData||{};
         if(gu.t===undefined) continue;
@@ -806,7 +808,7 @@ function anfxUpdate(dt){
           ob.rotation.x=0;
         }
       }
-      try{ syncCamera(0); }catch(e){}
+      try{ syncCamera(0,preview?view:null); }catch(e){}
     } else if(dtp==='ring'){
       /* 地上的石子一颗颗立起来，绕着你转，越收越紧，最后成了一个笼子 */
       var pr=anfxW2S(S.x,S.y);
@@ -828,9 +830,9 @@ function anfxUpdate(dt){
         fig.rotation.y=Math.atan2(fdx,fdz);
         if(dtp==='shadow'&&kk>0.6){
           var want3=Math.atan2(fig.position.z-pt.z,fig.position.x-pt.x);
-          var d4=((want3-S.ang+PI*3)%TAU)-PI;
-          S.ang+=d4*Math.min(1,dt*1.6);
-          try{ syncCamera(0); }catch(e){}
+          var d4=((want3-view.ang+PI*3)%TAU)-PI;
+          view.ang+=d4*(preview?(1-Math.exp(-Math.max(0,kk-0.6)*1.6)):Math.min(1,dt*1.6));
+          try{ syncCamera(0,preview?view:null); }catch(e){}
         }
         if(fdl<1.0&&!ANFX.flashed){ ANFX.flashed=1; GLR.flash=Math.max(GLR.flash||0,0.45); }
       }
@@ -845,7 +847,7 @@ function anfxUpdate(dt){
         ob.rotation.y=Math.atan2(pf.x-ob.position.x,pf.z-ob.position.z);
         ob.rotation.x=Math.sin(kk*4.4)*0.35;
       }
-      if(kk>1.0){ S.pitch=Math.sin(kk*4.4)*0.32; try{ syncCamera(0); }catch(e){} }
+      if(kk>1.0){ view.pitch=Math.sin(kk*4.4)*0.32; try{ syncCamera(0,preview?view:null); }catch(e){} }
     } else {
       /* 其它：一个黑影从前方走到你面前（以前这里的 z 坐标算成了两倍） */
       if(ANFX.grp&&ANFX.grp.position){

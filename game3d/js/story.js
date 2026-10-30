@@ -296,6 +296,7 @@ function kill(msg,fx){
   if(S.dead||S.death) return;
   if(hasItem('elixir')){ elixirSave(); return; }      /* 不知名药丸：替你死一次 */
   if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
+  S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
@@ -352,7 +353,7 @@ function dreamWake(){
     try{ anfxClear(); }catch(e){}
     AN.active=false; AN.id=null; AN.data={}; AN.t=0; AN.acc=0; AN.pre=null; AN.preNext=0; AN.locked=false;
     AN.next=60;
-    S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.pitch=0;
+    S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.pitch=0;S.deathView=null;
     S.tsec=700; S.san=78; S.viol=0; S.stam=100; S.snackT=0; S.tt=0; S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
     VisualState.hurt=0; VisualState.flash=0;
     var f=document.getElementById('flash'); if(f){ f.style.transition='none'; f.style.opacity='0'; }

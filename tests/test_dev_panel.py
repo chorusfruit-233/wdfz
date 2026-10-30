@@ -121,6 +121,114 @@ class DebugPanelTest(BrowserCase):
         page.evaluate('render(5)')
         self.assert_js(page,'!VisualState.deathAnim&&GLR.postMat.uniforms.uDm.value===0')
 
+    def test_every_death_preview_keeps_the_live_camera_state(self):
+        page = self.game()
+        self.open_panel(page)
+        result=page.evaluate("""()=>{
+          let failures=[],visual=[];SHAKE_ON=false;
+          for(const [name,id] of DEV_DEATH){
+            S.ang=.7;S.pitch=-.22;S.eyeLift=.12;syncCamera(0);
+            const before=JSON.stringify(S),position=GLR.cam.position.clone(),rotation=GLR.cam.quaternion.clone();
+            document.getElementById('devdeath').value=id;Dev.previewDeath();
+            if(!DEV.previewFx){failures.push(id+':未创建');continue;}
+            for(let i=0;i<6;i++)anfxUpdate(.5);
+            if(JSON.stringify(S)!==before)failures.push(id+':预览期间修改玩家状态');
+            if(GLR.cam.position.distanceTo(position)>1e-5||1-Math.abs(GLR.cam.quaternion.dot(rotation))>1e-5)visual.push(id);
+            Dev.clearPreview();
+            if(JSON.stringify(S)!==before)failures.push(id+':清理后状态改变');
+          }
+          return {count:DEV_DEATH.length,failures,visual};
+        }""")
+        self.assertGreaterEqual(result['count'],28)
+        self.assertEqual(result['failures'],[])
+        self.assertTrue({'neck','grip','shadow','follow'}.issubset(result['visual']))
+
+    def test_preview_uses_visual_camera_and_keeps_later_player_input(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""S.seated=false;S.ang=.4;S.pitch=-.2;S.eyeLift=0;SHAKE_ON=false;syncCamera(0);
+          window.baseY=GLR.cam.position.y;document.getElementById('devdeath').value='grip';
+          Dev.previewDeath();anfxUpdate(1.2);window.previewY=GLR.cam.position.y;
+          S.ang=1.1;S.pitch=.15;S.eyeLift=.08;syncCamera(0);window.finalRotation=GLR.cam.quaternion.clone();
+          anfxUpdate(.2);Dev.clearPreview();""")
+        self.assert_js(page,"previewY<baseY-.5&&S.ang===1.1&&S.pitch===.15&&S.eyeLift===.08")
+        self.assert_js(page,'Math.abs(GLR.cam.position.y-(S.eyeH+S.eyeLift+(S.floorY||0)))<1e-6')
+        self.assert_js(page,'1-Math.abs(GLR.cam.quaternion.dot(finalRotation))<1e-8')
+
+    def test_preview_timeout_does_not_clear_a_new_anomaly(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""document.getElementById('devdeath').value='grip';Dev.previewDeath();anfxUpdate(1.2);
+          S.ang=1.3;AN.active=true;AN.id='rain';AN.data={};anOn('rain');window.newFx=ANFX.grp;""")
+        page.wait_for_function('!DEV.previewFx',timeout=6000)
+        self.assert_js(page,"S.ang===1.3&&AN.active&&AN.id==='rain'&&ANFX.grp===newFx&&!!WX.rain")
+
+    def test_preview_timeout_restores_camera_without_losing_player_input(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""S.seated=false;SHAKE_ON=false;S.eyeLift=0;syncCamera(0);
+          document.getElementById('devdeath').value='grip';Dev.previewDeath();anfxUpdate(1.2);
+          S.ang=1.1;S.pitch=.15;S.eyeLift=.08;syncCamera(0);window.finalRotation=GLR.cam.quaternion.clone();anfxUpdate(.2);""")
+        page.wait_for_function('!DEV.previewFx',timeout=6000)
+        self.assert_js(page,"S.ang===1.1&&S.pitch===.15&&S.eyeLift===.08&&ANFX.kind!=='death'")
+        self.assert_js(page,'1-Math.abs(GLR.cam.quaternion.dot(finalRotation))<1e-8')
+
+    def test_preview_cleanup_does_not_remove_a_real_death(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""S.day=2;S.diff='hard';S.talent='code';S.bag=[];S.ang=1.3;S.pitch=.2;S.eyeLift=.1;
+          document.getElementById('devdeath').value='grip';Dev.previewDeath();anfxUpdate(1.2);
+          kill('真实死亡','neck');window.realFx=ANFX.grp;Dev.clearPreview();""")
+        self.assert_js(page,"S.dead&&S.death==='neck'&&ANFX.grp===realFx&&ANFX.kind==='death'&&!ANFX.preview")
+        page.evaluate('anfxUpdate(2.5);Dev.revive()')
+        self.assert_js(page,'!S.dead&&S.ang===1.3&&S.pitch===.2&&S.eyeLift===.1')
+
+    def test_real_death_revive_restores_predeath_view(self):
+        page = self.game()
+        self.open_panel(page)
+        for effect in ('neck','grip','shadow','follow'):
+            with self.subTest(effect=effect):
+                result=page.evaluate("""effect=>{
+                  S.screen='play';S.dead=false;S.death=null;S.day=2;S.diff='hard';S.talent='code';S.bag=[];
+                  S.ang=.7;S.pitch=-.22;S.eyeLift=.12;window.confirm=()=>true;
+                  document.getElementById('devdeath').value=effect;Dev.death();
+                  for(let i=0;i<6;i++)anfxUpdate(.5);
+                  let changed=S.ang!==.7||S.pitch!==-.22||S.eyeLift!==.12;
+                  Dev.revive();return {changed,ang:S.ang,pitch:S.pitch,eye:S.eyeLift,dead:S.dead};
+                }""",effect)
+                self.assertTrue(result['changed'])
+                self.assertEqual((result['ang'],result['pitch'],result['eye'],result['dead']),(.7,-.22,.12,False))
+
+    def test_teleport_ends_anomaly_and_cancels_its_pending_choice(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("Dev.triggerAnomaly('rain');AN.pre='rain';AN.preNext=33;AN.locked=true")
+        self.assert_js(page,"AN.active&&AN.id==='rain'&&ANFX.kind==='rain'&&!!WX.rain")
+        page.locator('[data-dev-tab="scene"]').click()
+        page.locator('#devroom').select_option('admin5')
+        page.locator('#devroomGo').click()
+        page.wait_for_function("S.room==='admin5'")
+        self.assert_js(page,"!AN.active&&AN.id===null&&!WX.rain&&ANFX.kind!=='rain'")
+        self.assert_js(page,"AN.pre==='rain'&&AN.next===33&&AN.locked")
+        page.evaluate("""S.tsec=700;S.viol=10;S.san=80;S.bag=[];Dev.triggerAnomaly('roster');useRoster(250);
+          window.beforeSan=S.san;document.getElementById('devout').value='0';Dev.tpo();""")
+        self.assert_js(page,"S.mode==='out'&&!AN.active&&AN.id===null&&!UI.chooseOpen&&!UI.choiceTimer&&S.viol===28")
+        page.wait_for_timeout(350)
+        self.assert_js(page,'S.san===beforeSan&&S.viol===28&&!UI.chooseOpen')
+
+    def test_debug_freeze_holds_ambient_events_but_allows_previews(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""S.san=10;AN.active=false;PAT.locked=false;HALLU.next=10;APPAR.next=11;
+          window.h=HALLU.next;window.a=APPAR.next;render(.5);""")
+        self.assert_js(page,'HALLU.next===h&&APPAR.next===a')
+        page.evaluate("Dev.triggerAnomaly('rain');window.fxTime=ANFX.t;render(.5)")
+        self.assert_js(page,'ANFX.t===fxTime')
+        page.evaluate("Dev.anomEnd();document.getElementById('devdeath').value='grip';Dev.previewDeath();render(.5)")
+        self.assert_js(page,"ANFX.kind==='death'&&ANFX.t>.4")
+        page.evaluate('Dev.clearPreview();Dev.toggleFreeze();render(.5)')
+        self.assert_js(page,'HALLU.next<h&&APPAR.next<a')
+
     def test_actual_death_confirms_and_revive_cancels_delayed_death_screen(self):
         page = self.game()
         page.evaluate("S.day=2;S.bag=[];S.talent='code';saveGame();window.saved=localStorage.getItem('wdfz3d');window.confirm=()=>false")

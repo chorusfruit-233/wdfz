@@ -19,7 +19,7 @@ var Engine={
   addRoomLights:function(R){return ThreeBackend.addRoomLights(R);},
   enterRoom:function(id){QualityWatch.reset();return ThreeBackend.enterRoom(id);},
   enterOutside:function(){QualityWatch.reset();return ThreeBackend.enterOutside();},
-  syncCamera:function(dt){return ThreeBackend.syncCamera(dt);},
+  syncCamera:function(dt,view){return ThreeBackend.syncCamera(dt,view);},
   captureMenu:function(){return ThreeBackend.captureMenu();},
   torch:function(on){if(GLR.torch)GLR.torch.intensity=on?55:0;},
   brightness:function(value){if(GLR.postMat)GLR.postMat.uniforms.uBright.value=value;},
