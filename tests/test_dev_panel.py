@@ -183,6 +183,16 @@ class DebugPanelTest(BrowserCase):
         page.evaluate('anfxUpdate(2.5);Dev.revive()')
         self.assert_js(page,'!S.dead&&S.ang===1.3&&S.pitch===.2&&S.eyeLift===.1')
 
+    def test_preview_is_cleared_when_teleporting_or_quitting(self):
+        page = self.game()
+        self.open_panel(page)
+        page.evaluate("""S.eyeLift=.08;document.getElementById('devdeath').value='grip';
+          Dev.previewDeath();anfxUpdate(1);document.getElementById('devout').value='0';Dev.tpo();""")
+        self.assert_js(page,"S.mode==='out'&&S.eyeLift===.08&&S.ang===Math.PI/2&&!DEV.previewFx&&ANFX.kind!=='death'")
+        page.evaluate("""document.getElementById('devdeath').value='neck';Dev.previewDeath();anfxUpdate(2.5);
+          window.beforeQuit=[S.ang,S.pitch,S.eyeLift];Game.quit();""")
+        self.assert_js(page,"S.screen==='menu'&&!DEV.previewFx&&ANFX.kind!=='death'&&[S.ang,S.pitch,S.eyeLift].every((v,i)=>v===beforeQuit[i])")
+
     def test_real_death_revive_restores_predeath_view(self):
         page = self.game()
         self.open_panel(page)
@@ -215,6 +225,22 @@ class DebugPanelTest(BrowserCase):
         self.assert_js(page,"S.mode==='out'&&!AN.active&&AN.id===null&&!UI.chooseOpen&&!UI.choiceTimer&&S.viol===28")
         page.wait_for_timeout(350)
         self.assert_js(page,'S.san===beforeSan&&S.viol===28&&!UI.chooseOpen')
+
+    def test_ending_or_replacing_anomaly_cancels_pending_choice(self):
+        page = self.game()
+        self.open_panel(page)
+        for action in ('end','replace'):
+            with self.subTest(action=action):
+                page.evaluate("""action=>{
+                  if(AN.active)Dev.anomEnd();S.tsec=700;S.san=80;S.viol=10;S.bag=[];
+                  Dev.triggerAnomaly('roster');useRoster(150);
+                  if(action==='end')Dev.anomEnd();else Dev.triggerAnomaly('rain');
+                }""",action)
+                self.assert_js(page,'!UI.chooseOpen&&!UI.choiceTimer&&S.viol===28&&S.san===80')
+                if action=='end':self.assert_js(page,'!AN.active&&AN.id===null')
+                else:self.assert_js(page,"AN.active&&AN.id==='rain'&&!!WX.rain")
+                page.wait_for_timeout(220)
+                self.assert_js(page,'S.viol===28&&S.san===80&&!UI.chooseOpen')
 
     def test_debug_freeze_holds_ambient_events_but_allows_previews(self):
         page = self.game()
