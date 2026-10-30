@@ -216,8 +216,21 @@ function freshState(diff){
   var _hot=document.getElementById('hot'); if(_hot) _hot._sig='';
   if(!running){ running=true; lastT=0; }
 }
+var pendingAssetStart=null;
+function waitForGameAssets(start){
+  if(Assets.anyReady())return false;
+  pendingAssetStart=start;assetNotice('正在加载模型……',true);
+  Assets.load(Assets.want(),function(lod){
+    if(!pendingAssetStart)return;
+    if(Assets.anyReady()&&S.screen==='menu'){
+      var ready=pendingAssetStart;pendingAssetStart=null;ready();
+    }else if(lod===null)pendingAssetStart=null;
+  });
+  return true;
+}
 var Game={
   start:function(diff){
+    if(waitForGameAssets(function(){Game.start(diff);}))return;
     try{
     freshState(diff);
     var R1=INTERIORS['teach1'];
@@ -240,6 +253,7 @@ var Game={
     }catch(e){ try{ showErr('Game.start: '+e.message); }catch(_e){} }
   },
   continue_:function(){
+    if(waitForGameAssets(function(){Game.continue_();}))return;
     var d=loadGame();
     if(!d){ toast('没有存档'); return; }
     clearIntroTimers();
@@ -311,6 +325,7 @@ var Game={
 var MENU_PHOTO=null, PHOTO_TRIED=false;
 function captureMenuPhoto(){
   if(PHOTO_TRIED) return;
+  if(!Assets.anyReady())return;
   if(S.screen!=='menu'){ PHOTO_TRIED=true; return; }
   PHOTO_TRIED=true;
   try{

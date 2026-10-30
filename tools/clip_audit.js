@@ -32,6 +32,8 @@ var ClipAudit=(function(){
       prof.forEach(function(q){ u0=Math.min(u0,q[0]); u1=Math.max(u1,q[0]); v0=Math.min(v0,q[1]); v1=Math.max(v1,q[1]); });
       rec({t:'box',c:this._pt(x+(u0+u1)/2,y+(v0+v1)/2,z),h:[(u1-u0)/2,(v1-v0)/2,depth/2],tc:t.c,ts:t.s}); }
     return orig.prism.apply(this,arguments); };
+  /* 资源包里的模型（Kit.asset）：不画图元，按它带的碰撞代理（盒 / 圆柱 / 杆 / 椭球，已摆到场景坐标）记 */
+  G.proxy=function(p){ if(REC){ var q={}; for(var k in p) q[k]=p[k]; rec(q); } };
   /* Kit.g(key) 记材质（墙、地面这类结构件按材质认） */
   var kg=Kit.prototype.g;
   Kit.prototype.g=function(key){ if(REC) REC.mat=key; return kg.apply(this,arguments); };
@@ -329,10 +331,10 @@ var ClipAudit=(function(){
     if(!cell) return out;
     var tag='furn:d@'+cell[0]+','+cell[1]+'#', desk=list.filter(function(p){ return p.o.indexOf(tag)===0; });
     var saved={}, k;
-    for(k in FIG_GEO) if(/^sit\|/.test(k)){ saved[k]=FIG_GEO[k]; delete FIG_GEO[k]; }
+    for(k in FIG_GEO) if(/^(sit|A\|fig_sit)\|/.test(k)){ saved[k]=FIG_GEO[k]; delete FIG_GEO[k]; }
     REC={list:[],mat:'',outdoor:false}; OWN=['npc'];
     try{ figGeo('sit'); }finally{ var fl=REC.list; REC=null; OWN=[]; }
-    for(k in FIG_GEO) if(/^sit\|/.test(k)) delete FIG_GEO[k];
+    for(k in FIG_GEO) if(/^(sit|A\|fig_sit)\|/.test(k)) delete FIG_GEO[k];
     for(k in saved) FIG_GEO[k]=saved[k];
     var x0=(cell[0]+0.5)*tw-halfW, z0=(cell[1]+0.82)*tw-halfH;
     function tp(q){ return [x0-q[0],q[1],z0-q[2]]; }

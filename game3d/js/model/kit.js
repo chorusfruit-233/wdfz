@@ -502,8 +502,10 @@ GeoBuilder.prototype.buildChunks=function(size){
 /* 一组按材质分开的 GeoBuilder。
    opts.cull  —— {floor, ceil}：不建永远看不见的面（见 face）；只给房间、室外这种「地面以上看」的场景用，
                  人物、杯子这类会被举起来、掉下来的小件不能用。
-   opts.chunk —— 打开切块：顶点多的材质按位置切成几块（每块约 KIT_CHUNK_V 个顶点，最多 KIT_CHUNK_MAX 块），视野外的块不画。 */
-function Kit(opts){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; opts=opts||{}; this.cull=opts.cull||null; this.chunk=opts.chunk||0; }
+   opts.chunk —— 打开切块：顶点多的材质按位置切成几块（每块约 KIT_CHUNK_V 个顶点，最多 KIT_CHUNK_MAX 块），视野外的块不画。
+   opts.inst  —— 打开实例化：资源包里标了 i 的模型（课桌椅、床、灯……一层楼重复几十上百次）不抄顶点，
+                 build() 时每种模型、每个材质组一个 InstancedMesh（按 KIT_INST_CELL 米分格，视野外的格子不画）。 */
+function Kit(opts){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; opts=opts||{}; this.cull=opts.cull||null; this.chunk=opts.chunk||0; this.inst=opts.inst||0; this.sparse=opts.sparse||0; this.IN=null; }
 var KIT_CHUNK_V=20000, KIT_CHUNK_MAX=8;   /* 切得太碎绘制次数会变多（手机上每次绘制都有开销），所以按顶点数定块数 */
 Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder(matUV(key),this); return this.B[key]; };
 Kit.prototype.frame=function(x,z,rot,y){ this.T.x=x||0; this.T.z=z||0; this.T.y=y||0; this.T.c=Math.cos(rot||0); this.T.s=Math.sin(rot||0); return this; };
@@ -564,22 +566,202 @@ Kit.prototype.prism=function(m,x,y,z,prof,depth,col,sh,r){
   prof.forEach(function(p){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);});
   this._capBounds(m,x+x0,y+y0,z-depth/2,x+x1,y+y1,z+depth/2);
 };
+var KIT_INST_CELL=24;
+var KIT_M4=null, KIT_C=null;
+/* 同一格里只有一两件小模型时，逐材质复制进普通网格可避免大量单实例绘制。
+   半透明材质仍单独排序；大模型仍共用几何体，避免占用过多内存。 */
+Kit.prototype._instanceBuckets=function(){
+  var result=[],name;
+  if(!this.IN)return result;
+  for(name in this.IN){
+    var L=this.IN[name],buckets={};
+    L.list.forEach(function(it){
+      var key=it.rk+'|'+Math.floor(it.X.x/KIT_INST_CELL)+','+Math.floor(it.X.z/KIT_INST_CELL);
+      (buckets[key]||(buckets[key]=[])).push(it);
+    });
+    for(var key in buckets)result.push({name:name,pk:L.pk,m:L.m,list:buckets[key]});
+  }
+  return result;
+};
+Kit.prototype._mergeSparseInstances=function(buckets){
+  var self=this,builders={};
+  if(!this.sparse)return builders;
+  buckets.forEach(function(bucket){
+    var list=bucket.list,m=bucket.m,pk=bucket.pk;
+    if(list.length>self.sparse)return;
+    bucket.merged={};
+    m.g.forEach(function(g,gi){
+      var mk=g[0],remap=list[0].remap;
+      if(remap&&remap[mk]!==undefined)mk=remap[mk];
+      if(!mk||mk==='glass'||mk==='grime'||g[3]*list.length>2000)return;
+      bucket.merged[gi]=true;
+      list.forEach(function(it){
+        var color=Assets.rgb(it.cols[gi]),shade=it.shade;
+        var builder=builders[mk]||(builders[mk]=new GeoBuilder(matUV(mk),self));
+        builder.appendAsset(pk,m.b,g,it.X,[color[0]*shade,color[1]*shade,color[2]*shade],0,0,1);
+      });
+    });
+  });
+  return builders;
+};
+Kit.prototype._buildInstances=function(grp,buckets){
+  if(!this.IN) return;
+  if(!KIT_M4){ KIT_M4=new THREE.Matrix4(); KIT_C=new THREE.Color(); }
+  var M=KIT_M4, col=KIT_C;
+  buckets.forEach(function(bucket){
+      var name=bucket.name,pk=bucket.pk,m=bucket.m,list=bucket.list,remap=list[0].remap,gi;
+      for(gi=0;gi<m.g.length;gi++){
+        if(bucket.merged&&bucket.merged[gi])continue;
+        var g=m.g[gi], mk=g[0];
+        if(remap&&remap[mk]!==undefined) mk=remap[mk];
+        if(!mk) continue;
+        var geo=Assets.groupGeometry(pk,name,gi,mk), mesh=new THREE.InstancedMesh(geo,matOf(mk),list.length), j;
+        for(j=0;j<list.length;j++){
+          var X=list[j].X, sc=X.k||1, sq=sc*(X.q||1);
+          /* 绕 y 转：three.js 的 rotation.y=a 时 x'=x·cos a+z·sin a、z'=−x·sin a+z·cos a，和 Kit 的 frame 一样；
+             模型自己的 x 先拉长 sx 倍（着色器按实例矩阵的各列长度修正法线） */
+          M.set(X.c*sq,0,X.s*sc,X.x, 0,sc,0,X.y, -X.s*sq,0,X.c*sc,X.z, 0,0,0,1);
+          mesh.setMatrixAt(j,M);
+          var hx=list[j].cols[gi], f=g[6]*list[j].shade;
+          col.setRGB(((hx>>16)&255)/255*f,((hx>>8)&255)/255*f,(hx&255)/255*f,THREE.LinearSRGBColorSpace);
+          mesh.setColorAt(j,col);
+        }
+        mesh.instanceMatrix.needsUpdate=true; if(mesh.instanceColor) mesh.instanceColor.needsUpdate=true;
+        mesh.computeBoundingSphere();
+        if(mk==='glass') mesh.renderOrder=2;
+        mesh.userData.matKey=mk; mesh.userData.asset=name;
+        grp.add(mesh);
+      }
+  });
+};
 Kit.prototype.build=function(group){
-  var grp=group||new THREE.Group(), k;
-  for(k in this.B){
-    var b=this.B[k]; if(!b.v) continue;
-    var nc=0, geos, j;
-    if(this.chunk) nc=lodLow()?(b.v>65535?Math.ceil(b.v/60000):0)          /* 流畅档（手机）绘制次数更要紧：只在超过 16 位索引时才拆 */
-                              :Math.min(KIT_CHUNK_MAX,Math.floor(b.v/KIT_CHUNK_V));
-    geos=(nc>=2)?b.buildChunks(b.cellFor(nc)):[b.build()];
-    for(j=0;j<geos.length;j++){
-      var mesh=new THREE.Mesh(geos[j],matOf(k));
-      if(k==='glass') mesh.renderOrder=2;
-      mesh.userData.matKey=k;
-      grp.add(mesh);
+  var grp=group||new THREE.Group(), buckets=this._instanceBuckets(),sparse=this._mergeSparseInstances(buckets),self=this;
+  function addBuilders(builders){
+    for(var k in builders){
+      var b=builders[k]; if(!b.v) continue;
+      var nc=0, geos, j;
+      if(self.chunk) nc=lodLow()?(b.v>65535?Math.ceil(b.v/60000):0)       /* 流畅档（手机）绘制次数更要紧：只在超过 16 位索引时才拆 */
+                                 :Math.min(KIT_CHUNK_MAX,Math.floor(b.v/KIT_CHUNK_V));
+      geos=(nc>=2)?b.buildChunks(b.cellFor(nc)):[b.build()];
+      for(j=0;j<geos.length;j++){
+        var mesh=new THREE.Mesh(geos[j],matOf(k));
+        if(k==='glass') mesh.renderOrder=2;
+        mesh.userData.matKey=k;
+        grp.add(mesh);
+      }
     }
   }
+  addBuilders(this.B);addBuilders(sparse);
+  this._buildInstances(grp,buckets);         /* 实例化的放在后面：前面是这个房间自己的网格，后面是共用几何体的实例 */
   return grp;
+};
+/* ---- 资源包里的模型（Blender 建模，见 assets.js）----
+   并进对应材质的 GeoBuilder：位置按包里的外包盒还原、跟着 frame 和这次的转角走；颜色乘染色；
+   贴图坐标是模型自己的（米），除以材质的平铺尺寸，每次摆放错开一点，一排课桌的木纹不会一模一样。 */
+GeoBuilder.prototype.appendAsset=function(pk,b,g,X,rgbMul,uo,vo,uvScale){
+  var nv=g[3], ni=g[5], v=this.v, i0=this.ni, k;
+  this._grow(v+nv,i0+ni);
+  var POS=pk.pos, NRM=pk.nrm, COL=pk.col, UVS=pk.uv, IDX=pk.idx, s=X.k||1, q=X.q||1;
+  var P=this.P, N=this.N, C=this.C, U=this.U, I=this.I;
+  var bx=b[0], by=b[1], bz=b[2], ex=(b[3]-b[0])/65535, ey=(b[4]-b[1])/65535, ez=(b[5]-b[2])/65535;
+  var cc=X.c, ss=X.s, ox=X.x, oy=X.y, oz=X.z, inv=1/this.uv,us=uvScale===undefined?s:uvScale;
+  var cs=g[6]/255, cr=cs*rgbMul[0], cg=cs*rgbMul[1], cb=cs*rgbMul[2];
+  var src=g[2]*3, src2=g[2]*2, dst=v*3, dst2=v*2;
+  for(k=0;k<nv;k++,src+=3,src2+=2,dst+=3,dst2+=2){
+    var lx=(bx+POS[src]*ex)*s*q, ly=(by+POS[src+1]*ey)*s, lz=(bz+POS[src+2]*ez)*s;
+    P[dst]=ox+lx*cc+lz*ss; P[dst+1]=oy+ly; P[dst+2]=oz-lx*ss+lz*cc;
+    var nx=NRM[src], ny=NRM[src+1], nz=NRM[src+2];
+    if(q!==1){ nx/=q; var nl=127/Math.sqrt(nx*nx+ny*ny+nz*nz); nx*=nl; ny*=nl; nz*=nl; }   /* 沿 x 拉伸：法线按逆转置变换 */
+    N[dst]=Math.round(nx*cc+nz*ss); N[dst+1]=Math.round(ny); N[dst+2]=Math.round(-nx*ss+nz*cc);
+    C[dst]=COL[src]*cr; C[dst+1]=COL[src+1]*cg; C[dst+2]=COL[src+2]*cb;
+    U[dst2]=(UVS[src2]/1024*us+uo)*inv; U[dst2+1]=(UVS[src2+1]/1024*us+vo)*inv;
+  }
+  var isrc=g[4];
+  for(k=0;k<ni;k++) I[i0+k]=v+IDX[isrc+k];
+  this.v=v+nv; this.ni=i0+ni;
+};
+/* 碰撞代理（盒 / 圆柱 / 杆 / 椭球）摆到场景里以后交给这里：游戏本身不用，穿模审查（tools/clip_audit.js）挂在这上面 */
+GeoBuilder.prototype.proxy=function(p){};
+var ASSET_WHITE=[1,1,1];
+Kit.prototype.asset=function(name,x,y,z,rot,opt){
+  var a=Assets.get(name); if(!a) return false;
+  opt=opt||{};
+  var T=this.T, pk=a.pk, m=a.m, ca=Math.cos(rot||0), sa=Math.sin(rot||0), s=opt.s||1, i;
+  x=x||0; y=y||0; z=z||0;
+  var X={x:T.x+x*T.c+z*T.s, y:T.y+y, z:T.z-x*T.s+z*T.c, c:T.c*ca-T.s*sa, s:T.s*ca+T.c*sa, k:s, q:opt.sx||1};   /* sx：沿模型自己的 x 拉长（一段段的栏杆、门扇） */
+  var uo=opt.uo!==undefined?opt.uo:hash2(Math.round(X.x*7)+311,Math.round(X.z*7)+97)*3.7;
+  var vo=opt.vo!==undefined?opt.vo:hash2(Math.round(X.z*5)+13,Math.round(X.x*5)+71)*3.1;
+  var tint=opt.tint||{}, remap=opt.mat||null, G=m.g, first=null;
+  if(this.inst&&m.i&&!opt.merge){
+    /* 实例化：只记下摆放（场景坐标的位置、转角、缩放）和这一次的染色、换材质 */
+    if(!this.IN) this.IN={};
+    var L=this.IN[name]||(this.IN[name]={pk:pk,m:m,list:[]}), cols=[];
+    for(i=0;i<G.length;i++){
+      var tg=G[i][1], hx=0xffffff;
+      if(tg) hx=tint[tg]!==undefined?tint[tg]:(m.t&&m.t[tg]!==undefined?m.t[tg]:0xffffff);
+      cols.push(hx);
+    }
+    L.list.push({X:X,cols:cols,shade:opt.shade||1,remap:remap,rk:remap?JSON.stringify(remap):''});
+    first=this.g(G[0][0]);
+  }else
+  for(i=0;i<G.length;i++){
+    var g=G[i], key=g[0], tag=g[1];
+    if(remap&&remap[key]!==undefined) key=remap[key];
+    if(!key) continue;                                      /* 映射成空：这一组不要 */
+    var mul=ASSET_WHITE;
+    if(tag){ var tc=tint[tag]!==undefined?tint[tag]:(m.t&&m.t[tag]!==undefined?m.t[tag]:0xffffff); mul=Assets.rgb(tc); }
+    if(opt.shade) mul=[mul[0]*opt.shade,mul[1]*opt.shade,mul[2]*opt.shade];
+    var gb=this.g(key); if(!first) first=gb;
+    var fixed=(key==='foliage'||key==='grime');               /* 叶片卡、污渍是整张图集：贴图不能错开 */
+    gb.appendAsset(pk,m.b,g,X,mul,fixed?0:uo,fixed?0:vo);
+  }
+  if(m.p){
+    for(i=0;i<m.p.length;i++){
+      var w=assetProxyWorld(m.p[i],X);
+      if(this.cap) this._capBounds('asset',w.bb[0],w.bb[1],w.bb[2],w.bb[3],w.bb[4],w.bb[5],true);
+      if(first) first.proxy(w.p);
+    }
+  }
+  return true;
+};
+/* 代理 → 场景坐标（穿模审查的格式），顺便给出外包盒 */
+function assetProxyWorld(q,X){
+  var s=X.k||1, c=X.c, sn=X.s, sq=X.q||1;
+  function W(p){ var lx=p[0]*s*sq, lz=p[2]*s; return [X.x+lx*c+lz*sn, X.y+p[1]*s, X.z-lx*sn+lz*c]; }
+  var p, bb, ex, ez;
+  if(q.t==='box'||q.t==='blob'){
+    /* 拉长时盒子按它自己的转角把 x、z 两个半边长分摊（转角是 0 或 90° 时是准的） */
+    var a=(q.a||0)+Math.atan2(sn,c), qa=q.a||0, fx=Math.abs(Math.cos(qa))*sq+Math.abs(Math.sin(qa)), fz=Math.abs(Math.sin(qa))*sq+Math.abs(Math.cos(qa));
+    var h=(q.t==='box'?q.h:q.r).map(function(v,i){ return v*s*(i===0?fx:(i===2?fz:1)); }), cc=W(q.c);
+    p=q.t==='box'?{t:'box',c:cc,h:h,tc:Math.cos(a),ts:Math.sin(a)}:{t:'blob',c:cc,r:h,tc:Math.cos(a),ts:Math.sin(a),jit:q.jit||0};
+    ex=Math.abs(h[0]*Math.cos(a))+Math.abs(h[2]*Math.sin(a)); ez=Math.abs(h[0]*Math.sin(a))+Math.abs(h[2]*Math.cos(a));
+    bb=[cc[0]-ex,cc[1]-h[1],cc[2]-ez,cc[0]+ex,cc[1]+h[1],cc[2]+ez];
+  }else if(q.t==='cyl'){
+    var c0=W(q.c), r=Math.max(q.rb,q.rt)*s;
+    p={t:'cyl',c:c0,rb:q.rb*s,rt:q.rt*s,hh:q.hh*s};
+    bb=[c0[0]-r,c0[1],c0[2]-r,c0[0]+r,c0[1]+q.hh*s,c0[2]+r];
+  }else{
+    var A=W(q.a), B=W(q.b), rr=Math.max(q.r0,q.r1)*s;
+    p={t:'rod',a:A,b:B,r0:q.r0*s,r1:q.r1*s};
+    bb=[Math.min(A[0],B[0])-rr,Math.min(A[1],B[1])-rr,Math.min(A[2],B[2])-rr,Math.max(A[0],B[0])+rr,Math.max(A[1],B[1])+rr,Math.max(A[2],B[2])+rr];
+  }
+  return {p:p,bb:bb};
+}
+/* 合成一个几何体，每个材质一组（geometry.groups[i].materialKey）：单独显示的人物、手用 */
+Kit.prototype.groupedGeometry=function(){
+  var keys=Object.keys(this.B).filter(function(k){ return this.B[k].v>0; },this), nv=0, ni=0, k, b, j;
+  keys.forEach(function(k){ nv+=this.B[k].v; ni+=this.B[k].ni; },this);
+  var P=new Float32Array(nv*3), N=new Int8Array(nv*3), C=new Float32Array(nv*3), U=new Float32Array(nv*2), I=new Uint32Array(ni), v=0, t=0, groups=[];
+  for(var q=0;q<keys.length;q++){
+    k=keys[q]; b=this.B[k];
+    P.set(b.P.subarray(0,b.v*3),v*3); N.set(b.N.subarray(0,b.v*3),v*3); C.set(b.C.subarray(0,b.v*3),v*3); U.set(b.U.subarray(0,b.v*2),v*2);
+    for(j=0;j<b.ni;j++) I[t+j]=b.I[j]+v;
+    groups.push({start:t,count:b.ni,materialIndex:q,materialKey:k});
+    v+=b.v; t+=b.ni;
+  }
+  var g=geoFromArrays(P,N,C,U,I,nv,ni);
+  groups.forEach(function(gr){ g.addGroup(gr.start,gr.count,gr.materialIndex); g.groups[g.groups.length-1].materialKey=gr.materialKey; });
+  return g;
 };
 /* 用于小件（人物等）：把 Kit 合成一个几何体，交给调用者自己挂材质 */
 Kit.prototype.mergedGeometry=function(){

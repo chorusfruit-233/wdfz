@@ -11,7 +11,7 @@ var Quality=(function(){
     {id:4,label:'真实',dpr:2,scale:1,texture:2048,segments:2.6,grass:20000,rain:3000,moths:220,shadow:4096,torchShadow:2048,ceilingShadow:1024,samples:8,ao:0.5,
       smooth:true,pbr:true,bloom:0.32,realAudio:true}
   ].map(function(p,i){
-    Object.assign(p,{lodLow:i===0,relief:i>=1,fenceStep:[0.9,0.6,0.45,0.3,0.22][i],facadeDetail:i>=2,
+    Object.assign(p,{lodLow:i===0,lod:[3,2,2,1,0][i],relief:i>=1,fenceStep:[0.9,0.6,0.45,0.3,0.22][i],facadeDetail:i>=2,
       gazeEyes:[14,24,24,36,44][i],gazeFloat:[4,8,8,12,14][i],flowers:[7,14,14,28,35][i],
       smooth:!!p.smooth,pbr:!!p.pbr,bloom:p.bloom||0,realAudio:!!p.realAudio});
     return Object.freeze(p);

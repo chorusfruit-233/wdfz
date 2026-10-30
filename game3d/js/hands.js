@@ -293,11 +293,25 @@ function handBuild(poseName){
   }
   return M;
 }
+/* Blender 建的手（tools/blender/assets/handheld.py）：照着真人手的照片量的比例，整块皮肤、贴着指尖的指甲片，
+   指缝、掌心的接触阴影烘在顶点色里；三种拿法和下面现场搭的一样摆，左手把右手镜像。没有模型时照旧现场搭 */
+function handAssetLod(pose){ var a=Assets.get('hand_'+pose); return a?a.pk.lod:'k'; }
+function handMirror(g){
+  var p=g.attributes.position, n=g.attributes.normal, ix=g.index.array, k;
+  for(k=0;k<p.count;k++){ p.setX(k,-p.getX(k)); n.setX(k,-n.getX(k)); }
+  for(k=0;k<ix.length;k+=3){ var t=ix[k+1]; ix[k+1]=ix[k+2]; ix[k+2]=t; }
+  g.computeBoundingSphere();
+  return g;
+}
 function handGeo(side,pose){
-  var key=pose+'|'+side;
-  if(!HAND_GEO[key]) HAND_GEO[key]=handBuild(pose).geometry(side<0);
+  var lod=handAssetLod(pose), key=pose+'|'+side+'|'+lod;
+  if(HAND_GEO[key]) return HAND_GEO[key];
+  if(lod!=='k'){ var K=new Kit(); K.asset('hand_'+pose,0,0,0,0,{uo:0,vo:0}); var g=K.mergedGeometry(); HAND_GEO[key]=side<0?handMirror(g):g; }
+  else HAND_GEO[key]=handBuild(pose).geometry(side<0);
   return HAND_GEO[key];
 }
+/* 手里的东西的模型（没有就 null） */
+function itemAssetGeo(name){ if(!Assets.get(name)) return null; var K=new Kit(); K.asset(name,0,0,0,0,{uo:0,vo:0}); return K.mergedGeometry(); }
 
 /* ---- 手里的东西：都以握持中心为原点 ---- */
 function handMat(col,basic){ return basic?new THREE.MeshBasicMaterial({color:col,fog:false}):new THREE.MeshLambertMaterial({color:col}); }
@@ -312,7 +326,7 @@ function buildTorch(){
   TK.cyl('metal',0,0.236,0,0.0365,0.0365,0.006,20,linHex(0x4a4f55),1.0,false);              /* 灯头前面一圈亮边 */
   TK.box('metal',0.0232,0.118,0,0.006,0.016,0.011,linHex(0x7a2a22),1.1);                     /* 开关按钮 */
   TK.box('metal',-0.0236,0.06,0,0.003,0.05,0.006,linHex(0x15181b),1.0);                     /* 挂绳扣 */
-  var tb=new THREE.Mesh(TK.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
+  var tb=new THREE.Mesh(itemAssetGeo('torch_body')||TK.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
   tb.rotation.x=-PI/2; tb.position.z=0.105; torch.add(tb);
   var refl=new THREE.Mesh(new THREE.CylinderGeometry(0.029,0.012,0.022,18,1,true),new THREE.MeshLambertMaterial({color:0x8a8e92,side:THREE.BackSide}));
   refl.rotation.x=-PI/2; refl.position.z=0.105-0.236; torch.add(refl);                       /* 反光杯 */
@@ -331,7 +345,7 @@ function buildPhone(){
   K.cyl('metal',-0.013,0.0055,-0.045,0.0045,0.0045,0.0015,10,linHex(0x08090a),1);
   K.box('metal',0.0345,0,-0.02,0.002,0.003,0.016,linHex(0x2a2d31),1);                       /* 侧键 */
   K.box('metal',0.0345,0,0.01,0.002,0.003,0.010,linHex(0x2a2d31),1);
-  var body=new THREE.Mesh(K.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
+  var body=new THREE.Mesh(itemAssetGeo('phone_body')||K.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
   phone.add(body);
   var ps=new THREE.Mesh(new THREE.PlaneGeometry(0.059,0.124),handMat(0x9fd0e8,true));
   ps.rotation.x=PI/2; ps.position.y=-0.0049; phone.add(ps);
@@ -341,7 +355,8 @@ function buildPhone(){
 }
 /* 雨伞：伞柄是握持点，伞杆沿 -z（整组转成朝上）；八片伞面在伞骨之间往下塌一点，下面看得见伞骨和撑杆 */
 function buildBrolly(){
-  var brolly=new THREE.Group(), K=new Kit(), i;
+  var brolly=new THREE.Group(), K=new Kit(), i, ag=itemAssetGeo('umbrella');
+  if(ag){ brolly.add(new THREE.Mesh(ag,new THREE.MeshLambertMaterial({vertexColors:true}))); return brolly; }   /* 伞面两面都建了 */
   var shaftLen=0.98, top=-shaftLen, ribN=8, R=0.62, drop=0.22;
   K.rod('metal',0,0,0.05,0,0,top-0.04,0.0075,0.0065,8,linHex(0x3a3d40),1);                 /* 伞杆 */
   K.rod('plastic',0,0,0.055,0,0,-0.07,0.016,0.016,12,linHex(0x22180f),1);                  /* 泡棉握把 */
@@ -399,11 +414,29 @@ function handArm(side){
   g.userData.side=side;
   return g;
 }
+function handItemLod(item){
+  var name={torch:'torch_body',phone:'phone_body',brolly:'umbrella'}[item],a=Assets.get(name);
+  return a?a.pk.lod:'k';
+}
+function makeHandItem(item){
+  var g=item==='torch'?buildTorch():item==='phone'?buildPhone():buildBrolly();
+  g.userData.assetLod=handItemLod(item);
+  return g;
+}
+function disposeHandItem(g){
+  var geometries=new Set(),materials=new Set();
+  g.traverse(function(o){
+    if(o.geometry)geometries.add(o.geometry);
+    if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){materials.add(m);});
+  });
+  geometries.forEach(function(geometry){geometry.dispose();});
+  materials.forEach(function(material){material.dispose();});
+}
 function buildHands(){
   if(HANDS.built||!GLR.cam) return;
   HANDS.built=true;
   HANDS.L=handArm(-1); HANDS.R=handArm(1);
-  HANDS.items={torch:buildTorch(),phone:buildPhone(),brolly:buildBrolly()};
+  HANDS.items={torch:makeHandItem('torch'),phone:makeHandItem('phone'),brolly:makeHandItem('brolly')};
   /* 手单独放一个场景，渲染层独立绘制再合成（engine/scene.js）：贴着墙也不会被截断。
      灯光照着主场景的环境光、天光、身边的补光每帧抄一份。 */
   var hs=new THREE.Scene(), root=new THREE.Group();
@@ -417,9 +450,14 @@ function buildHands(){
 /* 让 hand 拿着 item：换成对应的手势，物品挂到这只手上，摆到这种拿法的位置 */
 function handHold(hand,item){
   var it=HANDS.items[item]; if(!it) return;
-  var side=hand.userData.side, mesh=HANDS.meshes[side<0?'L':'R'];
+  if(it.userData.assetLod!==handItemLod(item)){
+    if(it.parent)it.parent.remove(it);
+    disposeHandItem(it);
+    it=HANDS.items[item]=makeHandItem(item);
+  }
+  var side=hand.userData.side, mesh=HANDS.meshes[side<0?'L':'R'], gk=item+'|'+handAssetLod(item);
+  if(hand.userData.gk!==gk){ mesh.geometry=handGeo(side,item); hand.userData.gk=gk; }     /* 换了画质、模型包换了一档，手也跟着换 */
   if(hand.userData.pose!==item){
-    mesh.geometry=handGeo(side,item);
     hand.userData.pose=item;
     var pl=HAND_PLACE[item];
     hand.userData.base=[side*pl.p[0],pl.p[1],pl.p[2]];

@@ -80,6 +80,11 @@ class BrowserCase(unittest.TestCase):
     def assert_js(self, page, expression, message=None):
         self.assertTrue(page.evaluate(expression), message or expression)
 
+    def set_quality(self, page, q):
+        """换画质并等这一档的模型包读好：包是按需异步读的，读好以后当前场景会再重建一次。"""
+        page.evaluate('q=>Settings.q(q)', q)
+        page.wait_for_function('Assets.ready()', timeout=60000)
+
     def touch(self, page, kind, points):
         session = getattr(page, '_controls_cdp', None)
         if session is None:

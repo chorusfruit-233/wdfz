@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>模型查看</title>
+<style>
+  :root{--bg:#5d666e;--fg:#e8ecef;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.5 system-ui,sans-serif;overflow:hidden}
+  canvas{display:block}
+  #info{position:fixed;left:8px;top:6px;white-space:pre;text-shadow:0 1px 2px #000;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="info"></div>
+<!-- 开发工具：用游戏同一套材质渲染资源包里的模型。
+     tools/asset_viewer.html?q=4&a=desk_student,chair_student&yaw=35&pitch=22&cols=2&light=studio&bg=5d666e
+     q：画质档（0–4，决定读哪一档模型和材质）；a：模型名，逗号分开，每个一格；yaw/pitch：机位角（度）；
+     zoom：机位离物体的远近倍数；light：studio（棚拍）/ dark（暗处，打一盏手电似的聚光）；list=1 列出包里所有模型 -->
+<script src="../game3d/lib/three.min.js"></script>
+<script src="../game3d/js/core.js"></script>
+<script src="../game3d/js/quality.js"></script>
+<script>
+  var QS=new URLSearchParams(location.search);
+  QUALITY=Quality.normalize(+(QS.get('q')||2));
+  localStorage.setItem('zw3d_set',JSON.stringify({q:QUALITY}));
+</script>
+<script src="../game3d/js/model/assets.js"></script>
+<script src="../game3d/js/render.js"></script>
+<script src="../game3d/js/model/materials.js"></script>
+<script src="../game3d/js/model/kit.js"></script>
+<script>
+(function(){
+  var W=innerWidth,H=innerHeight,q=Quality.get();
+  var renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+  renderer.setPixelRatio(1);renderer.setSize(W,H);
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.setScissorTest(true);
+  document.body.appendChild(renderer.domElement);
+  GLR.renderer=renderer;
+  var names=(QS.get('a')||'').split(',').filter(Boolean);
+  var info=document.getElementById('info');
+  var pk=ASSETS.packs[q.lod];
+  if(QS.get('list')||!names.length){ info.textContent=pk?Object.keys(pk.assets).join('\n'):'没有资源包'; window.VIEW_DONE=true; return; }
+  var cols=+(QS.get('cols')||Math.ceil(Math.sqrt(names.length))), rows=Math.ceil(names.length/cols);
+  var yaw=(+(QS.get('yaw')||35))*Math.PI/180, pitch=(+(QS.get('pitch')||22))*Math.PI/180, zoom=+(QS.get('zoom')||1);
+  var dark=QS.get('light')==='dark', bg=new THREE.Color('#'+(QS.get('bg')||(dark?'15191c':'5d666e')));
+  var stats=[], ENV=null;
+  /* 「真实」档材质要的环境反射：一间灰色的屋子，顶上几块亮的面板 */
+  function envTex(){
+    if(ENV) return ENV;
+    var pm=new THREE.PMREMGenerator(renderer), sc=new THREE.Scene(), k;
+    sc.add(new THREE.Mesh(new THREE.SphereGeometry(10,32,16),new THREE.MeshBasicMaterial({color:0x6a6e70,side:THREE.BackSide})));
+    for(k=-1;k<=1;k++){ var b=new THREE.Mesh(new THREE.BoxGeometry(4,0.2,1.2),new THREE.MeshBasicMaterial({color:0xf4f4f0})); b.position.set(k*3.5,8,0); sc.add(b); }
+    ENV=pm.fromScene(sc,0.03).texture; return ENV;
+  }
+  names.forEach(function(name,i){
+    var scene=new THREE.Scene(); scene.background=bg;
+    if(q.pbr) scene.environment=envTex();
+    var g=Assets.mesh(name);
+    if(!g){ stats.push(name+'：没有'); return; }
+    var tri=0; g.traverse(function(o){ if(o.geometry){ o.castShadow=o.receiveShadow=true; tri+=o.geometry.index.count/3; } });
+    scene.add(g);
+    var bb=new THREE.Box3().setFromObject(g), c=bb.getCenter(new THREE.Vector3()), s=bb.getSize(new THREE.Vector3()), r=s.length()*0.5+0.02;
+    var floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:dark?0x2a2e30:0x8a8f92,roughness:0.9}));
+    floor.rotation.x=-Math.PI/2; floor.position.y=bb.min.y-0.0005; floor.receiveShadow=true; scene.add(floor);
+    if(dark){
+      scene.add(new THREE.AmbientLight(0x9aa6b0,0.25));
+      var sp=new THREE.SpotLight(0xdceaf0,40,30,0.5,0.6,1.2); sp.castShadow=true; sp.shadow.mapSize.set(2048,2048); scene.add(sp); scene.userData.spot=sp;
+    }else{
+      scene.add(new THREE.HemisphereLight(0xdfe8ee,0x4a4540,1.1));
+      var d=new THREE.DirectionalLight(0xfff4e6,2.2); d.position.set(c.x+r*3,c.y+r*5,c.z+r*4); d.target.position.copy(c); scene.add(d.target);
+      d.castShadow=true; d.shadow.mapSize.set(2048,2048); var sc=d.shadow.camera; sc.left=sc.bottom=-r*1.6; sc.right=sc.top=r*1.6; sc.near=0.01; sc.far=r*20; d.shadow.bias=-0.0004; d.shadow.normalBias=0.01;
+      scene.add(d);
+      var f=new THREE.DirectionalLight(0xbfd4e6,0.6); f.position.set(c.x-r*4,c.y+r*1.5,c.z-r*2); scene.add(f);
+    }
+    var cw=W/cols, ch=H/rows, cam=new THREE.PerspectiveCamera(30,cw/ch,0.01,200);
+    var dist=r/Math.sin(15*Math.PI/180)*zoom*(cw/ch<1?1/(cw/ch):1)*0.92;
+    cam.position.set(c.x+Math.sin(yaw)*Math.cos(pitch)*dist,c.y+Math.sin(pitch)*dist,c.z+Math.cos(yaw)*Math.cos(pitch)*dist); cam.lookAt(c);
+    if(scene.userData.spot){ var sp2=scene.userData.spot; sp2.position.copy(cam.position).add(new THREE.Vector3(0.3,0.4,0)); sp2.target.position.copy(c); scene.add(sp2.target); }
+    var col=i%cols, row=Math.floor(i/cols), x=col*cw, y=H-(row+1)*ch;
+    renderer.setViewport(x,y,cw,ch); renderer.setScissor(x,y,cw,ch);
+    renderer.render(scene,cam);
+    stats.push(name+'  '+tri+' △  '+s.x.toFixed(2)+'×'+s.y.toFixed(2)+'×'+s.z.toFixed(2)+' m');
+  });
+  info.textContent='L'+q.lod+' · '+q.label+'\n'+stats.join('\n');
+  window.VIEW_DONE=true;
+})();
+</script>
+</body>
+</html>

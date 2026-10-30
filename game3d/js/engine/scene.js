@@ -40,6 +40,7 @@ ThreeBackend.disposeGroup=function(g,keepData){
   if(!g)return;
   var geometries=new Set(),materials=new Set();
   g.traverse(function(o){
+    if(o.isInstancedMesh&&!keepData)o.dispose();          /* 实例矩阵、实例颜色的显存；几何体是各房间共用的 */
     if(o.geometry&&!(o.geometry.userData&&o.geometry.userData.shared))geometries.add(o.geometry);
     if(!keepData&&o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){if(!(m.userData&&m.userData.shared))materials.add(m);});
   });

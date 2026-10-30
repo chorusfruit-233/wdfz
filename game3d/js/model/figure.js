@@ -53,7 +53,19 @@ function figShoe(K,m,x,z,c){
   K.blob(m,x,0.036,z+0.100,0.050,0.036,0.055,c,1,7);
   K.bevel(m,x,0.012,z-0.005,0.102,0.024,0.27,c,1,0.01);                       /* 鞋底比鞋面宽一圈 */
 }
+/* Blender 建的模型（tools/blender/assets/figures.py）：按这一档的模型包合成一个几何体，标上种类（换画质时按它换）。
+   自己缓存，不随 Assets.clearCache 换掉：回到原来的画质还是同一个几何体 */
+function figAssetGeo(name,flag,val){
+  var a=Assets.get(name); if(!a) return null;
+  var key='A|'+name+'|'+a.pk.lod;
+  if(FIG_GEO[key]) return FIG_GEO[key];
+  var K=new Kit(); K.asset(name,0,0,0,0,{uo:0,vo:0});
+  var g=K.mergedGeometry(); g.userData={shared:true}; g.userData[flag]=val;
+  FIG_GEO[key]=g;
+  return g;
+}
 function figGeo(kind){
+  var ag=figAssetGeo('fig_'+(FIG_SPEC[kind]?kind:'tall'),'figKind',kind); if(ag) return ag;
   var key=kind+'|'+Quality.get().segments;
   if(FIG_GEO[key]) return FIG_GEO[key];
   var sp=FIG_SPEC[kind]||FIG_SPEC.tall, K=new Kit(), m='dark', c=0xffffff, t=sp.thin;
@@ -139,6 +151,7 @@ function figMesh(kind,mat,scale){
 var FX_GEO={}, FX_VC_MAT=null;
 function fxVCMat(){ if(!FX_VC_MAT) FX_VC_MAT=new THREE.MeshBasicMaterial({vertexColors:true,fog:true,side:THREE.DoubleSide});   /* 镜头钻进去也看得见（钟罩下来的时候） */ return FX_VC_MAT; }
 function fxGeo(name){
+  var ag=figAssetGeo('fx_'+name,'fxKind',name); if(ag) return ag;
   var key=name+'|'+Quality.get().segments;
   if(FX_GEO[key]) return FX_GEO[key];
   var K=new Kit(), m='dark', i;
