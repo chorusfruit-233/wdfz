@@ -505,7 +505,7 @@ GeoBuilder.prototype.buildChunks=function(size){
    opts.chunk —— 打开切块：顶点多的材质按位置切成几块（每块约 KIT_CHUNK_V 个顶点，最多 KIT_CHUNK_MAX 块），视野外的块不画。
    opts.inst  —— 打开实例化：资源包里标了 i 的模型（课桌椅、床、灯……一层楼重复几十上百次）不抄顶点，
                  build() 时每种模型、每个材质组一个 InstancedMesh（按 KIT_INST_CELL 米分格，视野外的格子不画）。 */
-function Kit(opts){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; opts=opts||{}; this.cull=opts.cull||null; this.chunk=opts.chunk||0; this.inst=opts.inst||0; this.IN=null; }
+function Kit(opts){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; opts=opts||{}; this.cull=opts.cull||null; this.chunk=opts.chunk||0; this.inst=opts.inst||0; this.sparse=opts.sparse||0; this.IN=null; }
 var KIT_CHUNK_V=20000, KIT_CHUNK_MAX=8;   /* 切得太碎绘制次数会变多（手机上每次绘制都有开销），所以按顶点数定块数 */
 Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder(matUV(key),this); return this.B[key]; };
 Kit.prototype.frame=function(x,z,rot,y){ this.T.x=x||0; this.T.z=z||0; this.T.y=y||0; this.T.c=Math.cos(rot||0); this.T.s=Math.sin(rot||0); return this; };
@@ -568,20 +568,50 @@ Kit.prototype.prism=function(m,x,y,z,prof,depth,col,sh,r){
 };
 var KIT_INST_CELL=24;
 var KIT_M4=null, KIT_C=null;
-Kit.prototype._buildInstances=function(grp){
-  if(!this.IN) return;
-  if(!KIT_M4){ KIT_M4=new THREE.Matrix4(); KIT_C=new THREE.Color(); }
-  var name, M=KIT_M4, col=KIT_C;
+/* 同一格里只有一两件小模型时，逐材质复制进普通网格可避免大量单实例绘制。
+   半透明材质仍单独排序；大模型仍共用几何体，避免占用过多内存。 */
+Kit.prototype._instanceBuckets=function(){
+  var result=[],name;
+  if(!this.IN)return result;
   for(name in this.IN){
-    var L=this.IN[name], pk=L.pk, m=L.m, buckets={}, k;
-    /* 同一种换材质、同一格的放在一起 */
+    var L=this.IN[name],buckets={};
     L.list.forEach(function(it){
       var key=it.rk+'|'+Math.floor(it.X.x/KIT_INST_CELL)+','+Math.floor(it.X.z/KIT_INST_CELL);
       (buckets[key]||(buckets[key]=[])).push(it);
     });
-    for(k in buckets){
-      var list=buckets[k], remap=list[0].remap, gi;
+    for(var key in buckets)result.push({name:name,pk:L.pk,m:L.m,list:buckets[key]});
+  }
+  return result;
+};
+Kit.prototype._mergeSparseInstances=function(buckets){
+  var self=this,builders={};
+  if(!this.sparse)return builders;
+  buckets.forEach(function(bucket){
+    var list=bucket.list,m=bucket.m,pk=bucket.pk;
+    if(list.length>self.sparse)return;
+    bucket.merged={};
+    m.g.forEach(function(g,gi){
+      var mk=g[0],remap=list[0].remap;
+      if(remap&&remap[mk]!==undefined)mk=remap[mk];
+      if(!mk||mk==='glass'||mk==='grime'||g[3]*list.length>2000)return;
+      bucket.merged[gi]=true;
+      list.forEach(function(it){
+        var color=Assets.rgb(it.cols[gi]),shade=it.shade;
+        var builder=builders[mk]||(builders[mk]=new GeoBuilder(matUV(mk),self));
+        builder.appendAsset(pk,m.b,g,it.X,[color[0]*shade,color[1]*shade,color[2]*shade],0,0,1);
+      });
+    });
+  });
+  return builders;
+};
+Kit.prototype._buildInstances=function(grp,buckets){
+  if(!this.IN) return;
+  if(!KIT_M4){ KIT_M4=new THREE.Matrix4(); KIT_C=new THREE.Color(); }
+  var M=KIT_M4, col=KIT_C;
+  buckets.forEach(function(bucket){
+      var name=bucket.name,pk=bucket.pk,m=bucket.m,list=bucket.list,remap=list[0].remap,gi;
       for(gi=0;gi<m.g.length;gi++){
+        if(bucket.merged&&bucket.merged[gi])continue;
         var g=m.g[gi], mk=g[0];
         if(remap&&remap[mk]!==undefined) mk=remap[mk];
         if(!mk) continue;
@@ -602,37 +632,39 @@ Kit.prototype._buildInstances=function(grp){
         mesh.userData.matKey=mk; mesh.userData.asset=name;
         grp.add(mesh);
       }
-    }
-  }
+  });
 };
 Kit.prototype.build=function(group){
-  var grp=group||new THREE.Group(), k;
-  for(k in this.B){
-    var b=this.B[k]; if(!b.v) continue;
-    var nc=0, geos, j;
-    if(this.chunk) nc=lodLow()?(b.v>65535?Math.ceil(b.v/60000):0)          /* 流畅档（手机）绘制次数更要紧：只在超过 16 位索引时才拆 */
-                              :Math.min(KIT_CHUNK_MAX,Math.floor(b.v/KIT_CHUNK_V));
-    geos=(nc>=2)?b.buildChunks(b.cellFor(nc)):[b.build()];
-    for(j=0;j<geos.length;j++){
-      var mesh=new THREE.Mesh(geos[j],matOf(k));
-      if(k==='glass') mesh.renderOrder=2;
-      mesh.userData.matKey=k;
-      grp.add(mesh);
+  var grp=group||new THREE.Group(), buckets=this._instanceBuckets(),sparse=this._mergeSparseInstances(buckets),self=this;
+  function addBuilders(builders){
+    for(var k in builders){
+      var b=builders[k]; if(!b.v) continue;
+      var nc=0, geos, j;
+      if(self.chunk) nc=lodLow()?(b.v>65535?Math.ceil(b.v/60000):0)       /* 流畅档（手机）绘制次数更要紧：只在超过 16 位索引时才拆 */
+                                 :Math.min(KIT_CHUNK_MAX,Math.floor(b.v/KIT_CHUNK_V));
+      geos=(nc>=2)?b.buildChunks(b.cellFor(nc)):[b.build()];
+      for(j=0;j<geos.length;j++){
+        var mesh=new THREE.Mesh(geos[j],matOf(k));
+        if(k==='glass') mesh.renderOrder=2;
+        mesh.userData.matKey=k;
+        grp.add(mesh);
+      }
     }
   }
-  this._buildInstances(grp);                 /* 实例化的放在后面：前面是这个房间自己的网格，后面是共用几何体的实例 */
+  addBuilders(this.B);addBuilders(sparse);
+  this._buildInstances(grp,buckets);         /* 实例化的放在后面：前面是这个房间自己的网格，后面是共用几何体的实例 */
   return grp;
 };
 /* ---- 资源包里的模型（Blender 建模，见 assets.js）----
    并进对应材质的 GeoBuilder：位置按包里的外包盒还原、跟着 frame 和这次的转角走；颜色乘染色；
    贴图坐标是模型自己的（米），除以材质的平铺尺寸，每次摆放错开一点，一排课桌的木纹不会一模一样。 */
-GeoBuilder.prototype.appendAsset=function(pk,b,g,X,rgbMul,uo,vo){
+GeoBuilder.prototype.appendAsset=function(pk,b,g,X,rgbMul,uo,vo,uvScale){
   var nv=g[3], ni=g[5], v=this.v, i0=this.ni, k;
   this._grow(v+nv,i0+ni);
   var POS=pk.pos, NRM=pk.nrm, COL=pk.col, UVS=pk.uv, IDX=pk.idx, s=X.k||1, q=X.q||1;
   var P=this.P, N=this.N, C=this.C, U=this.U, I=this.I;
   var bx=b[0], by=b[1], bz=b[2], ex=(b[3]-b[0])/65535, ey=(b[4]-b[1])/65535, ez=(b[5]-b[2])/65535;
-  var cc=X.c, ss=X.s, ox=X.x, oy=X.y, oz=X.z, inv=1/this.uv;
+  var cc=X.c, ss=X.s, ox=X.x, oy=X.y, oz=X.z, inv=1/this.uv,us=uvScale===undefined?s:uvScale;
   var cs=g[6]/255, cr=cs*rgbMul[0], cg=cs*rgbMul[1], cb=cs*rgbMul[2];
   var src=g[2]*3, src2=g[2]*2, dst=v*3, dst2=v*2;
   for(k=0;k<nv;k++,src+=3,src2+=2,dst+=3,dst2+=2){
@@ -642,7 +674,7 @@ GeoBuilder.prototype.appendAsset=function(pk,b,g,X,rgbMul,uo,vo){
     if(q!==1){ nx/=q; var nl=127/Math.sqrt(nx*nx+ny*ny+nz*nz); nx*=nl; ny*=nl; nz*=nl; }   /* 沿 x 拉伸：法线按逆转置变换 */
     N[dst]=Math.round(nx*cc+nz*ss); N[dst+1]=Math.round(ny); N[dst+2]=Math.round(-nx*ss+nz*cc);
     C[dst]=COL[src]*cr; C[dst+1]=COL[src+1]*cg; C[dst+2]=COL[src+2]*cb;
-    U[dst2]=(UVS[src2]/1024*s+uo)*inv; U[dst2+1]=(UVS[src2+1]/1024*s+vo)*inv;
+    U[dst2]=(UVS[src2]/1024*us+uo)*inv; U[dst2+1]=(UVS[src2+1]/1024*us+vo)*inv;
   }
   var isrc=g[4];
   for(k=0;k<ni;k++) I[i0+k]=v+IDX[isrc+k];

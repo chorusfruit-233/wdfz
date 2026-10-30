@@ -114,6 +114,7 @@
     </div>
     <div class="mends" id="mends" style="display:none"></div>
     <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
+    <div id="assetNotice" role="status" aria-live="polite" hidden><span id="assetNoticeText"></span><button id="assetRetry" type="button" onclick="Assets.retry()">重试</button></div>
     <div class="mctl">
       <label>画面 <select id="mq" onchange="Settings.q(+this.value)">
         <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option><option value="4">真实</option></select></label>

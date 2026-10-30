@@ -12,7 +12,24 @@
      Assets.mesh(名字)                                                           —— 单独一件，按材质分好的一组网格 */
 'use strict';
 
-var ASSETS={packs:{},loading:{},waiters:{}};
+var ASSETS={packs:{},loading:{},waiters:{},errors:{}};
+function assetNotice(text,busy){
+  if(typeof document==='undefined')return;
+  var box=document.getElementById('assetNotice'),message=document.getElementById('assetNoticeText'),btn=document.getElementById('assetRetry');
+  if(!box)return;
+  box.hidden=!text;if(message)message.textContent=text||'';
+  if(btn)btn.disabled=!!busy;
+}
+function assetLoadFailed(lod){
+  if(ASSETS.packs[lod])return;
+  delete ASSETS.loading[lod];ASSETS.errors[lod]=true;
+  var callbacks=ASSETS.waiters[lod]||[];delete ASSETS.waiters[lod];
+  if(!Object.keys(ASSETS.packs).length)assetNotice('模型加载失败，请检查连接后重试。',false);
+  else if(typeof Assets!=='undefined'&&Assets.want()===lod&&typeof S!=='undefined'&&S.screen==='play'&&typeof toast==='function')
+    toast('模型加载失败，继续使用已有画质');
+  callbacks.forEach(function(f){try{f(null);}catch(e){setTimeout(function(){throw e;});}});
+}
+function assetLoadFinished(lod){if(!ASSETS.packs[lod])assetLoadFailed(lod);}
 /* ---- 解压：标准的 deflate（RFC 1951，无头），查表解哈夫曼码。包在读进来的那一刻同步解开 ---- */
 var INFL=(function(){
   var LB=[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258],
@@ -37,15 +54,17 @@ var INFL=(function(){
   var FIXL=null, FIXD=null;
   return function(src,out){
     var sp=0, op=0, bb=0, bc=0, sl=src.length;
-    function need(n){ while(bc<n){ bb|=(sp<sl?src[sp]:0)<<bc; sp++; bc+=8; } }
+    function need(n){ while(bc<n){ if(sp>=sl+2)throw new Error('模型压缩数据不完整'); bb|=(sp<sl?src[sp]:0)<<bc; sp++; bc+=8; } }
     function bits(n){ need(n); var v=bb&((1<<n)-1); bb>>>=n; bc-=n; return v; }
-    function sym(H){ need(H.m); var e=H.t[bb&((1<<H.m)-1)], L=e&15; bb>>>=L; bc-=L; return e>>>4; }
+    function sym(H){ if(!H.m)throw new Error('无效的模型编码'); need(H.m); var e=H.t[bb&((1<<H.m)-1)], L=e&15; if(!L)throw new Error('无效的模型编码'); bb>>>=L; bc-=L; return e>>>4; }
     var fin, type, i;
     do{
       fin=bits(1); type=bits(2);
       if(type===0){                                      /* 不压缩的块：对齐到字节 */
         var drop=bc&7; bb>>>=drop; bc-=drop; sp-=bc>>3; bb=0; bc=0;
-        var len=src[sp]|(src[sp+1]<<8); sp+=4;
+        if(sp+4>sl)throw new Error('模型压缩数据不完整');
+        var len=src[sp]|(src[sp+1]<<8), inverse=src[sp+2]|(src[sp+3]<<8); sp+=4;
+        if(((len^inverse)&65535)!==65535||sp+len>sl||op+len>out.length)throw new Error('无效的模型数据块');
         out.set(src.subarray(sp,sp+len),op); sp+=len; op+=len;
         continue;
       }
@@ -54,25 +73,28 @@ var INFL=(function(){
         if(!FIXL){ var l=new Uint8Array(288); for(i=0;i<288;i++) l[i]=i<144?8:(i<256?9:(i<280?7:8)); FIXL=table(l,288);
           var d=new Uint8Array(30); for(i=0;i<30;i++) d[i]=5; FIXD=table(d,30); }
         HL=FIXL; HD=FIXD;
-      }else{
+      }else if(type===2){
         var hl=bits(5)+257, hd=bits(5)+1, hc=bits(4)+4, cl=new Uint8Array(19);
         for(i=0;i<hc;i++) cl[ORD[i]]=bits(3);
         var HC=table(cl,19), lens=new Uint8Array(hl+hd), n=0;
         while(n<hl+hd){
           var s=sym(HC);
           if(s<16) lens[n++]=s;
-          else if(s===16){ var pv=lens[n-1], r=3+bits(2); while(r--) lens[n++]=pv; }
+          else if(s===16){ if(!n)throw new Error('无效的模型编码'); var pv=lens[n-1], r=3+bits(2); while(r--) lens[n++]=pv; }
           else if(s===17){ n+=3+bits(3); }
           else{ n+=11+bits(7); }
         }
+        if(n>hl+hd)throw new Error('无效的模型编码');
         HL=table(lens.subarray(0,hl),hl); HD=table(lens.subarray(hl),hd);
-      }
+      }else throw new Error('无效的模型压缩类型');
       for(;;){
         var c=sym(HL);
-        if(c<256){ out[op++]=c; continue; }
+        if(c<256){ if(op>=out.length)throw new Error('模型数据超过预期长度'); out[op++]=c; continue; }
         if(c===256) break;
         c-=257;
+        if(c<0||c>=LB.length)throw new Error('无效的模型长度');
         var ln=LB[c]+(LX[c]?bits(LX[c]):0), dc=sym(HD), ds=DB[dc]+(DX[dc]?bits(DX[dc]):0), from=op-ds;
+        if(dc>=DB.length||!Number.isFinite(ds)||from<0||op+ln>out.length)throw new Error('无效的模型距离');
         while(ln--) out[op++]=out[from++];
       }
     }while(!fin);
@@ -81,8 +103,9 @@ var INFL=(function(){
 })();
 /* 解开以后是各分量分开、16 位拆成低 / 高字节面的差分数据：按组做前缀和还原 */
 function assetUnpack(meta,z){
+  if(!Number.isSafeInteger(meta.raw)||meta.raw<0||meta.raw>64*1024*1024)throw new Error('模型数据长度不正确');
   var nv=meta.nv, ni=meta.ni, S=new Uint8Array(meta.raw), k, i, g, o=0;
-  INFL(z,S);
+  if(INFL(z,S)!==meta.raw)throw new Error('模型数据不完整');
   var pos=new Uint16Array(nv*3), nrm=new Int8Array(nv*3), col=new Uint8Array(nv*3), uv=new Int16Array(nv*2), idx=new Uint16Array(ni);
   for(k=0;k<3;k++){ for(i=0;i<nv;i++) pos[i*3+k]=S[o+i]|(S[o+nv+i]<<8); o+=nv*2; }
   for(k=0;k<3;k++){ for(i=0;i<nv;i++) nrm[i*3+k]=S[o+i]; o+=nv; }
@@ -107,7 +130,7 @@ function ASSET_PACK(lod,meta,b64){
   for(i=0;i<n;i++) u8[i]=bin.charCodeAt(i);
   var d=assetUnpack(meta,u8);
   ASSETS.packs[lod]={lod:lod,meta:meta,assets:meta.assets,pos:d.pos,nrm:d.nrm,col:d.col,uv:d.uv,idx:d.idx};
-  delete ASSETS.loading[lod];
+  delete ASSETS.loading[lod];delete ASSETS.errors[lod];assetNotice('',false);
   var w=ASSETS.waiters[lod]||[]; delete ASSETS.waiters[lod];           /* 只叫等这一档的：别的档先读好不能把它们的回调吃掉 */
   w.forEach(function(f){ try{ f(lod); }catch(e){ setTimeout(function(){ throw e; }); } });
 }
@@ -131,16 +154,28 @@ var Assets=(function(){
     if(cb) (ASSETS.waiters[lod]||(ASSETS.waiters[lod]=[])).push(cb);
     if(ASSETS.loading[lod]) return false;
     ASSETS.loading[lod]=1;
-    if(typeof document==='undefined') return false;
+    if(typeof document==='undefined'){assetLoadFailed(lod);return false;}
     var s=document.createElement('script');
     s.src=ASSETS_BASE+'models_l'+lod+'.js'; s.async=true;
-    s.onerror=function(){ delete ASSETS.loading[lod]; };
+    s.onerror=function(){ assetLoadFailed(lod);s.remove(); };
+    s.onload=function(){ assetLoadFinished(lod);s.remove(); };
     document.head.appendChild(s);
     return false;
   }
   return {
     want:want,
     load:load,
+    anyReady:function(){return Object.keys(ASSETS.packs).length>0;},
+    retry:function(){
+      assetNotice('正在加载模型……',true);
+      load(want(),function(lod){
+        if(lod===null)return;
+        if(typeof Engine!=='undefined'&&Engine.ready())Engine.applyQuality();
+        if(typeof S!=='undefined'&&S.screen==='menu'&&typeof captureMenuPhoto==='function'){
+          PHOTO_TRIED=false;setTimeout(captureMenuPhoto,0);
+        }
+      });
+    },
     ready:function(lod){ return !!ASSETS.packs[lod===undefined?want():lod]; },
     /* 当前档位用哪一件：{pk 包, m 元数据}，没有就 null */
     get:function(name,lod){ var pk=packFor(name,lod===undefined?want():lod); return pk?{pk:pk,m:pk.assets[name]}:null; },
@@ -205,9 +240,16 @@ var ASSETS_BASE=(function(){
 function bootQuality(){
   var q=1;
   try{
-    var s=JSON.parse(localStorage.getItem('zw3d_set')||'null');
-    if(s&&s.q!==undefined) q=s.q;
-    else if(window.matchMedia&&!window.matchMedia('(pointer: fine)').matches&&(window.matchMedia('(pointer: coarse)').matches||'ontouchstart' in window||navigator.maxTouchPoints>0)) q=0;
+    var raw=localStorage.getItem('zw3d_set');
+    if(raw){
+      var s=JSON.parse(raw);if(s&&s.q!==undefined)q=s.q;
+    }else{
+      var touch;
+      if(window.matchMedia&&window.matchMedia('(pointer: fine)').matches)touch=false;
+      else if(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)touch=true;
+      else touch=!!('ontouchstart' in window||navigator.maxTouchPoints>0);
+      if(touch)q=0;
+    }
   }catch(e){}
   return Quality.normalize(q);
 }
@@ -216,5 +258,5 @@ function bootQuality(){
   if(typeof document==='undefined'||!document.write) return;
   var lod=Quality.get(bootQuality()).lod;
   ASSETS.loading[lod]=1;
-  document.write('<script src="'+ASSETS_BASE+'models_l'+lod+'.js"><\/script>');
+  document.write('<script src="'+ASSETS_BASE+'models_l'+lod+'.js" onerror="assetLoadFailed('+lod+')" onload="assetLoadFinished('+lod+')"><\/script>');
 })();

@@ -72,12 +72,12 @@ class ModelTest(BrowserCase):
     def test_low_quality_keeps_a_vertex_budget(self):
         page = self.page()
         n = page.evaluate("""(function(){
-          function cnt(g){ var n=0; g.traverse(function(o){ if(o.geometry&&o.geometry.attributes.position) n+=o.geometry.attributes.position.count; }); g.traverse(function(o){ if(o.geometry) o.geometry.dispose(); }); return n; }
+          function cnt(g){ var n=0; g.traverse(function(o){ if(o.geometry&&o.geometry.attributes.position) n+=o.geometry.attributes.position.count*(o.isInstancedMesh?o.count:1); }); g.traverse(function(o){ if(o.geometry) o.geometry.dispose(); }); return n; }
           var ins=0; Object.keys(INTERIORS).forEach(function(id){ S.__pianoPlaced=0; ins+=cnt(buildRoomGeometry(INTERIORS[id])); });
           return {indoor:ins, outdoor:cnt(buildOutdoorGeometry())};
         })()""")
         self.assertLess(n['indoor'], 2300000, '流畅档（手机）全校室内的顶点数')
-        self.assertLess(n['outdoor'], 270000, '流畅档室外的顶点数')
+        self.assertLess(n['outdoor'], 450000, '流畅档室外实际绘制的顶点数（含实例）')
 
     # ---------- 氛围：远处的人影 ----------
     def test_far_figure_appears_down_the_corridor_and_vanishes_up_close(self):

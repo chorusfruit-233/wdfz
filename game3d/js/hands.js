@@ -414,11 +414,29 @@ function handArm(side){
   g.userData.side=side;
   return g;
 }
+function handItemLod(item){
+  var name={torch:'torch_body',phone:'phone_body',brolly:'umbrella'}[item],a=Assets.get(name);
+  return a?a.pk.lod:'k';
+}
+function makeHandItem(item){
+  var g=item==='torch'?buildTorch():item==='phone'?buildPhone():buildBrolly();
+  g.userData.assetLod=handItemLod(item);
+  return g;
+}
+function disposeHandItem(g){
+  var geometries=new Set(),materials=new Set();
+  g.traverse(function(o){
+    if(o.geometry)geometries.add(o.geometry);
+    if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){materials.add(m);});
+  });
+  geometries.forEach(function(geometry){geometry.dispose();});
+  materials.forEach(function(material){material.dispose();});
+}
 function buildHands(){
   if(HANDS.built||!GLR.cam) return;
   HANDS.built=true;
   HANDS.L=handArm(-1); HANDS.R=handArm(1);
-  HANDS.items={torch:buildTorch(),phone:buildPhone(),brolly:buildBrolly()};
+  HANDS.items={torch:makeHandItem('torch'),phone:makeHandItem('phone'),brolly:makeHandItem('brolly')};
   /* 手单独放一个场景，渲染层独立绘制再合成（engine/scene.js）：贴着墙也不会被截断。
      灯光照着主场景的环境光、天光、身边的补光每帧抄一份。 */
   var hs=new THREE.Scene(), root=new THREE.Group();
@@ -432,6 +450,11 @@ function buildHands(){
 /* 让 hand 拿着 item：换成对应的手势，物品挂到这只手上，摆到这种拿法的位置 */
 function handHold(hand,item){
   var it=HANDS.items[item]; if(!it) return;
+  if(it.userData.assetLod!==handItemLod(item)){
+    if(it.parent)it.parent.remove(it);
+    disposeHandItem(it);
+    it=HANDS.items[item]=makeHandItem(item);
+  }
   var side=hand.userData.side, mesh=HANDS.meshes[side<0?'L':'R'], gk=item+'|'+handAssetLod(item);
   if(hand.userData.gk!==gk){ mesh.geometry=handGeo(side,item); hand.userData.gk=gk; }     /* 换了画质、模型包换了一档，手也跟着换 */
   if(hand.userData.pose!==item){

@@ -80,6 +80,7 @@ function texPackWant(){
   s.onerror=function(){ delete TEXP.loading[res]; };
   document.head.appendChild(s);
 }
+function texBootFinished(res){if(!TEXP.packs[res])delete TEXP.loading[res];}
 /* 一档读好了：已经建好的材质换上新贴图 */
 function texPackReady(){ if(MAT_TEX_SIZE) matRefreshQuality(true); }
 function texParams(t,aniso){
@@ -302,5 +303,5 @@ function matUV(key){ var d=MAT_DEF[key]; return d?d[1]:2.4; }
   if(typeof document==='undefined'||!document.write) return;
   var res=Quality.get(bootQuality()).texture>512?1024:512;
   TEXP.loading[res]=1;
-  document.write('<script src="'+ASSETS_BASE+'textures_'+res+'.js"><\/script>');
+  document.write('<script src="'+ASSETS_BASE+'textures_'+res+'.js" onerror="texBootFinished('+res+')" onload="texBootFinished('+res+')"><\/script>');
 })();

@@ -913,7 +913,7 @@ function bldBuilderOf(o){
                                                     :function(K,grp,o2,px,pz,sw,sd){ bldSmall(K,grp,o2,px,pz,sw,sd); });
 }
 function buildOutdoorGeometry(){
-  var K=new Kit({cull:{floor:0.002},chunk:64,inst:1}), grp=new THREE.Group(), i;     /* 贴地朝下的面不建；大网格按 64 米切块；重复多的模型实例化 */
+  var K=new Kit({cull:{floor:0.002},chunk:64,inst:1,sparse:Quality.get().lod>=2?2:0}), grp=new THREE.Group(), i; /* 流畅、均衡和精细合并稀疏小物件 */
   var x0=BOUND.x0*SC*U2M, y0=BOUND.y0*SC*U2M;
   var x1=BOUND.x1*SC*U2M, y1=BOUND.y1*SC*U2M;
   var cx=(x0+x1)/2, cz=(y0+y1)/2;
