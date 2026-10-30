@@ -1,0 +1,9659 @@
+{
+ "quality": {
+  "0": {
+   "rooms": {
+    "teach1": {
+     "meshes": 177,
+     "verts": 140021,
+     "tris": 80634,
+     "bytes": 1623067,
+     "inst": {
+      "meshes": 149,
+      "draws": 1349,
+      "verts": 91944,
+      "tris": 51984,
+      "bytes": 185088
+     },
+     "top": [
+      [
+       "desk_student",
+       25920
+      ],
+      [
+       "books_row_32b",
+       19200
+      ],
+      [
+       "chair_student",
+       15552
+      ],
+      [
+       "lamp_hang_120",
+       6552
+      ],
+      [
+       "fan_ceiling",
+       5220
+      ]
+     ],
+     "ms": 41.6
+    },
+    "teach2": {
+     "meshes": 177,
+     "verts": 138859,
+     "tris": 80036,
+     "bytes": 1587341,
+     "inst": {
+      "meshes": 149,
+      "draws": 1349,
+      "verts": 91944,
+      "tris": 51984,
+      "bytes": 185088
+     },
+     "top": [
+      [
+       "desk_student",
+       25920
+      ],
+      [
+       "books_row_32b",
+       19200
+      ],
+      [
+       "chair_student",
+       15552
+      ],
+      [
+       "lamp_hang_120",
+       6552
+      ],
+      [
+       "fan_ceiling",
+       5220
+      ]
+     ],
+     "ms": 31.7
+    },
+    "teach3": {
+     "meshes": 177,
+     "verts": 138737,
+     "tris": 79962,
+     "bytes": 1583611,
+     "inst": {
+      "meshes": 149,
+      "draws": 1349,
+      "verts": 91944,
+      "tris": 51984,
+      "bytes": 185088
+     },
+     "top": [
+      [
+       "desk_student",
+       25920
+      ],
+      [
+       "books_row_32b",
+       19200
+      ],
+      [
+       "chair_student",
+       15552
+      ],
+      [
+       "lamp_hang_120",
+       6552
+      ],
+      [
+       "fan_ceiling",
+       5220
+      ]
+     ],
+     "ms": 31.5
+    },
+    "teach4": {
+     "meshes": 177,
+     "verts": 138685,
+     "tris": 79936,
+     "bytes": 1582103,
+     "inst": {
+      "meshes": 149,
+      "draws": 1349,
+      "verts": 91944,
+      "tris": 51984,
+      "bytes": 185088
+     },
+     "top": [
+      [
+       "desk_student",
+       25920
+      ],
+      [
+       "books_row_32b",
+       19200
+      ],
+      [
+       "chair_student",
+       15552
+      ],
+      [
+       "lamp_hang_120",
+       6552
+      ],
+      [
+       "fan_ceiling",
+       5220
+      ]
+     ],
+     "ms": 14.9
+    },
+    "teach5": {
+     "meshes": 177,
+     "verts": 138685,
+     "tris": 79936,
+     "bytes": 1582103,
+     "inst": {
+      "meshes": 149,
+      "draws": 1349,
+      "verts": 91944,
+      "tris": 51984,
+      "bytes": 185088
+     },
+     "top": [
+      [
+       "desk_student",
+       25920
+      ],
+      [
+       "books_row_32b",
+       19200
+      ],
+      [
+       "chair_student",
+       15552
+      ],
+      [
+       "lamp_hang_120",
+       6552
+      ],
+      [
+       "fan_ceiling",
+       5220
+      ]
+     ],
+     "ms": 24.4
+    },
+    "teach6": {
+     "meshes": 9,
+     "verts": 3624,
+     "tris": 1926,
+     "bytes": 83664,
+     "inst": {
+      "meshes": 4,
+      "draws": 21,
+      "verts": 972,
+      "tris": 600,
+      "bytes": 6756
+     },
+     "top": [
+      [
+       "stair_baluster",
+       612
+      ],
+      [
+       "stair_step",
+       360
+      ]
+     ],
+     "ms": 2.7
+    },
+    "admin1": {
+     "meshes": 84,
+     "verts": 118291,
+     "tris": 65515,
+     "bytes": 730948,
+     "inst": {
+      "meshes": 64,
+      "draws": 1153,
+      "verts": 97734,
+      "tris": 53346,
+      "bytes": 123452
+     },
+     "top": [
+      [
+       "cubicle_admin",
+       65130
+      ],
+      [
+       "chair_office",
+       23856
+      ],
+      [
+       "window_in_150",
+       6240
+      ],
+      [
+       "door_frame_lr",
+       1272
+      ],
+      [
+       "stair_baluster",
+       612
+      ]
+     ],
+     "ms": 16.5
+    },
+    "admin2": {
+     "meshes": 83,
+     "verts": 117783,
+     "tris": 65293,
+     "bytes": 709752,
+     "inst": {
+      "meshes": 64,
+      "draws": 1157,
+      "verts": 97974,
+      "tris": 53466,
+      "bytes": 123756
+     },
+     "top": [
+      [
+       "cubicle_admin",
+       65130
+      ],
+      [
+       "chair_office",
+       23856
+      ],
+      [
+       "window_in_150",
+       6480
+      ],
+      [
+       "door_frame_lr",
+       1272
+      ],
+      [
+       "stair_baluster",
+       612
+      ]
+     ],
+     "ms": 13
+    },
+    "admin3": {
+     "meshes": 83,
+     "verts": 117893,
+     "tris": 65335,
+     "bytes": 712864,
+     "inst": {
+      "meshes": 64,
+      "draws": 1157,
+      "verts": 97974,
+      "tris": 53466,
+      "bytes": 123756
+     },
+     "top": [
+      [
+       "cubicle_admin",
+       65130
+      ],
+      [
+       "chair_office",
+       23856
+      ],
+      [
+       "window_in_150",
+       6480
+      ],
+      [
+       "door_frame_lr",
+       1272
+      ],
+      [
+       "stair_baluster",
+       612
+      ]
+     ],
+     "ms": 10.8
+    },
+    "admin4": {
+     "meshes": 82,
+     "verts": 117653,
+     "tris": 65215,
+     "bytes": 705904,
+     "inst": {
+      "meshes": 64,
+      "draws": 1157,
+      "verts": 97974,
+      "tris": 53466,
+      "bytes": 123756
+     },
+     "top": [
+      [
+       "cubicle_admin",
+       65130
+      ],
+      [
+       "chair_office",
+       23856
+      ],
+      [
+       "window_in_150",
+       6480
+      ],
+      [
+       "door_frame_lr",
+       1272
+      ],
+      [
+       "stair_baluster",
+       612
+      ]
+     ],
+     "ms": 8.4
+    },
+    "admin5": {
+     "meshes": 82,
+     "verts": 117645,
+     "tris": 65211,
+     "bytes": 705672,
+     "inst": {
+      "meshes": 64,
+      "draws": 1157,
+      "verts": 97974,
+      "tris": 53466,
+      "bytes": 123756
+     },
+     "top": [
+      [
+       "cubicle_admin",
+       65130
+      ],
+      [
+       "chair_office",
+       23856
+      ],
+      [
+       "window_in_150",
+       6480
+      ],
+      [
+       "door_frame_lr",
+       1272
+      ],
+      [
+       "stair_baluster",
+       612
+      ]
+     ],
+     "ms": 11.7
+    },
+    "lab1": {
+     "meshes": 68,
+     "verts": 43923,
+     "tris": 23047,
+     "bytes": 505139,
+     "inst": {
+      "meshes": 50,
+      "draws": 591,
+      "verts": 29492,
+      "tris": 14860,
+      "bytes": 72000
+     },
+     "top": [
+      [
+       "bench_physics",
+       21240
+      ],
+      [
+       "window_in_150",
+       6000
+      ],
+      [
+       "door_frame_lr",
+       1060
+      ],
+      [
+       "stair_baluster",
+       612
+      ],
+      [
+       "stair_step",
+       360
+      ]
+     ],
+     "ms": 8
+    },
+    "lab2": {
+     "meshes": 71,
+     "verts": 94887,
+     "tris": 68659,
+     "bytes": 515625,
+     "inst": {
+      "meshes": 54,
+      "draws": 685,
+      "verts": 81032,
+      "tris": 60790,
+      "bytes": 97018
+     },
+     "top": [
+      [
+       "bench_chem",
+       72540
+      ],
+      [
+       "window_in_150",
+       6240
+      ],
+      [
+       "door_frame_lr",
+       1060
+      ],
+      [
+       "stair_baluster",
+       612
+      ],
+      [
+       "stair_step",
+       360
+      ]
+     ],
+     "ms": 7.9
+    },
+    "lab3": {
+     "meshes": 75,
+     "verts": 53963,
+     "tris": 28660,
+     "bytes": 418677,
+     "inst": {
+      "meshes": 58,
+      "draws": 446,
+      "verts": 43308,
+      "tris": 22808,
+      "bytes": 102896
+     },
+     "top": [
+      [
+       "server_rack",
+       19368
+      ],
+      [
+       "desk_computer",
+       9680
+      ],
+      [
+       "window_in_150",
+       6960
+      ],
+      [
+       "chair_office",
+       5680
+      ],
+      [
+       "stair_baluster",
+       612
+      ]
+     ],
+     "ms": 7.1
+    },
+    "lab4": {
+     "meshes": 47,
+     "verts": 80616,
+     "tris": 46206,
+     "bytes": 2201015,
+     "inst": {
+      "meshes": 30,
+      "draws": 145,
+      "verts": 8492,
+      "tris": 4360,
+      "bytes": 31260
+     },
+     "top": [
+      [
+       "window_in_150",
+       6240
+      ],
+      [
+       "door_frame_lr",
+       1060
+      ],
+      [
+       "stair_baluster",
+       612
+      ],
+      [
+       "stair_step",
+       360
+      ],
+      [
+       "light_panel_180",
+       220
+      ]
+     ],
+     "ms": 19.7
+    },
+    "lab5": {
+     "meshes": 55,
+     "verts": 24669,
+     "tris": 14033,
+     "bytes": 441665,
+     "inst": {
+      "meshes": 38,
+      "draws": 193,
+      "verts": 11248,
+      "tris": 6508,
+      "bytes": 43036
+     },
+     "top": [
+      [
+       "window_in_150",
+       6240
+      ],
+      [
+       "chair_student_tall",
+       2160
+      ],
+      [
+       "door_frame_lr",
+       1060
+      ],
+      [
+       "stair_baluster",
+       612
+      ],
+      [
+       "stool_piano",
+       596
+      ]
+     ],
+     "ms": 5.6
+    },
+    "canteen1": {
+     "meshes": 81,
+     "verts": 86298,
+     "tris": 61586,
+     "bytes": 528032,
+     "inst": {
+      "meshes": 64,
+      "draws": 365,
+      "verts": 70856,
+      "tris": 53272,
+      "bytes": 68592
+     },
+     "top": [
+      [
+       "canteen_table",
+       60300
+      ],
+      [
+       "window_in_150",
+       8640
+      ],
+      [
+       "door_frame_lr",
+       636
+      ],
+      [
+       "stair_baluster",
+       612
+      ],
+      [
+       "stair_step",
+       360
+      ]
+     ],
+     "ms": 7.7
+    },
+    "dorm1": {
+     "meshes": 118,
+     "verts": 74888,
+     "tris": 45234,
+     "bytes": 683872,
+     "inst": {
+      "meshes": 100,
+      "draws": 487,
+      "verts": 56144,
+      "tris": 34198,
+      "bytes": 130312
+     },
+     "top": [
+      [
+       "bunk_frame_l",
+       14592
+      ],
+      [
+       "bunk_frame_r",
+       14592
+      ],
+      [
+       "bed_mattress",
+       9216
+      ],
+      [
+       "window_in_150",
+       3840
+      ],
+      [
+       "quilt_block",
+       2784
+      ]
+     ],
+     "ms": 8.7
+    },
+    "dorm2": {
+     "meshes": 115,
+     "verts": 73904,
+     "tris": 44722,
+     "bytes": 655216,
+     "inst": {
+      "meshes": 100,
+      "draws": 487,
+      "verts": 56144,
+      "tris": 34198,
+      "bytes": 130312
+     },
+     "top": [
+      [
+       "bunk_frame_l",
+       14592
+      ],
+      [
+       "bunk_frame_r",
+       14592
+      ],
+      [
+       "bed_mattress",
+       9216
+      ],
+      [
+       "window_in_150",
+       3840
+      ],
+      [
+       "quilt_block",
+       2784
+      ]
+     ],
+     "ms": 16.7
+    },
+    "dorm3": {
+     "meshes": 115,
+     "verts": 74060,
+     "tris": 44800,
+     "bytes": 659740,
+     "inst": {
+      "meshes": 100,
+      "draws": 487,
+      "verts": 56144,
+      "tris": 34198,
+      "bytes": 130312
+     },
+     "top": [
+      [
+       "bunk_frame_l",
+       14592
+      ],
+      [
+       "bunk_frame_r",
+       14592
+      ],
+      [
+       "bed_mattress",
+       9216
+      ],
+      [
+       "window_in_150",
+       3840
+      ],
+      [
+       "quilt_block",
+       2784
+      ]
+     ],
+     "ms": 5.3
+    },
+    "dorm4": {
+     "meshes": 118,
+     "verts": 74824,
+     "tris": 45202,
+     "bytes": 682016,
+     "inst": {
+      "meshes": 100,
+      "draws": 487,
+      "verts": 56144,
+      "tris": 34198,
+      "bytes": 130312
+     },
+     "top": [
+      [
+       "bunk_frame_l",
+       14592
+      ],
+      [
+       "bunk_frame_r",
+       14592
+      ],
+      [
+       "bed_mattress",
+       9216
+      ],
+      [
+       "window_in_150",
+       3840
+      ],
+      [
+       "quilt_block",
+       2784
+      ]
+     ],
+     "ms": 8.5
+    },
+    "dorm5": {
+     "meshes": 115,
+     "verts": 74036,
+     "tris": 44788,
+     "bytes": 659044,
+     "inst": {
+      "meshes": 100,
+      "draws": 487,
+      "verts": 56144,
+      "tris": 34198,
+      "bytes": 130312
+     },
+     "top": [
+      [
+       "bunk_frame_l",
+       14592
+      ],
+      [
+       "bunk_frame_r",
+       14592
+      ],
+      [
+       "bed_mattress",
+       9216
+      ],
+      [
+       "window_in_150",
+       3840
+      ],
+      [
+       "quilt_block",
+       2784
+      ]
+     ],
+     "ms": 5.3
+    },
+    "dorm6": {
+     "meshes": 115,
+     "verts": 74012,
+     "tris": 44776,
+     "bytes": 658348,
+     "inst": {
+      "meshes": 100,
+      "draws": 487,
+      "verts": 56144,
+      "tris": 34198,
+      "bytes": 130312
+     },
+     "top": [
+      [
+       "bunk_frame_l",
+       14592
+      ],
+      [
+       "bunk_frame_r",
+       14592
+      ],
+      [
+       "bed_mattress",
+       9216
+      ],
+      [
+       "window_in_150",
+       3840
+      ],
+      [
+       "quilt_block",
+       2784
+      ]
+     ],
+     "ms": 5.2
+    },
+    "garage1": {
+     "meshes": 58,
+     "verts": 61286,
+     "tris": 49216,
+     "bytes": 491452,
+     "inst": {
+      "meshes": 46,
+      "draws": 215,
+      "verts": 48236,
+      "tris": 42686,
+      "bytes": 112972
+     },
+     "top": [
+      [
+       "car_sedan",
+       43744
+      ],
+      [
+       "wheel_stop",
+       1472
+      ],
+      [
+       "pillar_bands",
+       1440
+      ],
+      [
+       "stair_baluster",
+       816
+      ],
+      [
+       "stair_step",
+       720
+      ]
+     ],
+     "ms": 4.1
+    },
+    "trash1": {
+     "meshes": 16,
+     "verts": 1658,
+     "tris": 910,
+     "bytes": 48720,
+     "inst": {
+      "meshes": 2,
+      "draws": 2,
+      "verts": 44,
+      "tris": 22,
+      "bytes": 1428
+     },
+     "top": [
+      [
+       "light_panel_180",
+       44
+      ]
+     ],
+     "ms": 0.6
+    },
+    "link1": {
+     "meshes": 25,
+     "verts": 6408,
+     "tris": 3230,
+     "bytes": 46516,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 5280,
+      "tris": 2640,
+      "bytes": 13648
+     },
+     "top": [
+      [
+       "window_in_180",
+       5280
+      ]
+     ],
+     "ms": 0.7
+    },
+    "link2": {
+     "meshes": 26,
+     "verts": 6440,
+     "tris": 3246,
+     "bytes": 47444,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 5280,
+      "tris": 2640,
+      "bytes": 13648
+     },
+     "top": [
+      [
+       "window_in_180",
+       5280
+      ]
+     ],
+     "ms": 1.7
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 8491,
+     "tris": 5154,
+     "bytes": 253586,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 6.7
+    },
+    "guard1": {
+     "meshes": 21,
+     "verts": 2988,
+     "tris": 1712,
+     "bytes": 81608,
+     "inst": {
+      "meshes": 8,
+      "draws": 8,
+      "verts": 480,
+      "tris": 240,
+      "bytes": 7568
+     },
+     "top": [
+      [
+       "window_in_150",
+       480
+      ]
+     ],
+     "ms": 0.8
+    },
+    "gear1": {
+     "meshes": 29,
+     "verts": 4878,
+     "tris": 3324,
+     "bytes": 118908,
+     "inst": {
+      "meshes": 15,
+      "draws": 18,
+      "verts": 1468,
+      "tris": 734,
+      "bytes": 14708
+     },
+     "top": [
+      [
+       "window_in_150",
+       720
+      ],
+      [
+       "shelf_metal",
+       704
+      ],
+      [
+       "light_panel_180",
+       44
+      ]
+     ],
+     "ms": 1.5
+    }
+   },
+   "outdoor": {
+    "meshes": 558,
+    "verts": 384029,
+    "tris": 262960,
+    "bytes": 5946733,
+    "inst": {
+     "meshes": 519,
+     "draws": 1422,
+     "verts": 203282,
+     "tris": 170508,
+     "bytes": 474874
+    },
+    "top": [
+     [
+      "ac_outdoor",
+      70184
+     ],
+     [
+      "ebike",
+      12546
+     ],
+     [
+      "hedge_200",
+      9856
+     ],
+     [
+      "street_lamp",
+      9585
+     ],
+     [
+      "dp_clamp",
+      9152
+     ]
+    ],
+    "ms": 51.5
+   },
+   "total": {
+    "meshes": 2591,
+    "verts": 2210105,
+    "tris": 1307504,
+    "bytes": 21303652,
+    "ms": 329,
+    "inst": {
+     "meshes": 2066,
+     "draws": 18313,
+     "verts": 1592402,
+     "tris": 944478,
+     "bytes": 2911318
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 192,
+     "tris": 103102
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 47,
+     "tris": 46564
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 42,
+     "tris": 38369
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 62,
+     "tris": 28476
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 409,
+     "tris": 238454
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 472,
+     "tris": 247403
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 169,
+     "tris": 134246
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 36,
+     "tris": 96061
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 84,
+     "tris": 64873
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 56,
+     "tris": 62817
+    }
+   ],
+   "label": "流畅",
+   "packs": [
+    {
+     "lod": 3,
+     "assets": 181,
+     "verts": 76745,
+     "tris": 60472,
+     "raw": 1590752
+    }
+   ]
+  },
+  "1": {
+   "rooms": {
+    "teach1": {
+     "meshes": 211,
+     "verts": 475899,
+     "tris": 333386,
+     "bytes": 3134800,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 42.4
+    },
+    "teach2": {
+     "meshes": 211,
+     "verts": 473327,
+     "tris": 331418,
+     "bytes": 3051308,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 29.3
+    },
+    "teach3": {
+     "meshes": 211,
+     "verts": 473447,
+     "tris": 331574,
+     "bytes": 3055220,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 23.8
+    },
+    "teach4": {
+     "meshes": 211,
+     "verts": 472887,
+     "tris": 331042,
+     "bytes": 3037468,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 22
+    },
+    "teach5": {
+     "meshes": 211,
+     "verts": 472879,
+     "tris": 331014,
+     "bytes": 3037092,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 20.8
+    },
+    "teach6": {
+     "meshes": 10,
+     "verts": 4174,
+     "tris": 2346,
+     "bytes": 88762,
+     "inst": {
+      "meshes": 5,
+      "draws": 26,
+      "verts": 1458,
+      "tris": 988,
+      "bytes": 9998
+     },
+     "top": [
+      [
+       "stair_baluster",
+       738
+      ],
+      [
+       "stair_step",
+       720
+      ]
+     ],
+     "ms": 2.6
+    },
+    "admin1": {
+     "meshes": 106,
+     "verts": 695132,
+     "tris": 584799,
+     "bytes": 1588970,
+     "inst": {
+      "meshes": 85,
+      "draws": 1994,
+      "verts": 653360,
+      "tris": 551824,
+      "bytes": 305048
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 32.4
+    },
+    "admin2": {
+     "meshes": 105,
+     "verts": 694254,
+     "tris": 584145,
+     "bytes": 1550570,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 15.5
+    },
+    "admin3": {
+     "meshes": 105,
+     "verts": 695082,
+     "tris": 584737,
+     "bytes": 1575650,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 21.8
+    },
+    "admin4": {
+     "meshes": 105,
+     "verts": 694062,
+     "tris": 583953,
+     "bytes": 1544426,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 14.7
+    },
+    "admin5": {
+     "meshes": 105,
+     "verts": 694058,
+     "tris": 583951,
+     "bytes": 1544310,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 14.3
+    },
+    "lab1": {
+     "meshes": 70,
+     "verts": 121366,
+     "tris": 79456,
+     "bytes": 851759,
+     "inst": {
+      "meshes": 51,
+      "draws": 596,
+      "verts": 97238,
+      "tris": 63328,
+      "bytes": 108034
+     },
+     "top": [
+      [
+       "bench_physics",
+       83160
+      ],
+      [
+       "window_in_150",
+       10200
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "light_panel_180",
+       840
+      ],
+      [
+       "stair_baluster",
+       738
+      ]
+     ],
+     "ms": 6.2
+    },
+    "lab2": {
+     "meshes": 77,
+     "verts": 239699,
+     "tris": 184332,
+     "bytes": 869895,
+     "inst": {
+      "meshes": 59,
+      "draws": 780,
+      "verts": 216896,
+      "tris": 169212,
+      "bytes": 163512
+     },
+     "top": [
+      [
+       "bench_chem",
+       202410
+      ],
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "light_panel_180",
+       840
+      ],
+      [
+       "stair_baluster",
+       738
+      ]
+     ],
+     "ms": 6.4
+    },
+    "lab3": {
+     "meshes": 88,
+     "verts": 178238,
+     "tris": 138858,
+     "bytes": 754008,
+     "inst": {
+      "meshes": 70,
+      "draws": 534,
+      "verts": 161062,
+      "tris": 127868,
+      "bytes": 232708
+     },
+     "top": [
+      [
+       "chair_office",
+       91480
+      ],
+      [
+       "desk_computer",
+       33120
+      ],
+      [
+       "server_rack",
+       21132
+      ],
+      [
+       "window_in_150",
+       11832
+      ],
+      [
+       "light_panel_180",
+       840
+      ]
+     ],
+     "ms": 5.7
+    },
+    "lab4": {
+     "meshes": 57,
+     "verts": 220426,
+     "tris": 148145,
+     "bytes": 6294834,
+     "inst": {
+      "meshes": 31,
+      "draws": 150,
+      "verts": 14486,
+      "tris": 8292,
+      "bytes": 46430
+     },
+     "top": [
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "light_panel_180",
+       840
+      ],
+      [
+       "stair_baluster",
+       738
+      ],
+      [
+       "stair_step",
+       720
+      ]
+     ],
+     "ms": 79.4
+    },
+    "lab5": {
+     "meshes": 59,
+     "verts": 52017,
+     "tris": 36810,
+     "bytes": 749080,
+     "inst": {
+      "meshes": 41,
+      "draws": 218,
+      "verts": 30114,
+      "tris": 22472,
+      "bytes": 85546
+     },
+     "top": [
+      [
+       "chair_student_tall",
+       14180
+      ],
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "stool_piano",
+       1448
+      ],
+      [
+       "light_panel_180",
+       840
+      ]
+     ],
+     "ms": 6.6
+    },
+    "canteen1": {
+     "meshes": 83,
+     "verts": 191530,
+     "tris": 156304,
+     "bytes": 1010018,
+     "inst": {
+      "meshes": 65,
+      "draws": 370,
+      "verts": 162450,
+      "tris": 135988,
+      "bytes": 113178
+     },
+     "top": [
+      [
+       "canteen_table",
+       144180
+      ],
+      [
+       "window_in_150",
+       14688
+      ],
+      [
+       "light_panel_180",
+       1176
+      ],
+      [
+       "door_frame_lr",
+       948
+      ],
+      [
+       "stair_baluster",
+       738
+      ]
+     ],
+     "ms": 10.5
+    },
+    "dorm1": {
+     "meshes": 136,
+     "verts": 223798,
+     "tris": 205510,
+     "bytes": 1471054,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 11.4
+    },
+    "dorm2": {
+     "meshes": 133,
+     "verts": 221434,
+     "tris": 203554,
+     "bytes": 1397854,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 9.9
+    },
+    "dorm3": {
+     "meshes": 133,
+     "verts": 221902,
+     "tris": 203932,
+     "bytes": 1412290,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 7.5
+    },
+    "dorm4": {
+     "meshes": 136,
+     "verts": 223378,
+     "tris": 205096,
+     "bytes": 1457650,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 7.9
+    },
+    "dorm5": {
+     "meshes": 133,
+     "verts": 221790,
+     "tris": 203852,
+     "bytes": 1408898,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 7.7
+    },
+    "dorm6": {
+     "meshes": 133,
+     "verts": 221806,
+     "tris": 203884,
+     "bytes": 1409506,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 7.5
+    },
+    "garage1": {
+     "meshes": 79,
+     "verts": 240692,
+     "tris": 259782,
+     "bytes": 895084,
+     "inst": {
+      "meshes": 67,
+      "draws": 362,
+      "verts": 226148,
+      "tris": 251952,
+      "bytes": 469960
+     },
+     "top": [
+      [
+       "car_sedan",
+       196144
+      ],
+      [
+       "sprinkler",
+       14820
+      ],
+      [
+       "wheel_stop",
+       8512
+      ],
+      [
+       "pillar_bands",
+       4080
+      ],
+      [
+       "stair_step",
+       1440
+      ]
+     ],
+     "ms": 6.9
+    },
+    "trash1": {
+     "meshes": 16,
+     "verts": 3024,
+     "tris": 2182,
+     "bytes": 91868,
+     "inst": {
+      "meshes": 2,
+      "draws": 2,
+      "verts": 168,
+      "tris": 102,
+      "bytes": 5132
+     },
+     "top": [
+      [
+       "light_panel_180",
+       168
+      ]
+     ],
+     "ms": 0.7
+    },
+    "link1": {
+     "meshes": 25,
+     "verts": 10184,
+     "tris": 5604,
+     "bytes": 54104,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 8976,
+      "tris": 4928,
+      "bytes": 18640
+     },
+     "top": [
+      [
+       "window_in_180",
+       8976
+      ]
+     ],
+     "ms": 0.7
+    },
+    "link2": {
+     "meshes": 26,
+     "verts": 10244,
+     "tris": 5658,
+     "bytes": 55988,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 8976,
+      "tris": 4928,
+      "bytes": 18640
+     },
+     "top": [
+      [
+       "window_in_180",
+       8976
+      ]
+     ],
+     "ms": 1.2
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 13813,
+     "tris": 10388,
+     "bytes": 424340,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 3.8
+    },
+    "guard1": {
+     "meshes": 22,
+     "verts": 5684,
+     "tris": 3996,
+     "bytes": 160416,
+     "inst": {
+      "meshes": 8,
+      "draws": 8,
+      "verts": 816,
+      "tris": 448,
+      "bytes": 12560
+     },
+     "top": [
+      [
+       "window_in_150",
+       816
+      ]
+     ],
+     "ms": 1.1
+    },
+    "gear1": {
+     "meshes": 30,
+     "verts": 13100,
+     "tris": 12122,
+     "bytes": 325844,
+     "inst": {
+      "meshes": 16,
+      "draws": 22,
+      "verts": 4384,
+      "tris": 2310,
+      "bytes": 40356
+     },
+     "top": [
+      [
+       "shelf_metal",
+       2992
+      ],
+      [
+       "window_in_150",
+       1224
+      ],
+      [
+       "light_panel_180",
+       168
+      ]
+     ],
+     "ms": 2
+    }
+   },
+   "outdoor": {
+    "meshes": 1199,
+    "verts": 1588473,
+    "tris": 1070550,
+    "bytes": 6931724,
+    "inst": {
+     "meshes": 1158,
+     "draws": 13907,
+     "verts": 1434882,
+     "tris": 985446,
+     "bytes": 2279522
+    },
+    "top": [
+     [
+      "ac_outdoor",
+      185628
+     ],
+     [
+      "fence_panel_200",
+      170208
+     ],
+     [
+      "fwin_180_125",
+      146880
+     ],
+     [
+      "?",
+      88200
+     ],
+     [
+      "fsash_180_125",
+      86400
+     ]
+    ],
+    "ms": 91.8
+   },
+   "total": {
+    "meshes": 3042,
+    "verts": 8479326,
+    "tris": 6851830,
+    "bytes": 44303066,
+    "ms": 422.7,
+    "inst": {
+     "meshes": 2484,
+     "draws": 24896,
+     "verts": 7250804,
+     "tris": 5978018,
+     "bytes": 6864822
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 234,
+     "tris": 374868
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 55,
+     "tris": 167778
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 61,
+     "tris": 308483
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 72,
+     "tris": 134088
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 881,
+     "tris": 803386
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 1035,
+     "tris": 964960
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 257,
+     "tris": 276062
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 65,
+     "tris": 149216
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 154,
+     "tris": 583635
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 96,
+     "tris": 579739
+    }
+   ],
+   "label": "均衡",
+   "packs": [
+    {
+     "lod": 2,
+     "assets": 202,
+     "verts": 185624,
+     "tris": 161546,
+     "raw": 3939260
+    }
+   ]
+  },
+  "2": {
+   "rooms": {
+    "teach1": {
+     "meshes": 211,
+     "verts": 475899,
+     "tris": 333386,
+     "bytes": 3134800,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 42.4
+    },
+    "teach2": {
+     "meshes": 211,
+     "verts": 473327,
+     "tris": 331418,
+     "bytes": 3051308,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 37
+    },
+    "teach3": {
+     "meshes": 211,
+     "verts": 473447,
+     "tris": 331574,
+     "bytes": 3055220,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 22.4
+    },
+    "teach4": {
+     "meshes": 211,
+     "verts": 472887,
+     "tris": 331042,
+     "bytes": 3037468,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 25.6
+    },
+    "teach5": {
+     "meshes": 211,
+     "verts": 472879,
+     "tris": 331014,
+     "bytes": 3037092,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 386532,
+      "tris": 272558,
+      "bytes": 418756
+     },
+     "top": [
+      [
+       "chair_student",
+       101232
+      ],
+      [
+       "desk_student",
+       97920
+      ],
+      [
+       "books_row_32b",
+       59520
+      ],
+      [
+       "bottle_water",
+       44451
+      ],
+      [
+       "lamp_hang_120",
+       20304
+      ]
+     ],
+     "ms": 22
+    },
+    "teach6": {
+     "meshes": 10,
+     "verts": 4174,
+     "tris": 2346,
+     "bytes": 88762,
+     "inst": {
+      "meshes": 5,
+      "draws": 26,
+      "verts": 1458,
+      "tris": 988,
+      "bytes": 9998
+     },
+     "top": [
+      [
+       "stair_baluster",
+       738
+      ],
+      [
+       "stair_step",
+       720
+      ]
+     ],
+     "ms": 3.6
+    },
+    "admin1": {
+     "meshes": 106,
+     "verts": 695132,
+     "tris": 584799,
+     "bytes": 1588970,
+     "inst": {
+      "meshes": 85,
+      "draws": 1994,
+      "verts": 653360,
+      "tris": 551824,
+      "bytes": 305048
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 30.3
+    },
+    "admin2": {
+     "meshes": 105,
+     "verts": 694254,
+     "tris": 584145,
+     "bytes": 1550570,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 21.9
+    },
+    "admin3": {
+     "meshes": 105,
+     "verts": 695082,
+     "tris": 584737,
+     "bytes": 1575650,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 15.3
+    },
+    "admin4": {
+     "meshes": 105,
+     "verts": 694062,
+     "tris": 583953,
+     "bytes": 1544426,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 20.2
+    },
+    "admin5": {
+     "meshes": 105,
+     "verts": 694058,
+     "tris": 583951,
+     "bytes": 1544310,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 653768,
+      "tris": 552048,
+      "bytes": 305352
+     },
+     "top": [
+      [
+       "chair_office",
+       384216
+      ],
+      [
+       "cubicle_admin",
+       254174
+      ],
+      [
+       "window_in_150",
+       11016
+      ],
+      [
+       "door_frame_lr",
+       1896
+      ],
+      [
+       "light_panel_180",
+       1008
+      ]
+     ],
+     "ms": 15.8
+    },
+    "lab1": {
+     "meshes": 70,
+     "verts": 121366,
+     "tris": 79456,
+     "bytes": 851759,
+     "inst": {
+      "meshes": 51,
+      "draws": 596,
+      "verts": 97238,
+      "tris": 63328,
+      "bytes": 108034
+     },
+     "top": [
+      [
+       "bench_physics",
+       83160
+      ],
+      [
+       "window_in_150",
+       10200
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "light_panel_180",
+       840
+      ],
+      [
+       "stair_baluster",
+       738
+      ]
+     ],
+     "ms": 5.5
+    },
+    "lab2": {
+     "meshes": 77,
+     "verts": 239699,
+     "tris": 184332,
+     "bytes": 869895,
+     "inst": {
+      "meshes": 59,
+      "draws": 780,
+      "verts": 216896,
+      "tris": 169212,
+      "bytes": 163512
+     },
+     "top": [
+      [
+       "bench_chem",
+       202410
+      ],
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "light_panel_180",
+       840
+      ],
+      [
+       "stair_baluster",
+       738
+      ]
+     ],
+     "ms": 6.5
+    },
+    "lab3": {
+     "meshes": 88,
+     "verts": 178238,
+     "tris": 138858,
+     "bytes": 754008,
+     "inst": {
+      "meshes": 70,
+      "draws": 534,
+      "verts": 161062,
+      "tris": 127868,
+      "bytes": 232708
+     },
+     "top": [
+      [
+       "chair_office",
+       91480
+      ],
+      [
+       "desk_computer",
+       33120
+      ],
+      [
+       "server_rack",
+       21132
+      ],
+      [
+       "window_in_150",
+       11832
+      ],
+      [
+       "light_panel_180",
+       840
+      ]
+     ],
+     "ms": 6.4
+    },
+    "lab4": {
+     "meshes": 57,
+     "verts": 220426,
+     "tris": 148145,
+     "bytes": 6294834,
+     "inst": {
+      "meshes": 31,
+      "draws": 150,
+      "verts": 14486,
+      "tris": 8292,
+      "bytes": 46430
+     },
+     "top": [
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "light_panel_180",
+       840
+      ],
+      [
+       "stair_baluster",
+       738
+      ],
+      [
+       "stair_step",
+       720
+      ]
+     ],
+     "ms": 67.8
+    },
+    "lab5": {
+     "meshes": 59,
+     "verts": 52017,
+     "tris": 36810,
+     "bytes": 749080,
+     "inst": {
+      "meshes": 41,
+      "draws": 218,
+      "verts": 30114,
+      "tris": 22472,
+      "bytes": 85546
+     },
+     "top": [
+      [
+       "chair_student_tall",
+       14180
+      ],
+      [
+       "window_in_150",
+       10608
+      ],
+      [
+       "door_frame_lr",
+       1580
+      ],
+      [
+       "stool_piano",
+       1448
+      ],
+      [
+       "light_panel_180",
+       840
+      ]
+     ],
+     "ms": 5.9
+    },
+    "canteen1": {
+     "meshes": 83,
+     "verts": 191530,
+     "tris": 156304,
+     "bytes": 1010018,
+     "inst": {
+      "meshes": 65,
+      "draws": 370,
+      "verts": 162450,
+      "tris": 135988,
+      "bytes": 113178
+     },
+     "top": [
+      [
+       "canteen_table",
+       144180
+      ],
+      [
+       "window_in_150",
+       14688
+      ],
+      [
+       "light_panel_180",
+       1176
+      ],
+      [
+       "door_frame_lr",
+       948
+      ],
+      [
+       "stair_baluster",
+       738
+      ]
+     ],
+     "ms": 7.9
+    },
+    "dorm1": {
+     "meshes": 136,
+     "verts": 223798,
+     "tris": 205510,
+     "bytes": 1471054,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 10
+    },
+    "dorm2": {
+     "meshes": 133,
+     "verts": 221434,
+     "tris": 203554,
+     "bytes": 1397854,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 10.3
+    },
+    "dorm3": {
+     "meshes": 133,
+     "verts": 221902,
+     "tris": 203932,
+     "bytes": 1412290,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 8
+    },
+    "dorm4": {
+     "meshes": 136,
+     "verts": 223378,
+     "tris": 205096,
+     "bytes": 1457650,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 8.2
+    },
+    "dorm5": {
+     "meshes": 133,
+     "verts": 221790,
+     "tris": 203852,
+     "bytes": 1408898,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 7.7
+    },
+    "dorm6": {
+     "meshes": 133,
+     "verts": 221806,
+     "tris": 203884,
+     "bytes": 1409506,
+     "inst": {
+      "meshes": 117,
+      "draws": 556,
+      "verts": 186090,
+      "tris": 177066,
+      "bytes": 319982
+     },
+     "top": [
+      [
+       "bed_mattress",
+       60288
+      ],
+      [
+       "bunk_frame_l",
+       31488
+      ],
+      [
+       "bunk_frame_r",
+       31488
+      ],
+      [
+       "quilt_folded",
+       21736
+      ],
+      [
+       "chair_student",
+       8436
+      ]
+     ],
+     "ms": 7.7
+    },
+    "garage1": {
+     "meshes": 79,
+     "verts": 240692,
+     "tris": 259782,
+     "bytes": 895084,
+     "inst": {
+      "meshes": 67,
+      "draws": 362,
+      "verts": 226148,
+      "tris": 251952,
+      "bytes": 469960
+     },
+     "top": [
+      [
+       "car_sedan",
+       196144
+      ],
+      [
+       "sprinkler",
+       14820
+      ],
+      [
+       "wheel_stop",
+       8512
+      ],
+      [
+       "pillar_bands",
+       4080
+      ],
+      [
+       "stair_step",
+       1440
+      ]
+     ],
+     "ms": 5.4
+    },
+    "trash1": {
+     "meshes": 16,
+     "verts": 3024,
+     "tris": 2182,
+     "bytes": 91868,
+     "inst": {
+      "meshes": 2,
+      "draws": 2,
+      "verts": 168,
+      "tris": 102,
+      "bytes": 5132
+     },
+     "top": [
+      [
+       "light_panel_180",
+       168
+      ]
+     ],
+     "ms": 1.8
+    },
+    "link1": {
+     "meshes": 25,
+     "verts": 10184,
+     "tris": 5604,
+     "bytes": 54104,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 8976,
+      "tris": 4928,
+      "bytes": 18640
+     },
+     "top": [
+      [
+       "window_in_180",
+       8976
+      ]
+     ],
+     "ms": 2.9
+    },
+    "link2": {
+     "meshes": 26,
+     "verts": 10244,
+     "tris": 5658,
+     "bytes": 55988,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 8976,
+      "tris": 4928,
+      "bytes": 18640
+     },
+     "top": [
+      [
+       "window_in_180",
+       8976
+      ]
+     ],
+     "ms": 2.3
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 13813,
+     "tris": 10388,
+     "bytes": 424340,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 3.9
+    },
+    "guard1": {
+     "meshes": 22,
+     "verts": 5684,
+     "tris": 3996,
+     "bytes": 160416,
+     "inst": {
+      "meshes": 8,
+      "draws": 8,
+      "verts": 816,
+      "tris": 448,
+      "bytes": 12560
+     },
+     "top": [
+      [
+       "window_in_150",
+       816
+      ]
+     ],
+     "ms": 1.1
+    },
+    "gear1": {
+     "meshes": 30,
+     "verts": 13100,
+     "tris": 12122,
+     "bytes": 325844,
+     "inst": {
+      "meshes": 16,
+      "draws": 22,
+      "verts": 4384,
+      "tris": 2310,
+      "bytes": 40356
+     },
+     "top": [
+      [
+       "shelf_metal",
+       2992
+      ],
+      [
+       "window_in_150",
+       1224
+      ],
+      [
+       "light_panel_180",
+       168
+      ]
+     ],
+     "ms": 1.9
+    }
+   },
+   "outdoor": {
+    "meshes": 1207,
+    "verts": 1715381,
+    "tris": 1117204,
+    "bytes": 7413680,
+    "inst": {
+     "meshes": 1166,
+     "draws": 18739,
+     "verts": 1559298,
+     "tris": 1030854,
+     "bytes": 2689210
+    },
+    "top": [
+     [
+      "?",
+      189000
+     ],
+     [
+      "ac_outdoor",
+      185628
+     ],
+     [
+      "fence_panel_200",
+      170208
+     ],
+     [
+      "fwin_180_125",
+      146880
+     ],
+     [
+      "fsash_180_125",
+      86400
+     ]
+    ],
+    "ms": 87.2
+   },
+   "total": {
+    "meshes": 3042,
+    "verts": 8479326,
+    "tris": 6851830,
+    "bytes": 44303066,
+    "ms": 427.6999999999999,
+    "inst": {
+     "meshes": 2484,
+     "draws": 24896,
+     "verts": 7250804,
+     "tris": 5978018,
+     "bytes": 6864822
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 535,
+     "tris": 982605
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 311,
+     "tris": 635782
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 219,
+     "tris": 1201747
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 174,
+     "tris": 466076
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 951,
+     "tris": 1133718
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 1082,
+     "tris": 1252902
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 291,
+     "tris": 507396
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 98,
+     "tris": 397656
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 312,
+     "tris": 1474597
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 267,
+     "tris": 1665825
+    }
+   ],
+   "label": "精细",
+   "packs": [
+    {
+     "lod": 2,
+     "assets": 202,
+     "verts": 185624,
+     "tris": 161546,
+     "raw": 3939260
+    }
+   ]
+  },
+  "3": {
+   "rooms": {
+    "teach1": {
+     "meshes": 211,
+     "verts": 1140127,
+     "tris": 989714,
+     "bytes": 4971521,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1004126,
+      "tris": 877158,
+      "bytes": 710902
+     },
+     "top": [
+      [
+       "desk_student",
+       433584
+      ],
+      [
+       "chair_student",
+       227808
+      ],
+      [
+       "books_row_32b",
+       140160
+      ],
+      [
+       "bottle_water",
+       65637
+      ],
+      [
+       "books_row_38b",
+       35856
+      ]
+     ],
+     "ms": 66.3
+    },
+    "teach2": {
+     "meshes": 211,
+     "verts": 1135993,
+     "tris": 985740,
+     "bytes": 4831769,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1004126,
+      "tris": 877158,
+      "bytes": 710902
+     },
+     "top": [
+      [
+       "desk_student",
+       433584
+      ],
+      [
+       "chair_student",
+       227808
+      ],
+      [
+       "books_row_32b",
+       140160
+      ],
+      [
+       "bottle_water",
+       65637
+      ],
+      [
+       "books_row_38b",
+       35856
+      ]
+     ],
+     "ms": 56.1
+    },
+    "teach3": {
+     "meshes": 211,
+     "verts": 1136583,
+     "tris": 986506,
+     "bytes": 4851489,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1004126,
+      "tris": 877158,
+      "bytes": 710902
+     },
+     "top": [
+      [
+       "desk_student",
+       433584
+      ],
+      [
+       "chair_student",
+       227808
+      ],
+      [
+       "books_row_32b",
+       140160
+      ],
+      [
+       "bottle_water",
+       65637
+      ],
+      [
+       "books_row_38b",
+       35856
+      ]
+     ],
+     "ms": 41.1
+    },
+    "teach4": {
+     "meshes": 211,
+     "verts": 1134973,
+     "tris": 984588,
+     "bytes": 4798121,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1004126,
+      "tris": 877158,
+      "bytes": 710902
+     },
+     "top": [
+      [
+       "desk_student",
+       433584
+      ],
+      [
+       "chair_student",
+       227808
+      ],
+      [
+       "books_row_32b",
+       140160
+      ],
+      [
+       "bottle_water",
+       65637
+      ],
+      [
+       "books_row_38b",
+       35856
+      ]
+     ],
+     "ms": 32.9
+    },
+    "teach5": {
+     "meshes": 211,
+     "verts": 1134865,
+     "tris": 984428,
+     "bytes": 4794353,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1004126,
+      "tris": 877158,
+      "bytes": 710902
+     },
+     "top": [
+      [
+       "desk_student",
+       433584
+      ],
+      [
+       "chair_student",
+       227808
+      ],
+      [
+       "books_row_32b",
+       140160
+      ],
+      [
+       "bottle_water",
+       65637
+      ],
+      [
+       "books_row_38b",
+       35856
+      ]
+     ],
+     "ms": 28.9
+    },
+    "teach6": {
+     "meshes": 10,
+     "verts": 6010,
+     "tris": 3818,
+     "bytes": 100782,
+     "inst": {
+      "meshes": 5,
+      "draws": 26,
+      "verts": 3198,
+      "tris": 2412,
+      "bytes": 19234
+     },
+     "top": [
+      [
+       "stair_baluster",
+       2238
+      ],
+      [
+       "stair_step",
+       960
+      ]
+     ],
+     "ms": 4.2
+    },
+    "admin1": {
+     "meshes": 106,
+     "verts": 1738926,
+     "tris": 1614595,
+     "bytes": 2729502,
+     "inst": {
+      "meshes": 85,
+      "draws": 1994,
+      "verts": 1670600,
+      "tris": 1545028,
+      "bytes": 535624
+     },
+     "top": [
+      [
+       "chair_office",
+       952392
+      ],
+      [
+       "cubicle_admin",
+       685034
+      ],
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2238
+      ]
+     ],
+     "ms": 30.5
+    },
+    "admin2": {
+     "meshes": 105,
+     "verts": 1737914,
+     "tris": 1613859,
+     "bytes": 2668982,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 1671548,
+      "tris": 1545936,
+      "bytes": 535928
+     },
+     "top": [
+      [
+       "chair_office",
+       952392
+      ],
+      [
+       "cubicle_admin",
+       685034
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2238
+      ]
+     ],
+     "ms": 23.2
+    },
+    "admin3": {
+     "meshes": 105,
+     "verts": 1740931,
+     "tris": 1615919,
+     "bytes": 2759784,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 1671548,
+      "tris": 1545936,
+      "bytes": 535928
+     },
+     "top": [
+      [
+       "chair_office",
+       952392
+      ],
+      [
+       "cubicle_admin",
+       685034
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2238
+      ]
+     ],
+     "ms": 19.2
+    },
+    "admin4": {
+     "meshes": 105,
+     "verts": 1737392,
+     "tris": 1613221,
+     "bytes": 2651582,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 1671548,
+      "tris": 1545936,
+      "bytes": 535928
+     },
+     "top": [
+      [
+       "chair_office",
+       952392
+      ],
+      [
+       "cubicle_admin",
+       685034
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2238
+      ]
+     ],
+     "ms": 13.6
+    },
+    "admin5": {
+     "meshes": 105,
+     "verts": 1737388,
+     "tris": 1613219,
+     "bytes": 2651466,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 1671548,
+      "tris": 1545936,
+      "bytes": 535928
+     },
+     "top": [
+      [
+       "chair_office",
+       952392
+      ],
+      [
+       "cubicle_admin",
+       685034
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2238
+      ]
+     ],
+     "ms": 16.2
+    },
+    "lab1": {
+     "meshes": 70,
+     "verts": 193871,
+     "tris": 164108,
+     "bytes": 1268248,
+     "inst": {
+      "meshes": 51,
+      "draws": 596,
+      "verts": 159138,
+      "tris": 136132,
+      "bytes": 165198
+     },
+     "top": [
+      [
+       "bench_physics",
+       127800
+      ],
+      [
+       "window_in_150",
+       23700
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stair_baluster",
+       2238
+      ],
+      [
+       "light_panel_180",
+       1080
+      ]
+     ],
+     "ms": 7.3
+    },
+    "lab2": {
+     "meshes": 77,
+     "verts": 375904,
+     "tris": 332526,
+     "bytes": 1313198,
+     "inst": {
+      "meshes": 59,
+      "draws": 780,
+      "verts": 342426,
+      "tris": 305340,
+      "bytes": 243078
+     },
+     "top": [
+      [
+       "bench_chem",
+       310140
+      ],
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stair_baluster",
+       2238
+      ],
+      [
+       "light_panel_180",
+       1080
+      ]
+     ],
+     "ms": 7.6
+    },
+    "lab3": {
+     "meshes": 91,
+     "verts": 466248,
+     "tris": 403450,
+     "bytes": 1480673,
+     "inst": {
+      "meshes": 73,
+      "draws": 537,
+      "verts": 436976,
+      "tris": 381668,
+      "bytes": 575244
+     },
+     "top": [
+      [
+       "chair_office",
+       226760
+      ],
+      [
+       "desk_computer",
+       117520
+      ],
+      [
+       "server_rack",
+       57024
+      ],
+      [
+       "window_in_150",
+       27492
+      ],
+      [
+       "shelf_metal",
+       2944
+      ]
+     ],
+     "ms": 9.1
+    },
+    "lab4": {
+     "meshes": 61,
+     "verts": 311656,
+     "tris": 235091,
+     "bytes": 8668957,
+     "inst": {
+      "meshes": 31,
+      "draws": 150,
+      "verts": 32286,
+      "tris": 29940,
+      "bytes": 87242
+     },
+     "top": [
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stair_baluster",
+       2238
+      ],
+      [
+       "light_panel_180",
+       1080
+      ],
+      [
+       "stair_step",
+       960
+      ]
+     ],
+     "ms": 58.2
+    },
+    "lab5": {
+     "meshes": 59,
+     "verts": 97343,
+     "tris": 88772,
+     "bytes": 1129633,
+     "inst": {
+      "meshes": 41,
+      "draws": 218,
+      "verts": 66266,
+      "tris": 64304,
+      "bytes": 161170
+     },
+     "top": [
+      [
+       "chair_student_tall",
+       31780
+      ],
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stair_baluster",
+       2238
+      ],
+      [
+       "stool_piano",
+       2200
+      ]
+     ],
+     "ms": 11.4
+    },
+    "canteen1": {
+     "meshes": 83,
+     "verts": 327846,
+     "tris": 352828,
+     "bytes": 2094482,
+     "inst": {
+      "meshes": 65,
+      "draws": 370,
+      "verts": 268554,
+      "tris": 296924,
+      "bytes": 186998
+     },
+     "top": [
+      [
+       "canteen_table",
+       227700
+      ],
+      [
+       "window_in_150",
+       34128
+      ],
+      [
+       "stair_baluster",
+       2238
+      ],
+      [
+       "door_frame_lr",
+       2016
+      ],
+      [
+       "light_panel_180",
+       1512
+      ]
+     ],
+     "ms": 13.3
+    },
+    "dorm1": {
+     "meshes": 144,
+     "verts": 453886,
+     "tris": 493722,
+     "bytes": 2635674,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 393406,
+      "tris": 435470,
+      "bytes": 713682
+     },
+     "top": [
+      [
+       "bed_mattress",
+       101760
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       36328
+      ],
+      [
+       "desk_student",
+       36132
+      ]
+     ],
+     "ms": 14.3
+    },
+    "dorm2": {
+     "meshes": 141,
+     "verts": 449422,
+     "tris": 488950,
+     "bytes": 2490978,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 393406,
+      "tris": 435470,
+      "bytes": 713682
+     },
+     "top": [
+      [
+       "bed_mattress",
+       101760
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       36328
+      ],
+      [
+       "desk_student",
+       36132
+      ]
+     ],
+     "ms": 17.2
+    },
+    "dorm3": {
+     "meshes": 141,
+     "verts": 450490,
+     "tris": 490120,
+     "bytes": 2525766,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 393406,
+      "tris": 435470,
+      "bytes": 713682
+     },
+     "top": [
+      [
+       "bed_mattress",
+       101760
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       36328
+      ],
+      [
+       "desk_student",
+       36132
+      ]
+     ],
+     "ms": 10.4
+    },
+    "dorm4": {
+     "meshes": 144,
+     "verts": 452616,
+     "tris": 492186,
+     "bytes": 2593438,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 393406,
+      "tris": 435470,
+      "bytes": 713682
+     },
+     "top": [
+      [
+       "bed_mattress",
+       101760
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       36328
+      ],
+      [
+       "desk_student",
+       36132
+      ]
+     ],
+     "ms": 11.4
+    },
+    "dorm5": {
+     "meshes": 141,
+     "verts": 450278,
+     "tris": 489908,
+     "bytes": 2518982,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 393406,
+      "tris": 435470,
+      "bytes": 713682
+     },
+     "top": [
+      [
+       "bed_mattress",
+       101760
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       36328
+      ],
+      [
+       "desk_student",
+       36132
+      ]
+     ],
+     "ms": 10.8
+    },
+    "dorm6": {
+     "meshes": 141,
+     "verts": 450394,
+     "tris": 490072,
+     "bytes": 2522982,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 393406,
+      "tris": 435470,
+      "bytes": 713682
+     },
+     "top": [
+      [
+       "bed_mattress",
+       101760
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       36328
+      ],
+      [
+       "desk_student",
+       36132
+      ]
+     ],
+     "ms": 11.3
+    },
+    "garage1": {
+     "meshes": 79,
+     "verts": 443684,
+     "tris": 513510,
+     "bytes": 1366838,
+     "inst": {
+      "meshes": 67,
+      "draws": 362,
+      "verts": 427492,
+      "tris": 503764,
+      "bytes": 887370
+     },
+     "top": [
+      [
+       "car_sedan",
+       382272
+      ],
+      [
+       "sprinkler",
+       20292
+      ],
+      [
+       "wheel_stop",
+       11648
+      ],
+      [
+       "pillar_bands",
+       8160
+      ],
+      [
+       "stair_baluster",
+       2984
+      ]
+     ],
+     "ms": 6.6
+    },
+    "trash1": {
+     "meshes": 16,
+     "verts": 4614,
+     "tris": 4478,
+     "bytes": 146984,
+     "inst": {
+      "meshes": 2,
+      "draws": 2,
+      "verts": 216,
+      "tris": 158,
+      "bytes": 6716
+     },
+     "top": [
+      [
+       "light_panel_180",
+       216
+      ]
+     ],
+     "ms": 6.7
+    },
+    "link1": {
+     "meshes": 25,
+     "verts": 22268,
+     "tris": 20884,
+     "bytes": 77852,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 20900,
+      "tris": 19976,
+      "bytes": 36836
+     },
+     "top": [
+      [
+       "window_in_180",
+       20900
+      ]
+     ],
+     "ms": 0.5
+    },
+    "link2": {
+     "meshes": 26,
+     "verts": 22428,
+     "tris": 21070,
+     "bytes": 83128,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 20900,
+      "tris": 19976,
+      "bytes": 36836
+     },
+     "top": [
+      [
+       "window_in_180",
+       20900
+      ]
+     ],
+     "ms": 0.5
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 22288,
+     "tris": 19912,
+     "bytes": 703850,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 4.9
+    },
+    "guard1": {
+     "meshes": 22,
+     "verts": 9272,
+     "tris": 8552,
+     "bytes": 262896,
+     "inst": {
+      "meshes": 8,
+      "draws": 8,
+      "verts": 1896,
+      "tris": 1816,
+      "bytes": 30704
+     },
+     "top": [
+      [
+       "window_in_150",
+       1896
+      ]
+     ],
+     "ms": 2.2
+    },
+    "gear1": {
+     "meshes": 31,
+     "verts": 32694,
+     "tris": 34478,
+     "bytes": 740768,
+     "inst": {
+      "meshes": 17,
+      "draws": 26,
+      "verts": 14836,
+      "tris": 9170,
+      "bytes": 124612
+     },
+     "top": [
+      [
+       "shelf_metal",
+       11776
+      ],
+      [
+       "window_in_150",
+       2844
+      ],
+      [
+       "light_panel_180",
+       216
+      ]
+     ],
+     "ms": 4.6
+    }
+   },
+   "outdoor": {
+    "meshes": 1276,
+    "verts": 3310818,
+    "tris": 2561930,
+    "bytes": 10901540,
+    "inst": {
+     "meshes": 1231,
+     "draws": 25338,
+     "verts": 3096432,
+     "tris": 2433174,
+     "bytes": 4338986
+    },
+    "top": [
+     [
+      "fence_panel_200",
+      428672
+     ],
+     [
+      "fwin_180_125",
+      321120
+     ],
+     [
+      "ac_outdoor",
+      308884
+     ],
+     [
+      "?",
+      294000
+     ],
+     [
+      "fsash_180_125",
+      190080
+     ]
+    ],
+    "ms": 102.7
+   },
+   "total": {
+    "meshes": 3098,
+    "verts": 19418304,
+    "tris": 18150224,
+    "bytes": 72434678,
+    "ms": 540.5000000000001,
+    "inst": {
+     "meshes": 2536,
+     "draws": 25191,
+     "verts": 17532942,
+     "tris": 16498962,
+     "bytes": 13077176
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 535,
+     "tris": 2901709
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 312,
+     "tris": 1888440
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 219,
+     "tris": 3297015
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 174,
+     "tris": 912492
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 1015,
+     "tris": 2359732
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 1147,
+     "tris": 2643576
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 300,
+     "tris": 863238
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 101,
+     "tris": 626826
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 312,
+     "tris": 4061895
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 267,
+     "tris": 4597651
+    }
+   ],
+   "label": "超精细",
+   "packs": [
+    {
+     "lod": 1,
+     "assets": 202,
+     "verts": 349188,
+     "tris": 333400,
+     "raw": 7587408
+    }
+   ]
+  },
+  "4": {
+   "rooms": {
+    "teach1": {
+     "meshes": 214,
+     "verts": 1518323,
+     "tris": 1378578,
+     "bytes": 7825358,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1295918,
+      "tris": 1196770,
+      "bytes": 879098
+     },
+     "top": [
+      [
+       "desk_student",
+       511056
+      ],
+      [
+       "chair_student",
+       286560
+      ],
+      [
+       "books_row_32b",
+       224640
+      ],
+      [
+       "bottle_water",
+       96129
+      ],
+      [
+       "books_row_38b",
+       57456
+      ]
+     ],
+     "ms": 115
+    },
+    "teach2": {
+     "meshes": 214,
+     "verts": 1512257,
+     "tris": 1372657,
+     "bytes": 7620503,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1295918,
+      "tris": 1196770,
+      "bytes": 879098
+     },
+     "top": [
+      [
+       "desk_student",
+       511056
+      ],
+      [
+       "chair_student",
+       286560
+      ],
+      [
+       "books_row_32b",
+       224640
+      ],
+      [
+       "bottle_water",
+       96129
+      ],
+      [
+       "books_row_38b",
+       57456
+      ]
+     ],
+     "ms": 93.8
+    },
+    "teach3": {
+     "meshes": 214,
+     "verts": 1513639,
+     "tris": 1374678,
+     "bytes": 7668258,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1295918,
+      "tris": 1196770,
+      "bytes": 879098
+     },
+     "top": [
+      [
+       "desk_student",
+       511056
+      ],
+      [
+       "chair_student",
+       286560
+      ],
+      [
+       "books_row_32b",
+       224640
+      ],
+      [
+       "bottle_water",
+       96129
+      ],
+      [
+       "books_row_38b",
+       57456
+      ]
+     ],
+     "ms": 60.7
+    },
+    "teach4": {
+     "meshes": 214,
+     "verts": 1510370,
+     "tris": 1370198,
+     "bytes": 7556384,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1295918,
+      "tris": 1196770,
+      "bytes": 879098
+     },
+     "top": [
+      [
+       "desk_student",
+       511056
+      ],
+      [
+       "chair_student",
+       286560
+      ],
+      [
+       "books_row_32b",
+       224640
+      ],
+      [
+       "bottle_water",
+       96129
+      ],
+      [
+       "books_row_38b",
+       57456
+      ]
+     ],
+     "ms": 55
+    },
+    "teach5": {
+     "meshes": 214,
+     "verts": 1510104,
+     "tris": 1369794,
+     "bytes": 7547044,
+     "inst": {
+      "meshes": 182,
+      "draws": 1666,
+      "verts": 1295918,
+      "tris": 1196770,
+      "bytes": 879098
+     },
+     "top": [
+      [
+       "desk_student",
+       511056
+      ],
+      [
+       "chair_student",
+       286560
+      ],
+      [
+       "books_row_32b",
+       224640
+      ],
+      [
+       "bottle_water",
+       96129
+      ],
+      [
+       "books_row_38b",
+       57456
+      ]
+     ],
+     "ms": 51.4
+    },
+    "teach6": {
+     "meshes": 10,
+     "verts": 9714,
+     "tris": 5886,
+     "bytes": 191014,
+     "inst": {
+      "meshes": 5,
+      "draws": 26,
+      "verts": 3918,
+      "tris": 2988,
+      "bytes": 22930
+     },
+     "top": [
+      [
+       "stair_baluster",
+       2958
+      ],
+      [
+       "stair_step",
+       960
+      ]
+     ],
+     "ms": 7.5
+    },
+    "admin1": {
+     "meshes": 106,
+     "verts": 2326957,
+     "tris": 2309425,
+     "bytes": 4850708,
+     "inst": {
+      "meshes": 85,
+      "draws": 1994,
+      "verts": 2196881,
+      "tris": 2172120,
+      "bytes": 644902
+     },
+     "top": [
+      [
+       "chair_office",
+       1350888
+      ],
+      [
+       "cubicle_admin",
+       811787
+      ],
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2958
+      ]
+     ],
+     "ms": 52.5
+    },
+    "admin2": {
+     "meshes": 105,
+     "verts": 2325239,
+     "tris": 2308594,
+     "bytes": 4771262,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 2197829,
+      "tris": 2173028,
+      "bytes": 645206
+     },
+     "top": [
+      [
+       "chair_office",
+       1350888
+      ],
+      [
+       "cubicle_admin",
+       811787
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2958
+      ]
+     ],
+     "ms": 32
+    },
+    "admin3": {
+     "meshes": 105,
+     "verts": 2328775,
+     "tris": 2311383,
+     "bytes": 4879932,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 2197829,
+      "tris": 2173028,
+      "bytes": 645206
+     },
+     "top": [
+      [
+       "chair_office",
+       1350888
+      ],
+      [
+       "cubicle_admin",
+       811787
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2958
+      ]
+     ],
+     "ms": 33.2
+    },
+    "admin4": {
+     "meshes": 105,
+     "verts": 2324245,
+     "tris": 2307259,
+     "bytes": 4737408,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 2197829,
+      "tris": 2173028,
+      "bytes": 645206
+     },
+     "top": [
+      [
+       "chair_office",
+       1350888
+      ],
+      [
+       "cubicle_admin",
+       811787
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2958
+      ]
+     ],
+     "ms": 31.6
+    },
+    "admin5": {
+     "meshes": 105,
+     "verts": 2324241,
+     "tris": 2307257,
+     "bytes": 4737292,
+     "inst": {
+      "meshes": 85,
+      "draws": 1998,
+      "verts": 2197829,
+      "tris": 2173028,
+      "bytes": 645206
+     },
+     "top": [
+      [
+       "chair_office",
+       1350888
+      ],
+      [
+       "cubicle_admin",
+       811787
+      ],
+      [
+       "window_in_150",
+       25596
+      ],
+      [
+       "door_frame_lr",
+       4032
+      ],
+      [
+       "stair_baluster",
+       2958
+      ]
+     ],
+     "ms": 33.7
+    },
+    "lab1": {
+     "meshes": 70,
+     "verts": 260041,
+     "tris": 219326,
+     "bytes": 2469896,
+     "inst": {
+      "meshes": 51,
+      "draws": 596,
+      "verts": 186938,
+      "tris": 164428,
+      "bytes": 180250
+     },
+     "top": [
+      [
+       "bench_physics",
+       154620
+      ],
+      [
+       "window_in_150",
+       23700
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stair_baluster",
+       2958
+      ],
+      [
+       "light_panel_180",
+       1340
+      ]
+     ],
+     "ms": 23.4
+    },
+    "lab2": {
+     "meshes": 77,
+     "verts": 533835,
+     "tris": 490420,
+     "bytes": 2545630,
+     "inst": {
+      "meshes": 59,
+      "draws": 780,
+      "verts": 462746,
+      "tris": 436416,
+      "bytes": 291710
+     },
+     "top": [
+      [
+       "bench_chem",
+       429480
+      ],
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stair_baluster",
+       2958
+      ],
+      [
+       "light_panel_180",
+       1340
+      ]
+     ],
+     "ms": 17.6
+    },
+    "lab3": {
+     "meshes": 91,
+     "verts": 598183,
+     "tris": 554814,
+     "bytes": 2246266,
+     "inst": {
+      "meshes": 73,
+      "draws": 537,
+      "verts": 547492,
+      "tris": 516712,
+      "bytes": 673480
+     },
+     "top": [
+      [
+       "chair_office",
+       321640
+      ],
+      [
+       "desk_computer",
+       131120
+      ],
+      [
+       "server_rack",
+       58068
+      ],
+      [
+       "window_in_150",
+       27492
+      ],
+      [
+       "stair_baluster",
+       2958
+      ]
+     ],
+     "ms": 18.8
+    },
+    "lab4": {
+     "meshes": 65,
+     "verts": 381671,
+     "tris": 293557,
+     "bytes": 10798570,
+     "inst": {
+      "meshes": 31,
+      "draws": 150,
+      "verts": 33266,
+      "tris": 30876,
+      "bytes": 92722
+     },
+     "top": [
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stair_baluster",
+       2958
+      ],
+      [
+       "light_panel_180",
+       1340
+      ],
+      [
+       "stair_step",
+       960
+      ]
+     ],
+     "ms": 79
+    },
+    "lab5": {
+     "meshes": 59,
+     "verts": 145306,
+     "tris": 125654,
+     "bytes": 2326458,
+     "inst": {
+      "meshes": 41,
+      "draws": 218,
+      "verts": 76294,
+      "tris": 73656,
+      "bytes": 186726
+     },
+     "top": [
+      [
+       "chair_student_tall",
+       39940
+      ],
+      [
+       "window_in_150",
+       24648
+      ],
+      [
+       "door_frame_lr",
+       3360
+      ],
+      [
+       "stool_piano",
+       3088
+      ],
+      [
+       "stair_baluster",
+       2958
+      ]
+     ],
+     "ms": 22
+    },
+    "canteen1": {
+     "meshes": 85,
+     "verts": 481892,
+     "tris": 590908,
+     "bytes": 3854268,
+     "inst": {
+      "meshes": 65,
+      "draws": 370,
+      "verts": 368998,
+      "tris": 484844,
+      "bytes": 233638
+     },
+     "top": [
+      [
+       "canteen_table",
+       327060
+      ],
+      [
+       "window_in_150",
+       34128
+      ],
+      [
+       "stair_baluster",
+       2958
+      ],
+      [
+       "door_frame_lr",
+       2016
+      ],
+      [
+       "light_panel_180",
+       1876
+      ]
+     ],
+     "ms": 37.1
+    },
+    "dorm1": {
+     "meshes": 144,
+     "verts": 613594,
+     "tris": 699214,
+     "bytes": 5024874,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 482798,
+      "tris": 579606,
+      "bytes": 906530
+     },
+     "top": [
+      [
+       "bed_mattress",
+       147840
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       54568
+      ],
+      [
+       "desk_student",
+       42588
+      ]
+     ],
+     "ms": 32
+    },
+    "dorm2": {
+     "meshes": 141,
+     "verts": 607358,
+     "tris": 691394,
+     "bytes": 4815818,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 482798,
+      "tris": 579606,
+      "bytes": 906530
+     },
+     "top": [
+      [
+       "bed_mattress",
+       147840
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       54568
+      ],
+      [
+       "desk_student",
+       42588
+      ]
+     ],
+     "ms": 31.4
+    },
+    "dorm3": {
+     "meshes": 141,
+     "verts": 609374,
+     "tris": 694028,
+     "bytes": 4884038,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 482798,
+      "tris": 579606,
+      "bytes": 906530
+     },
+     "top": [
+      [
+       "bed_mattress",
+       147840
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       54568
+      ],
+      [
+       "desk_student",
+       42588
+      ]
+     ],
+     "ms": 32.6
+    },
+    "dorm4": {
+     "meshes": 144,
+     "verts": 610981,
+     "tris": 695604,
+     "bytes": 4935276,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 482798,
+      "tris": 579606,
+      "bytes": 906530
+     },
+     "top": [
+      [
+       "bed_mattress",
+       147840
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       54568
+      ],
+      [
+       "desk_student",
+       42588
+      ]
+     ],
+     "ms": 31.2
+    },
+    "dorm5": {
+     "meshes": 141,
+     "verts": 609004,
+     "tris": 693572,
+     "bytes": 4871682,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 482798,
+      "tris": 579606,
+      "bytes": 906530
+     },
+     "top": [
+      [
+       "bed_mattress",
+       147840
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       54568
+      ],
+      [
+       "desk_student",
+       42588
+      ]
+     ],
+     "ms": 26.8
+    },
+    "dorm6": {
+     "meshes": 141,
+     "verts": 609278,
+     "tris": 693980,
+     "bytes": 4881254,
+     "inst": {
+      "meshes": 125,
+      "draws": 604,
+      "verts": 482798,
+      "tris": 579606,
+      "bytes": 906530
+     },
+     "top": [
+      [
+       "bed_mattress",
+       147840
+      ],
+      [
+       "bunk_frame_l",
+       74592
+      ],
+      [
+       "bunk_frame_r",
+       74592
+      ],
+      [
+       "quilt_folded",
+       54568
+      ],
+      [
+       "desk_student",
+       42588
+      ]
+     ],
+     "ms": 33
+    },
+    "garage1": {
+     "meshes": 79,
+     "verts": 679188,
+     "tris": 820790,
+     "bytes": 2980568,
+     "inst": {
+      "meshes": 67,
+      "draws": 362,
+      "verts": 621746,
+      "tris": 789598,
+      "bytes": 1299924
+     },
+     "top": [
+      [
+       "car_sedan",
+       560112
+      ],
+      [
+       "sprinkler",
+       28158
+      ],
+      [
+       "wheel_stop",
+       15104
+      ],
+      [
+       "pillar_bands",
+       12240
+      ],
+      [
+       "stair_baluster",
+       3944
+      ]
+     ],
+     "ms": 22.3
+    },
+    "trash1": {
+     "meshes": 16,
+     "verts": 8194,
+     "tris": 7362,
+     "bytes": 257368,
+     "inst": {
+      "meshes": 2,
+      "draws": 2,
+      "verts": 268,
+      "tris": 230,
+      "bytes": 8500
+     },
+     "top": [
+      [
+       "light_panel_180",
+       268
+      ]
+     ],
+     "ms": 1.7
+    },
+    "link1": {
+     "meshes": 25,
+     "verts": 24662,
+     "tris": 22178,
+     "bytes": 147860,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 20900,
+      "tris": 19976,
+      "bytes": 36836
+     },
+     "top": [
+      [
+       "window_in_180",
+       20900
+      ]
+     ],
+     "ms": 1.2
+    },
+    "link2": {
+     "meshes": 26,
+     "verts": 24980,
+     "tris": 22608,
+     "bytes": 158708,
+     "inst": {
+      "meshes": 16,
+      "draws": 88,
+      "verts": 20900,
+      "tris": 19976,
+      "bytes": 36836
+     },
+     "top": [
+      [
+       "window_in_180",
+       20900
+      ]
+     ],
+     "ms": 1.3
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 59985,
+     "tris": 44696,
+     "bytes": 1837344,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 20.1
+    },
+    "guard1": {
+     "meshes": 22,
+     "verts": 14340,
+     "tris": 12884,
+     "bytes": 420656,
+     "inst": {
+      "meshes": 8,
+      "draws": 8,
+      "verts": 1896,
+      "tris": 1816,
+      "bytes": 30704
+     },
+     "top": [
+      [
+       "window_in_150",
+       1896
+      ]
+     ],
+     "ms": 2.5
+    },
+    "gear1": {
+     "meshes": 31,
+     "verts": 36360,
+     "tris": 36854,
+     "bytes": 849188,
+     "inst": {
+      "meshes": 17,
+      "draws": 26,
+      "verts": 14936,
+      "tris": 9290,
+      "bytes": 126780
+     },
+     "top": [
+      [
+       "shelf_metal",
+       11824
+      ],
+      [
+       "window_in_150",
+       2844
+      ],
+      [
+       "light_panel_180",
+       268
+      ]
+     ],
+     "ms": 4.4
+    }
+   },
+   "outdoor": {
+    "meshes": 1322,
+    "verts": 4658427,
+    "tris": 3674371,
+    "bytes": 20005217,
+    "inst": {
+     "meshes": 1265,
+     "draws": 31536,
+     "verts": 4182672,
+     "tris": 3401701,
+     "bytes": 5808980
+    },
+    "top": [
+     [
+      "fence_panel_200",
+      628824
+     ],
+     [
+      "?",
+      420000
+     ],
+     [
+      "ac_outdoor",
+      403992
+     ],
+     [
+      "fwin_180_125",
+      389880
+     ],
+     [
+      "fence_pillar",
+      239184
+     ]
+    ],
+    "ms": 198.4
+   },
+   "total": {
+    "meshes": 3119,
+    "verts": 26112090,
+    "tris": 25825552,
+    "bytes": 122690885,
+    "ms": 1004.8,
+    "inst": {
+     "meshes": 2536,
+     "draws": 25191,
+     "verts": 22724873,
+     "tris": 22876524,
+     "bytes": 16281432
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 541,
+     "tris": 4096879
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 312,
+     "tris": 2535100
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 219,
+     "tris": 4754585
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 174,
+     "tris": 1477168
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 1060,
+     "tris": 3439509
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 1183,
+     "tris": 3764880
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 323,
+     "tris": 1318320
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 124,
+     "tris": 1022960
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 312,
+     "tris": 5832892
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 267,
+     "tris": 6589012
+    }
+   ],
+   "label": "真实",
+   "packs": [
+    {
+     "lod": 0,
+     "assets": 202,
+     "verts": 481959,
+     "tris": 505757,
+     "raw": 10745886
+    }
+   ]
+  }
+ },
+ "files": {
+  "models_l0.js": {
+   "bytes": 4075043,
+   "lod": 0,
+   "assets": 202,
+   "verts": 481959,
+   "tris": 505757,
+   "raw": 10745886
+  },
+  "models_l1.js": {
+   "bytes": 2926444,
+   "lod": 1,
+   "assets": 202,
+   "verts": 349188,
+   "tris": 333400,
+   "raw": 7587408
+  },
+  "models_l2.js": {
+   "bytes": 1820495,
+   "lod": 2,
+   "assets": 202,
+   "verts": 185624,
+   "tris": 161546,
+   "raw": 3939260
+  },
+  "models_l3.js": {
+   "bytes": 897908,
+   "lod": 3,
+   "assets": 181,
+   "verts": 76745,
+   "tris": 60472,
+   "raw": 1590752
+  },
+  "textures_1024.js": {
+   "bytes": 4784540
+  },
+  "textures_512.js": {
+   "bytes": 1044395
+  }
+ },
+ "models": {
+  "door_frame_lr": {
+   "inst": true,
+   "lods": {
+    "0": [
+     672,
+     626
+    ],
+    "1": [
+     672,
+     626
+    ],
+    "2": [
+     316,
+     194
+    ],
+    "3": [
+     212,
+     106
+    ]
+   }
+  },
+  "door_frame_l": {
+   "inst": false,
+   "lods": {
+    "0": [
+     432,
+     400
+    ],
+    "1": [
+     432,
+     400
+    ],
+    "2": [
+     204,
+     120
+    ],
+    "3": [
+     152,
+     76
+    ]
+   }
+  },
+  "door_frame_r": {
+   "inst": false,
+   "lods": {
+    "0": [
+     432,
+     400
+    ],
+    "1": [
+     432,
+     400
+    ],
+    "2": [
+     204,
+     120
+    ],
+    "3": [
+     152,
+     76
+    ]
+   }
+  },
+  "door_frame_0": {
+   "inst": false,
+   "lods": {
+    "0": [
+     192,
+     174
+    ],
+    "1": [
+     192,
+     174
+    ],
+    "2": [
+     92,
+     46
+    ],
+    "3": [
+     92,
+     46
+    ]
+   }
+  },
+  "door_plate": {
+   "inst": false,
+   "lods": {
+    "0": [
+     420,
+     342
+    ],
+    "1": [
+     316,
+     246
+    ],
+    "2": [
+     80,
+     58
+    ],
+    "3": [
+     64,
+     34
+    ]
+   }
+  },
+  "door_leaf": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2214,
+     2116
+    ],
+    "1": [
+     1656,
+     1500
+    ],
+    "2": [
+     1052,
+     796
+    ],
+    "3": [
+     314,
+     240
+    ]
+   }
+  },
+  "door_leaf_m": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2214,
+     2116
+    ],
+    "1": [
+     1656,
+     1500
+    ],
+    "2": [
+     1052,
+     796
+    ],
+    "3": [
+     314,
+     240
+    ]
+   }
+  },
+  "exit_door": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2134,
+     2334
+    ],
+    "1": [
+     1600,
+     1646
+    ],
+    "2": [
+     950,
+     766
+    ],
+    "3": [
+     440,
+     230
+    ]
+   }
+  },
+  "window_in_150": {
+   "inst": true,
+   "lods": {
+    "0": [
+     948,
+     908
+    ],
+    "1": [
+     948,
+     908
+    ],
+    "2": [
+     408,
+     224
+    ],
+    "3": [
+     240,
+     120
+    ]
+   }
+  },
+  "window_in_180": {
+   "inst": true,
+   "lods": {
+    "0": [
+     950,
+     908
+    ],
+    "1": [
+     950,
+     908
+    ],
+    "2": [
+     408,
+     224
+    ],
+    "3": [
+     240,
+     120
+    ]
+   }
+  },
+  "stair_step": {
+   "inst": true,
+   "lods": {
+    "0": [
+     192,
+     156
+    ],
+    "1": [
+     192,
+     156
+    ],
+    "2": [
+     144,
+     92
+    ],
+    "3": [
+     72,
+     36
+    ]
+   }
+  },
+  "stair_baluster": {
+   "inst": true,
+   "lods": {
+    "0": [
+     493,
+     368
+    ],
+    "1": [
+     373,
+     272
+    ],
+    "2": [
+     123,
+     88
+    ],
+    "3": [
+     102,
+     70
+    ]
+   }
+  },
+  "locker_bank_4": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1742,
+     1206
+    ],
+    "1": [
+     1558,
+     1046
+    ],
+    "2": [
+     1228,
+     662
+    ],
+    "3": [
+     236,
+     118
+    ]
+   }
+  },
+  "board_bulletin": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1862,
+     1134
+    ],
+    "1": [
+     1634,
+     950
+    ],
+    "2": [
+     1394,
+     750
+    ],
+    "3": [
+     164,
+     82
+    ]
+   }
+  },
+  "hydrant_box": {
+   "inst": false,
+   "lods": {
+    "0": [
+     840,
+     722
+    ],
+    "1": [
+     644,
+     522
+    ],
+    "2": [
+     452,
+     330
+    ],
+    "3": [
+     116,
+     58
+    ]
+   }
+  },
+  "blackboard": {
+   "inst": false,
+   "lods": {
+    "0": [
+     860,
+     788
+    ],
+    "1": [
+     656,
+     564
+    ],
+    "2": [
+     392,
+     276
+    ],
+    "3": [
+     256,
+     140
+    ]
+   }
+  },
+  "window_high": {
+   "inst": false,
+   "lods": {
+    "0": [
+     512,
+     504
+    ],
+    "1": [
+     512,
+     504
+    ],
+    "2": [
+     234,
+     136
+    ],
+    "3": [
+     208,
+     104
+    ]
+   }
+  },
+  "speaker_box": {
+   "inst": false,
+   "lods": {
+    "0": [
+     392,
+     396
+    ],
+    "1": [
+     288,
+     276
+    ],
+    "2": [
+     172,
+     140
+    ],
+    "3": [
+     72,
+     54
+    ]
+   }
+  },
+  "clock_wall": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1702,
+     1268
+    ],
+    "1": [
+     1310,
+     948
+    ],
+    "2": [
+     998,
+     692
+    ],
+    "3": [
+     456,
+     354
+    ]
+   }
+  },
+  "board_news": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1546,
+     1730
+    ],
+    "1": [
+     1176,
+     1082
+    ],
+    "2": [
+     896,
+     570
+    ],
+    "3": [
+     164,
+     82
+    ]
+   }
+  },
+  "pillar_bands": {
+   "inst": true,
+   "lods": {
+    "0": [
+     816,
+     928
+    ],
+    "1": [
+     544,
+     608
+    ],
+    "2": [
+     272,
+     224
+    ],
+    "3": [
+     96,
+     48
+    ]
+   }
+  },
+  "sprinkler": {
+   "inst": true,
+   "lods": {
+    "0": [
+     494,
+     384
+    ],
+    "1": [
+     356,
+     270
+    ],
+    "2": [
+     260,
+     194
+    ],
+    "3": [
+     132,
+     102
+    ]
+   }
+  },
+  "fwin_180_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1084,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     408,
+     258
+    ]
+   }
+  },
+  "fsash_180_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     264,
+     212
+    ],
+    "1": [
+     264,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_180_125": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1083,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     408,
+     258
+    ]
+   }
+  },
+  "fsash_180_125": {
+   "inst": true,
+   "lods": {
+    "0": [
+     264,
+     212
+    ],
+    "1": [
+     264,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_160_125": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1090,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     408,
+     258
+    ]
+   }
+  },
+  "fsash_160_125": {
+   "inst": true,
+   "lods": {
+    "0": [
+     264,
+     212
+    ],
+    "1": [
+     264,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_140_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1087,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     408,
+     258
+    ]
+   }
+  },
+  "fsash_140_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     264,
+     212
+    ],
+    "1": [
+     264,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_120_110": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1083,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     408,
+     258
+    ]
+   }
+  },
+  "fsash_120_110": {
+   "inst": true,
+   "lods": {
+    "0": [
+     272,
+     212
+    ],
+    "1": [
+     272,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_100_200": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1082,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     414,
+     258
+    ]
+   }
+  },
+  "fsash_100_200": {
+   "inst": true,
+   "lods": {
+    "0": [
+     264,
+     212
+    ],
+    "1": [
+     264,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_240_180": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1071,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     412,
+     258
+    ]
+   }
+  },
+  "fsash_240_180": {
+   "inst": true,
+   "lods": {
+    "0": [
+     264,
+     212
+    ],
+    "1": [
+     264,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_140_100": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1085,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     408,
+     258
+    ]
+   }
+  },
+  "fsash_140_100": {
+   "inst": true,
+   "lods": {
+    "0": [
+     272,
+     212
+    ],
+    "1": [
+     272,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fwin_160_90": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1089,
+     930
+    ],
+    "1": [
+     892,
+     715
+    ],
+    "2": [
+     410,
+     258
+    ]
+   }
+  },
+  "fsash_160_90": {
+   "inst": true,
+   "lods": {
+    "0": [
+     264,
+     212
+    ],
+    "1": [
+     264,
+     212
+    ],
+    "2": [
+     120,
+     60
+    ]
+   }
+  },
+  "fgrille_140_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1476,
+     976
+    ],
+    "1": [
+     1356,
+     900
+    ],
+    "2": [
+     744,
+     372
+    ]
+   }
+  },
+  "fgrille_120_110": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1412,
+     952
+    ],
+    "1": [
+     1292,
+     876
+    ],
+    "2": [
+     720,
+     360
+    ]
+   }
+  },
+  "ac_outdoor": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3258,
+     3494
+    ],
+    "1": [
+     2491,
+     2440
+    ],
+    "2": [
+     1497,
+     1410
+    ],
+    "3": [
+     566,
+     570
+    ]
+   }
+  },
+  "solar_heater": {
+   "inst": true,
+   "lods": {
+    "0": [
+     8385,
+     7884
+    ],
+    "1": [
+     5192,
+     4792
+    ],
+    "2": [
+     2234,
+     1996
+    ],
+    "3": [
+     758,
+     568
+    ]
+   }
+  },
+  "roof_stairhouse": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3194,
+     2774
+    ],
+    "1": [
+     2524,
+     2030
+    ],
+    "2": [
+     1372,
+     898
+    ],
+    "3": [
+     906,
+     486
+    ]
+   }
+  },
+  "roof_tank": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3304,
+     3184
+    ],
+    "1": [
+     2318,
+     2056
+    ],
+    "2": [
+     1422,
+     1124
+    ],
+    "3": [
+     610,
+     456
+    ]
+   }
+  },
+  "roof_antenna": {
+   "inst": true,
+   "lods": {
+    "0": [
+     907,
+     768
+    ],
+    "1": [
+     741,
+     604
+    ],
+    "2": [
+     654,
+     512
+    ],
+    "3": [
+     354,
+     248
+    ]
+   }
+  },
+  "dp_clamp": {
+   "inst": true,
+   "lods": {
+    "0": [
+     388,
+     298
+    ],
+    "1": [
+     304,
+     230
+    ],
+    "2": [
+     120,
+     86
+    ],
+    "3": [
+     104,
+     70
+    ]
+   }
+  },
+  "dp_shoe": {
+   "inst": true,
+   "lods": {
+    "0": [
+     671,
+     834
+    ],
+    "1": [
+     504,
+     584
+    ],
+    "2": [
+     274,
+     288
+    ],
+    "3": [
+     166,
+     154
+    ]
+   }
+  },
+  "dp_head": {
+   "inst": true,
+   "lods": {
+    "0": [
+     142,
+     114
+    ],
+    "1": [
+     128,
+     100
+    ],
+    "2": [
+     92,
+     56
+    ],
+    "3": [
+     86,
+     50
+    ]
+   }
+  },
+  "entrance_col_420": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2733,
+     2480
+    ],
+    "1": [
+     2324,
+     2000
+    ],
+    "2": [
+     1148,
+     816
+    ],
+    "3": [
+     828,
+     440
+    ]
+   }
+  },
+  "entrance_420": {
+   "inst": false,
+   "lods": {
+    "0": [
+     4141,
+     3568
+    ],
+    "1": [
+     3374,
+     2784
+    ],
+    "2": [
+     1736,
+     1204
+    ],
+    "3": [
+     1166,
+     664
+    ]
+   }
+  },
+  "entrance_300": {
+   "inst": false,
+   "lods": {
+    "0": [
+     4137,
+     3568
+    ],
+    "1": [
+     3374,
+     2784
+    ],
+    "2": [
+     1729,
+     1204
+    ],
+    "3": [
+     1166,
+     664
+    ]
+   }
+  },
+  "entrance_231": {
+   "inst": false,
+   "lods": {
+    "0": [
+     4140,
+     3568
+    ],
+    "1": [
+     3374,
+     2784
+    ],
+    "2": [
+     1728,
+     1204
+    ],
+    "3": [
+     1166,
+     664
+    ]
+   }
+  },
+  "door_small_160": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1782,
+     1724
+    ],
+    "1": [
+     1438,
+     1272
+    ],
+    "2": [
+     496,
+     380
+    ],
+    "3": [
+     234,
+     120
+    ]
+   }
+  },
+  "exhaust_hood": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1030,
+     854
+    ],
+    "1": [
+     859,
+     674
+    ],
+    "2": [
+     494,
+     338
+    ],
+    "3": [
+     346,
+     242
+    ]
+   }
+  },
+  "shed_frame": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1964,
+     1472
+    ],
+    "1": [
+     1472,
+     1072
+    ],
+    "2": [
+     732,
+     464
+    ],
+    "3": [
+     324,
+     176
+    ]
+   }
+  },
+  "shed_roof_1m": {
+   "inst": true,
+   "lods": {
+    "0": [
+     564,
+     344
+    ],
+    "1": [
+     564,
+     344
+    ],
+    "2": [
+     412,
+     232
+    ],
+    "3": [
+     216,
+     112
+    ]
+   }
+  },
+  "shed_charger": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2018,
+     1832
+    ],
+    "1": [
+     1746,
+     1384
+    ],
+    "2": [
+     629,
+     536
+    ],
+    "3": [
+     336,
+     168
+    ]
+   }
+  },
+  "hoop_stand": {
+   "inst": true,
+   "lods": {
+    "0": [
+     5192,
+     4692
+    ],
+    "1": [
+     4291,
+     3754
+    ],
+    "2": [
+     2073,
+     1598
+    ],
+    "3": [
+     1344,
+     950
+    ]
+   }
+  },
+  "soccer_goal": {
+   "inst": true,
+   "lods": {
+    "0": [
+     4099,
+     4872
+    ],
+    "1": [
+     2960,
+     3460
+    ],
+    "2": [
+     1633,
+     1874
+    ],
+    "3": [
+     234,
+     216
+    ]
+   }
+  },
+  "badminton_post": {
+   "inst": true,
+   "lods": {
+    "0": [
+     934,
+     934
+    ],
+    "1": [
+     672,
+     594
+    ],
+    "2": [
+     450,
+     360
+    ],
+    "3": [
+     147,
+     93
+    ]
+   }
+  },
+  "fence_pillar": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1208,
+     1122
+    ],
+    "1": [
+     452,
+     510
+    ],
+    "2": [
+     236,
+     206
+    ],
+    "3": [
+     144,
+     110
+    ]
+   }
+  },
+  "fence_panel_200": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1596,
+     1176
+    ],
+    "1": [
+     1088,
+     808
+    ],
+    "2": [
+     432,
+     216
+    ]
+   }
+  },
+  "gate_pillar": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1150,
+     1086
+    ],
+    "1": [
+     801,
+     714
+    ],
+    "2": [
+     309,
+     274
+    ],
+    "3": [
+     192,
+     174
+    ]
+   }
+  },
+  "gate_pillar_tall": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1393,
+     1126
+    ],
+    "1": [
+     1120,
+     814
+    ],
+    "2": [
+     188,
+     174
+    ],
+    "3": [
+     188,
+     174
+    ]
+   }
+  },
+  "gate_leaf_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2364,
+     2612
+    ],
+    "1": [
+     1136,
+     996
+    ],
+    "2": [
+     600,
+     412
+    ],
+    "3": [
+     258,
+     126
+    ]
+   }
+  },
+  "turnstile": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1220,
+     1454
+    ],
+    "1": [
+     882,
+     938
+    ],
+    "2": [
+     648,
+     586
+    ],
+    "3": [
+     388,
+     242
+    ]
+   }
+  },
+  "padlock_chain": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1372,
+     2088
+    ],
+    "1": [
+     896,
+     1304
+    ],
+    "2": [
+     530,
+     764
+    ],
+    "3": [
+     86,
+     92
+    ]
+   }
+  },
+  "barrier_cabinet": {
+   "inst": true,
+   "lods": {
+    "0": [
+     850,
+     1066
+    ],
+    "1": [
+     572,
+     614
+    ],
+    "2": [
+     356,
+     282
+    ],
+    "3": [
+     174,
+     94
+    ]
+   }
+  },
+  "desk_student": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3549,
+     3288
+    ],
+    "1": [
+     3011,
+     2824
+    ],
+    "2": [
+     680,
+     360
+    ],
+    "3": [
+     180,
+     90
+    ]
+   }
+  },
+  "chair_student": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1990,
+     1972
+    ],
+    "1": [
+     1582,
+     1600
+    ],
+    "2": [
+     703,
+     632
+    ],
+    "3": [
+     108,
+     74
+    ]
+   }
+  },
+  "chair_student_tall": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1997,
+     1972
+    ],
+    "1": [
+     1589,
+     1600
+    ],
+    "2": [
+     709,
+     632
+    ],
+    "3": [
+     108,
+     74
+    ]
+   }
+  },
+  "bunk_frame_r": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3108,
+     2624
+    ],
+    "1": [
+     3108,
+     2624
+    ],
+    "2": [
+     1312,
+     656
+    ],
+    "3": [
+     608,
+     304
+    ]
+   }
+  },
+  "bunk_frame_l": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3108,
+     2624
+    ],
+    "1": [
+     3108,
+     2624
+    ],
+    "2": [
+     1312,
+     656
+    ],
+    "3": [
+     608,
+     304
+    ]
+   }
+  },
+  "bunk_frame_n": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2064,
+     1856
+    ],
+    "1": [
+     2064,
+     1856
+    ],
+    "2": [
+     1024,
+     512
+    ],
+    "3": [
+     416,
+     208
+    ]
+   }
+  },
+  "bed_mattress": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1540,
+     2488
+    ],
+    "1": [
+     1060,
+     1624
+    ],
+    "2": [
+     628,
+     888
+    ],
+    "3": [
+     96,
+     88
+    ]
+   }
+  },
+  "quilt_folded": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1436,
+     2400
+    ],
+    "1": [
+     956,
+     1536
+    ],
+    "2": [
+     572,
+     864
+    ],
+    "3": [
+     48,
+     44
+    ]
+   }
+  },
+  "quilt_block": {
+   "inst": true,
+   "lods": {
+    "0": [
+     174,
+     200
+    ],
+    "1": [
+     120,
+     120
+    ],
+    "2": [
+     72,
+     56
+    ],
+    "3": [
+     48,
+     44
+    ]
+   }
+  },
+  "fig_tall": {
+   "inst": false,
+   "lods": {
+    "0": [
+     5799,
+     7292
+    ],
+    "1": [
+     3389,
+     3614
+    ],
+    "2": [
+     1799,
+     1756
+    ],
+    "3": [
+     1095,
+     992
+    ]
+   }
+  },
+  "fig_roam": {
+   "inst": false,
+   "lods": {
+    "0": [
+     5798,
+     7292
+    ],
+    "1": [
+     3389,
+     3614
+    ],
+    "2": [
+     1815,
+     1756
+    ],
+    "3": [
+     1095,
+     992
+    ]
+   }
+  },
+  "fig_person": {
+   "inst": false,
+   "lods": {
+    "0": [
+     5796,
+     7292
+    ],
+    "1": [
+     3391,
+     3614
+    ],
+    "2": [
+     1801,
+     1756
+    ],
+    "3": [
+     1095,
+     992
+    ]
+   }
+  },
+  "fig_teacher": {
+   "inst": false,
+   "lods": {
+    "0": [
+     5790,
+     7292
+    ],
+    "1": [
+     3389,
+     3614
+    ],
+    "2": [
+     1815,
+     1756
+    ],
+    "3": [
+     1095,
+     992
+    ]
+   }
+  },
+  "fig_neck": {
+   "inst": false,
+   "lods": {
+    "0": [
+     5800,
+     7292
+    ],
+    "1": [
+     3389,
+     3614
+    ],
+    "2": [
+     1799,
+     1756
+    ],
+    "3": [
+     1095,
+     992
+    ]
+   }
+  },
+  "fig_sit": {
+   "inst": false,
+   "lods": {
+    "0": [
+     5628,
+     7032
+    ],
+    "1": [
+     3254,
+     3426
+    ],
+    "2": [
+     1690,
+     1608
+    ],
+    "3": [
+     996,
+     892
+    ]
+   }
+  },
+  "fx_hand": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2605,
+     3225
+    ],
+    "1": [
+     1595,
+     1840
+    ],
+    "2": [
+     983,
+     1026
+    ],
+    "3": [
+     699,
+     571
+    ]
+   }
+  },
+  "fx_head": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2108,
+     2968
+    ],
+    "1": [
+     1269,
+     1646
+    ],
+    "2": [
+     738,
+     820
+    ],
+    "3": [
+     388,
+     308
+    ]
+   }
+  },
+  "fx_bigface": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2020,
+     2800
+    ],
+    "1": [
+     1121,
+     1382
+    ],
+    "2": [
+     430,
+     472
+    ],
+    "3": [
+     311,
+     306
+    ]
+   }
+  },
+  "fx_smile": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2852,
+     3654
+    ],
+    "1": [
+     2012,
+     2322
+    ],
+    "2": [
+     1017,
+     1024
+    ],
+    "3": [
+     869,
+     804
+    ]
+   }
+  },
+  "fx_neckhead": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1073,
+     1408
+    ],
+    "1": [
+     611,
+     716
+    ],
+    "2": [
+     295,
+     256
+    ],
+    "3": [
+     211,
+     162
+    ]
+   }
+  },
+  "fx_bell": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3692,
+     4060
+    ],
+    "1": [
+     2204,
+     2272
+    ],
+    "2": [
+     1420,
+     1304
+    ],
+    "3": [
+     636,
+     636
+    ]
+   }
+  },
+  "fx_lantern": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2108,
+     2524
+    ],
+    "1": [
+     1686,
+     1840
+    ],
+    "2": [
+     1288,
+     1376
+    ],
+    "3": [
+     434,
+     336
+    ]
+   }
+  },
+  "pat_gear": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2249,
+     1988
+    ],
+    "1": [
+     1529,
+     1308
+    ],
+    "2": [
+     914,
+     676
+    ],
+    "3": [
+     776,
+     534
+    ]
+   }
+  },
+  "cup_tsinghua": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1335,
+     1184
+    ],
+    "1": [
+     1005,
+     864
+    ],
+    "2": [
+     741,
+     608
+    ],
+    "3": [
+     354,
+     308
+    ]
+   }
+  },
+  "street_lamp": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1827,
+     1736
+    ],
+    "1": [
+     1334,
+     1188
+    ],
+    "2": [
+     556,
+     512
+    ],
+    "3": [
+     355,
+     294
+    ]
+   }
+  },
+  "bench_park": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3426,
+     4228
+    ],
+    "1": [
+     2266,
+     2604
+    ],
+    "2": [
+     922,
+     1020
+    ],
+    "3": [
+     590,
+     544
+    ]
+   }
+  },
+  "manhole": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1587,
+     1926
+    ],
+    "1": [
+     1354,
+     1600
+    ],
+    "2": [
+     941,
+     1248
+    ],
+    "3": [
+     83,
+     55
+    ]
+   }
+  },
+  "flagpole": {
+   "inst": false,
+   "lods": {
+    "0": [
+     954,
+     1116
+    ],
+    "1": [
+     616,
+     654
+    ],
+    "2": [
+     388,
+     358
+    ],
+    "3": [
+     291,
+     250
+    ]
+   }
+  },
+  "board_outdoor": {
+   "inst": false,
+   "lods": {
+    "0": [
+     981,
+     924
+    ],
+    "1": [
+     836,
+     772
+    ],
+    "2": [
+     484,
+     380
+    ],
+    "3": [
+     320,
+     184
+    ]
+   }
+  },
+  "sculpture_ring": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1815,
+     2870
+    ],
+    "1": [
+     1194,
+     1846
+    ],
+    "2": [
+     737,
+     1076
+    ],
+    "3": [
+     549,
+     774
+    ]
+   }
+  },
+  "flowerbed": {
+   "inst": true,
+   "lods": {
+    "0": [
+     6809,
+     5946
+    ],
+    "1": [
+     2137,
+     1844
+    ],
+    "2": [
+     1080,
+     860
+    ],
+    "3": [
+     522,
+     338
+    ]
+   }
+  },
+  "hand_torch": {
+   "inst": false,
+   "lods": {
+    "0": [
+     11629,
+     18771
+    ],
+    "1": [
+     7431,
+     11347
+    ],
+    "2": [
+     4728,
+     6773
+    ],
+    "3": [
+     2853,
+     3757
+    ]
+   }
+  },
+  "hand_brolly": {
+   "inst": false,
+   "lods": {
+    "0": [
+     11764,
+     18770
+    ],
+    "1": [
+     7513,
+     11348
+    ],
+    "2": [
+     4822,
+     6774
+    ],
+    "3": [
+     2966,
+     3758
+    ]
+   }
+  },
+  "hand_phone": {
+   "inst": false,
+   "lods": {
+    "0": [
+     12112,
+     18772
+    ],
+    "1": [
+     7817,
+     11348
+    ],
+    "2": [
+     5001,
+     6774
+    ],
+    "3": [
+     3051,
+     3758
+    ]
+   }
+  },
+  "torch_body": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1934,
+     2462
+    ],
+    "1": [
+     1554,
+     1808
+    ],
+    "2": [
+     684,
+     1032
+    ],
+    "3": [
+     407,
+     585
+    ]
+   }
+  },
+  "phone_body": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1142,
+     992
+    ],
+    "1": [
+     770,
+     576
+    ],
+    "2": [
+     526,
+     352
+    ],
+    "3": [
+     410,
+     236
+    ]
+   }
+  },
+  "umbrella": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3856,
+     4604
+    ],
+    "1": [
+     2522,
+     2704
+    ],
+    "2": [
+     1847,
+     1744
+    ],
+    "3": [
+     1313,
+     980
+    ]
+   }
+  },
+  "chair_office": {
+   "inst": true,
+   "lods": {
+    "0": [
+     8041,
+     8800
+    ],
+    "1": [
+     5669,
+     5960
+    ],
+    "2": [
+     2287,
+     2156
+    ],
+    "3": [
+     142,
+     94
+    ]
+   }
+  },
+  "cubicle_admin": {
+   "inst": true,
+   "lods": {
+    "0": [
+     4861,
+     3964
+    ],
+    "1": [
+     4102,
+     3072
+    ],
+    "2": [
+     1522,
+     1084
+    ],
+    "3": [
+     390,
+     198
+    ]
+   }
+  },
+  "desk_office": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3218,
+     3274
+    ],
+    "1": [
+     2427,
+     2338
+    ],
+    "2": [
+     1468,
+     1162
+    ],
+    "3": [
+     434,
+     248
+    ]
+   }
+  },
+  "podium": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1332,
+     1142
+    ],
+    "1": [
+     1116,
+     918
+    ],
+    "2": [
+     344,
+     192
+    ],
+    "3": [
+     116,
+     58
+    ]
+   }
+  },
+  "terminal_data": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3221,
+     2250
+    ],
+    "1": [
+     2941,
+     1922
+    ],
+    "2": [
+     872,
+     602
+    ],
+    "3": [
+     212,
+     106
+    ]
+   }
+  },
+  "counter_guard": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2191,
+     2116
+    ],
+    "1": [
+     1670,
+     1460
+    ],
+    "2": [
+     1116,
+     812
+    ],
+    "3": [
+     466,
+     332
+    ]
+   }
+  },
+  "bench_physics": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1718,
+     1494
+    ],
+    "1": [
+     1420,
+     1190
+    ],
+    "2": [
+     924,
+     614
+    ],
+    "3": [
+     236,
+     118
+    ]
+   }
+  },
+  "desk_computer": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3278,
+     2516
+    ],
+    "1": [
+     2938,
+     2036
+    ],
+    "2": [
+     828,
+     552
+    ],
+    "3": [
+     242,
+     124
+    ]
+   }
+  },
+  "map_stand": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2370,
+     1800
+    ],
+    "1": [
+     2082,
+     1508
+    ],
+    "2": [
+     1548,
+     1052
+    ],
+    "3": [
+     491,
+     285
+    ]
+   }
+  },
+  "centrifuge": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2086,
+     2272
+    ],
+    "1": [
+     1580,
+     1556
+    ],
+    "2": [
+     1000,
+     760
+    ],
+    "3": [
+     462,
+     334
+    ]
+   }
+  },
+  "microscope_stand": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2804,
+     2412
+    ],
+    "1": [
+     2041,
+     1708
+    ],
+    "2": [
+     1352,
+     1020
+    ],
+    "3": [
+     164,
+     88
+    ]
+   }
+  },
+  "physics_apparatus": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3374,
+     3000
+    ],
+    "1": [
+     2430,
+     1990
+    ],
+    "2": [
+     1697,
+     1252
+    ],
+    "3": [
+     730,
+     516
+    ]
+   }
+  },
+  "globe": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3193,
+     4835
+    ],
+    "1": [
+     2810,
+     4311
+    ],
+    "2": [
+     1185,
+     1537
+    ],
+    "3": [
+     503,
+     501
+    ]
+   }
+  },
+  "bench_demo": {
+   "inst": false,
+   "lods": {
+    "0": [
+     5084,
+     4250
+    ],
+    "1": [
+     3663,
+     2990
+    ],
+    "2": [
+     2432,
+     1846
+    ],
+    "3": [
+     1101,
+     816
+    ]
+   }
+  },
+  "bench_chem": {
+   "inst": true,
+   "lods": {
+    "0": [
+     4772,
+     4506
+    ],
+    "1": [
+     3446,
+     3060
+    ],
+    "2": [
+     2249,
+     1788
+    ],
+    "3": [
+     806,
+     627
+    ]
+   }
+  },
+  "server_rack": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3226,
+     1734
+    ],
+    "1": [
+     3168,
+     1662
+    ],
+    "2": [
+     1174,
+     606
+    ],
+    "3": [
+     1076,
+     538
+    ]
+   }
+  },
+  "server_console": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3074,
+     2202
+    ],
+    "1": [
+     2816,
+     1842
+    ],
+    "2": [
+     836,
+     546
+    ],
+    "3": [
+     342,
+     174
+    ]
+   }
+  },
+  "fume_hood": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2338,
+     2066
+    ],
+    "1": [
+     1854,
+     1610
+    ],
+    "2": [
+     1128,
+     818
+    ],
+    "3": [
+     306,
+     162
+    ]
+   }
+  },
+  "eyewash": {
+   "inst": false,
+   "lods": {
+    "0": [
+     856,
+     970
+    ],
+    "1": [
+     601,
+     650
+    ],
+    "2": [
+     379,
+     382
+    ],
+    "3": [
+     192,
+     205
+    ]
+   }
+  },
+  "piano_upright": {
+   "inst": false,
+   "lods": {
+    "0": [
+     6259,
+     5856
+    ],
+    "1": [
+     3735,
+     2490
+    ],
+    "2": [
+     2796,
+     1566
+    ],
+    "3": [
+     1252,
+     626
+    ]
+   }
+  },
+  "piano_bench": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1344,
+     1948
+    ],
+    "1": [
+     968,
+     1336
+    ],
+    "2": [
+     616,
+     792
+    ],
+    "3": [
+     152,
+     96
+    ]
+   }
+  },
+  "stool_piano": {
+   "inst": true,
+   "lods": {
+    "0": [
+     772,
+     835
+    ],
+    "1": [
+     550,
+     591
+    ],
+    "2": [
+     362,
+     385
+    ],
+    "3": [
+     149,
+     167
+    ]
+   }
+  },
+  "canteen_table": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3634,
+     4952
+    ],
+    "1": [
+     2530,
+     2876
+    ],
+    "2": [
+     1602,
+     1396
+    ],
+    "3": [
+     670,
+     532
+    ]
+   }
+  },
+  "counter_serving": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1643,
+     1352
+    ],
+    "1": [
+     1278,
+     1032
+    ],
+    "2": [
+     838,
+     576
+    ],
+    "3": [
+     424,
+     266
+    ]
+   }
+  },
+  "food_pan_fill": {
+   "inst": false,
+   "lods": {
+    "0": [
+     4105,
+     4352
+    ],
+    "1": [
+     2107,
+     2304
+    ],
+    "2": [
+     485,
+     432
+    ],
+    "3": [
+     24,
+     12
+    ]
+   }
+  },
+  "shelf_metal": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2956,
+     1584
+    ],
+    "1": [
+     2944,
+     1572
+    ],
+    "2": [
+     748,
+     384
+    ],
+    "3": [
+     176,
+     88
+    ]
+   }
+  },
+  "carton_0": {
+   "inst": true,
+   "lods": {
+    "0": [
+     146,
+     90
+    ],
+    "1": [
+     146,
+     90
+    ],
+    "2": [
+     68,
+     34
+    ],
+    "3": [
+     20,
+     10
+    ]
+   }
+  },
+  "carton_1": {
+   "inst": true,
+   "lods": {
+    "0": [
+     146,
+     90
+    ],
+    "1": [
+     146,
+     90
+    ],
+    "2": [
+     68,
+     34
+    ],
+    "3": [
+     20,
+     10
+    ]
+   }
+  },
+  "carton_2": {
+   "inst": true,
+   "lods": {
+    "0": [
+     140,
+     90
+    ],
+    "1": [
+     140,
+     90
+    ],
+    "2": [
+     68,
+     34
+    ],
+    "3": [
+     20,
+     10
+    ]
+   }
+  },
+  "ball_basket": {
+   "inst": false,
+   "lods": {
+    "0": [
+     914,
+     1480
+    ],
+    "1": [
+     914,
+     1480
+    ],
+    "2": [
+     374,
+     528
+    ],
+    "3": [
+     122,
+     120
+    ]
+   }
+  },
+  "ball_soccer": {
+   "inst": false,
+   "lods": {
+    "0": [
+     914,
+     1480
+    ],
+    "1": [
+     914,
+     1480
+    ],
+    "2": [
+     374,
+     528
+    ],
+    "3": [
+     122,
+     120
+    ]
+   }
+  },
+  "ball_volley": {
+   "inst": false,
+   "lods": {
+    "0": [
+     914,
+     1480
+    ],
+    "1": [
+     914,
+     1480
+    ],
+    "2": [
+     374,
+     528
+    ],
+    "3": [
+     134,
+     120
+    ]
+   }
+  },
+  "ball_crate": {
+   "inst": false,
+   "lods": {
+    "0": [
+     4752,
+     6512
+    ],
+    "1": [
+     4752,
+     6512
+    ],
+    "2": [
+     2416,
+     2544
+    ],
+    "3": [
+     560,
+     490
+    ]
+   }
+  },
+  "bin_wheelie": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3036,
+     3420
+    ],
+    "1": [
+     2282,
+     2416
+    ],
+    "2": [
+     1390,
+     1056
+    ],
+    "3": [
+     658,
+     400
+    ]
+   }
+  },
+  "toilet_stall": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1572,
+     1484
+    ],
+    "1": [
+     1404,
+     1344
+    ],
+    "2": [
+     828,
+     664
+    ],
+    "3": [
+     174,
+     92
+    ]
+   }
+  },
+  "bell_bronze": {
+   "inst": false,
+   "lods": {
+    "0": [
+     10199,
+     12896
+    ],
+    "1": [
+     6840,
+     7212
+    ],
+    "2": [
+     3115,
+     2800
+    ],
+    "3": [
+     823,
+     806
+    ]
+   }
+  },
+  "altar_table": {
+   "inst": false,
+   "lods": {
+    "0": [
+     4772,
+     5248
+    ],
+    "1": [
+     3610,
+     3900
+    ],
+    "2": [
+     2104,
+     2044
+    ],
+    "3": [
+     1052,
+     788
+    ]
+   }
+  },
+  "sign_hanging": {
+   "inst": false,
+   "lods": {
+    "0": [
+     325,
+     323
+    ],
+    "1": [
+     248,
+     236
+    ],
+    "2": [
+     168,
+     120
+    ],
+    "3": [
+     134,
+     80
+    ]
+   }
+  },
+  "washbasin": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1440,
+     1630
+    ],
+    "1": [
+     1003,
+     1086
+    ],
+    "2": [
+     625,
+     618
+    ],
+    "3": [
+     385,
+     346
+    ]
+   }
+  },
+  "cabinet_tall": {
+   "inst": false,
+   "lods": {
+    "0": [
+     984,
+     772
+    ],
+    "1": [
+     792,
+     588
+    ],
+    "2": [
+     582,
+     372
+    ],
+    "3": [
+     20,
+     10
+    ]
+   }
+  },
+  "pingpong_table": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1016,
+     704
+    ],
+    "1": [
+     784,
+     536
+    ],
+    "2": [
+     568,
+     360
+    ],
+    "3": [
+     364,
+     216
+    ]
+   }
+  },
+  "tree_camphor_a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3400,
+     2426
+    ],
+    "1": [
+     2532,
+     1749
+    ],
+    "2": [
+     1980,
+     1340
+    ],
+    "3": [
+     552,
+     439
+    ]
+   }
+  },
+  "tree_camphor_b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3428,
+     2426
+    ],
+    "1": [
+     2554,
+     1749
+    ],
+    "2": [
+     1726,
+     1167
+    ],
+    "3": [
+     463,
+     371
+    ]
+   }
+  },
+  "tree_plane_a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2547,
+     1814
+    ],
+    "1": [
+     1895,
+     1305
+    ],
+    "2": [
+     1488,
+     994
+    ],
+    "3": [
+     408,
+     327
+    ]
+   }
+  },
+  "tree_plane_b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2533,
+     1814
+    ],
+    "1": [
+     1880,
+     1305
+    ],
+    "2": [
+     1222,
+     821
+    ],
+    "3": [
+     319,
+     259
+    ]
+   }
+  },
+  "tree_ginkgo_a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2419,
+     1730
+    ],
+    "1": [
+     1797,
+     1247
+    ],
+    "2": [
+     1331,
+     903
+    ],
+    "3": [
+     463,
+     371
+    ]
+   }
+  },
+  "tree_ginkgo_b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2415,
+     1730
+    ],
+    "1": [
+     1774,
+     1247
+    ],
+    "2": [
+     1139,
+     774
+    ],
+    "3": [
+     408,
+     327
+    ]
+   }
+  },
+  "tree_meta_a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     4930,
+     3249
+    ],
+    "1": [
+     3603,
+     2370
+    ],
+    "2": [
+     1305,
+     918
+    ],
+    "3": [
+     178,
+     141
+    ]
+   }
+  },
+  "tree_meta_b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     4933,
+     3249
+    ],
+    "1": [
+     3593,
+     2370
+    ],
+    "2": [
+     1309,
+     918
+    ],
+    "3": [
+     178,
+     141
+    ]
+   }
+  },
+  "shrub_cluster": {
+   "inst": true,
+   "lods": {
+    "0": [
+     755,
+     600
+    ],
+    "1": [
+     389,
+     264
+    ],
+    "2": [
+     240,
+     144
+    ],
+    "3": [
+     102,
+     72
+    ]
+   }
+  },
+  "hedge_200": {
+   "inst": true,
+   "lods": {
+    "0": [
+     568,
+     402
+    ],
+    "1": [
+     423,
+     274
+    ],
+    "2": [
+     135,
+     90
+    ],
+    "3": [
+     44,
+     42
+    ]
+   }
+  },
+  "fan_ceiling": {
+   "inst": true,
+   "lods": {
+    "0": [
+     1972,
+     1665
+    ],
+    "1": [
+     1542,
+     1295
+    ],
+    "2": [
+     691,
+     569
+    ],
+    "3": [
+     435,
+     345
+    ]
+   }
+  },
+  "lamp_hang_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     946,
+     884
+    ],
+    "1": [
+     746,
+     652
+    ],
+    "2": [
+     564,
+     376
+    ],
+    "3": [
+     182,
+     110
+    ]
+   }
+  },
+  "light_panel_180": {
+   "inst": true,
+   "lods": {
+    "0": [
+     268,
+     230
+    ],
+    "1": [
+     216,
+     158
+    ],
+    "2": [
+     168,
+     102
+    ],
+    "3": [
+     44,
+     22
+    ]
+   }
+  },
+  "light_panel_120": {
+   "inst": true,
+   "lods": {
+    "0": [
+     268,
+     230
+    ],
+    "1": [
+     216,
+     158
+    ],
+    "2": [
+     168,
+     102
+    ],
+    "3": [
+     44,
+     22
+    ]
+   }
+  },
+  "sign_exit": {
+   "inst": false,
+   "lods": {
+    "0": [
+     758,
+     702
+    ],
+    "1": [
+     542,
+     458
+    ],
+    "2": [
+     358,
+     250
+    ],
+    "3": [
+     136,
+     70
+    ]
+   }
+  },
+  "sign_exit_arrow": {
+   "inst": false,
+   "lods": {
+    "0": [
+     800,
+     726
+    ],
+    "1": [
+     584,
+     482
+    ],
+    "2": [
+     400,
+     274
+    ],
+    "3": [
+     178,
+     94
+    ]
+   }
+  },
+  "light_emergency": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1396,
+     1250
+    ],
+    "1": [
+     1020,
+     882
+    ],
+    "2": [
+     728,
+     490
+    ],
+    "3": [
+     352,
+     214
+    ]
+   }
+  },
+  "cam_dome": {
+   "inst": false,
+   "lods": {
+    "0": [
+     589,
+     449
+    ],
+    "1": [
+     425,
+     321
+    ],
+    "2": [
+     291,
+     215
+    ],
+    "3": [
+     151,
+     117
+    ]
+   }
+  },
+  "smoke_detector": {
+   "inst": true,
+   "lods": {
+    "0": [
+     563,
+     361
+    ],
+    "1": [
+     491,
+     301
+    ],
+    "2": [
+     431,
+     251
+    ],
+    "3": [
+     107,
+     77
+    ]
+   }
+  },
+  "switch_3": {
+   "inst": false,
+   "lods": {
+    "0": [
+     340,
+     326
+    ],
+    "1": [
+     224,
+     174
+    ],
+    "2": [
+     128,
+     82
+    ],
+    "3": [
+     112,
+     58
+    ]
+   }
+  },
+  "socket": {
+   "inst": false,
+   "lods": {
+    "0": [
+     304,
+     254
+    ],
+    "1": [
+     264,
+     198
+    ],
+    "2": [
+     176,
+     106
+    ],
+    "3": [
+     160,
+     82
+    ]
+   }
+  },
+  "water_dispenser": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1586,
+     1472
+    ],
+    "1": [
+     1240,
+     1120
+    ],
+    "2": [
+     830,
+     660
+    ],
+    "3": [
+     476,
+     388
+    ]
+   }
+  },
+  "bin_pair": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1009,
+     1044
+    ],
+    "1": [
+     768,
+     740
+    ],
+    "2": [
+     496,
+     356
+    ],
+    "3": [
+     304,
+     180
+    ]
+   }
+  },
+  "cleaning_corner": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2671,
+     2777
+    ],
+    "1": [
+     1932,
+     1909
+    ],
+    "2": [
+     1099,
+     1027
+    ],
+    "3": [
+     532,
+     391
+    ]
+   }
+  },
+  "plant_money": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3056,
+     2381
+    ],
+    "1": [
+     2639,
+     1939
+    ],
+    "2": [
+     1076,
+     999
+    ],
+    "3": [
+     751,
+     691
+    ]
+   }
+  },
+  "plant_pothos": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3580,
+     2473
+    ],
+    "1": [
+     3198,
+     2089
+    ],
+    "2": [
+     838,
+     735
+    ],
+    "3": [
+     535,
+     457
+    ]
+   }
+  },
+  "ac_cabinet": {
+   "inst": false,
+   "lods": {
+    "0": [
+     783,
+     616
+    ],
+    "1": [
+     672,
+     464
+    ],
+    "2": [
+     548,
+     312
+    ],
+    "3": [
+     400,
+     220
+    ]
+   }
+  },
+  "projector": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1113,
+     833
+    ],
+    "1": [
+     829,
+     597
+    ],
+    "2": [
+     585,
+     379
+    ],
+    "3": [
+     267,
+     187
+    ]
+   }
+  },
+  "curtains_150": {
+   "inst": false,
+   "lods": {
+    "0": [
+     2226,
+     3216
+    ],
+    "1": [
+     1302,
+     1620
+    ],
+    "2": [
+     706,
+     676
+    ],
+    "3": [
+     202,
+     140
+    ]
+   }
+  },
+  "books_row_26a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2424,
+     1972
+    ],
+    "1": [
+     1512,
+     756
+    ],
+    "2": [
+     648,
+     324
+    ],
+    "3": [
+     216,
+     108
+    ]
+   }
+  },
+  "books_row_26b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2040,
+     1660
+    ],
+    "1": [
+     1272,
+     636
+    ],
+    "2": [
+     552,
+     276
+    ],
+    "3": [
+     216,
+     108
+    ]
+   }
+  },
+  "books_row_32a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2616,
+     2128
+    ],
+    "1": [
+     1632,
+     816
+    ],
+    "2": [
+     696,
+     348
+    ],
+    "3": [
+     240,
+     120
+    ]
+   }
+  },
+  "books_row_32b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     2808,
+     2284
+    ],
+    "1": [
+     1752,
+     876
+    ],
+    "2": [
+     744,
+     372
+    ],
+    "3": [
+     240,
+     120
+    ]
+   }
+  },
+  "books_row_38a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3576,
+     2908
+    ],
+    "1": [
+     2232,
+     1116
+    ],
+    "2": [
+     936,
+     468
+    ],
+    "3": [
+     288,
+     144
+    ]
+   }
+  },
+  "books_row_38b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3192,
+     2596
+    ],
+    "1": [
+     1992,
+     996
+    ],
+    "2": [
+     840,
+     420
+    ],
+    "3": [
+     288,
+     144
+    ]
+   }
+  },
+  "books_row_44a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3576,
+     2908
+    ],
+    "1": [
+     2232,
+     1116
+    ],
+    "2": [
+     936,
+     468
+    ],
+    "3": [
+     312,
+     156
+    ]
+   }
+  },
+  "books_row_44b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     3768,
+     3064
+    ],
+    "1": [
+     2352,
+     1176
+    ],
+    "2": [
+     984,
+     492
+    ],
+    "3": [
+     312,
+     156
+    ]
+   }
+  },
+  "books_pile_2": {
+   "inst": true,
+   "lods": {
+    "0": [
+     402,
+     312
+    ],
+    "1": [
+     240,
+     120
+    ],
+    "2": [
+     96,
+     48
+    ],
+    "3": [
+     48,
+     24
+    ]
+   }
+  },
+  "books_pile_3": {
+   "inst": true,
+   "lods": {
+    "0": [
+     618,
+     468
+    ],
+    "1": [
+     360,
+     180
+    ],
+    "2": [
+     144,
+     72
+    ],
+    "3": [
+     72,
+     36
+    ]
+   }
+  },
+  "books_pile_4": {
+   "inst": true,
+   "lods": {
+    "0": [
+     781,
+     624
+    ],
+    "1": [
+     480,
+     240
+    ],
+    "2": [
+     192,
+     96
+    ],
+    "3": [
+     96,
+     48
+    ]
+   }
+  },
+  "bottle_water": {
+   "inst": true,
+   "lods": {
+    "0": [
+     971,
+     1148
+    ],
+    "1": [
+     663,
+     752
+    ],
+    "2": [
+     449,
+     496
+    ],
+    "3": [
+     34,
+     20
+    ]
+   }
+  },
+  "frame_poster_a": {
+   "inst": true,
+   "lods": {
+    "0": [
+     448,
+     254
+    ],
+    "1": [
+     448,
+     254
+    ],
+    "2": [
+     332,
+     166
+    ],
+    "3": [
+     92,
+     46
+    ]
+   }
+  },
+  "frame_poster_b": {
+   "inst": true,
+   "lods": {
+    "0": [
+     448,
+     254
+    ],
+    "1": [
+     448,
+     254
+    ],
+    "2": [
+     332,
+     166
+    ],
+    "3": [
+     92,
+     46
+    ]
+   }
+  },
+  "frame_poster_c": {
+   "inst": true,
+   "lods": {
+    "0": [
+     448,
+     254
+    ],
+    "1": [
+     448,
+     254
+    ],
+    "2": [
+     332,
+     166
+    ],
+    "3": [
+     92,
+     46
+    ]
+   }
+  },
+  "frame_poster_d": {
+   "inst": true,
+   "lods": {
+    "0": [
+     472,
+     266
+    ],
+    "1": [
+     472,
+     266
+    ],
+    "2": [
+     356,
+     178
+    ],
+    "3": [
+     116,
+     58
+    ]
+   }
+  },
+  "bin_classroom": {
+   "inst": false,
+   "lods": {
+    "0": [
+     919,
+     915
+    ],
+    "1": [
+     655,
+     647
+    ],
+    "2": [
+     437,
+     425
+    ],
+    "3": [
+     223,
+     187
+    ]
+   }
+  },
+  "paper_floor": {
+   "inst": false,
+   "lods": {
+    "0": [
+     153,
+     212
+    ],
+    "1": [
+     74,
+     90
+    ],
+    "2": [
+     24,
+     24
+    ],
+    "3": [
+     8,
+     4
+    ]
+   }
+  },
+  "tower_clock": {
+   "inst": false,
+   "lods": {
+    "0": [
+     4380,
+     3790
+    ],
+    "1": [
+     3888,
+     3226
+    ],
+    "2": [
+     1578,
+     1874
+    ],
+    "3": [
+     706,
+     522
+    ]
+   }
+  },
+  "tower_window_231": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1511,
+     1227
+    ],
+    "1": [
+     1139,
+     837
+    ],
+    "2": [
+     641,
+     415
+    ],
+    "3": [
+     455,
+     243
+    ]
+   }
+  },
+  "tower_window_418": {
+   "inst": false,
+   "lods": {
+    "0": [
+     1525,
+     1239
+    ],
+    "1": [
+     1163,
+     849
+    ],
+    "2": [
+     671,
+     427
+    ],
+    "3": [
+     479,
+     255
+    ]
+   }
+  },
+  "bell_roof": {
+   "inst": false,
+   "lods": {
+    "0": [
+     3736,
+     3056
+    ],
+    "1": [
+     2417,
+     1904
+    ],
+    "2": [
+     1428,
+     1088
+    ],
+    "3": [
+     434,
+     272
+    ]
+   }
+  },
+  "car_sedan": {
+   "inst": true,
+   "lods": {
+    "0": [
+     35007,
+     46092
+    ],
+    "1": [
+     23892,
+     29194
+    ],
+    "2": [
+     12259,
+     14414
+    ],
+    "3": [
+     2734,
+     2480
+    ]
+   }
+  },
+  "wheel_stop": {
+   "inst": true,
+   "lods": {
+    "0": [
+     472,
+     362
+    ],
+    "1": [
+     364,
+     258
+    ],
+    "2": [
+     266,
+     162
+    ],
+    "3": [
+     46,
+     42
+    ]
+   }
+  },
+  "ebike": {
+   "inst": true,
+   "lods": {
+    "0": [
+     5808,
+     7308
+    ],
+    "1": [
+     4059,
+     4828
+    ],
+    "2": [
+     2629,
+     2860
+    ],
+    "3": [
+     697,
+     584
+    ]
+   }
+  }
+ }
+}

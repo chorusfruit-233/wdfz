@@ -1,0 +1,2711 @@
+{
+ "quality": {
+  "0": {
+   "rooms": {
+    "teach1": {
+     "meshes": 33,
+     "verts": 118153,
+     "tris": 57501,
+     "bytes": 3549404,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 41.8
+    },
+    "teach2": {
+     "meshes": 32,
+     "verts": 117201,
+     "tris": 57035,
+     "bytes": 3520800,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 45.9
+    },
+    "teach3": {
+     "meshes": 32,
+     "verts": 117133,
+     "tris": 57001,
+     "bytes": 3518780,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 27.2
+    },
+    "teach4": {
+     "meshes": 32,
+     "verts": 117105,
+     "tris": 56987,
+     "bytes": 3517968,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 27.1
+    },
+    "teach5": {
+     "meshes": 32,
+     "verts": 117113,
+     "tris": 56991,
+     "bytes": 3518200,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 31.7
+    },
+    "teach6": {
+     "meshes": 7,
+     "verts": 3108,
+     "tris": 1554,
+     "bytes": 90132,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.4
+    },
+    "admin1": {
+     "meshes": 24,
+     "verts": 139310,
+     "tris": 68220,
+     "bytes": 4031380,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 49.2
+    },
+    "admin2": {
+     "meshes": 22,
+     "verts": 138978,
+     "tris": 68054,
+     "bytes": 4021752,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 37.4
+    },
+    "admin3": {
+     "meshes": 22,
+     "verts": 139134,
+     "tris": 68132,
+     "bytes": 4026276,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 36.3
+    },
+    "admin4": {
+     "meshes": 22,
+     "verts": 138946,
+     "tris": 68038,
+     "bytes": 4020824,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 28.3
+    },
+    "admin5": {
+     "meshes": 22,
+     "verts": 138934,
+     "tris": 68032,
+     "bytes": 4020476,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 34.6
+    },
+    "lab1": {
+     "meshes": 22,
+     "verts": 40220,
+     "tris": 19528,
+     "bytes": 1164028,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 12.6
+    },
+    "lab2": {
+     "meshes": 21,
+     "verts": 56738,
+     "tris": 26122,
+     "bytes": 1677154,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 19.9
+    },
+    "lab3": {
+     "meshes": 22,
+     "verts": 53392,
+     "tris": 26304,
+     "bytes": 1546796,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 14.7
+    },
+    "lab4": {
+     "meshes": 21,
+     "verts": 52680,
+     "tris": 26212,
+     "bytes": 1527732,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 18
+    },
+    "lab5": {
+     "meshes": 22,
+     "verts": 21390,
+     "tris": 10556,
+     "bytes": 625332,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 7.1
+    },
+    "canteen1": {
+     "meshes": 22,
+     "verts": 56886,
+     "tris": 25992,
+     "bytes": 1692234,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 26.8
+    },
+    "dorm1": {
+     "meshes": 23,
+     "verts": 62680,
+     "tris": 31204,
+     "bytes": 1844552,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 20.1
+    },
+    "dorm2": {
+     "meshes": 21,
+     "verts": 62080,
+     "tris": 30904,
+     "bytes": 1827152,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 22.1
+    },
+    "dorm3": {
+     "meshes": 21,
+     "verts": 62232,
+     "tris": 30980,
+     "bytes": 1831560,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 18.6
+    },
+    "dorm4": {
+     "meshes": 23,
+     "verts": 62652,
+     "tris": 31190,
+     "bytes": 1843740,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 17.6
+    },
+    "dorm5": {
+     "meshes": 21,
+     "verts": 62200,
+     "tris": 30964,
+     "bytes": 1830632,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 19.6
+    },
+    "dorm6": {
+     "meshes": 21,
+     "verts": 62176,
+     "tris": 30952,
+     "bytes": 1829936,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 10.5
+    },
+    "garage1": {
+     "meshes": 14,
+     "verts": 54266,
+     "tris": 24478,
+     "bytes": 1557784,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 13.1
+    },
+    "trash1": {
+     "meshes": 13,
+     "verts": 1012,
+     "tris": 496,
+     "bytes": 29288,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.4
+    },
+    "link1": {
+     "meshes": 10,
+     "verts": 4684,
+     "tris": 2342,
+     "bytes": 135836,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.9
+    },
+    "link2": {
+     "meshes": 11,
+     "verts": 4712,
+     "tris": 2356,
+     "bytes": 136648,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 2.4
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 7276,
+     "tris": 3512,
+     "bytes": 211508,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 3.4
+    },
+    "guard1": {
+     "meshes": 13,
+     "verts": 1916,
+     "tris": 958,
+     "bytes": 55564,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.8
+    },
+    "gear1": {
+     "meshes": 14,
+     "verts": 3146,
+     "tris": 1498,
+     "bytes": 90784,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1
+    }
+   },
+   "outdoor": {
+    "meshes": 41,
+    "verts": 262677,
+    "tris": 124577,
+    "bytes": 7860240,
+    "inst": {
+     "meshes": 0,
+     "draws": 0,
+     "verts": 0,
+     "tris": 0,
+     "bytes": 0
+    },
+    "top": [],
+    "ms": 86
+   },
+   "total": {
+    "meshes": 630,
+    "verts": 2017453,
+    "tris": 984093,
+    "bytes": 59294252,
+    "ms": 590.5,
+    "inst": {
+     "meshes": 0,
+     "draws": 0,
+     "verts": 0,
+     "tris": 0,
+     "bytes": 0
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 63,
+     "tris": 86027
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 24,
+     "tris": 60393
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 20,
+     "tris": 68028
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 39,
+     "tris": 24778
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 37,
+     "tris": 124559
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 37,
+     "tris": 124559
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 24,
+     "tris": 124087
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 22,
+     "tris": 124477
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 24,
+     "tris": 67976
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 20,
+     "tris": 67850
+    }
+   ],
+   "label": "流畅",
+   "packs": null
+  },
+  "1": {
+   "rooms": {
+    "teach1": {
+     "meshes": 43,
+     "verts": 254466,
+     "tris": 120472,
+     "bytes": 7452750,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 100.8
+    },
+    "teach2": {
+     "meshes": 42,
+     "verts": 252910,
+     "tris": 119734,
+     "bytes": 7407626,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 93.5
+    },
+    "teach3": {
+     "meshes": 42,
+     "verts": 252842,
+     "tris": 119704,
+     "bytes": 7405630,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 78.6
+    },
+    "teach4": {
+     "meshes": 42,
+     "verts": 252702,
+     "tris": 119634,
+     "bytes": 7401570,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 79.7
+    },
+    "teach5": {
+     "meshes": 42,
+     "verts": 252734,
+     "tris": 119650,
+     "bytes": 7402498,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 65.4
+    },
+    "teach6": {
+     "meshes": 7,
+     "verts": 3148,
+     "tris": 1574,
+     "bytes": 91292,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.1
+    },
+    "admin1": {
+     "meshes": 36,
+     "verts": 273780,
+     "tris": 127904,
+     "bytes": 7885704,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 59.6
+    },
+    "admin2": {
+     "meshes": 35,
+     "verts": 273172,
+     "tris": 127620,
+     "bytes": 7868192,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 72.2
+    },
+    "admin3": {
+     "meshes": 36,
+     "verts": 273556,
+     "tris": 127800,
+     "bytes": 7879256,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 75.9
+    },
+    "admin4": {
+     "meshes": 35,
+     "verts": 273112,
+     "tris": 127594,
+     "bytes": 7866476,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 60.8
+    },
+    "admin5": {
+     "meshes": 35,
+     "verts": 273108,
+     "tris": 127592,
+     "bytes": 7866360,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 70.1
+    },
+    "lab1": {
+     "meshes": 22,
+     "verts": 65798,
+     "tris": 30764,
+     "bytes": 1896952,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 16.5
+    },
+    "lab2": {
+     "meshes": 21,
+     "verts": 95174,
+     "tris": 42754,
+     "bytes": 2802166,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 21.4
+    },
+    "lab3": {
+     "meshes": 22,
+     "verts": 84840,
+     "tris": 40206,
+     "bytes": 2448336,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 19.1
+    },
+    "lab4": {
+     "meshes": 21,
+     "verts": 65444,
+     "tris": 31956,
+     "bytes": 1894540,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 20.5
+    },
+    "lab5": {
+     "meshes": 22,
+     "verts": 27842,
+     "tris": 13430,
+     "bytes": 811210,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 7.3
+    },
+    "canteen1": {
+     "meshes": 24,
+     "verts": 87956,
+     "tris": 39038,
+     "bytes": 2588344,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 26.6
+    },
+    "dorm1": {
+     "meshes": 25,
+     "verts": 106624,
+     "tris": 51544,
+     "bytes": 3178256,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 27.9
+    },
+    "dorm2": {
+     "meshes": 23,
+     "verts": 105496,
+     "tris": 51004,
+     "bytes": 3145688,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 23.5
+    },
+    "dorm3": {
+     "meshes": 23,
+     "verts": 105724,
+     "tris": 51118,
+     "bytes": 3152300,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 26.9
+    },
+    "dorm4": {
+     "meshes": 25,
+     "verts": 106544,
+     "tris": 51504,
+     "bytes": 3175936,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 27.3
+    },
+    "dorm5": {
+     "meshes": 23,
+     "verts": 105652,
+     "tris": 51082,
+     "bytes": 3150212,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 24.4
+    },
+    "dorm6": {
+     "meshes": 23,
+     "verts": 105628,
+     "tris": 51070,
+     "bytes": 3149516,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 24.5
+    },
+    "garage1": {
+     "meshes": 18,
+     "verts": 116796,
+     "tris": 51446,
+     "bytes": 3345372,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 36.3
+    },
+    "trash1": {
+     "meshes": 13,
+     "verts": 1452,
+     "tris": 690,
+     "bytes": 41892,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.4
+    },
+    "link1": {
+     "meshes": 10,
+     "verts": 4840,
+     "tris": 2412,
+     "bytes": 140312,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.9
+    },
+    "link2": {
+     "meshes": 11,
+     "verts": 4860,
+     "tris": 2422,
+     "bytes": 140892,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 9224,
+     "tris": 4370,
+     "bytes": 267904,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 4.4
+    },
+    "guard1": {
+     "meshes": 13,
+     "verts": 2816,
+     "tris": 1360,
+     "bytes": 81376,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.1
+    },
+    "gear1": {
+     "meshes": 14,
+     "verts": 4466,
+     "tris": 2104,
+     "bytes": 128740,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.7
+    }
+   },
+   "outdoor": {
+    "meshes": 61,
+    "verts": 672536,
+    "tris": 305172,
+    "bytes": 17597728,
+    "inst": {
+     "meshes": 1,
+     "draws": 4200,
+     "verts": 88200,
+     "tris": 29400,
+     "bytes": 319956
+    },
+    "top": [
+     [
+      "?",
+      88200
+     ]
+    ],
+    "ms": 152.5
+   },
+   "total": {
+    "meshes": 763,
+    "verts": 3842706,
+    "tris": 1809552,
+    "bytes": 112067298,
+    "ms": 1069.4,
+    "inst": {
+     "meshes": 0,
+     "draws": 0,
+     "verts": 0,
+     "tris": 0,
+     "bytes": 0
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 85,
+     "tris": 189798
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 27,
+     "tris": 87398
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 33,
+     "tris": 99236
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 43,
+     "tris": 51746
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 55,
+     "tris": 299655
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 57,
+     "tris": 305154
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 34,
+     "tris": 197866
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 37,
+     "tris": 267880
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 85,
+     "tris": 127472
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 49,
+     "tris": 126596
+    }
+   ],
+   "label": "均衡",
+   "packs": null
+  },
+  "2": {
+   "rooms": {
+    "teach1": {
+     "meshes": 43,
+     "verts": 254466,
+     "tris": 120472,
+     "bytes": 7452750,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 174.3
+    },
+    "teach2": {
+     "meshes": 42,
+     "verts": 252910,
+     "tris": 119734,
+     "bytes": 7407626,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 100.8
+    },
+    "teach3": {
+     "meshes": 42,
+     "verts": 252842,
+     "tris": 119704,
+     "bytes": 7405630,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 76.8
+    },
+    "teach4": {
+     "meshes": 42,
+     "verts": 252702,
+     "tris": 119634,
+     "bytes": 7401570,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 70.8
+    },
+    "teach5": {
+     "meshes": 42,
+     "verts": 252734,
+     "tris": 119650,
+     "bytes": 7402498,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 73.1
+    },
+    "teach6": {
+     "meshes": 7,
+     "verts": 3148,
+     "tris": 1574,
+     "bytes": 91292,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1
+    },
+    "admin1": {
+     "meshes": 36,
+     "verts": 273780,
+     "tris": 127904,
+     "bytes": 7885704,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 85.1
+    },
+    "admin2": {
+     "meshes": 35,
+     "verts": 273172,
+     "tris": 127620,
+     "bytes": 7868192,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 90.9
+    },
+    "admin3": {
+     "meshes": 36,
+     "verts": 273556,
+     "tris": 127800,
+     "bytes": 7879256,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 69.1
+    },
+    "admin4": {
+     "meshes": 35,
+     "verts": 273112,
+     "tris": 127594,
+     "bytes": 7866476,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 60
+    },
+    "admin5": {
+     "meshes": 35,
+     "verts": 273108,
+     "tris": 127592,
+     "bytes": 7866360,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 59.5
+    },
+    "lab1": {
+     "meshes": 22,
+     "verts": 65798,
+     "tris": 30764,
+     "bytes": 1896952,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 16.1
+    },
+    "lab2": {
+     "meshes": 21,
+     "verts": 95174,
+     "tris": 42754,
+     "bytes": 2802166,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 22.6
+    },
+    "lab3": {
+     "meshes": 22,
+     "verts": 84840,
+     "tris": 40206,
+     "bytes": 2448336,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 19.1
+    },
+    "lab4": {
+     "meshes": 21,
+     "verts": 65444,
+     "tris": 31956,
+     "bytes": 1894540,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 22.9
+    },
+    "lab5": {
+     "meshes": 22,
+     "verts": 27842,
+     "tris": 13430,
+     "bytes": 811210,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 11.7
+    },
+    "canteen1": {
+     "meshes": 24,
+     "verts": 87956,
+     "tris": 39038,
+     "bytes": 2588344,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 24.6
+    },
+    "dorm1": {
+     "meshes": 25,
+     "verts": 106624,
+     "tris": 51544,
+     "bytes": 3178256,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 38.3
+    },
+    "dorm2": {
+     "meshes": 23,
+     "verts": 105496,
+     "tris": 51004,
+     "bytes": 3145688,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 26.3
+    },
+    "dorm3": {
+     "meshes": 23,
+     "verts": 105724,
+     "tris": 51118,
+     "bytes": 3152300,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 31.8
+    },
+    "dorm4": {
+     "meshes": 25,
+     "verts": 106544,
+     "tris": 51504,
+     "bytes": 3175936,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 28.8
+    },
+    "dorm5": {
+     "meshes": 23,
+     "verts": 105652,
+     "tris": 51082,
+     "bytes": 3150212,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 39.3
+    },
+    "dorm6": {
+     "meshes": 23,
+     "verts": 105628,
+     "tris": 51070,
+     "bytes": 3149516,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 23
+    },
+    "garage1": {
+     "meshes": 18,
+     "verts": 116796,
+     "tris": 51446,
+     "bytes": 3345372,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 36.9
+    },
+    "trash1": {
+     "meshes": 13,
+     "verts": 1452,
+     "tris": 690,
+     "bytes": 41892,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.6
+    },
+    "link1": {
+     "meshes": 10,
+     "verts": 4840,
+     "tris": 2412,
+     "bytes": 140312,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.1
+    },
+    "link2": {
+     "meshes": 11,
+     "verts": 4860,
+     "tris": 2422,
+     "bytes": 140892,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 9224,
+     "tris": 4370,
+     "bytes": 267904,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 5.2
+    },
+    "guard1": {
+     "meshes": 13,
+     "verts": 2816,
+     "tris": 1360,
+     "bytes": 81376,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.9
+    },
+    "gear1": {
+     "meshes": 14,
+     "verts": 4466,
+     "tris": 2104,
+     "bytes": 128740,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.3
+    }
+   },
+   "outdoor": {
+    "meshes": 61,
+    "verts": 873637,
+    "tris": 384555,
+    "bytes": 20996522,
+    "inst": {
+     "meshes": 1,
+     "draws": 9000,
+     "verts": 189000,
+     "tris": 63000,
+     "bytes": 684756
+    },
+    "top": [
+     [
+      "?",
+      189000
+     ]
+    ],
+    "ms": 254.2
+   },
+   "total": {
+    "meshes": 763,
+    "verts": 3842706,
+    "tris": 1809552,
+    "bytes": 112067298,
+    "ms": 1212.9,
+    "inst": {
+     "meshes": 0,
+     "draws": 0,
+     "verts": 0,
+     "tris": 0,
+     "bytes": 0
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 158,
+     "tris": 414482
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 89,
+     "tris": 281534
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 92,
+     "tris": 312494
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 77,
+     "tris": 154494
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 90,
+     "tris": 758062
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 85,
+     "tris": 685854
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 63,
+     "tris": 550801
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 73,
+     "tris": 723654
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 148,
+     "tris": 352050
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 109,
+     "tris": 351314
+    }
+   ],
+   "label": "精细",
+   "packs": null
+  },
+  "3": {
+   "rooms": {
+    "teach1": {
+     "meshes": 47,
+     "verts": 325791,
+     "tris": 153383,
+     "bytes": 9399006,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 138
+    },
+    "teach2": {
+     "meshes": 46,
+     "verts": 323739,
+     "tris": 152407,
+     "bytes": 9339594,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 134.1
+    },
+    "teach3": {
+     "meshes": 46,
+     "verts": 323659,
+     "tris": 152371,
+     "bytes": 9337214,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 99
+    },
+    "teach4": {
+     "meshes": 46,
+     "verts": 323519,
+     "tris": 152301,
+     "bytes": 9333154,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 100
+    },
+    "teach5": {
+     "meshes": 46,
+     "verts": 323551,
+     "tris": 152317,
+     "bytes": 9334082,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 82.2
+    },
+    "teach6": {
+     "meshes": 7,
+     "verts": 3308,
+     "tris": 1654,
+     "bytes": 95932,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 7.7
+    },
+    "admin1": {
+     "meshes": 38,
+     "verts": 303741,
+     "tris": 141087,
+     "bytes": 8743788,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 81.5
+    },
+    "admin2": {
+     "meshes": 38,
+     "verts": 303085,
+     "tris": 140779,
+     "bytes": 8724884,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 76.7
+    },
+    "admin3": {
+     "meshes": 38,
+     "verts": 303457,
+     "tris": 140953,
+     "bytes": 8735600,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 66.6
+    },
+    "admin4": {
+     "meshes": 38,
+     "verts": 303013,
+     "tris": 140747,
+     "bytes": 8722820,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 67.1
+    },
+    "admin5": {
+     "meshes": 38,
+     "verts": 303009,
+     "tris": 140745,
+     "bytes": 8722704,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 86.8
+    },
+    "lab1": {
+     "meshes": 24,
+     "verts": 73657,
+     "tris": 33991,
+     "bytes": 2121608,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 16.5
+    },
+    "lab2": {
+     "meshes": 21,
+     "verts": 130953,
+     "tris": 57869,
+     "bytes": 3874125,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 31.4
+    },
+    "lab3": {
+     "meshes": 22,
+     "verts": 92440,
+     "tris": 43518,
+     "bytes": 2666768,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 26.1
+    },
+    "lab4": {
+     "meshes": 21,
+     "verts": 74145,
+     "tris": 36151,
+     "bytes": 2146896,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 23.5
+    },
+    "lab5": {
+     "meshes": 22,
+     "verts": 32257,
+     "tris": 15465,
+     "bytes": 940115,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 7.5
+    },
+    "canteen1": {
+     "meshes": 28,
+     "verts": 141392,
+     "tris": 62222,
+     "bytes": 4150684,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 41.1
+    },
+    "dorm1": {
+     "meshes": 25,
+     "verts": 112192,
+     "tris": 54136,
+     "bytes": 3338576,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 41.2
+    },
+    "dorm2": {
+     "meshes": 23,
+     "verts": 110984,
+     "tris": 53556,
+     "bytes": 3303688,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 31
+    },
+    "dorm3": {
+     "meshes": 23,
+     "verts": 111212,
+     "tris": 53670,
+     "bytes": 3310300,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 33.1
+    },
+    "dorm4": {
+     "meshes": 25,
+     "verts": 112112,
+     "tris": 54096,
+     "bytes": 3336256,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 25.5
+    },
+    "dorm5": {
+     "meshes": 23,
+     "verts": 111140,
+     "tris": 53634,
+     "bytes": 3308212,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 25.4
+    },
+    "dorm6": {
+     "meshes": 23,
+     "verts": 111116,
+     "tris": 53622,
+     "bytes": 3307516,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 24
+    },
+    "garage1": {
+     "meshes": 24,
+     "verts": 169912,
+     "tris": 73404,
+     "bytes": 4858136,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 46.3
+    },
+    "trash1": {
+     "meshes": 13,
+     "verts": 1620,
+     "tris": 762,
+     "bytes": 46692,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 0.7
+    },
+    "link1": {
+     "meshes": 10,
+     "verts": 4864,
+     "tris": 2424,
+     "bytes": 141008,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 5.2
+    },
+    "link2": {
+     "meshes": 11,
+     "verts": 4884,
+     "tris": 2434,
+     "bytes": 141588,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.2
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 12490,
+     "tris": 5858,
+     "bytes": 362948,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 4.3
+    },
+    "guard1": {
+     "meshes": 13,
+     "verts": 2992,
+     "tris": 1448,
+     "bytes": 86480,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 1.5
+    },
+    "gear1": {
+     "meshes": 14,
+     "verts": 8076,
+     "tris": 3830,
+     "bytes": 232956,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 3.1
+    }
+   },
+   "outdoor": {
+    "meshes": 77,
+    "verts": 1354513,
+    "tris": 587977,
+    "bytes": 32422177,
+    "inst": {
+     "meshes": 1,
+     "draws": 14000,
+     "verts": 294000,
+     "tris": 98000,
+     "bytes": 1064756
+    },
+    "top": [
+     [
+      "?",
+      294000
+     ]
+    ],
+    "ms": 309
+   },
+   "total": {
+    "meshes": 808,
+    "verts": 4558310,
+    "tris": 2130834,
+    "bytes": 132163330,
+    "ms": 1328.3000000000002,
+    "inst": {
+     "meshes": 0,
+     "draws": 0,
+     "verts": 0,
+     "tris": 0,
+     "bytes": 0
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 169,
+     "tris": 603023
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 96,
+     "tris": 355501
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 97,
+     "tris": 345327
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 87,
+     "tris": 211832
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 100,
+     "tris": 1041140
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 102,
+     "tris": 1005903
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 67,
+     "tris": 768864
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 73,
+     "tris": 908224
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 155,
+     "tris": 382659
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 116,
+     "tris": 372928
+    }
+   ],
+   "label": "超精细",
+   "packs": null
+  },
+  "4": {
+   "rooms": {
+    "teach1": {
+     "meshes": 63,
+     "verts": 777621,
+     "tris": 378843,
+     "bytes": 22537272,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 295.1
+    },
+    "teach2": {
+     "meshes": 62,
+     "verts": 771545,
+     "tris": 375837,
+     "bytes": 22358788,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 247.9
+    },
+    "teach3": {
+     "meshes": 62,
+     "verts": 771333,
+     "tris": 375731,
+     "bytes": 22352520,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 238.9
+    },
+    "teach4": {
+     "meshes": 62,
+     "verts": 771193,
+     "tris": 375661,
+     "bytes": 22348460,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 319
+    },
+    "teach5": {
+     "meshes": 62,
+     "verts": 771225,
+     "tris": 375677,
+     "bytes": 22349388,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 247.2
+    },
+    "teach6": {
+     "meshes": 7,
+     "verts": 9228,
+     "tris": 4614,
+     "bytes": 267612,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 2.3
+    },
+    "admin1": {
+     "meshes": 65,
+     "verts": 1472154,
+     "tris": 726858,
+     "bytes": 42637152,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 594.2
+    },
+    "admin2": {
+     "meshes": 62,
+     "verts": 1471858,
+     "tris": 726710,
+     "bytes": 42628568,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 516.5
+    },
+    "admin3": {
+     "meshes": 62,
+     "verts": 1473138,
+     "tris": 727350,
+     "bytes": 42665688,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 529.6
+    },
+    "admin4": {
+     "meshes": 62,
+     "verts": 1471654,
+     "tris": 726608,
+     "bytes": 42622652,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 544.4
+    },
+    "admin5": {
+     "meshes": 62,
+     "verts": 1471650,
+     "tris": 726606,
+     "bytes": 42622536,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 466.8
+    },
+    "lab1": {
+     "meshes": 31,
+     "verts": 303544,
+     "tris": 148758,
+     "bytes": 8800616,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 107.3
+    },
+    "lab2": {
+     "meshes": 48,
+     "verts": 601570,
+     "tris": 289582,
+     "bytes": 18154784,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 167.5
+    },
+    "lab3": {
+     "meshes": 40,
+     "verts": 349240,
+     "tris": 172150,
+     "bytes": 10126400,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 105.5
+    },
+    "lab4": {
+     "meshes": 30,
+     "verts": 209596,
+     "tris": 104148,
+     "bytes": 6087644,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 75.9
+    },
+    "lab5": {
+     "meshes": 24,
+     "verts": 140158,
+     "tris": 69374,
+     "bytes": 4128068,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 38
+    },
+    "canteen1": {
+     "meshes": 40,
+     "verts": 576264,
+     "tris": 276210,
+     "bytes": 16742220,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 161
+    },
+    "dorm1": {
+     "meshes": 47,
+     "verts": 735024,
+     "tris": 366720,
+     "bytes": 21953760,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 234.2
+    },
+    "dorm2": {
+     "meshes": 45,
+     "verts": 731688,
+     "tris": 365052,
+     "bytes": 21857016,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 232.9
+    },
+    "dorm3": {
+     "meshes": 45,
+     "verts": 731916,
+     "tris": 365166,
+     "bytes": 21863628,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 214
+    },
+    "dorm4": {
+     "meshes": 47,
+     "verts": 734944,
+     "tris": 366680,
+     "bytes": 21951440,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 224.9
+    },
+    "dorm5": {
+     "meshes": 45,
+     "verts": 731844,
+     "tris": 365130,
+     "bytes": 21861540,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 224.5
+    },
+    "dorm6": {
+     "meshes": 45,
+     "verts": 731820,
+     "tris": 365118,
+     "bytes": 21860844,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 225.3
+    },
+    "garage1": {
+     "meshes": 37,
+     "verts": 544816,
+     "tris": 256860,
+     "bytes": 15706376,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 152.4
+    },
+    "trash1": {
+     "meshes": 13,
+     "verts": 6896,
+     "tris": 3406,
+     "bytes": 199732,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 3
+    },
+    "link1": {
+     "meshes": 10,
+     "verts": 32712,
+     "tris": 16356,
+     "bytes": 948648,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 12
+    },
+    "link2": {
+     "meshes": 11,
+     "verts": 32732,
+     "tris": 16366,
+     "bytes": 949228,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 7.6
+    },
+    "bell1": {
+     "meshes": 15,
+     "verts": 59218,
+     "tris": 29102,
+     "bytes": 1733132,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 18.9
+    },
+    "guard1": {
+     "meshes": 13,
+     "verts": 12752,
+     "tris": 6376,
+     "bytes": 369808,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 4.1
+    },
+    "gear1": {
+     "meshes": 14,
+     "verts": 30328,
+     "tris": 14882,
+     "bytes": 877820,
+     "inst": {
+      "meshes": 0,
+      "draws": 0,
+      "verts": 0,
+      "tris": 0,
+      "bytes": 0
+     },
+     "top": [],
+     "ms": 8
+    }
+   },
+   "outdoor": {
+    "meshes": 119,
+    "verts": 2859701,
+    "tris": 1307445,
+    "bytes": 73012140,
+    "inst": {
+     "meshes": 1,
+     "draws": 20000,
+     "verts": 420000,
+     "tris": 140000,
+     "bytes": 1520756
+    },
+    "top": [
+     [
+      "?",
+      420000
+     ]
+    ],
+    "ms": 770.9
+   },
+   "total": {
+    "meshes": 1231,
+    "verts": 18529661,
+    "tris": 9117931,
+    "bytes": 541563340,
+    "ms": 6218.9,
+    "inst": {
+     "meshes": 0,
+     "draws": 0,
+     "verts": 0,
+     "tris": 0,
+     "bytes": 0
+    }
+   },
+   "frames": [
+    {
+     "view": "teach1 20,1.6,5.5",
+     "calls": 206,
+     "tris": 1412609
+    },
+    {
+     "view": "teach1 -25,1.6,-4",
+     "calls": 114,
+     "tris": 660147
+    },
+    {
+     "view": "admin1 -12,1.6,5",
+     "calls": 143,
+     "tris": 1426575
+    },
+    {
+     "view": "garage1 2,1.6,-2",
+     "calls": 111,
+     "tris": 569803
+    },
+    {
+     "view": "out 124.6,2.2,232",
+     "calls": 159,
+     "tris": 2156390
+    },
+    {
+     "view": "out 114,2.5,30",
+     "calls": 150,
+     "tris": 1960486
+    },
+    {
+     "view": "out 60,6,90",
+     "calls": 90,
+     "tris": 1368193
+    },
+    {
+     "view": "out 150,1.7,150",
+     "calls": 95,
+     "tris": 1426651
+    },
+    {
+     "view": "admin2 -24,1.6,8",
+     "calls": 212,
+     "tris": 1840535
+    },
+    {
+     "view": "admin2 3.5,1.6,4",
+     "calls": 168,
+     "tris": 1764192
+    }
+   ],
+   "label": "真实",
+   "packs": null
+  }
+ },
+ "files": {},
+ "models": {}
+}
