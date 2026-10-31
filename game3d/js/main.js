@@ -4,6 +4,7 @@
 function onEnterRoom(id){
   if(id==='garage1') os('我：车库里没有灯。空气是潮的，有一股铁和机油的味道。远处有水在滴。',3.6);
   if(id==='portal_tunnel') os('我：不想靠近。墙上的黑色黏液还在缓慢流动。',4.5,OS_FORCE);
+  try{ Dread.enter(id); }catch(e){}
   spotTick();
 }
 
@@ -52,6 +53,7 @@ function update(dt){
   LESSON.tick(dt);
   PHONE.checkInterrupt();                         /* 世界更新中可能死亡、开始异象或打开选择 */
   try{ monoTick(dt); }catch(e){}
+  try{ Dread.tick(dt); }catch(e){}
   spotTick();
 }
 function render(dt){
@@ -191,6 +193,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  try{ Dread.reset(); }catch(e){}
   if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
   fnPeopleClear();Engine.resetFakeNormal();VisualState.worldNorm=0;

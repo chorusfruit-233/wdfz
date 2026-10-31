@@ -227,6 +227,7 @@ function doExitRoom(){
   try{ anfxClear(); }catch(e){}
   var R=INTERIORS[S.room]; if(!R) return;
   var o=objById(R.host);
+  try{ Dread.enter(null); }catch(e){}
   S.mode='out'; S.room=null; S.seated=false;
   try{ spiralReset(); }catch(e){}
   showBanner('武大附中 · 校园');

@@ -172,7 +172,7 @@ function updateLighting(){
   var pf=GLR.patrolFlick||0, pr=GLR.patrolRed||0, sum=0;
   for(i=0;i<GLR.roomLights.length;i++){
     var base=GLR.roomLightBase[i]*s.ptK;
-    var flick=s.blackout?0:roomFlicker(i,tt,s.day)*lampHealth(i);
+    var flick=s.blackout?0:roomFlicker(i,tt,s.day)*lampHealth(i)*(typeof dreadLampMul==='function'?dreadLampMul(i,tt):1);
     if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
     lightCrackle(i,flick);
     sum+=flick;

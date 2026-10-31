@@ -544,7 +544,7 @@ function anInterval(){
 }
 function anScheduleNext(){
   if(!AN.preNext||!AN.pre){ try{ AN.pre = pickAnomaly(); }catch(e){ AN.pre=null; } }
-  AN.next=anInterval();
+  AN.next=anInterval(); AN.next0=(AN.next0||0)+1;
   if(AN.preNext){ AN.next=AN.preNext; AN.preNext=0; }   /* 黑板上预告过的时间，要兑现 */
 }
 function anStart(){
