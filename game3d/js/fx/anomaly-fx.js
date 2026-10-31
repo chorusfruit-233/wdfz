@@ -26,7 +26,7 @@ function anfxClear(){
     if(ANFX.kind==='death'&&!ANFX.preview) ThreeBackend.disposeGroup(ANFX.grp);
     ANFX.grp=null;
   }
-  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;
+  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;
   ANFX.timeline=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
@@ -605,7 +605,21 @@ function deathFX(type,options){
       }
     }
     else if(T==='slit'){
-      for(i=0;i<2;i++) push(anfxBox(grp,dark,0.12,2.6,3.0,p.x+(i?0.5:-0.5),1.3,p.z));
+      /* 正门：门缝里漏进一道光，挤过去以后是一条长马路，路的尽头又是一扇校门；身后的门合上了 */
+      var sa=S.ang, sf={x:Math.cos(sa),z:Math.sin(sa)}, sr={x:-Math.sin(sa),z:Math.cos(sa)}, srot=Math.PI/2-sa;
+      ANFX.slit={o:{x:p.x,z:p.z},f:sf,r:sr};
+      var leaf=anfxMat(0x101316,1.0), glow=new THREE.MeshBasicMaterial({color:0xd6e2dd,transparent:true,opacity:0.9,fog:false});
+      for(i=0;i<4;i++){                       /* 0、1：挤过去的那扇门；2、3：最后在面前合上的那扇 */
+        var lf=anfxBox(grp,leaf,1.25,2.7,0.10,p.x,1.35,p.z);lf.rotation.y=srot;
+        lf.userData={slitLeaf:i,side:i%2?1:-1};push(lf);
+      }
+      var light=new THREE.Mesh(new THREE.PlaneGeometry(1.0,2.6),glow);light.rotation.y=srot+Math.PI;
+      light.userData={slitLight:1};grp.add(light);push(light);
+      var gate=new THREE.Group(), gm=anfxMat(0x07090b,1.0);
+      [[-2.4,1.6,0.35,3.2],[2.4,1.6,0.35,3.2],[0,3.3,5.2,0.3]].forEach(function(b){
+        var gb=new THREE.Mesh(new THREE.BoxGeometry(b[2],b[3],0.35),gm);gb.position.set(b[0],b[1],0);gate.add(gb);
+      });
+      gate.rotation.y=srot;gate.userData={slitGate:1};grp.add(gate);push(gate);
     }
     else if(T==='wall'){
       for(i=0;i<2;i++) push(anfxBox(grp,anfxMat(0x9a958c,1.0),0.6,3.0,4.0,p.x+(i?1.2:-1.2),1.5,p.z));
@@ -791,6 +805,25 @@ function anfxUpdate(dt){
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it]; var lu2=ob.userData||{};
         ob.position.x=lu2.deathOrigin.x+Math.sin(kk*2+it*0.4)*0.04;
+      }
+    } else if(dtp==='slit'&&ANFX.slit){
+      /* 按经过的时间：0–0.7 秒门缝里一道光；0.7–1.6 秒门缝拉开、从中间挤过去；
+         1.6–3.0 秒马路尽头的校门迎面过来；最后身前又一扇门合上 */
+      var so=ANFX.slit.o, sf2=ANFX.slit.f, sr2=ANFX.slit.r;
+      function sAt(o,d,side){ o.position.x=so.x+sf2.x*d+sr2.x*side; o.position.z=so.z+sf2.z*d+sr2.z*side; }
+      var pass=clamp((kk-0.7)/0.9,0,1), doorD=1.8-pass*2.6, gap=0.08+0.67*clamp((kk-0.7)/0.5,0,1);
+      var shut=clamp((kk-3.0)/0.5,0,1), shutGap=1.4*(1-shut);
+      for(it=0;it<ANFX.items.length;it++){
+        ob=ANFX.items[it]; var su2=ob.userData||{};
+        if(su2.slitLeaf!==undefined){
+          if(su2.slitLeaf<2){ sAt(ob,doorD,su2.side*(0.625+gap/2)); ob.visible=doorD>-0.4; }
+          else { sAt(ob,1.3,su2.side*(0.625+shutGap/2)); ob.visible=kk>2.9; }
+        }else if(su2.slitLight){
+          sAt(ob,doorD+0.25,0); ob.visible=doorD>-0.2;
+          ob.material.opacity=0.9*(kk<0.7?0.55+0.45*Math.abs(Math.sin(kk*9)):1-pass*0.6);
+        }else if(su2.slitGate){
+          var gk=clamp((kk-1.6)/1.4,0,1); sAt(ob,30-gk*26,0); ob.visible=kk>1.5;
+        }
       }
     } else if(dtp==='slit'||dtp==='wall'){
       for(it=0;it<ANFX.items.length;it++){ ob=ANFX.items[it]; ob.position.y=Math.min(1.6,kk*0.9); }
