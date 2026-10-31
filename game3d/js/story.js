@@ -226,8 +226,49 @@ function carDrive(){
 function tryFaceRoute(){
   if(!RT.hacked){ os('我：得先进实验楼三楼机房里那间锁着的网络中心，再去行政楼三楼改数据。',3.8); return; }
   if(!RT.data){ os('我：白名单还没改完。',2.6); return; }
-  triggerEnding('face');
+  if(S.mode!=='out'||dist2(GATE_W.x*SC,GATE_W.y*SC,S.x,S.y)>=70*70){
+    os('我：还得去西小门的闸机前。',2.6);return;
+  }
+  tryGateWest();
 }
+/* 每局抽三道题并保存顺序和进度；答错可重试，离开后可继续。 */
+var FACE_QUESTIONS=[
+  {text:'方程 x² − 5x + 6 = 0 的较大根是多少？',choices:['2','3','6'],answer:1},
+  {text:'同时掷两枚均匀六面骰，点数之和不小于 10 的概率是多少？',choices:['1/12','1/6','1/4'],answer:1},
+  {text:'等差数列首项为 2、公差为 3，第 8 项是多少？',choices:['20','23','26'],answer:1},
+  {text:'函数 y = x² − 4x + 7 的最小值是多少？',choices:['3','4','7'],answer:0}
+];
+var FaceChallenge={
+  state:function(){
+    var q=RT.faceQuiz;
+    if(!q||!Array.isArray(q.order)||q.order.length!==3||new Set(q.order).size!==3||
+       q.order.some(function(i){return !Number.isInteger(i)||!FACE_QUESTIONS[i];})){
+      var pool=FACE_QUESTIONS.map(function(_,i){return i;}),order=[];
+      while(order.length<3)order.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+      q=RT.faceQuiz={order:order,done:0};autoSave();
+    }
+    q.done=Number.isInteger(q.done)?clamp(q.done,0,3):0;
+    return q;
+  },
+  open:function(){
+    var q=FaceChallenge.state();
+    if(q.done>=3){
+      UI.choice('闸机亮起绿灯。外面的路安静得出奇。',[
+        {label:'通过闸机',fn:function(){triggerEnding('face');}},
+        {label:'暂时留下',fn:function(){}}
+      ]);return;
+    }
+    var question=FACE_QUESTIONS[q.order[q.done]],opts=question.choices.map(function(label,i){
+      return {label:label,fn:function(){
+        if(i===question.answer){q.done++;autoSave();}
+        else toast('答案不正确，可以重试');
+        FaceChallenge.open();
+      }};
+    });
+    opts.push({label:'暂时离开',fn:function(){}});
+    UI.choice('白名单验证 '+(q.done+1)+'/3：'+question.text,opts);
+  }
+};
 function tryTrashRoute(){
   if(S.mode!=='in'||S.room!=='trash1'){ os('我：得先进垃圾房。',2.4); return; }
   addClue('trash');
@@ -353,7 +394,7 @@ function dreamWake(){
 
 var ENDINGS={
   car:  {t:'《闸 门》',  l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
-  face: {t:'《白名单》', l:['闸机「嘀」地亮了一下绿光。','你走出去，回头看了一眼——','里面的天还是黑白的。所有窗口后面都站着一个人，在目送你。','你的名字从那天起，一直留在白名单的最后一行。']},
+  face: {t:'《白名单》', true:1,l:['闸机「嘀」地亮了一下绿光。','你走出去，回头看了一眼——','里面的天还是黑白的。所有窗口后面都站着一个人，在目送你。','你的名字从那天起，一直留在白名单的最后一行。']},
   /* 假结局：看起来逃出去了，其实又回到了座位上 */
   trash:{t:'《第三个桶》',fake:1,l:['桶盖在头顶合上。','黑暗里，你听见垃圾车发动的声音，越来越远，越来越颠。','车停了很久。有人在外面敲了两下桶壁。','是你自己的声音在问：「里面有人吗？」','……然后，上课铃响了。']},
   beast:{t:'《先 辈》',  l:['门是被从外面撞开的。','你看清了那个背影——穿着很多年前的校服，一直在往外跑。','你跟着他跑了出去。','整座学校，第一次有了颜色。']},

@@ -650,5 +650,5 @@ function useData(){
 }
 function tryGateWest(){
   if(!RT.hacked||!RT.data){ os('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); addClue('gatew'); return; }
-  triggerEnding('face');
+  FaceChallenge.open();
 }
