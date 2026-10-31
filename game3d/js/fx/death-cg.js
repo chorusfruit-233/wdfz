@@ -180,6 +180,183 @@ var DeathCG=(function(){
     }
   };
 
+  /* ---- swarm：蛾群。远处一团，绕成一根柱子把你围住，最后扑满镜头 ---- */
+  CG.swarm={
+    build:function(c){
+      var i,r=c.rand,geo=new THREE.PlaneGeometry(0.17,0.1),m=mat(0x8a7a62,undefined,{side:THREE.DoubleSide});      /* 灰白的蛾子，暗处也看得见 */
+      c.moths=[];
+      for(i=0;i<70;i++){
+        var o=c.mesh(geo,m,0,0,0);
+        o.userData.m={a:r()*6.283,r:0.6+r()*1.6,h:0.4+r()*2.4,sp:1.6+r()*1.8,ph:r()*6.283};
+        c.moths.push(o);
+      }
+      c.veil(0x0c0905);
+    },
+    update:function(c,k,view){
+      var gather=ss(k,0.4,1.4), close=ss(k,1.4,2.5), cover=ss(k,2.5,3.2);
+      c.cam(view,k,0,0.22*gather*(1-close)-0.1*close+0.05*Math.sin(k*17)*close*c.shk,-0.35*cover);
+      var cy=c.camY(), a=new THREE.Vector3(), b=new THREE.Vector3();
+      c.moths.forEach(function(o){
+        var m=o.userData.m, ang=m.a+k*m.sp;
+        a.set(Math.cos(ang)*m.r*0.7, 1.6+(m.h-1.6)*0.6, 4.5+Math.sin(ang)*m.r*0.5);            /* 远处的一团 */
+        var R=2.2*(1-close)+0.3+0.15*m.r, ang2=m.a+k*m.sp*1.6;
+        b.set(Math.cos(ang2)*R, m.h+(cy-m.h)*close*0.7, Math.sin(ang2)*R);                    /* 绕着你的柱子 */
+        o.position.lerpVectors(a,b,gather);
+        if(cover>0){ o.position.lerp(new THREE.Vector3(Math.cos(ang2)*0.18,cy+Math.sin(ang2*1.3)*0.1,0.16+0.08*Math.sin(ang2)),cover*0.9); }
+        o.rotation.set(Math.sin(k*9+m.ph)*0.5,ang2,0);
+        o.scale.x=0.25+0.75*Math.abs(Math.sin(k*28+m.ph));                                    /* 扑翅 */
+      });
+      c.shade(0.85*ss(k,2.9,3.2));
+    }
+  };
+
+  /* ---- shatter：车棚里的车铃一起响，一个个炸开，碎片停在你四周，再一起扎进来 ---- */
+  CG.shatter={
+    build:function(c){
+      var i,j,r=c.rand,metal=mat(0x9a9890),dark=mat(0x1a1c1e),shard=mat(0xc8c8c0);
+      var dome=new THREE.SphereGeometry(0.08,10,5,0,6.283,0,Math.PI/2), sgeo=new THREE.TetrahedronGeometry(0.05);
+      c.bells=[]; c.shards=[];
+      for(i=0;i<8;i++){
+        var x=-2.1+i*0.6, z=2.0+Math.abs(i-3.5)*0.25;
+        c.mesh(new THREE.BoxGeometry(0.5,0.03,0.03),dark,x,0.98,z);
+        var bl=c.mesh(dome,metal,x+0.18,1.0,z); bl.userData.b={x:x+0.18,z:z,t:1.0+((i*3)%8)*0.07};
+        c.bells.push(bl);
+        for(j=0;j<5;j++){
+          var s=c.mesh(sgeo,shard,x,1,z), az=(r()-0.5)*2.4, el=(r()-0.5)*1.2;
+          s.userData.s={b:i,az:az,el:el,rad:0.55+r()*0.25,spin:2+r()*5,ox:(r()-0.5)*0.3,oy:r()*0.3};
+          c.shards.push(s);
+        }
+      }
+      c.veil(0x050505);
+    },
+    update:function(c,k,view){
+      c.cam(view,k,0,-0.1*ss(k,0,0.4)+0.03*Math.sin(k*40)*c.shk*seg(k,1.0,1.8)*(1-seg(k,1.8,2.2)),0);
+      var cy=c.camY(), cl=ss(k,2.6,3.2);
+      c.bells.forEach(function(bl,i){
+        var b=bl.userData.b, ring=0.3+seg(k,0,1.0);
+        bl.position.x=b.x+0.015*Math.sin(k*60+i)*ring;                    /* 一起抖、一起响 */
+        bl.visible=k<b.t;
+      });
+      c.shards.forEach(function(s){
+        var u=s.userData.s, bl=c.bells[u.b].userData.b, f=ss(k,bl.t,bl.t+0.9);
+        s.visible=k>=bl.t;
+        var rad=u.rad*(1-0.78*cl);
+        var tx=Math.sin(u.az)*Math.cos(u.el)*rad, ty=cy+Math.sin(u.el)*rad, tz=Math.cos(u.az)*Math.cos(u.el)*rad;
+        var hx=bl.x+u.ox, hy=1.0+u.oy, hz=bl.z;
+        s.position.set(hx+(tx-hx)*f, hy+(ty-hy)*f+Math.sin(f*Math.PI)*0.3, hz+(tz-hz)*f);
+        s.rotation.set(k*u.spin*(1-f*0.8),k*u.spin*0.7*(1-f*0.8),0);   /* 飞到身边就停住 */
+      });
+      c.flash('crack',k,1.0,0.25);
+      c.shade(0.9*ss(k,2.95,3.2));
+    }
+  };
+
+  /* ---- drown：雨下个不停，水从脚下涨起来，没过头顶，往下沉 ---- */
+  CG.drown={
+    build:function(c){
+      var i,r=c.rand,rain=mat(0x9fb6c4,0.5),geo=new THREE.BoxGeometry(0.012,0.5,0.012);
+      c.rain=[];
+      for(i=0;i<80;i++){
+        var a=r()*6.283, d=0.6+r()*4;
+        var o=c.mesh(geo,rain,Math.cos(a)*d,0,Math.abs(Math.sin(a))*d+0.4); o.userData.off=r()*5; c.rain.push(o);
+      }
+      c.water=c.mesh(new THREE.PlaneGeometry(16,16),mat(0x1d2c35,0.8,{side:THREE.DoubleSide}),0,0,0);
+      c.water.rotation.x=-Math.PI/2;
+      c.bub=[];
+      var bg=new THREE.SphereGeometry(0.025,6,4),bm=mat(0xa8c8d8,0.6);
+      for(i=0;i<24;i++){ var b=c.mesh(bg,bm,(r()-0.5)*0.8,0,0.4+r()*0.8); b.userData.off=r()*1.4; c.bub.push(b); }
+      c.veil(0x081218);
+    },
+    update:function(c,k,view){
+      var sinkT=ss(k,2.4,3.4);
+      c.cam(view,k,0,-0.35*ss(k,0.2,1.4)*(1-ss(k,1.8,2.3))+0.75*ss(k,1.9,2.8),-0.9*sinkT);
+      var cy=c.camY();
+      var L=0.5*ss(k,0.3,1.0)+0.9*ss(k,1.0,1.8)+(EYE+0.45-1.4)*ss(k,1.8,2.4)+0.6*sinkT;   /* 脚踝→腰→没过头顶 */
+      c.water.position.y=L;
+      c.rain.forEach(function(o){
+        o.position.y=4.5-((k*9+o.userData.off)%5);
+        o.visible=o.position.y>L;
+      });
+      c.bub.forEach(function(b){
+        b.visible=k>2.2;
+        b.position.y=cy-0.3+((k-2.2)*1.3+b.userData.off)%1.4;
+      });
+      c.shade(0.6*ss(k,2.2,2.6)+0.3*ss(k,3.0,3.4));
+    }
+  };
+
+  /* ---- water：天花板渗水。水渍晕开、滴得越来越密，天花板鼓下来一个水泡，压到脸上 ---- */
+  CG.water={
+    build:function(c){
+      var i,r=c.rand;
+      c.stain=c.mesh(new THREE.CircleGeometry(1,24),mat(0x4a5a52,0.85,{side:THREE.DoubleSide}),0,2.88,1.0);
+      c.stain.rotation.x=Math.PI/2;
+      c.drips=[];
+      var dg=new THREE.BoxGeometry(0.025,0.08,0.025),dm=mat(0xa8c8d4,0.95);
+      for(i=0;i<16;i++){ var d=c.mesh(dg,dm,(r()-0.5)*1.6,2.8,0.4+r()*1.4); d.userData.off=r(); c.drips.push(d); }
+      c.bulge=c.mesh(new THREE.SphereGeometry(1,18,8,0,6.283,Math.PI/2,Math.PI/2),mat(0x3a5560,0.85,{side:THREE.DoubleSide}),0,2.9,1.0);
+      c.veil(0x0b1820);
+    },
+    update:function(c,k,view){
+      var spread=ss(k,0,1.0), sag=ss(k,1.0,2.2), wrap=ss(k,2.2,3.0);
+      c.cam(view,k,0,0.7*ss(k,0.1,0.9),-0.15*wrap);
+      c.stain.scale.setScalar(0.3+1.6*spread);
+      c.drips.forEach(function(d){
+        var rate=1.4+1.6*seg(k,0.4,2.2);
+        d.position.y=2.85-((k*rate+d.userData.off)%1)*2.8;
+        d.visible=k>0.2;
+      });
+      c.bulge.position.z=1.0-0.95*sag;
+      c.bulge.scale.set(0.3+0.9*sag+0.4*wrap,0.05+0.8*sag+0.6*wrap,0.3+0.9*sag+0.4*wrap);   /* 水泡最低点压过眼睛 */
+      c.shade(0.88*ss(k,2.8,3.4));
+    }
+  };
+
+  /* ---- freeze：冷库。呼出的白气、地上结霜，冰锥从四周长过来，霜爬满视野 ---- */
+  CG.freeze={
+    build:function(c){
+      var i,r=c.rand,ice=mat(0xcfe4ee,0.85),cone=new THREE.ConeGeometry(0.07,1,5);
+      c.frost=c.mesh(new THREE.CircleGeometry(4,32),mat(0xdfeef5,0),0,0.015,0);
+      c.frost.rotation.x=-Math.PI/2;
+      c.spikes=[];
+      for(i=0;i<30;i++){
+        var a=i/30*6.283+(r()-0.5)*0.2;
+        var s=c.mesh(cone,ice,0,0,0); s.userData.s={a:a,r:2.4+r()*1.2,h:0.6+r()*1.4,d:r()*0.6}; c.spikes.push(s);
+      }
+      c.puffs=[];
+      var pg=new THREE.SphereGeometry(1,10,6);
+      for(i=0;i<3;i++){ c.puffs.push(c.mesh(pg,mat(0xeef4f6,0),0,0,0)); }
+      c.panes=[];
+      var pm=mat(0xd8eaf2,0.45,{side:THREE.DoubleSide});
+      for(i=0;i<8;i++){ var pn=c.mesh(new THREE.CircleGeometry(0.2+r()*0.12,7),pm,0,0,0); pn.userData.a=i/8*6.283+r()*0.3; c.panes.push(pn); }
+      c.veil(0xc8dce4);
+    },
+    update:function(c,k,view){
+      var kneel=ss(k,1.8,3.0);
+      c.cam(view,k,0,-0.12-0.2*kneel+0.015*Math.sin(k*31)*c.shk*seg(k,0.5,1.8)*(1-seg(k,2.2,2.8)),-0.5*kneel);
+      var cy=c.camY(), grow=ss(k,0.8,2.4), cover=ss(k,2.0,3.3);
+      c.frost.material.opacity=0.22*ss(k,0,1.2);
+      c.spikes.forEach(function(s){
+        var u=s.userData.s, g=ss(k,0.8+u.d,1.8+u.d), rad=u.r*(1-0.6*grow);
+        s.position.set(Math.cos(u.a)*rad,u.h*g*0.5,Math.sin(u.a)*rad);
+        s.scale.set(1,Math.max(0.02,u.h*g),1);
+        s.rotation.set(0,0,0); s.rotation.x=0.25*Math.sin(u.a); s.rotation.z=-0.25*Math.cos(u.a);   /* 尖头往你这边歪 */
+      });
+      c.puffs.forEach(function(p,i){
+        var ph=((k+i*0.37)%1.1)/1.1;
+        p.position.set(0.05*Math.sin(i*2),cy-0.2+ph*0.08,0.4+ph*0.35);
+        p.scale.setScalar(0.012+0.04*ph);
+        p.material.opacity=0.22*(1-ph)*(1-seg(k,2.2,2.8));          /* 最后呼不出气了 */
+      });
+      /* 一圈霜花从视野边上往中间爬 */
+      c.panes.forEach(function(p){
+        var rr=0.62-0.38*cover;
+        p.position.set(Math.cos(p.userData.a)*rr,cy+Math.sin(p.userData.a)*rr*0.6,0.32); p.rotation.set(0,Math.PI,p.userData.a); p.visible=cover>0;
+      });
+      c.shade(0.85*ss(k,2.9,3.4));
+    }
+  };
+
   return {
     has:function(type){ return !!CG[type]; },
     types:function(){ return Object.keys(CG); },

@@ -360,50 +360,6 @@ function deathFX(type,options){
       stallHand.scale.setScalar(1.4);stallHand.userData={stallHand:true};
       grp.add(stallHand);push(stallHand);
     }
-    else if(T==='swarm'||T==='shatter'){
-      var col=(T==='swarm')?dark:anfxMat(0x8a8680,1.0);
-      var N=(T==='swarm')?56:40;
-      for(i=0;i<N;i++){
-        var aa=Math.random()*6.283, rr=1.2+Math.random()*5.0;
-        m=anfxBox(grp,col,0.05+Math.random()*0.08,0.05+Math.random()*0.08,0.05+Math.random()*0.08,
-                  p.x+Math.cos(aa)*rr, 0.6+Math.random()*2.2, p.z+Math.sin(aa)*rr);
-        m.userData={a:aa,r:rr};
-        push(m);
-      }
-    }
-    else if(T==='drown'){
-      var wp=new THREE.Mesh(new THREE.PlaneGeometry(9,9),anfxMat(0x20303a,0.82));
-      wp.rotation.x=-Math.PI/2; wp.position.set(p.x,-1.4,p.z);
-      wp.userData={rises:1};
-      grp.add(wp); push(wp);
-      for(i=0;i<22;i++){                        /* 气泡 */
-        var bb=anfxBox(grp,anfxMat(0x9fc4d8,0.55),0.06,0.06,0.06,p.x+(Math.random()-0.5)*4,0.2+Math.random()*1.4,p.z+(Math.random()-0.5)*4);
-        bb.userData={bub:1};
-        push(bb);
-      }
-    }
-    else if(T==='water'){
-      var wq=new THREE.Mesh(new THREE.PlaneGeometry(11,11),anfxMat(0x16242c,0.55));
-      wq.rotation.x=-Math.PI/2; wq.position.set(p.x,2.9,p.z);
-      wq.userData={sinks:1};
-      grp.add(wq); push(wq);
-      for(i=0;i<10;i++){                        /* 水下的光斑 */
-        var ca=anfxBox(grp,anfxMat(0x4a7a8c,0.30),0.7,0.02,0.7,p.x+(Math.random()-0.5)*6,2.6,p.z+(Math.random()-0.5)*6);
-        ca.userData={caustic:1};
-        push(ca);
-      }
-    }
-    else if(T==='freeze'){
-      var ic=anfxMat(0xcfe4ee,0.8);
-      for(i=0;i<26;i++){
-        var fa2=i/26*6.283, fr2=2.2+Math.random()*2.6;
-        var ih=0.5+Math.random()*1.5;
-        var iw=anfxBox(grp,ic,0.10,ih,0.10,p.x+Math.cos(fa2)*fr2,ih/2,p.z+Math.sin(fa2)*fr2);
-        iw.rotation.z=(Math.random()-0.5)*0.35;
-        push(iw);
-      }
-      for(i=0;i<8;i++) push(anfxBox(grp,anfxMat(0xa8c8d8,0.45),0.5,0.02,0.5,p.x+(Math.random()-0.5)*5,1.4+i*0.16,p.z+(Math.random()-0.5)*5));
-    }
     else if(T==='stare'){
       var sp0=anfxW2S(S.x,S.y);
       var hk=anfxMat(0x2a2f33,1.0), hf=anfxMat(0xb8b2a6,0.95), hd2=anfxMat(0x0a0d10,1.0);
@@ -737,24 +693,6 @@ function anfxUpdate(dt){
       }
       view.pitch=0.55*Math.abs(Math.sin(Math.min(climb,4)*Math.PI*0.5))*(kk<2.4?1:0)-(kk>2.4?0.08:0);
       try{syncCamera(0,preview?view:null);}catch(e){}
-    } else if(dtp==='drown'){
-      var wl=-1.2+Math.min(3.4,kk*1.35);
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var du=ob.userData||{};
-        if(du.rises){ ob.position.y=wl; }
-        else if(du.bub){ ob.position.y=Math.min(2.4,0.2+kk*1.5+Math.sin(kk*9+it)*0.1); }
-      }
-    } else if(dtp==='water'){
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var wu=ob.userData||{};
-        if(wu.sinks){ ob.position.y=Math.max(0.6,2.9-kk*1.1); }
-        else if(wu.caustic){ ob.position.y=2.6-Math.min(2.0,kk*0.8); ob.position.x=wu.deathOrigin.x+Math.sin(kk*3+it)*0.12; }
-      }
-    } else if(dtp==='freeze'){
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var fu=ob.userData||{};
-        ob.scale.set(1,Math.min(2.2,0.4+kk*1.1),1);
-      }
     } else if(dtp==='voice'){
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it]; var vu2=ob.userData||{};
@@ -814,14 +752,6 @@ function anfxUpdate(dt){
         ob.position.set(hu.deathOrigin.x+(handPlayer.x-hu.deathOrigin.x)*handReach*0.68,
           -0.35+handRise*1.45,hu.deathOrigin.z+(handPlayer.z-hu.deathOrigin.z)*handReach*0.68);
         ob.rotation.x=-0.8+handRise*0.8+handReach*0.35;
-      }
-    } else if(dtp==='swarm'||dtp==='shatter'){
-      var pp=anfxW2S(S.x,S.y);
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var u=ob.userData||{a:0,r:3};
-        var rr=u.r*Math.max(0,1-kk*0.42);
-        ob.position.x=pp.x+Math.cos(u.a)*rr;
-        ob.position.z=pp.z+Math.sin(u.a)*rr;
       }
     } else if(dtp==='gaze'||dtp==='stare'){
       var near=Math.min(1,Math.max(0,(kk-1.0)/1.4));            /* 1 秒后开始逼近 */
