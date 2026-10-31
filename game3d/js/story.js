@@ -229,47 +229,26 @@ function tryFaceRoute(){
   triggerEnding('face');
 }
 function tryTrashRoute(){
-  if(RT.trashFake){ os('我：桶是空的，桶壁上有我自己敲出来的两个凹印。这不是出口——上一次，它把我送回了座位上。',4.4); return; }
   if(S.mode!=='in'||S.room!=='trash1'){ os('我：得先进垃圾房。',2.4); return; }
-  var lo=1050,hi=1056;
-  if(S.talent==='thin'){ lo=1048; hi=1058; }
   addClue('trash');
-  if(S.tsec>=lo&&S.tsec<=hi){ triggerEnding('trash'); return; }
-  /* 以前时间不对就直接死，而游戏里没有任何地方告诉你清运时间 */
-  if(isNight()){ kill('桶盖合上了。今晚垃圾车不会来。外面有人敲了两下，像在确认里面有没有人。','deep'); return; }
-  if(S.tsec>=lo-40&&S.tsec<lo){
-    UI.choice('桶盖内侧用记号笔写着：「清运 17:30」。离那时候还有 '+Math.round(lo-S.tsec)+' 分钟。',[
-      {label:'钻进去，等',fn:function(){
-        UI.closeChoice();
-        S.san=Math.max(1,S.san-12);
-        var mins=Math.round(lo-S.tsec)+1;
-        S.tsec=lo+1;
-        try{ timeSkipCard(mins,'在桶里等',S.tsec); }catch(e){}
-        setTimeout(function(){ if(!S.dead) triggerEnding('trash'); },900);
-      }},
-      {label:'先不了',fn:function(){ UI.closeChoice(); }}
-    ]);
-    return;
-  }
-  os('我：桶盖内侧用记号笔写着：「清运 17:30」。字是倒着写的，像是从里面写的。',4.4,OS_KEEP);
+  kill('桶盖合上了。外面有人敲了两下，像在确认里面有没有人。','deep');
 }
 function tryBeastRoute(){
   if(!inToiletHere()||S.room!=='teach1'){ os('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
-  if(!inBeastWindow()){
-    os(hasSeconds()?'我：门上刻的是 11:45:00 整。现在是 '+fmtClockS(S.tsec)+'。到点了就把东西放下（G）。'
-                   :'我：门上刻的是 11:45:00 整——要精确到秒。我得有块带秒针的表。',3.8,OS_KEEP);
-    return;
-  }
-  os('我：就是现在。放下一样东西（G）。',2.6,OS_KEEP);
+  useStall();
 }
-/* 隔间：门上刻着时间（《先辈》的提示），时间对了、东西放过了，敲门就是那条路 */
 function useStall(){
   S.spots.stall=1; UI.spotsDirty=true;
-  if(RT.beastDrop&&inBeastWindow()&&S.room==='teach1'){ triggerEnding('beast'); return; }
+  if(RT.beastDrop&&S.room==='teach1'){
+    UI.choice('门后传来一个声音：「你愿意跟我一起走吗？」',[
+      {label:'跟上',fn:function(){triggerEnding('beast');}},
+      {label:'先等等',fn:function(){os('我：门后没有再催促。',2.5);}}
+    ]);
+    return;
+  }
   addClue('stall');
   if(S.room==='teach1'){
-    os('我：第三个隔间的门从里面锁着。门板上有人用指甲刻了一行：「11:45:00　放下一样东西」。'+
-       (hasSeconds()?'我看了一眼表。':'连秒都刻上了——得有块带秒针的表才行。'),5.6,OS_KEEP);
+    os('我：第三个隔间的门从里面锁着。门缝底下很暗，暗得不像有地面。',5.6,OS_KEEP);
   }else{
     os('我：隔间的门在里面锁着。门缝底下很暗，暗得不像有地面。',3.4);
   }
@@ -383,6 +362,7 @@ var ENDINGS={
 };
 function triggerEnding(id){
   if(S.screen==='cut'||S.screen==='end') return;
+  if(id==='trash'){tryTrashRoute();return;}
   RT.end=id;
   var e=ENDINGS[id];
   endMark(id);
@@ -401,7 +381,7 @@ function showEndingCard(id){
     '<div style="font-size:28px;letter-spacing:14px;color:#cfe9dc">'+e.t+'</div>'+
     '<div style="font-size:14px;line-height:2.4;opacity:.82;max-width:560px">'+e.l.join('<br>')+'</div>'+
     '<div style="font-size:11px;opacity:.4;letter-spacing:2px;margin-top:10px">'+
- '第 '+S.day+' 天 · '+fmtClock(S.tsec)+'</div>'+more+
+ '第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+more+
     '<button onclick="Game.quit()" style="font-family:inherit;font-size:12px;letter-spacing:3px;'+
     'padding:11px 36px;background:transparent;color:#b6d4c5;border:1px solid rgba(130,180,155,.34);'+
     'cursor:pointer;margin-top:8px">回到主菜单</button></div>';
