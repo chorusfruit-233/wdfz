@@ -15,6 +15,8 @@ var Engine={
   resize:function(){if(this.ready())ThreeBackend.resize();},
   draw:function(dt){if(this.ready())ThreeBackend.draw(dt);},
   resetSan:function(value){ThreeBackend.resetSan(value);},
+  /* 新局 / 回主菜单：假正常的画面平滑值归零，不带到下一局 */
+  resetFakeNormal:function(){GLR.fnNorm=0;},
   clearWorld:function(){return ThreeBackend.clearWorld();},
   addRoomLights:function(R){return ThreeBackend.addRoomLights(R);},
   enterRoom:function(id){QualityWatch.reset();return ThreeBackend.enterRoom(id);},

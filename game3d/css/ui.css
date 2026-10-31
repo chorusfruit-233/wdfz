@@ -123,6 +123,15 @@ body.touch #choices button kbd{display:none}
 #choices .choice-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
 #choices .choice-bar i{display:block;height:100%;width:100%;background:var(--ui-warn)}
 
+#drivehud{position:fixed;z-index:12;left:50%;bottom:calc(170px + var(--sb));transform:translateX(-50%);
+  box-sizing:border-box;width:min(360px,calc(100vw - 32px));padding:9px 14px;border:1px solid var(--ui-line);border-radius:10px;
+  background:rgba(2,9,7,.82);color:#e1eee5;font:13px/1.6 var(--ui-font);white-space:pre-line;text-align:center;pointer-events:none}
+#drivehud[hidden]{display:none}
+body.driving #cross,body.driving #prompt,body.driving #keyhelp,body.driving #mini,body.driving #hot,
+body.driving #lookhint,body.driving #tAct,body.driving #tside,body.driving #tBook{display:none!important}
+body.touch #drivehud{bottom:calc(190px + var(--sb));font-size:12px;line-height:1.35;padding:6px 8px}
+@media (orientation:landscape){body.touch #drivehud{top:calc(64px + var(--st));right:12px;bottom:auto;left:auto;transform:none}}
+
 /* ---------- 随身手册 ---------- */
 #journal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;
   padding:calc(18px + var(--st)) calc(18px + var(--sr)) calc(18px + var(--sb)) calc(18px + var(--sl));

@@ -189,6 +189,7 @@ function unstick(){
   }catch(e){}
 }
 function doEnterRoom(id,spawn){
+  if(typeof FN_P!=='undefined'&&FN_P.grp&&FN_P.room!==id)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
   try{ spiralReset(); }catch(e){}
   var R=INTERIORS[id]; if(!R) return;
@@ -222,6 +223,7 @@ function doEnterRoom(id,spawn){
 }
 function exitRoom(){ fadeTo(function(){ doExitRoom(); }); }
 function doExitRoom(){
+  if(typeof FN_P!=='undefined'&&FN_P.grp)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
   var R=INTERIORS[S.room]; if(!R) return;
   var o=objById(R.host);

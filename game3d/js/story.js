@@ -88,11 +88,13 @@ function fnWhereNow(){
   return 'out';
 }
 function fnTick(dt){
-  var f=S.fn; if(!f||!f.on) return;
+  var f=S.fn;
+  if(!f||!f.on){if(FN_P.grp)fnPeopleClear();return;}
   if(S.dead||S.screen!=='play') return;
   if(UI.chooseOpen) return;
   if(f.v>=100){
     f.on=false;
+    fnPeopleClear();
     kill('你笑得停不下来。笑了很久。','laugh');
     return;
   }
@@ -218,10 +220,10 @@ function useCar(cx,cy){
   os(S.talent==='drive'?'我：我弯下腰去摸方向盘底下的线……':'我：我把钥匙插进锁孔，慢慢地拧……',1.6);
 }
 function carDrive(){
-  RT.carUsed=true; RT.carLeaving=2.0;
-  S.enterCool=2.0;
+  if(AN.active||Inspection.pending()){os('我：现在走不开，先解决眼前的事。',2.5);return;}
+  autoSave();
   os('我：引擎着了。车往前冲了出去。',4);
-  triggerEnding('car');                       /* 开出去的那一段在 cutscene.js 里演 */
+  playCut('car',function(){CarChase.start();});
 }
 function tryFaceRoute(){
   if(!RT.hacked){ os('我：得先进实验楼三楼机房里那间锁着的网络中心，再去行政楼三楼改数据。',3.8); return; }
@@ -231,12 +233,20 @@ function tryFaceRoute(){
   }
   tryGateWest();
 }
-/* 每局抽三道题并保存顺序和进度；答错可重试，离开后可继续。 */
+/* 每局抽三道题并保存顺序和进度；离开后可继续。答错扣一点 SAN，并且换一道没出过的题——
+   不能把三个选项挨个试过去。题目是高中各科的基础题。 */
+var FACE_WRONG_SAN=4;
 var FACE_QUESTIONS=[
   {text:'方程 x² − 5x + 6 = 0 的较大根是多少？',choices:['2','3','6'],answer:1},
   {text:'同时掷两枚均匀六面骰，点数之和不小于 10 的概率是多少？',choices:['1/12','1/6','1/4'],answer:1},
   {text:'等差数列首项为 2、公差为 3，第 8 项是多少？',choices:['20','23','26'],answer:1},
-  {text:'函数 y = x² − 4x + 7 的最小值是多少？',choices:['3','4','7'],answer:0}
+  {text:'函数 y = x² − 4x + 7 的最小值是多少？',choices:['3','4','7'],answer:0},
+  {text:'sin 30° + cos 60° 等于多少？',choices:['1/2','1','√3'],answer:1},
+  {text:'log₂ 32 等于多少？',choices:['4','5','16'],answer:1},
+  {text:'自由落体 2 秒末的速度约是多少？（g 取 10 m/s²）',choices:['10 m/s','20 m/s','40 m/s'],answer:1},
+  {text:'1 mol 水（H₂O）的质量约是多少克？',choices:['16','18','20'],answer:1},
+  {text:'「先天下之忧而忧，后天下之乐而乐」出自哪一篇？',choices:['《岳阳楼记》','《醉翁亭记》','《出师表》'],answer:0},
+  {text:'阻值 6 Ω 和 3 Ω 的两个电阻并联，总电阻是多少？',choices:['2 Ω','4.5 Ω','9 Ω'],answer:0}
 ];
 var FaceChallenge={
   state:function(){
@@ -245,10 +255,18 @@ var FaceChallenge={
        q.order.some(function(i){return !Number.isInteger(i)||!FACE_QUESTIONS[i];})){
       var pool=FACE_QUESTIONS.map(function(_,i){return i;}),order=[];
       while(order.length<3)order.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
-      q=RT.faceQuiz={order:order,done:0};autoSave();
+      q=RT.faceQuiz={order:order,done:0,used:order.slice()};autoSave();
     }
     q.done=Number.isInteger(q.done)?clamp(q.done,0,3):0;
+    if(!Array.isArray(q.used))q.used=q.order.slice();       /* 旧档没有这一项 */
     return q;
+  },
+  /* 答错：这一格换成一道没出过的题（题都出完了就留着原题） */
+  swap:function(q){
+    var left=FACE_QUESTIONS.map(function(_,i){return i;}).filter(function(i){return q.used.indexOf(i)<0&&q.order.indexOf(i)<0;});
+    if(!left.length)return;
+    var next=left[Math.floor(Math.random()*left.length)];
+    q.order[q.done]=next;q.used.push(next);
   },
   open:function(){
     var q=FaceChallenge.state();
@@ -260,8 +278,11 @@ var FaceChallenge={
     }
     var question=FACE_QUESTIONS[q.order[q.done]],opts=question.choices.map(function(label,i){
       return {label:label,fn:function(){
-        if(i===question.answer){q.done++;autoSave();}
-        else toast('答案不正确，可以重试');
+        if(i===question.answer){q.done++;autoSave();FaceChallenge.open();return;}
+        S.san=Math.max(0,S.san-FACE_WRONG_SAN*dif().san);settleSan();
+        FaceChallenge.swap(q);autoSave();
+        if(S.dead)return;
+        os('我：闸机长长地响了一声。屏幕上换了一道题，像是在嫌我慢。',3.2);
         FaceChallenge.open();
       }};
     });
@@ -321,6 +342,7 @@ function kill(msg,fx){
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   if(typeof Inspection!=='undefined')Inspection.cancel();
   if(typeof Elevator!=='undefined')Elevator.cancel();
+  if(typeof CarChase!=='undefined'&&RT.carChase)CarChase.cancel();
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
   var f=document.getElementById('flash');
@@ -395,7 +417,7 @@ function dreamWake(){
 }
 
 var ENDINGS={
-  car:  {t:'《闸 门》',  l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
+  car:  {t:'《闸 门》', true:1,l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
   face: {t:'《白名单》', true:1,l:['闸机「嘀」地亮了一下绿光。','你走出去，回头看了一眼——','里面的天还是黑白的。所有窗口后面都站着一个人，在目送你。','你的名字从那天起，一直留在白名单的最后一行。']},
   /* 假结局：看起来逃出去了，其实又回到了座位上 */
   trash:{t:'《第三个桶》',fake:1,l:['桶盖在头顶合上。','黑暗里，你听见垃圾车发动的声音，越来越远，越来越颠。','车停了很久。有人在外面敲了两下桶壁。','是你自己的声音在问：「里面有人吗？」','……然后，上课铃响了。']},
@@ -403,14 +425,14 @@ var ENDINGS={
   /* 真结局：自己造一扇门 */
   portal:{t:'《门》',true:1,l:['光圈合上之前，你回头看了一眼。','实验台、显微镜、离心机，还有教室里那一排排低着的头——都在原地，一动不动。','你没有再回头。','门的那一边是一个普通的下午。铃响了，有人在走廊里叫你的名字，你答应了一声。']}
 };
-function triggerEnding(id){
+function triggerEnding(id,skipCut){
   if(S.screen==='cut'||S.screen==='end') return;
   if(id==='trash'){tryTrashRoute();return;}
   RT.end=id;
   var e=ENDINGS[id];
   endMark(id);
   if(!e.fake) clearSave();                    /* 假结局之后还能接着玩 */
-  playCut(id,function(){ showEndingCard(id); });
+  if(skipCut)showEndingCard(id);else playCut(id,function(){ showEndingCard(id); });
 }
 function showEndingCard(id){
   var e=ENDINGS[id];

@@ -39,6 +39,7 @@ function releaseMouseLook(){
   if(pointerIsLocked()&&document.exitPointerLock){try{document.exitPointerLock();}catch(e){}}
 }
 function requestMouseLook(){
+  if(typeof CarChase!=='undefined'&&CarChase.active())return Promise.resolve(false);
   if(INPUT.mode!=='mouse'||!playerInputAllowed())return Promise.resolve(false);
   var cv=document.getElementById('cv');
   INPUT.wantsLock=true;
@@ -178,6 +179,10 @@ function initInput(){
     }
     if(UI.chooseOpen&&!PAUSE.on&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)UI.choiceKey(+k);return;}
     if(PAUSE.on||DEV.on||UI.chooseOpen||S.intro>0)return;
+    if(typeof CarChase!=='undefined'&&CarChase.active()){
+      if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){e.preventDefault();KEY[k]=true;}
+      return;
+    }
     if(['tab','h','j','m'].indexOf(k)>=0){
       e.preventDefault();if(!e.repeat)UI.toggle({tab:'bag',h:'think',j:'note',m:'mapv'}[k]);return;
     }

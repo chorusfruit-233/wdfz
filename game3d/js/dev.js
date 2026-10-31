@@ -271,6 +271,7 @@ var Dev={
   prepareTeleport:function(){
     if(typeof Inspection!=='undefined')Inspection.cancel();
     if(typeof Elevator!=='undefined')Elevator.cancel();
+    if(typeof CarChase!=='undefined'&&CarChase.active())CarChase.cancel();
     Dev.clearPreview();if(UI.chooseOpen)UI.closeChoice();Dev.endActiveAnomaly();
     clearSearch();patReset();spiralReset();resetInputState();
   },
