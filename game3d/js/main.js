@@ -36,6 +36,7 @@ function update(dt){
     return;
   }
   if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
+  if(CarChase.active()){clockTick(dt);CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
   if(Elevator.inRide()){
     if(S.room!=='lift_dream')clockTick(dt);
@@ -67,6 +68,7 @@ function render(dt){
   try{ if(DEV.on){DEV.refreshT-=dt;if(DEV.refreshT<=0){DEV.refreshT=.3;Dev.refresh();}} }catch(e){}
   try{ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
+  if(CarChase.active()&&S.screen==='play')CarChase.draw();
   Engine.draw(dt); updateHUD(); drawMini(dt);
 }
 function updateIntro(dt){
@@ -145,6 +147,7 @@ function updateHUD(){
   hudEl('place').textContent=currentPlaceName();
   var p=periodAt(S.tsec), pe=hudEl('period'), leave=onLeave(), examing=S.exam&&p[3]==='教室';
   pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec)));
+  if(CarChase.active())pe.textContent='驾驶逃脱';
   if(typeof Inspection!=='undefined'&&Inspection.active())pe.textContent='学生会检查 · 教室';
   /* 时段前面的小圆点：绿 = 在该在的地方；黄 = 不在，违规在涨；蓝 = 请假中；红 = 考试 */
   var pc=leave?'leave':(S.wrong?'warn':(examing?'exam':'ok'));
@@ -184,6 +187,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
   if(DEV.on)Dev.close(false);
   Dev.clearPreview();Dev.clearAnimation();
@@ -299,6 +303,7 @@ var Game={
       '<span>左下摇杆</span>移动（推到底就是跑）<span>右侧滑动</span>环视<span>交互键</span>上面写着能做的事<span>手册</span>背包 · 思索 · 笔记 · 地图':
       '<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>移动<span><kbd>Shift</kbd></span>奔跑<span><kbd>E</kbd></span>交互<span><kbd>F</kbd></span>手电'+
       '<span><kbd>1</kbd><kbd>2</kbd></span>快捷栏<span><kbd>G</kbd></span>丢弃选中<span><kbd>Tab</kbd></span>背包<span><kbd>H</kbd></span>思索<span><kbd>J</kbd></span>笔记<span><kbd>M</kbd></span>地图';
+    if(pk&&CarChase.active())pk.textContent=IS_TOUCH?'驾驶：摇杆向前加速、左右转向、向后刹车。':'驾驶：W / ↑ 加速，A D / ← → 转向，S / ↓ 刹车。';
     document.body.classList.add('paused');
     UI.open('pause');
   },
@@ -318,6 +323,7 @@ var Game={
     Game.resume();
   },
   quit:function(){
+    if(typeof CarChase!=='undefined'&&CarChase.active()){autoSave();CarChase.clearVisual();}
     if(typeof Inspection!=='undefined')Inspection.clearFx();
     if(DEV.on)Dev.close(false);
     Dev.clearPreview();Dev.clearAnimation();

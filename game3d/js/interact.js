@@ -250,6 +250,7 @@ function interactHint(){
 }
 function tryInteract(){
   if(S.screen!=='play'||S.dead||PAUSE.on||UI.anyOpen()) return;
+  if(typeof CarChase!=='undefined'&&CarChase.active())return;
   if(S.seated){ S.seated=false; os('我站了起来。',1.6); S.enterCool=0.4; return; }
   if(HIDE.on){ hideOut(); return; }
   if(nearRoster()){ useRoster(); return; }

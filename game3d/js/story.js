@@ -218,10 +218,10 @@ function useCar(cx,cy){
   os(S.talent==='drive'?'我：我弯下腰去摸方向盘底下的线……':'我：我把钥匙插进锁孔，慢慢地拧……',1.6);
 }
 function carDrive(){
-  RT.carUsed=true; RT.carLeaving=2.0;
-  S.enterCool=2.0;
+  if(AN.active||Inspection.pending()){os('我：现在走不开，先解决眼前的事。',2.5);return;}
+  autoSave();
   os('我：引擎着了。车往前冲了出去。',4);
-  triggerEnding('car');                       /* 开出去的那一段在 cutscene.js 里演 */
+  playCut('car',function(){CarChase.start();});
 }
 function tryFaceRoute(){
   if(!RT.hacked){ os('我：得先进实验楼三楼机房里那间锁着的网络中心，再去行政楼三楼改数据。',3.8); return; }
@@ -320,6 +320,7 @@ function kill(msg,fx){
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   if(typeof Inspection!=='undefined')Inspection.cancel();
   if(typeof Elevator!=='undefined')Elevator.cancel();
+  if(typeof CarChase!=='undefined'&&RT.carChase)CarChase.cancel();
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
   var f=document.getElementById('flash');
@@ -394,7 +395,7 @@ function dreamWake(){
 }
 
 var ENDINGS={
-  car:  {t:'《闸 门》',  l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
+  car:  {t:'《闸 门》', true:1,l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
   face: {t:'《白名单》', true:1,l:['闸机「嘀」地亮了一下绿光。','你走出去，回头看了一眼——','里面的天还是黑白的。所有窗口后面都站着一个人，在目送你。','你的名字从那天起，一直留在白名单的最后一行。']},
   /* 假结局：看起来逃出去了，其实又回到了座位上 */
   trash:{t:'《第三个桶》',fake:1,l:['桶盖在头顶合上。','黑暗里，你听见垃圾车发动的声音，越来越远，越来越颠。','车停了很久。有人在外面敲了两下桶壁。','是你自己的声音在问：「里面有人吗？」','……然后，上课铃响了。']},
@@ -402,14 +403,14 @@ var ENDINGS={
   /* 真结局：自己造一扇门 */
   portal:{t:'《门》',true:1,l:['光圈合上之前，你回头看了一眼。','实验台、显微镜、离心机，还有教室里那一排排低着的头——都在原地，一动不动。','你没有再回头。','门的那一边是一个普通的下午。铃响了，有人在走廊里叫你的名字，你答应了一声。']}
 };
-function triggerEnding(id){
+function triggerEnding(id,skipCut){
   if(S.screen==='cut'||S.screen==='end') return;
   if(id==='trash'){tryTrashRoute();return;}
   RT.end=id;
   var e=ENDINGS[id];
   endMark(id);
   if(!e.fake) clearSave();                    /* 假结局之后还能接着玩 */
-  playCut(id,function(){ showEndingCard(id); });
+  if(skipCut)showEndingCard(id);else playCut(id,function(){ showEndingCard(id); });
 }
 function showEndingCard(id){
   var e=ENDINGS[id];

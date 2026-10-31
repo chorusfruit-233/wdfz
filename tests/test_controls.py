@@ -571,7 +571,7 @@ class ControlsTest(BrowserCase):
             window.__wrong=!RT.carUsed&&Object.keys(RT.carTried).length===1;
             useCar(cs[0],cs[1]); searchTick(2);""")
         self.assert_js(page, '__wrong')
-        page.wait_for_function("S.screen==='end'&&RT.end==='car'", timeout=5000)
+        self.assert_js(page, "CarChase.active()&&!RT.end&&!endsSeen().car&&!!loadGame()")
 
     def test_auto_save_death_and_ending_history(self):
         page = self.page()
