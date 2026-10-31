@@ -14,7 +14,7 @@ var DEV_DEATH=[
   ['回头','gaze'],['围观','stare'],['广播','voice'],['钟声','bell'],['跟随','follow'],
   ['碎裂','shatter'],['深坑','deep'],['仪式圈','ring'],['名单','names'],['黑板','chalk'],
   ['走廊','loop'],['双生','twin'],['灯','lamps'],['缝隙','slit'],['挤墙','squeeze'],
-  ['对视','face'],['墙','wall'],['笑','laugh'],['镜子','mirror']];
+  ['对视','face'],['墙','wall'],['笑','laugh'],['镜子','mirror'],['隔间伸手','hand']];
 var Dev={
   open:function(){
     if(DEV.on)return;

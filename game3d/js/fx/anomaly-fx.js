@@ -16,8 +16,14 @@ function anfxW2S(wx,wy){
 }
 function anfxClear(){
   try{ wxClear(); }catch(e){}
-  if(ANFX.grp){ GLR.scene.remove(ANFX.grp); ANFX.grp=null; }
+  if(ANFX.grp){
+    GLR.scene.remove(ANFX.grp);
+    /* 调试预览的资源由 Dev.clearPreview 管理；真实死亡在这里释放。 */
+    if(ANFX.kind==='death'&&!ANFX.preview) ThreeBackend.disposeGroup(ANFX.grp);
+    ANFX.grp=null;
+  }
   ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;
+  ANFX.timeline=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
 function anfxMat(col,op){
@@ -287,6 +293,7 @@ function deathFX(type,options){
     var p=anfxW2S(S.x,S.y);
     var grp=new THREE.Group();
     ANFX.kind='death'; ANFX.grp=grp; ANFX.t=0; ANFX.deathType=type||'vignette';ANFX.preview=!!(options&&options.preview);
+    ANFX.timeline=DeathTimeline.sample(ANFX.deathType,0);
     ANFX.mx=undefined; ANFX.mz=undefined; ANFX.flashed=0;
     var i, m;
     var dark=anfxMat(0x04060a,1.0);
@@ -579,12 +586,17 @@ function deathFX(type,options){
       anfxFigure(grp,dark,0,0,1.15,false);
       grp.position.set(fq2.x,0,fq2.z);
     }
+    ANFX.items.forEach(function(item){
+      item.userData=item.userData||{};
+      item.userData.deathOrigin={x:item.position.x,y:item.position.y,z:item.position.z};
+    });
     GLR.scene.add(grp);
   }catch(e){}
 }
 function anfxUpdate(dt){
   if(!ANFX.kind||!ANFX.grp) return;
   ANFX.t+=dt;
+  if(ANFX.kind==='death') ANFX.timeline=DeathTimeline.sample(ANFX.deathType,ANFX.t);
   var i,m;
   if(ANFX.kind==='rain'){
     wxRainUpdate(dt);
@@ -703,7 +715,7 @@ function anfxUpdate(dt){
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it]; var wu=ob.userData||{};
         if(wu.sinks){ ob.position.y=Math.max(0.6,2.9-kk*1.1); }
-        else if(wu.caustic){ ob.position.y=2.6-Math.min(2.0,kk*0.8); ob.position.x+=Math.sin(kk*3+it)*0.01; }
+        else if(wu.caustic){ ob.position.y=2.6-Math.min(2.0,kk*0.8); ob.position.x=wu.deathOrigin.x+Math.sin(kk*3+it)*0.12; }
       }
     } else if(dtp==='freeze'){
       for(it=0;it<ANFX.items.length;it++){
@@ -728,13 +740,14 @@ function anfxUpdate(dt){
     } else if(dtp==='chalk'){
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it];
-        if(ob.position.y>0.4&&ob.position.y<2.5) ob.position.y-=Math.min(0.9,kk*0.55);
+        var cy=ob.userData.deathOrigin.y;
+        if(cy>0.4&&cy<2.5) ob.position.y=cy-Math.min(0.9,kk*0.55);
       }
     } else if(dtp==='loop'){
       var camL=GLR.cam.position;
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it]; var lu2=ob.userData||{};
-        ob.position.x+=Math.sin(kk*2+it*0.4)*0.003;
+        ob.position.x=lu2.deathOrigin.x+Math.sin(kk*2+it*0.4)*0.04;
       }
     } else if(dtp==='slit'||dtp==='wall'){
       for(it=0;it<ANFX.items.length;it++){ ob=ANFX.items[it]; ob.position.y=Math.min(1.6,kk*0.9); }
