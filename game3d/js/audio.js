@@ -421,6 +421,7 @@ var SFX=(function(){
     shatter:function(){ for(var i=0;i<26;i++) tone(rnd(2000,5200),0.3,'triangle',0.03,0,i*0.03,0.5); },
     grip:function(){ noise(0.25,0.12,500,0); for(var i=0;i<6;i++) noise(0.2,0.04,250,0.3+i*0.2,'lowpass',2); },
     hand:function(){ noise(0.5,0.055,380,0.15,'lowpass',2);noise(0.18,0.09,800,0.9,'bandpass',1.4);tone(92,0.7,'sawtooth',0.025,48,1.05,0.4); },
+    trash:function(){ noise(0.35,0.09,420,0.3,'lowpass',2);noise(0.25,0.09,260,1.35,'lowpass',2);noise(0.10,0.1,600,2.0,'bandpass',2);noise(0.10,0.1,600,2.35,'bandpass',2); },
     names:function(){ for(var i=0;i<12;i++) vowel(130+Math.random()*80,0.3,0.03,i*0.12,600,1000,2); }
   };
   return {

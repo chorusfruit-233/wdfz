@@ -272,7 +272,7 @@ var FaceChallenge={
 function tryTrashRoute(){
   if(S.mode!=='in'||S.room!=='trash1'){ os('我：得先进垃圾房。',2.4); return; }
   addClue('trash');
-  kill('桶盖合上了。外面有人敲了两下，像在确认里面有没有人。','deep');
+  kill('桶盖合上了。外面有人敲了两下，像在确认里面有没有人。','trash');
 }
 function tryBeastRoute(){
   if(!inToiletHere()||S.room!=='teach1'){ os('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
@@ -307,7 +307,8 @@ var DFX_EPI={
   chalk:'这一次写的是你的名字。', loop:'走廊没有尽头 —— 因为你一直在同一段里。',
   twin:'他转过来的时候，你正在转过去。', lamps:'灯停在你站的那一格上。',
   neck:'他根本没打算绕路。', mirror:'镜子里那个，先动的手。',
-  floor:'下面很宽敞。还有很多张课桌。', wall:'你比墙软。', vignette:'有人替你应了一声"到"。'
+  floor:'下面很宽敞。还有很多张课桌。', wall:'你比墙软。', vignette:'有人替你应了一声"到"。',
+  trash:'外面又敲了两下。这次更近了。'
 };
 var DFX_SFX={laugh:'crack',shatter:'crack',grip:'slam',squeeze:'slam',bell:'bell',
   deep:'crack',freeze:'blink',voice:'blink',names:'blink',slit:'door',default:'blink'};

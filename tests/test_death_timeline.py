@@ -71,6 +71,19 @@ class DeathTimelineTest(BrowserCase):
         }""")
         self.assertEqual(result, {'raised': True, 'approached': True, 'phase': 'struggle'})
 
+    def test_bin_preview_closes_lid_without_mutating_player(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+          doEnterRoom('trash1');let world=GLR.roomMesh;
+          let before=JSON.stringify(S);deathFX('trash',{preview:true});
+          let hidden=!world.visible;
+          let lid=ANFX.items.find(o=>o.userData.trashLid),start=lid.rotation.z;
+          anfxUpdate(2.2);let end=lid.rotation.z,unchanged=JSON.stringify(S)===before;
+          let group=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(group);
+          return {closed:end<start*.1,unchanged,hidden,restored:world.visible};
+        }""")
+        self.assertEqual(result, {'closed': True, 'unchanged': True, 'hidden': True, 'restored': True})
+
     def test_real_death_resources_are_released_once(self):
         page = self.page()
         result = page.evaluate("""() => {

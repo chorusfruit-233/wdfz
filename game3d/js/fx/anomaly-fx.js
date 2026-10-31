@@ -16,6 +16,10 @@ function anfxW2S(wx,wy){
 }
 function anfxClear(){
   try{ wxClear(); }catch(e){}
+  if(ANFX.hiddenWorld&&ANFX.hiddenWorld.mesh){
+    ANFX.hiddenWorld.mesh.visible=ANFX.hiddenWorld.visible;
+    ANFX.hiddenWorld=null;
+  }
   if(ANFX.grp){
     GLR.scene.remove(ANFX.grp);
     /* 调试预览的资源由 Dev.clearPreview 管理；真实死亡在这里释放。 */
@@ -300,7 +304,24 @@ function deathFX(type,options){
     function push(o){ ANFX.items.push(o); return o; }
     var T=type||'vignette';
 
-    if(T==='vignette'){
+    if(T==='trash'){
+      var oldWorld=S.mode==='in'?GLR.roomMesh:GLR.outMesh;
+      if(oldWorld){ANFX.hiddenWorld={mesh:oldWorld,visible:oldWorld.visible};oldWorld.visible=false;}
+      var barrel=new THREE.Mesh(new THREE.CylinderGeometry(1.1,0.9,2.1,20,1,true),
+        new THREE.MeshBasicMaterial({color:0x314b38,side:THREE.DoubleSide}));
+      barrel.position.set(p.x,1.05,p.z);grp.add(barrel);push(barrel);
+      for(i=0;i<2;i++){
+        var band=new THREE.Mesh(new THREE.TorusGeometry(0.98+i*0.08,0.025,6,20),
+          new THREE.MeshBasicMaterial({color:0x60735b}));
+        band.rotation.x=Math.PI/2;band.position.set(p.x,0.45+i*1.1,p.z);grp.add(band);
+      }
+      var hinge=new THREE.Group();hinge.position.set(p.x-1.1,2.1,p.z);
+      var lid=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.12,0.07,20),
+        new THREE.MeshBasicMaterial({color:0x263d2d}));
+      lid.position.set(1.1,0,0);hinge.add(lid);hinge.rotation.z=1.45;
+      hinge.userData={trashLid:true};grp.add(hinge);push(hinge);
+    }
+    else if(T==='vignette'){
       var vp=new THREE.Mesh(new THREE.PlaneGeometry(14,14),anfxMat(0x020304,0.92));
       vp.rotation.x=-Math.PI/2; vp.position.set(p.x,-1.0,p.z);
       grp.add(vp); push(vp);
@@ -637,7 +658,16 @@ function anfxUpdate(dt){
     var dtp=ANFX.deathType||'vignette', kk=ANFX.t, it, ob;
     /* 预览只改变渲染镜头；玩家可以在预览期间移动或转头。 */
     var preview=ANFX.preview, view=preview?{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift}:S;
-    if(dtp==='floor'||dtp==='deep'){
+    if(dtp==='trash'){
+      var tp=ANFX.timeline.progress,close=clamp((tp-0.12)/0.44,0,1);
+      var easeClose=close*close*(3-2*close);
+      for(it=0;it<ANFX.items.length;it++){
+        ob=ANFX.items[it];if(ob.userData&&ob.userData.trashLid)ob.rotation.z=1.45*(1-easeClose);
+      }
+      view.eyeLift=-0.8*clamp(tp/0.5,0,1);
+      view.pitch=0.65*clamp(tp/0.25,0,1);
+      try{syncCamera(0,preview?view:null);}catch(e){}
+    } else if(dtp==='floor'||dtp==='deep'){
       /* 镜头往下沉，黑水一样的地面往上漫，在 1.8 秒左右合上 */
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it];

@@ -14,7 +14,7 @@ var DEV_DEATH=[
   ['回头','gaze'],['围观','stare'],['广播','voice'],['钟声','bell'],['跟随','follow'],
   ['碎裂','shatter'],['深坑','deep'],['仪式圈','ring'],['名单','names'],['黑板','chalk'],
   ['走廊','loop'],['双生','twin'],['灯','lamps'],['缝隙','slit'],['挤墙','squeeze'],
-  ['对视','face'],['墙','wall'],['笑','laugh'],['镜子','mirror'],['隔间伸手','hand']];
+  ['对视','face'],['墙','wall'],['笑','laugh'],['镜子','mirror'],['隔间伸手','hand'],['垃圾桶','trash']];
 var Dev={
   open:function(){
     if(DEV.on)return;
@@ -334,8 +334,9 @@ var Dev={
     if(ANFX.kind!=='death'||!ANFX.grp){Dev.report('死亡效果预览失败');return;}
     DEV.previewFx=ANFX.grp;
     try{SFX.deathFx(t);}catch(e){}
-    DEV.previewTimer=setTimeout(function(){Dev.clearPreview();},3500);
-    Dev.report('正在预览死亡效果，3.5 秒后自动清理');
+    var previewSeconds=Math.max(3.5,DeathTimeline.duration(t)+0.2);
+    DEV.previewTimer=setTimeout(function(){Dev.clearPreview();},previewSeconds*1000);
+    Dev.report('正在预览死亡效果，'+previewSeconds.toFixed(1)+' 秒后自动清理');
   },
   death:function(){
     if(!Dev.canUse())return;
