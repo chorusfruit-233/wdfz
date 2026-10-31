@@ -336,18 +336,6 @@ function deathFX(type,options){
         grp.add(vf);push(vf);
       }
     }
-    else if(T==='floor'||T==='deep'){
-      var pl=new THREE.Mesh(new THREE.PlaneGeometry(10,10),anfxMat(0x020304,0.94));
-      pl.rotation.x=-Math.PI/2; pl.position.set(p.x,-1.0,p.z);
-      grp.add(pl); push(pl);
-      if(T==='deep'){
-        for(i=0;i<10;i++){
-          var a=i/10*6.283;
-          m=anfxBox(grp,dark,0.10,2.4,0.10,p.x+Math.cos(a)*0.9,-1.0,p.z+Math.sin(a)*0.9);
-          push(m);
-        }
-      }
-    }
     else if(T==='hand'){
       var gx=S.x+Math.cos(S.ang)*9, gy=S.y+Math.sin(S.ang)*9;
       var q=anfxW2S(gx,gy);
@@ -382,52 +370,6 @@ function deathFX(type,options){
         push(anfxBox(cf,anfxMat(0xd8d2c4,0.95),cw,0.09,0.02,
              -3.0+cw/2+Math.random()*(6.0-cw), 2.35-i*0.29, 2.54));
       }
-    }
-    else if(T==='loop'){
-      for(i=0;i<7;i++){
-        var lx3=p.x+Math.cos(S.ang+i*0.9)*(2.2+i*0.9);
-        var lz3=p.z+Math.sin(S.ang+i*0.9)*(2.2+i*0.9);
-        push(anfxBox(grp,anfxMat(0x3a2a1e,1.0),0.12,2.30,1.0,lx3,1.15,lz3));
-        push(anfxBox(grp,anfxMat(0x0d1114,1.0),0.10,2.10,0.82,lx3,1.05,lz3));
-        push(anfxBox(grp,anfxMat(0x2a1f16,1.0),0.16,0.10,1.14,lx3,2.32,lz3));
-      }
-    }
-    else if(T==='ring'){
-      for(i=0;i<16;i++){
-        var ra=i/16*6.283;
-        var rs=anfxBox(grp,anfxMat(0xd8d4cc,1.0),0.10,0.10,0.10,
-             p.x+Math.cos(ra)*2.2,0.02,p.z+Math.sin(ra)*2.2);
-        rs.userData={a:ra};
-        push(rs);
-      }
-      for(i=0;i<4;i++){                                    /* 四根蜡烛的火苗，一起朝你歪 */
-        var ca5=i/4*6.283+0.6;
-        anfxBox(grp,anfxMat(0xffc860,1.0),0.05,0.12,0.05,p.x+Math.cos(ca5)*1.6,0.30,p.z+Math.sin(ca5)*1.6).rotation.z=0.5;
-      }
-    }
-    else if(T==='lamps'){
-      for(i=0;i<16;i++){
-        var ra2=i/16*6.283;
-        var lm3=anfxBox(grp,anfxMat(0xfff2d0,1.0),0.26,0.10,0.26,
-             p.x+Math.cos(ra2)*2.25,2.55,p.z+Math.sin(ra2)*2.25);
-        lm3.visible=false; lm3.userData={i:i};
-        push(lm3);
-      }
-      var lh=anfxBox(grp,anfxMat(0x0a0d10,0.55),7.0,0.04,7.0,p.x,2.78,p.z);
-      push(lh);
-    }
-    else if(T==='laugh'){
-      for(i=0;i<16;i++){
-        var la=(i/16)*6.283+Math.random()*0.35, lr=0.30+Math.random()*0.55;
-        var cc2=anfxBox(grp,anfxMat(0xe8ece6,0.88),0.028,0.028,1.0,
-             p.x+Math.cos(la)*lr, 1.35+Math.random()*0.75, p.z+Math.sin(la)*lr);
-        cc2.rotation.y=Math.PI/2-la;
-        cc2.userData={a:la,r:lr};
-        push(cc2);
-      }
-      var lsh=anfxBox(grp,anfxMat(0x0a0d10,0.42),6.0,0.02,6.0,p.x,1.2,p.z);
-      lsh.rotation.y=-Math.PI/2-S.ang;
-      push(lsh);
     }
     else if(T==='mirror'){
       var mq=anfxW2S(S.x+Math.cos(S.ang)*1.55, S.y+Math.sin(S.ang)*1.55);
@@ -553,13 +495,6 @@ function anfxUpdate(dt){
       view.eyeLift=-0.8*clamp(tp/0.5,0,1);
       view.pitch=0.65*clamp(tp/0.25,0,1);
       try{syncCamera(0,preview?view:null);}catch(e){}
-    } else if(dtp==='floor'||dtp==='deep'){
-      /* 镜头往下沉，黑水一样的地面往上漫，在 1.8 秒左右合上 */
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it];
-        if(ob.geometry&&ob.geometry.type==='PlaneGeometry') ob.position.y=Math.min(GLR.cam.position.y-0.08,-1.0+kk*0.95);
-        else ob.position.y=-1.2+Math.min(2.6,kk*1.1);
-      }
     } else if(dtp==='vignette'){
       /* 按经过的时间算：先在 4 米外站定，再一个接一个往里走，最后贴到身边、微微俯下来 */
       var vc=ANFX.items[0].position;
@@ -573,31 +508,6 @@ function anfxUpdate(dt){
         ob.rotation.x=0.18*clamp((2.4-vr)/1.6,0,1);
         ob.visible=kk>vu.delay*0.6;
       }
-    } else if(dtp==='lamps'){
-      /* 一圈灯依次亮起，然后一起压到头顶（以前这些灯永远不可见） */
-      var conv=Math.min(1,Math.max(0,(kk-1.4)/1.2));
-      var pc=anfxW2S(S.x,S.y);
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var lu=ob.userData||{};
-        if(lu.i===undefined) continue;
-        ob.visible=(kk*11>lu.i);
-        var la2=lu.i/16*6.283+conv*1.2, lr2=2.25-conv*1.9;
-        ob.position.set(pc.x+Math.cos(la2)*lr2, 2.55-conv*0.55, pc.z+Math.sin(la2)*lr2);
-        ob.scale.setScalar(1+conv*1.6);
-      }
-      try{ GLR.flash=Math.max(GLR.flash||0,conv*0.9); }catch(e){}
-    } else if(dtp==='laugh'){
-      var pa2=anfxW2S(S.x,S.y);
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var lu=ob.userData||{};
-        if(lu.a===undefined) continue;
-        var grow=0.25+kk*1.9;
-        ob.scale.z=grow;
-        var r0=lu.r+grow*0.5;
-        ob.position.x=pa2.x+Math.cos(lu.a)*r0;
-        ob.position.z=pa2.z+Math.sin(lu.a)*r0;
-      }
-      try{ GLR.flash=Math.max(GLR.flash||0,Math.max(0,0.85-kk*0.5)); }catch(e){}
     } else if(dtp==='mirror'){
       var mg=ANFX.items[ANFX.items.length-1];
       if(mg&&mg.position){
@@ -647,12 +557,6 @@ function anfxUpdate(dt){
         var cy=ob.userData.deathOrigin.y;
         if(cy>0.4&&cy<2.5) ob.position.y=cy-Math.min(0.9,kk*0.55);
       }
-    } else if(dtp==='loop'){
-      var camL=GLR.cam.position;
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var lu2=ob.userData||{};
-        ob.position.x=lu2.deathOrigin.x+Math.sin(kk*2+it*0.4)*0.04;
-      }
     } else if(dtp==='slit'&&ANFX.slit){
       /* 按经过的时间：0–0.7 秒门缝里一道光；0.7–1.6 秒门缝拉开、从中间挤过去；
          1.6–3.0 秒马路尽头的校门迎面过来；最后身前又一扇门合上 */
@@ -685,16 +589,6 @@ function anfxUpdate(dt){
         ob.position.set(hu.deathOrigin.x+(handPlayer.x-hu.deathOrigin.x)*handReach*0.68,
           -0.35+handRise*1.45,hu.deathOrigin.z+(handPlayer.z-hu.deathOrigin.z)*handReach*0.68);
         ob.rotation.x=-0.8+handRise*0.8+handReach*0.35;
-      }
-    } else if(dtp==='ring'){
-      /* 地上的石子一颗颗立起来，绕着你转，越收越紧，最后成了一个笼子 */
-      var pr=anfxW2S(S.x,S.y);
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var ru=ob.userData||{};
-        if(ru.a===undefined) continue;
-        var ang2=ru.a+kk*(1.2+kk*0.4), rad2=Math.max(0.75,2.2-kk*0.55);
-        ob.position.set(pr.x+Math.cos(ang2)*rad2, Math.min(2.4,0.05+kk*0.7*(1+(it%4)*0.35)), pr.z+Math.sin(ang2)*rad2);
-        ob.scale.set(1,1+Math.min(12,kk*5),1);
       }
     } else {
       /* 其它：一个黑影从前方走到你面前（以前这里的 z 坐标算成了两倍） */

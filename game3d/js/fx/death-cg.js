@@ -118,10 +118,10 @@ var DeathCG=(function(){
       var peek=ss(k,0,0.5), rise=ss(k,0.5,1.6), bend=ss(k,1.6,2.6), end=ss(k,2.6,3.4);
       var lift=1.3*end, cy=EYE+lift;
       var top=new THREE.Vector3(0,2.1+0.35*peek+2.6*rise,2.8);
-      var near=new THREE.Vector3(0,cy+0.05,0.5-0.15*end);
+      var near=new THREE.Vector3(0,cy+0.02,0.75-0.2*end);
       var hp=new THREE.Vector3(); lerp3(hp,top,near,bend); hp.y+=Math.sin(bend*Math.PI)*0.9;
       c.head.position.copy(hp);
-      c.head.scale.setScalar(1+0.35*bend+0.6*end);
+      c.head.scale.setScalar(1+0.3*bend+0.35*end);
       c.head.rotation.y=Math.atan2(-hp.x,-hp.z)*bend+Math.PI*(1-bend);   /* 先是后脑勺对着墙这边，弯过来时转成正脸 */
       c.head.rotation.x=0.3*bend;
       /* 脖子：从墙后的肩膀沿一条弯线连到头 */
@@ -137,7 +137,7 @@ var DeathCG=(function(){
       });
       /* 先抬头跟着它往上看，它弯下来时视线落回正前方，最后被拎离地面 */
       var look=Math.atan2(hp.y-cy,Math.max(0.3,hp.z));
-      c.cam(view,k,0,look*(1-end)+0.25*end,lift);
+      c.cam(view,k,0,look*(1-end),lift);
       c.shade(0.9*ss(k,3.0,3.4));
     }
   };
@@ -488,6 +488,184 @@ var DeathCG=(function(){
         p.rotation.x=(1-turn)*0.3*Math.max(0,beat)+0.35*lean;
       });
       c.shade(0.9*ss(k,3.0,3.4));
+    }
+  };
+
+  /* ---- deep：食堂盛宴。桌上的菜在抖，桌下的地裂成一个黑坑一路裂到脚下，你掉下去，头顶的光越来越小 ---- */
+  CG.deep={
+    build:function(c){
+      var i,r=c.rand;
+      c.table=new THREE.Group(); c.add(c.table,0,0,1.5);
+      var wood=mat(0x4a3626), plate=mat(0xd8d0c0), food=mat(0x8a2a1e);
+      var top=new THREE.Mesh(new THREE.BoxGeometry(2.4,0.08,0.9),wood); top.position.y=0.78; c.table.add(top);
+      [[-1.1,-0.38],[1.1,-0.38],[-1.1,0.38],[1.1,0.38]].forEach(function(l){ var g=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.76,0.06),wood); g.position.set(l[0],0.38,l[1]); c.table.add(g); });
+      c.dishes=[];
+      for(i=0;i<6;i++){
+        var d=new THREE.Group(), pl=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.13,0.03,14),plate), fd=new THREE.Mesh(new THREE.SphereGeometry(0.1,10,6,0,6.283,0,Math.PI/2),food);
+        fd.position.y=0.015; d.add(pl); d.add(fd); d.position.set(-0.9+i*0.36,0.83,(i%2?0.18:-0.15)); d.userData.ph=r()*6; c.table.add(d); c.dishes.push(d);
+      }
+      c.pit=c.mesh(new THREE.CircleGeometry(1,32),mat(0x010203),0,0.014,1.4); c.pit.rotation.x=-Math.PI/2;
+      c.shaft=c.mesh(new THREE.CylinderGeometry(1.2,1.2,14,24,1,true),mat(0x0a0c0e,undefined,{side:THREE.DoubleSide}),0,-7,0);
+      c.mouth=c.mesh(new THREE.RingGeometry(1.2,9,32),mat(0x6c7176,undefined,{side:THREE.DoubleSide}),0,0.0,0); c.mouth.rotation.x=Math.PI/2;
+      c.veil(0x000000);
+    },
+    update:function(c,k,view){
+      var open=ss(k,0.8,1.6), fall=seg(k,1.6,2.9);
+      c.cam(view,k,0,-0.38*(1-ss(k,1.6,1.9))-0.7*ss(k,1.6,1.9)*(1-ss(k,1.95,2.5))+1.25*ss(k,2.0,2.6),-9*fall*fall);
+      c.dishes.forEach(function(d,i){ d.position.y=0.83+0.012*Math.abs(Math.sin(k*20+d.userData.ph))*seg(k,0,1.0); });
+      c.pit.position.z=1.4-1.4*open; c.pit.scale.setScalar(0.05+1.15*open);
+      c.pit.visible=k<1.6;
+      var tip=ss(k,1.0,1.6);
+      c.table.position.y=-2.4*tip*tip; c.table.rotation.x=0.6*tip; c.table.visible=k<1.9;
+      c.shaft.visible=c.mouth.visible=k>=1.6;
+      c.shade(0.92*ss(k,2.9,3.4));
+    }
+  };
+
+  /* ---- floor：清华水杯。头顶一声哨音，抬头看见它掉下来，砸中，倒在地上看着它滚走 ---- */
+  CG.floor={
+    build:function(c){
+      c.cup=new THREE.Group(); c.add(c.cup,0,EYE+9,0.15);
+      var body=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.04,0.2,14),mat(0xc8ccd0)); c.cup.add(body);
+      c.lid=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.045,14),mat(0x6a2c91)); c.lid.position.y=0.12; c.cup.add(c.lid);
+      c.veil(0x050000);
+    },
+    update:function(c,k,view){
+      var hit=ss(k,1.15,1.55), lie=seg(k,1.6,2.6);
+      c.cam(view,k,0.35*hit,1.1*ss(k,0.1,0.7)*(1-hit)-0.3*hit,-1.45*hit);
+      var f=Math.pow(seg(k,0.2,1.15),2), h=9*(1-f);
+      if(k<1.15){ c.cup.position.set(0,EYE+h,0.15+h*0.5); c.cup.rotation.set(k*14,0,0.3); c.lid.position.set(0,0.12,0); }
+      else{
+        /* 落地以后：杯身横着往前滚，杯盖滚到另一边 */
+        c.cup.position.set(-0.22-0.15*lie,0.045,0.75+0.3*lie);          /* 镜头往一侧偏了，杯子落在视线里 */
+        c.cup.rotation.set(lie*9,0,Math.PI/2);
+        c.lid.position.set(0.25+0.6*lie,0,0.1*lie);
+      }
+      c.flash('hit',k,1.15,0.4);
+      c.shade(0.3*ss(k,1.15,1.3)*(1-ss(k,1.3,1.8))+0.9*ss(k,2.5,3.0));
+    }
+  };
+
+  /* ---- ring：实验楼仪式。脚下的粉笔圈、四周的蜡烛火苗朝你歪，石子立起来绕着转成笼子，圈外站起一圈人，蜡烛一根根灭 ---- */
+  CG.ring={
+    build:function(c){
+      var i,r=c.rand;
+      c.circle=c.mesh(new THREE.RingGeometry(2.0,2.06,48),mat(0xd8d4cc,0.85,{side:THREE.DoubleSide}),0,0.012,0); c.circle.rotation.x=-Math.PI/2;
+      c.flames=[];
+      for(i=0;i<5;i++){
+        var a=i/5*6.283+0.3, x=Math.cos(a)*1.7, z=Math.sin(a)*1.7;
+        c.box(0.05,0.2,0.05,0xe8e0cc,undefined,x,0.1,z);
+        var fl=c.mesh(new THREE.SphereGeometry(0.03,6,4),mat(0xffc860),x,0.24,z); fl.userData.f={x:x,z:z,i:i}; c.flames.push(fl);
+      }
+      c.stones=[];
+      for(i=0;i<16;i++){ var s=c.box(0.08,0.08,0.08,0xd8d4cc,undefined,0,0,0); s.userData.s={a:i/16*6.283,d:r()*0.5,h:0.4+(i%4)*0.45}; c.stones.push(s); }
+      c.robes=[];
+      for(i=0;i<6;i++){
+        var ra=i/6*6.283+0.5, f=c.fig('tall',0x050607,1,Math.cos(ra)*3.3,Math.sin(ra)*3.3);
+        f.rotation.y=Math.atan2(-f.position.x,-f.position.z); f.userData.r=f.position.clone(); c.robes.push(f);
+      }
+      c.veil(0x000000);
+    },
+    update:function(c,k,view){
+      c.cam(view,k,0.9*ss(k,1.8,3.2),-0.45*ss(k,0,0.6)*(1-ss(k,1.6,2.2))+0.05,0);
+      var lean=ss(k,0.2,0.8), cage=ss(k,1.8,2.6);
+      c.flames.forEach(function(fl){
+        var u=fl.userData.f; fl.position.set(u.x*(1-0.06*lean),0.24,u.z*(1-0.06*lean));
+        fl.scale.set(1,1.8+0.3*Math.sin(k*13+u.i),1); fl.visible=k<2.7+u.i*0.12;
+      });
+      c.stones.forEach(function(s){
+        var u=s.userData.s, up=ss(k,0.8+u.d,1.4+u.d), ang=u.a+Math.max(0,k-0.8)*1.4*up+cage*1.2, rad=2.2-1.3*cage;
+        s.position.set(Math.cos(ang)*rad,0.05+up*u.h,Math.sin(ang)*rad);
+        s.scale.set(1,1+10*cage,1);                                       /* 石子拉长成笼子的栏杆 */
+      });
+      var stand=ss(k,1.6,2.4), bow=ss(k,2.7,3.3);
+      c.robes.forEach(function(f){ f.position.y=-1.9*(1-stand); f.rotation.x=0.3*bow; });
+      c.shade(0.92*ss(k,3.0,3.4));
+    }
+  };
+
+  /* ---- loop：无尽的走廊。一道道门框迎面滑过来没有尽头，走廊越来越窄，灯从远处一盏盏灭，最近的门框里站着一个人 ---- */
+  CG.loop={
+    build:function(c){
+      var i,wood=mat(0x6a4a32),wall=mat(0x4a4f55);
+      c.walls=[c.mesh(new THREE.BoxGeometry(0.1,2.8,26),wall,-1.3,1.4,13),c.mesh(new THREE.BoxGeometry(0.1,2.8,26),wall,1.3,1.4,13)];
+      c.frames=[];
+      for(i=0;i<10;i++){
+        var g=new THREE.Group();
+        [[-0.62,1.1,0.1,2.2],[0.62,1.1,0.1,2.2],[0,2.25,1.34,0.1]].forEach(function(b){ var m=new THREE.Mesh(new THREE.BoxGeometry(b[2],b[3],0.12),wood); m.position.set(b[0],b[1],0); g.add(m); });
+        var lamp=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.04,0.12),mat(0xfff4dc,undefined,{fog:false})); lamp.position.set(0,2.72,1.2); g.add(lamp); g.userData.lamp=lamp;
+        c.add(g,0,0,2+i*2.4); c.frames.push(g);
+      }
+      c.man=c.fig('person',0x07090b,1,0,1.6); c.man.rotation.y=Math.PI; c.man.visible=false;
+      c.veil(0x000000);
+    },
+    update:function(c,k,view){
+      c.cam(view,k,0,-0.04,0);
+      var scroll=Math.max(0,k-0.8)*3.0-Math.max(0,k-2.8)*3.0, narrow=ss(k,2.2,2.8), L=24;
+      c.frames.forEach(function(g,i){
+        var z=((i*2.4-scroll)%L+L)%L*(1-0.45*narrow)+0.8;
+        g.position.z=z; g.scale.x=1-0.35*narrow;
+        g.userData.lamp.visible=!(k>2.2&&z>L*(1-seg(k,2.2,2.8))*0.6);   /* 远处的灯先灭 */
+      });
+      c.walls[0].position.x=-1.3+0.5*narrow; c.walls[1].position.x=1.3-0.5*narrow;
+      c.man.visible=k>2.95;
+      c.flash('man',k,2.95,0.2);
+      c.shade(0.9*ss(k,3.1,3.4));
+    }
+  };
+
+  /* ---- lamps：熄灯。头顶一排灯闪了几下，从远处开始一盏盏灭到你头上；黑暗里最后那盏又亮了两下，每亮一次那个人都更近 ---- */
+  CG.lamps={
+    build:function(c){
+      var i,lm=mat(0xfff2d0,undefined,{over:true,fog:false});
+      c.lamps=[];
+      for(i=0;i<8;i++){ var l=c.mesh(new THREE.BoxGeometry(0.9,0.05,0.16),lm,0,2.75,0.5+i*1.2); l.renderOrder=1000; c.lamps.push(l); }
+      c.pale=new THREE.Group(); c.pale.add(figMesh('tall',mat(0xa8aeb0,undefined,{over:true}),1)); c.add(c.pale,0,0,2.2);
+      c.pale.traverse(function(o){o.renderOrder=1001;}); c.pale.rotation.y=Math.PI; c.pale.visible=false;
+      c.veil(0x000000);
+    },
+    update:function(c,k,view){
+      c.cam(view,k,0,0.12*ss(k,0,0.5)-0.12*ss(k,1.0,2.0),0);
+      function on(a,b){ return k>=a&&k<b; }
+      c.lamps.forEach(function(l,i){
+        var lit=!(on(0.35,0.42)&&i%2)&&!on(0.7,0.78)&&k<1.0+(7-i)*0.15;
+        if(i===0) lit=lit||on(2.35,2.45)||on(2.6,2.66)||k>=3.05;
+        l.visible=lit;
+      });
+      var blink=on(2.35,2.45)?1:on(2.6,2.66)?2:k>=3.05?3:0;
+      c.pale.visible=blink>0;
+      c.pale.position.z=[2.2,2.2,1.3,0.55][blink];
+      c.flash('last',k,3.05,0.25);
+      c.shade(0.9*ss(k,1.4,2.3));                       /* 灯灭到哪里，黑到哪里；只剩灯和那个人看得见 */
+    }
+  };
+
+  /* ---- laugh：笑。四周的人一张张笑起来，笑脸越凑越近、绕着你转，你跟着笑得发抖，最后一张大笑脸贴到面前 ---- */
+  CG.laugh={
+    build:function(c){
+      var i,r=c.rand;
+      c.faces=[];
+      for(i=0;i<7;i++){
+        var a=-1.2+i*0.4+(r()-0.5)*0.15, d=2.2+r()*1.0, f=c.fx('smile',0.35,Math.sin(a)*d,0,Math.cos(a)*d);
+        f.userData.l={a:a,d:d,t:i*0.1+r()*0.1}; c.faces.push(f);
+      }
+      c.big=c.fx('smile',0.8,0,0,0.9); c.big.visible=false;
+      c.veil(0x0a0505);
+    },
+    update:function(c,k,view){
+      var near=ss(k,0.8,1.8), swirl=ss(k,1.8,2.6), end=ss(k,2.6,3.2);
+      c.cam(view,k,0,-0.02+0.06*Math.sin(k*16)*c.shk*seg(k,1.0,2.6)*(1-end),-0.15*Math.abs(Math.sin(k*8))*seg(k,1.0,2.6)*(c.shk?1:0.3));
+      var cy=c.camY();
+      c.faces.forEach(function(f){
+        var u=f.userData.l, s=0.35+0.35*near, d=u.d*(1-0.4*near)-(u.d*0.6-0.9)*swirl, a=u.a+(k-1.8)*0.8*swirl;
+        f.visible=k>u.t&&end<0.5;
+        f.scale.setScalar(s);
+        f.position.set(Math.sin(a)*d,cy-1.7*s+0.02*Math.sin(k*14+u.a*5),Math.cos(a)*d);
+        c.face(f);
+      });
+      c.big.visible=end>0;
+      var bs=0.8+0.6*end; c.big.scale.setScalar(bs); c.big.position.set(0,cy-1.7*bs,0.9-0.2*end); c.face(c.big);
+      c.shade(0.85*ss(k,2.95,3.2));
     }
   };
 
