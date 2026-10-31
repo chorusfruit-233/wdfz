@@ -428,7 +428,21 @@ var SFX=(function(){
     freeze:function(){ for(var i=0;i<20;i++) tone(rnd(2500,4500),0.08,'sine',0.02,0,i*0.07,0.6); },
     shatter:function(){ for(var i=0;i<26;i++) tone(rnd(2000,5200),0.3,'triangle',0.03,0,i*0.03,0.5); },
     grip:function(){ noise(0.25,0.12,500,0); for(var i=0;i<6;i++) noise(0.2,0.04,250,0.3+i*0.2,'lowpass',2); },
-    names:function(){ for(var i=0;i<12;i++) vowel(130+Math.random()*80,0.3,0.03,i*0.12,600,1000,2); }
+    hand:function(){ noise(0.5,0.055,380,0.15,'lowpass',2);noise(0.18,0.09,800,0.9,'bandpass',1.4);tone(92,0.7,'sawtooth',0.025,48,1.05,0.4); },
+    trash:function(){ noise(0.35,0.09,420,0.3,'lowpass',2);noise(0.25,0.09,260,1.35,'lowpass',2);noise(0.10,0.1,600,2.0,'bandpass',2);noise(0.10,0.1,600,2.35,'bandpass',2); },
+    names:function(){ for(var i=0;i<12;i++) vowel(130+Math.random()*80,0.3,0.03,i*0.12,600,1000,2); },
+    /* 下面这些原来只有通用的死亡音：按死因各配一段（声音先行，先听见、再看见） */
+    vignette:function(){ for(var i=0;i<5;i++) vowel(92-i*4,0.9,0.03+i*0.006,i*0.42,320,700,1); noise(2.4,0.06,160,0.4,'lowpass',1,0.5,1.4); },        /* 一圈呼吸声往里收 */
+    shadow:function(){ for(var i=0;i<6;i++) noise(0.07,0.05,420,i*0.36+(i%2)*0.04,'lowpass',2,0.4); vowel(180,1.4,0.02,1.6,700,2100,9); },  /* 身后慢一拍的脚步，贴耳的气声 */
+    water:function(){ for(var i=0;i<16;i++) tone(rnd(900,1500),0.07,'sine',0.03,rnd(400,700),Math.pow(i/16,0.6)*2.2,0.6); noise(1.6,0.09,500,1.9,'lowpass',0.8,0.6,0.4); },  /* 滴水越来越密，最后一口灌进来 */
+    deep:function(){ noise(1.8,0.07,900,0,'bandpass',0.7,0.3,1.2); tone(160,1.8,'sine',0.04,40,0,0.4); noise(0.4,0.12,120,2.0,'lowpass',1,0.8); },   /* 往下掉的风声，很远的一声闷响 */
+    chalk:function(){ for(var i=0;i<4;i++){ noise(0.35,0.05,3600+i*300,i*0.5,'bandpass',8,0.3); tone(2600+i*180,0.3,'sawtooth',0.008,2900+i*200,i*0.5,0.3); } },   /* 粉笔在黑板上一下一下刮 */
+    loop:function(){ for(var i=0;i<10;i++) noise(0.07,0.03+i*0.006,950,0.45*(1-Math.pow(0.82,i))/0.18,'bandpass',1.2,0.9); },   /* 同一串脚步，一次比一次近 */
+    twin:function(){ for(var i=0;i<6;i++){ noise(0.07,0.05,600,i*0.5,'lowpass',1.5,0.4); noise(0.07,0.05,600,i*0.5+0.09,'lowpass',1.5,0.4); } },   /* 自己的脚步多了一份，差半拍 */
+    slit:function(){ tone(140,2.2,'sawtooth',0.02,95,0,0.4); noise(1.4,0.04,700,0.5,'bandpass',4,0.3,0.6); },   /* 门缝慢慢被推开 */
+    squeeze:function(){ noise(2.6,0.09,110,0,'lowpass',2,0.4,1.5); for(var i=0;i<5;i++) noise(0.05,0.08,1800,0.8+i*0.35,'highpass',1,0.2); },   /* 墙往里挤，混凝土一声声裂开 */
+    floor:function(){ tone(2400,1.1,'sine',0.02,600,0,0.3); noise(0.25,0.14,900,1.15,'lowpass',1,0.4); for(var i=0;i<5;i++) tone(rnd(1800,3200),0.12,'triangle',0.02,0,1.2+i*0.06,0.5); },   /* 头顶一声往下坠的哨音，砸在身上，碎了一地 */
+    face:function(){ noise(0.35,0.06,1500,0,'bandpass',1,0.2,0.2); tone(62,2.2,'sine',0.05,58,0.6,0.6); }   /* 吸一口气，然后只剩很低的嗡声 */
   };
   return {
     moonlight: moonlight,
@@ -518,6 +532,7 @@ var SFX=(function(){
     pickup:function(){ tone(1320,0.18,'sine',0.025,0,0,0.5); tone(1760,0.22,'sine',0.018,0,0.06,0.5); },
     anim:function(mode){ var dur=mode===2?3.0:(mode===3?2.6:2.4); VisualState.deathAnim={mode:mode,t:0,dur:dur}; },
     death:function(){ tone(70,1.6,'sawtooth',0.11,24); noise(1.4,0.07,240); },
+    deathKinds:function(){ return Object.keys(DEATH_SND); },
     deathFx:function(type){
       tone(55,2.2,'sawtooth',0.10,22,0,0.3); noise(1.6,0.08,240,0,'lowpass',1,0.4);
       tone(1500,0.9,'sawtooth',0.018,900,0.05,0.6); tone(1590,0.9,'sawtooth',0.018,960,0.05,0.6);
@@ -529,6 +544,9 @@ var SFX=(function(){
     bigBell:function(v){ bellHit(98,0.12*(v===undefined?1:v),0,0.7); },
     schoolBell:schoolBell,
     vanish:function(){ noise(0.5,0.035,140,0,'lowpass',1,0.7,0.05); tone(52,0.6,'sine',0.03,38,0,0.5); },   /* 远处的人影不见了的那一下 */
+    /* 结局演出：车库里点火；门那边装置充能的嗡声越来越高 */
+    engine:function(){ tone(46,3.4,'sawtooth',0.05,92,0,0.3); noise(3.2,0.045,170,0,'lowpass',1,0.4,0.5); tone(92,2.6,'square',0.012,140,0.6,0.3); },
+    hum:function(){ tone(110,6,'sine',0.035,330,0,0.6); tone(165,6,'sine',0.02,495,0.5,0.6); noise(6,0.02,900,0,'bandpass',3,0.5,3); },
     alarm:function(){ tone(520,0.8,'square',0.05,180); },
     anomaly:function(id){
       var i;
