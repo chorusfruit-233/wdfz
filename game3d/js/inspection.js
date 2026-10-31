@@ -2,7 +2,8 @@
 'use strict';
 
 /* warnLead：提前多少游戏分钟用校园广播提醒回教室（检查时只认教室，平时这两段是自由时间） */
-var INSPECT_CONFIG={times:[770,1070],warnLead:8,duration:8,moveEvery:1,moveViolation:2,gazeSan:2,
+/* lateLimit：到点以后最多推迟多少游戏分钟开始（被电梯、异象、选项拦住）；超过就作废，不按「不在教室」处罚 */
+var INSPECT_CONFIG={times:[770,1070],warnLead:8,lateLimit:3,duration:8,moveEvery:1,moveViolation:2,gazeSan:2,
   goodSan:3,badSan:8,goodViolation:8,badViolation:10,assimilation:3};
 var INSPECT_FX={group:null,room:null,points:null,scatter:null};
 var Inspection={
@@ -42,6 +43,7 @@ var Inspection={
       return st.warned[key]&&!st.seen[key]&&S.tsec>=time-INSPECT_CONFIG.warnLead&&S.tsec<time;
     });
   },
+  stale:function(item){return item.day!==S.day||S.tsec>INSPECT_CONFIG.times[item.slot]+INSPECT_CONFIG.lateLimit;},
   active:function(){return !!(RT.inspection&&RT.inspection.current);},
   pending:function(){return !!((RT.inspection&&(RT.inspection.current||RT.inspection.queue.length))||INSPECT_FX.scatter);},
   points:function(){
@@ -125,6 +127,8 @@ var Inspection={
     if(!c){
       if(INSPECT_FX.scatter)return;
       if(S.room==='portal_tunnel')return;
+      /* 排队太久的（玩家当时在电梯里、在异象里，没法回教室）作废 */
+      while(st.queue.length&&Inspection.stale(st.queue[0]))st.queue.shift();
       if(st.queue.length&&!AN.active&&!UI.chooseOpen&&PAT.state==='idle'&&!LESSON.on){Inspection.start(st.queue.shift());}
       return;
     }

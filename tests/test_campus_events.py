@@ -92,3 +92,20 @@ class CampusEventTest(BrowserCase):
         self.assertEqual(result['warnedOnce'],1)
         self.assertFalse(result['after'])
         self.assertEqual(result['queued'],1)
+
+    def test_inspection_missed_inside_a_forced_flow_is_dropped_not_punished(self):
+        """到点时玩家在电梯里或被异象拦住，太久以后不再补一场「不在教室」的检查。"""
+        page=self.game()
+        result=page.evaluate("""()=>{
+          S.mode='out';S.room=null;S.san=80;S.viol=30;
+          S.tsec=769.99;advanceGameTime(.02);let queued=Inspection.state().queue.length;
+          AN.active=true;Inspection.tick(.1);let held=Inspection.active();
+          advanceGameTime(4);AN.active=false;Inspection.tick(.1);
+          let late={active:Inspection.active(),queue:Inspection.state().queue.length,san:S.san,viol:S.viol};
+          S.tsec=1069.99;advanceGameTime(.02);advanceGameTime(1);Inspection.tick(.1);
+          return {queued,held,late,soon:Inspection.active()};
+        }""")
+        self.assertEqual(result['queued'],1)
+        self.assertFalse(result['held'])
+        self.assertEqual(result['late'],{'active':False,'queue':0,'san':80,'viol':30})
+        self.assertTrue(result['soon'])
