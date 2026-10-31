@@ -357,6 +357,140 @@ var DeathCG=(function(){
     }
   };
 
+  /* ---- gaze：有人拍你肩膀。先瞥一下，再被慢慢扭过头去：身后是一张笑脸，黑暗里一只只眼睛睁开 ---- */
+  CG.gaze={
+    build:function(c){
+      var i,r=c.rand;
+      c.smile=c.fx('smile',1,0,EYE-1.7,-1.0);
+      c.eyes=[];
+      for(i=0;i<18;i++){
+        var e=gazeEye(1,r()<0.4?'red':'gold'), a=Math.PI*(0.25+r()*0.5)+Math.PI, d=1.8+r()*2.4;
+        e.userData.e={x:Math.cos(a)*d,z:Math.sin(a)*d,y:0.5+r()*2.1,s:0.4+r()*0.6,d:r()*0.5};
+        c.add(e,e.userData.e.x,e.userData.e.y,e.userData.e.z); c.eyes.push(e);
+      }
+      GLR.gazeT=1;
+      c.veil(0x050203);
+    },
+    update:function(c,k,view){
+      var turn=0.22*ss(k,0.15,0.5)*(1-ss(k,0.5,0.8))+Math.PI*ss(k,0.8,1.7);   /* 瞥一眼，又转回去，然后被扭过去 */
+      c.cam(view,k,turn,-0.04,0);
+      var close=ss(k,2.0,2.9);
+      c.smile.position.z=-1.0+0.55*close;
+      c.smile.scale.setScalar(1+0.5*close);
+      c.smile.position.y=EYE-1.7*(1+0.5*close);
+      c.eyes.forEach(function(e){
+        var u=e.userData.e, o=ss(k,1.5+u.d,1.9+u.d), sh=1-0.5*close;
+        e.position.set(u.x*sh,u.y+(EYE-u.y)*0.3*close,u.z*sh);
+        e.material.opacity=o;
+        e.scale.set(u.s*(0.3+0.7*o)*(1+0.4*close),u.s*0.6875*o*(1+0.4*close),1);
+      });
+      c.shade(0.9*ss(k,3.0,3.4));
+    }
+  };
+
+  /* ---- stare：全体回头。一排排同学背对着你坐着，头一个接一个转过来，脖子伸长，凑到你面前 ---- */
+  CG.stare={
+    build:function(c){
+      var i,j,r=c.rand,cloth=mat(0x1c2024),chair=mat(0x3a2e22);
+      c.heads=[];
+      for(i=0;i<3;i++) for(j=0;j<5;j++){
+        var x=-1.6+j*0.8+(r()-0.5)*0.1, z=1.5+i*1.0;
+        c.box(0.44,0.5,0.26,0x1c2024,undefined,x,0.95,z);
+        c.box(0.42,0.04,0.4,0x3a2e22,undefined,x,0.46,z-0.05);
+        var h=c.fx('head',1.25,x,1.38,z);
+        h.userData.h={x:x,z:z,d:(i*5+((j*3)%5))*0.045,row:i};
+        c.heads.push(h);
+      }
+      c.veil(0x020203);
+    },
+    update:function(c,k,view){
+      c.cam(view,k,0,-0.14+0.1*ss(k,1.8,2.6),0);
+      var rise=ss(k,1.8,2.6), end=ss(k,2.6,3.2), cy=c.camY();
+      c.heads.forEach(function(h,i){
+        var u=h.userData.h, t=ss(k,0.6+u.d,1.1+u.d);
+        var px=u.x, py=1.38+rise*(0.35+u.row*0.2), pz=u.z-rise*0.4;
+        if(i%5===2&&u.row<2||i===6){ px+=(0-px)*end*0.8; py+=(cy-py)*end; pz+=(0.55+u.row*0.15-pz)*end; }
+        h.position.set(px,py,pz);
+        h.rotation.y=Math.atan2(-px,-pz)*t;                 /* 身子不动，只有头转过来 */
+        h.rotation.x=0.2*rise;
+      });
+      c.shade(0.9*ss(k,2.9,3.2));
+    }
+  };
+
+  /* ---- voice：广播点名。喇叭里叫你的名字，一圈圈声波推过来，你捂着耳朵蹲下去，喇叭贴到脸上 ---- */
+  CG.voice={
+    build:function(c){
+      var i;
+      c.spk=new THREE.Group(); c.add(c.spk,0,2.55,2.6);
+      var body=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.38,0.22),mat(0x3a3f42)); c.spk.add(body);
+      var gr=new THREE.Mesh(new THREE.CircleGeometry(0.15,16),mat(0x0a0c0e)); gr.position.z=-0.115; gr.rotation.y=Math.PI; c.spk.add(gr);
+      c.rings=[];
+      var rg=new THREE.TorusGeometry(0.3,0.012,4,28);
+      for(i=0;i<8;i++){ c.rings.push(c.mesh(rg,mat(0x9aa4ac,0.5),0,2.55,2.5)); }
+      c.veil(0x060606);
+    },
+    update:function(c,k,view){
+      var cover=ss(k,1.6,2.6), end=ss(k,2.6,3.2);
+      c.cam(view,k,0,0.3*ss(k,0,0.6)*(1-cover)-0.3*cover*(1-end)+0.03*Math.sin(k*40)*c.shk*cover*(1-end),-0.35*cover);
+      var cy=c.camY(), from=new THREE.Vector3(0,2.55,2.5), to=new THREE.Vector3(0,cy,0.15);
+      c.spk.position.set(0.01*Math.sin(k*50)*seg(k,0.4,3),2.55+(cy+0.05-2.55)*end,2.6-2.15*end);
+      c.spk.scale.setScalar(1+0.5*end);
+      c.rings.forEach(function(rr,i){
+        var ph=k*1.1+Math.pow(Math.max(0,k-1.6),2)*1.2-0.4-i*0.28;    /* 越来越密 */
+        rr.visible=ph>0&&ph<1&&end<0.6;
+        var t=clamp(ph,0,1); rr.position.lerpVectors(from,to,t);
+        rr.scale.setScalar(1+t*4); rr.material.opacity=0.55*(1-t*0.6);
+      });
+      c.shade(0.9*ss(k,2.95,3.2));
+    }
+  };
+
+  /* ---- bell：钟敲十三下。头顶的钟在晃，第十三下脱钩砸下来把你扣在里面，嗡嗡地震 ---- */
+  CG.bell={
+    build:function(c){
+      c.bell=c.fx('bell',1,0,1.4,0);          /* 钟口刚好在头顶（室内也不会被天花板挡住） */
+      c.spot=c.mesh(new THREE.CircleGeometry(1,24),mat(0x050608,0.6),0,0.012,0);
+      c.spot.rotation.x=-Math.PI/2;
+      c.veil(0x020202);
+    },
+    update:function(c,k,view){
+      var drop=Math.pow(seg(k,1.0,1.45),2), ring=Math.exp(-Math.max(0,k-1.45)*1.6)*(k>1.45?1:0), sinkT=ss(k,2.6,3.4);
+      var pitch=0.95*ss(k,0,0.6)*(1-ss(k,1.2,1.6))+0.04*Math.sin(k*45)*ring*c.shk;
+      c.cam(view,k,0.6*Math.sin(Math.max(0,k-1.7)*1.2)*seg(k,1.7,2.6),pitch,-0.45*sinkT);
+      c.bell.position.y=1.4*(1-drop)-0.25*sinkT;
+      c.bell.rotation.z=0.22*Math.sin(k*4)*(1-drop)+0.03*Math.sin(k*50)*ring;
+      c.spot.scale.setScalar(0.3+0.8*seg(k,0,1.45)); c.spot.visible=k<1.5;
+      c.flash('hit',k,1.45,0.3);
+      c.shade(0.4*ss(k,1.5,1.7)+0.5*ss(k,3.0,3.4));
+    }
+  };
+
+  /* ---- follow：操场做操的人。背对着你整齐地做操，忽然一起停下转身，踩着节拍围过来，俯下身 ---- */
+  CG.follow={
+    build:function(c){
+      var i,j;
+      c.ppl=[];
+      for(i=0;i<3;i++) for(j=0;j<5;j++){
+        var x=-2.4+j*1.2, z=3.2+i*1.3, f=c.fig('person',0x2e333a,1,x,z);
+        f.userData.f={x:x,z:z}; c.ppl.push(f);
+      }
+      c.veil(0x030303);
+    },
+    update:function(c,k,view){
+      var beat=Math.sin(k*4.4), turn=ss(k,1.0,1.3), march=ss(k,1.3,2.6), lean=ss(k,2.6,3.2);
+      var nod=0.18*Math.sin(k*4.4)*seg(k,1.3,2.0)*(c.shk?1:0.3)*(1-lean);
+      c.cam(view,k,0,-0.04+nod+0.25*lean,-0.1*march);
+      c.ppl.forEach(function(p){
+        var u=p.userData.f, m=march, z=u.z+(0.9+(u.z-3.2)*0.35-u.z)*m, x=u.x*(1-0.6*m);
+        p.position.set(x,0.05*Math.abs(beat)*(1-turn*(1-m)),z);
+        p.rotation.y=Math.PI*turn;                                     /* 一起转身，一点不差 */
+        p.rotation.x=(1-turn)*0.3*Math.max(0,beat)+0.35*lean;
+      });
+      c.shade(0.9*ss(k,3.0,3.4));
+    }
+  };
+
   return {
     has:function(type){ return !!CG[type]; },
     types:function(){ return Object.keys(CG); },

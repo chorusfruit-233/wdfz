@@ -4,7 +4,7 @@
 var DeathTimeline=(function(){
   var durations={
     vignette:2,floor:2,grip:3.2,neck:3.4,shadow:3.2,swarm:3.2,drown:3.4,
-    water:3.4,freeze:3.4,gaze:2.6,stare:2.6,voice:2,bell:2,follow:2.6,
+    water:3.4,freeze:3.4,gaze:3.4,stare:3.2,voice:3.2,bell:3.4,follow:3.4,
     shatter:3.2,deep:2,ring:2.6,names:2,chalk:2,loop:2,twin:3.2,
     lamps:2.6,slit:3.6,squeeze:3.6,face:3,wall:2,laugh:2,mirror:2,hand:2,trash:3.6
   };

@@ -360,60 +360,6 @@ function deathFX(type,options){
       stallHand.scale.setScalar(1.4);stallHand.userData={stallHand:true};
       grp.add(stallHand);push(stallHand);
     }
-    else if(T==='stare'){
-      var sp0=anfxW2S(S.x,S.y);
-      var hk=anfxMat(0x2a2f33,1.0), hf=anfxMat(0xb8b2a6,0.95), hd2=anfxMat(0x0a0d10,1.0);
-      for(i=0;i<14;i++){
-        var ha=i/14*6.283+0.2, hr2=2.4+Math.random()*2.2, hy=1.45+Math.random()*0.5;
-        var hx2=sp0.x+Math.cos(ha)*hr2, hz2=sp0.z+Math.sin(ha)*hr2;
-        var hg=new THREE.Group();
-        hg.add(fxMesh('head'));                              /* 后脑、苍白的脸、黑眼窝、脖子和肩 */
-        hg.position.set(hx2,hy,hz2);
-        hg.userData={head:1,a:ha,r:hr2,y:hy};
-        grp.add(hg); push(hg);
-      }
-    }
-    else if(T==='gaze'){
-      var gp=anfxW2S(S.x,S.y);
-      /* 黑暗里一圈一圈睁开的眼睛：火苗一样的黄眼眶，螺旋的金色 / 血红虹膜（"目光"） */
-      var eyeN=(T==='stare')?26:20, ei;
-      for(ei=0;ei<eyeN;ei++){
-        var ea=Math.random()*6.283, er=1.9+Math.random()*3.8;
-        var ey=0.45+Math.random()*2.2;
-        var es=0.55+Math.random()*0.75;            /* 大小不一，像画上去的 */
-        var eg=gazeEye(1);
-        eg.material.opacity=1;
-        eg.position.set(gp.x+Math.cos(ea)*er, ey, gp.z+Math.sin(ea)*er);
-        eg.scale.set(es,es*0.6875,1);
-        eg.userData={i:ei, a:ea, r:er, y:ey, s:es};
-        grp.add(eg); push(eg);
-      }
-      GLR.gazeT=1;
-    }
-    else if(T==='voice'){
-      for(i=0;i<9;i++){
-        var rr2=0.5+i*0.85;
-        var rq=anfxBox(grp,anfxMat(0x6a747c,0.42),rr2*2,0.03,0.04,p.x,1.55,p.z+rr2);
-        rq.userData={wave:i};
-        push(rq);
-        push(anfxBox(grp,anfxMat(0x6a747c,0.42),0.04,0.03,rr2*2,p.x+rr2,1.55,p.z));
-      }
-    }
-    else if(T==='bell'){
-      var bz=anfxW2S(S.x,S.y);
-      var bm=fxMesh('bell'); bm.position.set(bz.x,0,bz.z); grp.add(bm); push(bm);
-      push(anfxBox(grp,anfxMat(0x0a0d10,0.45),2.1,0.006,2.1,bz.x,0.008,bz.z));
-    }
-    else if(T==='follow'){
-      for(i=0;i<5;i++){
-        var fa=(i/5)*6.283+0.5;
-        var fq=anfxW2S(S.x+Math.cos(S.ang)*9+Math.cos(fa)*3, S.y+Math.sin(S.ang)*9+Math.sin(fa)*3);
-        var fg=new THREE.Group(); anfxFigure(fg,dark,0,0,1.15,false);
-        fg.position.set(fq.x,0,fq.z);
-        fg.userData={ring:fa};
-        grp.add(fg); push(fg);
-      }
-    }
     else if(T==='names'){
       /* 名单墙立在视线正前方（以前固定放在场景的 +z 方向） */
       var nmr, nmc, nf=new THREE.Group();nf.position.set(p.x,0,p.z);nf.rotation.y=Math.PI/2-S.ang;grp.add(nf);
@@ -693,19 +639,6 @@ function anfxUpdate(dt){
       }
       view.pitch=0.55*Math.abs(Math.sin(Math.min(climb,4)*Math.PI*0.5))*(kk<2.4?1:0)-(kk>2.4?0.08:0);
       try{syncCamera(0,preview?view:null);}catch(e){}
-    } else if(dtp==='voice'){
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var vu2=ob.userData||{};
-        if(vu2.wave===undefined) continue;
-        ob.scale.set(1+kk*1.4,1,1+kk*0.6);
-        ob.position.z=ANFX.items[0].position.z-0.5+(vu2.wave*0.85)*(1+kk*0.5);
-      }
-    } else if(dtp==='bell'){
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it];
-        ob.rotation.z=Math.sin(kk*9+it)*0.05*Math.max(0,1-kk*0.3);   /* 钟还在嗡嗡地晃 */
-        ob.position.y=Math.max(-0.6,-kk*0.25);                          /* 慢慢压下来 */
-      }
     } else if(dtp==='names'){
       for(it=0;it<ANFX.items.length;it++){ ob=ANFX.items[it]; ob.visible=(it%3)<=Math.floor(kk*6)%3; }
     } else if(dtp==='chalk'){
@@ -753,29 +686,6 @@ function anfxUpdate(dt){
           -0.35+handRise*1.45,hu.deathOrigin.z+(handPlayer.z-hu.deathOrigin.z)*handReach*0.68);
         ob.rotation.x=-0.8+handRise*0.8+handReach*0.35;
       }
-    } else if(dtp==='gaze'||dtp==='stare'){
-      var near=Math.min(1,Math.max(0,(kk-1.0)/1.4));            /* 1 秒后开始逼近 */
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var eu=ob.userData||{};
-        if(eu.a===undefined) continue;
-        if(eu.cx===undefined){                 /* 每只眼睛记下自己的圆心和基准高度 */
-          eu.cx=ob.position.x-Math.cos(eu.a)*eu.r;
-          eu.cz=ob.position.z-Math.sin(eu.a)*eu.r;
-          eu.by=ob.position.y;
-        }
-        var rr3=eu.r*(1-near*0.72);
-        ob.position.x=eu.cx+Math.cos(eu.a)*rr3;
-        ob.position.z=eu.cz+Math.sin(eu.a)*rr3;
-        ob.position.y=eu.by+near*0.35;
-        if(eu.head){
-          /* 围观使用人头模型，不能按眼睛 Sprite 的尺寸计算。 */
-          ob.scale.setScalar(1+near*0.2);
-          ob.lookAt(GLR.cam.position.x,GLR.cam.position.y,GLR.cam.position.z);
-        }else{
-          var gk=(eu.s||1)*(1+near*0.5);
-          ob.scale.set(gk, gk*0.6875, 1);                 /* Sprite 始终正对镜头 */
-        }
-      }
     } else if(dtp==='ring'){
       /* 地上的石子一颗颗立起来，绕着你转，越收越紧，最后成了一个笼子 */
       var pr=anfxW2S(S.x,S.y);
@@ -786,18 +696,6 @@ function anfxUpdate(dt){
         ob.position.set(pr.x+Math.cos(ang2)*rad2, Math.min(2.4,0.05+kk*0.7*(1+(it%4)*0.35)), pr.z+Math.sin(ang2)*rad2);
         ob.scale.set(1,1+Math.min(12,kk*5),1);
       }
-    } else if(dtp==='follow'){
-      /* 做操的人围上来；你的视线跟着节拍一上一下 */
-      var pf=anfxW2S(S.x,S.y), rr4=Math.max(1.1,3.2-kk*1.0);
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var fu2=ob.userData||{};
-        if(fu2.ring===undefined) continue;
-        var a6=fu2.ring+kk*0.25;
-        ob.position.set(pf.x+Math.cos(a6)*rr4,0,pf.z+Math.sin(a6)*rr4);
-        ob.rotation.y=Math.atan2(pf.x-ob.position.x,pf.z-ob.position.z);
-        ob.rotation.x=Math.sin(kk*4.4)*0.35;
-      }
-      if(kk>1.0){ view.pitch=Math.sin(kk*4.4)*0.32; try{ syncCamera(0,preview?view:null); }catch(e){} }
     } else {
       /* 其它：一个黑影从前方走到你面前（以前这里的 z 坐标算成了两倍） */
       if(ANFX.grp&&ANFX.grp.position){
