@@ -53,6 +53,17 @@ function rooftop(){
   g[17][14]='#';
   return g;
 }
+function elevatorCabin(){
+  var g=blank(7,7,'.');border(g,7,7,'#');g[0][3]='J';return g;
+}
+function elevatorDream(){
+  var g=blank(18,12,'.');border(g,18,12,'#');g[5][17]='J';
+  g[3][8]='#';g[4][8]='#';g[8][11]='#';return g;
+}
+function portalTunnelFloor(){
+  var g=blank(7,24,'.');border(g,7,24,'#');
+  g[23][3]='j';g[0][3]='j';g[2][2]='u';return g;
+}
 function genericFloor(W,H,nRoom,roomW,furn,opts){
   opts=opts||{};
   var g=blank(W,H,'.'),x,y,i;
@@ -203,6 +214,14 @@ function buildInteriorData(){
     mkFloor('lab'+f,'实验楼 '+f+'F · '+LABKIND[f],'lab',f,
       genericFloor(2+5*8+4+4,20,5,8,LABFURN[f]||'l',{corr:3,podiumCh:'K',exit:f===1}));
   }
+  for(f=1;f<=5;f++){
+    INTERIORS['teach'+f].grid[21][20]='J';
+    INTERIORS['lab'+f].grid[19][10]='J';
+  }
+  mkFloor('lift_teach','教学楼 · 电梯','lift',1,elevatorCabin());
+  mkFloor('lift_lab','实验楼 · 电梯','lift',1,elevatorCabin());
+  mkFloor('lift_dream','白色空间','dream',1,elevatorDream());
+  mkFloor('portal_tunnel','物理实验室 · 隧道','tunnel',1,portalTunnelFloor());
   var kk2, kRow;
   for(kk2=1;kk2<=5;kk2++){
     kRow='admin'+kk2;

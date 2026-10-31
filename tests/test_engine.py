@@ -188,9 +188,36 @@ class EngineTest(BrowserCase):
         self.assert_js(page, "GLR.cam.near<.08&&GLR.cam.near*Math.sqrt(1+Math.pow(Math.tan(S.fov*PI/360),2)*(1+GLR.cam.aspect*GLR.cam.aspect))<PRAD*U2M")
         self.assert_js(page, 'GLR.postMat.uniforms.uNear.value===GLR.cam.near')
 
+    def test_film_grain_is_subtle_in_dark_areas_and_can_be_turned_off(self):
+        """噪点：颗粒加在显示空间、暗部只轻微跳动；设置里可以关掉并记住。"""
+        page = self.page()
+        page.evaluate("doEnterRoom('teach1');S.san=100;syncCamera(0)")
+        page.wait_for_timeout(600)
+        result = page.evaluate("""async () => {
+          async function frame(t){
+            GLR.time=t;render(0);const url=GLR.renderer.domElement.toDataURL();
+            const img=new Image();img.src=url;await img.decode();
+            const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+            const g=c.getContext('2d');g.drawImage(img,0,0);return g.getImageData(0,0,c.width,c.height).data;
+          }
+          async function dev(){
+            const a=await frame(10.13),b=await frame(10.47);let sum=0,n=0;
+            for(let i=0;i<a.length;i+=4*7){const l=(a[i]+a[i+1]+a[i+2])/3;if(l<40){sum+=Math.abs(a[i]-b[i]);n++;}}
+            return n?sum/n:0;
+          }
+          const on=await dev();Settings.grain(0);const off=await dev();
+          const saved=JSON.parse(localStorage.getItem('zw3d_set')).grain;Settings.grain(1);
+          return {on,off,saved,uniform:GLR.postMat.uniforms.uGrain.value};
+        }""")
+        self.assertLess(result['on'], 4.5)       # 暗部相邻两帧平均差：以前约 12/255，现在约 3
+        self.assertLess(result['off'], 1.0)      # 关掉以后只剩灯光闪动等真实变化
+        self.assertGreater(result['on'], result['off']+0.8)   # 开着仍有一点颗粒，不是完全干净
+        self.assertEqual(result['saved'], 0)
+        self.assertGreater(result['uniform'], 0)
+
     def test_gameplay_modules_do_not_construct_renderer_objects(self):
         root = Path(__file__).resolve().parents[1] / 'game3d/js'
-        for name in ('main', 'world', 'input', 'systems', 'anomaly', 'story', 'items', 'patrol', 'spiral', 'save', 'state', 'interact', 'prologue'):
+        for name in ('main', 'world', 'input', 'systems', 'anomaly', 'story', 'items', 'patrol', 'spiral', 'save', 'state', 'interact', 'prologue', 'dread'):
             source = (root / f'{name}.js').read_text()
             self.assertIsNone(re.search(r'\b(?:THREE|GLR)\s*\.', source), name)
 

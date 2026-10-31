@@ -82,6 +82,7 @@ function advanceGameTime(minutes){
   while(remaining>0){
     var before=S.tsec, step=Math.min(remaining,Math.max(0,1500-before));
     S.tsec+=step; remaining-=step;
+    if(typeof Inspection!=='undefined')Inspection.cross(S.day,before,S.tsec);
     if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=LIGHTS_OUT){
       S.fn.note=true;
       os('我：口袋里多了一张对折的纸。上面写着——灯前看字字如旧，月下认人人已非。　　　　　——笑时莫出声。',8);
@@ -99,7 +100,7 @@ function advanceGameTime(minutes){
         }
       }
     }
-    if(S.tsec>=1500) S.tsec=440;
+    if(S.tsec>=1500-1e-9) S.tsec=440;
     else if(step<=0) break;
   }
 }
@@ -138,20 +139,20 @@ var TT_LINES=['我：最近睡得挺好。铃一响就醒，不用闹钟。醒�
   '我：走廊里的人走得真整齐。我低头看了一眼——我的脚也在跟着拍子。',
   '我：座位表上，我的名字在哪一格？……哪一格都是我的名字。',
   '我：我好像一直都在这里。在我转来之前，就在这里。'];
-/* 时间往前走；《先辈》那十秒开始时提醒一句 */
+/* 坐着的时候越过 60、80：提醒落在椅子上——站起来就能缓下来 */
+var TT_SEAT={3:'我：……今天几号来着？我想站起来看一眼黑板，椅子没让我起来。',
+  4:'我：腿麻了。不对——是腿不想动。椅子贴着我的背，像是不想让我起来。'};
 /* 跨时段时分段消耗真实秒；不能把整步时间按旧时速推进，尤其是 11:45 的慢速窗。 */
 function clockTick(dt){
   var left=Math.max(0,dt);
   while(left>1e-9){
     var t0=S.tsec, boundary=periodAt(t0)[1];
-    if(t0<BEAST_T0-1e-9)boundary=Math.min(boundary,BEAST_T0);
-    else if(t0<BEAST_T1-1e-9)boundary=Math.min(boundary,BEAST_T1);
+    if(t0<BEAST_SLOW_T0-1e-9)boundary=Math.min(boundary,BEAST_SLOW_T0);
+    else if(t0<BEAST_SLOW_T1-1e-9)boundary=Math.min(boundary,BEAST_SLOW_T1);
     var rate=rateAt(t0), seconds=Math.max(0,(boundary-t0)*60/rate);
     if(seconds<1e-9){advanceGameTime(1e-8);continue;}
     var used=Math.min(left,seconds);
     advanceGameTime(used===seconds?boundary-t0:used*rate/60);left-=used;
-    if(t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
-      os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
   }
 }
 function sanityStage(value){var n=value===undefined?S.san:value;return n>60?0:n>30?1:n>12?2:3;}
@@ -166,17 +167,20 @@ function settleSan(){
 /* 仅保留日常恢复；危险环境、异象和躲避巡察者期间不能由课表恢复抵消伤害。 */
 function sanTick(dt,rule,exam){
   if(S.san<=0){settleSan();if(S.dead)return;}
-  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on)rule.san(dt,exam);
+  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt,exam);
   if(S.pillT>0){var pd=Math.min(dt,S.pillT);S.san+=PILL_RATE*pd;S.pillT-=pd;}
   if(PAT.state==='walk'&&(PAT.locked||HIDE.on))S.san-=dt*(PAT.locked?0.35:0.18);
   settleSan();
 }
-function addViolation(amount){
-  if(amount>0&&(eveningActivity(S.tsec)||onLeave()))return;
+function addViolation(amount,source){
+  if(amount>0&&(onLeave()||(eveningActivity(S.tsec)&&source!=='inspection')))return;
   S.viol=clamp(S.viol+amount,0,100);
 }
 /* 违规：不在该在的地方（或熄灯后）就涨，否则慢慢降；请假中不算 */
 function violTick(dt,nw,rule,exam){
+  if(typeof Inspection!=='undefined'&&Inspection.active()){
+    S.wrong=!inClassroomHere();leaveTick();try{ncUpdate(dt);}catch(e){}return;
+  }
   var wrong=!rule.there();
   var vioMul=1;
   if(nw==='教室') vioMul=exam?2.4:1.4;
@@ -197,12 +201,15 @@ function violTick(dt,nw,rule,exam){
     toast('违规已满 · 不能请假');
   }else if(RT.violFull&&S.viol<60) RT.violFull=0;
 }
+/* 同化速率（每真实秒）：坐在教室里涨、夜里待在宿舍涨，其余时间回落。 */
+var TT_CFG={seat:1.0,dorm:0.8,decay:0.45};      /* 2026-10-31 调整：原 1.5/1.0/0.35 下完全守规矩第一天上午就会融入；现在第一天最高约 67，第二天早上继续坐满才会 */
 /* 同化：坐得住、按时回宿舍就涨；满值直接融入。 */
 function ttTick(dt,nw){
   if(S.tt>=100){resolveAssimilation();return;}
-  if(S.seated&&nw==='教室') S.tt+=1.5*dt;
-  else if(inDorm()&&S.tsec>=EVENING) S.tt+=1.0*dt;
-  else S.tt=Math.max(0,S.tt-0.35*dt);
+  if(typeof Inspection!=='undefined'&&Inspection.active())return;
+  if(S.seated&&nw==='教室') S.tt+=TT_CFG.seat*dt;
+  else if(inDorm()&&S.tsec>=EVENING) S.tt+=TT_CFG.dorm*dt;
+  else S.tt=Math.max(0,S.tt-TT_CFG.decay*dt);
   S.tt=clamp(S.tt,0,100);
   if(S.tt>=100){
     resolveAssimilation();return;
@@ -210,7 +217,8 @@ function ttTick(dt,nw){
   var tier=Math.floor(S.tt/20);
   if(tier>0&&tier!==S.ttTier){
     S.ttTier=tier;
-    if(tier<=6) os(TT_LINES[tier-1],4.4);
+    if(S.seated&&TT_SEAT[tier]) os(TT_SEAT[tier],4.6);
+    else if(tier<=6) os(TT_LINES[tier-1],4.4);
   }
   if(S.tt<100) S.hiddenLatch=false;
 }
@@ -219,6 +227,8 @@ function updateSystems(dt){
   clockTick(dt);
   try{ patEndIfInvalid(); }catch(e){}
   try{ fnTick(dt); }catch(e){}
+  if(typeof Inspection!=='undefined')Inspection.tick(dt);
+  if(S.dead)return;
   if(S.exam&&(S.tsec>=LIGHTS_OUT||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
   examTick(dt);
   var exam=examNow(), nw=needWhere(S.tsec), rule=NEED_RULE[nw];
@@ -274,6 +284,7 @@ function dangerAt(){
   if(S.mode==='in'){
     if(S.room==='garage1') return 'garage';
     if(S.room==='trash1') return 'trash';
+    if(S.room==='portal_tunnel') return 'tunnel';
     return null;
   }
   if(isNight()) return 'night';
@@ -361,7 +372,7 @@ function roamTick(dt){
     kill('你在黑暗里撞上了它。它很高，很冷，一直站在车道中间，等你自己走过去。','grip');
   }
 }
-var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30}};
+var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30},tunnel:{san:0.60}};
 function dangerTick(dt){
   var dg=dangerAt(); if(!dg) return;
   var k=(S.talent==='night'&&(dg==='night'||dg==='garage'))?0.55:1;
@@ -371,6 +382,7 @@ function dangerTick(dt){
     S.dangerSeen[dg]=1;
     if(dg==='garage') os('我：车库里没有灯。只有最里面那盏在闪——闪的节奏，像有人在开关。',4.6);
     else if(dg==='trash') os('我：垃圾房的味道不对。太干净了。像刚刚被人舔过一遍。',4.2);
+    else if(dg==='tunnel') os('我：不想靠近。脚下的黑色黏液像是在呼吸。',4.2);
     else os('我：熄灯了。外面的路灯还亮着，可是它们照不到地面。这种时候还在外面走，是要被记下来的。',4.8);
   }
 }

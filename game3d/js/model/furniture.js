@@ -10,6 +10,32 @@
 var FURN={};
 var C_DESK=0x86653c, C_SEAT=0x785b34, C_FRAME=0x3a3f44, C_STEEL=0x9aa4a8, C_DARKP=0x2e3438;
 
+/* 电梯门、轿厢面板和白色空间出口共用交互格，实体碰撞由同一格登记。 */
+FURN.J=function(c,x,y,cx,cz){
+  var K=c.K,isDream=c.R.host==='dream';
+  if(isDream){
+    K.box('plain',cx,1.35,cz,0.14,2.7,0.94,0xe9f7ff,1);
+    K.box('plain',cx-0.09,1.4,cz,0.03,2.2,0.70,0x8ec6d1,1);
+  }else{
+    K.box('plain',cx,1.3,cz,0.94,2.6,0.16,0x5c676b,1);
+    K.box('plain',cx,1.15,cz-0.10,0.72,2.1,0.04,0x9ba4a4,1);
+    K.box('plain',cx+0.38,1.15,cz-0.14,0.09,0.35,0.04,0x75a899,1);
+  }
+  c.solid(cx,cz,c.tw,c.th);
+};
+FURN.j=function(c,x,y,cx,cz){
+  var K=c.K;
+  K.box('plain',cx,1.25,cz,.80,2.5,.12,0x111a17,1);
+  K.box('plain',cx-.40,1.25,cz,.08,2.5,.22,0x5b6b61,1);
+  K.box('plain',cx+.40,1.25,cz,.08,2.5,.22,0x5b6b61,1);
+  K.box('plain',cx,2.50,cz,.88,.08,.22,0x5b6b61,1);
+  c.solid(cx,cz,c.tw,c.th);
+};
+FURN.u=function(c,x,y,cx,cz){
+  c.K.box('plain',cx,.32,cz,.5,.64,.45,0x38443a,1);
+  c.K.box('plain',cx,.67,cz,.42,.06,.34,0xc4bda4,1);
+};
+
 /* 一把学生椅（Blender 建模：弯木椅面、弯靠背、钢管架）。正面朝 -z（人面向 -z 坐） */
 function chairModel(K,x,z,rot,seatY){
   K.asset(seatY>0.45?'chair_student_tall':'chair_student',x,0,z,rot||0);

@@ -50,6 +50,7 @@ function facRoll(n){
   return Math.floor(r*n);
 }
 function useFacility(ch,R){
+  if(ch==='K'&&PortalExploration.collect(R))return true;
   var cool=S.actCool||(S.actCool={});
   var key='fac'+ch;
   var cd=FAC_CD[ch]||60;
@@ -180,7 +181,7 @@ function timeSkipCard(mins,actName,tsec){
   var i=el.querySelector?el.querySelector('i'):null;
   var em=el.querySelector?el.querySelector('em'):null;
   if(b) b.textContent='…'+mins+' 分钟过去了';
-  if(i) i.textContent=fmtClock(tsec);
+  if(i) i.textContent=hasClock()?fmtClock(tsec):periodAt(tsec)[2];
   if(em) em.textContent=actName||'';
   el.classList.add('on');
   if(SKIP_T) clearTimeout(SKIP_T);
@@ -214,7 +215,7 @@ var TILE_HINT={
   O:'出去', H:'躲进柜子',
   M:function(){ return hasItem('coin')?'投币（售货机）':'售货机'; },
   k:canteenHint, t:canteenHint,
-  L:'走连廊', Q:'看服务器终端', S:'上下楼', P:'坐下', c:'上车', V:'上车',
+  L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:'上车',
   D:function(){ return (S.room==='lab3')?'门禁管理终端':'使用终端'; },
   X:'钻进去',
   K:function(h,R){ return (R&&R.host==='admin')?'看办公桌':'看实验台'; },
@@ -250,6 +251,7 @@ function interactHint(){
 }
 function tryInteract(){
   if(S.screen!=='play'||S.dead||PAUSE.on||UI.anyOpen()) return;
+  if(typeof CarChase!=='undefined'&&CarChase.active())return;
   if(S.seated){ S.seated=false; os('我站了起来。',1.6); S.enterCool=0.4; return; }
   if(HIDE.on){ hideOut(); return; }
   if(nearRoster()){ useRoster(); return; }
@@ -308,6 +310,9 @@ function tryInteract(){
     exitRoom(); return;
   }
   if(ch==='S'){ stairGo(); return; }
+  if(ch==='J'){ Elevator.interact(); return; }
+  if(ch==='j'){ PortalExploration.leave(hit); return; }
+  if(ch==='u'){ PortalExploration.readDiary(); return; }
   if(ch==='H'){ hideIn(hit); return; }
   if(ch==='L'){ useLink(R,hit.c,hit.r); return; }
   if(ch==='Q'){
@@ -594,11 +599,14 @@ function doSearch(c,r){
   /* 车钥匙和机房钥匙：校长办公室的容器 45%，别的老师办公室 1%（以前直接挂在保安岗） */
   if(_R&&_R.host==='admin'){
     var miss=['key','roomkey'].filter(function(k){ return !hasItem(k); });
-    if(miss.length&&Math.random()<(_R.principal?0.45:0.01)){
+    var pity=_R.principal&&(RT.keyMiss||0)>=3;              /* 保底：连着三次没翻到，这一次一定有 */
+    if(miss.length&&(pity||Math.random()<(_R.principal?0.45:0.01))){
+      RT.keyMiss=0;
       var kk=miss[Math.floor(Math.random()*miss.length)];
       os(kk==='key'?'我：抽屉最里面压着一串车钥匙，牌号刻在环上。':'我：抽屉里有一把铜钥匙，塑料标签上写着「机房」。',3.6);
       addItem(kk); return;
     }
+    if(miss.length&&_R.principal) RT.keyMiss=(RT.keyMiss||0)+1;
     if(_R.principal){
       var pr=Math.random();
       if(pr<0.12&&!hasItem('atlas')){ os('我：抽屉里卷着一大张图纸，是整个学校每一层的平面图。',3.4); addItem('atlas'); return; }
@@ -650,5 +658,5 @@ function useData(){
 }
 function tryGateWest(){
   if(!RT.hacked||!RT.data){ os('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); addClue('gatew'); return; }
-  triggerEnding('face');
+  FaceChallenge.open();
 }

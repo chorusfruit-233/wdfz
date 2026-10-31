@@ -79,6 +79,11 @@ function hideOut(){
 /* ---------- 巡察者 ---------- */
 var PAT={state:'idle',next:45,t:0,x:0,y:0,room:null,lock:0,locked:false,lost:0,still:0,tx:0,ty:0,stuck:0,walkT:0,step:0};
 var PAT_SPEED=16, PAT_CHASE=31, PAT_SEE=135, PAT_CATCH=19;
+/* stuckGiveUp：寻路卡住（被门、桌椅挡住，到不了你身边）超过这么多秒就放弃，不能一直红着灯对峙、扣 SAN；
+   lostSearch：跟丢以后先去最后看见你的地方站一会儿再走（P2 小实验，审计里不增加正确躲法的死亡）；
+   lockerMemory：你在它眼皮底下躲过的柜子，它下次会先去那个柜子门口停一会儿（只是吓人，没看见你钻进去就抓不到）；
+   noise：奔跑的脚步声会把它引过来（P2 小实验，审计里逃跑的死亡变多，默认关闭） */
+var PAT_CFG={stuckGiveUp:6,lostSearch:true,lostLinger:3,lockerMemory:true,memLinger:4,noise:false};
 function patReset(keepHiding){
   patRemoveFig();
   PAT.blinkCD=0.8;PAT.afterBlink=0;
@@ -288,6 +293,10 @@ function patAppear(){
   PAT.blinkCD=0.8;PAT.afterBlink=0;
   PAT.x=p.x; PAT.y=p.y; PAT.state='walk'; PAT.t=0; PAT.walkT=0; PAT.lock=0; PAT.locked=false;
   var q=patPickSpot(false)||p; PAT.tx=q.x; PAT.ty=q.y;
+  PAT.linger=0; PAT.stuckT=0; PAT.seenX=undefined; PAT.seenY=undefined;
+  /* 记得你上次躲过的柜子：先去那个柜子门口 */
+  var mem=PAT_CFG.lockerMemory&&RT.patMem&&RT.patMem[PAT.room];
+  if(mem&&INTERIORS[PAT.room]){ var lf=lockerFront(INTERIORS[PAT.room],mem.c,mem.r); PAT.tx=lf.x; PAT.ty=lf.y; PAT.linger=PAT_CFG.memLinger; }
   patAddFig();
   PAT.path=null;
   os('我：那边多了一个很高的人影。我眨了一下眼，它已经站在更近的地方。',4.2,OS_KEEP);
@@ -357,6 +366,9 @@ function patTick(dt){
   PAT.walkT+=dt;
   VisualState.patrolFlick=PAT.locked?0.35:0.7;
   var d=Math.hypot(S.x-PAT.x,S.y-PAT.y), sees=patSees()&&!patIgnores();
+  if(sees){ PAT.seenX=S.x; PAT.seenY=S.y; }
+  /* 你在它锁定的时候钻进柜子（它没看见），记住这个柜子 */
+  if(PAT.locked&&HIDE.on&&!HIDE.seen&&PAT.room!=='out'&&PAT_CFG.lockerMemory){ RT.patMem=RT.patMem||{}; RT.patMem[PAT.room]={c:HIDE.c,r:HIDE.r}; }
   if(!PAT.locked){
     if(sees) PAT.lock+=dt*(d<60?2.2:1.1);
     else PAT.lock=Math.max(0,PAT.lock-dt*0.5);
@@ -377,6 +389,7 @@ function patTick(dt){
     if(PAT.lost>2.5){
       PAT.locked=false; PAT.lock=0;
       os('我：红光一点一点褪下去。它停下来，在听。',3.2);
+      if(PAT_CFG.lostSearch&&PAT.seenX!==undefined){ PAT.tx=PAT.seenX; PAT.ty=PAT.seenY; PAT.linger=PAT_CFG.lostLinger; }
     }
     /* 难的逃法：背对它，一动不动 */
     var face=angDiff(Math.atan2(PAT.y-S.y,PAT.x-S.x),S.ang);
@@ -386,6 +399,7 @@ function patTick(dt){
       return;
     }
   }
+  if(PAT_CFG.noise&&!PAT.locked&&S.run&&S.moving&&d<PAT_SEE*1.4&&!sees){ PAT.tx=S.x; PAT.ty=S.y; }
   /* 平时停住，只在短促的脚步后瞬移一小段；背对静止的逃脱窗口中不逼近。 */
   PAT.blinkCD=(PAT.blinkCD===undefined?0.8:PAT.blinkCD)-dt;
   if(PAT.blinkCD<=0){
@@ -395,11 +409,24 @@ function patTick(dt){
       var target=HIDE.on&&HIDE.seen&&PAT.room!=='out'?lockerFront(INTERIORS[PAT.room],HIDE.c,HIDE.r):{x:S.x,y:S.y};
       PAT.tx=target.x;PAT.ty=target.y;
     }
-    if(PAT.still<=0||HIDE.on){
+    if((PAT.still<=0||HIDE.on)&&!(PAT.linger>0&&!PAT.locked&&Math.hypot(PAT.tx-PAT.x,PAT.ty-PAT.y)<6)){
       var moved=patBlink((PAT.locked?PAT_CHASE:PAT_SPEED)*interval);
-      if(moved)PAT.afterBlink=0.22;
+      if(moved){PAT.afterBlink=0.22;PAT.stuckT=0;}
+      else PAT.stuckT=(PAT.stuckT||0)+interval;
+      /* 卡住到不了：锁着也放弃（以前会一直红着灯对峙，锁定期间还在扣 SAN） */
+      if(PAT.locked&&PAT.stuckT>=PAT_CFG.stuckGiveUp){
+        patEnd('我：它停在那里，不再往前走了。过了很久，红光一点一点褪掉，灯亮了回来。');
+        return;
+      }
       var arrived=Math.hypot(PAT.tx-PAT.x,PAT.ty-PAT.y)<6;
-      if(!PAT.locked&&(arrived||!moved)){var next=patPickSpot(false);if(next){PAT.tx=next.x;PAT.ty=next.y;}}
+      /* 有目的地（跟丢后去找、去记得的柜子门口）时：到了就站着；路一时走不通也先别换，卡住 2 秒以上才放弃 */
+      var purposeful=PAT.linger>0&&(arrived||(PAT.stuckT||0)<2);
+      if(!PAT.locked&&!purposeful&&(arrived||!moved)){PAT.linger=0;var next=patPickSpot(false);if(next){PAT.tx=next.x;PAT.ty=next.y;}}
+    }
+    /* 跟丢后、去柜子门口：到了先站一会儿（听） */
+    if(PAT.linger>0&&!PAT.locked&&Math.hypot(PAT.tx-PAT.x,PAT.ty-PAT.y)<6){
+      PAT.linger-=interval;
+      if(PAT.linger<=0){var nx=patPickSpot(false);if(nx){PAT.tx=nx.x;PAT.ty=nx.y;}}
     }
   }
   PAT.step-=dt;

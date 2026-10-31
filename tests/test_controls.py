@@ -46,7 +46,7 @@ class ControlsTest(BrowserCase):
                 self.assertFalse(spoiler.locator('table').is_visible())
                 spoiler.locator('summary').click()
                 self.assertTrue(spoiler.locator('table').is_visible())
-                self.assertEqual(spoiler.locator('tbody tr').count(), 24)
+                self.assertEqual(spoiler.locator('tbody tr').count(), 25)
                 self.assertIn('模型加载失败', page.locator('#faq').inner_text())
                 page.get_by_role('link', name='← 返回游戏').click()
                 page.wait_for_url('**/index.html')
@@ -435,13 +435,17 @@ class ControlsTest(BrowserCase):
         self.assertAlmostEqual(result['snack'], 29, delta=.02)
         self.assertLess(result['backlog'], .017)
 
-    def test_ancestor_window_is_slowed_and_dropping_item_ends(self):
+    def test_ancestor_window_is_slowed_and_drop_requires_dialogue(self):
         page = self.page()
-        self.assert_js(page, 'Math.abs((BEAST_T1-BEAST_T0)*60/rateAt(BEAST_T0+0.01)-15)<0.01')
+        self.assert_js(page, 'Math.abs((BEAST_SLOW_T1-BEAST_SLOW_T0)*60/rateAt(BEAST_T0)-10)<0.01')
         page.evaluate(
             "var R=INTERIORS.teach1;S.mode='in';S.room='teach1';S.x=R.ox+59.5*9;S.y=R.oy+17.5*9;"
-            "S.dead=false;RT.beastDrop=false;S.tsec=BEAST_T0+0.05;S.bag=['chalk'];S.bagSel=0;dropSelected()")
-        page.wait_for_function("RT.end==='beast'", timeout=5000)
+            "S.dead=false;RT.beastDrop=false;S.tsec=BEAST_T0+0.001;S.bag=['chalk'];S.bagSel=0;dropSelected()")
+        self.assert_js(page, "RT.beastDrop&&!RT.end&&!hasItem('chalk')")
+        page.evaluate("S.tsec=BEAST_SLOW_T1+1;useStall()")
+        self.assert_js(page, "UI.chooseOpen&&!RT.end")
+        page.locator('#choices button').first.click()
+        self.assert_js(page, "RT.end==='beast'")
 
     def test_bell_tower_spiral_stairs_and_exam_mode(self):
         page = self.page()
@@ -567,7 +571,7 @@ class ControlsTest(BrowserCase):
             window.__wrong=!RT.carUsed&&Object.keys(RT.carTried).length===1;
             useCar(cs[0],cs[1]); searchTick(2);""")
         self.assert_js(page, '__wrong')
-        page.wait_for_function("S.screen==='end'&&RT.end==='car'", timeout=5000)
+        self.assert_js(page, "CarChase.active()&&!RT.end&&!endsSeen().car&&!!loadGame()")
 
     def test_auto_save_death_and_ending_history(self):
         page = self.page()
@@ -689,14 +693,12 @@ class ControlsTest(BrowserCase):
         page.wait_for_function("S.screen==='end'&&RT.end==='portal'", timeout=5000)
         self.assert_js(page, "!hasItem('coil')&&document.getElementById('ends').textContent.includes('真 结 局')")
 
-    def test_trash_is_a_fake_ending_you_can_wake_from(self):
+    def test_trash_is_a_death_and_respects_survival_item(self):
         page = self.page()
-        page.evaluate("doEnterRoom('trash1');running=false;triggerEnding('trash')")
-        self.assert_js(page, "S.screen==='end'&&document.getElementById('ends').textContent.includes('假 结 局')&&!!loadGame()")
-        page.evaluate("fakeWake()")
-        self.assert_js(page, "S.screen==='play'&&S.room==='teach1'&&RT.trashFake===1&&!document.getElementById('ends')")
-        page.evaluate("doEnterRoom('trash1');running=false;S.tsec=1051;tryTrashRoute()")
-        self.assert_js(page, "S.screen==='play'")
+        page.evaluate("doEnterRoom('trash1');running=false;S.diff='hard';S.talent='code';S.bag=['elixir'];tryTrashRoute()")
+        self.assert_js(page, "!S.dead&&!hasItem('elixir')&&!endsSeen().trash")
+        page.evaluate("tryTrashRoute()")
+        self.assert_js(page, "S.dead&&S.death==='deep'&&!endsSeen().trash&&!loadGame()")
 
     def test_coin_buys_meal_and_vending_items(self):
         page = self.page()
@@ -1141,7 +1143,7 @@ class ControlsTest(BrowserCase):
 
     def test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them(self):
         page = self.page()
-        self.assert_js(page, "TAL_KEYS.length===7&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd'].every(x=>!TAL_KEYS.includes(x))")
+        self.assert_js(page, "TAL_KEYS.length===6&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd','thin'].every(x=>!TAL_KEYS.includes(x))")
         page.evaluate("S.talent='map';saveGame();Game.continue_();running=false")
         self.assert_js(page, "S.talent==='map'&&TALENTS[S.talent].n==='过目不忘'")
 
@@ -1285,7 +1287,7 @@ class ControlsTest(BrowserCase):
     def test_day_budget_reflects_three_minute_breaks_and_eight_minute_activities(self):
         page = self.page()
         mins = page.evaluate("""(()=>{var t=SCHED.reduce((n,p)=>n+(p[1]-p[0])/p[4],0);
-            return t+(BEAST_T1-BEAST_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
+            return t+(BEAST_SLOW_T1-BEAST_SLOW_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
         self.assertTrue(43.7 <= mins <= 43.9, mins)
         free = page.evaluate("SCHED.filter(p=>p[3]==='自由'&&p[0]<LIGHTS_OUT).reduce((n,p)=>n+(p[1]-p[0])/p[4],0)")
         self.assertGreaterEqual(free, 34)          # 六次课间加午、晚活动
@@ -1436,9 +1438,9 @@ class ControlsTest(BrowserCase):
                 page.evaluate("S.bag=['brolly','torch','watch'];S.hot=['brolly','torch'];USE.brollyShield=false;USE.torch=false;UI.renderHot();updateHUD()")
                 status = page.locator('#status').bounding_box()
                 book = page.locator('#tBook').bounding_box()
-                seconds = page.locator('#secclock').bounding_box()
+                clock = page.locator('#clock').bounding_box()
                 self.assertLess(status['x']+status['width'], book['x'])
-                self.assertLessEqual(seconds['x']+seconds['width'], status['x']+status['width'])
+                self.assertLessEqual(clock['x']+clock['width'], status['x']+status['width'])
                 stick = page.locator('#stick').bounding_box()
                 for selector in ('#hot .hslot', '#tTorch'):
                     for control in page.locator(selector).all():
@@ -1543,6 +1545,47 @@ class ControlsTest(BrowserCase):
         page.locator('#tAct').tap()
         page.wait_for_timeout(1200)
         self.assert_js(page, 'actions===1')
+
+    def test_touch_action_with_slow_follow_up_still_fires_once(self):
+        page = self.page(touch=True)
+        # 处理本身很快，但排了一段很重的后续（进房间：淡出后建场景）。补发的 click 被拖过时间窗也不能再触发
+        page.evaluate("""window.actions=0;tryInteract=function(){actions++;
+          setTimeout(function(){var e=performance.now()+1200;while(performance.now()<e){}},0)};void 0""")
+        page.locator('#tAct').tap()
+        page.wait_for_timeout(2500)
+        self.assert_js(page, 'actions===1')
+        page.locator('#tAct').tap()
+        page.wait_for_timeout(2500)
+        self.assert_js(page, 'actions===2')
+
+    def test_tap_does_not_click_what_appears_under_the_finger(self):
+        page = self.page(touch=True)
+        # 按钮处理后在手指下面弹出另一个能点的东西（开始游戏后出现前情提要）：补发的 click 不能点到它
+        page.evaluate("""window.under=0;var d=document.createElement('div');d.id='underlay';
+          d.style.cssText='position:fixed;inset:0;z-index:998;display:none';
+          d.addEventListener('click',function(){under++});document.body.appendChild(d);
+          var b=document.createElement('button');b.id='opener';b.textContent='开';
+          b.style.cssText='position:fixed;left:40px;top:40px;width:200px;height:80px;z-index:999';
+          b.onclick=function(){b.remove();d.style.display='block'};document.body.appendChild(b);void 0""")
+        page.locator('#opener').tap()
+        page.wait_for_timeout(600)
+        self.assert_js(page, 'under===0')
+        page.touchscreen.tap(120, 80)        # 再点一次是真的点在它上面
+        page.wait_for_timeout(300)
+        self.assert_js(page, 'under===1')
+
+    def test_skipping_a_cutscene_does_not_press_the_button_behind_it(self):
+        page = self.page(touch=True)
+        page.evaluate("""window.hit=0;var b=document.createElement('button');b.id='behind';b.textContent='回到主菜单';
+          b.style.cssText='position:fixed;inset:0;z-index:999;display:none';b.onclick=function(){hit++};
+          document.body.appendChild(b);S.screen='cut';
+          window.cutSkip=function(){S.screen='play';b.style.display='block'};void 0""")
+        page.touchscreen.tap(200, 200)
+        page.wait_for_timeout(600)
+        self.assert_js(page, "hit===0&&S.screen==='play'")
+        page.touchscreen.tap(200, 200)
+        page.wait_for_timeout(300)
+        self.assert_js(page, 'hit===1')
 
     def test_portrait_subtitle_uses_full_width(self):
         page = self.page(touch=True)

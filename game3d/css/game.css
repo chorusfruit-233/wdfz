@@ -1,6 +1,6 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05070a;
-  font-family:"Consolas","Courier New",monospace;color:#c8d6cf;user-select:none;cursor:default;
+html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#050404;
+  font-family:var(--ui-font);color:var(--paper);user-select:none;cursor:default;
   overscroll-behavior:none;-webkit-tap-highlight-color:transparent;
   /* iPhone：整页不许双击缩放 / 捏合缩放 / 长按弹菜单，也不许橡皮筋滚动 */
   touch-action:manipulation;-webkit-touch-callout:none;-webkit-user-select:none}
@@ -11,92 +11,101 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05070
 #scan{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0}
 #vig{display:none}   /* 径向渐变在暗部会产生同心分层，暗角改由着色器负责 */
 
-/* 亮的室内（保安岗、厕所）里，时段和地点文字会被背景吃掉 */
-
 /* 原来这里有个 #warn 面板倒数"下次异象 7s" —— 已经改成世界里的黑板/纸条/粉笔字 */
 
+/* ---------- 主菜单：一份旧档案的封面 ---------- */
 #menu .mgrid{position:absolute;inset:0;
-  background-image:linear-gradient(rgba(120,200,170,.045) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(120,200,170,.045) 1px,transparent 1px);
-  background-size:46px 46px;
-  -webkit-mask-image:radial-gradient(ellipse at 50% 46%,#000 12%,transparent 72%);
-          mask-image:radial-gradient(ellipse at 50% 46%,#000 12%,transparent 72%)}
+  background-image:repeating-linear-gradient(180deg,rgba(221,213,196,.035) 0 1px,transparent 1px 34px);
+  -webkit-mask-image:radial-gradient(ellipse at 40% 46%,#000 10%,transparent 70%);
+          mask-image:radial-gradient(ellipse at 40% 46%,#000 10%,transparent 70%)}
 #menu .minner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
-.mtitle{font-size:clamp(26px,4.2vw,44px);letter-spacing:26px;font-weight:300;color:#dff5ea;
-  text-shadow:0 0 34px rgba(110,220,175,.30),0 0 80px rgba(110,220,175,.14);
+.mtitle{font-size:clamp(26px,4.2vw,44px);letter-spacing:26px;font-weight:300;color:#ece4d3;
   padding-left:26px;animation:mbreathe 6s ease-in-out infinite}
-@keyframes mbreathe{0%,100%{opacity:.92}50%{opacity:1}}
+@keyframes mbreathe{0%,100%{opacity:.9}50%{opacity:1}}
 .mrule{width:230px;height:1px;margin:20px 0 16px;
-  background:linear-gradient(90deg,transparent,rgba(130,200,170,.55),transparent)}
+  background:linear-gradient(90deg,transparent,rgba(221,213,196,.45),transparent)}
 .msub{font-size:11px;letter-spacing:5px;opacity:.42;margin-bottom:40px}
 .mbtns{display:flex;flex-direction:column;gap:12px;margin-bottom:34px}
-.mb{position:relative;font-family:inherit;display:flex;flex-direction:column;align-items:flex-start;
-  gap:5px;padding:15px 30px 15px 26px;min-width:330px;background:rgba(8,20,16,.55);
-  color:#b6d4c5;border:1px solid rgba(130,180,155,.22);cursor:pointer;
-  transition:background .16s,border-color .16s,transform .16s}
-.mb:before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;
-  transition:background .16s}
-.mb b{font-size:15px;letter-spacing:6px;font-weight:400}
-.mb i{font-style:normal;font-size:11px;letter-spacing:1px;opacity:.45}
-.mb:hover{background:rgba(20,48,38,.75);border-color:#79c8a4;transform:translateX(4px)}
-.mb:hover:before{background:#79c8a4}
 .mnote{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;max-width:560px;
   font-size:10px;letter-spacing:2px;opacity:.30;margin-bottom:18px}
 .mfoot{font-size:11px;letter-spacing:1px;opacity:.26;max-width:470px;line-height:2;text-align:center}
-#menu{position:fixed;inset:0;z-index:60;background:radial-gradient(ellipse at 72% 42%,rgba(10,18,22,.30),rgba(3,6,9,.93) 62%),#04070a}
+#menu{position:fixed;inset:0;z-index:60;background:radial-gradient(ellipse at 72% 40%,rgba(36,26,20,.22),rgba(4,3,3,.94) 62%),#050404}
 #menu .mtop{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;
-  gap:14px;padding:0 40px;font-size:11px;letter-spacing:2px;color:#8fa8a0}
+  gap:14px;padding:0 40px;font:11px var(--ui-mono);letter-spacing:2px;color:var(--ui-dim);border-bottom:1px solid rgba(221,213,196,.06)}
 #menu .mtop i{opacity:.3;font-style:normal}
-#menu .mtop b{margin-left:auto;font-weight:400;color:#6d8580;letter-spacing:1px}
+#menu .mtop b{margin-left:auto;font-weight:400;color:var(--ui-faint);letter-spacing:1px}
 #menu .mleft{position:absolute;left:6.2%;top:50%;transform:translateY(-50%);width:min(520px,42vw)}
-#menu .meyebrow{font-size:10px;letter-spacing:5px;color:#7fa898;opacity:.8;margin-bottom:16px}
-#menu .mtitle{font-size:clamp(46px,5.4vw,78px);font-weight:200;letter-spacing:12px;color:#eaf6ef;
-  text-shadow:0 0 44px rgba(110,220,175,.22);line-height:1.05}
-#menu .mschool{font-size:13px;letter-spacing:3px;color:#a8c4ba;margin-top:18px}
-#menu .mhook{font-size:13px;line-height:2.1;color:#8fa8a0;margin-top:26px;opacity:.86}
-#menu .mcards{margin-top:34px;display:flex;flex-direction:column;gap:10px}
+#menu .meyebrow{font:10px var(--ui-mono);letter-spacing:6px;color:var(--seal-text);opacity:.75;margin-bottom:16px}
+#menu .mtitle{font:400 clamp(44px,5vw,76px)/1.05 var(--ui-serif);letter-spacing:14px;color:#efe7d6;
+  text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 40px rgba(180,120,90,.10)}
+#menu .mschool{font:14px var(--ui-serif);letter-spacing:6px;color:var(--ui-dim);margin-top:14px;
+  padding-bottom:12px;border-bottom:1px solid rgba(221,213,196,.12);max-width:340px}
+#menu .mhook{font:13px/1.95 var(--ui-serif);letter-spacing:2px;color:#b9b0a1;margin-top:14px}
+#menu .mcards{margin-top:22px;display:flex;flex-direction:column;gap:8px}
 .mcard{position:relative;display:flex;align-items:center;gap:18px;width:100%;text-align:left;
-  padding:16px 20px;background:rgba(10,20,17,.62);border:1px solid rgba(120,170,150,.20);
-  color:#c8d6cf;cursor:pointer;font-family:inherit;transition:.16s}
-.mcard em{font-style:normal;font-size:11px;letter-spacing:2px;color:#6d8580;flex:none}
-.mcard span{display:flex;flex-direction:column;gap:4px;flex:1}
-.mcard b{font-size:15px;letter-spacing:4px;font-weight:400;color:#e2f2ea}
-.mcard i{font-style:normal;font-size:11px;letter-spacing:1px;color:#7f948e}
-.mcard u{text-decoration:none;font-size:15px;color:#6d8580;transition:.16s}
-.mcard:hover{background:rgba(22,44,36,.82);border-color:rgba(121,200,164,.55)}
-.mcard:hover u{color:#79c8a4;transform:translateX(4px)}
-#menu .mends{margin-top:12px;font-size:11px;letter-spacing:1px;color:#8fa8a0}
-#menu .mctl{display:flex;align-items:center;flex-wrap:wrap;gap:14px 26px;margin-top:24px;font-size:11px;letter-spacing:1px;color:#8fa8a0}
+  padding:14px 20px;background:rgba(14,12,11,.72);border:1px solid var(--ui-line);border-left:3px solid var(--ui-line2);border-radius:2px;
+  color:var(--paper);cursor:pointer;font-family:var(--ui-font);transition:background .16s,border-color .16s}
+.mcard em{font-style:normal;font:11px var(--ui-mono);letter-spacing:2px;color:var(--ui-faint);flex:none}
+.mcard span{display:flex;flex-direction:column;gap:5px;flex:1}
+.mcard b{font:400 17px/1.3 var(--ui-serif);letter-spacing:5px;color:#f1eadc}
+.mcard i{font-style:normal;font-size:11px;letter-spacing:1px;color:var(--ui-dim)}
+.mcard u{text-decoration:none;font-size:15px;color:var(--ui-faint);transition:.16s}
+.mcard:hover,.mcard:focus-visible{background:rgba(181,51,47,.09);border-color:rgba(181,51,47,.45);border-left-color:var(--seal)}
+.mcard:hover u,.mcard:focus-visible u{color:var(--seal-text);transform:translateX(4px)}
+#menu .mends{margin-top:12px;font-size:11px;letter-spacing:1px;color:var(--ui-dim)}
+#menu .mctl{display:flex;align-items:center;flex-wrap:wrap;gap:14px 26px;margin-top:24px;font-size:11px;letter-spacing:1px;color:var(--ui-dim)}
 #menu .mctl label{display:flex;align-items:center;gap:9px}
-#menu .mwiki{display:inline-flex;align-items:center;gap:5px;min-height:36px;color:#a8d8c2;text-decoration:none}
-#menu .mwiki:hover,#menu .mwiki:focus-visible{color:#eafbf2;text-decoration:underline}
-#menu .mctl select{background:rgba(10,20,17,.8);color:#b6d4c5;border:1px solid rgba(120,170,150,.28);
+#menu .mwiki{display:inline-flex;align-items:center;gap:5px;min-height:36px;color:var(--ui-acc);text-decoration:none}
+#menu .mwiki:hover,#menu .mwiki:focus-visible{color:#f1e0b8;text-decoration:underline}
+#menu .mctl select{background:rgba(14,12,11,.85);color:var(--paper);border:1px solid var(--ui-line2);border-radius:2px;
   font-family:inherit;font-size:11px;padding:5px 8px}
-#menu .mbr input{width:96px;accent-color:#79c8a4}
+#menu .mbr input{width:96px;accent-color:var(--ui-acc)}
 #menu .mios{display:none;margin-top:20px;font-size:11px;line-height:1.95;letter-spacing:.5px;
-  color:#86a89a;border-left:2px solid rgba(121,200,164,.45);padding-left:11px;max-width:340px}
+  color:var(--ui-dim);border-left:2px solid var(--ui-acc);padding-left:11px;max-width:340px}
 #menu #assetNotice:not([hidden]){display:flex;align-items:center;gap:10px;margin-top:12px;color:#f0d29b;font-size:12px;line-height:1.6}
 #menu #assetRetry{padding:6px 10px;border:1px solid #a68b5b;background:#211b10;color:#fff0ce;cursor:pointer}
 #menu #assetRetry:disabled{opacity:.5;cursor:default}
-#menu .mkeys{position:absolute;left:6.2%;bottom:30px;font-size:10px;line-height:2;letter-spacing:1px;color:#6d8580}
-#menu .mfoot{position:absolute;right:40px;bottom:30px;text-align:right;font-size:10px;letter-spacing:2px;color:#6d8580;line-height:2}
-#menu .mfoot span{display:block;font-size:12px;color:#9fb8ae;margin-bottom:4px}
+#menu .mkeys{position:absolute;left:6.2%;bottom:30px;font:10px/2 var(--ui-mono);letter-spacing:1px;color:var(--ui-faint);pointer-events:none}
+#menu .mfoot{position:absolute;right:40px;bottom:30px;text-align:right;font:10px/2 var(--ui-mono);letter-spacing:2px;color:var(--ui-faint);pointer-events:none}
+#menu .mfoot span{display:block;font:13px var(--ui-serif);letter-spacing:3px;color:#b9b0a1;margin-bottom:4px}
 #menu .mfoot i{font-style:normal;opacity:.55}
-#menu h1{font-size:clamp(20px,3.4vw,34px);letter-spacing:10px;font-weight:400;color:#d7efe2;
-  text-shadow:0 0 26px rgba(110,220,175,.34)}
+#menu h1{font-size:clamp(20px,3.4vw,34px);letter-spacing:10px;font-weight:400;color:#ece4d3}
 #menu .sub{font-size:12px;opacity:.5;letter-spacing:3px;margin-bottom:26px}
 #menu button{font-family:inherit;font-size:14px;letter-spacing:3px;padding:13px 46px;min-width:250px;
-  background:transparent;color:#b6d4c5;border:1px solid rgba(130,180,155,.34);cursor:pointer}
-#menu button:hover{background:rgba(24,54,42,.7);border-color:#79c8a4;color:#eaq}
-#menu button:hover{color:#eafbf2}
+  background:transparent;color:var(--paper);border:1px solid var(--ui-line2);cursor:pointer}
+#menu button:hover{background:rgba(221,213,196,.07);border-color:var(--paper);color:#f6efe2}
 #menu .note{font-size:11px;opacity:.36;margin-top:22px;line-height:2;max-width:520px}
-#die #dieepi{font-size:11px;letter-spacing:2px;opacity:.45;margin-top:10px;max-width:420px;text-align:center;line-height:2}
+
+/* ---------- 死亡：墨迹慢慢洇开 ---------- */
+#die #dieepi{font:13px/2 var(--ui-serif);letter-spacing:2px;color:#8f857a;margin-top:6px;max-width:440px;text-align:center}
 #die{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
-  background:rgba(4,2,2,.94);flex-direction:column;gap:20px}
-#die .m{font-size:16px;color:#e3c9c9;max-width:640px;text-align:center;line-height:2;letter-spacing:1px}
-#die .t{font-size:34px;letter-spacing:14px;color:#7c2b2b;text-shadow:0 0 30px rgba(150,30,30,.6)}
-#die button{font-family:inherit;font-size:12px;letter-spacing:3px;padding:11px 36px;background:transparent;
-  color:#b89a9a;border:1px solid rgba(150,90,90,.4);cursor:pointer}
+  background:radial-gradient(ellipse at 50% 44%,rgba(46,8,7,.62),rgba(4,2,2,.97) 68%);flex-direction:column;gap:20px}
+#die .m{font:17px/2 var(--ui-serif);color:#e1d4c8;max-width:640px;text-align:center;letter-spacing:2px;padding:0 24px}
+#die .t{font:400 46px/1.2 var(--ui-serif);letter-spacing:22px;padding-left:22px;color:#a32c26;
+  text-shadow:0 0 1px rgba(163,44,38,.95),0 0 26px rgba(120,18,14,.55);animation:inkIn 1.8s ease both}
+#die .t::after{content:'';display:block;width:140px;height:1px;margin:20px auto 0;background:linear-gradient(90deg,transparent,rgba(163,44,38,.8),transparent)}
+@keyframes inkIn{from{opacity:0;filter:blur(7px);letter-spacing:34px}to{opacity:1;filter:blur(0);letter-spacing:22px}}
+#die button{font-family:var(--ui-font);font-size:13px;letter-spacing:4px;padding:12px 38px;margin-top:8px;background:transparent;
+  color:#c9b8ad;border:1px solid rgba(201,184,173,.35);border-radius:2px;cursor:pointer}
+#die button:hover{border-color:rgba(201,184,173,.75);color:#f2e6dc;background:rgba(221,213,196,.05)}
+@media (prefers-reduced-motion:reduce){#die .t{animation:none}}
+@media (max-width:520px){#die .t{font-size:34px;letter-spacing:12px;padding-left:12px;white-space:nowrap}
+  #ends .et{font-size:26px;letter-spacing:8px;padding-left:8px}}
+
+/* ---------- 结局卡：档案的最后一页 ---------- */
+#ends{position:fixed;inset:0;z-index:75;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;
+  padding:24px;overflow-y:auto;text-align:center;background:radial-gradient(ellipse at 50% 42%,rgba(24,19,15,.93),rgba(4,3,3,.985) 70%);
+  animation:panelIn .8s ease both;touch-action:pan-y}
+#ends .etag{font:12px var(--ui-mono);letter-spacing:8px;padding:5px 6px 5px 14px;color:var(--ui-acc);border:1px solid rgba(200,166,107,.6)}
+#ends .etag.fake{color:var(--seal-text);border-color:rgba(181,51,47,.75);transform:rotate(-2deg)}
+#ends .et{font:400 32px/1.3 var(--ui-serif);letter-spacing:14px;padding-left:14px;color:#efe7d6}
+#ends .el{font:15px/2.4 var(--ui-serif);letter-spacing:1px;color:#cfc6b6;max-width:560px}
+#ends .emeta{font:11px var(--ui-mono);letter-spacing:3px;color:var(--ui-faint);margin-top:6px}
+#ends button{font-family:var(--ui-font);font-size:13px;letter-spacing:4px;padding:12px 38px;border-radius:2px;cursor:pointer;
+  background:transparent;color:var(--paper);border:1px solid var(--ui-line2)}
+#ends button:hover{background:rgba(221,213,196,.07);border-color:var(--paper)}
+#ends .ewake{background:var(--seal-bg);border-color:rgba(181,51,47,.75);color:#f3e2d8}
+#ends .equit{margin-top:4px}
 
 /* 每格右上角的 ① ② —— 触屏上唯一能把道具放上快捷栏的入口 */
 
@@ -108,20 +117,20 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05070
    八个快捷按钮排在右侧油门下沿、两列四行。 */
 
 #pcgame{position:fixed;inset:0;z-index:48;display:none;flex-direction:column;align-items:center;
-  justify-content:center;gap:14px;background:rgba(2,6,9,.94)}
-#pcgame .pch{font-size:13px;letter-spacing:5px;color:#9fe3c2}
+  justify-content:center;gap:14px;background:rgba(4,4,5,.95)}
+#pcgame .pch{font:13px var(--ui-mono);letter-spacing:5px;color:#9fe3c2}
 #pccv{border:1px solid rgba(130,180,155,.4);background:#0a1210}
-#pcgame .pcf{font-size:10px;letter-spacing:1px;color:#6d8580}
+#pcgame .pcf{font-size:10px;letter-spacing:1px;color:var(--ui-faint)}
 /* 小游戏：画布跟着屏幕缩，触屏上有方向键和右上角的退出键（以前手机上转不了向，横屏时退出键被挤出屏幕） */
 #pccv{width:min(320px,62vmin);height:min(320px,62vmin);touch-action:none}
 #pcgame .pcx{display:none;position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));
-  min-width:64px;min-height:48px;padding:8px 14px;font:inherit;font-size:14px;letter-spacing:2px;color:#e6f2ec;
-  background:rgba(60,24,20,.75);border:1px solid rgba(220,140,120,.5);border-radius:4px}
+  min-width:64px;min-height:48px;padding:8px 14px;font:inherit;font-size:14px;letter-spacing:2px;color:#f1e4d8;
+  background:var(--seal-bg);border:1px solid rgba(181,51,47,.7);border-radius:2px}
 #pcpad{display:none;position:absolute;right:calc(28px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));
   grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:4px;touch-action:none}
-#pcpad button{font:inherit;font-size:22px;color:#cfe9dc;background:rgba(20,48,38,.7);border:1px solid rgba(130,180,155,.45);
-  border-radius:10px;touch-action:none}
-#pcpad button:active{background:rgba(120,200,170,.4)}
+#pcpad button{font:inherit;font-size:22px;color:var(--paper);background:rgba(14,12,11,.8);border:1px solid var(--ui-line2);
+  border-radius:3px;touch-action:none}
+#pcpad button:active{background:rgba(221,213,196,.18)}
 #pcpad [data-d="0,-1"]{grid-column:2;grid-row:1}#pcpad [data-d="-1,0"]{grid-column:1;grid-row:2}
 #pcpad [data-d="1,0"]{grid-column:3;grid-row:2}#pcpad [data-d="0,1"]{grid-column:2;grid-row:3}
 body.touch #pcgame .pcx{display:block}
@@ -199,14 +208,14 @@ body.touch #dev .devkbd{display:none}
 /* 面板右上角的「关闭」在手机上只是一行小字，点不中 */
 
 #flash{position:fixed;inset:0;z-index:8;background:#000;pointer-events:none;opacity:0;transition:opacity .5s}
-#fade{position:fixed;inset:0;z-index:40;background:#05080a;pointer-events:none;opacity:0;transition:opacity .18s ease}
+#fade{position:fixed;inset:0;z-index:40;background:#050404;pointer-events:none;opacity:0;transition:opacity .18s ease}
 @keyframes panelIn{from{opacity:0}to{opacity:1}}
 #menu{animation:panelIn .45s ease both}
 
 #die:not([style*="display: none"]){animation:panelIn .6s ease both}
 
 /* 前情提要：黑底白字，一页一句，点一下翻一页 */
-#pro{position:fixed;inset:0;z-index:80;display:none;background:#04070a;
+#pro{position:fixed;inset:0;z-index:80;display:none;background:#050404;
   align-items:center;justify-content:center;flex-direction:column;cursor:pointer}
 #pro.on{display:flex}
 /* 看到"世界"之后：遮罩变半透明、字挪到底部，像从眼睛缝里往外看 */
@@ -216,24 +225,25 @@ body.touch #dev .devkbd{display:none}
   text-shadow:0 2px 12px #000,0 0 22px rgba(0,0,0,.9)}
 body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0 !important;transition:opacity .3s}
 /* 时间跳跃：黑一下，正中一句"过去了多久" */
-#skip{position:fixed;inset:0;z-index:44;background:#04070a;display:flex;flex-direction:column;
+#skip{position:fixed;inset:0;z-index:44;background:#050404;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .38s ease}
 #skip.on{opacity:1}
-#skip b{font-weight:400;font-size:15px;letter-spacing:5px;color:#9fb6ac}
-#skip i{font-style:normal;font-size:30px;letter-spacing:4px;color:#e2f2ea;
+#skip b{font:400 15px var(--ui-serif);letter-spacing:6px;color:var(--ui-dim)}
+#skip i{font-style:normal;font:400 32px var(--ui-serif);letter-spacing:5px;color:#ece4d3;
   font-variant-numeric:tabular-nums;margin-top:2px}
-#skip em{font-style:normal;font-size:11px;letter-spacing:3px;color:#5d6f69;margin-top:6px}
+#skip em{font-style:normal;font-size:11px;letter-spacing:3px;color:var(--ui-faint);margin-top:6px}
 #lidtop,#lidbot{position:fixed;left:0;right:0;height:0;background:#000;z-index:79;pointer-events:none;
   transition:height .34s cubic-bezier(.4,0,.2,1)}
 #lidtop{top:0;border-bottom:1px solid #000}
 #lidbot{bottom:0}
-#protext{max-width:70%;text-align:center;font-size:17px;line-height:2.6;color:#dbe9e1;
-  letter-spacing:2px;white-space:pre-line;transition:opacity .3s}
-#prohint{position:absolute;bottom:12%;font-size:11px;letter-spacing:4px;color:#6d8580;pointer-events:none;
+#protext{max-width:70%;text-align:center;font:18px/2.6 var(--ui-serif);color:#e6dece;
+  letter-spacing:3px;white-space:pre-line;transition:opacity .3s}
+#prohint{position:absolute;bottom:12%;font:11px var(--ui-mono);letter-spacing:4px;color:var(--ui-faint);pointer-events:none;
   animation:proBlink 2.4s ease-in-out infinite}
 @keyframes proBlink{0%,100%{opacity:.25}50%{opacity:.65}}
 #banner{position:fixed;left:50%;top:26%;transform:translateX(-50%);z-index:12;pointer-events:none;
-  font-size:15px;letter-spacing:8px;color:#cfe9dc;text-shadow:0 0 18px rgba(110,220,175,.35);
+  font-size:16px;letter-spacing:10px;color:#e6dece;text-shadow:0 1px 6px #000,0 0 22px rgba(0,0,0,.85);
+  padding:4px 0 8px 10px;border-bottom:1px solid rgba(221,213,196,.22);white-space:nowrap;
   opacity:0;transition:opacity .5s ease}
 
 /* 矮屏（横屏手机）整套缩小一档。必须写在所有控件规则之后 —— 同优先级下后写的赢，
@@ -255,15 +265,15 @@ body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0 !important;transition:o
 
 /* 全屏按钮保留在菜单和暂停面板上；手机右侧给暂停键留位。 */
 
-select:focus-visible{outline:2px solid #79c8a4;outline-offset:3px}
+select:focus-visible{outline:2px solid var(--ui-acc);outline-offset:3px}
 #cv:focus{outline:none}
 
 #menu .mtop{padding-right:150px}
 body.touch #menu .mtop{padding-right:calc(176px + env(safe-area-inset-right,0px))}
 #menu{overflow-y:auto}
 
-#pcgame>button{padding:10px 26px;background:rgba(20,48,38,.6);border:1px solid rgba(130,180,155,.4);
-  color:#b6d4c5;font:inherit;font-size:12px;cursor:pointer;touch-action:manipulation}
+#pcgame>button{padding:10px 26px;background:rgba(14,12,11,.8);border:1px solid var(--ui-line2);border-radius:2px;
+  color:var(--paper);font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer;touch-action:manipulation}
 
 @media(max-width:700px){
   #menu{padding:88px 24px 30px}
@@ -303,7 +313,7 @@ body.touch #menu .mtop{padding-right:calc(176px + env(safe-area-inset-right,0px)
 
 /* 翻找读条：准星外一圈，--p 从 0 走到 1 */
 #searchring{position:fixed;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;z-index:9;display:none;pointer-events:none;
-  border-radius:50%;--p:0;background:conic-gradient(#9fe3c2 calc(var(--p)*360deg),rgba(255,255,255,.12) 0);
+  border-radius:50%;--p:0;background:conic-gradient(var(--ui-acc) calc(var(--p)*360deg),rgba(221,213,196,.12) 0);
   -webkit-mask:radial-gradient(circle,transparent 17px,#000 18px);mask:radial-gradient(circle,transparent 17px,#000 18px)}
 
 /* 躲在储物柜里：眼前是一排百叶缝 */
@@ -318,7 +328,7 @@ body.cut #cutbars{display:block}
 #cutbars i{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:42;pointer-events:none}
 #cutbars i:first-child{top:0}#cutbars i:last-child{bottom:0}
 body.cut #hud,body.cut #prompt,body.cut #cross,body.cut #touch,body.cut #lookhint,body.cut #sub,body.cut #searchring,body.cut #hideslits,body.cut .screen-control{display:none!important}
-body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';position:absolute;right:20px;bottom:12px;font-size:11px;letter-spacing:2px;color:#4a5a54}
+body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';position:absolute;right:20px;bottom:12px;font-size:11px;letter-spacing:2px;color:#5a5249}
 
 /* 手机：小游戏面板浮在画面中间，四周的世界还看得见（玩手机时世界不停） */
 #phone{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,.25),rgba(0,0,0,.7))}
@@ -332,17 +342,18 @@ body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';positio
   background:rgba(20,30,38,.8);border:1px solid rgba(140,190,210,.45);border-radius:4px}
 
 /* 理智以身体反应呈现；体力条仍保留，低 SAN 时最大可用长度下降。 */
-#sanfeel{margin-top:10px;font-size:11px;letter-spacing:1px;color:#8fa89d}
-#sanfeel[data-stage="1"]{color:#c4b88f}
-#sanfeel[data-stage="2"]{color:#d1a478}
-#sanfeel[data-stage="3"]{color:#df8b7a}
+#sanfeel{margin-top:9px;font:12px var(--ui-serif);letter-spacing:2px;color:var(--ui-dim)}
+#sanfeel[data-stage="1"]{color:#c9b37a}
+#sanfeel[data-stage="2"]{color:#d38f5f}
+#sanfeel[data-stage="3"]{color:#df6a5c}
 
-#lessonOpen{pointer-events:auto;margin-top:8px;padding:7px 12px;min-height:36px;border:1px solid #698c7b;background:#111e19;color:#c8d8cf;cursor:pointer;font:inherit;font-size:11px}
+#lessonOpen{pointer-events:auto;margin-top:8px;padding:7px 12px;min-height:36px;border:1px solid rgba(200,166,107,.6);border-radius:2px;background:rgba(24,19,13,.8);color:#efe2c4;cursor:pointer;font:inherit;font-size:11px;letter-spacing:1px}
 #lessonOpen[hidden],#lesson[hidden]{display:none}
 #lesson{position:fixed;inset:0;z-index:32;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.45)}
-.lesson-card{width:min(440px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:20px;background:#111915;border:1px solid #597365;color:#c8d8cf}
-.lesson-card h2{font-size:17px;letter-spacing:2px;margin:0 0 16px}.lesson-card p{font-size:13px;line-height:1.8}
-.lesson-card button{display:block;width:100%;min-height:44px;margin-top:9px;padding:10px;border:1px solid #4b6558;background:#16261e;color:#d2e1d8;cursor:pointer;text-align:left;font:inherit;font-size:13px}
-#lessonTime{font-size:11px;color:#9ab6a5}
+.lesson-card{width:min(440px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:22px;color:var(--paper)}
+.lesson-card h2{font:400 18px var(--ui-serif);letter-spacing:4px;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--ui-line)}.lesson-card p{font:14px/1.9 var(--ui-serif)}
+.lesson-card button{display:block;width:100%;min-height:44px;margin-top:9px;padding:10px 12px;border:1px solid var(--ui-line);border-radius:2px;background:rgba(221,213,196,.03);color:var(--paper);cursor:pointer;text-align:left;font:inherit;font-size:13px}
+.lesson-card button:hover{border-color:var(--ui-line2);background:rgba(221,213,196,.07)}
+#lessonTime{font-size:11px;color:var(--ui-dim)}
 
 body.lesson-open #hud .bc,body.lesson-open #prompt{visibility:hidden}

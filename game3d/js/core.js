@@ -78,9 +78,10 @@ function needWhere(t){
   if(t>=LIGHTS_OUT) return '宿舍';
   return '自由';
 }
-/* 《先辈》：11:45:00–11:45:10 这 10 秒，时间慢到大约 15 个真实秒（流速单位是"游戏秒 / 真实秒"） */
-var BEAST_T0=705, BEAST_T1=705+10/60, BEAST_RATE=10/15;
-function rateAt(t){ return (t>=BEAST_T0&&t<BEAST_T1)?BEAST_RATE:periodAt(t)[4]; }
+/* 隐藏时段：慢速区间与实际判定窗口分别计量。 */
+var BEAST_SLOW_T0=705, BEAST_SLOW_T1=705+20/60;
+var BEAST_T0=705+14/60, BEAST_T1=705+15/60, BEAST_RATE=2;
+function rateAt(t){ return (t>=BEAST_SLOW_T0&&t<BEAST_SLOW_T1)?BEAST_RATE:periodAt(t)[4]; }
 function isNight(){ return S.tsec>=LIGHTS_OUT||S.tsec<440; }
 
 /* 预知梦：中等（第一天死了能醒三次，异象 40–64 秒一次，提前一点告诉你下一个是什么）
@@ -108,7 +109,7 @@ var ITEMS={
   hw:{n:'作业本',d:'写完了的作业。字很工整，不是我的。'},
   coin:{n:'硬币',d:'边缘磨得很圆。食堂窗口和售货机都收；在车库里扔出去会有声音。'},
   usb:{n:'U 盘',d:'上面贴着「门禁」两个字。'},
-  watch:{n:'手表',d:'带秒针。能数到秒。'},
+  watch:{n:'手表',d:'能看现在的时间，精确到分钟。'},
   memo:{n:'纸条',d:'上面写着门禁和白名单的事。'},
   roomkey:{n:'机房钥匙',d:'铜的，磨得发亮。塑料标签上写着「机房」。'},
   /* 高级物品 */
@@ -143,7 +144,7 @@ var TALENTS={
   stomach:{n:'铁胃',d:'胃比一般人结实。'},
   night:{n:'夜视',d:'暗的地方也看得清。'},
   hand:{n:'手稳',d:'扔东西很少失手。'},
-  watch:{n:'秒表',d:'手腕上有块带秒针的表。'},
+  watch:{n:'秒表',d:'手腕上有块表，可以查看分钟。'},
   thin:{n:'瘦小',d:'比同龄人瘦小一圈。'},
   cold:{n:'血冷',d:'不容易慌。'},
   known:{n:'熟人',d:'保安叫得出我的名字。'},
@@ -151,4 +152,4 @@ var TALENTS={
   crowd:{n:'藏在人群里',d:'人多的时候不显眼。'}
 };
 /* 已有存档仍可读取旧天赋；新局只随机有实际效果的天赋。 */
-var TAL_KEYS=['code','drive','stomach','night','watch','thin','immune'];
+var TAL_KEYS=['code','drive','stomach','night','watch','immune'];
