@@ -122,3 +122,20 @@ class DeathTimelineTest(BrowserCase):
           return {missing,errors};
         }""")
         self.assertEqual(result, {'missing': [], 'errors': []})
+
+    def test_board_deaths_stand_in_front_of_the_view(self):
+        """黑板、名单这类立板要出现在视线正前方，不能固定在场景某个方向上（会跑到身后）。"""
+        page = self.page()
+        result = page.evaluate("""() => {
+          let out={};
+          for(const id of ['chalk','names']){
+            out[id]=[0,1.6,3.2,4.7].map(a=>{
+              S.ang=a;syncCamera(0);GLR.cam.updateMatrixWorld();deathFX(id,{preview:true});ANFX.grp.updateMatrixWorld(true);
+              let box=new THREE.Box3().setFromObject(ANFX.items[0]),c=box.getCenter(new THREE.Vector3());
+              let v=c.clone().applyMatrix4(GLR.cam.matrixWorldInverse);
+              anfxClear();return v.z<-1;          /* 相机坐标里 -z 是前方 */
+            });
+          }
+          return out;
+        }""")
+        self.assertEqual(result, {'chalk': [True]*4, 'names': [True]*4})

@@ -507,22 +507,26 @@ function deathFX(type,options){
       push(anfxBox(grp,anfxMat(0x0a0d10,0.5),0.7,0.005,2.4,tq.x,0.006,tq.z));
     }
     else if(T==='names'){
-      var nmr, nmc;
+      /* 名单墙立在视线正前方（以前固定放在场景的 +z 方向） */
+      var nmr, nmc, nf=new THREE.Group();nf.position.set(p.x,0,p.z);nf.rotation.y=Math.PI/2-S.ang;grp.add(nf);
       for(nmr=0;nmr<6;nmr++){
         for(nmc=0;nmc<7;nmc++){
-          var nx=p.x-2.6+nmc*0.86, ny=0.55+nmr*0.46;
-          push(anfxBox(grp,anfxMat(0x1a2024,1.0),0.78,0.40,0.05,nx,ny,p.z+2.6));
-          push(anfxBox(grp,anfxMat(0xb8b2a6,0.9),0.58,0.05,0.02,nx,ny+0.08,p.z+2.63));
-          push(anfxBox(grp,anfxMat(0x8a8478,0.9),0.40,0.04,0.02,nx,ny-0.06,p.z+2.63));
+          var nx=-2.6+nmc*0.86, ny=0.55+nmr*0.46;
+          push(anfxBox(nf,anfxMat(0x1a2024,1.0),0.78,0.40,0.05,nx,ny,2.6));
+          push(anfxBox(nf,anfxMat(0xb8b2a6,0.9),0.58,0.05,0.02,nx,ny+0.08,2.57));
+          push(anfxBox(nf,anfxMat(0x8a8478,0.9),0.40,0.04,0.02,nx,ny-0.06,2.57));
         }
       }
     }
     else if(T==='chalk'){
-      push(anfxBox(grp,anfxMat(0x141a1e,1.0),6.4,2.4,0.10,p.x,1.55,p.z+2.6));
-      push(anfxBox(grp,anfxMat(0x2a3338,1.0),6.5,0.08,0.16,p.x,0.34,p.z+2.62));
-      for(i=0;i<7;i++){
-        push(anfxBox(grp,anfxMat(0xd8d2c4,0.95),1.4+Math.random()*3.4,0.09,0.02,
-             p.x-2.2+Math.random()*2.0, 2.35-i*0.29, p.z+2.66));
+      /* 黑板立在视线正前方（以前固定放在场景的 +z 方向，经常在身后看不见） */
+      var cf=new THREE.Group();cf.position.set(p.x,0,p.z);cf.rotation.y=Math.PI/2-S.ang;grp.add(cf);
+      push(anfxBox(cf,anfxMat(0x141a1e,1.0),6.4,2.4,0.10,0,1.55,2.6));
+      push(anfxBox(cf,anfxMat(0x2a3338,1.0),6.5,0.08,0.16,0,0.34,2.58));
+      for(i=0;i<7;i++){                         /* 一行行粉笔字，都落在黑板上 */
+        var cw=1.4+Math.random()*3.0;
+        push(anfxBox(cf,anfxMat(0xd8d2c4,0.95),cw,0.09,0.02,
+             -3.0+cw/2+Math.random()*(6.0-cw), 2.35-i*0.29, 2.54));
       }
     }
     else if(T==='loop'){
