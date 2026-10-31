@@ -2,6 +2,8 @@
 'use strict';
 var SCENE_SPEC=Object.freeze({trees:170,shrubs:40});
 var ROOM_THEMES={
+  lift:{floor:'fterrazzo',fcol:0x7c888c,wall:0x8a999d,low:0x59666a,ceil:0x9ba7a9},
+  dream:{floor:'ftile',fcol:0xf5f5f0,wall:0xf4f5f0,low:0xe6eceb,ceil:0xffffff},
   garage1:{floor:'fconcrete',fcol:0x6a6a66,wall:0x8a8a84,wallMat:'concrete',low:0x4a4a46,ceil:0x5a5e60,ceilMat:'concrete'},
   trash1:{floor:'fconcrete',fcol:0x7a7a72,wall:0xa8aca0,low:0x6a7068},
   bell:{floor:'fstone',fcol:0x8a8478,low:0x6a5a4a,ceil:0x2a2420},

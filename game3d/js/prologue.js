@@ -64,7 +64,7 @@ function proEnd(){
   proMark();
   try{ VisualState.worldNorm=0; }catch(e){}
   try{ ncFlip(); }catch(e){}
-  try{ os('我：11:40。第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8); }catch(e){}
+  try{ os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8); }catch(e){}
 }
 function proSetText(txt){
   var t=document.getElementById('protext');

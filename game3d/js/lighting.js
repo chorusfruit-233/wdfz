@@ -109,6 +109,7 @@ function lightState(){
     if(typeof AN!=='undefined'&&AN.active&&AN.id==='blackout'){
       st.amb*=0.16;st.hemi*=0.16;st.dir*=0.12;st.ptK=0;st.blackout=true;
     }
+    if(S.room==='lift_dream'){st.amb=1.4;st.hemi=0.8;st.dir=0.35;st.ptK=1;}
   }else{
     st.amb = 0.075+0.12*day;
     st.hemi= 0.10+0.24*day;

@@ -37,6 +37,11 @@ function update(dt){
   }
   if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
+  if(Elevator.inRide()){
+    if(S.room!=='lift_dream')clockTick(dt);
+    Elevator.tick(dt);settleSan();return;
+  }
+  Elevator.tick(dt);
   try{ PHONE.tick(dt); }catch(e){}
   try{ searchTick(dt); }catch(e){}
   updateSystems(dt);
@@ -252,7 +257,7 @@ var Game={
       try{ VisualState.worldNorm=0; }catch(e){}      /* 老玩家直接进里世界，没有"正常世界"那一段 */
       setTimeout(function(){ try{ os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',4.0); }catch(e){} },2400);
       introT1=setTimeout(function(){ os('我：兜里有一张学生证。照片上的人我不认识，可是班号、学号，都是我的。',4.8); },6800);
-      os('我：11:40。第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
+      os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
     }
     SFX.resume();
     }catch(e){ try{ showErr('Game.start: '+e.message); }catch(_e){} }

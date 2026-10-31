@@ -109,6 +109,10 @@ ThreeBackend.addRoomLights=function(R){
     addLight(x,v[1],z,v[3],LCFG.ptI*v[4],v[5],2);
   });
   if(teach)addLight(0,2.75,18.5*TTILE*U2M-H/2,0xf2dcc0,LCFG.ptI*1.2,18,2);
+  if(teach||(R.host==='lab'&&R.floor>=1&&R.floor<=5)){
+    var liftCol=teach?20.5:10.5;
+    addLight(liftCol*TTILE*U2M-W/2,2.65,(R.rows-1.5)*TTILE*U2M-H/2,0xe2eeec,LCFG.ptI*0.65,10,2);
+  }
   if(R.host==='bell'&&R.spiral){
     addLight(SPIRAL.cx,SPIRAL.topH/2,SPIRAL.cz+2,0xd8b080,LCFG.ptI*0.5,9,2);
     addLight(SPIRAL.cx,SPIRAL.topH+2.6,SPIRAL.cz,0xc8d0d8,LCFG.ptI*0.8,10,2);

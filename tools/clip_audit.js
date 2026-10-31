@@ -350,7 +350,7 @@ var ClipAudit=(function(){
   }
   /* 可达性：门全开，玩家（半径 PRAD）从出口、楼梯、门口出发能走到的地方里，
      每个能交互的东西（门、出口、楼梯、座位、柜子、能搜的家具、设施……）旁边 1.2 米内要有能站的点 */
-  var REACH_CH='=OSPHqdfRDQxAMKVTZCNYwbXk';
+  var REACH_CH='=OSPHqdfRDQxAMKVTZCNYwbXkJ';
   function reach(R){
     var id=R.id, out=[], step=3, W=Math.ceil(R.w/step), H=Math.ceil(R.h/step), seen=new Uint8Array(W*H), q=[], head=0;
     if(R.spiral) return out;                                        /* 钟楼：旋梯另有自己的高度逻辑 */
@@ -361,7 +361,8 @@ var ClipAudit=(function(){
       function stand(x,y){ return Collision.depth(x,y,PRAD,R)<1e-7; }
       function P(i,j){ return [R.ox+(i+0.5)*step,R.oy+(j+0.5)*step]; }
       for(r=0;r<R.rows;r++) for(c=0;c<R.cols;c++){
-        var ch=R.grid[r][c]; if(ch!=='O'&&ch!=='S') continue;
+        var ch=R.grid[r][c];
+        if(ch!=='O'&&ch!=='S'&&!(ch==='J'&&(R.host==='lift'||R.host==='dream')))continue;
         var i0=Math.floor((c-1.5)*R.tw/step), i1=Math.ceil((c+2.5)*R.tw/step), j0=Math.floor((r-1.5)*R.th/step), j1=Math.ceil((r+2.5)*R.th/step), i, j;
         for(j=Math.max(0,j0);j<Math.min(H,j1);j++) for(i=Math.max(0,i0);i<Math.min(W,i1);i++){
           var p=P(i,j); if(!seen[i+j*W]&&stand(p[0],p[1])){ seen[i+j*W]=1; q.push(i+j*W); }
