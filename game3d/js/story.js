@@ -88,11 +88,13 @@ function fnWhereNow(){
   return 'out';
 }
 function fnTick(dt){
-  var f=S.fn; if(!f||!f.on) return;
+  var f=S.fn;
+  if(!f||!f.on){if(FN_P.grp)fnPeopleClear();return;}
   if(S.dead||S.screen!=='play') return;
   if(UI.chooseOpen) return;
   if(f.v>=100){
     f.on=false;
+    fnPeopleClear();
     kill('你笑得停不下来。笑了很久。','laugh');
     return;
   }

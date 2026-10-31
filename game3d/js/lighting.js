@@ -95,8 +95,9 @@ function lightState(){
   var day=sun.day;
   var wn=GLR.worldNorm||0;
   if(wn>0) day=day+(1-day)*0.6*wn;           /* "正常世界"那一段总是亮一点 */
-  var fnl=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
-  if(fnl) day=Math.max(day,0.85);
+  /* 与后处理共用平滑值，避免笑值越过阈值时灯光瞬间跳变。 */
+  var fnl=clamp(Number.isFinite(GLR.fnNorm)?GLR.fnNorm:0,0,1);
+  day+=(Math.max(day,0.85)-day)*fnl;
   var st={ day:day, gold:sun.gold, sun:sun, indoor:indoor };
   if(indoor){
     var g=(S.room==='garage1');
@@ -106,6 +107,11 @@ function lightState(){
     st.hemi= g?0.015:(0.022+0.030*day);
     st.dir = g?0.015:(0.02+0.09*day);
     st.ptK = g?0.8:(0.30+0.34*day);          /* 灯管老了：白天也只亮一半，夜里更暗、会闪 */
+    if(S.room==='portal_tunnel'){st.amb=0.14;st.hemi=0.1;st.dir=0.08;st.ptK=0.9;}
+    if(wn>0){
+      st.amb=lerp(st.amb,0.38,wn);st.hemi=lerp(st.hemi,0.28,wn);
+      st.dir=lerp(st.dir,0.32,wn);st.ptK=lerp(st.ptK,1,wn);
+    }
     if(typeof AN!=='undefined'&&AN.active&&AN.id==='blackout'){
       st.amb*=0.16;st.hemi*=0.16;st.dir*=0.12;st.ptK=0;st.blackout=true;
     }
@@ -157,8 +163,9 @@ function updateLighting(){
     }else{
       /* 屋里的雾：远处是黑的。夜里更近，走廊十几米外就看不清了 */
       var fn=1-s.day;
-      fog.color.setRGB(0.032-0.02*fn,0.040-0.024*fn,0.042-0.024*fn,THREE.SRGBColorSpace);
-      fog.density=(S.room==='garage1')?0.09:(0.072+0.03*fn);
+      var nw=s.blackout?0:clamp(GLR.worldNorm||0,0,1);
+      fog.color.setRGB(lerp(0.032-0.02*fn,0.32,nw),lerp(0.040-0.024*fn,0.35,nw),lerp(0.042-0.024*fn,0.36,nw),THREE.SRGBColorSpace);
+      fog.density=lerp((S.room==='garage1')?0.09:S.room==='portal_tunnel'?0.04:(0.072+0.03*fn),0.024,nw);
     }
   }
   var tt=GLR.time||0;

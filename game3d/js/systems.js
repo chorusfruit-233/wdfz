@@ -278,6 +278,7 @@ function dangerAt(){
   if(S.mode==='in'){
     if(S.room==='garage1') return 'garage';
     if(S.room==='trash1') return 'trash';
+    if(S.room==='portal_tunnel') return 'tunnel';
     return null;
   }
   if(isNight()) return 'night';
@@ -365,7 +366,7 @@ function roamTick(dt){
     kill('你在黑暗里撞上了它。它很高，很冷，一直站在车道中间，等你自己走过去。','grip');
   }
 }
-var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30}};
+var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30},tunnel:{san:0.60}};
 function dangerTick(dt){
   var dg=dangerAt(); if(!dg) return;
   var k=(S.talent==='night'&&(dg==='night'||dg==='garage'))?0.55:1;
@@ -375,6 +376,7 @@ function dangerTick(dt){
     S.dangerSeen[dg]=1;
     if(dg==='garage') os('我：车库里没有灯。只有最里面那盏在闪——闪的节奏，像有人在开关。',4.6);
     else if(dg==='trash') os('我：垃圾房的味道不对。太干净了。像刚刚被人舔过一遍。',4.2);
+    else if(dg==='tunnel') os('我：不想靠近。脚下的黑色黏液像是在呼吸。',4.2);
     else os('我：熄灯了。外面的路灯还亮着，可是它们照不到地面。这种时候还在外面走，是要被记下来的。',4.8);
   }
 }

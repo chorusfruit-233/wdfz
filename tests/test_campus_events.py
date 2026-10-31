@@ -62,3 +62,16 @@ class CampusEventTest(BrowserCase):
         self.assertAlmostEqual(result['san'],78.6,places=5)
         self.assertFalse(result['active'])
         self.assertAlmostEqual(result['restored'],result['lit'],places=5)
+
+    def test_inspection_finishes_once_then_figures_scatter(self):
+        page=self.game()
+        result=page.evaluate("""()=>{
+          Inspection.start({day:2,slot:0});let event=Inspection.state().current;
+          let figure=INSPECT_FX.group.children[0],start=figure.position.clone();
+          Inspection.finish(event);let san=S.san;Inspection.finish(event);
+          Inspection.tick(.4);let moved=figure.position.distanceTo(start)>0;
+          let fading=figure.children[0].material.opacity<1;
+          Inspection.tick(.5);
+          return {moved,fading,cleared:!INSPECT_FX.group,once:S.san===san,active:Inspection.active()};
+        }""")
+        self.assertEqual(result,{'moved':True,'fading':True,'cleared':True,'once':True,'active':False})

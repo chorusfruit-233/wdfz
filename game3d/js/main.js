@@ -3,6 +3,7 @@
 
 function onEnterRoom(id){
   if(id==='garage1') os('我：车库里没有灯。空气是潮的，有一股铁和机油的味道。远处有水在滴。',3.6);
+  if(id==='portal_tunnel') os('我：不想靠近。墙上的黑色黏液还在缓慢流动。',4.5,OS_FORCE);
   spotTick();
 }
 
@@ -189,6 +190,7 @@ function clearIntroTimers(){
 function freshState(diff){
   if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
+  fnPeopleClear();GLR.fnNorm=0;VisualState.worldNorm=0;
   if(DEV.on)Dev.close(false);
   Dev.clearPreview();Dev.clearAnimation();
   LESSON.close(false);
@@ -325,6 +327,7 @@ var Game={
   quit:function(){
     if(typeof CarChase!=='undefined'&&CarChase.active()){autoSave();CarChase.clearVisual();}
     if(typeof Inspection!=='undefined')Inspection.clearFx();
+    fnPeopleClear();GLR.fnNorm=0;
     if(DEV.on)Dev.close(false);
     Dev.clearPreview();Dev.clearAnimation();
     LESSON.close(false);

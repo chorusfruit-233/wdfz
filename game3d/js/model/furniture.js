@@ -23,6 +23,18 @@ FURN.J=function(c,x,y,cx,cz){
   }
   c.solid(cx,cz,c.tw,c.th);
 };
+FURN.j=function(c,x,y,cx,cz){
+  var K=c.K;
+  K.box('plain',cx,1.25,cz,.80,2.5,.12,0x111a17,1);
+  K.box('plain',cx-.40,1.25,cz,.08,2.5,.22,0x5b6b61,1);
+  K.box('plain',cx+.40,1.25,cz,.08,2.5,.22,0x5b6b61,1);
+  K.box('plain',cx,2.50,cz,.88,.08,.22,0x5b6b61,1);
+  c.solid(cx,cz,c.tw,c.th);
+};
+FURN.u=function(c,x,y,cx,cz){
+  c.K.box('plain',cx,.32,cz,.5,.64,.45,0x38443a,1);
+  c.K.box('plain',cx,.67,cz,.42,.06,.34,0xc4bda4,1);
+};
 
 /* 一把学生椅（Blender 建模：弯木椅面、弯靠背、钢管架）。正面朝 -z（人面向 -z 坐） */
 function chairModel(K,x,z,rot,seatY){
