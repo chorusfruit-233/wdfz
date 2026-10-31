@@ -437,18 +437,14 @@ function showEndingCard(id){
   var e=ENDINGS[id];
   VisualState.flash=0.6;
   setTimeout(function(){ VisualState.flash=0; },600);
-  var tag=e.fake?'<div style="font-size:11px;letter-spacing:6px;color:#c8a24a">假 结 局</div>':(e.true?'<div style="font-size:11px;letter-spacing:6px;color:#9fe3c2">真 结 局</div>':'');
-  var more=e.fake?'<button onclick="fakeWake()" style="font-family:inherit;font-size:12px;letter-spacing:3px;'+
-    'padding:11px 36px;background:rgba(20,48,38,.5);color:#cfe9dc;border:1px solid rgba(130,180,155,.5);cursor:pointer">……再睁开眼</button>':'';
-  var html='<div id="ends" style="position:fixed;inset:0;z-index:75;display:flex;align-items:center;'+
-    'justify-content:center;flex-direction:column;gap:22px;background:rgba(3,5,4,.96);text-align:center">'+tag+
-    '<div style="font-size:28px;letter-spacing:14px;color:#cfe9dc">'+e.t+'</div>'+
-    '<div style="font-size:14px;line-height:2.4;opacity:.82;max-width:560px">'+e.l.join('<br>')+'</div>'+
-    '<div style="font-size:11px;opacity:.4;letter-spacing:2px;margin-top:10px">'+
- '第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+more+
-    '<button onclick="Game.quit()" style="font-family:inherit;font-size:12px;letter-spacing:3px;'+
-    'padding:11px 36px;background:transparent;color:#b6d4c5;border:1px solid rgba(130,180,155,.34);'+
-    'cursor:pointer;margin-top:8px">回到主菜单</button></div>';
+  /* 结局卡：样式在 game.css（#ends），和死亡、暂停同一套档案式界面 */
+  var tag=e.fake?'<div class="etag fake">假 结 局</div>':(e.true?'<div class="etag">真 结 局</div>':'');
+  var more=e.fake?'<button type="button" class="ewake" onclick="fakeWake()">……再睁开眼</button>':'';
+  var html='<div id="ends">'+tag+
+    '<div class="et">'+e.t+'</div>'+
+    '<div class="el">'+e.l.join('<br>')+'</div>'+
+    '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+more+
+    '<button type="button" class="equit" onclick="Game.quit()">回到主菜单</button></div>';
   var d=document.createElement('div');
   d.innerHTML=html;
   document.body.appendChild(d);

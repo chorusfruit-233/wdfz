@@ -16,6 +16,7 @@ function loadSet(){
     else if(IS_TOUCH) SET.q=0;          /* 手机第一次打开：性能优先 */
   }catch(e){}
   SHAKE_ON=!!SET.shake; SUB_MULT=[0.6,1.0,1.6][SET.sub]||1.0; AMB_ON=!!SET.amb;
+  try{ document.body.classList.toggle('noshake',!SHAKE_ON); }catch(e){}
   QUALITY=SET.q=Quality.normalize(SET.q);
   try{ var mq=document.getElementById('mq'); if(mq) mq.value=String(QUALITY); }catch(e){}
   try{ SFX.setVol(SET.vol/100); }catch(e){}
@@ -47,7 +48,7 @@ var Settings={
     Engine.applyQuality();
     toast(Quality.get().label);
   },
-  shake:function(off){ SET.shake=off?0:1; SHAKE_ON=!off; paintSet(); saveSet(); },
+  shake:function(off){ SET.shake=off?0:1; SHAKE_ON=!off; document.body.classList.toggle('noshake',!SHAKE_ON); paintSet(); saveSet(); },
   amb:function(on){ SET.amb=on; AMB_ON=!!on; paintSet(); saveSet(); if(on) SFX.ambient(); else SFX.stopAmbient(); },
   grain:function(on){ SET.grain=on?1:0; Engine.grain(SET.grain); paintSet(); saveSet(); }
 };

@@ -138,6 +138,8 @@ function hudEl(id){
 function updateHUD(){
   var feel=hudEl('sanfeel'),stage=sanityStage();
   if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=SAN_FEEL[stage];}
+  /* 界面也跟着身体状态变（状态条的红线跳得越来越急）；样式里关掉镜头晃动时不动 */
+  if(document.body.dataset.san!==String(stage))document.body.dataset.san=stage;
   hudEl('clock').textContent=hasClock()?fmtClock(S.tsec):'时间不明';
   var sc=hudEl('secclock');
   if(sc){sc.hidden=true;sc.textContent='';}
