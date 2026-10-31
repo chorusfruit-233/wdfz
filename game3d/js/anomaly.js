@@ -516,6 +516,11 @@ function pickAnomaly(){
   var hist=RT.anHist||[], last=hist[hist.length-1], seen=RT.anSeen||{};
   if(pool.length>1) pool=pool.filter(function(a){ return a!==last; });
   else if(pool[0]===last) return null;
+  /* 最近四次里已经出过两次的，这次先不来；全被排掉就空一档（安静也是节奏） */
+  var recent=hist.slice(-4);
+  var fresh=pool.filter(function(a){ return recent.filter(function(h){ return h===a; }).length<2; });
+  if(!fresh.length){ RT.anHist=hist.concat('_').slice(-6); return null; }
+  pool=fresh;
   if(!hist.length&&pool.indexOf('chalk')>=0) return 'chalk';   /* 第一次总是黑板上的预告：先教会你看时间 */
   var tot=0,ws=[];
   for(i=0;i<pool.length;i++){

@@ -332,6 +332,37 @@ var DFX_EPI={
 };
 var DFX_SFX={laugh:'crack',shatter:'crack',grip:'slam',squeeze:'slam',bell:'bell',
   deep:'crack',freeze:'blink',voice:'blink',names:'blink',slit:'door',default:'blink'};
+/* 反复死在同一种东西上：优先给可读的线索，而不是降低难度（恐怖计划 P2） */
+var DEATH_LOG_KEY='wdfz3d_deaths';
+var DEATH_HINTS={
+  grip:'灯按拍子闪，是它要来了。先找柜子躲好；已经被它盯上，就背对它站着别动。',
+  drown:'雨下大了，就往有顶的地方去：屋檐、柱廊、车棚都行。',
+  swarm:'蛾群是从一个地方涌过来的。离那里远一点，它们就跟不上。',
+  follow:'操场上那些人开始做操的时候，别站在原地看，走远一点。',
+  ring:'实验楼地上的粉笔圈，别踩进去；踩到线就马上退出来。',
+  neck:'围墙外那个人在等我靠近东边的墙。离墙远一点。',
+  twin:'天台另一头那个人，只有在我不看他的时候才会动。',
+  floor:'窗台上那只杯子掉下来，是对着我刚才站的地方。听见它掉，就换个地方，或者进楼。',
+  names:'坐久了，椅子会留人。该站起来的时候，就站起来。',
+  vignette:'撑不住的时候，吃药、吃饭、玩一会儿手机，都能缓过来一点。',
+  trash:'垃圾房里那个桶，不是出口。'
+};
+function deathLogRead(){ try{ return JSON.parse(localStorage.getItem(DEATH_LOG_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function deathLogAdd(fx){
+  var d=deathLogRead(); d.counts=d.counts||{}; d.counts[fx]=(d.counts[fx]||0)+1;
+  d.last=(d.last||[]).concat([{fx:fx,day:S.day,where:S.mode==='in'?S.room:'out'}]).slice(-12);
+  try{ localStorage.setItem(DEATH_LOG_KEY,JSON.stringify(d)); }catch(e){}
+}
+/* 死过两次以上、而且有对应线索的死法，最多三条，最近的在前 */
+function deathHints(){
+  var d=deathLogRead(), c=d.counts||{}, out=[], seen={}, i;
+  var order=(d.last||[]).slice().reverse().map(function(e){ return e.fx; });
+  for(i=0;i<order.length&&out.length<3;i++){
+    var fx=order[i]; if(seen[fx]) continue; seen[fx]=1;
+    if((c[fx]||0)>=2&&DEATH_HINTS[fx]) out.push(DEATH_HINTS[fx]);
+  }
+  return out;
+}
 function kill(msg,fx){
   if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
   if(S.dead||S.death) return;
@@ -339,6 +370,7 @@ function kill(msg,fx){
   if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
+  try{ deathLogAdd(S.death); }catch(e){}
   if(typeof Inspection!=='undefined')Inspection.cancel();
   if(typeof Elevator!=='undefined')Elevator.cancel();
   if(typeof CarChase!=='undefined'&&RT.carChase)CarChase.cancel();
