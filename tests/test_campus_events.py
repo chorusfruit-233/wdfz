@@ -75,3 +75,20 @@ class CampusEventTest(BrowserCase):
           return {moved,fading,cleared:!INSPECT_FX.group,once:S.san===san,active:Inspection.active()};
         }""")
         self.assertEqual(result,{'moved':True,'fading':True,'cleared':True,'once':True,'active':False})
+
+    def test_broadcast_warns_before_inspection_and_hud_asks_for_classroom(self):
+        page=self.game()
+        result=page.evaluate("""()=>{
+          S.mode='out';S.room=null;S.tsec=760;updateHUD();let before=document.getElementById('period').textContent;
+          let lines=[];let original=os;os=function(t){lines.push(t);return original.apply(this,arguments);};
+          advanceGameTime(3);updateHUD();let during=document.getElementById('period').textContent;
+          advanceGameTime(.5);let warnedOnce=lines.filter(t=>t.indexOf('学生会')>=0).length;
+          S.tsec=769.99;advanceGameTime(.02);updateHUD();let after=Inspection.upcoming();
+          os=original;
+          return {before,during,warnedOnce,after,queued:Inspection.state().queue.length};
+        }""")
+        self.assertNotIn('教室', result['before'])
+        self.assertIn('教室', result['during'])
+        self.assertEqual(result['warnedOnce'],1)
+        self.assertFalse(result['after'])
+        self.assertEqual(result['queued'],1)

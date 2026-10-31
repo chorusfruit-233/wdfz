@@ -1,12 +1,14 @@
 /* 学生会定时检查：游戏时刻触发，行为处罚按模拟运行秒结算。 */
 'use strict';
 
-var INSPECT_CONFIG={times:[770,1070],duration:8,moveEvery:1,moveViolation:2,gazeSan:2,
+/* warnLead：提前多少游戏分钟用校园广播提醒回教室（检查时只认教室，平时这两段是自由时间） */
+var INSPECT_CONFIG={times:[770,1070],warnLead:8,duration:8,moveEvery:1,moveViolation:2,gazeSan:2,
   goodSan:3,badSan:8,goodViolation:8,badViolation:10,assimilation:3};
 var INSPECT_FX={group:null,room:null,points:null,scatter:null};
 var Inspection={
   state:function(){
     if(!RT.inspection)RT.inspection={seen:{},queue:[],current:null};
+    if(!RT.inspection.warned)RT.inspection.warned={};
     return RT.inspection;
   },
   clearFx:function(){
@@ -20,10 +22,24 @@ var Inspection={
     if(S.screen!=='play'||after<=before)return;
     var st=Inspection.state();
     INSPECT_CONFIG.times.forEach(function(time,i){
-      var key=day+':'+i;
-      if(before<=time&&after>=time&&!st.seen[key]){
-        st.seen[key]=true;st.queue.push({day:day,slot:i});
+      var key=day+':'+i, warn=time-INSPECT_CONFIG.warnLead;
+      if(before<=warn&&after>=warn&&after<time&&!st.warned[key]){
+        st.warned[key]=true;
+        os('广播：「请各班同学注意，学生会将于'+(i?'五点五十':'十二点五十')+'到各班检查，请回到自己的教室。」',5.5,OS_FORCE);
+        try{ SFX.click(); }catch(e){}
       }
+      if(before<=time&&after>=time&&!st.seen[key]){
+        st.seen[key]=true;st.warned[key]=true;st.queue.push({day:day,slot:i});
+      }
+    });
+  },
+  /* 广播之后、检查开始之前：这段时间的地点要求按教室显示 */
+  upcoming:function(){
+    if(!RT.inspection||Inspection.active())return false;
+    var st=Inspection.state();
+    return INSPECT_CONFIG.times.some(function(time,i){
+      var key=S.day+':'+i;
+      return st.warned[key]&&!st.seen[key]&&S.tsec>=time-INSPECT_CONFIG.warnLead&&S.tsec<time;
     });
   },
   active:function(){return !!(RT.inspection&&RT.inspection.current);},

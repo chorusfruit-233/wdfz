@@ -150,6 +150,7 @@ function updateHUD(){
   pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec)));
   if(CarChase.active())pe.textContent='驾驶逃脱';
   if(typeof Inspection!=='undefined'&&Inspection.active())pe.textContent='学生会检查 · 教室';
+  else if(typeof Inspection!=='undefined'&&Inspection.upcoming()&&!leave)pe.textContent=p[2]+' · 教室（学生会要来）';
   /* 时段前面的小圆点：绿 = 在该在的地方；黄 = 不在，违规在涨；蓝 = 请假中；红 = 考试 */
   var pc=leave?'leave':(S.wrong?'warn':(examing?'exam':'ok'));
   if(pe.className!==pc) pe.className=pc;
