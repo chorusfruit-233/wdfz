@@ -26,7 +26,7 @@ function anfxClear(){
     if(ANFX.kind==='death'&&!ANFX.preview) ThreeBackend.disposeGroup(ANFX.grp);
     ANFX.grp=null;
   }
-  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;
+  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;ANFX.faceWalk=null;
   ANFX.timeline=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
@@ -587,13 +587,16 @@ function deathFX(type,options){
       grp.add(mir); push(mir);
     }
     else if(T==='face'){
-      var fq3=anfxW2S(S.x+Math.cos(S.ang)*3.8, S.y+Math.sin(S.ang)*3.8);
-      var fg2=new THREE.Group();
-      fg2.add(fxMesh('bigface'));
-      fg2.position.set(fq3.x,0,fq3.z);
-      fg2.rotation.y=-Math.PI/2-S.ang;
-      fg2.userData={fx:fq3.x, fz:fq3.z};
-      grp.add(fg2); push(fg2);
+      /* 问路人：路人背对着停下，慢慢转过头——没有脸，只有一个在笑的洞——然后径直走过来 */
+      var fa=S.ang, ff={x:Math.cos(fa),z:Math.sin(fa)}, ffront=-Math.PI/2-fa;
+      ANFX.faceWalk={o:{x:p.x,z:p.z},f:ff,front:ffront};
+      var walker=new THREE.Group();
+      walker.add(figMesh('person',anfxMat(0x0a0c0e,1.0),1));
+      var hole=new THREE.Group();hole.add(fxMesh('smile'));
+      hole.scale.setScalar(0.2);hole.position.set(0,1.72-1.72*0.2,0.06);hole.visible=false;
+      hole.userData={faceHole:1};walker.add(hole);
+      walker.userData={faceWalker:1,hole:hole};
+      grp.add(walker); push(walker);
     }
     else if(T==='squeeze'){
       /* 翻墙：墙外还有一道墙，再外面还有一道；最后两边的墙一起挤过来 */
@@ -745,17 +748,18 @@ function anfxUpdate(dt){
       }
       var fr=ANFX.items[0];
       if(fr&&fr.scale) fr.scale.set(1+kk*0.22,1+kk*0.16,1);
-    } else if(dtp==='face'){
-      var fc=ANFX.items[0];
-      if(fc&&fc.position){
-        var pq4=anfxW2S(S.x,S.y);
-        var fu=fc.userData||{};
-        var fx2=(fu.fx!==undefined)?fu.fx:fc.position.x;
-        var fz2=(fu.fz!==undefined)?fu.fz:fc.position.z;
-        var dd=Math.max(0.40,1-kk*0.42);
-        fc.position.x=pq4.x+(fx2-pq4.x)*dd;
-        fc.position.z=pq4.z+(fz2-pq4.z)*dd;
-        if(fc.scale&&fc.scale.setScalar) fc.scale.setScalar(1+kk*0.55);
+    } else if(dtp==='face'&&ANFX.faceWalk){
+      /* 0–0.5 秒背对着站着；0.5–1.4 秒慢慢转过来，笑着的洞露出来；1.4 秒以后径直走过来，洞越张越大 */
+      var fw=ANFX.faceWalk, wk=ANFX.items[0];
+      if(wk&&wk.userData.faceWalker){
+        var turn=clamp((kk-0.5)/0.9,0,1), ease=turn*turn*(3-2*turn), walk=clamp((kk-1.4)/1.2,0,1);
+        var wd=4.6-walk*3.9;
+        wk.position.set(fw.o.x+fw.f.x*wd,0,fw.o.z+fw.f.z*wd);
+        wk.rotation.y=fw.front+Math.PI*(1-ease);
+        var hole=wk.userData.hole; hole.visible=turn>0.45;
+        var hk=0.2+walk*walk*0.35, hc=1.72-0.12*walk;          /* 洞的中心留在脸的位置（模型原点在底下，约 1.72 倍缩放处是中心） */
+        hole.scale.setScalar(hk); hole.position.y=hc-1.72*hk;
+        wk.position.y=-0.04*Math.abs(Math.sin(kk*5))*walk;     /* 走路的起伏 */
       }
     } else if(dtp==='squeeze'&&ANFX.squeeze){
       /* 0–2.4 秒：镜头一次次抬起翻过墙头，每翻一道，前面那道就往脚下沉、后面那道露出来；
