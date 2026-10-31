@@ -111,7 +111,7 @@
 | 死亡类型 | 调试名 | 触发来源 | 专属画面分支 | 专属音效 | 测试中出现 |
 | --- | --- | --- | :---: | :---: | :---: |
 | `vignette` | 黑影逼近 | kill：anomaly.js、systems.js | ✓ |  | ✓ |
-| `floor` | 地面翻起 | —（未找到真实触发） | ✓ |  |  |
+| `floor` | 地面翻起 | 异象 cup | ✓ |  |  |
 | `grip` | 脚下伸手 | kill：car-chase.js、patrol.js、story.js、systems.js | ✓ |  | ✓ |
 | `neck` | 侧向长条 | 异象 necker | ✓ |  | ✓ |
 | `shadow` | 影子 | 异象 shadow | ✓ | ✓ | ✓ |
@@ -122,7 +122,7 @@
 | `gaze` | 回头 | 异象 turn、repeat | ✓ |  |  |
 | `stare` | 围观 | 异象 stare | ✓ | ✓ | ✓ |
 | `voice` | 广播 | 异象 broad | ✓ |  |  |
-| `bell` | 钟声 | —（未找到真实触发） | ✓ | ✓ | ✓ |
+| `bell` | 钟声 | 异象 bell13 | ✓ | ✓ | ✓ |
 | `follow` | 跟随 | 异象 exercise | ✓ |  | ✓ |
 | `shatter` | 碎裂 | 异象 bells | ✓ |  |  |
 | `deep` | 深坑 | 异象 feast | ✓ |  |  |
@@ -141,6 +141,10 @@
 | `hand` | 隔间伸手 | 异象 hand | ✓ | ✓ | ✓ |
 | `trash` | 垃圾桶 | kill：story.js | ✓ |  | ✓ |
 
-- **没有真实触发的类型**：`floor`（地面翻起）、`bell`（钟声；「钟敲十三下」用的是 `shatter`）、`wall`、`mirror` 只能从调试面板预览。保留预览，不作为本轮重制的验收对象；以后接上真实触发再补。
-- **只有通用死亡音的真实类型**：`vignette`、`shadow`、`water`、`deep`、`chalk`、`loop`、`twin`、`slit`、`squeeze`、`face` 盘点时只有 `deathFx` 的通用低频和高频哨音。按「声音先行」原则，M2 先给这些类型补上符合死因的音效。
+- **没有真实触发的类型**：`wall`、`mirror` 只能从调试面板预览（`floor` 是清华水杯、`bell` 是钟敲十三下的死亡类型；初版脚本漏扫了这两条，测试按 `DFX_MAP` 实际值核对后改正）。保留预览，不作为本轮重制的验收对象；以后接上真实触发再补。
+- **只有通用死亡音的真实类型**：`vignette`、`shadow`、`water`、`deep`、`chalk`、`loop`、`twin`、`slit`、`squeeze`、`face`、`floor` 盘点时只有 `deathFx` 的通用低频和高频哨音。按「声音先行」原则，M2 先给这些类型补上符合死因的音效。
 - 同一类型被多个来源复用：`grip` 来自巡察者、驾驶追逐、白名单失败和车库；`lamps` 来自熄灯走廊、停电和灯异象；`water` 来自渗水和雨点成字。重制时按类型做一套，来源差异用字幕区分。
+
+### M2 进度
+
+- [x] 声音先行：11 种真实可达、原来只有通用死亡音的类型（`vignette`、`shadow`、`water`、`deep`、`chalk`、`loop`、`twin`、`slit`、`squeeze`、`face`、`floor`）各配了按死因设计的死亡音；`test_death_timeline` 检查每个真实可达类型都有自己的死亡音、调用不报错。只在无头浏览器里验证了能调用，听感还要实机试听。

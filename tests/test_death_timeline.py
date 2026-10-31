@@ -108,3 +108,17 @@ class DeathTimelineTest(BrowserCase):
           return {complete,disposed,attached:GLR.scene.children.includes(group),worldNorm:GLR.worldNorm};
         }""")
         self.assertEqual(result, {'complete': 1, 'disposed': 1, 'attached': False, 'worldNorm': .23})
+
+    def test_every_reachable_death_has_its_own_sound(self):
+        """真实能触发的死亡类型都要有按死因配的死亡音（附录 A 盘点时缺 10 种）。"""
+        page = self.page()
+        result = page.evaluate("""() => {
+          let kinds=new Set(SFX.deathKinds());
+          let reachable=new Set(Object.values(DFX_MAP).filter(Boolean));
+          ['vignette','grip','names','slit','squeeze','face','laugh','trash'].forEach(id=>reachable.add(id));
+          let missing=[...reachable].filter(id=>!kinds.has(id)).sort();
+          let errors=[];
+          kinds.forEach(id=>{try{SFX.deathFx(id);}catch(e){errors.push(id+':'+e.message);}});
+          return {missing,errors};
+        }""")
+        self.assertEqual(result, {'missing': [], 'errors': []})
