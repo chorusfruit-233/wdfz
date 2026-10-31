@@ -85,3 +85,22 @@ class CarChaseTest(BrowserCase):
                             a['y']<b['y']+b['height'] and b['y']<a['y']+a['height'])
                 self.assertFalse(overlaps(hud,stick),(hud,stick))
                 self.assertFalse(overlaps(hud,sub),(hud,sub))
+
+    def test_route_is_read_from_signs_and_pursuit_shows_in_mirror(self):
+        page=self.setup_car()
+        result=page.evaluate("""()=>{
+          CUT.enabled=false;carDrive();let d=RT.carChase;
+          d.distance=100;d.pursuit=0;CarChase.draw();
+          let calm=CAR_VIS.shades.filter(s=>s.visible).length,hud=document.getElementById('drivehud').textContent;
+          d.pursuit=CAR_CHASE_CONFIG.pursuitLimit*.8;CarChase.draw();
+          let close=CAR_VIS.shades.filter(s=>s.visible).length,hud2=document.getElementById('drivehud').textContent;
+          return {calm,close,hud,hud2,sign:CAR_VIS.signs[0].visible};
+        }""")
+        self.assertEqual(result['calm'],0)
+        self.assertGreaterEqual(result['close'],4)
+        self.assertTrue(result['sign'])
+        for text in (result['hud'],result['hud2']):
+            self.assertNotIn('向右',text)
+            self.assertNotIn('向左',text)
+        self.assertIn('路牌',result['hud'])
+        self.assertIn('黑影',result['hud2'])

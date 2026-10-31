@@ -21,7 +21,7 @@ var CarChase={
     if(CAR_VIS.dash){GLR.cam.remove(CAR_VIS.dash);ThreeBackend.disposeGroup(CAR_VIS.dash);}
     if(CAR_VIS.world)CAR_VIS.world.visible=CAR_VIS.worldVisible;
     if(CAR_VIS.group)GLR.worldNorm=CAR_VIS.oldNorm;
-    CAR_VIS.group=null;CAR_VIS.dash=null;CAR_VIS.world=null;CAR_VIS.props=[];CAR_VIS.marks=[];CAR_VIS.signs=[];
+    CAR_VIS.group=null;CAR_VIS.dash=null;CAR_VIS.world=null;CAR_VIS.props=[];CAR_VIS.marks=[];CAR_VIS.signs=[];CAR_VIS.shades=[];CAR_VIS.step=0;
     document.body.classList.remove('driving');
     var hud=document.getElementById('drivehud');if(hud)hud.hidden=true;
   },
@@ -68,9 +68,11 @@ var CarChase={
     wheel.position.set(0,-.49,-.88);dash.add(wheel);
     var mirror=new THREE.Mesh(new THREE.BoxGeometry(.9,.18,.04),new THREE.MeshBasicMaterial({color:0x515b59}));
     mirror.position.set(0,.47,-1.15);dash.add(mirror);
-    for(i=0;i<3;i++){
-      var shade=new THREE.Mesh(new THREE.BoxGeometry(.08,.12,.03),new THREE.MeshBasicMaterial({color:0x080a0a}));
-      shade.position.set((i-1)*.18,.47,-1.11);dash.add(shade);
+    /* 后视镜里的黑影：追得越近越多、越大（draw 里按追影值调） */
+    CAR_VIS.shades=[];
+    for(i=0;i<5;i++){
+      var shade=new THREE.Mesh(new THREE.BoxGeometry(.06,.08,.02),new THREE.MeshBasicMaterial({color:0x080a0a}));
+      shade.position.set((i-2)*.15,.46,-1.12);shade.visible=false;dash.add(shade);CAR_VIS.shades.push(shade);
     }
     GLR.cam.add(dash);CAR_VIS.dash=dash;
     document.body.classList.add('driving');
@@ -92,10 +94,17 @@ var CarChase={
     for(var i=CAR_CHASE_CONFIG.obstacles.length;i<CAR_VIS.props.length;i++){
       var prop=CAR_VIS.props[i];prop.position.z=-((prop.userData.roadOffset-d.distance%96+96)%96);
     }
+    var near=d.pursuit/CAR_CHASE_CONFIG.pursuitLimit;
+    (CAR_VIS.shades||[]).forEach(function(shade,i){
+      shade.visible=near>i*.18+.04;
+      var k=.6+near*.6+Math.sin((GLR.time||0)*7+i*1.7)*.05;shade.scale.set(k,k*(1+near*.4),1);   /* 最大约 0.15 米高，不超出镜面 */
+    });
     var hud=document.getElementById('drivehud');
     if(hud){
-      var hint=d.nextFork===0&&d.distance>80?'前方路口向右':d.nextFork===1&&d.distance>180?'前方路口向左':'避开路障，沿路前进';
-      var text='驾驶 '+Math.floor(d.distance)+' / '+CAR_CHASE_CONFIG.distance+' 米 · 车辆 '+d.hp+'/3 · 追影 '+Math.floor(d.pursuit)+'\n'+hint+'\nW / ↑ 前进，A D / ← → 转向；触屏用摇杆';
+      /* 路口往哪边走只看路牌，界面上不直接写出来；追影只说远近 */
+      var near=d.pursuit/CAR_CHASE_CONFIG.pursuitLimit, chase=near>.75?'黑影就在车后':near>.4?'后视镜里的黑影越来越近':near>.1?'后面有东西跟着':'后视镜里暂时是空的';
+      var hint=CAR_CHASE_CONFIG.forks.some(function(f){var dd=f[0]-d.distance;return dd>0&&dd<85;})?'前方路口，看清路牌':'避开路障，沿路前进';
+      var text='驾驶 '+Math.floor(d.distance)+' / '+CAR_CHASE_CONFIG.distance+' 米 · 车辆 '+d.hp+'/3 · '+chase+'\n'+hint+'\nW / ↑ 前进，A D / ← → 转向；触屏用摇杆';
       if(hud.textContent!==text)hud.textContent=text;
     }
   },
@@ -117,6 +126,12 @@ var CarChase={
     d.x=clamp(d.x+clamp(steering,-1,1)*CAR_CHASE_CONFIG.steer*dt,-CAR_CHASE_CONFIG.edge,CAR_CHASE_CONFIG.edge);
     d.pursuit=clamp(d.pursuit+(d.speed<7?3:-2.5)*dt,0,CAR_CHASE_CONFIG.pursuitLimit);
     d.distance+=d.speed*dt;
+    var near=d.pursuit/CAR_CHASE_CONFIG.pursuitLimit;
+    CAR_VIS.step=(CAR_VIS.step||0)-dt;
+    if(near>.08&&CAR_VIS.step<=0){
+      CAR_VIS.step=lerp(.9,.28,near);
+      try{ SFX.patStep((Math.random()-.5)*.6,.35+.65*near,true,near>.6); }catch(e){}
+    }
     if(d.pursuit>=CAR_CHASE_CONFIG.pursuitLimit){CarChase.fail('黑影追上了车。后窗上全是贴上来的手。',Math.max(0,d.distance-30));return;}
     while(d.nextObstacle<CAR_CHASE_CONFIG.obstacles.length&&d.distance>=CAR_CHASE_CONFIG.obstacles[d.nextObstacle][0]){
       var o=CAR_CHASE_CONFIG.obstacles[d.nextObstacle++];
