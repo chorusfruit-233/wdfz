@@ -325,12 +325,14 @@ function deathFX(type,options){
       var vp=new THREE.Mesh(new THREE.PlaneGeometry(14,14),anfxMat(0x020304,0.92));
       vp.rotation.x=-Math.PI/2; vp.position.set(p.x,-1.0,p.z);
       grp.add(vp); push(vp);
-      for(i=0;i<12;i++){
-        var va=i/12*6.283;
-        var vb=anfxBox(grp,anfxMat(0x05080a,0.94),1.9,3.2,0.08,p.x+Math.cos(va)*3.6,1.5,p.z+Math.sin(va)*3.6);
-        vb.rotation.y=-va+Math.PI/2;
-        vb.userData={a:va};
-        push(vb);
+      /* 一圈没有脸的高个子，一个接一个从暗处走出来，围拢过来（以前是十二块黑板子） */
+      var vmat=anfxMat(0x030405,1.0);
+      for(i=0;i<10;i++){
+        var va=i/10*6.283+(i%2)*0.18;
+        var vf=new THREE.Group();vf.add(figMesh('tall',vmat,1));
+        vf.position.set(p.x+Math.cos(va)*4.2,0,p.z+Math.sin(va)*4.2);
+        vf.userData={a:va,delay:((i*7)%10)*0.11};
+        grp.add(vf);push(vf);
       }
     }
     else if(T==='floor'||T==='deep'){
@@ -675,12 +677,17 @@ function anfxUpdate(dt){
         else ob.position.y=-1.2+Math.min(2.6,kk*1.1);
       }
     } else if(dtp==='vignette'){
-      var vr=Math.max(0.5,3.6-kk*1.5);
+      /* 按经过的时间算：先在 4 米外站定，再一个接一个往里走，最后贴到身边、微微俯下来 */
+      var vc=ANFX.items[0].position;
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it]; var vu=ob.userData||{};
         if(vu.a===undefined) continue;
-        ob.position.x=ANFX.items[0].position.x+Math.cos(vu.a)*vr;
-        ob.position.z=ANFX.items[0].position.z+Math.sin(vu.a)*vr;
+        var vk=Math.max(0,kk-0.35-vu.delay), vr=Math.max(0.75,4.2-vk*1.7);
+        ob.position.x=vc.x+Math.cos(vu.a)*vr;
+        ob.position.z=vc.z+Math.sin(vu.a)*vr;
+        ob.rotation.y=Math.atan2(vc.x-ob.position.x,vc.z-ob.position.z);
+        ob.rotation.x=0.18*clamp((2.4-vr)/1.6,0,1);
+        ob.visible=kk>vu.delay*0.6;
       }
     } else if(dtp==='lamps'){
       /* 一圈灯依次亮起，然后一起压到头顶（以前这些灯永远不可见） */
