@@ -105,6 +105,7 @@ function playCut(id,done){
   try{ UI.closePanelAll(); UI.closeChoice(); }catch(e){}
   resetInputState(); releaseMouseLook();
   CUT.on=true; CUT.t=0; CUT.id=id; CUT.dur=def.dur; CUT.done=done; CUT.data={};
+  CUT.savedVisual={worldNorm:GLR.worldNorm,dayExpo:GLR.dayExpo};
   S.screen='cut';
   document.body.classList.add('cut');
   cutFade(0);
@@ -121,10 +122,14 @@ function cutFinish(){
   if(!CUT.on) return;
   var def=CUT_DEF[CUT.id];
   try{ if(def.clean) def.clean(CUT.data); }catch(e){}
-  if(CUT.grp){ GLR.scene.remove(CUT.grp); CUT.grp=null; }
+  if(CUT.grp){ GLR.scene.remove(CUT.grp);ThreeBackend.disposeGroup(CUT.grp);CUT.grp=null; }
   CUT.on=false;
   document.body.classList.remove('cut');
   GLR.flash=0;
+  if(CUT.savedVisual){
+    GLR.worldNorm=CUT.savedVisual.worldNorm;GLR.dayExpo=CUT.savedVisual.dayExpo;CUT.savedVisual=null;
+    try{updateLighting();}catch(e){}
+  }
   var f=document.getElementById('cutfade'); if(f) f.style.opacity='0';
   var done=CUT.done; CUT.done=null;
   if(done) done();

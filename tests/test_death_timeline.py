@@ -49,3 +49,17 @@ class DeathTimelineTest(BrowserCase):
           return {count,attached:GLR.scene.children.includes(group),timeline:ANFX.timeline};
         }""")
         self.assertEqual(result, {'count': 1, 'attached': False, 'timeline': None})
+
+    def test_cutscene_skip_releases_resources_and_restores_visual_state(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+          CUT.enabled=true;GLR.worldNorm=.23;let complete=0,disposed=0;
+          let old=ThreeBackend.disposeGroup;
+          playCut('face',()=>{complete++;S.screen='play'});
+          let group=CUT.grp;
+          ThreeBackend.disposeGroup=function(g){if(g===group)disposed++;return old(g)};
+          cutTick(4);GLR.worldNorm=.9;cutSkip();cutSkip();
+          ThreeBackend.disposeGroup=old;
+          return {complete,disposed,attached:GLR.scene.children.includes(group),worldNorm:GLR.worldNorm};
+        }""")
+        self.assertEqual(result, {'complete': 1, 'disposed': 1, 'attached': False, 'worldNorm': .23})
