@@ -39,6 +39,26 @@ class DeathTimelineTest(BrowserCase):
         }""")
         self.assertEqual(result, [])
 
+    def test_all_death_models_have_finite_transforms_during_playback(self):
+        page = self.page()
+        failures = page.evaluate("""() => {
+          let failures=[];
+          for(const [,id] of DEV_DEATH){
+            deathFX(id);
+            for(const dt of [.15,.5,.9,.8]){
+              anfxUpdate(dt);
+              ANFX.grp.traverse(o=>{
+                if(![o.position.x,o.position.y,o.position.z,o.scale.x,o.scale.y,o.scale.z,
+                     o.quaternion.x,o.quaternion.y,o.quaternion.z,o.quaternion.w].every(Number.isFinite))
+                  failures.push(id);
+              });
+            }
+            anfxClear();
+          }
+          return [...new Set(failures)];
+        }""")
+        self.assertEqual(failures, [])
+
     def test_real_death_resources_are_released_once(self):
         page = self.page()
         result = page.evaluate("""() => {

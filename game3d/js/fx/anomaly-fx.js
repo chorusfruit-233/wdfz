@@ -801,8 +801,14 @@ function anfxUpdate(dt){
         ob.position.x=eu.cx+Math.cos(eu.a)*rr3;
         ob.position.z=eu.cz+Math.sin(eu.a)*rr3;
         ob.position.y=eu.by+near*0.35;
-        var gk=eu.s*(1+near*0.5);
-        ob.scale.set(gk, gk*0.6875, 1);                   /* 不眨眼。Sprite 本来就永远正对镜头 */
+        if(eu.head){
+          /* 围观使用人头模型，不能按眼睛 Sprite 的尺寸计算。 */
+          ob.scale.setScalar(1+near*0.2);
+          ob.lookAt(GLR.cam.position.x,GLR.cam.position.y,GLR.cam.position.z);
+        }else{
+          var gk=(eu.s||1)*(1+near*0.5);
+          ob.scale.set(gk, gk*0.6875, 1);                 /* Sprite 始终正对镜头 */
+        }
       }
     } else if(dtp==='grip'){
       var sinkT=Math.min(1,kk/2.4);
