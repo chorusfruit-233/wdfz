@@ -334,14 +334,17 @@ function deathFX(type,options){
     else if(T==='names'){
       /* 名单墙立在视线正前方（以前固定放在场景的 +z 方向） */
       var nmr, nmc, nf=new THREE.Group();nf.position.set(p.x,0,p.z);nf.rotation.y=Math.PI/2-S.ang;grp.add(nf);
+      /* 42 张名牌、两行名字：合成三个网格（名牌、上一行、下一行），以前每个小方块单独画，一帧多出 126 次绘制 */
+      var nk=[new Kit(),new Kit(),new Kit()];
       for(nmr=0;nmr<6;nmr++){
         for(nmc=0;nmc<7;nmc++){
           var nx=-2.6+nmc*0.86, ny=0.55+nmr*0.46;
-          push(anfxBox(nf,anfxMat(0x1a2024,1.0),0.78,0.40,0.05,nx,ny,2.6));
-          push(anfxBox(nf,anfxMat(0xb8b2a6,0.9),0.58,0.05,0.02,nx,ny+0.08,2.57));
-          push(anfxBox(nf,anfxMat(0x8a8478,0.9),0.40,0.04,0.02,nx,ny-0.06,2.57));
+          nk[0].box('dark',nx,ny,2.6,0.78,0.40,0.05,0x07090a,1);
+          nk[1].box('dark',nx,ny+0.08,2.57,0.58,0.05,0.02,0x8f8a80,1);
+          nk[2].box('dark',nx,ny-0.06,2.57,0.40,0.04,0.02,0x5e5a52,1);
         }
       }
+      nk.forEach(function(K){ var nm=new THREE.Mesh(K.mergedGeometry(),new THREE.MeshBasicMaterial({vertexColors:true,fog:true})); nf.add(nm); push(nm); });
     }
     else if(T==='chalk'){
       /* 黑板立在视线正前方（以前固定放在场景的 +z 方向，经常在身后看不见） */

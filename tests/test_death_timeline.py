@@ -274,3 +274,36 @@ class DeathTimelineTest(BrowserCase):
             self.assertEqual(r['bad'], 0, cut_id)
             self.assertTrue(r['cleaned'], cut_id)
         self.assertEqual(result['car']['mode'], 'out')     # 开车那条从车库切到校门外
+
+    def test_death_cinematics_stay_within_a_draw_call_budget(self):
+        """性能：每种死亡演出在场景之外最多再加 30 次绘制（手机上每次绘制都有开销）。
+        以前名单墙每个小方块单独画，一帧多出 126 次；蛾群、雨、碎片、冰锥各 30–45 次。"""
+        page = self.page()
+        result = page.evaluate("""() => {
+          doEnterRoom('teach1');syncCamera(0);GLR.renderer.info.autoReset=false;
+          GLR.renderer.info.reset();render(0.016);const base=GLR.renderer.info.render.calls;const over={};
+          for(const [,id] of DEV_DEATH){
+            deathFX(id,{preview:true});for(let i=0;i<40;i++)anfxUpdate(DeathTimeline.duration(id)/60);
+            GLR.renderer.info.reset();render(0.016);const extra=GLR.renderer.info.render.calls-base;
+            if(extra>30)over[id]=extra;const g=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(g);
+          }
+          GLR.renderer.info.autoReset=true;return over;
+        }""")
+        self.assertEqual(result, {})
+
+    def test_warm_up_compiles_every_death_cinematic_shader_in_advance(self):
+        """开局预热以后，第一次播放任何一种死亡演出都不用再现编着色器（手机上会在死的那一下卡住）。"""
+        page = self.page()
+        result = page.evaluate("""() => {
+          doEnterRoom('teach1');syncCamera(0);render(0.016);DeathCG.warm();render(0.016);
+          const before=GLR.renderer.info.programs.length, fresh={};
+          for(const [,id] of DEV_DEATH){
+            const p0=GLR.renderer.info.programs.length;
+            deathFX(id,{preview:true});anfxUpdate(DeathTimeline.duration(id)*0.6);render(0.016);
+            const n=GLR.renderer.info.programs.length-p0; if(n>0)fresh[id]=n;
+            const g=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(g);
+          }
+          return {fresh,warmedTwice:DeathCG.warm()};
+        }""")
+        self.assertEqual(result['fresh'], {})
+        self.assertFalse(result['warmedTwice'])

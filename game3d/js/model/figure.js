@@ -149,7 +149,13 @@ function figMesh(kind,mat,scale){
 
 /* ---- 异象 / 死亡演出里的几种"东西"：带顶点色的共享几何体，配一个不吃光的材质 ---- */
 var FX_GEO={}, FX_VC_MAT=null;
-function fxVCMat(){ if(!FX_VC_MAT) FX_VC_MAT=new THREE.MeshBasicMaterial({vertexColors:true,fog:true,side:THREE.DoubleSide});   /* 镜头钻进去也看得见（钟罩下来的时候） */ return FX_VC_MAT; }
+function fxVCMat(){
+  if(!FX_VC_MAT){
+    FX_VC_MAT=new THREE.MeshBasicMaterial({vertexColors:true,fog:true,side:THREE.DoubleSide});   /* 镜头钻进去也看得见（钟罩下来的时候） */
+    FX_VC_MAT.userData.shared=true;   /* 各个演出共用这一份；以前每次死亡清场都把它释放掉，下一次又要现编着色器 */
+  }
+  return FX_VC_MAT;
+}
 function fxGeo(name){
   var ag=figAssetGeo('fx_'+name,'fxKind',name); if(ag) return ag;
   var key=name+'|'+Quality.get().segments;
