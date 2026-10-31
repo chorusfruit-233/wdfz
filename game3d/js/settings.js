@@ -1,7 +1,7 @@
 /* 里世界 3D · 设置 */
 'use strict';
 
-var SET={vol:70,sub:1,q:1,shake:1,amb:1,bright:100};
+var SET={vol:70,sub:1,q:1,shake:1,amb:1,bright:100,grain:1};
 var SHAKE_ON=true, SUB_MULT=1.0, AMB_ON=true;
 function applyBrightness(){
   var bright=Number(SET.bright)||100;
@@ -20,12 +20,13 @@ function loadSet(){
   try{ var mq=document.getElementById('mq'); if(mq) mq.value=String(QUALITY); }catch(e){}
   try{ SFX.setVol(SET.vol/100); }catch(e){}
   applyBrightness();
+  Engine.grain(SET.grain?1:0);
 }
 function saveSet(){ try{ localStorage.setItem('zw3d_set',JSON.stringify(SET)); }catch(e){} }
 function paintSet(){
   var v=document.getElementById('sVol'); if(v) v.value=SET.vol;
   var vv=document.getElementById('sVolV'); if(vv) vv.textContent=SET.vol;
-  [['sSub',SET.sub],['sQ',SET.q],['sShake',SET.shake?0:1],['sAmb',SET.amb?0:1]].forEach(function(p){
+  [['sSub',SET.sub],['sQ',SET.q],['sShake',SET.shake?0:1],['sAmb',SET.amb?0:1],['sGrain',SET.grain?0:1]].forEach(function(p){
     var el=document.getElementById(p[0]); if(!el) return;
     var bs=el.querySelectorAll('button');
     for(var i=0;i<bs.length;i++) bs[i].className=(i===p[1])?'on':'';
@@ -47,5 +48,6 @@ var Settings={
     toast(Quality.get().label);
   },
   shake:function(off){ SET.shake=off?0:1; SHAKE_ON=!off; paintSet(); saveSet(); },
-  amb:function(on){ SET.amb=on; AMB_ON=!!on; paintSet(); saveSet(); if(on) SFX.ambient(); else SFX.stopAmbient(); }
+  amb:function(on){ SET.amb=on; AMB_ON=!!on; paintSet(); saveSet(); if(on) SFX.ambient(); else SFX.stopAmbient(); },
+  grain:function(on){ SET.grain=on?1:0; Engine.grain(SET.grain); paintSet(); saveSet(); }
 };

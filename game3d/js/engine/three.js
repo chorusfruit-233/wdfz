@@ -129,9 +129,6 @@ ThreeBackend.boot=function(){
 '  vec3 tint=mix(vec3(0.66,0.90,1.02), vec3(1.0,0.98,0.90), smoothstep(0.04,0.50,lm2));',
   '  col*=mix(tint, vec3(1.0), uFx);',
 '  col=col*col*(3.0-2.0*clamp(col,0.0,1.0))*0.28+col*0.72;',
-'  float n=hash(gl_FragCoord.xy+fract(uTime)*91.0);',
-'  float lmN=dot(col,vec3(0.299,0.587,0.114));',
-'  col+=(n-0.5)*(0.012+0.030*(1.0-smoothstep(0.0,0.5,lmN)))*(1.0-uFx)*uGrain;',
 '  col=max(col-0.009*(1.0-uFx),0.0)*(1.0+0.009*(1.0-uFx));',
 '  float vg=distance(uv,vec2(0.5,0.5));',
 '  col*=1.0-0.84*smoothstep(0.20,0.95,vg*1.28)*(1.0-uFx);',
@@ -174,7 +171,15 @@ ThreeBackend.boot=function(){
       '      if(pr>0.0&&pp<0.0016) col=mix(col,vec3(1.0),0.32*uDt);',
       '    }',
       '  }',
-'  gl_FragColor=vec4(toSRGB(col),1.0);',
+'  vec3 outc=toSRGB(col);',
+/* 颗粒加在显示空间、按 24 帧换一次：以前加在线性空间、每帧都换，暗部被伽马放大成满屏跳动的白点。
+   暗处略多、亮处很少；SAN 越低颗粒越重一点（感知反馈的一部分） */
+'  float gn=hash(gl_FragCoord.xy+floor(uTime*24.0)*17.31)-0.5;',
+'  float gLum=dot(outc,vec3(0.299,0.587,0.114));',
+/* 以前满屏的颗粒顺带把纯黑抬亮了一点；颗粒减弱后补一个很浅的暗部抬升，暗处的轮廓仍看得出来 */
+'  outc+=vec3(0.011)*(1.0-smoothstep(0.0,0.3,gLum))*(1.0-uFx);',
+'  outc+=gn*(0.012+0.026*(1.0-smoothstep(0.03,0.45,gLum)))*(1.0+0.7*wob)*(1.0-uFx)*uGrain;',
+'  gl_FragColor=vec4(outc,1.0);',
 '}',
     ].join('\n'),
     depthTest:false,depthWrite:false
@@ -193,6 +198,13 @@ ThreeBackend.boot=function(){
   return GLR;
 };
 
+/* 画面颗粒：设置里的强度（0 关、1 开）乘画质系数（真实档画面干净，颗粒再轻一些） */
+ThreeBackend.grainLevel=1;
+ThreeBackend.grain=function(level){
+  if(level!==undefined)ThreeBackend.grainLevel=level;
+  if(typeof GLR==='undefined'||!GLR||!GLR.postMat)return;
+  GLR.postMat.uniforms.uGrain.value=ThreeBackend.grainLevel*(Quality.get().pbr?0.6:1);
+};
 /* 「真实」档的环境反射：一个暗的灰绿色房间，顶上几根灯管。金属、玻璃、瓷砖上有一点点反光，不会发亮 */
 function buildEnvTex(){
   var pm=new THREE.PMREMGenerator(GLR.renderer), sc=new THREE.Scene(), i;
@@ -227,7 +239,7 @@ ThreeBackend.resize=function(){
   var u=GLR.postMat.uniforms;
   u.tDiffuse.value=GLR.rt.texture;u.tDepth.value=GLR.rt.depthTexture||GLR.rt.texture;
   u.uAO.value=ao?q.ao:0;u.uAA.value=q.samples&&!samples?1:0;
-  u.uBloom.value=q.bloom||0;u.uGrain.value=q.pbr?0.45:1;   /* 真实档：颗粒轻一些，画面干净 */
+  u.uBloom.value=q.bloom||0;ThreeBackend.grain();
   if(q.pbr&&!GLR.envTex)GLR.envTex=buildEnvTex();
   GLR.scene.environment=q.pbr?GLR.envTex:null;
   var RTS=(GLRTEST&&GLRTEST.hq)?1:q.scale;
