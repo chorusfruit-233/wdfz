@@ -387,20 +387,28 @@ function kill(msg,fx){
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
   var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3);
   if(!wake) clearSave();                 /* 没有下一次了：不能再读档回来 */
-  var _deadId=S.deadId=(S.deadId||0)+1;
-  if(!wake) setTimeout(function(){
-    if(S.deadId!==_deadId||!S.dead) return;
-    var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
-  },_hold);
-  os(msg,2.6,OS_FORCE);
-  setTimeout(function(){
-    if(S.deadId!==_deadId||!S.dead) return;
+  var _deadId=S.deadId=(S.deadId||0)+1, finished=false;
+  /* 演出放完（或被跳过）只收一次：墓志铭、死亡界面或预知梦惊醒。旧的一次死亡被复活取消后不会再写回来 */
+  function finish(){
+    if(finished||S.deadId!==_deadId||!S.dead) return;
+    finished=true; if(DEATH_PENDING&&DEATH_PENDING.id===_deadId) DEATH_PENDING=null;
     if(wake){ dreamWake(); return; }
+    var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
     var el=document.getElementById('die');
     document.getElementById('diem').textContent=msg;
     el.style.display='flex';
     try{ var rv=document.getElementById('dieRevive'); if(rv) rv.style.display=(typeof DEV!=='undefined'&&DEV.on)?'block':'none'; }catch(e){}
-  },_hold);
+  }
+  DEATH_PENDING={id:_deadId,finish:finish,at:performance.now()};
+  os(msg,2.6,OS_FORCE);
+  setTimeout(finish,_hold);
+}
+/* 死亡演出可以跳过：至少看 0.6 秒（避免本来想点别的、一下子把整段跳没了），之后点一下或按空格 / 回车直接到结果 */
+var DEATH_PENDING=null;
+function deathSkip(){
+  if(!DEATH_PENDING||!S.dead) return false;
+  if(performance.now()-DEATH_PENDING.at<600) return false;
+  DEATH_PENDING.finish(); return true;
 }
 
 function elixirSave(){

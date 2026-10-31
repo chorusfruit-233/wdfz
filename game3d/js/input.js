@@ -148,6 +148,11 @@ function initInput(){
       if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
       cutSkip(); return;
     }
+    /* 死亡演出中：按下跳到结果（死亡界面或惊醒）；补发的 click 同样不能点到随后出现的按钮 */
+    if(S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING&&!(typeof DEV!=='undefined'&&DEV.on)){
+      if(deathSkip()&&(e.pointerType==='touch'||e.pointerType==='pen'))INPUT.touchHandled=true;
+      return;
+    }
     if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();
     else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen'&&INPUT.stickId===null)useMouseInput();
   },{capture:true,passive:true});
@@ -166,6 +171,9 @@ function initInput(){
       return;
     }
     if(S.screen==='cut'){ if(k===' '||k==='enter'||k==='escape'){e.preventDefault();cutSkip();} return; }   /* 跳过结局演出 */
+    if(S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING&&(k===' '||k==='enter'||k==='escape')){   /* 跳过死亡演出 */
+      e.preventDefault();if(!e.repeat)deathSkip();return;
+    }
     if(S.screen!=='play'||S.dead||e.ctrlKey||e.metaKey||e.altKey)return;
     if(k==='escape'){
       e.preventDefault();if(e.repeat)return;

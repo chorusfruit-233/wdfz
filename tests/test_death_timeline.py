@@ -225,3 +225,52 @@ class DeathTimelineTest(BrowserCase):
           return {turned,sank,count};
         }""")
         self.assertEqual(result, {'turned': True, 'sank': True, 'count': 2})
+
+    def test_death_cinematic_can_be_skipped_once(self):
+        """死亡演出至少看 0.6 秒，之后空格 / 回车 / Esc 直接到死亡界面；只结算一次，旧计时器不会再写一遍。"""
+        page = self.page()
+        page.evaluate("S.diff='hard';S.day=2;S.talent='code';S.bag=[];kill('一只手按住了我的头顶。','grip')")
+        early = page.evaluate("deathSkip()")
+        page.wait_for_timeout(700)
+        page.keyboard.press('Space')
+        result = page.evaluate("""() => ({shown:getComputedStyle(document.getElementById('die')).display!=='none',
+          pending:DEATH_PENDING,epi:document.getElementById('dieepi').textContent})""")
+        page.evaluate("document.getElementById('dieepi').textContent='改过'")
+        page.keyboard.press('Enter')
+        page.wait_for_timeout(int(page.evaluate("DeathTimeline.duration('grip')*1000")) + 300)
+        after = page.evaluate("document.getElementById('dieepi').textContent")
+        self.assertFalse(early)
+        self.assertTrue(result['shown'])
+        self.assertIsNone(result['pending'])
+        self.assertTrue(result['epi'])
+        self.assertEqual(after, '改过')
+
+    def test_tapping_through_a_death_does_not_press_the_menu_button(self):
+        page = self.page(touch=True)
+        page.evaluate("S.diff='hard';S.day=2;S.talent='code';S.bag=[];kill('黑影围了上来。','vignette')")
+        page.wait_for_timeout(700)
+        page.touchscreen.tap(195, 420)
+        page.wait_for_timeout(400)
+        self.assert_js(page, "getComputedStyle(document.getElementById('die')).display!=='none'&&S.screen==='play'&&S.dead")
+
+    def test_every_ending_storyboard_plays_through_and_finishes_once(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+          const out={};
+          for(const id of ['car','face','beast','portal']){
+            if(id==='car'){doEnterRoom('garage1');}else if(id==='beast'){doEnterRoom('teach1');}else if(id==='portal'){doEnterRoom('lab1');}
+            CUT.enabled=true;let done=0;const bad=[];
+            playCut(id,()=>{done++;S.screen='play';});
+            const grp=CUT.grp;
+            for(let i=0;i<120&&CUT.on;i++){cutTick(0.1);
+              const p=GLR.cam.position;if(![p.x,p.y,p.z].every(Number.isFinite))bad.push(i);}
+            cutSkip();cutSkip();
+            out[id]={done,bad:bad.length,cleaned:!CUT.on&&!CUT.grp&&!GLR.scene.children.includes(grp),mode:S.mode};
+          }
+          CUT.enabled=false;return out;
+        }""")
+        for cut_id, r in result.items():
+            self.assertEqual(r['done'], 1, cut_id)
+            self.assertEqual(r['bad'], 0, cut_id)
+            self.assertTrue(r['cleaned'], cut_id)
+        self.assertEqual(result['car']['mode'], 'out')     # 开车那条从车库切到校门外

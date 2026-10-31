@@ -544,6 +544,9 @@ var SFX=(function(){
     bigBell:function(v){ bellHit(98,0.12*(v===undefined?1:v),0,0.7); },
     schoolBell:schoolBell,
     vanish:function(){ noise(0.5,0.035,140,0,'lowpass',1,0.7,0.05); tone(52,0.6,'sine',0.03,38,0,0.5); },   /* 远处的人影不见了的那一下 */
+    /* 结局演出：车库里点火；门那边装置充能的嗡声越来越高 */
+    engine:function(){ tone(46,3.4,'sawtooth',0.05,92,0,0.3); noise(3.2,0.045,170,0,'lowpass',1,0.4,0.5); tone(92,2.6,'square',0.012,140,0.6,0.3); },
+    hum:function(){ tone(110,6,'sine',0.035,330,0,0.6); tone(165,6,'sine',0.02,495,0.5,0.6); noise(6,0.02,900,0,'bandpass',3,0.5,3); },
     alarm:function(){ tone(520,0.8,'square',0.05,180); },
     anomaly:function(id){
       var i;

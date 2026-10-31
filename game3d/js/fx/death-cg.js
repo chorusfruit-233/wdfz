@@ -28,7 +28,7 @@ var DeathCG=(function(){
     this.type=type; this.F=F; this.preview=preview; this.rand=rng(type);
     this.base=preview?null:(S.deathView||{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0});
     this.shk=(typeof SHAKE_ON==='undefined'||SHAKE_ON)?1:0;
-    this.flashed={}; this.lift=0; this.veilMesh=null;
+    this.flashed={}; this.cued={}; this.lift=0; this.veilMesh=null;
   }
   Ctx.prototype={
     /* 加到视线坐标系，并登记为动画对象 */
@@ -65,11 +65,46 @@ var DeathCG=(function(){
     flash:function(id,k,at,v){
       if(k>=at&&!this.flashed[id]){ this.flashed[id]=1; GLR.flash=Math.max(GLR.flash||0,Math.min(0.5,v)); }
     },
+    /* 声音跟着分镜的节拍：到点只响一次（声音先行，画面里的事情紧跟着发生） */
+    cue:function(id,k,at,fn){
+      if(k>=at&&!this.cued[id]){ this.cued[id]=1; try{ fn(); }catch(e){} }
+    },
     /* 让一个东西的 +z 正面朝向镜头 */
     face:function(o){ o.rotation.y=Math.atan2(-o.position.x,-o.position.z); }
   };
 
   var CG={};
+
+  /* ---- trash：第三个桶。从桶里往上看，盖子合上，桶沿漏进一圈光；外面有人敲了两下 ---- */
+  CG.trash={
+    build:function(c){
+      var oldWorld=S.mode==='in'?GLR.roomMesh:GLR.outMesh, i;
+      if(oldWorld){ANFX.hiddenWorld={mesh:oldWorld,visible:oldWorld.visible};oldWorld.visible=false;}
+      var green=mat(0x2e4a36,undefined,{side:THREE.DoubleSide}), rib=mat(0x56684f);
+      c.mesh(new THREE.CylinderGeometry(0.62,0.55,1.25,22,1,true),green,0,0.625,0);
+      for(i=0;i<2;i++){ var t=c.mesh(new THREE.TorusGeometry(0.6-i*0.03,0.018,6,24),rib,0,0.3+i*0.7,0); t.rotation.x=Math.PI/2; }
+      for(i=0;i<5;i++) c.box(0.18+((i*7)%5)*0.03,0.04,0.14,0xb8b2a6,undefined,((i*37)%9-4)*0.08,0.03,((i*53)%9-4)*0.07);   /* 桶底的废纸 */
+      c.hinge=new THREE.Group(); c.add(c.hinge,-0.62,1.25,0);
+      var lid=new THREE.Mesh(new THREE.CylinderGeometry(0.64,0.64,0.05,22),mat(0x24402c)); lid.position.x=0.62; c.hinge.add(lid);
+      c.hinge.userData.trashLid=true; c.hinge.rotation.z=1.9;          /* 一开始盖子是开着的 */
+      c.lamp=c.mesh(new THREE.CircleGeometry(0.45,20),mat(0xe8e2cc,undefined,{fog:false}),0.4,3.0,0.2); c.lamp.rotation.x=Math.PI/2;   /* 垃圾房顶上的灯 */
+      c.slit=c.mesh(new THREE.TorusGeometry(0.63,0.008,4,40),mat(0xf0e6c8,0.5,{fog:false}),0,1.24,0); c.slit.rotation.x=Math.PI/2;   /* 盖子边上漏进来的一圈光 */
+      c.veil(0x000000);
+    },
+    update:function(c,k,view){
+      var close=ss(k,0.6,1.25);
+      var kn=Math.max(k>=1.9?Math.exp(-(k-1.9)*8):0,k>=2.35?Math.exp(-(k-2.35)*8):0);
+      c.cam(view,k,0,0.95*ss(k,0,0.4)+0.05*Math.sin(k*60)*kn*c.shk,-0.85*ss(k,0.2,1.0));
+      c.hinge.rotation.z=1.9*(1-close);
+      c.lamp.visible=close<0.97;
+      c.slit.visible=close>0.9;
+      c.slit.material.opacity=(0.22+0.55*kn)*(1-ss(k,2.8,3.4));
+      c.cue('shut',k,1.2,function(){ SFX.door(); });
+      c.cue('k1',k,1.9,function(){ SFX.door(); });
+      c.cue('k2',k,2.35,function(){ SFX.door(); });
+      c.shade(0.55*ss(k,1.1,1.3)*(1-0.5*kn)+0.4*ss(k,3.0,3.5));
+    }
+  };
 
   /* ---- grip：脚下伸手（巡察者、驾驶追兵、白名单、车库） ---- */
   CG.grip={
@@ -98,6 +133,7 @@ var DeathCG=(function(){
         h.rotation.y=Math.atan2(-h.position.x,-h.position.z);
         h.rotation.x=-0.9*(1-up)-0.6*reach;               /* 先是手腕翻上来，然后手指朝上抓 */
       });
+      c.cue('grab',k,1.5,function(){ SFX.sting(); });
       c.shade(0.9*ss(k,2.8,3.2));
     }
   };
@@ -176,6 +212,7 @@ var DeathCG=(function(){
       c.tw.rotation.z=0.14*ss(k,0.2,0.8)*(1-end);                       /* 歪头，和你一样的角度 */
       c.tw.rotation.x=0.22*reach;                                        /* 停在一臂远，俯身凑过来看你 */
       c.cam(view,k,0,-0.04,0);
+      c.cue('in',k,2.6,function(){ SFX.vanish(); });
       c.shade(0.92*ss(k,2.7,3.1));
     }
   };
@@ -374,6 +411,7 @@ var DeathCG=(function(){
     update:function(c,k,view){
       var turn=0.22*ss(k,0.15,0.5)*(1-ss(k,0.5,0.8))+Math.PI*ss(k,0.8,1.7);   /* 瞥一眼，又转回去，然后被扭过去 */
       c.cam(view,k,turn,-0.04,0);
+      c.cue('giggle',k,1.75,function(){ SFX.smile('behind'); });
       var close=ss(k,2.0,2.9);
       c.smile.position.z=-1.0+0.55*close;
       c.smile.scale.setScalar(1+0.5*close);
@@ -462,6 +500,7 @@ var DeathCG=(function(){
       c.bell.rotation.z=0.22*Math.sin(k*4)*(1-drop)+0.03*Math.sin(k*50)*ring;
       c.spot.scale.setScalar(0.3+0.8*seg(k,0,1.45)); c.spot.visible=k<1.5;
       c.flash('hit',k,1.45,0.3);
+      c.cue('hit',k,1.45,function(){ SFX.bigBell(1); });
       c.shade(0.4*ss(k,1.5,1.7)+0.5*ss(k,3.0,3.4));
     }
   };
@@ -610,6 +649,7 @@ var DeathCG=(function(){
       c.walls[0].position.x=-1.3+0.5*narrow; c.walls[1].position.x=1.3-0.5*narrow;
       c.man.visible=k>2.95;
       c.flash('man',k,2.95,0.2);
+      c.cue('man',k,2.95,function(){ SFX.sting(); });
       c.shade(0.9*ss(k,3.1,3.4));
     }
   };
@@ -631,11 +671,13 @@ var DeathCG=(function(){
         var lit=!(on(0.35,0.42)&&i%2)&&!on(0.7,0.78)&&k<1.0+(7-i)*0.15;
         if(i===0) lit=lit||on(2.35,2.45)||on(2.6,2.66)||k>=3.05;
         l.visible=lit;
+        c.cue('off'+i,k,1.0+(7-i)*0.15,function(){ SFX.crackle(0.5+0.06*(7-i),0); });   /* 一盏盏灭下来，每盏噼啪一声，越近越响 */
       });
       var blink=on(2.35,2.45)?1:on(2.6,2.66)?2:k>=3.05?3:0;
       c.pale.visible=blink>0;
       c.pale.position.z=[2.2,2.2,1.3,0.55][blink];
       c.flash('last',k,3.05,0.25);
+      c.cue('last',k,3.05,function(){ SFX.sting(); });
       c.shade(0.9*ss(k,1.4,2.3));                       /* 灯灭到哪里，黑到哪里；只剩灯和那个人看得见 */
     }
   };
@@ -664,6 +706,7 @@ var DeathCG=(function(){
         c.face(f);
       });
       c.big.visible=end>0;
+      c.cue('big',k,2.6,function(){ SFX.smile('jump'); });
       var bs=0.8+0.6*end; c.big.scale.setScalar(bs); c.big.position.set(0,cy-1.7*bs,0.9-0.2*end); c.face(c.big);
       c.shade(0.85*ss(k,2.95,3.2));
     }
