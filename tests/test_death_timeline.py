@@ -59,6 +59,18 @@ class DeathTimelineTest(BrowserCase):
         }""")
         self.assertEqual(failures, [])
 
+    def test_stall_hand_rises_then_reaches_player(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+          deathFX('hand',{preview:true});let hand=ANFX.items[0],start=hand.position.clone();
+          anfxUpdate(.8);let raised=hand.position.clone();anfxUpdate(.8);let reached=hand.position.clone();
+          let player=anfxW2S(S.x,S.y),horizontal=p=>Math.hypot(p.x-player.x,p.z-player.z);
+          let r={raised:raised.y>start.y+.8,approached:horizontal(reached)<horizontal(raised),
+                 phase:ANFX.timeline.phase};
+          let group=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(group);return r;
+        }""")
+        self.assertEqual(result, {'raised': True, 'approached': True, 'phase': 'struggle'})
+
     def test_real_death_resources_are_released_once(self):
         page = self.page()
         result = page.evaluate("""() => {

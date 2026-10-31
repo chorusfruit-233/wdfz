@@ -343,8 +343,14 @@ function deathFX(type,options){
     else if(T==='hand'){
       var gx=S.x+Math.cos(S.ang)*9, gy=S.y+Math.sin(S.ang)*9;
       var q=anfxW2S(gx,gy);
-      push(anfxBox(grp,dark,0.28,0.07,0.24,q.x,-0.3,q.z));
-      for(i=0;i<4;i++) push(anfxBox(grp,dark,0.055,0.06,0.22,q.x-0.10+i*0.068,-0.3,q.z+0.13));
+      var gap=new THREE.Mesh(new THREE.PlaneGeometry(1.5,0.55),anfxMat(0x020304,0.95));
+      gap.rotation.x=-Math.PI/2;gap.rotation.z=-S.ang;
+      gap.position.set(q.x,0.015,q.z);grp.add(gap);
+      var stallHand=new THREE.Group();stallHand.add(fxMesh('hand'));
+      stallHand.position.set(q.x,-0.35,q.z);
+      stallHand.rotation.y=-Math.PI/2-S.ang;stallHand.rotation.x=-0.8;
+      stallHand.scale.setScalar(1.4);stallHand.userData={stallHand:true};
+      grp.add(stallHand);push(stallHand);
     }
     else if(T==='neck'){
       var nq=anfxW2S(S.x+Math.cos(S.ang)*2.6, S.y+Math.sin(S.ang)*2.6);
@@ -778,7 +784,17 @@ function anfxUpdate(dt){
         }
       }
     } else if(dtp==='hand'){
-      for(it=0;it<ANFX.items.length;it++){ ob=ANFX.items[it]; ob.position.y=-0.3+Math.min(1.6,kk*1.7); }
+      var handProgress=ANFX.timeline.progress;
+      var handRise=clamp((handProgress-0.12)/0.34,0,1);
+      var handReach=clamp((handProgress-0.48)/0.32,0,1);
+      var handPlayer=anfxW2S(S.x,S.y);
+      for(it=0;it<ANFX.items.length;it++){
+        ob=ANFX.items[it];var hu=ob.userData||{};
+        if(!hu.stallHand)continue;
+        ob.position.set(hu.deathOrigin.x+(handPlayer.x-hu.deathOrigin.x)*handReach*0.68,
+          -0.35+handRise*1.45,hu.deathOrigin.z+(handPlayer.z-hu.deathOrigin.z)*handReach*0.68);
+        ob.rotation.x=-0.8+handRise*0.8+handReach*0.35;
+      }
     } else if(dtp==='swarm'||dtp==='shatter'){
       var pp=anfxW2S(S.x,S.y);
       for(it=0;it<ANFX.items.length;it++){
