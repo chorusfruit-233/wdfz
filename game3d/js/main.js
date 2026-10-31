@@ -191,7 +191,7 @@ function clearIntroTimers(){
 function freshState(diff){
   if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
-  fnPeopleClear();GLR.fnNorm=0;VisualState.worldNorm=0;
+  fnPeopleClear();Engine.resetFakeNormal();VisualState.worldNorm=0;
   if(DEV.on)Dev.close(false);
   Dev.clearPreview();Dev.clearAnimation();
   LESSON.close(false);
@@ -328,7 +328,7 @@ var Game={
   quit:function(){
     if(typeof CarChase!=='undefined'&&CarChase.active()){autoSave();CarChase.clearVisual();}
     if(typeof Inspection!=='undefined')Inspection.clearFx();
-    fnPeopleClear();GLR.fnNorm=0;
+    fnPeopleClear();Engine.resetFakeNormal();
     if(DEV.on)Dev.close(false);
     Dev.clearPreview();Dev.clearAnimation();
     LESSON.close(false);
