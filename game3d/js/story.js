@@ -298,6 +298,7 @@ function kill(msg,fx){
   if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
+  if(typeof Inspection!=='undefined')Inspection.cancel();
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
   var f=document.getElementById('flash');

@@ -140,6 +140,7 @@ function updateHUD(){
   hudEl('place').textContent=currentPlaceName();
   var p=periodAt(S.tsec), pe=hudEl('period'), leave=onLeave(), examing=S.exam&&p[3]==='教室';
   pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec)));
+  if(typeof Inspection!=='undefined'&&Inspection.active())pe.textContent='学生会检查 · 教室';
   /* 时段前面的小圆点：绿 = 在该在的地方；黄 = 不在，违规在涨；蓝 = 请假中；红 = 考试 */
   var pc=leave?'leave':(S.wrong?'warn':(examing?'exam':'ok'));
   if(pe.className!==pc) pe.className=pc;
@@ -178,6 +179,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  if(typeof Inspection!=='undefined')Inspection.clearFx();
   if(DEV.on)Dev.close(false);
   Dev.clearPreview();Dev.clearAnimation();
   LESSON.close(false);
@@ -311,6 +313,7 @@ var Game={
     Game.resume();
   },
   quit:function(){
+    if(typeof Inspection!=='undefined')Inspection.clearFx();
     if(DEV.on)Dev.close(false);
     Dev.clearPreview();Dev.clearAnimation();
     LESSON.close(false);

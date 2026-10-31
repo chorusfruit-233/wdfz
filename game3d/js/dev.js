@@ -269,6 +269,7 @@ var Dev={
     smileClear();
   },
   prepareTeleport:function(){
+    if(typeof Inspection!=='undefined')Inspection.cancel();
     Dev.clearPreview();if(UI.chooseOpen)UI.closeChoice();Dev.endActiveAnomaly();
     clearSearch();patReset();spiralReset();resetInputState();
   },

@@ -82,6 +82,7 @@ function advanceGameTime(minutes){
   while(remaining>0){
     var before=S.tsec, step=Math.min(remaining,Math.max(0,1500-before));
     S.tsec+=step; remaining-=step;
+    if(typeof Inspection!=='undefined')Inspection.cross(S.day,before,S.tsec);
     if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=LIGHTS_OUT){
       S.fn.note=true;
       os('我：口袋里多了一张对折的纸。上面写着——灯前看字字如旧，月下认人人已非。　　　　　——笑时莫出声。',8);
@@ -166,17 +167,20 @@ function settleSan(){
 /* 仅保留日常恢复；危险环境、异象和躲避巡察者期间不能由课表恢复抵消伤害。 */
 function sanTick(dt,rule,exam){
   if(S.san<=0){settleSan();if(S.dead)return;}
-  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on)rule.san(dt,exam);
+  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt,exam);
   if(S.pillT>0){var pd=Math.min(dt,S.pillT);S.san+=PILL_RATE*pd;S.pillT-=pd;}
   if(PAT.state==='walk'&&(PAT.locked||HIDE.on))S.san-=dt*(PAT.locked?0.35:0.18);
   settleSan();
 }
-function addViolation(amount){
-  if(amount>0&&(eveningActivity(S.tsec)||onLeave()))return;
+function addViolation(amount,source){
+  if(amount>0&&(onLeave()||(eveningActivity(S.tsec)&&source!=='inspection')))return;
   S.viol=clamp(S.viol+amount,0,100);
 }
 /* 违规：不在该在的地方（或熄灯后）就涨，否则慢慢降；请假中不算 */
 function violTick(dt,nw,rule,exam){
+  if(typeof Inspection!=='undefined'&&Inspection.active()){
+    S.wrong=!inClassroomHere();leaveTick();try{ncUpdate(dt);}catch(e){}return;
+  }
   var wrong=!rule.there();
   var vioMul=1;
   if(nw==='教室') vioMul=exam?2.4:1.4;
@@ -200,6 +204,7 @@ function violTick(dt,nw,rule,exam){
 /* 同化：坐得住、按时回宿舍就涨；满值直接融入。 */
 function ttTick(dt,nw){
   if(S.tt>=100){resolveAssimilation();return;}
+  if(typeof Inspection!=='undefined'&&Inspection.active())return;
   if(S.seated&&nw==='教室') S.tt+=1.5*dt;
   else if(inDorm()&&S.tsec>=EVENING) S.tt+=1.0*dt;
   else S.tt=Math.max(0,S.tt-0.35*dt);
@@ -219,6 +224,8 @@ function updateSystems(dt){
   clockTick(dt);
   try{ patEndIfInvalid(); }catch(e){}
   try{ fnTick(dt); }catch(e){}
+  if(typeof Inspection!=='undefined')Inspection.tick(dt);
+  if(S.dead)return;
   if(S.exam&&(S.tsec>=LIGHTS_OUT||S.tsec<440)){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
   examTick(dt);
   var exam=examNow(), nw=needWhere(S.tsec), rule=NEED_RULE[nw];

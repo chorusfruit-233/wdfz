@@ -106,6 +106,9 @@ function lightState(){
     st.hemi= g?0.015:(0.022+0.030*day);
     st.dir = g?0.015:(0.02+0.09*day);
     st.ptK = g?0.8:(0.30+0.34*day);          /* 灯管老了：白天也只亮一半，夜里更暗、会闪 */
+    if(typeof AN!=='undefined'&&AN.active&&AN.id==='blackout'){
+      st.amb*=0.16;st.hemi*=0.16;st.dir*=0.12;st.ptK=0;st.blackout=true;
+    }
   }else{
     st.amb = 0.075+0.12*day;
     st.hemi= 0.10+0.24*day;
@@ -161,7 +164,7 @@ function updateLighting(){
   var pf=GLR.patrolFlick||0, pr=GLR.patrolRed||0, sum=0;
   for(i=0;i<GLR.roomLights.length;i++){
     var base=GLR.roomLightBase[i]*s.ptK;
-    var flick=roomFlicker(i,tt,s.day)*lampHealth(i);
+    var flick=s.blackout?0:roomFlicker(i,tt,s.day)*lampHealth(i);
     if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
     lightCrackle(i,flick);
     sum+=flick;
@@ -174,15 +177,15 @@ function updateLighting(){
   }
   /* 灯盘本身（自发光材质）跟着一起闪、一起变红 */
   var em=MATS.emit;
-  if(em){ var k=GLR.roomLights.length?clamp(sum/GLR.roomLights.length,0.2,1):1; em.color.setRGB(k,k*(1-0.9*pr),k*(1-0.92*pr)); }
+  if(em){ var k=s.blackout?0:(GLR.roomLights.length?clamp(sum/GLR.roomLights.length,0.2,1):1); em.color.setRGB(k,k*(1-0.9*pr),k*(1-0.92*pr)); }
   /* 快坏的灯管（单独一种材质）：大部分时间暗着发灰，隔一阵抽搐似的亮几下 */
   var ed=MATS.emitDying;
-  if(ed){ var dk=dyingTube(tt); ed.color.setRGB(dk,dk*(1-0.9*pr),dk*(0.97-0.9*pr)); }
+  if(ed){ var dk=s.blackout?0:dyingTube(tt); ed.color.setRGB(dk,dk*(1-0.9*pr),dk*(0.97-0.9*pr)); }
   lampTick(s);
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
   var wn=GLR.worldNorm||0;
   GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
-  GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
+  GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz*(s.blackout?0.08:1);
   try{ shadeTick(s); }catch(e){}
 }
 /* 灯一下子暗下去（接触不良那一跳）的瞬间：近处的灯管噼啪一声，按方位分左右 */
