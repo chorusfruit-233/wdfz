@@ -435,13 +435,17 @@ class ControlsTest(BrowserCase):
         self.assertAlmostEqual(result['snack'], 29, delta=.02)
         self.assertLess(result['backlog'], .017)
 
-    def test_ancestor_window_is_slowed_and_dropping_item_ends(self):
+    def test_ancestor_window_is_slowed_and_drop_requires_dialogue(self):
         page = self.page()
-        self.assert_js(page, 'Math.abs((BEAST_T1-BEAST_T0)*60/rateAt(BEAST_T0+0.01)-15)<0.01')
+        self.assert_js(page, 'Math.abs((BEAST_SLOW_T1-BEAST_SLOW_T0)*60/rateAt(BEAST_T0)-10)<0.01')
         page.evaluate(
             "var R=INTERIORS.teach1;S.mode='in';S.room='teach1';S.x=R.ox+59.5*9;S.y=R.oy+17.5*9;"
-            "S.dead=false;RT.beastDrop=false;S.tsec=BEAST_T0+0.05;S.bag=['chalk'];S.bagSel=0;dropSelected()")
-        page.wait_for_function("RT.end==='beast'", timeout=5000)
+            "S.dead=false;RT.beastDrop=false;S.tsec=BEAST_T0+0.001;S.bag=['chalk'];S.bagSel=0;dropSelected()")
+        self.assert_js(page, "RT.beastDrop&&!RT.end&&!hasItem('chalk')")
+        page.evaluate("S.tsec=BEAST_SLOW_T1+1;useStall()")
+        self.assert_js(page, "UI.chooseOpen&&!RT.end")
+        page.locator('#choices button').first.click()
+        self.assert_js(page, "RT.end==='beast'")
 
     def test_bell_tower_spiral_stairs_and_exam_mode(self):
         page = self.page()
@@ -689,14 +693,12 @@ class ControlsTest(BrowserCase):
         page.wait_for_function("S.screen==='end'&&RT.end==='portal'", timeout=5000)
         self.assert_js(page, "!hasItem('coil')&&document.getElementById('ends').textContent.includes('真 结 局')")
 
-    def test_trash_is_a_fake_ending_you_can_wake_from(self):
+    def test_trash_is_a_death_and_respects_survival_item(self):
         page = self.page()
-        page.evaluate("doEnterRoom('trash1');running=false;triggerEnding('trash')")
-        self.assert_js(page, "S.screen==='end'&&document.getElementById('ends').textContent.includes('假 结 局')&&!!loadGame()")
-        page.evaluate("fakeWake()")
-        self.assert_js(page, "S.screen==='play'&&S.room==='teach1'&&RT.trashFake===1&&!document.getElementById('ends')")
-        page.evaluate("doEnterRoom('trash1');running=false;S.tsec=1051;tryTrashRoute()")
-        self.assert_js(page, "S.screen==='play'")
+        page.evaluate("doEnterRoom('trash1');running=false;S.diff='hard';S.talent='code';S.bag=['elixir'];tryTrashRoute()")
+        self.assert_js(page, "!S.dead&&!hasItem('elixir')&&!endsSeen().trash")
+        page.evaluate("tryTrashRoute()")
+        self.assert_js(page, "S.dead&&S.death==='deep'&&!endsSeen().trash&&!loadGame()")
 
     def test_coin_buys_meal_and_vending_items(self):
         page = self.page()
@@ -1285,7 +1287,7 @@ class ControlsTest(BrowserCase):
     def test_day_budget_reflects_three_minute_breaks_and_eight_minute_activities(self):
         page = self.page()
         mins = page.evaluate("""(()=>{var t=SCHED.reduce((n,p)=>n+(p[1]-p[0])/p[4],0);
-            return t+(BEAST_T1-BEAST_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
+            return t+(BEAST_SLOW_T1-BEAST_SLOW_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
         self.assertTrue(43.7 <= mins <= 43.9, mins)
         free = page.evaluate("SCHED.filter(p=>p[3]==='自由'&&p[0]<LIGHTS_OUT).reduce((n,p)=>n+(p[1]-p[0])/p[4],0)")
         self.assertGreaterEqual(free, 34)          # 六次课间加午、晚活动
@@ -1436,9 +1438,9 @@ class ControlsTest(BrowserCase):
                 page.evaluate("S.bag=['brolly','torch','watch'];S.hot=['brolly','torch'];USE.brollyShield=false;USE.torch=false;UI.renderHot();updateHUD()")
                 status = page.locator('#status').bounding_box()
                 book = page.locator('#tBook').bounding_box()
-                seconds = page.locator('#secclock').bounding_box()
+                clock = page.locator('#clock').bounding_box()
                 self.assertLess(status['x']+status['width'], book['x'])
-                self.assertLessEqual(seconds['x']+seconds['width'], status['x']+status['width'])
+                self.assertLessEqual(clock['x']+clock['width'], status['x']+status['width'])
                 stick = page.locator('#stick').bounding_box()
                 for selector in ('#hot .hslot', '#tTorch'):
                     for control in page.locator(selector).all():

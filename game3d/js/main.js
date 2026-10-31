@@ -130,9 +130,9 @@ function hudEl(id){
 function updateHUD(){
   var feel=hudEl('sanfeel'),stage=sanityStage();
   if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=SAN_FEEL[stage];}
-  hudEl('clock').textContent=fmtClock(S.tsec);
-  var sc=hudEl('secclock');                                   /* 手表 / 秒表天赋：右上角显示到秒 */
-  if(sc){ var hs=hasSeconds(); sc.hidden=!hs; if(hs) sc.textContent=fmtClockS(S.tsec); }
+  hudEl('clock').textContent=hasClock()?fmtClock(S.tsec):'时间不明';
+  var sc=hudEl('secclock');
+  if(sc){sc.hidden=true;sc.textContent='';}
   var cr=hudEl('cross');
   if(cr){ cr.style.display=playerInputAllowed()?'block':'none'; }
   try{ anwTick(dtG); }catch(e){}

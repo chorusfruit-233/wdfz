@@ -79,7 +79,7 @@ var ITEM_USE={
   elixir:function(){ os('我：留着。没有说明书，可我知道它什么时候该吃——到时候它自己会起作用。',3.2); },
   seal:function(){ os('我：符纸在口袋里很安静。等那个高个子盯上我的时候，它才会动。',3.2); },
   coil:useMaterial, lens:useMaterial, vial:useMaterial,
-  watch:function(){ toast('现在是 '+fmtClockS(S.tsec)); os('我：现在是 '+fmtClockS(S.tsec)+'。秒针走得很稳。',2.6); },
+  watch:function(){ toast('现在是 '+fmtClock(S.tsec)); os('我：现在是 '+fmtClock(S.tsec)+'。',2.6); },
   compass:function(){ useCompass(); },
   memo:function(){
     S.spots.data=1; S.spots.comp=1; UI.spotsDirty=true;
@@ -169,19 +169,15 @@ function dropSelected(){
   os('我：我把「'+ITEMS[id].n+'」放下了。',2.4);
   if(S.mode==='in'&&inToiletHere()&&S.room==='teach1'&&!RT.beastDrop){
     if(inBeastWindow()){
-      /* 隔间门上刻的是「11:45:00 放下一样东西」：时间对了，放下就是那条路 */
       RT.beastDrop=true;
       addClue('beast');
       os('我：东西刚落地，就被地砖缝里的什么接住了。很轻的一声："嗯。" 第三个隔间的门锁，自己弹开了。',4,OS_FORCE);
-      setTimeout(function(){ if(!S.dead&&S.screen==='play') triggerEnding('beast'); },2200);
-    }else if(Math.abs(S.tsec-BEAST_T0)<20){
-      os('我：东西落在地上，什么也没发生。门上刻的是「11:45:00」——差了几秒，还是差了几分钟？',3.6);
+      autoSave();
     }
   }
 }
-/* 《先辈》的时间窗：11:45:00–11:45:10。这 10 秒在 core.js 里被放慢到约 15 个真实秒 */
 function inBeastWindow(){ return S.tsec>=BEAST_T0&&S.tsec<BEAST_T1; }
-function hasSeconds(){ return S.talent==='watch'||hasItem('watch'); }
+function hasClock(){ return S.talent==='watch'||hasItem('watch'); }
 
 function addClue(id){
   if(!S.clues[id]) S.clues[id]=S.day;

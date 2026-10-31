@@ -180,7 +180,7 @@ function timeSkipCard(mins,actName,tsec){
   var i=el.querySelector?el.querySelector('i'):null;
   var em=el.querySelector?el.querySelector('em'):null;
   if(b) b.textContent='…'+mins+' 分钟过去了';
-  if(i) i.textContent=fmtClock(tsec);
+  if(i) i.textContent=hasClock()?fmtClock(tsec):periodAt(tsec)[2];
   if(em) em.textContent=actName||'';
   el.classList.add('on');
   if(SKIP_T) clearTimeout(SKIP_T);
@@ -650,5 +650,5 @@ function useData(){
 }
 function tryGateWest(){
   if(!RT.hacked||!RT.data){ os('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); addClue('gatew'); return; }
-  triggerEnding('face');
+  FaceChallenge.open();
 }

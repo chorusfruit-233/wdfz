@@ -100,7 +100,7 @@ function advanceGameTime(minutes){
         }
       }
     }
-    if(S.tsec>=1500) S.tsec=440;
+    if(S.tsec>=1500-1e-9) S.tsec=440;
     else if(step<=0) break;
   }
 }
@@ -139,20 +139,17 @@ var TT_LINES=['我：最近睡得挺好。铃一响就醒，不用闹钟。醒�
   '我：走廊里的人走得真整齐。我低头看了一眼——我的脚也在跟着拍子。',
   '我：座位表上，我的名字在哪一格？……哪一格都是我的名字。',
   '我：我好像一直都在这里。在我转来之前，就在这里。'];
-/* 时间往前走；《先辈》那十秒开始时提醒一句 */
 /* 跨时段时分段消耗真实秒；不能把整步时间按旧时速推进，尤其是 11:45 的慢速窗。 */
 function clockTick(dt){
   var left=Math.max(0,dt);
   while(left>1e-9){
     var t0=S.tsec, boundary=periodAt(t0)[1];
-    if(t0<BEAST_T0-1e-9)boundary=Math.min(boundary,BEAST_T0);
-    else if(t0<BEAST_T1-1e-9)boundary=Math.min(boundary,BEAST_T1);
+    if(t0<BEAST_SLOW_T0-1e-9)boundary=Math.min(boundary,BEAST_SLOW_T0);
+    else if(t0<BEAST_SLOW_T1-1e-9)boundary=Math.min(boundary,BEAST_SLOW_T1);
     var rate=rateAt(t0), seconds=Math.max(0,(boundary-t0)*60/rate);
     if(seconds<1e-9){advanceGameTime(1e-8);continue;}
     var used=Math.min(left,seconds);
     advanceGameTime(used===seconds?boundary-t0:used*rate/60);left-=used;
-    if(t0<BEAST_T0&&S.tsec>=BEAST_T0&&S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].host==='teach')
-      os('我：……秒针忽然走得很慢。走廊里所有的声音都被拖长了。',4,OS_KEEP);
   }
 }
 function sanityStage(value){var n=value===undefined?S.san:value;return n>60?0:n>30?1:n>12?2:3;}
