@@ -214,7 +214,7 @@ var TILE_HINT={
   O:'出去', H:'躲进柜子',
   M:function(){ return hasItem('coin')?'投币（售货机）':'售货机'; },
   k:canteenHint, t:canteenHint,
-  L:'走连廊', Q:'看服务器终端', S:'上下楼', P:'坐下', c:'上车', V:'上车',
+  L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return S.room==='lift_dream'?'走向门':'电梯';}, P:'坐下', c:'上车', V:'上车',
   D:function(){ return (S.room==='lab3')?'门禁管理终端':'使用终端'; },
   X:'钻进去',
   K:function(h,R){ return (R&&R.host==='admin')?'看办公桌':'看实验台'; },
@@ -308,6 +308,7 @@ function tryInteract(){
     exitRoom(); return;
   }
   if(ch==='S'){ stairGo(); return; }
+  if(ch==='J'){ Elevator.interact(); return; }
   if(ch==='H'){ hideIn(hit); return; }
   if(ch==='L'){ useLink(R,hit.c,hit.r); return; }
   if(ch==='Q'){

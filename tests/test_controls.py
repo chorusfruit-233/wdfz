@@ -1143,7 +1143,7 @@ class ControlsTest(BrowserCase):
 
     def test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them(self):
         page = self.page()
-        self.assert_js(page, "TAL_KEYS.length===7&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd'].every(x=>!TAL_KEYS.includes(x))")
+        self.assert_js(page, "TAL_KEYS.length===6&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd','thin'].every(x=>!TAL_KEYS.includes(x))")
         page.evaluate("S.talent='map';saveGame();Game.continue_();running=false")
         self.assert_js(page, "S.talent==='map'&&TALENTS[S.talent].n==='过目不忘'")
 

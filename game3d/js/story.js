@@ -319,6 +319,7 @@ function kill(msg,fx){
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   if(typeof Inspection!=='undefined')Inspection.cancel();
+  if(typeof Elevator!=='undefined')Elevator.cancel();
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
   var f=document.getElementById('flash');
@@ -386,7 +387,7 @@ function dreamWake(){
     doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
     try{ SFX.wake&&SFX.wake(); }catch(e){}
   },function(){
-    os('……我猛地抬起头，后背全是汗。11:40。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,OS_FORCE);
+    os('……我猛地抬起头，后背全是汗。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,OS_FORCE);
     toast(left>0?'预知梦 · 还能再醒 '+left+' 次':'预知梦 · 下一次，不会再醒了');
     autoSave();
   });
