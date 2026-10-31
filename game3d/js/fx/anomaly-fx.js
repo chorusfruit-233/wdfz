@@ -26,7 +26,7 @@ function anfxClear(){
     if(ANFX.kind==='death'&&!ANFX.preview) ThreeBackend.disposeGroup(ANFX.grp);
     ANFX.grp=null;
   }
-  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;
+  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;
   ANFX.timeline=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
@@ -596,12 +596,19 @@ function deathFX(type,options){
       grp.add(fg2); push(fg2);
     }
     else if(T==='squeeze'){
-      for(i=0;i<2;i++){
-        var sq=anfxBox(grp,anfxMat(0x2b3036,1.0),4.2,3.1,0.30,
-             p.x+(i?1.9:-1.9),1.55,p.z);
-        sq.rotation.y=-Math.PI/2-S.ang;
-        sq.userData={s:i?1:-1};
-        push(sq);
+      /* 翻墙：墙外还有一道墙，再外面还有一道；最后两边的墙一起挤过来 */
+      var qa=S.ang, qf={x:Math.cos(qa),z:Math.sin(qa)}, qr={x:-Math.sin(qa),z:Math.cos(qa)}, qrot=Math.PI/2-qa;
+      ANFX.squeeze={o:{x:p.x,z:p.z},f:qf,r:qr};
+      var brick=anfxMat(0x3a2f2c,1.0), cap=anfxMat(0x6c675f,1.0);
+      for(i=0;i<4;i++){                          /* 一道接一道的墙 */
+        var w=new THREE.Group(),wb=new THREE.Mesh(new THREE.BoxGeometry(9,2.8,0.36),brick),wc=new THREE.Mesh(new THREE.BoxGeometry(9.2,0.12,0.5),cap);
+        wb.position.y=1.4;wc.position.y=2.86;w.add(wb);w.add(wc);
+        w.position.set(p.x+qf.x*(1.1+i*1.8),0,p.z+qf.z*(1.1+i*1.8));w.rotation.y=qrot;
+        w.userData={wallRow:i};grp.add(w);push(w);
+      }
+      for(i=0;i<2;i++){                          /* 两侧挤过来的墙 */
+        var sq=anfxBox(grp,anfxMat(0x2b3036,1.0),0.30,3.4,8.0,p.x,1.7,p.z);
+        sq.rotation.y=qrot;sq.userData={s:i?1:-1};push(sq);
       }
     }
     else if(T==='slit'){
@@ -750,17 +757,24 @@ function anfxUpdate(dt){
         fc.position.z=pq4.z+(fz2-pq4.z)*dd;
         if(fc.scale&&fc.scale.setScalar) fc.scale.setScalar(1+kk*0.55);
       }
-    } else if(dtp==='squeeze'){
-      var pq5=anfxW2S(S.x,S.y);
-      var rxv=-Math.sin(S.ang), rzv=Math.cos(S.ang);
-      var gap=Math.max(0.28,1.9-kk*0.95);
+    } else if(dtp==='squeeze'&&ANFX.squeeze){
+      /* 0–2.4 秒：镜头一次次抬起翻过墙头，每翻一道，前面那道就往脚下沉、后面那道露出来；
+         2.4 秒以后两侧的墙挤过来 */
+      var qo=ANFX.squeeze.o, qf2=ANFX.squeeze.f, qr2=ANFX.squeeze.r, climb=Math.min(kk,2.4)/0.6;
       for(it=0;it<ANFX.items.length;it++){
         ob=ANFX.items[it]; var su=ob.userData||{};
-        if(!su.s) continue;
-        var sgn=su.s;
-        ob.position.x=pq5.x+rxv*sgn*gap;
-        ob.position.z=pq5.z+rzv*sgn*gap;
+        if(su.wallRow!==undefined){
+          var over=clamp(climb-su.wallRow,0,1);
+          ob.position.set(qo.x+qf2.x*(1.1+su.wallRow*1.8-over*1.8),-2.9*over,qo.z+qf2.z*(1.1+su.wallRow*1.8-over*1.8));
+          ob.visible=over<1;
+        }else if(su.s){
+          var gap=Math.max(0.3,2.2-Math.max(0,kk-2.4)*1.6);
+          ob.position.x=qo.x+qr2.x*su.s*gap; ob.position.z=qo.z+qr2.z*su.s*gap;
+          ob.visible=kk>2.2;
+        }
       }
+      view.pitch=0.55*Math.abs(Math.sin(Math.min(climb,4)*Math.PI*0.5))*(kk<2.4?1:0)-(kk>2.4?0.08:0);
+      try{syncCamera(0,preview?view:null);}catch(e){}
     } else if(dtp==='drown'){
       var wl=-1.2+Math.min(3.4,kk*1.35);
       for(it=0;it<ANFX.items.length;it++){

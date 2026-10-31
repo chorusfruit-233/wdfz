@@ -6,7 +6,7 @@ var DeathTimeline=(function(){
     vignette:2,floor:2,grip:2.6,neck:3,shadow:2,swarm:2,drown:2,
     water:2,freeze:2,gaze:2.6,stare:2.6,voice:2,bell:2,follow:2.6,
     shatter:2,deep:2,ring:2.6,names:2,chalk:2,loop:2,twin:2,
-    lamps:2.6,slit:3.6,squeeze:2,face:2,wall:2,laugh:2,mirror:2,hand:2,trash:3.6
+    lamps:2.6,slit:3.6,squeeze:3.6,face:2,wall:2,laugh:2,mirror:2,hand:2,trash:3.6
   };
   function duration(type){return durations[type]||durations.vignette;}
   function sample(type,elapsed){
