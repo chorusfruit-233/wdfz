@@ -32,21 +32,27 @@ class ThreatAuditTest(BrowserCase):
         result = page.evaluate("""() => {
           const R=INTERIORS.teach2;let lock=null;
           for(let r=0;r<R.rows&&!lock;r++)for(let c=0;c<R.cols&&!lock;c++)if(R.grid[r][c]==='H')lock={c,r};
-          // 记得你躲过的柜子：一出现就先去那个柜子门口，站一会儿
-          RT.patMem={teach2:lock};patStart();for(let i=0;i<40;i++)patTick(0.1);
           const front=lockerFront(R,lock.c,lock.r);
+          // 你又躲进了上次那个柜子，它没看见你钻进去；它一出现就先去那个柜子门口，站一会儿
+          RT.patMem={teach2:lock};hideIn(lock);HIDE.seen=false;
+          patStart();for(let i=0;i<40;i++)patTick(0.1);
           const goesToLocker=Math.hypot(PAT.tx-front.x,PAT.ty-front.y)<1&&PAT.linger>0;
-          // 你就躲在那个柜子里，它没看见你钻进去：停在门口吓人，但抓不到
-          hideIn(lock);HIDE.seen=false;let near=false;
+          // 停在门口吓人，但抓不到
+          let near=false;
           for(let i=0;i<520&&PAT.state!=='idle';i++){patTick(0.1);if(Math.hypot(PAT.x-front.x,PAT.y-front.y)<12)near=true;}
           const safe=!S.dead;hideOut();patReset();
+          // 记得的柜子走不到（被关着的门隔开）：不去，也不在原地卡着
+          const realPath=window.patPath;window.patPath=(x,y)=>Math.hypot(x-front.x,y-front.y)<1?null:realPath(x,y);
+          patStart();for(let i=0;i<40;i++)patTick(0.1);
+          const skipsUnreachable=Math.hypot(PAT.tx-front.x,PAT.ty-front.y)>=1&&!(PAT.linger>0);
+          window.patPath=realPath;patReset();
           // 跟丢以后：去最后看见你的地方
           patStart();for(let i=0;i<40;i++)patTick(0.1);
           PAT.locked=true;PAT.lock=1;PAT.seenX=S.x;PAT.seenY=S.y;PAT.lost=2.4;
           const sees=window.patSees;window.patSees=()=>false;patTick(0.2);window.patSees=sees;
-          return {goesToLocker,near,safe,lostTarget:PAT.tx===PAT.seenX&&PAT.ty===PAT.seenY&&PAT.linger>0&&!PAT.locked};
+          return {goesToLocker,near,safe,skipsUnreachable,lostTarget:PAT.tx===PAT.seenX&&PAT.ty===PAT.seenY&&PAT.linger>0&&!PAT.locked};
         }""")
-        self.assertEqual(result, {'goesToLocker': True, 'near': True, 'safe': True, 'lostTarget': True})
+        self.assertEqual(result, {'goesToLocker': True, 'near': True, 'safe': True, 'skipsUnreachable': True, 'lostTarget': True})
 
     def test_sanity_feedback_does_not_depend_on_sound_quality_or_input(self):
         for touch in (False, True):

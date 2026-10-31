@@ -296,7 +296,8 @@ function patAppear(){
   PAT.linger=0; PAT.stuckT=0; PAT.seenX=undefined; PAT.seenY=undefined;
   /* 记得你上次躲过的柜子：先去那个柜子门口 */
   var mem=PAT_CFG.lockerMemory&&RT.patMem&&RT.patMem[PAT.room];
-  if(mem&&INTERIORS[PAT.room]){ var lf=lockerFront(INTERIORS[PAT.room],mem.c,mem.r); PAT.tx=lf.x; PAT.ty=lf.y; PAT.linger=PAT_CFG.memLinger; }
+  /* 走不到（比如被关着的门隔开）就不去，免得原地卡两秒再放弃 */
+  if(mem&&INTERIORS[PAT.room]){ var lf=lockerFront(INTERIORS[PAT.room],mem.c,mem.r); if(patPath(lf.x,lf.y)){ PAT.tx=lf.x; PAT.ty=lf.y; PAT.linger=PAT_CFG.memLinger; } }
   patAddFig();
   PAT.path=null;
   os('我：那边多了一个很高的人影。我眨了一下眼，它已经站在更近的地方。',4.2,OS_KEEP);
