@@ -155,7 +155,7 @@ class DebugPanelTest(BrowserCase):
         self.open_panel(page)
         page.evaluate("""S.seated=false;S.ang=.4;S.pitch=-.2;S.eyeLift=0;SHAKE_ON=false;syncCamera(0);
           window.baseY=GLR.cam.position.y;document.getElementById('devdeath').value='grip';
-          Dev.previewDeath();anfxUpdate(1.2);window.previewY=GLR.cam.position.y;
+          Dev.previewDeath();anfxUpdate(DeathTimeline.duration('grip')*.75);window.previewY=GLR.cam.position.y;
           S.ang=1.1;S.pitch=.15;S.eyeLift=.08;syncCamera(0);window.finalRotation=GLR.cam.quaternion.clone();
           anfxUpdate(.2);Dev.clearPreview();""")
         self.assert_js(page,"previewY<baseY-.5&&S.ang===1.1&&S.pitch===.15&&S.eyeLift===.08")
@@ -293,12 +293,13 @@ class DebugPanelTest(BrowserCase):
         page = self.game()
         self.open_panel(page)
         page.evaluate("""window.savedTimeout=window.setTimeout;window.deathTimers=[];
-          window.setTimeout=function(fn,ms){if(ms===3000||ms===2000){deathTimers.push({fn,ms});return 999;}return savedTimeout(fn,ms)};
+          window.neckMs=DeathTimeline.duration('neck')*1000;
+          window.setTimeout=function(fn,ms){if(ms===neckMs||ms===2000){deathTimers.push({fn,ms});return 999;}return savedTimeout(fn,ms)};
           window.confirm=()=>true;S.day=2;S.diff='hard';S.talent='code';S.bag=[];
           document.getElementById('devdeath').value='neck';Dev.death();Dev.revive();
           document.getElementById('devdeath').value='vignette';Dev.death();
           document.getElementById('dieepi').textContent='新死亡';
-          deathTimers.find(x=>x.ms===3000).fn();window.setTimeout=savedTimeout;""")
+          deathTimers.find(x=>x.ms===neckMs).fn();window.setTimeout=savedTimeout;""")
         self.assert_js(page,"S.dead&&S.death==='vignette'&&document.getElementById('dieepi').textContent==='新死亡'")
 
     def test_effect_preview_does_not_leak_into_a_new_session(self):

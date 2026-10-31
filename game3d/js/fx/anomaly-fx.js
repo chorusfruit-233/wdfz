@@ -26,7 +26,7 @@ function anfxClear(){
     if(ANFX.kind==='death'&&!ANFX.preview) ThreeBackend.disposeGroup(ANFX.grp);
     ANFX.grp=null;
   }
-  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;ANFX.faceWalk=null;
+  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;ANFX.faceWalk=null;ANFX.cg=null;ANFX.neck=null;
   ANFX.timeline=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
@@ -304,7 +304,8 @@ function deathFX(type,options){
     function push(o){ ANFX.items.push(o); return o; }
     var T=type||'vignette';
 
-    if(T==='trash'){
+    if(DeathCG.has(T)){ ANFX.cg=DeathCG.build(T,grp,ANFX.preview); }
+    else if(T==='trash'){
       var oldWorld=S.mode==='in'?GLR.roomMesh:GLR.outMesh;
       if(oldWorld){ANFX.hiddenWorld={mesh:oldWorld,visible:oldWorld.visible};oldWorld.visible=false;}
       var barrel=new THREE.Mesh(new THREE.CylinderGeometry(1.1,0.9,2.1,20,1,true),
@@ -347,22 +348,6 @@ function deathFX(type,options){
         }
       }
     }
-    else if(T==='grip'){
-      var hp=anfxW2S(S.x,S.y);
-      var flesh=anfxMat(0x6f6a63,1.0);          /* 灰白的手，不吃光 */
-      var hn=11, hi, hf;
-      for(hi=0;hi<hn;hi++){
-        var hang=hi/hn*6.283+(Math.random()-0.5)*0.28;
-        var hrad=0.85+Math.random()*1.5;
-        var hx=hp.x+Math.cos(hang)*hrad, hz=hp.z+Math.sin(hang)*hrad;
-        var hg=new THREE.Group();
-        hg.add(fxMesh('hand'));                                 /* 掌、五根弯着的手指、一截小臂 */
-        hg.position.set(hx,-1.0,hz);
-        hg.rotation.y=-(Math.PI/2+hang);                        /* 手指朝圆心 */
-        hg.userData={t:hi*0.085, ph:Math.random()*6.283};
-        grp.add(hg); push(hg);
-      }
-    }
     else if(T==='hand'){
       var gx=S.x+Math.cos(S.ang)*9, gy=S.y+Math.sin(S.ang)*9;
       var q=anfxW2S(gx,gy);
@@ -374,23 +359,6 @@ function deathFX(type,options){
       stallHand.rotation.y=-Math.PI/2-S.ang;stallHand.rotation.x=-0.8;
       stallHand.scale.setScalar(1.4);stallHand.userData={stallHand:true};
       grp.add(stallHand);push(stallHand);
-    }
-    else if(T==='neck'){
-      var nq=anfxW2S(S.x+Math.cos(S.ang)*2.6, S.y+Math.sin(S.ang)*2.6);
-      var flesh=anfxMat(0x7c302c,1.0);
-      var nseg=8, sh=0.42;
-      for(i=0;i<nseg;i++){
-        var sg=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.085,sh,8),flesh);   /* 一节一节的脖子 */
-        sg.position.set(nq.x,0.21+i*sh,nq.z); grp.add(sg);
-        sg.visible=false;
-        push(sg);
-      }
-      var head=new THREE.Group();
-      head.add(fxMesh('neckhead'));
-      head.position.set(nq.x,0.21,nq.z);
-      head.visible=false;
-      grp.add(head); push(head);
-      ANFX.neck={n:nseg,sh:sh,x:nq.x,z:nq.z};
     }
     else if(T==='swarm'||T==='shatter'){
       var col=(T==='swarm')?dark:anfxMat(0x8a8680,1.0);
@@ -489,22 +457,6 @@ function deathFX(type,options){
         fg.userData={ring:fa};
         grp.add(fg); push(fg);
       }
-    }
-    else if(T==='shadow'){
-      var sq=anfxW2S(S.x-Math.cos(S.ang)*14, S.y-Math.sin(S.ang)*14);
-      var sg=new THREE.Group(); anfxFigure(sg,dark,0,0,1.0,false);
-      sg.position.set(sq.x,0,sq.z);
-      sg.userData={behind:1};
-      grp.add(sg); push(sg);
-      push(anfxBox(grp,anfxMat(0x0a0d10,0.55),0.7,0.005,2.2,sq.x,0.006,sq.z+0.9));
-    }
-    else if(T==='twin'){
-      var tq=anfxW2S(S.x+Math.cos(S.ang)*16, S.y+Math.sin(S.ang)*16);
-      var tg=new THREE.Group(); anfxFigure(tg,dark,0,0,1.2,false);
-      tg.position.set(tq.x,0,tq.z);
-      tg.userData={twin:1};
-      grp.add(tg); push(tg);
-      push(anfxBox(grp,anfxMat(0x0a0d10,0.5),0.7,0.005,2.4,tq.x,0.006,tq.z));
     }
     else if(T==='names'){
       /* 名单墙立在视线正前方（以前固定放在场景的 +z 方向） */
@@ -688,7 +640,9 @@ function anfxUpdate(dt){
     var dtp=ANFX.deathType||'vignette', kk=ANFX.t, it, ob;
     /* 预览只改变渲染镜头；玩家可以在预览期间移动或转头。 */
     var preview=ANFX.preview, view=preview?{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift}:S;
-    if(dtp==='trash'){
+    if(ANFX.cg){
+      DeathCG.update(ANFX.cg,kk,view);
+    } else if(dtp==='trash'){
       var tp=ANFX.timeline.progress,close=clamp((tp-0.12)/0.44,0,1);
       var easeClose=close*close*(3-2*close);
       for(it=0;it<ANFX.items.length;it++){
@@ -849,32 +803,6 @@ function anfxUpdate(dt){
       }
     } else if(dtp==='slit'||dtp==='wall'){
       for(it=0;it<ANFX.items.length;it++){ ob=ANFX.items[it]; ob.position.y=Math.min(1.6,kk*0.9); }
-    } else if(dtp==='neck'){
-      var nk=ANFX.neck||{n:8,sh:0.42,x:0,z:0};
-      var topY=0.21+(nk.n-1)*nk.sh;
-      var up=Math.round(Math.min(1,kk/1.1)*nk.n);
-      for(it=0;it<nk.n;it++) ANFX.items[it].visible=(it<up);
-      var hd=ANFX.items[nk.n];
-      if(hd){
-        if(kk<1.1){
-          hd.visible=up>0;
-          hd.position.set(nk.x,0.21+Math.max(0,up-1)*nk.sh,nk.z);
-        }else if(kk<2.15){
-          hd.visible=true;
-          var k2=(kk-1.1)/1.05, e2=k2*k2;
-          var cx3=GLR.cam.position.x, cy3=GLR.cam.position.y, cz3=GLR.cam.position.z;
-          hd.position.set(nk.x+(cx3-nk.x)*e2, topY+(cy3-topY)*e2, nk.z+(cz3-nk.z)*e2);
-          if(hd.scale&&hd.scale.setScalar) hd.scale.setScalar(1+e2*0.85);
-          if(kk>1.55){ view.pitch=Math.min(0.35,view.pitch+(preview?(kk-1.55)*0.6:dt*0.6)); try{ syncCamera(0,preview?view:null); }catch(e){} }
-        }else{
-          var k3=Math.min(1,(kk-2.15)/0.95);
-          view.eyeLift=k3*2.5;
-          view.pitch=0.35+k3*0.55;
-          try{ syncCamera(0,preview?view:null); }catch(e){}
-          hd.position.set(GLR.cam.position.x,GLR.cam.position.y+0.25,GLR.cam.position.z);
-          hd.visible=(k3<0.88);
-        }
-      }
     } else if(dtp==='hand'){
       var handProgress=ANFX.timeline.progress;
       var handRise=clamp((handProgress-0.12)/0.34,0,1);
@@ -918,24 +846,6 @@ function anfxUpdate(dt){
           ob.scale.set(gk, gk*0.6875, 1);                 /* Sprite 始终正对镜头 */
         }
       }
-    } else if(dtp==='grip'){
-      var sinkT=Math.min(1,kk/2.4);
-      view.eyeLift=-(sinkT*1.25);
-      for(it=0;it<ANFX.items.length;it++){
-        ob=ANFX.items[it]; var gu=ob.userData||{};
-        if(gu.t===undefined) continue;
-        if(kk<gu.t){ ob.visible=false; continue; }
-        ob.visible=true;
-        var up2=Math.min(1,(kk-gu.t)/1.05);
-        if(up2<1){
-          ob.position.y=-1.0+up2*1.75;                 /* 从地下伸到眼前 */
-          ob.rotation.x=-0.9+0.9*up2;                  /* 手腕慢慢翻过来 */
-        }else{
-          ob.position.y=0.75+Math.sin(kk*1.8+gu.ph)*0.05;
-          ob.rotation.x=0;
-        }
-      }
-      try{ syncCamera(0,preview?view:null); }catch(e){}
     } else if(dtp==='ring'){
       /* 地上的石子一颗颗立起来，绕着你转，越收越紧，最后成了一个笼子 */
       var pr=anfxW2S(S.x,S.y);
@@ -945,23 +855,6 @@ function anfxUpdate(dt){
         var ang2=ru.a+kk*(1.2+kk*0.4), rad2=Math.max(0.75,2.2-kk*0.55);
         ob.position.set(pr.x+Math.cos(ang2)*rad2, Math.min(2.4,0.05+kk*0.7*(1+(it%4)*0.35)), pr.z+Math.sin(ang2)*rad2);
         ob.scale.set(1,1+Math.min(12,kk*5),1);
-      }
-    } else if(dtp==='twin'||dtp==='shadow'){
-      /* 另一个你 / 你的影子：走过来，停在一臂远的地方；影子那种，镜头会被慢慢扭过去看它 */
-      var fig=ANFX.items[0];
-      if(fig&&fig.position){
-        var pt=anfxW2S(S.x,S.y);
-        var fdx=pt.x-fig.position.x, fdz=pt.z-fig.position.z, fdl=Math.hypot(fdx,fdz)||1;
-        var stp=Math.min(Math.max(0,fdl-0.85),dt*(1.2+kk*2.4));
-        fig.position.x+=fdx/fdl*stp; fig.position.z+=fdz/fdl*stp;
-        fig.rotation.y=Math.atan2(fdx,fdz);
-        if(dtp==='shadow'&&kk>0.6){
-          var want3=Math.atan2(fig.position.z-pt.z,fig.position.x-pt.x);
-          var d4=((want3-view.ang+PI*3)%TAU)-PI;
-          view.ang+=d4*(preview?(1-Math.exp(-Math.max(0,kk-0.6)*1.6)):Math.min(1,dt*1.6));
-          try{ syncCamera(0,preview?view:null); }catch(e){}
-        }
-        if(fdl<1.0&&!ANFX.flashed){ ANFX.flashed=1; GLR.flash=Math.max(GLR.flash||0,0.45); }
       }
     } else if(dtp==='follow'){
       /* 做操的人围上来；你的视线跟着节拍一上一下 */
