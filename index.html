@@ -135,9 +135,14 @@
   <button type="button" class="pcx" onclick="PCGAME.stop()" aria-label="退出电脑">✕ 退出</button>
   <div id="pcpad"><button type="button" data-d="0,-1" aria-label="上">▲</button><button type="button" data-d="-1,0" aria-label="左">◀</button><button type="button" data-d="1,0" aria-label="右">▶</button><button type="button" data-d="0,1" aria-label="下">▼</button></div></div>
 <div id="devbackdrop" aria-hidden="true"></div>
+<div id="devbounds" aria-hidden="true"></div>
 <div id="dev" role="dialog" aria-modal="true" aria-labelledby="devTitle">
   <header class="devhead">
-    <div><div class="deveye">DEVELOPER CONSOLE <span id="devst">· ON</span></div><h2 id="devTitle">调试面板</h2></div>
+    <div class="devdrag" id="devdrag" role="group" tabindex="0" aria-label="移动调试面板：按住拖动，或使用方向键移动，Home 键归位" title="按住拖动；方向键移动，Home 键归位">
+      <span class="devgrip" aria-hidden="true">⠿</span>
+      <div class="devtitle"><div class="deveye">DEVELOPER CONSOLE <span id="devst">· ON</span></div><h2 id="devTitle">调试面板 <span class="devdrag-hint">按住拖动</span></h2></div>
+    </div>
+    <button type="button" class="devreset" onclick="Dev.resetPanelPosition()" aria-label="调试面板归位" title="调试面板归位">归位</button>
     <button type="button" class="devclose" onclick="Dev.close()" aria-label="关闭调试面板">×</button>
   </header>
   <div class="devrun"><span id="devrun" role="status"></span><button type="button" id="devfreeze" onclick="Dev.toggleFreeze()">继续模拟</button></div>

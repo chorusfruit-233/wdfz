@@ -1,7 +1,7 @@
 /* 里世界 3D · 调试面板 */
 'use strict';
 
-var DEV={on:false,fast:false,god:false,freeze:true,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0};
+var DEV={on:false,fast:false,god:false,freeze:true,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0,panelPos:null,drag:null,dragReady:false};
 var DEV_POI=[
   ['北门',514,115],['西小门',214,624],['南门',386,1276],
   ['大操场',344,350],['花园雕塑',535,1020],['车库入口',485,163],
@@ -36,8 +36,80 @@ var Dev={
       death:DEV_DEATH.map(function(d){return [d[1],d[0]+' ('+d[1]+')'];})
     };
     ['room','out','anom','death'].forEach(Dev.filter);
-    Dev.tab(DEV.tab);Dev.refresh();updateTouchUI();
+    Dev.initPanelDrag();Dev.tab(DEV.tab);Dev.refresh();Dev.fitPanel();updateTouchUI();
     var close=el&&el.querySelector('.devclose');if(close)close.focus({preventScroll:true});
+  },
+  panelBounds:function(){
+    var r=document.getElementById('devbounds').getBoundingClientRect(),v=window.visualViewport;
+    var left=r.left,top=r.top,right=r.right,bottom=r.bottom;
+    if(v){
+      left=Math.max(left,v.offsetLeft+8);top=Math.max(top,v.offsetTop+8);
+      right=Math.min(right,v.offsetLeft+v.width-8);bottom=Math.min(bottom,v.offsetTop+v.height-8);
+    }
+    return {left:left,top:top,right:Math.max(left,right),bottom:Math.max(top,bottom)};
+  },
+  placePanel:function(x,y,remember){
+    var el=document.getElementById('dev');if(!DEV.on||!el)return;
+    var b=Dev.panelBounds(),r=el.getBoundingClientRect();
+    x=Math.max(b.left,Math.min(x,Math.max(b.left,b.right-r.width)));
+    y=Math.max(b.top,Math.min(y,Math.max(b.top,b.bottom-r.height)));
+    el.style.left=x+'px';el.style.top=y+'px';
+    if(remember)DEV.panelPos={x:x,y:y};
+  },
+  fitPanel:function(){
+    var el=document.getElementById('dev');if(!DEV.on||!el)return;
+    var b=Dev.panelBounds(),width=b.right-b.left,height=b.bottom-b.top;
+    el.classList.toggle('dev-short',height<300);
+    el.style.maxWidth=width+'px';
+    el.style.maxHeight=Math.min(height,window.innerHeight*.82)+'px';
+    var pos=DEV.panelPos||{x:b.left+4,y:b.top+4};
+    Dev.placePanel(pos.x,pos.y,false);Dev.scrollHint();
+  },
+  resetPanelPosition:function(){Dev.endPanelDrag();DEV.panelPos=null;Dev.fitPanel();},
+  endPanelDrag:function(){
+    var drag=DEV.drag,el=document.getElementById('dev'),handle=document.getElementById('devdrag');
+    DEV.drag=null;if(el)el.classList.remove('dragging');
+    if(drag&&handle){try{if(handle.hasPointerCapture(drag.id))handle.releasePointerCapture(drag.id);}catch(e){}}
+  },
+  initPanelDrag:function(){
+    if(DEV.dragReady)return;
+    var handle=document.getElementById('devdrag'),panel=document.getElementById('dev');if(!handle||!panel)return;
+    DEV.dragReady=true;
+    handle.addEventListener('pointerdown',function(e){
+      if(!DEV.on||DEV.drag||!e.isPrimary||e.button!==0)return;
+      var r=panel.getBoundingClientRect();
+      DEV.drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top};
+      panel.classList.add('dragging');handle.focus({preventScroll:true});
+      try{handle.setPointerCapture(e.pointerId);}catch(err){}
+      if(e.cancelable)e.preventDefault();
+    });
+    window.addEventListener('pointermove',function(e){
+      var d=DEV.drag;if(!d||e.pointerId!==d.id)return;
+      if(e.pointerType==='mouse'&&e.buttons===0){Dev.endPanelDrag();return;}
+      Dev.placePanel(d.left+e.clientX-d.x,d.top+e.clientY-d.y,true);
+      if(e.cancelable)e.preventDefault();
+    },{passive:false});
+    function end(e){if(DEV.drag&&e.pointerId===DEV.drag.id)Dev.endPanelDrag();}
+    window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
+    handle.addEventListener('lostpointercapture',end);window.addEventListener('blur',Dev.endPanelDrag);
+    handle.addEventListener('keydown',function(e){
+      if(!DEV.on)return;
+      if(e.key==='Home'){e.preventDefault();Dev.resetPanelPosition();return;}
+      var delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
+      if(!delta)return;
+      e.preventDefault();var r=panel.getBoundingClientRect(),step=e.shiftKey?48:16;
+      Dev.placePanel(r.left+delta[0]*step,r.top+delta[1]*step,true);
+    });
+    function viewportChanged(){
+      Dev.endPanelDrag();Dev.fitPanel();
+      var active=document.activeElement;
+      if(DEV.on&&active&&panel.contains(active)&&active.matches('input,select')){
+        requestAnimationFrame(function(){if(DEV.on&&document.activeElement===active)active.scrollIntoView({block:'nearest',inline:'nearest'});});
+      }
+    }
+    window.addEventListener('resize',viewportChanged);
+    if(window.visualViewport){window.visualViewport.addEventListener('resize',viewportChanged);window.visualViewport.addEventListener('scroll',viewportChanged);}
+    if(window.ResizeObserver)new ResizeObserver(function(){Dev.fitPanel();}).observe(panel);
   },
   filter:function(kind){
     var source=DEV.lists&&DEV.lists[kind],select=document.getElementById('dev'+kind);
@@ -60,7 +132,7 @@ var Dev={
       if(page)page.hidden=name!==id;if(button)button.setAttribute('aria-pressed',String(name===id));
     });
     var body=document.getElementById('devbody');if(body)body.scrollTop=0;
-    Dev.refresh();
+    Dev.refresh();Dev.fitPanel();
   },
   report:function(msg){var el=document.getElementById('devmessage');if(el)el.textContent=msg;toast(msg);},
   canUse:function(){
@@ -88,7 +160,7 @@ var Dev={
   toggleFreeze:function(){DEV.freeze=!DEV.freeze;Dev.refresh();},
   focusTrap:function(e){
     var panel=document.getElementById('dev');if(!panel)return;
-    var all=Array.prototype.slice.call(panel.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])'));
+    var all=Array.prototype.slice.call(panel.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex="0"]'));
     var controls=all.filter(function(el){return el.getClientRects().length>0;});if(!controls.length)return;
     var i=controls.indexOf(document.activeElement),target=null;
     if(e.shiftKey&&(i<=0))target=controls[controls.length-1];
@@ -169,6 +241,7 @@ var Dev={
   },
   close:function(resume){
     if(!DEV.on)return;
+    Dev.endPanelDrag();
     DEV.on=false;document.body.classList.remove('dev-open');var el=document.getElementById('dev');if(el)el.style.display='none';
     resetInputState();updateTouchUI();
     if(resume!==false){
