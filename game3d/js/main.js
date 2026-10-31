@@ -4,6 +4,7 @@
 function onEnterRoom(id){
   if(id==='garage1') os('我：车库里没有灯。空气是潮的，有一股铁和机油的味道。远处有水在滴。',3.6);
   if(id==='portal_tunnel') os('我：不想靠近。墙上的黑色黏液还在缓慢流动。',4.5,OS_FORCE);
+  try{ Dread.enter(id); }catch(e){}
   spotTick();
 }
 
@@ -52,6 +53,7 @@ function update(dt){
   LESSON.tick(dt);
   PHONE.checkInterrupt();                         /* 世界更新中可能死亡、开始异象或打开选择 */
   try{ monoTick(dt); }catch(e){}
+  try{ Dread.tick(dt); }catch(e){}
   spotTick();
 }
 function render(dt){
@@ -138,6 +140,8 @@ function hudEl(id){
 function updateHUD(){
   var feel=hudEl('sanfeel'),stage=sanityStage();
   if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=SAN_FEEL[stage];}
+  /* 界面也跟着身体状态变（状态条的红线跳得越来越急）；样式里关掉镜头晃动时不动 */
+  if(document.body.dataset.san!==String(stage))document.body.dataset.san=stage;
   hudEl('clock').textContent=hasClock()?fmtClock(S.tsec):'时间不明';
   var sc=hudEl('secclock');
   if(sc){sc.hidden=true;sc.textContent='';}
@@ -189,6 +193,7 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  try{ Dread.reset(); }catch(e){}
   if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
   fnPeopleClear();Engine.resetFakeNormal();VisualState.worldNorm=0;

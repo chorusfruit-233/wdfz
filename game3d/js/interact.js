@@ -599,11 +599,14 @@ function doSearch(c,r){
   /* 车钥匙和机房钥匙：校长办公室的容器 45%，别的老师办公室 1%（以前直接挂在保安岗） */
   if(_R&&_R.host==='admin'){
     var miss=['key','roomkey'].filter(function(k){ return !hasItem(k); });
-    if(miss.length&&Math.random()<(_R.principal?0.45:0.01)){
+    var pity=_R.principal&&(RT.keyMiss||0)>=3;              /* 保底：连着三次没翻到，这一次一定有 */
+    if(miss.length&&(pity||Math.random()<(_R.principal?0.45:0.01))){
+      RT.keyMiss=0;
       var kk=miss[Math.floor(Math.random()*miss.length)];
       os(kk==='key'?'我：抽屉最里面压着一串车钥匙，牌号刻在环上。':'我：抽屉里有一把铜钥匙，塑料标签上写着「机房」。',3.6);
       addItem(kk); return;
     }
+    if(miss.length&&_R.principal) RT.keyMiss=(RT.keyMiss||0)+1;
     if(_R.principal){
       var pr=Math.random();
       if(pr<0.12&&!hasItem('atlas')){ os('我：抽屉里卷着一大张图纸，是整个学校每一层的平面图。',3.4); addItem('atlas'); return; }

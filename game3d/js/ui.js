@@ -261,6 +261,8 @@ UI.renderNote=function(){
     if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0])){ li(CLUE_NOTE[ci][1]); any=true; }
   }
   if(!any) li('（还没注意到什么。）','dim');
+  var dh=(typeof deathHints==='function')?deathHints():[];
+  if(dh.length){ sec('梦里记得的事'); for(var di=0;di<dh.length;di++) li(dh[di]); }
   if(!hasItem('notebook')||!hasItem('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';
   document.getElementById('notein').innerHTML=h;
 };

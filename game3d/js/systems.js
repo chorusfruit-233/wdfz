@@ -139,6 +139,9 @@ var TT_LINES=['我：最近睡得挺好。铃一响就醒，不用闹钟。醒�
   '我：走廊里的人走得真整齐。我低头看了一眼——我的脚也在跟着拍子。',
   '我：座位表上，我的名字在哪一格？……哪一格都是我的名字。',
   '我：我好像一直都在这里。在我转来之前，就在这里。'];
+/* 坐着的时候越过 60、80：提醒落在椅子上——站起来就能缓下来 */
+var TT_SEAT={3:'我：……今天几号来着？我想站起来看一眼黑板，椅子没让我起来。',
+  4:'我：腿麻了。不对——是腿不想动。椅子贴着我的背，像是不想让我起来。'};
 /* 跨时段时分段消耗真实秒；不能把整步时间按旧时速推进，尤其是 11:45 的慢速窗。 */
 function clockTick(dt){
   var left=Math.max(0,dt);
@@ -198,13 +201,15 @@ function violTick(dt,nw,rule,exam){
     toast('违规已满 · 不能请假');
   }else if(RT.violFull&&S.viol<60) RT.violFull=0;
 }
+/* 同化速率（每真实秒）：坐在教室里涨、夜里待在宿舍涨，其余时间回落。 */
+var TT_CFG={seat:1.0,dorm:0.8,decay:0.45};      /* 2026-10-31 调整：原 1.5/1.0/0.35 下完全守规矩第一天上午就会融入；现在第一天最高约 67，第二天早上继续坐满才会 */
 /* 同化：坐得住、按时回宿舍就涨；满值直接融入。 */
 function ttTick(dt,nw){
   if(S.tt>=100){resolveAssimilation();return;}
   if(typeof Inspection!=='undefined'&&Inspection.active())return;
-  if(S.seated&&nw==='教室') S.tt+=1.5*dt;
-  else if(inDorm()&&S.tsec>=EVENING) S.tt+=1.0*dt;
-  else S.tt=Math.max(0,S.tt-0.35*dt);
+  if(S.seated&&nw==='教室') S.tt+=TT_CFG.seat*dt;
+  else if(inDorm()&&S.tsec>=EVENING) S.tt+=TT_CFG.dorm*dt;
+  else S.tt=Math.max(0,S.tt-TT_CFG.decay*dt);
   S.tt=clamp(S.tt,0,100);
   if(S.tt>=100){
     resolveAssimilation();return;
@@ -212,7 +217,8 @@ function ttTick(dt,nw){
   var tier=Math.floor(S.tt/20);
   if(tier>0&&tier!==S.ttTier){
     S.ttTier=tier;
-    if(tier<=6) os(TT_LINES[tier-1],4.4);
+    if(S.seated&&TT_SEAT[tier]) os(TT_SEAT[tier],4.6);
+    else if(tier<=6) os(TT_LINES[tier-1],4.4);
   }
   if(S.tt<100) S.hiddenLatch=false;
 }

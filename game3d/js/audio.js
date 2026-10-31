@@ -262,8 +262,9 @@ var SFX=(function(){
     return AN.active&&(AN.id==='rain'||AN.id==='raindots')&&S.mode==='out'&&!underCover();
   }
   /* 一步：k 是响度（跑起来更响），pan 左右，behind 背后（发闷） */
-  function stepSound(sf,k,pan,behind,wet){
+  function stepSound(sf,k,pan,behind,wet,at){
     var lp=behind?0.55:1, j;
+    if(at){ var a0=ctx(); if(!a0) return; setTimeout(function(){ stepSound(sf,k,pan,behind,wet); },at*1000); return; }
     if(sf==='tile'){ noiseP(0.07,0.036*k,1150*lp,0,'bandpass',1.2,pan,0.25); noiseP(0.02,0.018*k,3200*lp,0,'highpass',0.7,pan,0.2); }
     else if(sf==='stair'){ noiseP(0.08,0.04*k,800*lp,0,'bandpass',1.0,pan,0.5); tone(150,0.09,'sine',0.03*k,90,0,0.5); }
     else if(sf==='garage'){ noiseP(0.09,0.04*k,900*lp,0,'bandpass',1.0,pan,0.9); noiseP(0.03,0.02*k,2600*lp,0.01,'bandpass',2,pan,0.9); }
@@ -307,6 +308,8 @@ var SFX=(function(){
   function tick(dt){
     var a=ctx(); if(!a||!L) return;
     L.t+=dt;
+    /* 骤静：环境声忽然全没了几秒，再慢慢回来 */
+    var duck=(L.duckUntil&&L.t<L.duckUntil)?0.05:1, dtc=duck<1?0.18:null;
     var play=(S.screen==='play');
     var on=play&&(typeof AMB_ON==='undefined'||AMB_ON)&&!S.dead;
     var out_=play&&S.mode==='out', night=1;
@@ -319,23 +322,23 @@ var SFX=(function(){
     /* 混响跟着空间走：车库、钟楼里很空，教室一般，室外几乎没有 */
     if(revIn) setG(revIn.gain,spaceWet(),0.4);
     /* 铺底 */
-    setG(L.padG.gain,on?0.045+0.05*tension:0,1.2);
+    setG(L.padG.gain,(on?0.045+0.05*tension:0)*duck,dtc||1.2);
     setG(L.padF.frequency,on?(180+tension*700+(out_?0:-40)):200,1.5);
     var root=garage?41.2:(out_?(night>0.5?49:55):46.25);
     L.osc[0].frequency.setTargetAtTime(root,a.currentTime,2);
     L.osc[1].frequency.setTargetAtTime(root*1.5*(tension>0.6?0.944:1),a.currentTime,2);   /* 紧张时五度降成三全音 */
     L.osc[2].frequency.setTargetAtTime(root*(1.01+sanityStress*0.045),a.currentTime,2);
     L.osc[3].frequency.setTargetAtTime(root*(2-sanityStress*0.11),a.currentTime,2);
-    setG(L.tenG.gain,on?Math.max(0,tension-0.45)*0.05:0,0.8);
+    setG(L.tenG.gain,(on?Math.max(0,tension-0.45)*0.05:0)*duck,dtc||0.8);
     /* 环境 */
     var rainOn=on&&anomaly&&(id==='rain'||id==='raindots');
     var cover=rainOn&&S.mode==='in';
-    setG(L.wind.g.gain,on&&out_?0.020+0.012*night+(rainOn?0.02:0):(on&&S.room==='teach6'?0.03:0),1.0);
+    setG(L.wind.g.gain,(on&&out_?0.020+0.012*night+(rainOn?0.02:0):(on&&S.room==='teach6'?0.03:0))*duck,dtc||1.0);
     setG(L.rain.g.gain,rainOn?(cover?0.03:0.11):0,0.6);
     setG(L.rain2.g.gain,rainOn?(cover?0.005:0.035):0,0.6);
-    setG(L.humG.gain,on&&S.mode==='in'&&!garage&&S.room!=='bell1'&&S.room!=='teach6'?0.010+0.006*Math.abs(Math.sin(L.t*0.7)):0,0.5);
-    setG(L.rumble.g.gain,on&&garage?0.09:(on&&id==='shifting'?0.12:0),0.8);
-    if(!on) return;
+    setG(L.humG.gain,(on&&S.mode==='in'&&!garage&&S.room!=='bell1'&&S.room!=='teach6'?0.010+0.006*Math.abs(Math.sin(L.t*0.7)):0)*duck,dtc||0.5);
+    setG(L.rumble.g.gain,(on&&garage?0.09:(on&&id==='shifting'?0.12:0))*duck,dtc||0.8);
+    if(!on||duck<1) return;
     /* 八音盒一样的旋律：稀疏、不成调 */
     L.nextMel-=dt;
     if(L.nextMel<=0){
@@ -391,7 +394,12 @@ var SFX=(function(){
       L.lastPeriod=per;
     }catch(e){}
     L.nextStinger-=dt*(1+tension*1.5);
-    if(L.nextStinger<=0){ L.nextStinger=rnd(16,40); stinger(); }
+    if(L.nextStinger<=0){
+      L.nextStinger=rnd(16,40);
+      /* 和 dread.js 的假威胁共用一份惊吓预算：同一片地方不连着响 */
+      var okS=true; try{ if(typeof Dread!=='undefined') okS=!dreadBusy()&&Dread.allow(1); }catch(e){}
+      if(okS){ stinger(); try{ if(typeof Dread!=='undefined') Dread.note('stinger',1); }catch(e){} }
+    }
     /* 屋里夜里：不知道哪儿在滴水；偶尔一声暖气片 / 墙里的「咔」 */
     if(!out_&&!garage&&night>0.5){
       L.nextIndoorDrip=(L.nextIndoorDrip||2)-dt;
@@ -449,7 +457,35 @@ var SFX=(function(){
     getVol:function(){ return vol; },
     surface:function(){ return stepSurface(); },
     space:function(){ return spCur; },                /* 真实档当前用的混响空间（测试用） */
-    step:function(){ stepSound(stepSurface(),S.run?1.35:1,0,0,stepWet()); },
+    step:function(){
+      stepSound(stepSurface(),S.run?1.35:1,0,0,stepWet());
+      /* 回访变化：这间屋子今天多了一层回声，像有人跟着你走，慢半拍 */
+      try{ if(typeof DREAD!=='undefined'&&DREAD.echo) stepSound(stepSurface(),0.32,0.25,true,false,0.19); }catch(e){}
+    },
+    /* 有方位、有远近、隔墙发闷的环境声（dread.js 的假威胁）：p={pan,k,muffled,behind} */
+    dread:function(kind,p){
+      var a=ctx(); if(!a) return;
+      p=p||{pan:0,k:0.5,muffled:false,behind:false};
+      var k=clamp(p.k||0.5,0.05,1), pan=clamp(p.pan||0,-1,1), lp=(p.muffled?0.35:1)*(p.behind?0.7:1), wet=p.muffled?0.85:0.5, i, n;
+      if(kind==='knock'){ for(i=0;i<3;i++) noiseP(0.07,0.075*k,260*lp+90,i*0.34+Math.random()*0.03,'lowpass',2,pan,wet); }
+      else if(kind==='steps'){ n=5+Math.floor(Math.random()*3); for(i=0;i<n;i++) noiseP(0.07,0.055*k*(1-i/(n+3)),900*lp+120,i*0.43,'bandpass',1.2,pan*(1-i/(n*1.6)),wet); }
+      else if(kind==='chair'){ noiseP(0.7,0.045*k,240*lp+90,0,'lowpass',3,pan,wet,0.12); noiseP(0.12,0.03*k,600*lp,0.68,'lowpass',2,pan,wet); }
+      else if(kind==='whisper'){ for(i=0;i<7;i++) noiseP(rnd(0.12,0.3),0.013*k,rnd(1800,3000)*lp,i*rnd(0.12,0.22),'bandpass',6,pan,0.3,0.05); }
+      else if(kind==='door'){ tone(95,1.4,'sawtooth',0.012*k,140,0,wet); noiseP(1.2,0.022*k,700*lp+100,0.1,'bandpass',4,pan,wet,0.4); }
+      else if(kind==='call'){ vowel(rnd(220,280),1.4,0.012*k,0,500*lp+200,900*lp+300,6); }
+      else if(kind==='run'){ for(i=0;i<10;i++) noiseP(0.06,0.065*k,500*lp+200,i*0.17,'lowpass',2,clamp(pan+(i/9-0.5)*1.6,-1,1),wet); }
+      else if(kind==='desk'){ noiseP(0.05,0.085*k,380*lp+100,0,'lowpass',1.5,pan,wet); noiseP(0.4,0.02*k,300*lp+60,0.08,'lowpass',2,pan,wet,0.1); }
+      else if(kind==='radio'){ noiseP(1.8,0.03*k,1800,0,'bandpass',1.2,pan,0.6,0.2); vowel(150,1.6,0.01*k,0.2,600,1700,9); }
+    },
+    /* 骤静 */
+    duck:function(sec){ if(L) L.duckUntil=L.t+Math.max(0.5,sec||3); },
+    ducking:function(){ return !!(L&&L.duckUntil&&L.t<L.duckUntil); },
+    /* 异象前兆：低频的压迫感上来，耳朵里一点压力 */
+    precursor:function(k){
+      k=clamp(k===undefined?1:k,0.2,1);
+      tone(42,2.8,'sine',0.05*k,36,0,0.6); noise(2.6,0.025*k,120,0,'lowpass',1,0.6,1.6);
+      tone(1180,2.2,'sine',0.004*k,1160,0.6,0.9);
+    },
     /* 巡察者的脚步：按方位分左右，越近越响，背后的发闷 */
     patStep:function(pan,k,behind,locked){ stepSound(stepSurface(),(locked?1.5:1.1)*k,pan,behind,stepWet()); },
     /* 灯管接触不良：噼啪 + 一下 50Hz 的嗡 */

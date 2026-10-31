@@ -95,6 +95,8 @@
     <button onclick="Settings.shake(0)">开</button><button onclick="Settings.shake(1)">关</button></div></div>
   <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
     <button onclick="Settings.amb(1)">开</button><button onclick="Settings.amb(0)">关</button></div></div>
+  <div class="srow"><span>画面颗粒</span><div class="seg" id="sGrain">
+    <button onclick="Settings.grain(1)">开</button><button onclick="Settings.grain(0)">关</button></div></div>
   <button class="primary" onclick="UI.close('set',false);UI.open('pause')">返回</button>
   <button onclick="Game.resume()">返回游戏</button>
 </div></div>
@@ -206,6 +208,8 @@
       </div>
       <div class="devsection"><div><h3>其他操作</h3></div></div>
       <div class="devbuttons"><button type="button" onclick="Dev.lamps()">触发走廊灯异象</button><button type="button" onclick="Dev.prologue()">重看前情提要</button></div>
+      <div class="devsection"><div><h3>氛围</h3><p>五分钟体验切片：安静、先听后见、危险操作、兑现或落空、余韵</p></div></div>
+      <div class="devbuttons"><button type="button" onclick="DreadSlice.start();Dev.close()">开始五分钟切片</button><button type="button" onclick="Dread.falseThreat(Dread.pickAmbient(),1)">来一声假威胁</button></div>
     </section>
     <p class="devhint">打开面板时默认暂停游戏模拟；真实时间倒计时仍会继续。<span class="devkbd">F2 或 Esc 可关闭。</span></p>
   </div>
@@ -257,6 +261,7 @@
 <script src="game3d/js/fx/smile.js"></script>
 <script src="game3d/js/fx/traces.js"></script>
 <script src="game3d/js/fx/classroom.js"></script>
+<script src="game3d/js/fx/dread-fx.js"></script>
 <script src="game3d/js/lighting.js"></script>
 <script src="game3d/js/shade.js"></script>
 <script src="game3d/js/state.js"></script>
@@ -265,6 +270,7 @@
 <script src="game3d/js/systems.js"></script>
 <script src="game3d/js/inspection.js"></script>
 <script src="game3d/js/anomaly.js"></script>
+<script src="game3d/js/dread.js"></script>
 <script src="game3d/js/items.js"></script>
 <script src="game3d/js/story.js"></script>
 <script src="game3d/js/interact.js"></script>

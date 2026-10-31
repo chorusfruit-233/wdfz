@@ -25,6 +25,7 @@ var Engine={
   captureMenu:function(){return ThreeBackend.captureMenu();},
   torch:function(on){if(GLR.torch)GLR.torch.intensity=on?55:0;},
   brightness:function(value){if(GLR.postMat)GLR.postMat.uniforms.uBright.value=value;},
+  grain:function(level){ThreeBackend.grain(level);},
   /* 换画质：这一档的模型包还没读就先用已有的最接近的一档重建，读好以后再重建一次。
      碰撞代理各档一样（都是最细一档的），先后两次重建占地不变。换档时放掉上一档模型的显存 */
   applyQuality:function(){
