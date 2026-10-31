@@ -5,7 +5,8 @@ var KEY={}, TOUCH={dx:0,dy:0,run:false,active:false};
 var LOOKDRAG={on:false,x:0,y:0};
 var INPUT={mode:'mouse',lookId:null,lookType:null,stickId:null,stickCenter:null,
   dragDistance:0,blockClickUntil:0,lastTouchAt:-1000,wantsLock:false,
-  lockPending:false,lockToken:0,hadLock:false,unlockedAt:-1000};
+  lockPending:false,lockToken:0,hadLock:false,unlockedAt:-1000,
+  touchHandled:false};   /* 这一次触摸已经由游戏处理过（松指触发了按钮，或按下时跳过了演出）：浏览器随后补发的 click 一律吞掉 */
 
 function playerInputAllowed(){
   return S.screen==='play'&&!S.dead&&!PAUSE.on&&!UI.anyOpen()&&
@@ -94,6 +95,8 @@ function initTouchActivation(){
   }
   document.addEventListener('pointerdown',function(e){
     if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+    /* 新的一次触摸开始：上一次触摸补发的 click 一定已经派发过了（浏览器按顺序派发输入事件） */
+    INPUT.touchHandled=false;
     var el=control(e.target);
     if(el&&!el.disabled)taps.set(e.pointerId,{el:el,x:e.clientX,y:e.clientY});
   },{capture:true,passive:true});
@@ -111,8 +114,10 @@ function initTouchActivation(){
     // 用松指事件触发按钮：浏览器在一次视角滑动后可能不再发送兼容 click。
     // pointerup 保留真实用户激活，全屏请求仍可在这里同步发起。
     tap.el.click();
-    /* 记下按钮处理完的时刻：坐下、进房间这类操作在手机上可能跑上大半秒，
-       浏览器补发的那次 click 要等它跑完才派发，按松指时刻算会超出窗口，于是同一个键被按了两次 */
+    /* 这次触摸已经处理过了。以前只按时间窗吞补发的 click：进房间、坐下这类操作会在之后再排一段很重的
+       工作（淡出后建场景），手机上补发的 click 被拖到窗口外，同一个键就被按了两次。现在按「这一次触摸」吞，
+       不管它拖了多久；时间窗留作兜底 */
+    INPUT.touchHandled=true;
     lastDone=performance.now();
   },{capture:true,passive:true});
   document.addEventListener('click',function(e){
@@ -126,7 +131,8 @@ function initTouchActivation(){
     /* 松指刚处理过一次：补发的 click 不管落在哪个按钮上都吞掉（按钮处理后弹出的选择框、
        换出来的面板正好在手指下面时，以前会被这次补发的 click 再点一下） */
     var ghost=(target||e.target===document.getElementById('cv'))&&performance.now()-lastDone<800;
-    if(e.isTrusted&&touch&&((same&&performance.now()-lastTime<600)||ghost)){
+    if(e.isTrusted&&touch&&(INPUT.touchHandled||(same&&performance.now()-lastTime<600)||ghost)){
+      INPUT.touchHandled=false;
       e.preventDefault();e.stopImmediatePropagation();
     }
   },true);
@@ -137,7 +143,11 @@ function initInput(){
   var cv=document.getElementById('cv'),stick=document.getElementById('stick');
   initTouchActivation();
   document.addEventListener('pointerdown',function(e){
-    if(S.screen==='cut'){ cutSkip(); return; }
+    if(S.screen==='cut'){
+      /* 按下就跳过演出；松指后补发的 click 会落在随后出现的结局界面按钮上，要吞掉 */
+      if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
+      cutSkip(); return;
+    }
     if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();
     else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen'&&INPUT.stickId===null)useMouseInput();
   },{capture:true,passive:true});

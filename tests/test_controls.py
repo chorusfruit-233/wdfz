@@ -1546,6 +1546,47 @@ class ControlsTest(BrowserCase):
         page.wait_for_timeout(1200)
         self.assert_js(page, 'actions===1')
 
+    def test_touch_action_with_slow_follow_up_still_fires_once(self):
+        page = self.page(touch=True)
+        # 处理本身很快，但排了一段很重的后续（进房间：淡出后建场景）。补发的 click 被拖过时间窗也不能再触发
+        page.evaluate("""window.actions=0;tryInteract=function(){actions++;
+          setTimeout(function(){var e=performance.now()+1200;while(performance.now()<e){}},0)};void 0""")
+        page.locator('#tAct').tap()
+        page.wait_for_timeout(2500)
+        self.assert_js(page, 'actions===1')
+        page.locator('#tAct').tap()
+        page.wait_for_timeout(2500)
+        self.assert_js(page, 'actions===2')
+
+    def test_tap_does_not_click_what_appears_under_the_finger(self):
+        page = self.page(touch=True)
+        # 按钮处理后在手指下面弹出另一个能点的东西（开始游戏后出现前情提要）：补发的 click 不能点到它
+        page.evaluate("""window.under=0;var d=document.createElement('div');d.id='underlay';
+          d.style.cssText='position:fixed;inset:0;z-index:998;display:none';
+          d.addEventListener('click',function(){under++});document.body.appendChild(d);
+          var b=document.createElement('button');b.id='opener';b.textContent='开';
+          b.style.cssText='position:fixed;left:40px;top:40px;width:200px;height:80px;z-index:999';
+          b.onclick=function(){b.remove();d.style.display='block'};document.body.appendChild(b);void 0""")
+        page.locator('#opener').tap()
+        page.wait_for_timeout(600)
+        self.assert_js(page, 'under===0')
+        page.touchscreen.tap(120, 80)        # 再点一次是真的点在它上面
+        page.wait_for_timeout(300)
+        self.assert_js(page, 'under===1')
+
+    def test_skipping_a_cutscene_does_not_press_the_button_behind_it(self):
+        page = self.page(touch=True)
+        page.evaluate("""window.hit=0;var b=document.createElement('button');b.id='behind';b.textContent='回到主菜单';
+          b.style.cssText='position:fixed;inset:0;z-index:999;display:none';b.onclick=function(){hit++};
+          document.body.appendChild(b);S.screen='cut';
+          window.cutSkip=function(){S.screen='play';b.style.display='block'};void 0""")
+        page.touchscreen.tap(200, 200)
+        page.wait_for_timeout(600)
+        self.assert_js(page, "hit===0&&S.screen==='play'")
+        page.touchscreen.tap(200, 200)
+        page.wait_for_timeout(300)
+        self.assert_js(page, 'hit===1')
+
     def test_portrait_subtitle_uses_full_width(self):
         page = self.page(touch=True)
         page.evaluate("os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',5)")
