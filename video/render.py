@@ -8,27 +8,18 @@
 游戏页面用本地 HTTP 服务打开；video/trailer.js 注入页面后接管镜头，
 每一帧用固定步长调一次游戏自己的 render()，再截图。和实时帧率无关，所以软件渲染也能出平滑的 24 帧。
 """
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import argparse
 import json
-import os
 import re
-import shutil
 import sys
-import threading
 import time
 
 from playwright.sync_api import sync_playwright
+from capture import game_server, launch_browser
 
 ROOT = Path(__file__).resolve().parents[1]
 VIDEO = ROOT / 'video'
-
-
-class Quiet(SimpleHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
 
 
 def main():
@@ -57,14 +48,8 @@ def main():
             if frame.is_file() and re.fullmatch(r'\d{5,}\.jpg', frame.name):
                 frame.unlink()
 
-    server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT)))
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    url = f'http://127.0.0.1:{server.server_port}/index.html'
-
-    with sync_playwright() as pw:
-        exe = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
-        browser = pw.chromium.launch(executable_path=exe, headless=True,
-                                     args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'])
+    with game_server() as url, sync_playwright() as pw:
+        browser = launch_browser(pw)
         page = browser.new_page(viewport={'width': tl['width'], 'height': tl['height']}, device_scale_factor=1)
         errors = []
         page.on('pageerror', lambda e: errors.append(str(e)))
@@ -98,7 +83,6 @@ def main():
             if n % 48 == 0:
                 print(f'frame {i}/{total}  {time.time() - t0:.0f}s', flush=True)
         browser.close()
-    server.shutdown()
     if errors:
         print('页面报错：', *errors[:5], sep='\n')
         sys.exit(1)
