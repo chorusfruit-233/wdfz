@@ -86,7 +86,7 @@ function dreadSpot(minM,maxM){
 var Dread={
   reset:function(){
     DREAD.t=0;DREAD.last={};DREAD.areaLast={};DREAD.log=[];DREAD.nextAmb=30;DREAD.preFor=null;
-    DREAD.visitFx=null;DREAD.slice=null;DREAD.echo=false;DREAD.started=true;
+    DREAD.visitFx=null;DREAD.slice=null;DREAD.echo=false;DREAD.leftAt=0;DREAD.started=true;
     try{ DreadFx.clear(); }catch(e){}
   },
   /* 惊吓预算：strength 1 弱、2 强 */
@@ -140,19 +140,20 @@ var Dread={
     return t>0.55&&Math.random()<0.5?'run':'whisper';
   },
   /* 进房间：同一天第二次以后，房间会有一点点不一样 */
-  enter:function(room){
+  enter:function(room,restoring){
     try{ DreadFx.clear(); }catch(e){}
-    DREAD.visitFx=null; DREAD.echo=false;
+    DREAD.visitFx=null; DREAD.echo=false; DREAD.leftAt=0;
     if(!room||!INTERIORS[room]) return;
     RT.visits=RT.visits||{};
-    var key=S.day+':'+room, n=(RT.visits[key]||0)+1; RT.visits[key]=n;
+    /* 继续游戏只是重建保存时的房间，不增加访问次数，也不重新播放进门声。 */
+    var key=S.day+':'+room, n=restoring?Math.max(1,RT.visits[key]||0):(RT.visits[key]||0)+1; RT.visits[key]=n;
     if(n<2||room==='portal_tunnel'||room==='lift_dream') return;
     var h=lhashStr(key+':'+n), kinds=['lamp','note','echo','left'], kind=kinds[Math.floor(h*kinds.length)];
     DREAD.visitFx={room:room,visit:n,kind:kind,seed:h};
     if(kind==='echo') DREAD.echo=true;
     if(kind==='lamp'){ try{ DreadFx.lamp(Math.floor(lhashStr(key+'L'+n)*64)); }catch(e){} }
     if(kind==='note'){ try{ DreadFx.note(DREAD_NOTES[Math.floor(lhashStr(key+'N'+n)*DREAD_NOTES.length)],lhashStr(key+'P'+n)); }catch(e){} }
-    if(kind==='left'){ DREAD.leftAt=DREAD.t+0.8; }
+    if(kind==='left'&&!restoring){ DREAD.leftAt=DREAD.t+0.8; }
     Dread.note('visit:'+kind,0,{room:room,visit:n});
   },
   /* 真实秒推进；只在正常游玩时调用 */
