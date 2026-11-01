@@ -13,16 +13,13 @@ var C_DESK=0x86653c, C_SEAT=0x785b34, C_FRAME=0x3a3f44, C_STEEL=0x9aa4a8, C_DARK
 /* 电梯门、轿厢面板和异色空间出口共用交互格，实体碰撞由同一格登记。 */
 FURN.J=function(c,x,y,cx,cz){
   var K=c.K,isDream=c.R.host==='dream';
-  if(isDream){                                                /* 异常维度的出口：发光的青绿门框里一扇白门，最亮、形状最特别 */
-    K.box('plain',cx,1.35,cz,0.14,2.7,0.94,0x0b1440,1);
-    K.g('emit').box(cx-0.08,1.4,cz,0.04,2.3,0.08,0x1fffe0,1); K.g('emit').box(cx-0.08,1.4,cz-0.42,0.04,2.3,0.06,0x1fffe0,1);
-    K.g('emit').box(cx-0.08,1.4,cz+0.42,0.04,2.3,0.06,0x1fffe0,1); K.g('emit').box(cx-0.08,2.58,cz,0.04,0.06,0.9,0x1fffe0,1);
-    K.box('plain',cx-0.09,1.4,cz,0.03,2.2,0.70,0xf4fffd,1.1);
-  }else{
-    K.box('plain',cx,1.3,cz,0.94,2.6,0.16,0x5c676b,1);
-    K.box('plain',cx,1.15,cz-0.10,0.72,2.1,0.04,0x9ba4a4,1);
-    K.box('plain',cx+0.38,1.15,cz-0.14,0.09,0.35,0.04,0x75a899,1);
-  }
+  if(isDream){                                                /* 异常维度的出口：深色门框、青绿发光边（和地上的引导路同色）、一扇亮白的门——全场最亮的就是它 */
+    K.box('plain',cx,1.35,cz,0.14,2.7,0.94,0x120e33,1);
+    K.g('emit').box(cx-0.08,1.4,cz-0.42,0.04,2.3,0.06,0x3be3d2,1);
+    K.g('emit').box(cx-0.08,1.4,cz+0.42,0.04,2.3,0.06,0x3be3d2,1); K.g('emit').box(cx-0.08,2.58,cz,0.04,0.06,0.9,0x3be3d2,1);
+    K.box('plain',cx-0.09,1.4,cz,0.03,2.2,0.70,0xeafffb,1.1);
+  }else if(c.R.host==='lift'){ liftCabin(c,x,y,cx,cz); return; }   /* 轿厢：model/lift.js */
+  else { liftLanding(c,x,y,cx,cz); return; }                         /* 走廊上的电梯门：model/lift.js */
   c.solid(cx,cz,c.tw,c.th);
 };
 FURN.j=function(c,x,y,cx,cz){

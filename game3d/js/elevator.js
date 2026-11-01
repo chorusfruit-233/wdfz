@@ -26,6 +26,18 @@ var Elevator={
     var id=host+floor;
     return Elevator.spawn(id,host==='teach'?20:10,host==='teach'?20:18,Math.PI/2);
   },
+  /* 层门开着没有：电梯停在这一层、门开着等人（ready），或刚把人送到这一层（openT 秒内） */
+  doorOpen:function(host,floor){
+    if(host!=='teach'&&host!=='lab') return 0;
+    var lift=Elevator.state(host);
+    return (lift.floor===floor&&(lift.phase==='ready'||(lift.openT||0)>0))?1:0;
+  },
+  /* 旧存档在旧轿厢（5 × 5 米）里的位置：放回现在轿厢的正中 */
+  fixCabinPosition:function(){
+    if(S.mode!=='in'||(S.room!=='lift_teach'&&S.room!=='lift_lab')) return;
+    var R=INTERIORS[S.room], p=Elevator.spawn(S.room,2,1.25,-Math.PI/2);
+    if(!R||Math.abs(S.x-p.x)>0.75*R.tw||Math.abs(S.y-p.y)>0.7*R.th){ S.x=p.x; S.y=p.y; S.ang=p.ang; S.seated=false; }
+  },
   cancel:function(){
     var ride=RT.elevatorRide;
     if(ride&&(ride.host==='teach'||ride.host==='lab')){
@@ -59,7 +71,7 @@ var Elevator={
       rare:Math.random()<ELEVATOR_CONFIG.rareChance,remaining:0};
     lift.floor=floor;lift.phase='occupied';patReset();resetInputState();
     var room='lift_'+host;
-    doEnterRoom(room,Elevator.spawn(room,3,4,-Math.PI/2));
+    doEnterRoom(room,Elevator.spawn(room,2,1.25,-Math.PI/2));       /* 轿厢正中，面朝轿门 */
     os('我：轿厢很安静。走到按钮前，选一个楼层。',3.5);
   },
   controls:function(){
@@ -97,13 +109,14 @@ var Elevator={
   arrive:function(floor){
     var ride=RT.elevatorRide;if(!ride)return;
     var lift=Elevator.state(ride.host),id=ride.host+floor,spawn=Elevator.landing(ride.host,floor);
-    lift.floor=floor;lift.target=floor;lift.phase='idle';lift.remaining=0;RT.elevatorRide=null;
+    lift.floor=floor;lift.target=floor;lift.phase='idle';lift.remaining=0;lift.openT=2.6;RT.elevatorRide=null;   /* 出轿厢时层门开着，几秒后合上 */
     resetInputState();doEnterRoom(id,spawn);
     os('我：电梯门打开了。',2.2);
   },
   tick:function(dt){
     ['teach','lab'].forEach(function(host){
       var lift=Elevator.state(host);
+      if(lift.openT>0)lift.openT=Math.max(0,lift.openT-dt);
       if(lift.phase!=='waiting')return;
       lift.remaining=Math.max(0,lift.remaining-dt);
       if(lift.remaining===0){

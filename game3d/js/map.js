@@ -53,8 +53,9 @@ function rooftop(){
   g[17][14]='#';
   return g;
 }
+/* 轿厢：门格在北墙正中，里面 3 × 2 格；真实尺寸的轿厢（1.6 × 1.5 米）和轿壁碰撞由 model/lift.js 摆 */
 function elevatorCabin(){
-  var g=blank(7,7,'.');border(g,7,7,'#');g[0][3]='J';return g;
+  var g=blank(5,4,'.');border(g,5,4,'#');g[0][2]='J';return g;
 }
 function elevatorDream(){
   var g=blank(18,12,'.');border(g,18,12,'#');g[5][17]='J';

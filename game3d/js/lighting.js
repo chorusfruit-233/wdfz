@@ -166,7 +166,7 @@ function updateLighting(){
       var nw=s.blackout?0:clamp(GLR.worldNorm||0,0,1);
       fog.color.setRGB(lerp(0.032-0.02*fn,0.32,nw),lerp(0.040-0.024*fn,0.35,nw),lerp(0.042-0.024*fn,0.36,nw),THREE.SRGBColorSpace);
       fog.density=lerp((S.room==='garage1')?0.09:S.room==='portal_tunnel'?0.04:(0.072+0.03*fn),0.024,nw);
-      if(S.room==='lift_dream'){ fog.color.setRGB(0.16,0.05,0.30,THREE.SRGBColorSpace); fog.density=0.028; }   /* 异常维度：远处是深紫，不是黑 */
+      if(S.room==='lift_dream'){ fog.color.setRGB(0.07,0.04,0.17,THREE.SRGBColorSpace); fog.density=0.03; }   /* 异常维度：远处沉进深靛紫，不是黑 */
     }
   }
   var tt=GLR.time||0;

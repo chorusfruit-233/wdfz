@@ -147,6 +147,7 @@ function applySave(d){
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
   Investigation.migrate();
   SchoolDay.restore();
+  try{ Elevator.fixCabinPosition(); }catch(e){}
 }
 function loadGame(){
   try{

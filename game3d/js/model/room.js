@@ -309,6 +309,8 @@ function roomDecor(c,isRoof){
   var K=c.K, R=c.R, W=c.W, H=c.H, tw=c.tw, th=c.th, halfW=c.halfW, halfH=c.halfH, CX=c.CX, CZ=c.CZ, i, x;
   var teachFl=(R.host==='teach'&&R.floor>=1&&R.floor<=5);
   if(R.host==='dream'){ dreamDecor(c); return; }
+  if(R.host==='lift'){ liftDecor(c); return; }                     /* 轿厢：model/lift.js */
+  if(R.host==='teach'||R.host==='lab') liftDecor(c);               /* 电梯门后井道里的那一节轿厢 */
   if(R.host==='tunnel'){
     for(i=2;i<H-2;i+=3){
       K.box('plain',CX(3+(i%3)),.014,CZ(i),1.3,.02,1.8,0x0c1510,1);
@@ -799,7 +801,7 @@ function roomSigns(c,G,isWall){
       var gw=1, gd=1; while(G(y,x+gw)==='S') gw++; while(G(y+gd,x)==='S') gd++;
       plaque(x,y,gw,gd,'楼梯','STAIRS',true);
     }
-    if(ch==='J') plaque(x,y,1,1,'电梯','LIFT',false);
+    if(ch==='J'&&R.host!=='lift'&&R.host!=='dream') plaque(x,y,1,1,'电梯','LIFT',false);   /* 轿厢、异色空间里不挂 */
     if(ch==='L'){                                                     /* FURN.L 吊的那块牌子：板面 0.70×0.20，前后两面 */
       var ly=WALLH-0.25, tex=corridorTex(), mat=signMat(tex);
       for(var side=-1;side<=1;side+=2){
@@ -828,35 +830,61 @@ function roomSigns(c,G,isWall){
 /* ---- 电梯的异常维度（lift_dream）：高饱和分区 + 发光边线 + 头顶的悬浮几何 ----
    地面分三区：西边群青、中间品红、靠出口那一段金橙，出口前一条青绿的「路」和箭头；
    悬浮的方块、倒挂的台阶都在 2.3 米以上，不挡路、不改碰撞。出口门框是最亮、形状最特别的东西，不靠辨色也认得出 */
+/* 异色空间（电梯的异常维度）：高饱和，但有主次——
+     底色是深靛紫（墙、顶、悬浮体块），颜色集中在三处：
+     地砖沿着走向从钴蓝渐变到紫、再到玫红；墙上一道发光腰线跟着同样渐变；
+     青绿只给「出路」：引导路、箭头和出口门框，所以全场最亮、最特别的就是出口。
+     悬浮方块是深色体块加发光棱线，倒挂的台阶只在踏步边上留一道琥珀光。 */
+var DREAM_RAMP=[0x1d2f9a,0x4a23a0,0x9a1f72];      /* 钴蓝 → 紫 → 玫红 */
+function dreamRamp(t){
+  t=Math.max(0,Math.min(1,t));
+  var k=t*(DREAM_RAMP.length-1), i=Math.min(DREAM_RAMP.length-2,Math.floor(k)), f=k-i, a=DREAM_RAMP[i], b=DREAM_RAMP[i+1];
+  function ch(c,s){ return (c>>s)&255; }
+  return (Math.round(ch(a,16)+(ch(b,16)-ch(a,16))*f)<<16)|(Math.round(ch(a,8)+(ch(b,8)-ch(a,8))*f)<<8)|Math.round(ch(a,0)+(ch(b,0)-ch(a,0))*f);
+}
 function dreamDecor(c){
   var K=c.K, R=c.R, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, x, y, i;
-  var zone=function(x){ return x<6?0x2032d8:x<12?0xc81c86:0xf08a16; };
+  var span=Math.max(1,W-3);
   for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){
     if(R.grid[y][x]!=='.') continue;
-    var alt=((x+y)&1)?0.82:1;
-    K.box('plain',CX(x),0.006,CZ(y),0.98,0.012,0.98,shadeHex(zone(x),alt),1);
+    var alt=((x+y)&1)?0.86:1;
+    K.box('plain',CX(x),0.006,CZ(y),0.97,0.012,0.97,shadeHex(dreamRamp((x-1)/span),alt),1);
   }
-  /* 出口：找 J，门前铺一条青绿的路，地上三个箭头指过去 */
+  /* 出口：找 J，门前铺一条发光的青绿引导路，路上三个白色箭头 */
   var ex=-1, ey=-1;
   for(y=0;y<H;y++) for(x=0;x<W;x++) if(R.grid[y][x]==='J'){ ex=x; ey=y; }
   if(ex>0){
-    for(x=ex-6;x<ex;x++) if(R.grid[ey][x]==='.') K.box('plain',CX(x),0.016,CZ(ey),0.98,0.012,0.42,0x12e6c8,1);
+    for(x=ex-6;x<ex;x++) if(R.grid[ey][x]==='.') K.g('emit').box(CX(x),0.016,CZ(ey),0.98,0.012,0.30,0x1bc7b8,1);
     for(i=0;i<3;i++){
       var ax=CX(ex-5+i*2);
-      K.box('plain',ax,0.024,CZ(ey)-0.12,0.34,0.012,0.08,0xf6fffd,1);
-      K.box('plain',ax,0.024,CZ(ey)+0.12,0.34,0.012,0.08,0xf6fffd,1);
+      K.g('emit').box(ax,0.024,CZ(ey)-0.10,0.30,0.012,0.06,0xe9fffb,1);
+      K.g('emit').box(ax,0.024,CZ(ey)+0.10,0.30,0.012,0.06,0xe9fffb,1);
     }
   }
-  /* 墙上的发光边线：腰线一圈品红、贴顶一圈青绿 */
+  /* 墙上的发光腰线：一段一段跟着地砖渐变（只在北、南、西三面，东墙是出口） */
   var hz=c.halfH, hw=c.halfW;
-  [[0x1fffe0,2.88],[0xff3aa8,1.2]].forEach(function(b){
-    K.g('emit').box(0,b[1],-hz+c.th+0.012,(W-2)*c.tw,0.05,0.02,b[0],1);
-    K.g('emit').box(0,b[1],hz-c.th-0.012,(W-2)*c.tw,0.05,0.02,b[0],1);
-    K.g('emit').box(-hw+c.tw+0.012,b[1],0,0.02,0.05,(H-2)*c.th,b[0],1);
+  for(x=1;x<W-1;x++){
+    var lc=shadeHex(dreamRamp((x-1)/span),1.9);
+    K.g('emit').box(CX(x),1.05,-hz+c.th+0.012,c.tw*0.98,0.035,0.02,lc,1);
+    K.g('emit').box(CX(x),1.05,hz-c.th-0.012,c.tw*0.98,0.035,0.02,lc,1);
+  }
+  K.g('emit').box(-hw+c.tw+0.012,1.05,0,0.02,0.035,(H-2)*c.th,shadeHex(DREAM_RAMP[0],1.9),1);
+  /* 头顶：悬浮的深色方块，棱线发光（颜色取所在位置的渐变色） */
+  var cubes=[[3,3,0.5,2.5],[5,8,0.36,2.35],[10,2,0.42,2.6],[13,9,0.32,2.42],[15,3,0.38,2.5]];
+  cubes.forEach(function(q){
+    var s=q[2], h=s/2, e=0.018, col=shadeHex(dreamRamp((q[0]-1)/span),2.0);
+    K.frame(CX(q[0]),CZ(q[1]),q[0]*0.7);
+    K.box('plain',0,q[3],0,s,s,s,0x1a1446,1);
+    [[0,h,h],[0,h,-h],[0,-h,h],[0,-h,-h]].forEach(function(o){ K.g('emit').box(o[0],q[3]+o[1],o[2],s+e,e,e,col,1); });
+    [[h,h,0],[h,-h,0],[-h,h,0],[-h,-h,0]].forEach(function(o){ K.g('emit').box(o[0],q[3]+o[1],o[2],e,e,s+e,col,1); });
+    [[h,0,h],[h,0,-h],[-h,0,h],[-h,0,-h]].forEach(function(o){ K.g('emit').box(o[0],q[3]+o[1],o[2],e,s+e,e,col,1); });
+    K.unframe();
   });
-  /* 头顶：悬浮的方块和倒挂的台阶（错位的透视），都在 2.3 米以上 */
-  var cubes=[[3,3,0.5,2.55,0xffd21a],[5,8,0.35,2.4,0x1fffe0],[10,2,0.42,2.62,0xff3aa8],[13,9,0.3,2.45,0x7a4dff],[15,3,0.38,2.5,0x2bd9ff]];
-  cubes.forEach(function(q){ K.frame(CX(q[0]),CZ(q[1]),q[0]*0.7); K.box('plain',0,q[3],0,q[2],q[2],q[2],q[4],1.1); K.unframe(); });
-  for(i=0;i<5;i++) K.box('plain',CX(9+i),2.94-i*0.1,CZ(6),0.98,0.12,1.2,shadeHex(0xffb21a,1-i*0.08),1);
+  /* 倒挂的台阶：深紫的踏步，踏步边一道琥珀光 */
+  for(i=0;i<5;i++){
+    var sy=2.94-i*0.1;
+    K.box('plain',CX(9+i),sy,CZ(6),0.98,0.12,1.2,shadeHex(0x2b2063,1-i*0.06),1);
+    K.g('emit').box(CX(9+i)+0.49,sy-0.06,CZ(6),0.02,0.02,1.2,0xffa94d,1);
+  }
 }
 
