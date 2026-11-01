@@ -43,6 +43,29 @@ class SteeringMathTest(unittest.TestCase):
 
 
 class DoorwayNavigationTest(BrowserCase):
+    def test_portal_bench_tunnel_and_blueprint_use_real_interactions(self):
+        page = self.page()
+        page.evaluate("""ENTER_VIA='stair';doEnterRoom('lab1');running=false;
+          S.intro=0;S.seated=false;S.bag=['roomkey'];RT.inspection=null;
+          PAT.locked=false;AN.active=false;
+          window.pump=setInterval(()=>{dtG=.35;updatePlayer(.35);},80);""")
+        for script in ('navigation.js', 'playthrough.js'):
+            page.add_script_tag(path=str(ROOT / 'video' / script))
+        page.evaluate("""(async()=>{
+          await Pilot.nearest('N',10);if(!hasItem('lens'))throw Error('没有操作到显微镜');
+          await Pilot.nearest('K',10);await Pilot.choose(1);
+          await new Promise(r=>setTimeout(r,1800));
+          if(S.room!=='portal_tunnel')throw Error('没有进入隧道');
+          await Pilot.nearest('u',10);if(!RT.portalDiary)throw Error('没有读到日记');
+          await Pilot.interact(Pilot.cells('j').find(p=>p.r===0),12);
+          await new Promise(r=>setTimeout(r,1200));
+          await Pilot.stairs(true);await Pilot.nearest('K',10);await Pilot.choose(2);
+        })().then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)});""")
+        page.wait_for_function('window.result', timeout=90000)
+        self.assertEqual(page.evaluate('window.result'), {'ok': True})
+        self.assert_js(page, "RT.portalDiary && RT.portalBlueprints[2] && hasItem('lens')")
+        page.evaluate('clearInterval(pump)')
+
     def test_roster_cannot_be_mistaken_for_stair_direction(self):
         page = self.page()
         page.evaluate("""ENTER_VIA='stair';doEnterRoom('admin2');running=false;
