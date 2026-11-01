@@ -146,9 +146,7 @@ var TT_SEAT={3:'我：……今天几号来着？我想站起来看一眼黑板�
 function clockTick(dt){
   var left=Math.max(0,dt);
   while(left>1e-9){
-    var t0=S.tsec, boundary=periodAt(t0)[1];
-    if(t0<BEAST_SLOW_T0-1e-9)boundary=Math.min(boundary,BEAST_SLOW_T0);
-    else if(t0<BEAST_SLOW_T1-1e-9)boundary=Math.min(boundary,BEAST_SLOW_T1);
+    var t0=S.tsec, boundary=clockBoundary(t0);
     var rate=rateAt(t0), seconds=Math.max(0,(boundary-t0)*60/rate);
     if(seconds<1e-9){advanceGameTime(1e-8);continue;}
     var used=Math.min(left,seconds);
@@ -173,15 +171,16 @@ function sanTick(dt,rule,exam){
   settleSan();
 }
 function addViolation(amount,source){
-  if(amount>0&&(onLeave()||(eveningActivity(S.tsec)&&source!=='inspection')))return;
+  if(amount>0&&source!=='inspection'&&(onLeave()||eveningActivity(S.tsec)))return;
   S.viol=clamp(S.viol+amount,0,100);
 }
-/* 违规：不在该在的地方（或熄灯后）就涨，否则慢慢降；请假中不算 */
+/* 普通课堂与课间操不按离席秒数处罚；巡察发现、两次集合、考试和熄灯各自结算。 */
 function violTick(dt,nw,rule,exam){
   if(typeof Inspection!=='undefined'&&Inspection.active()){
     S.wrong=!inClassroomHere();leaveTick();try{ncUpdate(dt);}catch(e){}return;
   }
   var wrong=!rule.there();
+  if(!exam&&(nw==='教室'||nw==='操场'))wrong=false;
   var vioMul=1;
   if(nw==='教室') vioMul=exam?2.4:1.4;
   if(S.mode==='out'&&isNight()) vioMul*=0.5;
@@ -202,7 +201,7 @@ function violTick(dt,nw,rule,exam){
   }else if(RT.violFull&&S.viol<60) RT.violFull=0;
 }
 /* 同化速率（每真实秒）：坐在教室里涨、夜里待在宿舍涨，其余时间回落。 */
-var TT_CFG={seat:1.0,dorm:0.8,decay:0.45};      /* 2026-10-31 调整：原 1.5/1.0/0.35 下完全守规矩第一天上午就会融入；现在第一天最高约 67，第二天早上继续坐满才会 */
+var TT_CFG={seat:0.26,dorm:0.22,decay:0.6};   /* 20 分钟课表：保留久坐风险，避免压短课间后第一天早晨就被迫融入。 */
 /* 同化：坐得住、按时回宿舍就涨；满值直接融入。 */
 function ttTick(dt,nw){
   if(S.tt>=100){resolveAssimilation();return;}
@@ -256,7 +255,7 @@ var LEAVE_MIN=120;
 function onLeave(){ return !!RT.leaveUntil&&gameClock()<RT.leaveUntil; }
 function leaveLeft(){ return onLeave()?Math.ceil(RT.leaveUntil-gameClock()):0; }
 function leaveTick(){
-  if(RT.leaveUntil&&!onLeave()){ RT.leaveUntil=0; os('我：假条上写的时间到了。我得回到该在的地方去。',3.6,OS_KEEP); }
+  if(RT.leaveUntil&&!onLeave()){ RT.leaveUntil=0; os('我：假条上写的时间到了。接下来要避开巡察，留意集合广播。',3.6,OS_KEEP); }
 }
 function useLeave(){
   if(S.viol>=100||RT.violFull){ os('我：违规记满了。班主任看都不会看这张假条。',3); toast('违规已满 · 不能请假'); return; }

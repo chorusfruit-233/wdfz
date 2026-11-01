@@ -38,8 +38,8 @@ var Investigation={
     this.supply();
     var supply=this.state().supply;
     this.record('supply','临时补给箱移至'+(supply.site==='guard1'?'保安岗柜台':'食堂售货机旁')+'。可领取一份药片；封条能慢慢拆，也可投一枚硬币解锁。','事实','讲台移交单 · 补给附注');
-    UI.choice('移交单：钥匙在行政楼五楼校长办公室；保安岗有停车记录和备用手电。车库在西侧。',[
-      {label:'记下，先准备再去车库',fn:function(){autoSave();}},
+    UI.choice('移交单：钥匙在行政楼五楼校长办公室；保安岗有停车记录和备用手电。车库在西侧。外出登记可跨越普通课堂；12:50、17:50 回教室集合，熄灯回宿舍。校长室、考试和夜间仍要小心。',[
+      {label:'登记外出，记下移交事项',fn:function(){SchoolDay.grant();RT.dayRhythmVersion=1;Investigation.record('outing','讲台可以登记外出，不消耗物品。登记跨越普通课堂；12:50、17:50 必须回教室集合，合规后续签。熄灯回宿舍；校长室和考试不受外出登记保护。','事实','讲台 · 外出登记');autoSave();}},
       {label:'拿讲台上的粉笔',fn:function(){if(!hasItem('chalk'))addItem('chalk');autoSave();}}
     ]);
   },

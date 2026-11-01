@@ -127,7 +127,7 @@ class ThreatAuditTest(BrowserCase):
         result = page.evaluate("""() => {
           const valid=LESSON_TASKS.every(t=>t.choices.length===3&&t.answer>=0&&t.answer<3&&t.note);
           S.tsec=700;doEnterRoom('teach1');S.seated=true;S.ttTier=2;S.tt=59.9;
-          let said='';const old=window.os;window.os=(m)=>{said=m;};ttTick(0.2,'教室');window.os=old;
+          let said='';const old=window.os;window.os=(m)=>{said=m;};ttTick(0.5,'教室');window.os=old;
           return {count:LESSON_TASKS.length,valid,said};
         }""")
         self.assertEqual(result['count'], 10)

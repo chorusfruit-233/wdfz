@@ -1,10 +1,11 @@
 /* 学生会定时检查：游戏时刻触发，行为处罚按模拟运行秒结算。 */
 'use strict';
 
-/* warnLead：提前多少游戏分钟用校园广播提醒回教室（检查时只认教室，平时这两段是自由时间） */
+/* warningSeconds：按自然运行秒预留返程；课表变速不能把广播压到最后几秒。 */
 /* lateLimit：到点以后最多推迟多少游戏分钟开始（被电梯、异象、选项拦住）；超过就作废，不按「不在教室」处罚 */
-var INSPECT_CONFIG={times:[770,1070],warnLead:8,lateLimit:3,duration:8,moveEvery:1,moveViolation:2,gazeSan:2,
+var INSPECT_CONFIG={times:[770,1070],warningSeconds:60,lateLimit:3,duration:8,moveEvery:1,moveViolation:2,gazeSan:2,
   goodSan:3,badSan:8,goodViolation:8,badViolation:10,assimilation:3};
+var INSPECT_WARN_TIMES=INSPECT_CONFIG.times.map(function(t){return clockTimeBefore(t,INSPECT_CONFIG.warningSeconds);});
 var INSPECT_FX={group:null,room:null,points:null,scatter:null};
 var Inspection={
   state:function(){
@@ -23,8 +24,8 @@ var Inspection={
     if(S.screen!=='play'||after<=before)return;
     var st=Inspection.state();
     INSPECT_CONFIG.times.forEach(function(time,i){
-      var key=day+':'+i, warn=time-INSPECT_CONFIG.warnLead;
-      if(before<=warn&&after>=warn&&after<time&&!st.warned[key]){
+      var key=day+':'+i, warn=INSPECT_WARN_TIMES[i];
+      if(after>=warn&&after<time&&!st.warned[key]){
         st.warned[key]=true;
         os('广播：「请各班同学注意，学生会将于'+(i?'五点五十':'十二点五十')+'到各班检查，请回到自己的教室。」',5.5,OS_FORCE);
         try{ SFX.click(); }catch(e){}
@@ -36,16 +37,17 @@ var Inspection={
   },
   /* 广播之后、检查开始之前：这段时间的地点要求按教室显示 */
   upcoming:function(){
-    if(!RT.inspection||Inspection.active())return false;
+    if(Inspection.active())return false;
     var st=Inspection.state();
     return INSPECT_CONFIG.times.some(function(time,i){
       var key=S.day+':'+i;
-      return st.warned[key]&&!st.seen[key]&&S.tsec>=time-INSPECT_CONFIG.warnLead&&S.tsec<time;
+      return !st.seen[key]&&S.tsec>=INSPECT_WARN_TIMES[i]&&S.tsec<time;
     });
   },
   stale:function(item){return item.day!==S.day||S.tsec>INSPECT_CONFIG.times[item.slot]+INSPECT_CONFIG.lateLimit;},
   active:function(){return !!(RT.inspection&&RT.inspection.current);},
   pending:function(){return !!((RT.inspection&&(RT.inspection.current||RT.inspection.queue.length))||INSPECT_FX.scatter);},
+  quiet:function(){return Inspection.upcoming()||Inspection.pending()||!!(RT.inspection&&RT.inspection.calm>0);},
   points:function(){
     var result=[],n=20,i,j,angle,x,y;
     for(i=0;i<n&&result.length<6;i++){
@@ -114,16 +116,20 @@ var Inspection={
   finish:function(c){
     var st=Inspection.state();if(st.current!==c)return;
     st.current=null;
+    st.calm=8;
     if(INSPECT_FX.group)INSPECT_FX.scatter={t:0,duration:.8};
     S.san=Math.max(0,S.san-(c.compliant?INSPECT_CONFIG.goodSan:INSPECT_CONFIG.badSan));
     addViolation(c.compliant?-INSPECT_CONFIG.goodViolation:INSPECT_CONFIG.badViolation,'inspection');
     S.tt=clamp(S.tt+(c.compliant?INSPECT_CONFIG.assimilation:-INSPECT_CONFIG.assimilation),0,100);
     os(c.compliant?'我：黑影散开了。我还在教室里。':'我：黑影散开了。它们已经记下我不在教室。',3.8,OS_FORCE);
     settleSan();if(!S.dead&&S.tt>=100)resolveAssimilation();
+    if(c.compliant&&inClassroomHere()&&!S.dead)SchoolDay.grant(true);
+    autoSave();
   },
   tick:function(dt){
     Inspection.scatterTick(dt);
     var st=Inspection.state(),c=st.current;
+    st.calm=Math.max(0,(st.calm||0)-dt);
     if(!c){
       if(INSPECT_FX.scatter)return;
       if(S.room==='portal_tunnel')return;

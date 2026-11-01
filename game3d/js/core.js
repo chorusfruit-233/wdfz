@@ -33,35 +33,41 @@ var KEEP={
 };
 function isSolidCh(c){return c==='#'||c==='S';}   /* 楼梯占着一整格，人不能站进去 */
 
-/* 每真实分钟走多少游戏分钟：每次课间 3 分钟，午饭+午休 8 分钟，课外活动+晚饭 8 分钟。
-   保留其他时段，一天自然推进约 43 分 47 秒（含《先辈》慢速窗口）。 */
-var RATE={CLASS:84,BREAK:5,MEAL:13.125,ASSEM:32,FREE:6.25,NIGHT:110,WASH:18,LATE:240};
+/* 课表保留世界钟表；现实预算由四个连续阶段决定，不随每次上下课突然变速。
+   07:20→12:50、12:50→17:50、17:50→22:20 各 6 分钟，熄灯后 2 分钟。
+   隐藏慢速窗口的 10 秒计入第一阶段，总计 1200 秒。 */
+var BEAST_SLOW_T0=705, BEAST_SLOW_T1=705+20/60;
+var BEAST_T0=705+14/60, BEAST_T1=705+15/60, BEAST_RATE=2;
+var DAY_PHASES=[[440,770,360],[770,1070,360],[1070,1340,360],[1340,1500,120]];
+function dayPhaseAt(t){
+  return DAY_PHASES.find(function(p){return t>=p[0]&&t<p[1];})||DAY_PHASES[3];
+}
 /* 上课 8:00–12:15、14:00–17:20；晚自习 18:10–19:40、20:00–22:00；22:20 熄灯 */
 var SCHED=[
-  [440,480,'早读',    '教室',RATE.CLASS],
-  [480,525,'第 1 节','教室',RATE.CLASS],
-  [525,540,'课间',    '自由',RATE.BREAK],
-  [540,585,'第 2 节','教室',RATE.CLASS],
-  [585,620,'课间操',  '操场',RATE.ASSEM],
-  [620,665,'第 3 节','教室',RATE.CLASS],
-  [665,690,'课间',    '自由',25/3],
-  [690,735,'第 4 节','教室',RATE.CLASS],
-  [735,800,'午饭',    '自由',RATE.MEAL],
-  [800,840,'午休',    '自由',RATE.MEAL],
-  [840,885,'第 5 节','教室',RATE.CLASS],
-  [885,890,'课间',    '自由',5/3],
-  [890,935,'第 6 节','教室',RATE.CLASS],
-  [935,945,'课间',    '自由',10/3],
-  [945,990,'第 7 节','教室',RATE.CLASS],
-  [990,995,'课间',    '自由',5/3],
-  [995,1040,'第 8 节','教室',RATE.CLASS],
-  [1040,1060,'课外活动','自由',RATE.FREE],
-  [1060,1090,'晚饭',  '自由',RATE.FREE],
-  [1090,1180,'晚自习一','教室',RATE.NIGHT],
-  [1180,1200,'课间',  '自由',20/3],
-  [1200,1320,'晚自习二','教室',RATE.NIGHT],
-  [1320,1340,'洗漱',  '自由',RATE.WASH],
-  [1340,1500,'熄灯后','自由',RATE.LATE]
+  [440,480,'早读',    '教室'],
+  [480,525,'第 1 节','教室'],
+  [525,540,'课间',    '自由'],
+  [540,585,'第 2 节','教室'],
+  [585,620,'课间操',  '操场'],
+  [620,665,'第 3 节','教室'],
+  [665,690,'课间',    '自由'],
+  [690,735,'第 4 节','教室'],
+  [735,800,'午饭',    '自由'],
+  [800,840,'午休',    '自由'],
+  [840,885,'第 5 节','教室'],
+  [885,890,'课间',    '自由'],
+  [890,935,'第 6 节','教室'],
+  [935,945,'课间',    '自由'],
+  [945,990,'第 7 节','教室'],
+  [990,995,'课间',    '自由'],
+  [995,1040,'第 8 节','教室'],
+  [1040,1060,'课外活动','自由'],
+  [1060,1090,'晚饭',  '自由'],
+  [1090,1180,'晚自习一','教室'],
+  [1180,1200,'课间',  '自由'],
+  [1200,1320,'晚自习二','教室'],
+  [1320,1340,'洗漱',  '自由'],
+  [1340,1500,'熄灯后','自由']
 ];
 var MEALS=[[735,800],[1060,1090]];         /* 食堂开饭的时间段 */
 function eveningActivity(t){ return t>=1040&&t<1090; }
@@ -79,9 +85,35 @@ function needWhere(t){
   return '自由';
 }
 /* 隐藏时段：慢速区间与实际判定窗口分别计量。 */
-var BEAST_SLOW_T0=705, BEAST_SLOW_T1=705+20/60;
-var BEAST_T0=705+14/60, BEAST_T1=705+15/60, BEAST_RATE=2;
-function rateAt(t){ return (t>=BEAST_SLOW_T0&&t<BEAST_SLOW_T1)?BEAST_RATE:periodAt(t)[4]; }
+function rateAt(t){
+  if(t>=BEAST_SLOW_T0&&t<BEAST_SLOW_T1)return BEAST_RATE;
+  var p=dayPhaseAt(t),slow=p===DAY_PHASES[0]?BEAST_SLOW_T1-BEAST_SLOW_T0:0;
+  return (p[1]-p[0]-slow)*60/(p[2]-slow*60/BEAST_RATE);
+}
+function clockBoundary(t){
+  var end=Math.min(periodAt(t)[1],dayPhaseAt(t)[1]);
+  if(t<BEAST_SLOW_T0)end=Math.min(end,BEAST_SLOW_T0);
+  else if(t<BEAST_SLOW_T1)end=Math.min(end,BEAST_SLOW_T1);
+  return end;
+}
+/* 单个自然日内的模拟秒，供课表验证、返程预警与主动整理共用。 */
+function realSecondsBetween(from,to){
+  var seconds=0;
+  for(var t=from;t<to-1e-9;){
+    var end=Math.min(to,clockBoundary(t));
+    if(end<=t)break;
+    seconds+=(end-t)*60/rateAt(t);t=end;
+  }
+  return seconds;
+}
+function clockTimeBefore(time,seconds){
+  var lo=440,hi=time;
+  for(var i=0;i<48;i++){
+    var mid=(lo+hi)/2;
+    if(realSecondsBetween(mid,time)>seconds)lo=mid;else hi=mid;
+  }
+  return (lo+hi)/2;
+}
 function isNight(){ return S.tsec>=LIGHTS_OUT||S.tsec<440; }
 
 /* 预知梦：中等（第一天死了能醒三次，异象 40–64 秒一次，提前一点告诉你下一个是什么）

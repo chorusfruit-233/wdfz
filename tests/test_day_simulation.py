@@ -39,13 +39,12 @@ class DaySimulationTest(BrowserCase):
         self.assertLess(r['clock'], 12*60, r)            # 第二天上午
         print('\n一直坐着上课两天：', {k: (round(v, 1) if isinstance(v, float) else v) for k, v in r.items() if k != 'log'})
 
-    def test_truancy_does_not_drain_san_and_day_lasts_about_44_minutes(self):
+    def test_truancy_does_not_drain_san_and_day_lasts_20_minutes(self):
         r = self.simulate('truant')
         self.assertFalse(r['dead'], r)
-        # 逃课只加违规，不按时段扣 SAN；两次学生会检查不在教室各扣一次
+        # 普通离席不持续加违规或扣 SAN；检查与夜间规则仍结算。
         self.assertGreater(r['minSan'], 60, r)
         self.assertGreater(r['maxViol'], 50, r)
         self.assertEqual(r['inspections'], 2, r)
-        self.assertGreater(r['real'], 41*60, r)
-        self.assertLess(r['real'], 47*60, r)
+        self.assertAlmostEqual(r['real'], 20*60, delta=.25, msg=r)
         print('\n逃课一天：', {k: (round(v, 1) if isinstance(v, float) else v) for k, v in r.items()})

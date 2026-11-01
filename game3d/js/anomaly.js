@@ -700,7 +700,7 @@ function anDrive(dt){
   if(S.fn&&S.fn.on&&S.fn.v<72){ return; }
   if(!AN.active){
     if(S.room==='portal_tunnel')return;
-    if(typeof Inspection!=='undefined'&&Inspection.pending())return;
+    if(typeof Inspection!=='undefined'&&Inspection.quiet())return;
     AN.next -= dt;
     if(AN.next<=0) anStart();
   } else {

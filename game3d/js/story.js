@@ -120,6 +120,7 @@ function fnTick(dt){
     if(wz.indexOf('any')>=0||wz.indexOf(tag)>=0) pool.push(pi);
   }
   if(!pool.length) return;
+  if(Inspection.quiet())return;
   f.next-=dt;
   if(f.next>0) return;
   f.next=22+Math.random()*12;

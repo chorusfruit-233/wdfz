@@ -87,6 +87,7 @@ var PAT_CFG={stuckGiveUp:6,lostSearch:true,lostLinger:3,lockerMemory:true,memLin
 function patReset(keepHiding){
   patRemoveFig();
   PAT.blinkCD=0.8;PAT.afterBlink=0;
+  PAT.cited=false;
   PAT.state='idle'; PAT.t=0; PAT.lock=0; PAT.locked=false; PAT.lost=0; PAT.still=0; PAT.room=null;
   VisualState.patrolFlick=0; VisualState.patrolRed=0;
   if(HIDE.on&&!keepHiding){ HIDE.on=false; var el=document.getElementById('hideslits'); if(el) el.style.display='none'; }
@@ -136,7 +137,10 @@ function patSees(){
   return Math.hypot(S.x-PAT.x,S.y-PAT.y)<PAT_SEE&&patLOS();
 }
 /* 规规矩矩坐在自己座位上的人，它不管 */
-function patIgnores(){ return (S.seated&&needWhere(S.tsec)==='教室'&&atMySeat())||onLeave(); }   /* 请假中它也不管你 */
+function patIgnores(){
+  return (S.seated&&needWhere(S.tsec)==='教室'&&atMySeat())||onLeave()||
+    (SchoolDay.excused()&&!isNight()&&S.room!=='admin5');
+}
 /* 室内寻路：网格上 BFS，走格子中心。以前走直线，一碰到教室的墙就卡在原地 */
 function patWalkable(R,c,r){
   if(r<0||c<0||r>=R.rows||c>=R.cols) return false;
@@ -353,7 +357,7 @@ function patTick(dt){
   if(PAT.state==='idle'){
     VisualState.patrolFlick=Math.max(0,(VisualState.patrolFlick||0)-dt); VisualState.patrolRed=Math.max(0,(VisualState.patrolRed||0)-dt);
     /* 检查要求静止避开视线，不能同时启动一次巡察；已有巡察仍继续，免得排队中的检查永远等不到。 */
-    if(typeof Inspection!=='undefined'&&Inspection.pending())return;
+    if(typeof Inspection!=='undefined'&&Inspection.quiet())return;
     if(!patEligible()||patIgnores()) return;
     PAT.next-=dt;
     if(PAT.next<=0) patStart();
@@ -382,6 +386,7 @@ function patTick(dt){
     }
     if(PAT.lock>=1){
       PAT.locked=true; PAT.lost=0; PAT.still=0;
+      if(!PAT.cited){PAT.cited=true;addViolation(8,'patrol');}
       os('我：灯一下子全红了。它转过头来。它看见我了。',3.4,OS_FORCE);
       try{ SFX.anomaly&&SFX.anomaly('turn'); }catch(e){}
     }
