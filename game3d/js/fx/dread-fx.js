@@ -3,14 +3,19 @@
    · 地上的纸条：一张平放的纸，手写一行字；不挡路、没有碰撞，出房间就收走。 */
 'use strict';
 
-var DREADFX={note:null,lamp:-1};
+var DREADFX={note:null,texture:null,lamp:-1};
 var DreadFx={
-  clear:function(){
+  clearNote:function(){
     if(DREADFX.note){
       if(DREADFX.note.parent) DREADFX.note.parent.remove(DREADFX.note);
       ThreeBackend.disposeGroup(DREADFX.note);
       DREADFX.note=null;
     }
+    /* 纸条的画布贴图不属于共享素材；释放材质不会自动释放它。 */
+    if(DREADFX.texture){DREADFX.texture.dispose();DREADFX.texture=null;}
+  },
+  clear:function(){
+    DreadFx.clearNote();
     DREADFX.lamp=-1;
   },
   lamp:function(n){
@@ -26,7 +31,7 @@ var DreadFx={
   note:function(text,seed){
     if(!GLR||!GLR.scene||S.mode!=='in') return;
     var R=INTERIORS[S.room]; if(!R) return;
-    if(DREADFX.note){ if(DREADFX.note.parent) DREADFX.note.parent.remove(DREADFX.note); ThreeBackend.disposeGroup(DREADFX.note); DREADFX.note=null; }
+    DreadFx.clearNote();
     /* 落点：视线前方 1.6–2.6 米能站人的地方；找不到就放脚边 */
     var spot=null, i;
     for(i=0;i<10&&!spot;i++){
@@ -47,6 +52,7 @@ var DreadFx={
     if(cur) lines.push(cur);
     lines.slice(0,3).forEach(function(l,j){ g.fillText(l,16,58+j*36); });
     var tex=new THREE.CanvasTexture(cv);
+    DREADFX.texture=tex;
     /* 纸在暗处也反着一点光：带一层很淡的自发光，字还能看清 */
     var mesh=new THREE.Mesh(new THREE.PlaneGeometry(0.34,0.234),new THREE.MeshLambertMaterial({map:tex,emissive:0x8a8478,emissiveMap:tex,side:THREE.DoubleSide}));
     var p=worldToScene(spot.x,spot.y,R);

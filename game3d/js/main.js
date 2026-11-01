@@ -1,10 +1,10 @@
 /* 里世界 3D · 主循环、HUD、开始 / 继续 / 退出、启动 */
 'use strict';
 
-function onEnterRoom(id){
+function onEnterRoom(id,restoring){
   if(id==='garage1') os('我：车库里没有灯。空气是潮的，有一股铁和机油的味道。远处有水在滴。',3.6);
   if(id==='portal_tunnel') os('我：不想靠近。墙上的黑色黏液还在缓慢流动。',4.5,OS_FORCE);
-  try{ Dread.enter(id); }catch(e){}
+  try{ Dread.enter(id,restoring); }catch(e){}
   spotTick();
 }
 
@@ -294,7 +294,7 @@ var Game={
       }catch(e){}
       if(AN.id==='roster'&&!AN.data.done&&Number.isFinite(d.anChoiceMs)) useRoster(d.anChoiceMs);
     }
-    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral},restoreAnomalyFX);
+    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral,restoreVisit:true},restoreAnomalyFX);
     else { S.mode='out'; S.room=null; enterWorldOut(); syncCamera(0); restoreAnomalyFX(); }
     var _tel2=document.getElementById('talent'); if(_tel2) _tel2._set=false;
     var _hot2=document.getElementById('hot'); if(_hot2) _hot2._sig='';

@@ -115,3 +115,51 @@ class DreadTest(BrowserCase):
         self.assertFalse(result['active'])
         self.assertTrue(result['heard'] and result['paid'] and result['trace'])
         self.assertFalse(result['dead'])
+
+    def test_continue_restores_the_saved_visit_without_another_entry(self):
+        for touch in (False, True):
+            with self.subTest(touch=touch):
+                page = self.page(touch=touch)
+                page.evaluate("""S.day=2;S.tsec=760;
+                  doEnterRoom('teach2');doExitRoom();doEnterRoom('teach2');
+                  window.savedVisit=JSON.stringify(DREAD.visitFx);saveGame();Game.quit();
+                  window.visitRestored=false;window.originalEnter=onEnterRoom;
+                  onEnterRoom=function(){originalEnter.apply(this,arguments);visitRestored=true;};
+                  Game.continue_();running=false;""")
+                page.wait_for_function('visitRestored')
+                self.assert_js(page,"RT.visits['2:teach2']===2&&JSON.stringify(DREAD.visitFx)===savedVisit&&!!DREADFX.note")
+                page.evaluate("saveGame();Game.quit();visitRestored=false;Game.continue_();running=false")
+                page.wait_for_function('visitRestored')
+                self.assert_js(page,"RT.visits['2:teach2']===2&&JSON.stringify(DREAD.visitFx)===savedVisit")
+                page.evaluate("doExitRoom();doEnterRoom('teach2')")
+                self.assert_js(page,"RT.visits['2:teach2']===3&&DREAD.visitFx.kind==='lamp'")
+
+    def test_leaving_or_resetting_cancels_the_pending_entry_sound(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+          S.day=2;doEnterRoom('teach2');
+          for(let n=2;n<30;n++){
+            RT.visits['2:teach2']=n-1;Dread.enter('teach2');
+            if(DREAD.visitFx.kind==='left')break;
+          }
+          const pending=DREAD.leftAt>DREAD.t;
+          Dread.enter(null);const left=DREAD.leftAt;
+          DREAD.leftAt=DREAD.t+1;Dread.reset();
+          return {pending,left,reset:DREAD.leftAt};
+        }""")
+        self.assertEqual(result,{'pending':True,'left':0,'reset':0})
+
+    def test_replacing_and_clearing_notes_releases_their_gpu_textures(self):
+        page = self.page()
+        result = page.evaluate("""() => {
+          doEnterRoom('teach2');S.pitch=-.8;syncCamera(0);render(.016);
+          const before=GLR.renderer.info.memory.textures,counts=[];
+          for(let i=0;i<3;i++){
+            DreadFx.note('你昨天也来过。',.4);render(.016);
+            counts.push(GLR.renderer.info.memory.textures);
+          }
+          DreadFx.clear();render(.016);
+          return {before,counts,after:GLR.renderer.info.memory.textures};
+        }""")
+        self.assertEqual(result['counts'],[result['before']+1]*3)
+        self.assertEqual(result['after'],result['before'])

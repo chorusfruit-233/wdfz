@@ -352,6 +352,8 @@ function patTick(dt){
   PAT.afterBlink=Math.max(0,(PAT.afterBlink||0)-dt);
   if(PAT.state==='idle'){
     VisualState.patrolFlick=Math.max(0,(VisualState.patrolFlick||0)-dt); VisualState.patrolRed=Math.max(0,(VisualState.patrolRed||0)-dt);
+    /* 检查要求静止避开视线，不能同时启动一次巡察；已有巡察仍继续，免得排队中的检查永远等不到。 */
+    if(typeof Inspection!=='undefined'&&Inspection.pending())return;
     if(!patEligible()||patIgnores()) return;
     PAT.next-=dt;
     if(PAT.next<=0) patStart();
