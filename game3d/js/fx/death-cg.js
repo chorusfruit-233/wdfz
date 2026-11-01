@@ -235,7 +235,7 @@ var DeathCG=(function(){
     }
   };
 
-  /* ---- swarm：蛾群。远处一团，绕成一根柱子把你围住，最后扑满镜头 ---- */
+  /* ---- swarm：蛾群。灯下一团黑色的蛾子，绕成一根柱子把你围住，最后扑满镜头 ---- */
   CG.swarm={
     build:function(c){
       var i,r=c.rand,n=70;

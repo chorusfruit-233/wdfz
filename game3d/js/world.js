@@ -218,7 +218,7 @@ function doEnterRoom(id,spawn){
   try{ unstick(); }catch(e){}
   VisualState.hurt=0;
   showBanner(INTERIORS[id].name);
-  onEnterRoom(id);
+  onEnterRoom(id,!!(spawn&&spawn.restoreVisit));
   autoSave();
 }
 function exitRoom(){ fadeTo(function(){ doExitRoom(); }); }

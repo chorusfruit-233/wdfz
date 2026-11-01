@@ -109,3 +109,21 @@ class CampusEventTest(BrowserCase):
         self.assertFalse(result['held'])
         self.assertEqual(result['late'],{'active':False,'queue':0,'san':80,'viol':30})
         self.assertTrue(result['soon'])
+
+    def test_inspection_defers_new_patrols_but_allows_existing_patrols_to_end(self):
+        page=self.game()
+        result=page.evaluate("""()=>{
+          doEnterRoom('admin5');S.tsec=770;S.seated=false;patReset();PAT.next=0;
+          Inspection.start({day:2,slot:0});patTick(.1);
+          const activeHeld=PAT.state==='idle';
+          Inspection.finish(Inspection.state().current);patTick(.1);
+          const scatterHeld=PAT.state==='idle';
+          Inspection.scatterTick(1);patTick(.1);
+          const resumed=PAT.state==='warn';
+          Inspection.state().queue.push({day:2,slot:0});Inspection.tick(.1);
+          const queued=!Inspection.active();const before=PAT.t;patTick(.1);
+          const progressed=PAT.t>before;patEnd();Inspection.tick(.1);
+          return {activeHeld,scatterHeld,resumed,queued,progressed,started:Inspection.active()};
+        }""")
+        self.assertEqual(result,{'activeHeld':True,'scatterHeld':True,'resumed':True,
+                                 'queued':True,'progressed':True,'started':True})
