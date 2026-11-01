@@ -775,8 +775,8 @@ var DeathCG=(function(){
       /* 共用的顶点色材质（手、头、笑脸、钟……）和贴了图的眼睛精灵 */
       if(typeof fxVCMat==='function') g.add(new THREE.Mesh(box,fxVCMat()));
       if(typeof gazeEye==='function'){ var eye=gazeEye(0.01,'red'); eye.material.opacity=0.01; g.add(eye); }
-      /* 清华水杯的油画贴图（水杯死亡、异象都用）：材质编好，贴图先传上去 */
-      if(typeof cupMats==='function'){ var cm=cupMats(); g.add(new THREE.Mesh(box,cm.paint)); try{ GLR.renderer.initTexture(cm.paint.map); }catch(e){} }
+      /* 清华水杯的油画材质（水杯死亡、异象都用）：只编着色器，画本身开局十几秒后再画 */
+      if(typeof cupWarmMat==='function') g.add(new THREE.Mesh(box,cupWarmMat()));
       g.position.copy(GLR.cam.position); g.updateMatrixWorld(true);
       /* 只编这一小组（灯光、雾取当前场景的），不用把整个校园再走一遍 */
       var prev=GLR.renderer.getRenderTarget();

@@ -274,6 +274,7 @@ var Game={
     SFX.resume();
     /* 开局先把死亡演出、结局过场要用的着色器编好（第一次进场景、前情提要的时候顿一下，不在死的那一刻顿） */
     setTimeout(function(){ try{ DeathCG.warm(); }catch(e){} },700);
+    setTimeout(function(){ try{ if(running&&typeof cupMats==='function') cupMats(); }catch(e){} },12000);   /* 清华水杯的油画：游戏跑起来以后再画（约几十毫秒），第一次见到杯子时不用现画 */
     }catch(e){ try{ showErr('Game.start: '+e.message); }catch(_e){} }
   },
   continue_:function(){
@@ -299,6 +300,7 @@ var Game={
     if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral,restoreVisit:true},restoreAnomalyFX);
     else { S.mode='out'; S.room=null; enterWorldOut(); syncCamera(0); restoreAnomalyFX(); }
     setTimeout(function(){ try{ DeathCG.warm(); }catch(e){} },700);
+    setTimeout(function(){ try{ if(running&&typeof cupMats==='function') cupMats(); }catch(e){} },12000);   /* 清华水杯的油画：游戏跑起来以后再画（约几十毫秒），第一次见到杯子时不用现画 */
     var _tel2=document.getElementById('talent'); if(_tel2) _tel2._set=false;
     var _hot2=document.getElementById('hot'); if(_hot2) _hot2._sig='';
     SFX.resume();

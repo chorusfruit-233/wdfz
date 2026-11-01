@@ -14,12 +14,13 @@ function cupFallTime(){ return Math.sqrt(2*CUP_H/9.8); }
    白色哑光的锥形随行杯，下大半圈是一幅油画：紫蓝的天、白云、松树和二校门（门楣上「清華園」）；
    画的上沿是一圈云朵形的金边，背面两丛松树之间空出一个 V 形的白，金色竖写「清華」两个字。
    杯口和内胆是不锈钢，最底下一圈银灰色的底圈；淡紫色的扣盖，带喝水口和滑盖。
-   模型包不带这种专用贴图，所以杯子在这里车削建模，画是开局现画的一张画布贴图（同一局只画一次）。
+   模型包不带这种专用贴图，所以杯子在这里车削建模，画是现画的一张画布贴图（开局十几秒后顺手画好，同一局只画一次）。
    尺寸按真杯子（米）：高 17 厘米，杯口直径约 9 厘米，杯底约 7 厘米。 */
 var CUP_DIM={h:0.170,band:0.010,rb:0.0345,rt:0.0448,rim:0.0425,inBot:0.016,lidY:0.166,lidR:0.0462,lidH:0.022};
 var CUP_GEO={}, CUP_MAT={}, CUP_TEX={};
 function cupSeg(){ return Math.max(16,Math.round(28*Quality.get().segments)); }
-function cupTexW(){ return (Quality.get().texture||512)<512?512:1024; }
+/* 贴图宽度：游戏里杯子在屏幕上最多两百来像素高，512 就够；超精细、真实档用 1024 */
+function cupTexW(){ return (Quality.get().texture||512)>=1024?1024:512; }
 
 /* 画：u 绕杯身一圈（0→1，从 +z 那一面往 +x 转），v 从底圈上沿（0）到杯口（1）。V 形空白在 u=0.5，二校门在 u=0.82 */
 function cupPaintCanvas(W){
@@ -226,6 +227,14 @@ function cupPartGeo(part){
   var g=part==='wall'?cupWallGeo(seg):part==='lid'?cupLidGeo(seg):cupPartsGeo(seg);
   g.userData={shared:true,cupPart:part};
   CUP_GEO[key]=g; return g;
+}
+/* 开局预热用：和油画材质同一个着色器，但贴图只有一个像素——不用为了编着色器去画那张画 */
+var CUP_WARM=null;
+function cupWarmMat(){
+  if(CUP_WARM) return CUP_WARM;
+  var t=new THREE.DataTexture(new Uint8Array([239,238,234,255]),1,1); t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true;
+  CUP_WARM=new THREE.MeshBasicMaterial({map:t,vertexColors:true,fog:true}); CUP_WARM.userData.shared=true;
+  return CUP_WARM;
 }
 function cupMats(){
   var W=cupTexW();
