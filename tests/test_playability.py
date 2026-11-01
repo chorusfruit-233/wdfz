@@ -161,3 +161,25 @@ class PlayabilityTest(BrowserCase):
             page.evaluate("SET.touchLayout={ttop:{x:90,y:8}};TouchLayout.apply()")
             self.assert_js(page,"""(()=>{let b=document.getElementById('fullscreen-toggle').getBoundingClientRect();return Object.values(TouchLayout.rects).every(r=>r.x+r.w<=b.x||b.right<=r.x||r.y+r.h<=b.y||b.bottom<=r.y);})()""")
 
+    def test_notebook_focus_follows_discovered_routes_without_restoring_forgotten_text(self):
+        page=self.game()
+        page.evaluate("Investigation.notice();UI.closeChoice();doEnterRoom('portal_tunnel');PortalExploration.readDiary();UI.open('note')")
+        self.assertIn('实验楼二、四、五楼',page.evaluate('Investigation.goal()'))
+        page.evaluate("S.bag=[];S.day++;UI.renderNote()")
+        self.assertNotIn('实验楼二、四、五楼',page.evaluate('Investigation.goal()'))
+        self.assertIn('重读',page.evaluate('Investigation.goal()'))
+        page.evaluate("RT.hacked=true;RT.data=true;Investigation.record('whitelistSynced','已同步','验证');UI.renderNote()")
+        self.assertIn('西小门',page.evaluate('Investigation.goal()'))
+        page.locator('.investigation-focus button').filter(has_text='关注车辆').click()
+        self.assert_js(page,"loadGame().rt.investigation.focus==='car'&&RT.data&&!RT.portalSketch")
+
+    def test_mobile_floor_map_can_scroll_sideways(self):
+        page=self.game(touch=True)
+        page.evaluate("UI.open('mapv')")
+        box=page.locator('.floor-scroll').bounding_box()
+        y=box['y']+min(60,box['height']/2)
+        self.swipe(page,start=(box['x']+box['width']-25,y),end=(box['x']+25,y))
+        page.wait_for_timeout(150)
+        self.assert_js(page,"document.querySelector('.floor-scroll').scrollLeft>20")
+        self.assert_js(page,"!LOOKDRAG.on&&!TOUCH.active")
+

@@ -355,6 +355,8 @@ body.pro #hud,body.pro #cross,body.pro #prompt{opacity:0!important;transition:op
 #mapfloor{max-width:75%;min-height:44px;background:#19252a;color:#dcebe4;font-size:16px;border:1px solid #587168;border-radius:5px}
 .floor-scroll{overflow:auto;max-width:100%;border:1px solid #52655c;touch-action:pan-x pan-y}
 .floor-scroll canvas{display:block;max-width:none}
+#journal.map-open .jbody{touch-action:pan-x pan-y}
+.maplegend[hidden]{display:none}
 .floor-legend{font-size:13px;line-height:1.8;color:#afc4bb}
 :root{--read-scale:1}
 #layoutSettings{font-size:14px;line-height:1.6;border:1px solid #52655c;padding:10px}
@@ -378,3 +380,5 @@ body.touch #sub{font-size:calc(15px * var(--read-scale))}
 .playtest-tools summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
 .playtest-tools textarea{display:block;box-sizing:border-box;width:100%;font-size:16px;background:#172328;color:#e4eee5}
 .playtest-tools button{min-height:44px;padding:6px;margin:6px 0}
+.investigation-focus{display:flex;flex-wrap:wrap;gap:8px}
+.investigation-focus button{min-height:44px;padding:8px;background:#20372d;color:#e4eee5;border:1px solid #587168;border-radius:5px;font:inherit;cursor:pointer}

@@ -47,7 +47,7 @@ UI.open=function(id){
   UI.openPanel=id;
   if(JOURNAL_TABS[id]){
     UI.lastTab=id;
-    var jr=document.getElementById('journal'); if(jr) jr.style.display='flex';
+    var jr=document.getElementById('journal'); if(jr){jr.style.display='flex';jr.classList.toggle('map-open',id==='mapv');}
     var tabs=document.querySelectorAll('#journal .jtabs button');
     for(var i=0;i<tabs.length;i++){ var on=tabs[i].getAttribute('data-tab')===id; tabs[i].classList.toggle('on',on); tabs[i].setAttribute('aria-selected',String(on)); }
     el.style.display='block';
