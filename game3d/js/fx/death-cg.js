@@ -238,25 +238,47 @@ var DeathCG=(function(){
   /* ---- swarm：蛾群。远处一团，绕成一根柱子把你围住，最后扑满镜头 ---- */
   CG.swarm={
     build:function(c){
-      var i,r=c.rand,geo=new THREE.PlaneGeometry(0.17,0.1),m=mat(0x8a7a62,undefined,{side:THREE.DoubleSide});      /* 灰白的蛾子，暗处也看得见 */
-      c.moths=[]; c.mothIM=c.inst(geo,m,70);                 /* 70 只蛾子一次画完 */
-      for(i=0;i<70;i++) c.moths.push({m:{a:r()*6.283,r:0.6+r()*1.6,h:0.4+r()*2.4,sp:1.6+r()*1.8,ph:r()*6.283}});
+      var i,r=c.rand,n=70;
+      /* 和游戏里的蛾群同一种：黑色的翅膀（前翅尖、后翅圆）+ 黑色的身子（weather.js），实例化一次画完 */
+      var ws=new THREE.Shape();
+      ws.moveTo(0,0.012); ws.lineTo(0.05,0.03); ws.lineTo(0.072,0.018); ws.quadraticCurveTo(0.06,-0.012,0.04,-0.016);
+      ws.quadraticCurveTo(0.03,-0.04,0.008,-0.03); ws.lineTo(0,-0.014); ws.lineTo(0,0.012);
+      var wing=new THREE.ShapeGeometry(ws,3); wing.rotateX(-Math.PI/2);
+      c.wingIM=c.inst(wing,mat(0x111111,undefined,{side:THREE.DoubleSide}),n*2);
+      c.bodyIM=c.inst(new THREE.BoxGeometry(0.016,0.016,0.06),mat(0x080808),n);
+      c.moths=[];
+      for(i=0;i<n;i++) c.moths.push({a:r()*6.283,r:0.35+r()*1.3,h:r()*0.9,sp:(r()<0.5?-1:1)*(1.6+r()*1.8),ph:r()*6.283,fl:26+r()*16});
+      /* 前兆：灯下面聚着一团（游戏里这个异象也是这么出场的）——黑的蛾子映在灯光里才看得见 */
+      c.box(0.008,0.5,0.008,0x111111,undefined,0,2.55,4.5);                        /* 吊灯的线 */
+      c.bulb=c.mesh(new THREE.SphereGeometry(0.06,10,8),mat(0xffe9c0,undefined,{fog:false}),0,2.26,4.5);
+      var tex=(typeof shadeTex==='function')?shadeTex('pool'):null;
+      c.glow=c.add(new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:0xffd9a0,transparent:true,depthWrite:false,fog:false,
+        blending:THREE.AdditiveBlending,opacity:0.7})),0,2.26,4.5);
+      c.glow.scale.set(1.5,1.5,1);                                                   /* 不碰到天花板，免得光晕被切出硬边 */
       c.veil(0x0c0905);
     },
     update:function(c,k,view){
       var gather=ss(k,0.4,1.4), close=ss(k,1.4,2.5), cover=ss(k,2.5,3.2);
       c.cam(view,k,0,0.22*gather*(1-close)-0.1*close+0.05*Math.sin(k*17)*close*c.shk,-0.35*cover);
-      var cy=c.camY(), a=new THREE.Vector3(), b=new THREE.Vector3(), q=new THREE.Vector3();
-      c.moths.forEach(function(o,i){
-        var m=o.m, ang=m.a+k*m.sp;
-        a.set(Math.cos(ang)*m.r*0.7, 1.6+(m.h-1.6)*0.6, 4.5+Math.sin(ang)*m.r*0.5);            /* 远处的一团 */
+      var cy=c.camY(), a=new THREE.Vector3(), b=new THREE.Vector3(), q=new THREE.Vector3(), o=c.mothO||(c.mothO=new THREE.Object3D());
+      o.rotation.order='YZX';
+      var sc=1.5+1.0*cover;                                                          /* 扑到脸上的时候显得大 */
+      c.moths.forEach(function(m,i){
+        var ang=m.a+k*m.sp;
+        a.set(Math.cos(ang)*m.r*0.6, 2.2+(m.h-0.45)*0.9+Math.sin(ang*1.7+m.ph)*0.12, 4.5+Math.sin(ang)*m.r*0.6);   /* 绕着灯 */
         var R=2.2*(1-close)+0.3+0.15*m.r, ang2=m.a+k*m.sp*1.6;
-        b.set(Math.cos(ang2)*R, m.h+(cy-m.h)*close*0.7, Math.sin(ang2)*R);                    /* 绕着你的柱子 */
+        b.set(Math.cos(ang2)*R, 0.6+m.h*2+(cy-0.6-m.h*2)*close*0.7, Math.sin(ang2)*R);   /* 绕着你的柱子 */
         q.lerpVectors(a,b,gather);
         if(cover>0){ q.lerp(new THREE.Vector3(Math.cos(ang2)*0.18,cy+Math.sin(ang2*1.3)*0.1,0.16+0.08*Math.sin(ang2)),cover*0.9); }
-        setI(c.mothIM,i,q.x,q.y,q.z,Math.sin(k*9+m.ph)*0.5,ang2,0,0.25+0.75*Math.abs(Math.sin(k*28+m.ph)),1,1);   /* 扑翅 */
+        var head=m.sp>0?-ang2:Math.PI-ang2, flap=Math.sin(k*m.fl+m.ph)*1.1+0.25;
+        o.position.copy(q); o.rotation.set(0,head,0); o.scale.set(sc,sc,sc); o.updateMatrix(); c.bodyIM.setMatrixAt(i,o.matrix);
+        o.rotation.set(0,head,flap); o.updateMatrix(); c.wingIM.setMatrixAt(i*2,o.matrix);
+        o.rotation.set(0,head,-flap); o.scale.set(-sc,sc,sc); o.updateMatrix(); c.wingIM.setMatrixAt(i*2+1,o.matrix);
       });
-      c.mothIM.instanceMatrix.needsUpdate=true;
+      c.wingIM.instanceMatrix.needsUpdate=true; c.bodyIM.instanceMatrix.needsUpdate=true;
+      /* 灯：蛾子从前面飞过时一明一暗；它们离开灯扑向你以后，灯也暗下去 */
+      var fl=0.8+0.2*Math.sin(k*23)*Math.sin(k*7.3);
+      c.glow.material.opacity=0.7*fl*(1-0.4*close)*(1-0.6*cover);                  /* 扑脸时还留一点光，看得出是一只只蛾子 */
       c.shade(0.85*ss(k,2.9,3.2));
     }
   };
