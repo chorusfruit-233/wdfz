@@ -390,3 +390,10 @@ body.touch #lessonOpen,body.touch #investigateOpen{min-height:44px;font-size:12p
 #lessonTime{font-size:11px;color:var(--ui-dim)}
 
 body.lesson-open #hud .bc,body.lesson-open #prompt{visibility:hidden}
+/* 开场 CG 的字幕：压在下面那条黑边上，不挡画面 */
+#opcap{position:fixed;left:50%;bottom:calc(11vh + 18px);z-index:43;transform:translateX(-50%);max-width:min(760px,88vw);padding:6px 14px;
+  font:15px/1.9 var(--ui-serif);letter-spacing:2px;text-align:center;color:#e9e1d1;text-shadow:0 1px 6px rgba(0,0,0,.9);
+  opacity:0;transition:opacity .5s;pointer-events:none}
+#opcap.on{opacity:1}
+body:not(.cut) #opcap{display:none}
+@media (max-width:560px){ #opcap{font-size:13px;bottom:calc(11vh + 8px)} }

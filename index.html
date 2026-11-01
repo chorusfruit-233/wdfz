@@ -20,7 +20,7 @@
 <div id="lookhint" hidden>点击画面恢复鼠标环视 · 按住拖动也可转向</div>
 <div id="qualityHint" role="status" hidden><span>画面持续卡顿，建议降低画质。</span><button type="button" onclick="Settings.q(QUALITY-1)">降低一档</button><button type="button" onclick="QualityWatch.dismiss()" aria-label="关闭画质建议">×</button></div>
 <div id="scan"></div><div id="vig"></div><div id="flash"></div>
-<div id="fade"></div><div id="cutfade"></div><div id="cutbars"><i></i><i></i></div>
+<div id="fade"></div><div id="cutfade"></div><div id="cutbars"><i></i><i></i></div><div id="opcap" aria-live="polite"></div>
 <div id="hud">
   <div class="tl hud-card" id="status">
     <div class="hc-top"><div id="clock">11:40</div><div id="secclock" hidden></div></div>
@@ -336,6 +336,7 @@
 <script src="game3d/js/car-chase.js"></script>
 <script src="game3d/js/hands.js"></script>
 <script src="game3d/js/cutscene.js"></script>
+<script src="game3d/js/opening.js"></script>
 <script src="game3d/js/fx/gaze.js"></script>
 <script src="game3d/js/fx/death-timeline.js"></script>
 <script src="game3d/js/fx/anomaly-fx.js"></script>

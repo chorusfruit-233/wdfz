@@ -283,16 +283,8 @@ var Game={
     enterRoom('teach1',{x:S.x, y:S.y, ang:-PI/2, seated:true});
     syncCamera(0);
     clearIntroTimers();
-    var firstTime=false;
-    try{ firstTime=!proSeen(); }catch(e){}
-    if(firstTime){
-      setTimeout(function(){ try{ proShow(); }catch(e){} },320);
-    }else{
-      try{ VisualState.worldNorm=0; }catch(e){}      /* 老玩家直接进里世界，没有"正常世界"那一段 */
-      setTimeout(function(){ try{ os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',4.0); }catch(e){} },2400);
-      introT1=setTimeout(function(){ os('我：兜里有一张学生证。照片上的人我不认识，可是班号、学号，都是我的。',4.8); },6800);
-      os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
-    }
+    /* 开场 CG（opening.js）：第一次完整版、看过的短版，随时可跳过；演完或跳过都在同一个座位、同一个视角交还控制 */
+    try{ Opening.play(); }catch(e){ try{ proShow(); }catch(_e){} }
     SFX.resume();
     /* 开局先把死亡演出、结局过场要用的着色器编好（第一次进场景、前情提要的时候顿一下，不在死的那一刻顿） */
     setTimeout(function(){ try{ DeathCG.warm(); }catch(e){} },700);
@@ -302,6 +294,7 @@ var Game={
   continue_:function(){
     if(waitForGameAssets(function(){Game.continue_();}))return;
     Speedrun.disarm();                                         /* 速通不能读档接着跑；「继续上次」只读普通存档 */
+    try{ Opening.cancel(); }catch(e){}
     var d=loadGame();
     if(!d){ toast('没有存档'); return; }
     clearIntroTimers();
@@ -377,6 +370,7 @@ var Game={
     resetInputState();releaseMouseLook();
     try{ if(!MENU_PHOTO) setTimeout(captureMenuPhoto,320); }catch(e){}
     try{ if(CUT.on){ CUT.done=null; cutFinish(); } }catch(e){}
+    try{ Opening.cancel(); PRO.on=false; }catch(e){}
     VisualState.worldNorm=0;
     PAUSE.on=false;document.body.classList.remove('paused');UI.closePanelAll();UI.closeChoice();
     ['pause','die','bag','note','think','mapv','choices'].forEach(function(id){
