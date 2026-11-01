@@ -307,6 +307,13 @@ function ceilingLight(K,x,z,lw,ld,rot,state){
 function roomDecor(c,isRoof){
   var K=c.K, R=c.R, W=c.W, H=c.H, tw=c.tw, th=c.th, halfW=c.halfW, halfH=c.halfH, CX=c.CX, CZ=c.CZ, i, x;
   var teachFl=(R.host==='teach'&&R.floor>=1&&R.floor<=5);
+  if(R.host==='tunnel'){
+    for(i=2;i<H-2;i+=3){
+      K.box('plain',CX(3+(i%3)),.014,CZ(i),1.3,.02,1.8,0x0c1510,1);
+      K.box('plain',CX(1),1.2,CZ(i),.03,1.8,.35,0x101d15,1);
+      K.box('plain',CX(W-2),1.6,CZ(i+1),.03,1.2,.25,0x101d15,1);
+    }
+  }
 
   /* 外墙上的窗（教学楼教室前墙是黑板，走廊外墙是宣传栏，不开） */
   var winHosts={admin:1,lab:1,dormN:1,dormS:1,canteen:1,guard:1};

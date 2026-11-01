@@ -470,7 +470,7 @@ function handHold(hand,item){
 function handsTick(dt){
   if(!GLR.cam) return;
   buildHands();
-  var show=S.screen==='play'&&!S.dead&&!HIDE.on&&!(typeof CUT!=='undefined'&&CUT.on);
+  var show=S.screen==='play'&&!S.dead&&!HIDE.on&&!(typeof CUT!=='undefined'&&CUT.on)&&!(typeof CarChase!=='undefined'&&CarChase.active());
   var torchOn=show&&USE.torch&&hasItem('torch'), brollyOn=show&&USE.brollyShield&&hasItem('brolly'), phoneOn=show&&typeof PHONE!=='undefined'&&PHONE.on;       /* 手机只在玩小游戏时拿在手上 */
   var it=HANDS.items, leftUse=null, rightUse=null;
   if(brollyOn) leftUse='brolly';

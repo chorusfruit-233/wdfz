@@ -95,8 +95,9 @@ function lightState(){
   var day=sun.day;
   var wn=GLR.worldNorm||0;
   if(wn>0) day=day+(1-day)*0.6*wn;           /* "正常世界"那一段总是亮一点 */
-  var fnl=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
-  if(fnl) day=Math.max(day,0.85);
+  /* 与后处理共用平滑值，避免笑值越过阈值时灯光瞬间跳变。 */
+  var fnl=clamp(Number.isFinite(GLR.fnNorm)?GLR.fnNorm:0,0,1);
+  day+=(Math.max(day,0.85)-day)*fnl;
   var st={ day:day, gold:sun.gold, sun:sun, indoor:indoor };
   if(indoor){
     var g=(S.room==='garage1');
@@ -106,6 +107,15 @@ function lightState(){
     st.hemi= g?0.015:(0.022+0.030*day);
     st.dir = g?0.015:(0.02+0.09*day);
     st.ptK = g?0.8:(0.30+0.34*day);          /* 灯管老了：白天也只亮一半，夜里更暗、会闪 */
+    if(S.room==='portal_tunnel'){st.amb=0.14;st.hemi=0.1;st.dir=0.08;st.ptK=0.9;}
+    if(wn>0){
+      st.amb=lerp(st.amb,0.38,wn);st.hemi=lerp(st.hemi,0.28,wn);
+      st.dir=lerp(st.dir,0.32,wn);st.ptK=lerp(st.ptK,1,wn);
+    }
+    if(typeof AN!=='undefined'&&AN.active&&AN.id==='blackout'){
+      st.amb*=0.16;st.hemi*=0.16;st.dir*=0.12;st.ptK=0;st.blackout=true;
+    }
+    if(S.room==='lift_dream'){st.amb=1.4;st.hemi=0.8;st.dir=0.35;st.ptK=1;}
   }else{
     st.amb = 0.075+0.12*day;
     st.hemi= 0.10+0.24*day;
@@ -153,15 +163,16 @@ function updateLighting(){
     }else{
       /* 屋里的雾：远处是黑的。夜里更近，走廊十几米外就看不清了 */
       var fn=1-s.day;
-      fog.color.setRGB(0.032-0.02*fn,0.040-0.024*fn,0.042-0.024*fn,THREE.SRGBColorSpace);
-      fog.density=(S.room==='garage1')?0.09:(0.072+0.03*fn);
+      var nw=s.blackout?0:clamp(GLR.worldNorm||0,0,1);
+      fog.color.setRGB(lerp(0.032-0.02*fn,0.32,nw),lerp(0.040-0.024*fn,0.35,nw),lerp(0.042-0.024*fn,0.36,nw),THREE.SRGBColorSpace);
+      fog.density=lerp((S.room==='garage1')?0.09:S.room==='portal_tunnel'?0.04:(0.072+0.03*fn),0.024,nw);
     }
   }
   var tt=GLR.time||0;
   var pf=GLR.patrolFlick||0, pr=GLR.patrolRed||0, sum=0;
   for(i=0;i<GLR.roomLights.length;i++){
     var base=GLR.roomLightBase[i]*s.ptK;
-    var flick=roomFlicker(i,tt,s.day)*lampHealth(i);
+    var flick=s.blackout?0:roomFlicker(i,tt,s.day)*lampHealth(i)*(typeof dreadLampMul==='function'?dreadLampMul(i,tt):1);
     if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
     lightCrackle(i,flick);
     sum+=flick;
@@ -174,15 +185,15 @@ function updateLighting(){
   }
   /* 灯盘本身（自发光材质）跟着一起闪、一起变红 */
   var em=MATS.emit;
-  if(em){ var k=GLR.roomLights.length?clamp(sum/GLR.roomLights.length,0.2,1):1; em.color.setRGB(k,k*(1-0.9*pr),k*(1-0.92*pr)); }
+  if(em){ var k=s.blackout?0:(GLR.roomLights.length?clamp(sum/GLR.roomLights.length,0.2,1):1); em.color.setRGB(k,k*(1-0.9*pr),k*(1-0.92*pr)); }
   /* 快坏的灯管（单独一种材质）：大部分时间暗着发灰，隔一阵抽搐似的亮几下 */
   var ed=MATS.emitDying;
-  if(ed){ var dk=dyingTube(tt); ed.color.setRGB(dk,dk*(1-0.9*pr),dk*(0.97-0.9*pr)); }
+  if(ed){ var dk=s.blackout?0:dyingTube(tt); ed.color.setRGB(dk,dk*(1-0.9*pr),dk*(0.97-0.9*pr)); }
   lampTick(s);
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
   var wn=GLR.worldNorm||0;
   GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
-  GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz;
+  GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz*(s.blackout?0.08:1);
   try{ shadeTick(s); }catch(e){}
 }
 /* 灯一下子暗下去（接触不良那一跳）的瞬间：近处的灯管噼啪一声，按方位分左右 */

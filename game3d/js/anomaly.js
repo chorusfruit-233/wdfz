@@ -11,6 +11,15 @@ var AN={
      exam 考试时也会出，late 第一天的预知梦不出，rained 下过雨（之后才会有蛾群、雨点成字）；
      when 能不能在当前位置 / 时间出现，place 布置判定点（返回表现生成的位置），begin 出现后的第一下，tick 每帧。 */
 var AN_DEFS={
+  blackout:{w:0.5, small:1, cool:180,
+    cn:'楼里的灯全灭了', name:'停电', dfx:'lamps',
+    msg:'我：灯一盏接一盏灭了。走廊尽头也暗下来，只剩自己的呼吸。',
+    when:function(){return S.mode==='in'&&S.room!=='teach6';},
+    tick:function(dt){
+      if(S.mode==='in'&&S.room!=='teach6')S.san-=dt*0.7;
+      if(AN.t>=24){os('我：灯管轻轻响了一声，又亮了。',3.2);anEnd();}
+    }
+  },
   rain:{w:0.26, lethal:1, warn:1, fx:1, rained:1, cool:260,
     cn:'下不完的雨', name:'大暴雨', dfx:'drown',
     msg:'我：天一下子暗了。雨不是从云里落下来的——它从很高的地方垂下来，像有人在上面一桶一桶地倒。',
@@ -507,6 +516,11 @@ function pickAnomaly(){
   var hist=RT.anHist||[], last=hist[hist.length-1], seen=RT.anSeen||{};
   if(pool.length>1) pool=pool.filter(function(a){ return a!==last; });
   else if(pool[0]===last) return null;
+  /* 最近四次里已经出过两次的，这次先不来；全被排掉就空一档（安静也是节奏） */
+  var recent=hist.slice(-4);
+  var fresh=pool.filter(function(a){ return recent.filter(function(h){ return h===a; }).length<2; });
+  if(!fresh.length){ RT.anHist=hist.concat('_').slice(-6); return null; }
+  pool=fresh;
   if(!hist.length&&pool.indexOf('chalk')>=0) return 'chalk';   /* 第一次总是黑板上的预告：先教会你看时间 */
   var tot=0,ws=[];
   for(i=0;i<pool.length;i++){
@@ -535,7 +549,7 @@ function anInterval(){
 }
 function anScheduleNext(){
   if(!AN.preNext||!AN.pre){ try{ AN.pre = pickAnomaly(); }catch(e){ AN.pre=null; } }
-  AN.next=anInterval();
+  AN.next=anInterval(); AN.next0=(AN.next0||0)+1;
   if(AN.preNext){ AN.next=AN.preNext; AN.preNext=0; }   /* 黑板上预告过的时间，要兑现 */
 }
 function anStart(){
@@ -685,6 +699,8 @@ function anKill(msg,fx){
 function anDrive(dt){
   if(S.fn&&S.fn.on&&S.fn.v<72){ return; }
   if(!AN.active){
+    if(S.room==='portal_tunnel')return;
+    if(typeof Inspection!=='undefined'&&Inspection.pending())return;
     AN.next -= dt;
     if(AN.next<=0) anStart();
   } else {

@@ -22,9 +22,9 @@ for(const p of c.SCHED.filter(p=>p[2]==='课间')){
 }
 c.S.tsec=735;c.clockTick(480);a.ok(Math.abs(c.S.tsec-840)<1e-7);
 c.S.tsec=1040;c.clockTick(480);a.ok(Math.abs(c.S.tsec-1090)<1e-7);
-c.S.tsec=705;c.clockTick(15);a.ok(Math.abs(c.S.tsec-c.BEAST_T1)<1e-7);
+c.S.tsec=705;c.clockTick(10);a.ok(Math.abs(c.S.tsec-c.BEAST_SLOW_T1)<1e-7);
 c.S.tsec=524.99;c.clockTick(1);a.ok(Math.abs(c.S.tsec-(525+(1-0.01*60/84)*5/60))<1e-7);
-const duration=c.SCHED.reduce((n,p)=>n+(p[1]-p[0])*60/p[4],0)+15-10/84;
+const duration=c.SCHED.reduce((n,p)=>n+(p[1]-p[0])*60/p[4],0)+10-20/84;
 c.S.tsec=440;c.S.day=1;c.clockTick(duration);a.ok(Math.abs(c.S.tsec-440)<1e-6);a.equal(c.S.day,2);
 c.S.tsec=440;c.S.day=1;let rest=duration;while(rest>1e-8){const d=Math.min(.1,rest);c.clockTick(d);rest-=d;}
 a.ok(Math.abs(c.S.tsec-440)<1e-5);a.equal(c.S.day,2);

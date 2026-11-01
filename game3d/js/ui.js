@@ -249,8 +249,8 @@ UI.renderNote=function(){
   var CLUE_NOTE=[
     ['lesson','课桌上的字会变。上课时可以低头看一看，但别忘了抬头。'],
     ['roomkey','网络中心的门锁着 —— 钥匙可能在行政楼五楼的校长办公室。'],
-    ['stall','教学楼一楼厕所，第三个隔间：「11:45:00　放下一样东西」。要精确到秒：手表，或者「秒表」天赋。'],
-    ['trash','垃圾房的桶盖上写着：清运 17:30。'],
+    ['stall','教学楼一楼厕所的第三个隔间从里面锁着。'],
+    ['trash','垃圾房里有一个不太一样的桶。'],
     ['usb','门禁终端要插 U 盘。U 盘大概还在网络中心里。'],
     ['comp','白名单里已经有我了。还差行政楼三楼那一步。'],
     ['gatew','西小门的闸机只认白名单。'],
@@ -261,6 +261,8 @@ UI.renderNote=function(){
     if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0])){ li(CLUE_NOTE[ci][1]); any=true; }
   }
   if(!any) li('（还没注意到什么。）','dim');
+  var dh=(typeof deathHints==='function')?deathHints():[];
+  if(dh.length){ sec('梦里记得的事'); for(var di=0;di<dh.length;di++) li(dh[di]); }
   if(!hasItem('notebook')||!hasItem('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';
   document.getElementById('notein').innerHTML=h;
 };

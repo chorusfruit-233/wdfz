@@ -88,11 +88,13 @@ function fnWhereNow(){
   return 'out';
 }
 function fnTick(dt){
-  var f=S.fn; if(!f||!f.on) return;
+  var f=S.fn;
+  if(!f||!f.on){if(FN_P.grp)fnPeopleClear();return;}
   if(S.dead||S.screen!=='play') return;
   if(UI.chooseOpen) return;
   if(f.v>=100){
     f.on=false;
+    fnPeopleClear();
     kill('你笑得停不下来。笑了很久。','laugh');
     return;
   }
@@ -218,58 +220,97 @@ function useCar(cx,cy){
   os(S.talent==='drive'?'我：我弯下腰去摸方向盘底下的线……':'我：我把钥匙插进锁孔，慢慢地拧……',1.6);
 }
 function carDrive(){
-  RT.carUsed=true; RT.carLeaving=2.0;
-  S.enterCool=2.0;
+  if(AN.active||Inspection.pending()){os('我：现在走不开，先解决眼前的事。',2.5);return;}
+  autoSave();
   os('我：引擎着了。车往前冲了出去。',4);
-  triggerEnding('car');                       /* 开出去的那一段在 cutscene.js 里演 */
+  playCut('car',function(){CarChase.start();});
 }
 function tryFaceRoute(){
   if(!RT.hacked){ os('我：得先进实验楼三楼机房里那间锁着的网络中心，再去行政楼三楼改数据。',3.8); return; }
   if(!RT.data){ os('我：白名单还没改完。',2.6); return; }
-  triggerEnding('face');
-}
-function tryTrashRoute(){
-  if(RT.trashFake){ os('我：桶是空的，桶壁上有我自己敲出来的两个凹印。这不是出口——上一次，它把我送回了座位上。',4.4); return; }
-  if(S.mode!=='in'||S.room!=='trash1'){ os('我：得先进垃圾房。',2.4); return; }
-  var lo=1050,hi=1056;
-  if(S.talent==='thin'){ lo=1048; hi=1058; }
-  addClue('trash');
-  if(S.tsec>=lo&&S.tsec<=hi){ triggerEnding('trash'); return; }
-  /* 以前时间不对就直接死，而游戏里没有任何地方告诉你清运时间 */
-  if(isNight()){ kill('桶盖合上了。今晚垃圾车不会来。外面有人敲了两下，像在确认里面有没有人。','deep'); return; }
-  if(S.tsec>=lo-40&&S.tsec<lo){
-    UI.choice('桶盖内侧用记号笔写着：「清运 17:30」。离那时候还有 '+Math.round(lo-S.tsec)+' 分钟。',[
-      {label:'钻进去，等',fn:function(){
-        UI.closeChoice();
-        S.san=Math.max(1,S.san-12);
-        var mins=Math.round(lo-S.tsec)+1;
-        S.tsec=lo+1;
-        try{ timeSkipCard(mins,'在桶里等',S.tsec); }catch(e){}
-        setTimeout(function(){ if(!S.dead) triggerEnding('trash'); },900);
-      }},
-      {label:'先不了',fn:function(){ UI.closeChoice(); }}
-    ]);
-    return;
+  if(S.mode!=='out'||dist2(GATE_W.x*SC,GATE_W.y*SC,S.x,S.y)>=70*70){
+    os('我：还得去西小门的闸机前。',2.6);return;
   }
-  os('我：桶盖内侧用记号笔写着：「清运 17:30」。字是倒着写的，像是从里面写的。',4.4,OS_KEEP);
+  tryGateWest();
+}
+/* 每局抽三道题并保存顺序和进度；离开后可继续。答错扣一点 SAN，并且换一道没出过的题——
+   不能把三个选项挨个试过去。题目是高中各科的基础题。 */
+var FACE_WRONG_SAN=4;
+var FACE_QUESTIONS=[
+  {text:'方程 x² − 5x + 6 = 0 的较大根是多少？',choices:['2','3','6'],answer:1},
+  {text:'同时掷两枚均匀六面骰，点数之和不小于 10 的概率是多少？',choices:['1/12','1/6','1/4'],answer:1},
+  {text:'等差数列首项为 2、公差为 3，第 8 项是多少？',choices:['20','23','26'],answer:1},
+  {text:'函数 y = x² − 4x + 7 的最小值是多少？',choices:['3','4','7'],answer:0},
+  {text:'sin 30° + cos 60° 等于多少？',choices:['1/2','1','√3'],answer:1},
+  {text:'log₂ 32 等于多少？',choices:['4','5','16'],answer:1},
+  {text:'自由落体 2 秒末的速度约是多少？（g 取 10 m/s²）',choices:['10 m/s','20 m/s','40 m/s'],answer:1},
+  {text:'1 mol 水（H₂O）的质量约是多少克？',choices:['16','18','20'],answer:1},
+  {text:'「先天下之忧而忧，后天下之乐而乐」出自哪一篇？',choices:['《岳阳楼记》','《醉翁亭记》','《出师表》'],answer:0},
+  {text:'阻值 6 Ω 和 3 Ω 的两个电阻并联，总电阻是多少？',choices:['2 Ω','4.5 Ω','9 Ω'],answer:0}
+];
+var FaceChallenge={
+  state:function(){
+    var q=RT.faceQuiz;
+    if(!q||!Array.isArray(q.order)||q.order.length!==3||new Set(q.order).size!==3||
+       q.order.some(function(i){return !Number.isInteger(i)||!FACE_QUESTIONS[i];})){
+      var pool=FACE_QUESTIONS.map(function(_,i){return i;}),order=[];
+      while(order.length<3)order.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+      q=RT.faceQuiz={order:order,done:0,used:order.slice()};autoSave();
+    }
+    q.done=Number.isInteger(q.done)?clamp(q.done,0,3):0;
+    if(!Array.isArray(q.used))q.used=q.order.slice();       /* 旧档没有这一项 */
+    return q;
+  },
+  /* 答错：这一格换成一道没出过的题（题都出完了就留着原题） */
+  swap:function(q){
+    var left=FACE_QUESTIONS.map(function(_,i){return i;}).filter(function(i){return q.used.indexOf(i)<0&&q.order.indexOf(i)<0;});
+    if(!left.length)return;
+    var next=left[Math.floor(Math.random()*left.length)];
+    q.order[q.done]=next;q.used.push(next);
+  },
+  open:function(){
+    var q=FaceChallenge.state();
+    if(q.done>=3){
+      UI.choice('闸机亮起绿灯。外面的路安静得出奇。',[
+        {label:'通过闸机',fn:function(){triggerEnding('face');}},
+        {label:'暂时留下',fn:function(){}}
+      ]);return;
+    }
+    var question=FACE_QUESTIONS[q.order[q.done]],opts=question.choices.map(function(label,i){
+      return {label:label,fn:function(){
+        if(i===question.answer){q.done++;autoSave();FaceChallenge.open();return;}
+        S.san=Math.max(0,S.san-FACE_WRONG_SAN*dif().san);settleSan();
+        FaceChallenge.swap(q);autoSave();
+        if(S.dead)return;
+        os('我：闸机长长地响了一声。屏幕上换了一道题，像是在嫌我慢。',3.2);
+        FaceChallenge.open();
+      }};
+    });
+    opts.push({label:'暂时离开',fn:function(){}});
+    UI.choice('白名单验证 '+(q.done+1)+'/3：'+question.text,opts);
+  }
+};
+function tryTrashRoute(){
+  if(S.mode!=='in'||S.room!=='trash1'){ os('我：得先进垃圾房。',2.4); return; }
+  addClue('trash');
+  kill('桶盖合上了。外面有人敲了两下，像在确认里面有没有人。','deep');
 }
 function tryBeastRoute(){
   if(!inToiletHere()||S.room!=='teach1'){ os('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
-  if(!inBeastWindow()){
-    os(hasSeconds()?'我：门上刻的是 11:45:00 整。现在是 '+fmtClockS(S.tsec)+'。到点了就把东西放下（G）。'
-                   :'我：门上刻的是 11:45:00 整——要精确到秒。我得有块带秒针的表。',3.8,OS_KEEP);
-    return;
-  }
-  os('我：就是现在。放下一样东西（G）。',2.6,OS_KEEP);
+  useStall();
 }
-/* 隔间：门上刻着时间（《先辈》的提示），时间对了、东西放过了，敲门就是那条路 */
 function useStall(){
   S.spots.stall=1; UI.spotsDirty=true;
-  if(RT.beastDrop&&inBeastWindow()&&S.room==='teach1'){ triggerEnding('beast'); return; }
+  if(RT.beastDrop&&S.room==='teach1'){
+    UI.choice('门后传来一个声音：「你愿意跟我一起走吗？」',[
+      {label:'跟上',fn:function(){triggerEnding('beast');}},
+      {label:'先等等',fn:function(){os('我：门后没有再催促。',2.5);}}
+    ]);
+    return;
+  }
   addClue('stall');
   if(S.room==='teach1'){
-    os('我：第三个隔间的门从里面锁着。门板上有人用指甲刻了一行：「11:45:00　放下一样东西」。'+
-       (hasSeconds()?'我看了一眼表。':'连秒都刻上了——得有块带秒针的表才行。'),5.6,OS_KEEP);
+    os('我：第三个隔间的门从里面锁着。门缝底下很暗，暗得不像有地面。',5.6,OS_KEEP);
   }else{
     os('我：隔间的门在里面锁着。门缝底下很暗，暗得不像有地面。',3.4);
   }
@@ -291,6 +332,37 @@ var DFX_EPI={
 };
 var DFX_SFX={laugh:'crack',shatter:'crack',grip:'slam',squeeze:'slam',bell:'bell',
   deep:'crack',freeze:'blink',voice:'blink',names:'blink',slit:'door',default:'blink'};
+/* 反复死在同一种东西上：优先给可读的线索，而不是降低难度（恐怖计划 P2） */
+var DEATH_LOG_KEY='wdfz3d_deaths';
+var DEATH_HINTS={
+  grip:'灯按拍子闪，是它要来了。先找柜子躲好；已经被它盯上，就背对它站着别动。',
+  drown:'雨下大了，就往有顶的地方去：屋檐、柱廊、车棚都行。',
+  swarm:'蛾群是从一个地方涌过来的。离那里远一点，它们就跟不上。',
+  follow:'操场上那些人开始做操的时候，别站在原地看，走远一点。',
+  ring:'实验楼地上的粉笔圈，别踩进去；踩到线就马上退出来。',
+  neck:'围墙外那个人在等我靠近东边的墙。离墙远一点。',
+  twin:'天台另一头那个人，只有在我不看他的时候才会动。',
+  floor:'窗台上那只杯子掉下来，是对着我刚才站的地方。听见它掉，就换个地方，或者进楼。',
+  names:'坐久了，椅子会留人。该站起来的时候，就站起来。',
+  vignette:'撑不住的时候，吃药、吃饭、玩一会儿手机，都能缓过来一点。',
+  trash:'垃圾房里那个桶，不是出口。'
+};
+function deathLogRead(){ try{ return JSON.parse(localStorage.getItem(DEATH_LOG_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function deathLogAdd(fx){
+  var d=deathLogRead(); d.counts=d.counts||{}; d.counts[fx]=(d.counts[fx]||0)+1;
+  d.last=(d.last||[]).concat([{fx:fx,day:S.day,where:S.mode==='in'?S.room:'out'}]).slice(-12);
+  try{ localStorage.setItem(DEATH_LOG_KEY,JSON.stringify(d)); }catch(e){}
+}
+/* 死过两次以上、而且有对应线索的死法，最多三条，最近的在前 */
+function deathHints(){
+  var d=deathLogRead(), c=d.counts||{}, out=[], seen={}, i;
+  var order=(d.last||[]).slice().reverse().map(function(e){ return e.fx; });
+  for(i=0;i<order.length&&out.length<3;i++){
+    var fx=order[i]; if(seen[fx]) continue; seen[fx]=1;
+    if((c[fx]||0)>=2&&DEATH_HINTS[fx]) out.push(DEATH_HINTS[fx]);
+  }
+  return out;
+}
 function kill(msg,fx){
   if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
   if(S.dead||S.death) return;
@@ -298,6 +370,10 @@ function kill(msg,fx){
   if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
+  try{ deathLogAdd(S.death); }catch(e){}
+  if(typeof Inspection!=='undefined')Inspection.cancel();
+  if(typeof Elevator!=='undefined')Elevator.cancel();
+  if(typeof CarChase!=='undefined'&&RT.carChase)CarChase.cancel();
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
   var f=document.getElementById('flash');
@@ -365,45 +441,42 @@ function dreamWake(){
     doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
     try{ SFX.wake&&SFX.wake(); }catch(e){}
   },function(){
-    os('……我猛地抬起头，后背全是汗。11:40。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,OS_FORCE);
+    os('……我猛地抬起头，后背全是汗。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,OS_FORCE);
     toast(left>0?'预知梦 · 还能再醒 '+left+' 次':'预知梦 · 下一次，不会再醒了');
     autoSave();
   });
 }
 
 var ENDINGS={
-  car:  {t:'《闸 门》',  l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
-  face: {t:'《白名单》', l:['闸机「嘀」地亮了一下绿光。','你走出去，回头看了一眼——','里面的天还是黑白的。所有窗口后面都站着一个人，在目送你。','你的名字从那天起，一直留在白名单的最后一行。']},
+  car:  {t:'《闸 门》', true:1,l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
+  face: {t:'《白名单》', true:1,l:['闸机「嘀」地亮了一下绿光。','你走出去，回头看了一眼——','里面的天还是黑白的。所有窗口后面都站着一个人，在目送你。','你的名字从那天起，一直留在白名单的最后一行。']},
   /* 假结局：看起来逃出去了，其实又回到了座位上 */
   trash:{t:'《第三个桶》',fake:1,l:['桶盖在头顶合上。','黑暗里，你听见垃圾车发动的声音，越来越远，越来越颠。','车停了很久。有人在外面敲了两下桶壁。','是你自己的声音在问：「里面有人吗？」','……然后，上课铃响了。']},
   beast:{t:'《先 辈》',  l:['门是被从外面撞开的。','你看清了那个背影——穿着很多年前的校服，一直在往外跑。','你跟着他跑了出去。','整座学校，第一次有了颜色。']},
   /* 真结局：自己造一扇门 */
   portal:{t:'《门》',true:1,l:['光圈合上之前，你回头看了一眼。','实验台、显微镜、离心机，还有教室里那一排排低着的头——都在原地，一动不动。','你没有再回头。','门的那一边是一个普通的下午。铃响了，有人在走廊里叫你的名字，你答应了一声。']}
 };
-function triggerEnding(id){
+function triggerEnding(id,skipCut){
   if(S.screen==='cut'||S.screen==='end') return;
+  if(id==='trash'){tryTrashRoute();return;}
   RT.end=id;
   var e=ENDINGS[id];
   endMark(id);
   if(!e.fake) clearSave();                    /* 假结局之后还能接着玩 */
-  playCut(id,function(){ showEndingCard(id); });
+  if(skipCut)showEndingCard(id);else playCut(id,function(){ showEndingCard(id); });
 }
 function showEndingCard(id){
   var e=ENDINGS[id];
   VisualState.flash=0.6;
   setTimeout(function(){ VisualState.flash=0; },600);
-  var tag=e.fake?'<div style="font-size:11px;letter-spacing:6px;color:#c8a24a">假 结 局</div>':(e.true?'<div style="font-size:11px;letter-spacing:6px;color:#9fe3c2">真 结 局</div>':'');
-  var more=e.fake?'<button onclick="fakeWake()" style="font-family:inherit;font-size:12px;letter-spacing:3px;'+
-    'padding:11px 36px;background:rgba(20,48,38,.5);color:#cfe9dc;border:1px solid rgba(130,180,155,.5);cursor:pointer">……再睁开眼</button>':'';
-  var html='<div id="ends" style="position:fixed;inset:0;z-index:75;display:flex;align-items:center;'+
-    'justify-content:center;flex-direction:column;gap:22px;background:rgba(3,5,4,.96);text-align:center">'+tag+
-    '<div style="font-size:28px;letter-spacing:14px;color:#cfe9dc">'+e.t+'</div>'+
-    '<div style="font-size:14px;line-height:2.4;opacity:.82;max-width:560px">'+e.l.join('<br>')+'</div>'+
-    '<div style="font-size:11px;opacity:.4;letter-spacing:2px;margin-top:10px">'+
- '第 '+S.day+' 天 · '+fmtClock(S.tsec)+'</div>'+more+
-    '<button onclick="Game.quit()" style="font-family:inherit;font-size:12px;letter-spacing:3px;'+
-    'padding:11px 36px;background:transparent;color:#b6d4c5;border:1px solid rgba(130,180,155,.34);'+
-    'cursor:pointer;margin-top:8px">回到主菜单</button></div>';
+  /* 结局卡：样式在 game.css（#ends），和死亡、暂停同一套档案式界面 */
+  var tag=e.fake?'<div class="etag fake">假 结 局</div>':(e.true?'<div class="etag">真 结 局</div>':'');
+  var more=e.fake?'<button type="button" class="ewake" onclick="fakeWake()">……再睁开眼</button>':'';
+  var html='<div id="ends">'+tag+
+    '<div class="et">'+e.t+'</div>'+
+    '<div class="el">'+e.l.join('<br>')+'</div>'+
+    '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+more+
+    '<button type="button" class="equit" onclick="Game.quit()">回到主菜单</button></div>';
   var d=document.createElement('div');
   d.innerHTML=html;
   document.body.appendChild(d);
