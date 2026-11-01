@@ -13,16 +13,25 @@
 所以按镜头分给几个进程并行渲染，结果和一个进程从头渲染到尾一样。
 """
 from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import argparse
 import json
+import os
 import re
+import shutil
 import sys
+import threading
 import time
-from capture import game_server, launch_browser
 
 VIDEO = Path(__file__).resolve().parent
 ROOT = VIDEO.parent
+
+
+class Quiet(SimpleHTTPRequestHandler):
+    def log_message(self, *_args):
+        pass
 
 
 def shot_ranges(sb):
@@ -35,17 +44,19 @@ def shot_ranges(sb):
     return out
 
 
-def render_frames(url, sb, frames, step, out, sparse=False):
+def render_frames(port, sb, frames, step, out, sparse=False):
     """在一个浏览器里渲染一段连续的帧（必须从某个镜头的第一帧开始，场景才搭得对）。"""
     from playwright.sync_api import sync_playwright
     errors = []
     with sync_playwright() as pw:
-        browser = launch_browser(pw)
+        exe = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
+        browser = pw.chromium.launch(executable_path=exe, headless=True,
+                                     args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'])
         page = browser.new_page(viewport={'width': sb['width'], 'height': sb['height']}, device_scale_factor=1)
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.add_init_script("localStorage.setItem('wdfz_pro','1');"
                              "localStorage.setItem('zw3d_set',JSON.stringify({q:2,amb:0,vol:0}));")
-        page.goto(url, wait_until='load')
+        page.goto(f'http://127.0.0.1:{port}/index.html', wait_until='load')
         page.wait_for_function('typeof GLR!=="undefined"&&!!GLR.renderer')
         page.add_script_tag(path=str(VIDEO / 'shots.js'))
         page.evaluate('sb => trailerInit(sb)', sb)
@@ -117,17 +128,21 @@ def main():
     # 每段是连续的镜头，合成一段连续帧；段数多于进程数时排队
     spans = [(g[0][1], g[-1][2]) for g in groups]
 
+    server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT)))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
     t0 = time.time()
     errors = []
-    with game_server() as url:
+    try:
         if len(spans) == 1 or jobs == 1:
             for sp in spans:
-                errors += render_frames(url, sb, sp, args.step, str(out), args.sparse)
+                errors += render_frames(server.server_port, sb, sp, args.step, str(out), args.sparse)
         else:
             with ProcessPoolExecutor(jobs) as ex:
-                for errs in ex.map(render_frames, [url] * len(spans), [sb] * len(spans),
+                for errs in ex.map(render_frames, [server.server_port] * len(spans), [sb] * len(spans),
                                    spans, [args.step] * len(spans), [str(out)] * len(spans), [args.sparse] * len(spans)):
                     errors += errs
+    finally:
+        server.shutdown()
     if errors:
         print('页面报错：', *errors[:5], sep='\n')
         sys.exit(1)

@@ -1,25 +1,63 @@
 /* 里世界 3D · 交互：设施、楼梯、搜东西、终端 */
 'use strict';
 
+/* ---- 格子级遮挡：沿玩家→目标采样，撞墙/关着的门算挡住 ----
+   目标自己那一格不参与遮挡：门 '=' 和楼梯 'S' 本身是实心格，
+   不跳过的话，站在门前一格时采样中点正好落在门格上，门会把自己挡掉。 */
+function tileLOS(R,x0,y0,x1,y1,tc,tr){
+  if(!R||!R.grid) return true;
+  var dx=x1-x0, dy=y1-y0, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<0.001) return true;
+  var step=Math.max(0.5,Math.min(R.tw,R.th)*0.5), n=Math.ceil(len/step), i;
+  for(i=1;i<n;i++){
+    var t=i/n, px=x0+dx*t, py=y0+dy*t;
+    var c=Math.floor((px-R.ox)/R.tw), r=Math.floor((py-R.oy)/R.th);
+    if(r<0||c<0||r>=R.rows||c>=R.cols) return false;
+    if(tc!==undefined&&c===tc&&r===tr) continue;
+    var ch=R.grid[r][c];
+    if(ch==='#') return false;
+    if(ch==='S'&&typeof isSolidCh==='function'&&isSolidCh(ch)) return false;
+    if(ch==='='&&(typeof doorIsOpen!=='function'||!doorIsOpen(R,px,py))) return false;
+  }
+  return true;
+}
+
+/* 交互判定：只认眼前的东西；翻找比开门够得近
+   · NR_FURN   家具/道具 14 ≈ 1.56m（课桌必须凑近才翻得到）
+   · NR_STRUCT 门/楼梯/连廊/柜子/电梯 28 ≈ 3.11m（走廊 5 格宽，站中线也要够得着门）
+   · FACING_MAX 0.95rad ≈ 54°，身后和侧后方一律不算 */
+var NR_FURN=14, NR_STRUCT=28, FACING_MAX=0.95;
+var STRUCT_CH='=OWSLHJ';
+function isStructCh(ch){ return STRUCT_CH.indexOf(ch)>=0; }
+function facingOK(wx,wy){
+  var d=Math.sqrt(dist2(wx,wy,S.x,S.y));
+  if(d<4) return true;
+  return angDiff(Math.atan2(wy-S.y,wx-S.x),S.ang)<=FACING_MAX;
+}
+
 function nearWorld(radius){
+  var reach=radius>0?radius:NR_FURN;
   if(S.mode==='in'){
     var R=INTERIORS[S.room];
     if(!R) return null;
-    if(R.spiral&&SP.state!=='ground') return null;   /* 在钟楼楼梯上，够不着地上的东西 */
+    if(R.spiral&&SP.state!=='ground') return null;
     var hits=[];
     for(var r=0;r<R.rows;r++) for(var c=0;c<R.cols;c++){
       var ch=R.grid[r][c];
       if(ch==='#'||ch==='.') continue;
       var wx=R.ox+(c+0.5)*R.tw, wy=R.oy+(r+0.5)*R.th;
       var d=Math.sqrt(dist2(wx,wy,S.x,S.y));
-      if(d>=radius) continue;
-      /* 以前只取最近的格子、不看朝向：终端被课桌围着时，按 E 永远在翻课桌。
-         现在面前的东西优先，侧面、背后的要近得多才会被选中。 */
+      var lim=isStructCh(ch)?Math.max(reach,NR_STRUCT):reach;
+      if(d>=lim) continue;
+      if(!facingOK(wx,wy)) continue;
       var off=d<4?0:angDiff(Math.atan2(wy-S.y,wx-S.x),S.ang);
-      hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d+off*10});
+      hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d*(isStructCh(ch)?0.8:1)+off*12});
     }
     hits.sort(function(a,b){return a.score-b.score;});
-    return hits[0]||null;
+    for(var k=0;k<hits.length;k++){
+      if(tileLOS(R,S.x,S.y,hits[k].x,hits[k].y,hits[k].c,hits[k].r)) return hits[k];
+    }
+    return null;
   }
   var best=null,bd=1e9;
   for(var i=0;i<OBJ.length;i++){
@@ -235,7 +273,7 @@ var TILE_HINT={
 var GATE_HINT=[[GATE_N,'校门'],[GATE_W,'西小门'],[GATE_S,'南门']];
 function interactHint(){
   if(S.dead||S.screen!=='play'||UI.anyOpen()||PAUSE.on) return '';
-  var R=S.mode==='in'?INTERIORS[S.room]:null, h=R?nearWorld(24):null;
+  var R=S.mode==='in'?INTERIORS[S.room]:null, h=R?nearWorld():null;
   var first=h&&(FAC_CD[h.ch]!==undefined||sanActFor(R,h));   /* 设施、恢复 SAN 的动作排在"坐下"前面 */
   if(HIDE.on) return '出来';
   if(bellReach()) return '撞钟';
@@ -290,11 +328,11 @@ function tryInteract(){
 
   var R=INTERIORS[S.room];
   if(bellReach()){ useBell(); return; }
-  var _sa=sanActFor(R,null), _hit0=nearWorld(24);
+  var _sa=sanActFor(R,null), _hit0=nearWorld();
   if(_hit0&&FAC_CD[_hit0.ch]!==undefined){ if(useFacility(_hit0.ch,R)) return; }
   if(_hit0){ var _k=sanActFor(R,_hit0); if(_k){ doSanAct(_k); return; } }
   if(hit2_seatNear(R)){ sitDown(); return; }
-  var hit=nearWorld(24);
+  var hit=nearWorld();
   if(!hit){ os('我：这里什么都没有。',1.8); return; }
   var ch=hit.ch;
   if(ch==='='){
@@ -518,6 +556,9 @@ function floorIdOf(host,f){
 }
 function topFloorOf(host){ return host==='teach'?6:(host==='admin'||host==='lab')?5:(host==='dormN'||host==='dormS')?3:1; }
 function stairGo(){
+  /* 爬一层楼梯 = 1 游戏分钟。电梯每趟只花 0.4 分钟（ELEV_COST_MIN），
+     这就是"赶时间走电梯"的时间收益来源。 */
+  function stairCost(){ if(typeof advanceGameTime==='function') advanceGameTime(1); }
   var R=INTERIORS[S.room];
   if(!R){ exitRoom(); return; }
   var f=R.floor, host=R.host, top=topFloorOf(host);
@@ -526,15 +567,15 @@ function stairGo(){
   function upLabel(){ return (host==='teach'&&f+1===6)?'上天台':'上楼（'+(f+1)+'F）'; }
   if(up&&dn){
     UI.choice('楼梯间里很安静。扶手是凉的。',[
-      {label:upLabel(),fn:function(){ UI.closeChoice(); SFX.stairs&&SFX.stairs(); ENTER_VIA='stair'; enterRoom(up); }},
-      {label:'下楼（'+(f-1)+'F）',fn:function(){ UI.closeChoice(); SFX.stairs&&SFX.stairs(); ENTER_VIA='stair'; enterRoom(dn); }},
+      {label:upLabel(),fn:function(){ UI.closeChoice(); stairCost(); SFX.stairs&&SFX.stairs(); ENTER_VIA='stair'; enterRoom(up); }},
+      {label:'下楼（'+(f-1)+'F）',fn:function(){ UI.closeChoice(); stairCost(); SFX.stairs&&SFX.stairs(); ENTER_VIA='stair'; enterRoom(dn); }},
       {label:'算了',fn:function(){ UI.closeChoice(); }}
     ]);
     return;
   }
   try{ SFX.stairs&&SFX.stairs(); }catch(e){}
-  if(up){ ENTER_VIA='stair'; enterRoom(up); return; }
-  if(dn){ ENTER_VIA='stair'; enterRoom(dn); return; }
+  if(up){ stairCost(); ENTER_VIA='stair'; enterRoom(up); return; }
+  if(dn){ stairCost(); ENTER_VIA='stair'; enterRoom(dn); return; }
   exitRoom();
 }
 /* 实验楼各层抽屉里的东西（累计概率） */
