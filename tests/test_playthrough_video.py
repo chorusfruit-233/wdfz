@@ -1,5 +1,7 @@
 """Optional recorder safety/integrity tests; never a replacement for a full run."""
 from copy import deepcopy
+import gzip
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -10,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'video'))
 import playthrough
+from example import package_example
 
 
 class PlaythroughOutputTest(unittest.TestCase):
@@ -71,6 +74,22 @@ class PlaythroughOutputTest(unittest.TestCase):
             self.assertGreater(result['audio_delay_seconds'], .7)
             self.assertEqual({s['codec_type'] for s in result['streams']}, {'video', 'audio'})
             self.assertEqual(len(result['sha256']), 64)
+            run = {'video': result, 'source_commit': 'fixture', 'state': {'seconds': 2, 'ending': 'car', 'talent': 'watch'},
+                   'events': [{'kind': 'chapter', 'seconds': .5, 'detail': '测试章节'}]}
+            summary = package_example(folder, run)
+            self.assertEqual(summary['chapters'][0]['seconds'], 0)
+            self.assertEqual(json.loads(gzip.decompress((folder / 'playthrough-run.json.gz').read_bytes())), run)
+            self.assertTrue((folder / 'playthrough-poster.jpg').is_file())
+            with self.assertRaises(ValueError):
+                package_example(folder, run)
+
+    def test_player_rejects_modified_movie(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / 'playthrough.mp4').write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError, 'SHA-256'):
+                package_example(folder, {'video': {'sha256': '0' * 64}})
+            self.assertFalse((folder / 'index.html').exists())
 
 
 if __name__ == '__main__':

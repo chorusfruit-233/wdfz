@@ -9,6 +9,7 @@ import time
 
 from playwright.sync_api import sync_playwright
 from capture import ROOT, game_server, launch_browser
+from example import package_example
 
 
 def probe(path):
@@ -79,7 +80,7 @@ def main():
     result['settings'] = {'quality': args.quality, 'difficulty': 'easy', 'viewport': [960, 540],
                           'automated_inputs': True, 'reads_map_and_state': True, 'speed': 1,
                           'fresh_browser_profile': True, 'route': 'car', 'software_renderer': not args.gpu}
-    for filename in ('playthrough.js', 'playthrough.py', 'game-audio.js', 'capture.py'):
+    for filename in ('playthrough.js', 'playthrough.py', 'game-audio.js', 'capture.py', 'example.py', 'playthrough.html'):
         result.setdefault('generator_sha256', {})[filename] = hashlib.sha256((ROOT / 'video' / filename).read_bytes()).hexdigest()
     with game_server() as url, sync_playwright() as pw:
         browser = launch_browser(pw, software=not args.gpu)
@@ -155,6 +156,7 @@ def main():
             raise SystemExit('原声录制失败：' + result['audio']['error'])
         result['video'] = encode(args.out, result['audio'])
         manifest.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+        package_example(args.out, result)
     print('通关成功：', args.out, flush=True)
 
 
