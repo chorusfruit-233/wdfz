@@ -49,7 +49,12 @@
     for(const chapter of run.chapters){
       const li=document.createElement('li'),button=document.createElement('button'),time=document.createElement('time');
       button.type='button';time.textContent=stamp(chapter.seconds);button.append(time,document.createTextNode(chapter.title));
-      button.addEventListener('click',()=>{video.currentTime=chapter.seconds;video.play().catch(()=>{});});
+      button.addEventListener('click',async()=>{
+        if(video.readyState<1){
+          await new Promise(resolve=>video.addEventListener('loadedmetadata',resolve,{once:true}));
+        }
+        video.currentTime=chapter.seconds;video.play().catch(()=>{});
+      });
       li.append(button);document.getElementById('chapters').append(li);
     }
   }).catch(()=>{document.getElementById('chapters').textContent='章节信息暂时不可用，仍可使用播放器观看完整录像。';});

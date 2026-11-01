@@ -8,14 +8,36 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'video'))
 import playthrough
 from example import package_example
+from capture import game_server
 
 
 class PlaythroughOutputTest(unittest.TestCase):
+    def test_local_server_supports_video_seeking_ranges(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            data = bytes(range(100))
+            (folder / 'clip.mp4').write_bytes(data)
+            with game_server(folder) as url:
+                video_url = url.replace('index.html', 'clip.mp4')
+                for header, expected in (('bytes=10-19', data[10:20]), ('bytes=90-', data[90:]), ('bytes=-7', data[-7:])):
+                    with urlopen(Request(video_url, headers={'Range': header})) as response:
+                        self.assertEqual(response.status, 206)
+                        self.assertEqual(response.read(), expected)
+                        self.assertEqual(response.headers['Accept-Ranges'], 'bytes')
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(Request(video_url, headers={'Range': 'bytes=200-'}))
+                self.assertEqual(caught.exception.code, 416)
+                with urlopen(video_url) as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read(), data)
+
     def test_rejects_nonempty_or_linked_output_without_touching_it(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp) / 'keep'
