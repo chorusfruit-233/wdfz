@@ -291,6 +291,18 @@ class DeathTimelineTest(BrowserCase):
         }""")
         self.assertEqual(result, {})
 
+    def test_death_moths_are_black_like_the_in_game_swarm(self):
+        """蛾群扑面的死亡演出用的是和游戏里同一种黑色蛾子（翅膀、身子都是黑的），不是灰白色的片。"""
+        page = self.page()
+        result = page.evaluate("""() => {
+          doEnterRoom('teach1');syncCamera(0);deathFX('swarm',{preview:true});anfxUpdate(0.5);
+          const moths=[];ANFX.grp.traverse(o=>{if(o.isInstancedMesh)moths.push({hex:o.material.color.getHex(),n:o.count});});
+          const g=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(g);
+          return moths;
+        }""")
+        self.assertEqual(sorted(m['hex'] for m in result), [0x080808, 0x111111])   # 身子、翅膀，和 weather.js 一样
+        self.assertEqual(sorted(m['n'] for m in result), [70, 140])                 # 每只两片翅膀
+
     def test_warm_up_compiles_every_death_cinematic_shader_in_advance(self):
         """开局预热以后，第一次播放任何一种死亡演出都不用再现编着色器（手机上会在死的那一下卡住）。"""
         page = self.page()
