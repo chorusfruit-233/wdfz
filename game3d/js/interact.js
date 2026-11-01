@@ -1,6 +1,33 @@
 /* 里世界 3D · 交互：设施、楼梯、搜东西、终端 */
 'use strict';
 
+/* ---- 格子级遮挡（来自 PR #24，略作加固）----
+   以前交互只按距离和朝向挑格子，隔着墙也能翻到隔壁教室的课桌、摸到走廊另一侧的柜子。
+   现在沿玩家→目标采样：墙 '#'、实心楼梯格、关着的门都算挡住；目标自己那一格不参与遮挡
+   （门、楼梯本身是实心格，不跳过的话会把自己挡掉）。
+   斜着站时一条线容易擦到门边的墙角，所以除了目标中心，再试目标格里朝向玩家那两侧的点，任意一条通就算看得见。 */
+function tileLOS(R,x0,y0,x1,y1,tc,tr){
+  if(!R||!R.grid) return true;
+  var dx=x1-x0, dy=y1-y0, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<0.001) return true;
+  var step=Math.max(0.5,Math.min(R.tw,R.th)*0.25), n=Math.ceil(len/step), i;
+  for(i=1;i<n;i++){
+    var t=i/n, px=x0+dx*t, py=y0+dy*t;
+    var c=Math.floor((px-R.ox)/R.tw), r=Math.floor((py-R.oy)/R.th);
+    if(r<0||c<0||r>=R.rows||c>=R.cols) return false;
+    if(c===tc&&r===tr) continue;
+    var ch=R.grid[r][c];
+    if(ch==='#'||isSolidCh(ch)) return false;
+    if(ch==='='&&!doorIsOpen(R,px,py)) return false;
+  }
+  return true;
+}
+function tileVisible(R,hit){
+  if(tileLOS(R,S.x,S.y,hit.x,hit.y,hit.c,hit.r)) return true;
+  var ox=R.tw*0.42*(S.x>hit.x?1:-1), oy=R.th*0.42*(S.y>hit.y?1:-1);
+  return tileLOS(R,S.x,S.y,hit.x+ox,hit.y,hit.c,hit.r)||tileLOS(R,S.x,S.y,hit.x,hit.y+oy,hit.c,hit.r);
+}
+
 function nearWorld(radius){
   if(S.mode==='in'){
     var R=INTERIORS[S.room];
@@ -19,7 +46,8 @@ function nearWorld(radius){
       hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d+off*10});
     }
     hits.sort(function(a,b){return a.score-b.score;});
-    return hits[0]||null;
+    for(var k=0;k<hits.length;k++) if(tileVisible(R,hits[k])) return hits[k];   /* 隔着墙 / 关着的门的不算 */
+    return null;
   }
   var best=null,bd=1e9;
   for(var i=0;i<OBJ.length;i++){
