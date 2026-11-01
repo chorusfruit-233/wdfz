@@ -187,7 +187,7 @@ var TalentPick={diff:null,mode:'normal',sel:null,
   start:function(id,origin){
     var diff=this.diff, mode=this.mode; this.close();
     if(mode==='speedrun'&&typeof Speedrun!=='undefined') Speedrun.arm(diff);
-    Game.start(diff,{talent:id,origin:origin});
+    Game.start(diff,{talent:id,origin:origin,mode:mode==='speedrun'?'speedrun':'normal'});
   },
   confirm:function(){ if(this.sel) this.start(this.sel,'selected'); },
   random:function(){ this.start(TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)],'random'); },

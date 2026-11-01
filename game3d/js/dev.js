@@ -29,6 +29,7 @@ var Dev={
     }
     if(typeof LESSON!=='undefined'&&LESSON.on)LESSON.close(false);
     DEV.on=true;DEV.freeze=false;DEV.minimized=false;DEV.refreshT=0;document.body.classList.add('dev-open');
+    try{ Speedrun.invalidate('debug'); }catch(e){}                /* 速通中打开调试面板：这次成绩无效 */
     var el=document.getElementById('dev'); if(el) el.style.display='flex';
     el.classList.remove('dev-minimized');el.setAttribute('role','dialog');document.getElementById('devball').hidden=true;
     DEV.lists={
@@ -521,7 +522,8 @@ var Dev={
     Dev.clearPreview();
     var wasGod=DEV.god;
     DEV.god=false;
-    try{ kill('【Dev】测试死亡演出：'+t,t); }finally{ DEV.god=wasGod; }
+    KILL_CTX='debug';
+    try{ kill('【Dev】测试死亡演出：'+t,t); }finally{ DEV.god=wasGod; KILL_CTX=null; }
     Dev.refresh();
   },
   revive:function(){

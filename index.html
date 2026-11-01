@@ -130,7 +130,7 @@
   <button onclick="Game.resume()">返回游戏</button></div>
 </div></div>
 <div id="die"><div class="t">你 死 了 。</div><div class="m" id="diem"></div>
-  <div id="dieepi"></div><p id="diecause"></p><button onclick="Game.quit()">回到主菜单</button></div>
+  <div id="dieepi"></div><p id="diecause"></p><p id="diesr" hidden></p><button onclick="Game.quit()">回到主菜单</button></div>
 <div id="menu">
   <div class="mtop"><span>武大附中</span><i>/</i><span>校园异闻档案</span><b>单人探索 · 3D</b></div>
   <div class="mleft">
@@ -149,6 +149,10 @@
         <em>03</em><span><b>继续上次</b><i>读取最近的存档</i></span><u>→</u>
       </button>
     </div>
+    <div class="mextra">
+      <button type="button" class="mside" id="btnspeed" onclick="Speedrun.open()"><b>速通模式</b><i>计时到通关，记录个人最佳</i></button>
+      <button type="button" class="mside" id="btnarchive" onclick="DeathArchive.open()"><b>死亡档案室</b><i>每一种死法，记一份档案</i></button>
+    </div>
     <div class="mends" id="mends" style="display:none"></div>
     <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
     <div id="assetNotice" role="status" aria-live="polite" hidden><span id="assetNoticeText"></span><button id="assetRetry" type="button" onclick="Assets.retry()">重试</button></div>
@@ -162,6 +166,22 @@
   <div class="mkeys">WASD 移动 · 鼠标环视 · Shift 奔跑 · E 交互<br>Tab 背包 · F 手电 · H 思索 · J 笔记 · M 地图 · Esc 暂停 · Alt 放出鼠标</div>
   <div class="mfoot"><span>请记住你回去的路。它会变。</span><i>WUDFZ · FIELD RECORD 001</i></div>
 </div>
+<div id="srpick" class="mdialog" role="dialog" aria-modal="true" aria-labelledby="srTitle" hidden><div class="mdbox">
+  <div class="tphead"><b id="srTitle">速通模式</b><i>本机记录 · 规则 1</i></div>
+  <p class="tplead">从第一次能动起计时，到真结局确认的那一刻停表；暂停、过场和切后台都照常计时。不能读档接着跑，打开调试面板的成绩无效。速通有单独的存档，不影响「继续上次」。</p>
+  <div class="srdiff"><button type="button" data-diff="easy" onclick="Speedrun.choose('easy')"><b>预知梦</b><i>第一天死去会惊醒（三次），计时不停</i></button><button type="button" data-diff="hard" onclick="Speedrun.choose('hard')"><b>梦魇</b><i>没有第二次</i></button></div>
+  <div id="srrecords"></div>
+  <div class="tpfoot"><button type="button" id="srBack" onclick="Speedrun.close()">返回</button></div>
+</div></div>
+<div id="archive" class="mdialog" role="dialog" aria-modal="true" aria-labelledby="arTitle" hidden><div class="mdbox wide">
+  <div class="tphead"><b id="arTitle">死亡档案室</b><i id="arCount"></i></div>
+  <p class="tplead">每一种死法第一次发生时记一份。被药丸、天赋挡下的不算，调试面板里的也不算。记录只存在这台设备的浏览器里，清除网站数据会一起清掉。</p>
+  <div class="arcards" id="arcards"></div>
+  <p class="arnote" id="arNote"></p>
+  <div class="tpfoot"><button type="button" id="arBack" onclick="DeathArchive.close()">返回</button></div>
+</div></div>
+<div id="arReplay" hidden><i>死亡档案 · 回放</i><b></b><small>点击、空格或 Esc 结束</small></div>
+<div id="srclock" hidden><i>速通</i><b>00:00:00.00</b></div>
 <div id="tpick" role="dialog" aria-modal="true" aria-labelledby="tpickTitle" hidden><div class="tpbox">
   <div class="tphead"><b id="tpickTitle">选一项天赋</b><i id="tpickDiff"></i></div>
   <p class="tplead">开局前选好，这一局不能再换。不想选也可以交给运气。</p>
@@ -332,6 +352,8 @@
 <script src="game3d/js/state.js"></script>
 <script src="game3d/js/talents.js"></script>
 <script src="game3d/js/day-events.js"></script>
+<script src="game3d/js/speedrun.js"></script>
+<script src="game3d/js/death-archive.js"></script>
 <script src="game3d/js/input.js"></script>
 <script src="game3d/js/ui.js"></script>
 <script src="game3d/js/systems.js"></script>

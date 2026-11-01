@@ -132,11 +132,13 @@ var SAVE_SCHEMA=[
     load:function(d){ if(S.mode==='in'&&S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign(ROAM,d.roam); }
   }
 ];
+/* 速通用单独的存档槽，不覆盖、不删除普通模式的「继续上次」 */
+function saveSlot(){ return (typeof RUN_MODE!=='undefined'&&RUN_MODE==='speedrun')?'wdfz3d_speedrun_slot':'wdfz3d'; }
 function saveGame(){
   try{
     var d={v:1, clockVersion:2};
     SAVE_SCHEMA.forEach(function(f){ f.save(d); });
-    localStorage.setItem('wdfz3d',JSON.stringify(d));
+    localStorage.setItem(saveSlot(),JSON.stringify(d));
     return true;
   }catch(e){ return false; }
 }
@@ -148,7 +150,7 @@ function applySave(d){
 }
 function loadGame(){
   try{
-    var raw=localStorage.getItem('wdfz3d');
+    var raw=localStorage.getItem(saveSlot());
     if(!raw) return null;
     return JSON.parse(raw);
   }catch(e){ return null; }
@@ -160,7 +162,7 @@ function autoSave(){
   if(S.screen==='play'&&!S.dead) saveGame();
 }
 function clearSave(){
-  try{ localStorage.removeItem('wdfz3d'); }catch(e){}
+  try{ localStorage.removeItem(saveSlot()); }catch(e){}
 }
 /* 拿到过的结局单独记，不跟存档一起删 */
 var ENDS_KEY='wdfz3d_ends';

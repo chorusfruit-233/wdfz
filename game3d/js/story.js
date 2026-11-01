@@ -95,7 +95,7 @@ function fnTick(dt){
   if(f.v>=100){
     f.on=false;
     fnPeopleClear();
-    kill('你笑得停不下来。笑了很久。','laugh');
+    kill('你笑得停不下来。笑了很久。','laugh','laugh');
     return;
   }
   if(f.left===undefined) f.left=4;
@@ -156,9 +156,9 @@ function chooseIdea(id){
       {label:'再想想',fn:function(){ UI.closeChoice(); }},
       {label:'就这么办',fn:function(){
         UI.closeChoice();
-        if(it.route==='trap_out') kill('你从门缝里挤了出去。外面是一条很长的马路，路尽头有一扇校门。你走进去——衣服上还有雨，教学楼里，铃刚刚响。','slit');
-        else if(it.route==='trap_wall') kill('你翻上了墙头。墙外面还有一道墙。再外面，还有一道。你一直翻，翻到手指不再是手指的形状。','squeeze');
-        else kill('路过的那个人停了下来。他慢慢转过头——他没有脸，只有一个很大的、在笑的洞。然后他从墙里直接走了进来。','face');
+        if(it.route==='trap_out') kill('你从门缝里挤了出去。外面是一条很长的马路，路尽头有一扇校门。你走进去——衣服上还有雨，教学楼里，铃刚刚响。','slit','trap_out');
+        else if(it.route==='trap_wall') kill('你翻上了墙头。墙外面还有一道墙。再外面，还有一道。你一直翻，翻到手指不再是手指的形状。','squeeze','trap_wall');
+        else kill('路过的那个人停了下来。他慢慢转过头——他没有脸，只有一个很大的、在笑的洞。然后他从墙里直接走了进来。','face','trap_beg');
       }}
     ]);
     return;
@@ -290,7 +290,7 @@ var FaceChallenge={
     var q=FaceChallenge.state();
     if(q.done>=3){
       UI.choice('闸机亮起绿灯。外面的路安静得出奇。',[
-        {label:'通过闸机',fn:function(){triggerEnding('face');}},
+        {label:'通过闸机',fn:function(){Speedrun.proof('face');triggerEnding('face');}},
         {label:'暂时留下',fn:function(){}}
       ]);return;
     }
@@ -326,7 +326,7 @@ function useStall(){
   S.spots.stall=1; UI.spotsDirty=true;
   if(RT.beastDrop&&S.room==='teach1'){
     UI.choice('门后传来一个声音：「你愿意跟我一起走吗？」',[
-      {label:'跟上',fn:function(){triggerEnding('beast');}},
+      {label:'跟上',fn:function(){Speedrun.proof('beast');triggerEnding('beast');}},
       {label:'先等等',fn:function(){os('我：门后没有再催促。',2.5);}}
     ]);
     return;
@@ -407,6 +407,7 @@ function kill(msg,fx,source){
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   Playtest.event('死亡',source||S.death);
+  var _arc=null; try{ _arc=DeathArchive.record(source,S.death); }catch(e){}   /* 死亡档案：这种死法第一次发生时解锁，演出放完再提示（先于死亡日志，免得把这一次当成旧记录迁进去） */
   try{ deathLogAdd(S.death,source); }catch(e){}
   var cause=DEATH_SOURCES[source];
   if(cause)Investigation.record('failure:'+source,cause.cause,'验证','刚才的经历');
@@ -425,16 +426,19 @@ function kill(msg,fx,source){
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
   var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3);
   if(!wake) clearSave();                 /* 没有下一次了：不能再读档回来 */
+  var _sr=null; if(!wake){ try{ _sr=Speedrun.fail('failed',source||S.death); }catch(e){} }   /* 速通：死透了就停表、记未通关 */
   var _deadId=S.deadId=(S.deadId||0)+1, finished=false;
   /* 演出放完（或被跳过）只收一次：墓志铭、死亡界面或预知梦惊醒。旧的一次死亡被复活取消后不会再写回来 */
   function finish(){
     if(finished||S.deadId!==_deadId||!S.dead) return;
     finished=true; if(DEATH_PENDING&&DEATH_PENDING.id===_deadId) DEATH_PENDING=null;
+    try{ DeathArchive.notify(_arc); }catch(e){}
     if(wake){ dreamWake(); return; }
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
     var el=document.getElementById('die');
     document.getElementById('diem').textContent=msg;
     document.getElementById('diecause').textContent=cause?cause.cause:'';
+    var _dsr=document.getElementById('diesr'); if(_dsr){ _dsr.textContent=Speedrun.dieText(_sr); _dsr.hidden=!_sr; }
     el.style.display='flex';
     try{ var rv=document.getElementById('dieRevive'); if(rv) rv.style.display=(typeof DEV!=='undefined'&&DEV.on)?'block':'none'; }catch(e){}
   }
@@ -524,6 +528,7 @@ function triggerEnding(id,skipCut){
   var e=ENDINGS[id];
   endMark(id);
   if(!e.fake) clearSave();                    /* 假结局之后还能接着玩 */
+  Speedrun.lastResult=e.fake?null:Speedrun.finish(id);   /* 速通在通关确认的这一刻停表，不等结局演出 */
   if(skipCut)showEndingCard(id);else playCut(id,function(){ showEndingCard(id); });
 }
 function showEndingCard(id){
@@ -540,7 +545,7 @@ function showEndingCard(id){
   var html='<div id="ends">'+tag+
     '<div class="et">'+e.t+'</div>'+
     '<div class="el">'+e.l.join('<br>')+(echo?'<br><br>'+echo:'')+'</div>'+
-    '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+more+
+    '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+(e.fake?'':Speedrun.cardHtml(Speedrun.lastResult))+more+
     '<button type="button" class="equit" onclick="Game.quit()">回到主菜单</button></div>';
   var d=document.createElement('div');
   d.innerHTML=html;

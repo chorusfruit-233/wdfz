@@ -515,3 +515,70 @@ body.touch #sub{font-size:calc(15px * var(--read-scale))}
 #notein .talent-note b{font:400 15px var(--ui-serif);letter-spacing:3px;color:#f1eadc}
 #notein .talent-note b small{margin-left:10px;font:12px var(--ui-font);letter-spacing:1px;color:#e0857a}
 #notein .talent-note em{font-style:normal;font-size:12px;color:#cdb98d}
+
+/* ---------- 主菜单：速通模式、死亡档案室（《传送门建模、死亡CG档案室与速通模式》P1／P2） ---------- */
+#menu .mextra{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.mside{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:44px;padding:10px 14px;text-align:left;cursor:pointer;
+  font-family:var(--ui-font);color:var(--paper);background:rgba(14,12,11,.6);border:1px solid var(--ui-line);border-radius:2px;transition:background .16s,border-color .16s}
+.mside b{font:400 14px/1.3 var(--ui-serif);letter-spacing:4px;color:#e9e1d1}
+.mside i{font-style:normal;font-size:11px;letter-spacing:1px;color:var(--ui-dim)}
+.mside:hover,.mside:focus-visible{background:rgba(181,51,47,.08);border-color:rgba(181,51,47,.45)}
+.mdialog{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;overflow-y:auto;
+  padding:calc(18px + var(--st)) calc(14px + var(--sr)) calc(18px + var(--sb)) calc(14px + var(--sl));background:rgba(3,2,2,.86);font-family:var(--ui-font);color:var(--ui-text)}
+.mdialog[hidden]{display:none}
+.mdbox{width:min(640px,100%);margin:auto;padding:22px 22px 18px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:var(--ui-r);
+  outline:1px solid rgba(221,213,196,.06);outline-offset:-7px;box-shadow:0 24px 70px rgba(0,0,0,.72)}
+.mdbox.wide{width:min(980px,100%)}
+.srdiff{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.srdiff button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:44px;padding:12px 14px;text-align:left;cursor:pointer;
+  font-family:var(--ui-font);color:var(--ui-text);background:rgba(221,213,196,.03);border:1px solid var(--ui-line);border-left:2px solid var(--ui-line2);border-radius:2px}
+.srdiff button:hover,.srdiff button:focus-visible{border-color:var(--ui-acc);border-left-color:var(--ui-acc);background:var(--ui-acc-bg)}
+.srdiff b{font:400 16px var(--ui-serif);letter-spacing:4px;color:#f1eadc}
+.srdiff i{font-style:normal;font-size:12px;color:var(--ui-dim)}
+#srrecords table{width:100%;margin-top:14px;border-collapse:collapse;font-size:12px}
+#srrecords th,#srrecords td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--ui-line)}
+#srrecords th{font-weight:400;letter-spacing:2px;color:var(--ui-faint)}
+#srrecords td:last-child{font-family:var(--ui-mono);color:#efe7d6}
+#srrecords .srsub{margin:14px 0 6px;font-size:11px;letter-spacing:2px;color:var(--ui-faint)}
+#srrecords ul{list-style:none;margin:0;padding:0;font-size:12px}
+#srrecords li{display:flex;gap:12px;padding:4px 0;border-bottom:1px dashed var(--ui-line)}
+#srrecords li span{flex:1;color:var(--ui-dim)}
+#srrecords li b{font:400 12px var(--ui-mono);color:#efe7d6}
+#srrecords li i{font-style:normal;min-width:5em;text-align:right;color:var(--ui-dim)}
+.arcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;max-height:min(58vh,560px);overflow-y:auto;padding-right:4px}
+.arcard{display:flex;align-items:flex-start;gap:12px;min-height:44px;padding:12px 14px;background:rgba(221,213,196,.02);border:1px dashed var(--ui-line);border-radius:2px;color:var(--ui-faint)}
+.arcard em{font-style:normal;font:11px var(--ui-mono);letter-spacing:2px;color:var(--ui-faint);padding-top:3px}
+.arcard span{display:flex;flex-direction:column;gap:4px;flex:1}
+.arcard b{font:400 15px var(--ui-serif);letter-spacing:3px;color:var(--ui-faint)}
+.arcard i{font-style:normal;font-size:12px;line-height:1.7}
+.arcard small{font-size:11px;letter-spacing:1px;color:var(--ui-faint)}
+.arcard.open{border-style:solid;border-left:2px solid rgba(181,51,47,.7);background:rgba(221,213,196,.04);color:var(--ui-text)}
+.arcard.open b{color:#f1eadc}
+.arcard.latest{box-shadow:inset 0 0 0 1px rgba(200,166,107,.35)}
+.arcard button{flex:none;min-height:36px;padding:4px 12px;font:13px var(--ui-font);letter-spacing:2px;color:var(--ui-text);cursor:pointer;background:rgba(221,213,196,.03);border:1px solid var(--ui-line);border-radius:2px}
+.arcard button:hover,.arcard button:focus-visible{border-color:var(--seal);background:rgba(181,51,47,.1)}
+.arnote{margin:10px 0 0;font-size:11px;color:var(--ui-faint)}
+#arReplay{position:fixed;left:calc(18px + var(--sl));top:calc(18px + var(--st));z-index:76;display:flex;flex-direction:column;gap:3px;pointer-events:none;font-family:var(--ui-font)}
+#arReplay[hidden]{display:none}
+#arReplay i{font-style:normal;font-size:11px;letter-spacing:3px;color:var(--ui-faint)}
+#arReplay b{font:400 18px var(--ui-serif);letter-spacing:5px;color:#efe7d6}
+#arReplay small{font-size:11px;color:var(--ui-faint)}
+body.replaying #mini,body.replaying #hot,body.replaying #srclock{display:none!important}
+/* 速通计时：右上角、全屏按钮下面，不挡状态卡、字幕、地图和触屏按键 */
+#srclock{position:fixed;right:calc(14px + var(--sr));top:calc(62px + var(--st));z-index:30;display:flex;flex-direction:column;align-items:flex-end;gap:1px;
+  padding:5px 10px;pointer-events:none;background:rgba(10,8,7,.55);border:1px solid var(--ui-line);border-radius:2px;font-family:var(--ui-font)}
+#srclock[hidden]{display:none}
+#srclock i{font-style:normal;font-size:10px;letter-spacing:2px;color:var(--ui-faint)}
+#srclock b{font:400 16px var(--ui-mono);letter-spacing:1px;color:#efe7d6}
+#srclock.bad b{color:#c98c80;text-decoration:line-through}
+body.cut #srclock{opacity:.7}
+#ends .esr{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 22px;border:1px solid var(--ui-line);border-radius:2px}
+#ends .esr i{font-style:normal;font-size:11px;letter-spacing:3px;color:var(--ui-faint)}
+#ends .esr b{font:400 24px var(--ui-mono);letter-spacing:2px;color:#efe7d6}
+#ends .esr small{font-size:12px;letter-spacing:2px;color:var(--ui-acc)}
+#diesr{font:12px var(--ui-mono);letter-spacing:2px;color:var(--ui-faint)}
+@media (max-width:560px){
+  #menu .mextra,.srdiff{grid-template-columns:1fr}
+  #srclock{top:calc(54px + var(--st));padding:3px 8px}
+  #srclock b{font-size:13px}
+}

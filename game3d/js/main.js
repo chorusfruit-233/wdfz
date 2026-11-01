@@ -32,6 +32,7 @@ function update(dt){
   LESSON.checkInterrupt();
   if(S.screen!=='play') return;
   if(PRO.on) return;                     /* 前情提要期间世界不动 */
+  Speedrun.tick();                       /* 速通：第一次能操作时起表 */
   if(DEV.on&&DEV.freeze) return;        /* 调试暂停只影响打开面板期间的模拟 */
   VisualState.time+=dt;
   updateDialog(dt);
@@ -80,6 +81,7 @@ function render(dt){
   try{ SFX.tick(dt); }catch(e){}
   if(CarChase.active()&&S.screen==='play')CarChase.draw();
   Engine.draw(dt); updateHUD(); drawMini(dt);
+  try{ Speedrun.paintHud(); }catch(e){}
 }
 function updateIntro(dt){
   if(!(S.intro>0)) return;
@@ -271,6 +273,8 @@ var Game={
     if(waitForGameAssets(function(){Game.start(diff,opt);}))return;
     try{
     FRESH_TALENT=opt&&opt.talent?{id:opt.talent,origin:opt.origin||'selected'}:null;
+    if(opt&&opt.mode==='speedrun'){ if(!Speedrun.active()) Speedrun.arm(diff); }
+    else Speedrun.disarm();                                    /* 普通新局：回到普通存档槽 */
     freshState(diff);
     Playtest.event('开始新局',diff);
     var R1=INTERIORS['teach1'];
@@ -297,6 +301,7 @@ var Game={
   },
   continue_:function(){
     if(waitForGameAssets(function(){Game.continue_();}))return;
+    Speedrun.disarm();                                         /* 速通不能读档接着跑；「继续上次」只读普通存档 */
     var d=loadGame();
     if(!d){ toast('没有存档'); return; }
     clearIntroTimers();
@@ -357,6 +362,7 @@ var Game={
   },
   quit:function(){
     if(typeof CarChase!=='undefined'&&CarChase.active()){autoSave();CarChase.clearVisual();}
+    try{ Speedrun.fail('abandoned','quit'); if(RUN_MODE==='speedrun'){ clearSave(); } RUN_MODE='normal'; Speedrun.paintHud(true); }catch(e){}   /* 速通中途回菜单：记放弃，丢掉速通的存档槽 */
     if(typeof Inspection!=='undefined')Inspection.clearFx();
     fnPeopleClear();Engine.resetFakeNormal();
     if(DEV.on)Dev.close(false);
