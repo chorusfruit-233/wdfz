@@ -80,6 +80,7 @@ function render(dt){
   try{ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
   if(CarChase.active()&&S.screen==='play')CarChase.draw();
+  try{ PortalDevice.tick(dt); }catch(e){}          /* 物理实验室演示台上的传送门：按剧情状态摆、每帧动 */
   Engine.draw(dt); updateHUD(); drawMini(dt);
   try{ Speedrun.paintHud(); }catch(e){}
 }
