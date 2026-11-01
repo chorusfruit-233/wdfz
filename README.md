@@ -8,7 +8,7 @@ Wiki 收录操作、课表、地点、道具、异象和公开结局路线的攻
 
 本地运行时，在仓库目录执行 `python -m http.server 8000`，然后访问 `http://localhost:8000/`，也可以直接双击打开 `index.html`。游戏所需的脚本和素材均在仓库内：模型和贴图打包在 `game3d/assets/`，开局按画质读一档。模型在 Blender 里用脚本建（`tools/blender/`，改了以后运行 `python tools/blender/build.py` 重新打包，需要 `pip install bpy==5.2.3` 和 Python 3.13），贴图由 `tools/textures/build_textures.py` 离线生成。
 
-桌面端使用 WASD 移动、鼠标环视、Shift 奔跑、E 交互；上课坐下时可按 R 查看课桌；Tab 打开背包，Esc 关闭面板或暂停。触屏设备使用左侧摇杆移动，滑动屏幕转动视角。页面右上角可切换全屏。
+桌面端使用 WASD 移动、鼠标环视、Shift 奔跑、E 交互；上课坐下时可按 R 查看课桌；Tab 打开背包，Esc 关闭面板或暂停；Alt 只放出鼠标、不暂停（点画面收回）。触屏设备使用左侧摇杆移动，滑动屏幕转动视角。页面右上角可切换全屏。
 
 当前已接入[校园压力计划](docs/plan/SAN、校园压力与时间体验重做.md)的部分规则：SAN 通过视听与身体反应提示，低 SAN 降低体力上限；每次课间 3 分钟，午晚活动各 8 分钟。整体计划状态见[计划目录](docs/plan/README.md)。
 

@@ -69,7 +69,7 @@
         </div>
       </section>
       <section class="jpage" id="think"><div class="jlead" id="thinkhint"></div><div id="ideas"></div></section>
-      <section class="jpage" id="note"><label for="notequery">查找调查记录</label><input id="notequery" type="search" maxlength="80" placeholder="地点或关键词" oninput="UI.renderNote()"><div id="notein"></div></section>
+      <section class="jpage" id="note"><div class="notefind"><label for="notequery">检索</label><input id="notequery" type="search" maxlength="80" placeholder="地点、物品或关键词" oninput="UI.renderNote()" autocomplete="off"></div><div id="notein"></div></section>
       <section class="jpage" id="mapv"><div id="maptools"></div><div id="floormap" hidden></div><div id="mapc"></div><div class="maplegend"><i class="me"></i>你在这里 <i class="mg"></i>校门</div></section>
     </div>
   </div>
@@ -80,44 +80,54 @@
   <button class="primary" onclick="Game.resume()">继续</button>
   <button onclick="Game.saveNow()">保存进度</button>
   <button onclick="UI.open('set')">设置</button>
-  <details class="playtest-tools"><summary>本地试玩记录</summary><p>可选。只保留在本页内存中；记录后可下载，供回顾卡点和操作耗时。不会上传，刷新页面会清空。</p>
-    <button id="playtestToggle" type="button" onclick="Playtest.toggle()">开始新的本地试玩记录</button>
-    <label for="playtestNote">观察或求助情况</label><textarea id="playtestNote" maxlength="500" rows="2"></textarea>
-    <button type="button" onclick="Playtest.note()">记下观察</button><button id="playtestDownload" type="button" onclick="Playtest.export()" disabled>下载记录 JSON</button>
-  </details>
   <button onclick="Game.quit()">回到主菜单</button>
   <div class="pkeys" id="pkeys"></div>
+  <details class="playtest-tools"><summary><span>本地试玩记录</span><em id="playtestState">未记录</em></summary>
+    <p>可选，给帮忙试玩的人用：记下卡在哪、用了多久。只存在这一页的内存里，不会上传，刷新就没了。</p>
+    <div class="pt-row"><button id="playtestToggle" type="button" onclick="Playtest.toggle()">开始记录</button><button id="playtestDownload" type="button" onclick="Playtest.export()" disabled>下载 JSON</button></div>
+    <label for="playtestNote">旁观者的备注（卡住、求助、误会了什么）</label><textarea id="playtestNote" maxlength="500" rows="2" placeholder="例如：在二楼找不到楼梯"></textarea>
+    <button type="button" class="pt-note" onclick="Playtest.note()">记下这条</button>
+  </details>
   <button class="ghost" onclick="Dev.toggle()">调试 (F2)</button>
 </div></div>
-<div id="set"><div class="pbox">
+<div id="set"><div class="pbox setbox">
   <div class="ptitle">设置</div>
-  <div class="srow"><label for="mouseSense">鼠标灵敏度</label><input type="range" id="mouseSense" min="25" max="250" step="5" oninput="Settings.comfort('mouseSense',this.value)"><b id="mouseSenseValue"></b></div>
-  <div class="srow"><label for="touchSense">触屏灵敏度</label><input type="range" id="touchSense" min="25" max="250" step="5" oninput="Settings.comfort('touchSense',this.value)"><b id="touchSenseValue"></b></div>
-  <div class="srow"><label for="textSize">字幕与选项字号</label><input type="range" id="textSize" min="85" max="150" step="5" oninput="Settings.comfort('textSize',this.value)"><b id="textSizeValue"></b></div>
-  <div class="srow"><label for="touchSize">触屏控件尺寸</label><input type="range" id="touchSize" min="85" max="125" step="5" oninput="Settings.comfort('touchSize',this.value)"><b id="touchSizeValue"></b></div>
-  <details id="layoutSettings"><summary>调整触屏位置</summary>
-    <p>在示意图中预览位置。横竖屏分别按当前画面约束到可触及范围，按钮相碰时会自动避让。</p>
-    <label for="layoutTarget">调整控件</label><select id="layoutTarget" onchange="TouchLayout.paint()"><option value="stick">移动摇杆</option><option value="tAct">交互按钮</option><option value="ttop">手册与暂停</option></select>
-    <label for="layoutX">水平位置</label><input id="layoutX" type="range" min="0" max="100" oninput="TouchLayout.change('x',this.value)">
-    <label for="layoutY">垂直位置</label><input id="layoutY" type="range" min="0" max="100" oninput="TouchLayout.change('y',this.value)">
-    <div id="layoutPreview" aria-label="触屏位置示意图"><i data-control="stick">移动</i><i data-control="tAct">交互</i><i data-control="ttop">暂停 / 手册</i></div>
-    <button type="button" onclick="TouchLayout.reset()">触屏布局归位</button>
-  </details>
-  <button type="button" onclick="Settings.resetComfort()">恢复操作与文字默认值</button>
-  <div class="srow"><span>音量</span><input type="range" id="sVol" min="0" max="100" value="70" oninput="Settings.vol(this.value)"><b id="sVolV">70</b></div>
-  <div class="srow"><span>亮度</span><input type="range" id="sBr" min="60" max="150" value="100" oninput="Settings.bright(this.value)"><b id="sBrV">100</b></div>
-  <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
-    <button onclick="Settings.sub(0)">短</button><button onclick="Settings.sub(1)">标准</button><button onclick="Settings.sub(2)">长</button></div></div>
+  <section class="sgroup" aria-labelledby="sgView"><h4 id="sgView">画面</h4>
+  <div class="srow"><span>亮度</span><input type="range" id="sBr" min="60" max="150" value="100" oninput="Settings.bright(this.value)" aria-label="亮度"><b id="sBrV">100</b></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
     <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button><button onclick="Settings.q(3)">超精细</button><button onclick="Settings.q(4)">真实</button></div></div>
   <div class="srow"><span>镜头晃动</span><div class="seg" id="sShake">
     <button onclick="Settings.shake(0)">开</button><button onclick="Settings.shake(1)">关</button></div></div>
-  <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
-    <button onclick="Settings.amb(1)">开</button><button onclick="Settings.amb(0)">关</button></div></div>
   <div class="srow"><span>画面颗粒</span><div class="seg" id="sGrain">
     <button onclick="Settings.grain(1)">开</button><button onclick="Settings.grain(0)">关</button></div></div>
-  <button class="primary" onclick="UI.close('set',false);UI.open('pause')">返回</button>
-  <button onclick="Game.resume()">返回游戏</button>
+  </section>
+  <section class="sgroup" aria-labelledby="sgSound"><h4 id="sgSound">声音与文字</h4>
+  <div class="srow"><span>音量</span><input type="range" id="sVol" min="0" max="100" value="70" oninput="Settings.vol(this.value)" aria-label="音量"><b id="sVolV">70</b></div>
+  <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
+    <button onclick="Settings.amb(1)">开</button><button onclick="Settings.amb(0)">关</button></div></div>
+  <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
+    <button onclick="Settings.sub(0)">短</button><button onclick="Settings.sub(1)">标准</button><button onclick="Settings.sub(2)">长</button></div></div>
+  <div class="srow"><label for="textSize">字号</label><input type="range" id="textSize" min="85" max="150" step="5" oninput="Settings.comfort('textSize',this.value)"><b id="textSizeValue"></b></div>
+  <p class="shint" id="textSizeHint">字幕、选项、笔记和课堂纸条一起放大。</p>
+  </section>
+  <section class="sgroup" aria-labelledby="sgCtl"><h4 id="sgCtl">操作</h4>
+  <div class="srow"><label for="mouseSense">鼠标灵敏度</label><input type="range" id="mouseSense" min="25" max="250" step="5" oninput="Settings.comfort('mouseSense',this.value)"><b id="mouseSenseValue"></b></div>
+  <div class="srow"><label for="touchSense">触屏灵敏度</label><input type="range" id="touchSense" min="25" max="250" step="5" oninput="Settings.comfort('touchSense',this.value)"><b id="touchSenseValue"></b></div>
+  <div class="srow"><label for="touchSize">触屏按键大小</label><input type="range" id="touchSize" min="85" max="125" step="5" oninput="Settings.comfort('touchSize',this.value)"><b id="touchSizeValue"></b></div>
+  <details id="layoutSettings" class="sdetail" ontoggle="TouchLayout.paint()"><summary><span>触屏按键位置</span><em>预览与调整</em></summary>
+    <div class="srow"><span>调整</span><div class="seg" id="layoutSeg">
+      <button type="button" data-control="stick" onclick="TouchLayout.pick('stick')">摇杆</button><button type="button" data-control="tAct" onclick="TouchLayout.pick('tAct')">交互键</button><button type="button" data-control="ttop" onclick="TouchLayout.pick('ttop')">手册 / 暂停</button></div>
+      <input type="hidden" id="layoutTarget" value="stick"></div>
+    <div class="srow"><label for="layoutX">左右</label><input id="layoutX" type="range" min="0" max="100" oninput="TouchLayout.change('x',this.value)"><b id="layoutXValue"></b></div>
+    <div class="srow"><label for="layoutY">上下</label><input id="layoutY" type="range" min="0" max="100" oninput="TouchLayout.change('y',this.value)"><b id="layoutYValue"></b></div>
+    <div class="layout-frame"><div id="layoutPreview" role="img" aria-label="触屏按键位置示意图"><i data-control="ttop">手册 / 暂停</i><i data-control="stick">摇杆</i><i data-control="tAct">交互</i></div></div>
+    <p class="shint">按当前横竖屏预览。按键会留在屏幕可触及的范围内，相互碰到时自动让开。</p>
+    <button type="button" class="sreset" onclick="TouchLayout.reset()">触屏布局归位</button>
+  </details>
+  <button type="button" class="sreset" onclick="Settings.resetComfort()">灵敏度、字号、触屏按键恢复默认</button>
+  </section>
+  <div class="sfoot"><button class="primary" onclick="UI.close('set',false);UI.open('pause')">返回</button>
+  <button onclick="Game.resume()">返回游戏</button></div>
 </div></div>
 <div id="die"><div class="t">你 死 了 。</div><div class="m" id="diem"></div>
   <div id="dieepi"></div><p id="diecause"></p><button onclick="Game.quit()">回到主菜单</button></div>
@@ -149,7 +159,7 @@
       <a class="mwiki" href="wiki/index.html">游戏 Wiki <span aria-hidden="true">↗</span></a>
     </div>
   </div>
-  <div class="mkeys">WASD 移动 · 鼠标环视 · Shift 奔跑 · E 交互<br>Tab 背包 · F 手电 · H 思索 · J 笔记 · M 地图 · Esc 暂停</div>
+  <div class="mkeys">WASD 移动 · 鼠标环视 · Shift 奔跑 · E 交互<br>Tab 背包 · F 手电 · H 思索 · J 笔记 · M 地图 · Esc 暂停 · Alt 放出鼠标</div>
   <div class="mfoot"><span>请记住你回去的路。它会变。</span><i>WUDFZ · FIELD RECORD 001</i></div>
 </div>
 <div id="pcgame"><div class="pch">机房 · 贪吃蛇</div><canvas id="pccv" width="320" height="320"></canvas>
@@ -169,7 +179,7 @@
     <button type="button" class="devclose" onclick="Dev.close()" aria-label="关闭调试面板">×</button>
   </header>
   <div class="devrun"><span id="devrun" role="status"></span><button type="button" id="devfreeze" onclick="Dev.toggleFreeze()">暂停游戏</button></div>
-  <p class="devhelp" id="devhelp">点击窗口外操作游戏 · F2 关闭 · Esc 释放鼠标</p>
+  <p class="devhelp" id="devhelp">点击画面操作游戏 · Alt 放出鼠标（不暂停）· F2 关闭</p>
   <nav class="devtabs" aria-label="调试功能">
     <button type="button" data-dev-tab="status" aria-controls="dev-page-status" aria-pressed="true" onclick="Dev.tab('status')">状态</button>
     <button type="button" data-dev-tab="scene" aria-controls="dev-page-scene" aria-pressed="false" onclick="Dev.tab('scene')">场景</button>
@@ -259,7 +269,7 @@
       <div class="devsection"><div><h3>最近操作</h3><p>本次页面会话记录最近 20 条，面板展示最后 5 条；随诊断报告导出。</p></div></div>
       <p id="devhistory"></p>
     </section>
-    <p class="devhint">浮窗默认不冻结游戏，可手动暂停；真实时间倒计时仍会继续。<span class="devkbd">F2 关闭，面板内 Esc 也可关闭。</span></p>
+    <p class="devhint">浮窗默认不冻结游戏，可手动暂停；真实时间倒计时仍会继续。<span class="devkbd">F2 关闭，面板内 Esc 也可关闭。环视时按 Alt 放出鼠标、游戏不暂停，点画面收回。</span></p>
   </div>
   <div class="devfooter"><span id="devmessage" role="status" aria-live="polite">调试操作会改变当前游戏状态。</span><span id="devscroll" hidden>↓ 可滚动</span></div>
 </div>

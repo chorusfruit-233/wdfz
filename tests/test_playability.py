@@ -74,15 +74,15 @@ class PlayabilityTest(BrowserCase):
 
     def test_floor_map_uses_seen_geometry_pending_loot_and_resets(self):
         page=self.game()
-        page.evaluate("ExplorationMap.observe();window.seen=Object.keys(RT.exploration.teach1);UI.open('mapv')")
-        self.assert_js(page,"seen.length>0&&seen.length<INTERIORS.teach1.cols*INTERIORS.teach1.rows/2")
+        page.evaluate("ExplorationMap.observe();window.seen=ExplorationMap.count('teach1');UI.open('mapv')")
+        self.assert_js(page,"seen>0&&seen<INTERIORS.teach1.cols*INTERIORS.teach1.rows/2&&typeof RT.exploration.teach1==='string'")
         self.assert_js(page,"document.querySelector('#mapfloor').options.length===2")
         page.evaluate("""const R=INTERIORS.teach1;window.desk=null;
           for(let r=0;r<R.rows&&!desk;r++)for(let c=0;c<R.cols&&!desk;c++)if(R.grid[r][c]==='d')desk=[c,r];
           var key=R.id+':'+desk.join(':');RT.pendingLoot[key]='coin';""")
         self.assert_js(page,"ExplorationMap.label(INTERIORS.teach1,...desk)==='留'")
         page.evaluate("delete RT.pendingLoot[key];RT.deskUsed[key]=1;saveGame();let d=loadGame();freshState('hard');running=false;applySave(d)")
-        self.assert_js(page,"ExplorationMap.label(INTERIORS.teach1,...desk)==='✓'&&Object.keys(RT.exploration.teach1).length>=seen.length")
+        self.assert_js(page,"ExplorationMap.label(INTERIORS.teach1,...desk)==='✓'&&ExplorationMap.count('teach1')>=seen")
         page.evaluate("freshState('hard');running=false")
         self.assert_js(page,"Object.keys(ExplorationMap.state()).length===0")
 
@@ -175,7 +175,7 @@ class PlayabilityTest(BrowserCase):
         self.assertIn('重读',page.evaluate('Investigation.goal()'))
         page.evaluate("RT.hacked=true;RT.data=true;Investigation.record('whitelistSynced','已同步','验证');UI.renderNote()")
         self.assertIn('西小门',page.evaluate('Investigation.goal()'))
-        page.locator('.investigation-focus button').filter(has_text='关注车辆').click()
+        page.locator('.investigation-focus button').filter(has_text='车辆').click()
         self.assert_js(page,"loadGame().rt.investigation.focus==='car'&&RT.data&&!RT.portalSketch")
 
     def test_mobile_floor_map_can_scroll_sideways(self):
@@ -187,4 +187,56 @@ class PlayabilityTest(BrowserCase):
         page.wait_for_timeout(150)
         self.assert_js(page,"document.querySelector('.floor-scroll').scrollLeft>20")
         self.assert_js(page,"!LOOKDRAG.on&&!TOUCH.active")
+
+    def test_scene_signs_are_lit_unique_and_released_with_the_room(self):
+        page=self.game()
+        info=page.evaluate("""(()=>{const g=buildRoomGeometry(INTERIORS.garage1);let plates=[],rows=0,basic=0,maps=new Set();
+          g.traverse(o=>{const t=o.userData&&o.userData.wayfinding;if(!t)return;const ms=Array.isArray(o.material)?o.material:[o.material];
+            if(ms.some(m=>m.isMeshBasicMaterial))basic++;if(/^鄂A·/.test(t))plates.push(t);if(/排$/.test(t))rows++;ms.forEach(m=>{if(m.map)maps.add(m.map);});});
+          let disposed=0;maps.forEach(t=>t.addEventListener('dispose',()=>disposed++));ThreeBackend.disposeGroup(g);
+          const cell=carRightCell().split(':').map(Number);
+          return {plates,rows,basic,maps:maps.size,disposed,right:Investigation.carName(cell[0],cell[1])};})()""")
+        self.assertEqual(info['basic'],0)
+        self.assertEqual(len(info['plates']),16)
+        self.assertEqual(len(set(info['plates'])),16)
+        self.assertIn(info['right'],info['plates'])
+        self.assertEqual(info['rows'],4)
+        self.assertEqual(info['disposed'],info['maps'])
+        signs=page.evaluate("""(()=>{const out={};['teach1','lab2','admin2','lift_teach'].forEach(id=>{const g=buildRoomGeometry(INTERIORS[id]);out[id]=[];
+          g.traverse(o=>{if(o.userData&&o.userData.wayfinding)out[id].push(o.userData.wayfinding);});ThreeBackend.disposeGroup(g);});return out;})()""")
+        self.assertEqual(sorted(signs['teach1']),sorted(['1F 楼梯','1F 楼梯','1F 电梯','移交单']))
+        self.assertIn('连廊',signs['lab2'])
+        self.assertIn('2F 楼梯',signs['admin2'])
+        self.assertEqual(signs['lift_teach'],[])
+
+    def test_only_own_classroom_podium_holds_the_handover_slip(self):
+        page=self.game()
+        page.evaluate("""const R=INTERIORS.teach1;window.ts=[];for(let r=0;r<R.rows;r++)for(let c=0;c<R.cols;c++)if(R.grid[r][c]==='T')ts.push([c,r]);""")
+        self.assert_js(page,"ts.length===6&&ts.filter(t=>Investigation.isPodium(INTERIORS.teach1,t[0],t[1])).length===1&&Investigation.podium()[0]===48")
+        page.evaluate("""const R=INTERIORS.teach1,t=ts[0];S.seated=false;S.bag=[];S.x=R.ox+(t[0]+.5)*R.tw;S.y=R.oy+(t[1]+1.5)*R.th;S.ang=-Math.PI/2;S.pitch=0;
+          window.hint=interactHint();tryInteract();""")
+        self.assert_js(page,"hint==='拿粉笔'&&hasItem('chalk')&&!Investigation.state().entries.notice&&!UI.chooseOpen")
+        page.evaluate("""const R=INTERIORS.teach1,t=Investigation.podium();S.x=R.ox+(t[0]+.5)*R.tw;S.y=R.oy+(t[1]+1.5)*R.th;window.hint=interactHint();tryInteract();""")
+        self.assert_js(page,"hint==='看移交单'&&UI.chooseOpen&&Investigation.visible('notice')")
+
+    def test_floor_map_save_is_compact_and_reads_the_earlier_format(self):
+        page=self.game()
+        page.evaluate("""for(const id in INTERIORS){const b=ExplorationMap.seen(id);b.fill(1);RT.exploration[id]=ExplorationMap.pack(b);}
+          window.size=JSON.stringify(RT.exploration).length;""")
+        self.assert_js(page,"size<8000")
+        page.evaluate("RT.exploration={teach1:{'3:2':1,'4:2':1,'bad':1,'999:1':1}};ExplorationMap.rt=null;")
+        self.assert_js(page,"ExplorationMap.count('teach1')===2&&typeof RT.exploration.teach1==='string'")
+        page.evaluate("saveGame();let d=loadGame();freshState('hard');running=false;applySave(d)")
+        self.assert_js(page,"ExplorationMap.has(INTERIORS.teach1,3,2)&&ExplorationMap.has(INTERIORS.teach1,4,2)&&!ExplorationMap.has(INTERIORS.teach1,5,2)")
+
+    def test_redone_panels_show_state_without_losing_notes(self):
+        page=self.game()
+        page.evaluate("Playtest.data=null;Playtest.paint();document.getElementById('playtestNote').value='卡住了';Playtest.note()")
+        self.assert_js(page,"!Playtest.data&&document.getElementById('playtestNote').value==='卡住了'&&document.getElementById('playtestState').textContent==='未记录'")
+        page.evaluate("Playtest.toggle();Playtest.note()")
+        self.assert_js(page,"Playtest.data.events.some(e=>e.detail==='卡住了')&&document.getElementById('playtestState').textContent.startsWith('记录中')")
+        page.evaluate("Playtest.toggle();Game.pause();UI.open('set');document.getElementById('layoutSettings').open=true;TouchLayout.pick('tAct')")
+        self.assert_js(page,"document.getElementById('layoutTarget').value==='tAct'&&document.querySelector('#layoutSeg button.on').dataset.control==='tAct'&&document.querySelector('#layoutPreview i.on').dataset.control==='tAct'")
+        page.evaluate("UI.close('set',false);Game.resume();Investigation.notice();UI.closeChoice();S.spots.comp=1;UI.open('note')")
+        self.assert_js(page,"document.querySelector('.investigation-focus button.on').textContent==='车辆'&&document.querySelectorAll('#notein .inv-card').length>=3")
 

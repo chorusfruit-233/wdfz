@@ -64,7 +64,17 @@ var Investigation={
       {label:'先不取，继续查看设施',fn:next}
     ]);
   },
-  carName:function(c,r){return '鄂A·'+String(3100+c*31+r);},
+  /* 鄂A·字母 + 四位数：格子坐标决定，同一局、读档前后都一样 */
+  carName:function(c,r){return '鄂A·'+'DFHKM'.charAt((c+r)%5)+String(3100+c*31+r);},
+  /* 自己教室的讲台（座位所在那一间）：只有它上面压着移交单 */
+  podium:function(){
+    if(this._podium!==undefined)return this._podium;
+    var R=INTERIORS.teach1,seat=null,best=null,r,c;
+    for(r=0;r<R.rows;r++)for(c=0;c<R.cols;c++)if(R.grid[r][c]==='P')seat=[c,r];
+    if(seat)for(r=0;r<R.rows;r++)for(c=0;c<R.cols;c++)if(R.grid[r][c]==='T'&&r<seat[1]&&(!best||Math.abs(c-seat[0])<Math.abs(best[0]-seat[0])))best=[c,r];
+    return this._podium=best;
+  },
+  isPodium:function(R,c,r){var p=this.podium();return !!(p&&R&&R.id==='teach1'&&p[0]===c&&p[1]===r);},
   carKey:function(){
     var cell=carRightCell().split(':').map(Number),label=this.carName(cell[0],cell[1]);
     this.record('carKey','钥匙环刻着车牌「'+label+'」。在车位前看车牌，再试钥匙。','事实','车钥匙');
@@ -90,9 +100,12 @@ var Investigation={
       {label:'退开观察车道',fn:function(){}}
     ]);
   },
-  goal:function(){
+  currentFocus:function(){
     var j=this.state();
-    var focus=j.focus||((RT.portalDiary||RT.portalSketch||RT.portalOpen)?'portal':RT.hacked?'face':'car');
+    return j.focus||((RT.portalDiary||RT.portalSketch||RT.portalOpen)?'portal':RT.hacked?'face':'car');
+  },
+  goal:function(){
+    var focus=this.currentFocus();
     if(focus==='portal'&&(RT.portalDiary||RT.portalSketch||RT.portalOpen))return RT.portalOpen?'装置已启动，可以返回物理实验室的基座。':RT.portalSketch?'对照图纸准备材料。'+portalNeedText():this.visible('portalDiary')||hasClue('portalDiary')?'对照日记，调查实验楼二、四、五楼教师台；已得到 '+PortalExploration.count()+'/3 张图纸。':'造门调查还没结束；日记的文字记不清了，可以回隧道重读。';
     if(focus==='face'&&(S.spots.comp||S.spots.data||RT.hacked))return RT.data?'数据已同步，前往西小门完成闸机验证。':RT.hacked?'网络中心已写入，前往行政楼三楼同步数据。':'调查实验楼三楼的网络中心；留意门锁和终端旁的说明。';
     if(hasItem('key')&&!this.visible('notice'))return '已经有车钥匙。在背包中使用它，读清环上的牌号，再去车辆旁核对。';
@@ -102,24 +115,35 @@ var Investigation={
     if(!this.visible('parking'))return '已有开车的办法。保安岗停车记录能缩小范围，钥匙上的牌号可供核对。';
     return '去西侧车库核对车牌；先用手电或诱饵处理车道上的黑影，再试车门。';
   },
+  /* 笔记页上半部分：当前调查（案卷卡片）、关注路线、最近发现、按事实 / 推测 / 验证分组的记录、路线进度 */
   render:function(){
-    var j=this.state(),esc=this.escape,h='<h3>当前调查</h3><div class="nl goal">'+esc(this.goal())+'</div>';
+    var j=this.state(),esc=this.escape,me=this,KIND={'事实':'fact','推测':'guess','验证':'check'};
     var input=document.getElementById('notequery'),query=input?input.value.trim().toLowerCase():'';
-    var routes=this.routes();
-    if(routes.length>1)h+='<div class="investigation-focus">'+routes.map(function(route){return '<button type="button" onclick="Investigation.focus(\''+route[0]+'\')">关注'+route[1]+'</button>';}).join('')+'</div>';
-    var recent=j.recent.filter(function(id){var e=j.entries[id];return Investigation.visible(id)&&(!query||(e.text+' '+e.source).toLowerCase().indexOf(query)>=0);}).slice(-3).reverse();
-    if(recent.length)h+='<h3>最近发现</h3>'+recent.map(function(id){return '<div class="nl">'+esc(j.entries[id].text)+'</div>';}).join('');
-    if(query&&!Object.keys(j.entries).some(function(id){var e=j.entries[id];return Investigation.visible(id)&&(e.text+' '+e.source).toLowerCase().indexOf(query)>=0;}))h+='<div class="nl dim">没有找到仍能回忆的对应记录。</div>';
+    function hit(id){var e=j.entries[id];return me.visible(id)&&(!query||(e.text+' '+e.source).toLowerCase().indexOf(query)>=0);}
+    function tag(kind){return '<i class="inv-kind k-'+KIND[kind]+'">'+kind+'</i>';}
+    var routes=this.routes(),names={car:'车辆',face:'白名单',portal:'造门'},focus=this.currentFocus();
+    /* 标签和高亮按钮要和上面那句目标一致：关注的路线还没发现时，目标文字落回车辆路线 */
+    if(!routes.some(function(r){return r[0]===focus;}))focus=routes.some(function(r){return r[0]==='car';})?'car':'';
+    var h='<section class="inv-case"><div class="inv-k"><span>当前调查</span>'+(focus?'<b>'+names[focus]+'路线</b>':'')+'</div>'+
+      '<p class="nl goal">'+esc(this.goal())+'</p>';
+    if(routes.length>1)h+='<div class="investigation-focus" role="group" aria-label="切换关注的路线"><span>关注</span>'+routes.map(function(route){
+      var on=route[0]===focus;return '<button type="button"'+(on?' class="on" aria-pressed="true"':' aria-pressed="false"')+' onclick="Investigation.focus(\''+route[0]+'\')">'+route[1]+'</button>';}).join('')+'</div>';
+    h+='</section>';
+    var ids=Object.keys(j.entries).filter(hit);
+    if(query)h+='<p class="inv-found">'+(ids.length?'找到 '+ids.length+' 条':'没有找到仍能回忆的对应记录。')+'</p>';
+    var recent=j.recent.filter(function(id){return !!j.entries[id]&&hit(id);}).slice(-3).reverse();
+    if(recent.length&&!query)h+='<h3>最近发现</h3><ol class="inv-recent">'+recent.map(function(id){var e=j.entries[id];return '<li>'+tag(e.kind)+'<span>'+esc(e.text)+'</span></li>';}).join('')+'</ol>';
     ['事实','推测','验证'].forEach(function(kind){
-      var ids=Object.keys(j.entries).filter(function(id){var e=j.entries[id];return e.kind===kind&&Investigation.visible(id)&&(!query||(e.text+' '+e.source).toLowerCase().indexOf(query)>=0);});
-      if(!ids.length)return;
-      h+='<h3>'+kind+'</h3>'+ids.map(function(id){var e=j.entries[id];return '<div class="nl"><small>'+esc(e.source)+'</small><br>'+esc(e.text)+'</div>';}).join('');
+      var list=ids.filter(function(id){return j.entries[id].kind===kind;});
+      if(!list.length)return;
+      h+='<h3>'+kind+'<small>'+list.length+'</small></h3>'+list.map(function(id){var e=j.entries[id];
+        return '<div class="nl inv-card k-'+KIND[kind]+'"><div class="inv-src">'+(e.day?'第 '+esc(e.day)+' 天 · ':'')+esc(e.source)+'</div><p>'+esc(e.text)+'</p></div>';}).join('');
     });
     var progress=[];
-    if(j.entries.notice||hasItem('key')||RT.carTried)progress.push('车辆：'+(RT.carUsed?'已驶离车库':hasItem('key')||S.talent==='drive'?'能够试车门':'尚无开车办法')+'；已试 '+Object.keys(RT.carTried||{}).length+' 辆。');
-    if(S.spots.comp||S.spots.data||RT.hacked)progress.push('白名单：'+(RT.hacked?'网络中心已写入':'网络中心尚未写入')+'；'+(RT.data?'行政楼数据已同步':'行政楼尚未同步')+(RT.faceQuiz?'；闸机验证 '+RT.faceQuiz.done+'/3':'')+'。');
-    if(RT.portalDiary||RT.portalSketch||RT.portalOpen)progress.push('造门：'+(RT.portalOpen?'装置已启动':RT.portalSketch?'图纸齐全；'+portalNeedText():'已获得 '+PortalExploration.count()+'/3 张图纸'+(this.visible('portalDiary')||hasClue('portalDiary')?'；还需调查实验楼 '+PORTAL_BLUEPRINT_FLOORS.filter(function(f){return !(RT.portalBlueprints||{})[f];}).join('、')+' 楼教师台':'；日记的文字已模糊，可以回去重读'))+'。');
-    if(progress.length)h+='<h3>已经完成的事</h3>'+progress.map(function(p){return '<div class="nl">'+esc(p)+'</div>';}).join('');
+    if(j.entries.notice||hasItem('key')||RT.carTried)progress.push(['车辆',(RT.carUsed?'已驶离车库':hasItem('key')||S.talent==='drive'?'能够试车门':'尚无开车办法')+'；已试 '+Object.keys(RT.carTried||{}).length+' 辆。',RT.carUsed]);
+    if(S.spots.comp||S.spots.data||RT.hacked)progress.push(['白名单',(RT.hacked?'网络中心已写入':'网络中心尚未写入')+'；'+(RT.data?'行政楼数据已同步':'行政楼尚未同步')+(RT.faceQuiz?'；闸机验证 '+RT.faceQuiz.done+'/3':'')+'。',RT.data&&RT.faceQuiz&&RT.faceQuiz.done>=3]);
+    if(RT.portalDiary||RT.portalSketch||RT.portalOpen)progress.push(['造门',(RT.portalOpen?'装置已启动':RT.portalSketch?'图纸齐全；'+portalNeedText():'已获得 '+PortalExploration.count()+'/3 张图纸'+(this.visible('portalDiary')||hasClue('portalDiary')?'；还需调查实验楼 '+PORTAL_BLUEPRINT_FLOORS.filter(function(f){return !(RT.portalBlueprints||{})[f];}).join('、')+' 楼教师台':'；日记的文字已模糊，可以回去重读'))+'。',RT.portalOpen]);
+    if(progress.length)h+='<h3>路线进度</h3><div class="inv-progress">'+progress.map(function(p){return '<div class="'+(p[2]?'done':'')+'"><b>'+p[0]+'</b><span>'+esc(p[1])+'</span></div>';}).join('')+'</div>';
     return h;
   },
   routes:function(){

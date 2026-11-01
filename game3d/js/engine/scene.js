@@ -49,7 +49,11 @@ ThreeBackend.disposeGroup=function(g,keepData){
     if(o.geometry&&!(o.geometry.userData&&o.geometry.userData.shared))geometries.add(o.geometry);
     if(!keepData&&o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){if(!(m.userData&&m.userData.shared))materials.add(m);});
   });
-  geometries.forEach(function(g){g.dispose();});materials.forEach(function(m){m.dispose();});
+  geometries.forEach(function(g){g.dispose();});
+  materials.forEach(function(m){
+    if(m.userData&&m.userData.disposeMap&&m.map)m.map.dispose();   /* 房间自己的文字贴图（铭牌、车牌）：material.dispose 不会顺带释放 */
+    m.dispose();
+  });
 };
 ThreeBackend.clearWorld=function(){
   var i;

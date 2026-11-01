@@ -213,10 +213,17 @@ function canteenHint(h,R){ return (R.host==='canteen'&&!mealNow())?(hasItem('coi
 var TILE_HINT={
   '=':function(h,R){ var need=doorLockNeed(R,h.c,h.r); return (need&&!hasItem(need))?'开门（锁着）':'开门'; },
   O:'出去', H:'躲进柜子',
-  M:function(){ return '查看售货机与补给'; },
-  k:canteenHint, t:canteenHint,
+  M:function(){
+    var j=Investigation.state(),sup=j.supply;
+    if(j.entries.notice&&sup&&sup.site===S.room&&!sup.taken) return '看补给箱 / 售货机';   /* 只有补给箱真在这儿才这么写 */
+    return hasItem('coin')?'投币（售货机）':'售货机';
+  },
+  k:function(h,R){ return R.host==='guard'?'查看值班台':canteenHint(h,R); }, t:canteenHint,
   L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return Investigation.carHint(h);},
-  T:function(){return S.room==='teach1'?'看移交单 / 拿粉笔':'看讲台';},
+  T:function(h,R){
+    if(Investigation.isPodium(R,h.c,h.r)) return Investigation.visible('notice')?'再看移交单':'看移交单';
+    return S.room==='teach1'?'拿粉笔':'看讲台';
+  },
   D:function(){ return (S.room==='lab3')?'门禁管理终端':'使用终端'; },
   X:'钻进去',
   K:function(h,R){ return (R&&R.host==='admin')?'看办公桌':'看实验台'; },
@@ -336,8 +343,10 @@ function tryInteract(){
   if(ch==='P'){ sitDown(); return; }
   if(ch==='d'||ch==='f'||ch==='R'){ searchContainer(hit.c,hit.r); return; }
   if(ch==='T'){
-    if(S.room==='teach1'){
-      Investigation.notice();
+    if(Investigation.isPodium(R,hit.c,hit.r)) Investigation.notice();          /* 自己教室的讲台：压着移交单 */
+    else if(S.room==='teach1'){
+      if(hasItem('chalk')) os('我：讲台上有一支粉笔，我已经带了一支。',2.8);
+      else if(addItem('chalk')) os('我：讲台上有一支粉笔。',2.8);
     }
     else os('我：讲台是空的。',2.2);
     return;
@@ -357,7 +366,6 @@ function tryInteract(){
   }
   if(ch==='b'){ os('我：床。可是现在不能睡。',2.4); return; }
   if(ch==='k'&&R.host==='guard'){
-    Investigation.parking(true);
     guardSupplies();
     if(Investigation.state().entries.notice)Investigation.supplyOffer(function(){});
     return;
@@ -372,17 +380,18 @@ function tryInteract(){
 function guardSupplies(){
     /* 钥匙以前就挂在这儿，太容易了；现在收到了校长办公室 */
     if(!RT.guardKeysTold){
-      RT.guardKeysTold=1; addClue('keys');
+      RT.guardKeysTold=1; addClue('keys'); Investigation.parking(true);
       var light=hasItem('torch')||addItem('torch');
       os('我：钥匙已上交行政楼五楼校长办公室。停车记录和避险便签记在手册里了。'+(light?'抽屉里的手电带好了，去车库前记得打开。':'手电还在抽屉里，装不下了，腾出一格再来拿。'),6,OS_KEEP);
       autoSave();
       return;
     }
     if(!hasItem('torch')){
+      Investigation.parking(true);
       if(addItem('torch')) os('我：柜台下面还有一把手电筒。去车库之前，把它带上。',4.2);
       return;
     }
-    Investigation.parking();return;
+    Investigation.parking();return;          /* 再来一次：重读登记（记忆按笔记本规则刷新） */
 }
 
 /* 地理实验室的挂图：每张会圈出一个你还没去过的地方 */

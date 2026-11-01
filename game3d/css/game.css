@@ -78,6 +78,12 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05040
 
 /* ---------- 死亡：墨迹慢慢洇开 ---------- */
 #die #dieepi{font:13px/2 var(--ui-serif);letter-spacing:2px;color:#8f857a;margin-top:6px;max-width:440px;text-align:center}
+/* 死因：像档案上补的一行批注，左边一枚小红章 */
+#die #diecause{display:flex;align-items:baseline;gap:12px;max-width:min(560px,86vw);margin:4px 0 14px;padding:9px 16px 9px 12px;
+  font:13px/1.85 var(--ui-serif);letter-spacing:1px;color:#c9beb2;text-align:left;
+  border-top:1px solid rgba(163,44,38,.35);border-bottom:1px solid rgba(163,44,38,.35);background:rgba(20,8,7,.35)}
+#die #diecause::before{content:'死因';flex:none;padding:1px 5px;font:600 11px/1.6 var(--ui-font);letter-spacing:3px;color:#d65d52;border:1px solid rgba(214,93,82,.7);border-radius:2px;transform:rotate(-3deg)}
+#die #diecause:empty{display:none}
 #die{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
   background:radial-gradient(ellipse at 50% 44%,rgba(46,8,7,.62),rgba(4,2,2,.97) 68%);flex-direction:column;gap:20px}
 #die .m{font:17px/2 var(--ui-serif);color:#e1d4c8;max-width:640px;text-align:center;letter-spacing:2px;padding:0 24px}
@@ -369,8 +375,13 @@ body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';positio
 #sanfeel[data-stage="2"]{color:#d38f5f}
 #sanfeel[data-stage="3"]{color:#df6a5c}
 
-#lessonOpen{pointer-events:auto;margin-top:8px;padding:7px 12px;min-height:36px;border:1px solid rgba(200,166,107,.6);border-radius:2px;background:rgba(24,19,13,.8);color:#efe2c4;cursor:pointer;font:inherit;font-size:11px;letter-spacing:1px}
-#lessonOpen[hidden],#lesson[hidden]{display:none}
+/* 状态条下面的小按钮（看课桌 / 看停车单）：同一个样子，黄铜边表示「现在能做」 */
+#lessonOpen,#investigateOpen{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 12px 6px 10px;min-height:36px;
+  border:1px solid rgba(200,166,107,.6);border-left:2px solid var(--ui-acc);border-radius:2px;background:rgba(24,19,13,.82);color:#efe2c4;cursor:pointer;
+  font:inherit;font-size:11px;letter-spacing:2px;text-shadow:none}
+#lessonOpen:hover,#investigateOpen:hover{background:rgba(200,166,107,.16)}
+body.touch #lessonOpen,body.touch #investigateOpen{min-height:44px;font-size:12px}
+#lessonOpen[hidden],#investigateOpen[hidden],#lesson[hidden]{display:none}
 #lesson{position:fixed;inset:0;z-index:32;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.45)}
 .lesson-card{width:min(440px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:22px;color:var(--paper)}
 .lesson-card h2{font:400 18px var(--ui-serif);letter-spacing:4px;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--ui-line)}.lesson-card p{font:14px/1.9 var(--ui-serif)}

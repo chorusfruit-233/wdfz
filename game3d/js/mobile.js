@@ -76,7 +76,12 @@ function goFullscreen(){
 }
 function initMobileShell(){
   TouchLayout.apply();
-  window.addEventListener('resize',function(){resetInputState();TouchLayout.apply();});
+  /* 只有横竖屏真的换了才清掉正在按的摇杆：地址栏收起、软键盘之类的小幅尺寸变化不该打断移动 */
+  var portrait=innerHeight>=innerWidth;
+  window.addEventListener('resize',function(){
+    var now=innerHeight>=innerWidth;if(now!==portrait){portrait=now;resetInputState();}
+    TouchLayout.apply();
+  });
   function fullscreenChanged(){syncFullscreenUI();refreshViewport();}
   document.addEventListener('fullscreenchange',fullscreenChanged);
   document.addEventListener('webkitfullscreenchange',fullscreenChanged);
@@ -143,12 +148,24 @@ var TouchLayout={rects:{},
     container.style.display=oldDisplay;container.style.visibility=oldVisibility;
     this.paint();
   },
+  /* 设置里的示意图：外框按当前屏幕比例，选中的那个按键描黄铜色 */
   paint:function(){
     var target=document.getElementById('layoutTarget');if(!target)return;
-    var p=this.position(target.value);document.getElementById('layoutX').value=p.x;document.getElementById('layoutY').value=p.y;
-    Object.keys(this.rects).forEach(function(id){var r=TouchLayout.rects[id],node=document.querySelector('#layoutPreview [data-control="'+id+'"]');if(!node)return;
-      node.style.left=(r.x/window.innerWidth*100)+'%';node.style.top=(r.y/window.innerHeight*100)+'%';node.style.width=(r.w/window.innerWidth*100)+'%';node.style.height=(r.h/window.innerHeight*100)+'%';});
+    var id=target.value,p=this.position(id),x=document.getElementById('layoutX'),y=document.getElementById('layoutY');
+    x.value=Math.round(p.x);y.value=Math.round(p.y);
+    var xv=document.getElementById('layoutXValue'),yv=document.getElementById('layoutYValue');
+    if(xv)xv.textContent=Math.round(p.x)+'%';if(yv)yv.textContent=Math.round(p.y)+'%';
+    Array.prototype.forEach.call(document.querySelectorAll('#layoutSeg button'),function(b){var on=b.getAttribute('data-control')===id;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
+    var preview=document.getElementById('layoutPreview');
+    if(preview&&preview.parentElement&&preview.parentElement.clientWidth){        /* 按当前屏幕比例缩小成示意图，最高 230px */
+      var ratio=window.innerWidth/Math.max(1,window.innerHeight),pw=preview.parentElement.clientWidth,ph=Math.min(230,pw/ratio);
+      preview.style.width=Math.round(ph*ratio)+'px';preview.style.height=Math.round(ph)+'px';
+    }
+    Object.keys(this.rects).forEach(function(key){var r=TouchLayout.rects[key],node=document.querySelector('#layoutPreview [data-control="'+key+'"]');if(!node)return;
+      node.style.left=(r.x/window.innerWidth*100)+'%';node.style.top=(r.y/window.innerHeight*100)+'%';node.style.width=(r.w/window.innerWidth*100)+'%';node.style.height=(r.h/window.innerHeight*100)+'%';
+      node.classList.toggle('on',key===id);});
   },
+  pick:function(id){if(!this.defaults[id])return;document.getElementById('layoutTarget').value=id;this.paint();},
   change:function(axis,value){
     var id=document.getElementById('layoutTarget').value;if(!this.defaults[id]||(axis!=='x'&&axis!=='y'))return;
     var p=this.position(id);SET.touchLayout=SET.touchLayout||{};SET.touchLayout[id]={x:p.x,y:p.y};SET.touchLayout[id][axis]=clamp(Number(value)||0,0,100);

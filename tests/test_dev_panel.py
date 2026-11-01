@@ -115,6 +115,19 @@ class DebugPanelTest(BrowserCase):
         page.keyboard.press('F2')
         self.assert_js(page,'!DEV.on&&PAUSE.on')
 
+    def test_alt_frees_mouse_for_the_open_panel_without_pausing(self):
+        page = self.game()
+        self.open_panel(page)
+        page.mouse.click(850,650)
+        page.wait_for_function('pointerIsLocked()')
+        page.keyboard.press('Alt')
+        page.wait_for_function('!pointerIsLocked()')
+        page.wait_for_timeout(150)
+        self.assert_js(page,"DEV.on&&!PAUSE.on&&!UI.openPanel&&playerInputAllowed()")
+        page.locator('#devfreeze').click()
+        self.assert_js(page,'DEV.freeze&&!PAUSE.on')
+        self.assertIn('Alt',page.locator('#devhelp').inner_text())
+
     def test_editing_panel_does_not_move_player_or_trigger_game_shortcuts(self):
         page = self.game()
         self.open_panel(page)

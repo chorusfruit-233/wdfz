@@ -323,9 +323,11 @@ var Game={
     if(pk) pk.innerHTML=IS_TOUCH?
       '<span>左下摇杆</span>移动（推到底就是跑）<span>右侧滑动</span>环视<span>交互键</span>上面写着能做的事<span>手册</span>背包 · 思索 · 笔记 · 地图':
       '<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>移动<span><kbd>Shift</kbd></span>奔跑<span><kbd>E</kbd></span>交互<span><kbd>F</kbd></span>手电'+
-      '<span><kbd>1</kbd><kbd>2</kbd></span>快捷栏<span><kbd>G</kbd></span>丢弃选中<span><kbd>Tab</kbd></span>背包<span><kbd>H</kbd></span>思索<span><kbd>J</kbd></span>笔记<span><kbd>M</kbd></span>地图';
+      '<span><kbd>1</kbd><kbd>2</kbd></span>快捷栏<span><kbd>G</kbd></span>丢弃选中<span><kbd>Tab</kbd></span>背包<span><kbd>H</kbd></span>思索<span><kbd>J</kbd></span>笔记<span><kbd>M</kbd></span>地图'+
+      '<span><kbd>Alt</kbd></span>放出鼠标，游戏不暂停；点画面收回';
     if(pk&&CarChase.active())pk.textContent=IS_TOUCH?'驾驶：摇杆向前加速、左右转向、向后刹车。':'驾驶：W / ↑ 加速，A D / ← → 转向，S / ↓ 刹车。';
     document.body.classList.add('paused');
+    try{ Playtest.paint(); }catch(e){}
     UI.open('pause');
   },
   pauseToggle:function(){

@@ -135,18 +135,9 @@ function buildRoomGeometry(R){
   }
   R.shafts=SHAFT_ACC||[]; SHAFT_ACC=null;
   R.doorSpecs=c.doors;
+  roomSigns(c,G,isWall);
   var grp=K.build();
   grp.add(buildDoorLeaves(R));
-  /* 导向牌与车牌在所有画质保留，属于可用于判断的场景信息。 */
-  for(var sy=0;sy<H;sy++)for(var sx=0;sx<W;sx++){
-    var tile=R.grid[sy][sx],label=null,width=1.6;
-    if(tile==='S'&&G(sy,sx-1)!=='S'&&G(sy-1,sx)!=='S')label=R.floor+'F · 楼梯 ↑↓';
-    if(tile==='J')label=R.floor+'F · 电梯';
-    if(tile==='L')label='二楼 · 连廊';
-    if(tile==='T'&&R.id==='teach1')label='移交单 · 钥匙去向';
-    if(tile==='V'&&R.grid[sy].slice(sx+1).indexOf('V')<0)label='第 '+(sy+1)+' 排';
-    if(label){var sign=wayfindingSign(label,CX(sx),2.25,CZ(sy),width);if(tile==='V')sign.rotation.y=Math.PI/2;c.meshes.push(sign);}
-  }
   c.meshes.forEach(function(m){ grp.add(m); });                 /* 黑板上的粉笔字这种单独的网格 */
   return grp;
 }
@@ -654,13 +645,181 @@ function roomDecay(c){
   }
 }
 
-/* 双面、非发光光源的文字牌；不改变通路碰撞，随房间一起释放贴图。 */
-function wayfindingSign(text,x,y,z,width){
-  var cv=document.createElement('canvas');cv.width=512;cv.height=96;
-  var c=cv.getContext('2d');c.fillStyle='#1b302c';c.fillRect(0,0,512,96);
-  c.strokeStyle='#c7dbbd';c.lineWidth=4;c.strokeRect(4,4,504,88);
-  c.fillStyle='#f0f3dd';c.font='bold 38px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(text,256,48,480);
-  var tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
-  var mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,width*96/512),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
-  mesh.position.set(x,y,z);mesh.userData.wayfinding=text;return mesh;
+/* ---- 场景里能读的字：楼层铭牌、连廊吊牌上的字、车库排号吊牌、车牌、讲台上的移交单 ----
+   五档画质都保留（是能拿来判断路线的场景信息），都不改碰撞。
+   全部用受光照的材质：黑处要靠灯或手电才看得清，不会像以前那样在黑暗里自己发亮。
+   每块贴图只属于这一份房间模型，房间模型释放时一起释放（material.userData.disposeMap）。 */
+var SIGN_FONT='"Noto Sans SC","Noto Sans CJK SC","PingFang SC","Microsoft YaHei","WenQuanYi Zen Hei",sans-serif';
+var SIGN_HAND='"KaiTi","STKaiti","Kaiti SC","Noto Serif SC","Noto Serif CJK SC","Songti SC",serif';
+var SIGN_EDGE_MAT=null;
+function signEdgeMat(){
+  if(!SIGN_EDGE_MAT){ SIGN_EDGE_MAT=new THREE.MeshLambertMaterial({color:0x6b6862}); SIGN_EDGE_MAT.userData.shared=true; }
+  return SIGN_EDGE_MAT;
+}
+function signRand(text){
+  var h=7, i; for(i=0;i<text.length;i++) h=(h*31+text.charCodeAt(i))>>>0;
+  return function(){ h=(h*1664525+1013904223)>>>0; return h/4294967296; };
+}
+function signRR(g,x,y,w,h,r){
+  g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
+}
+function signGrime(g,w,h,rnd,rgb,n){
+  for(var i=0;i<n;i++){ var s=1+rnd()*2.6; g.fillStyle='rgba('+rgb+','+(0.03+rnd()*0.10).toFixed(3)+')'; g.fillRect(rnd()*w,rnd()*h,s,s); }
+}
+function signSpace(g,px){ try{ if('letterSpacing' in g) g.letterSpacing=px+'px'; }catch(e){} }
+function signTex(w,h,key,draw){
+  var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  var g=cv.getContext('2d'); if(g) draw(g,w,h,signRand(key));
+  var t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
+  return t;
+}
+function signMat(tex,extra){
+  var m=new THREE.MeshLambertMaterial(Object.assign({map:tex},extra||{}));
+  m.userData.disposeMap=true; return m;
+}
+/* 搪瓷楼层铭牌：左边深蓝色块写楼层，右边中文和英文 */
+function plaqueTex(floor,cn,en,arrows){
+  return signTex(384,128,'plaque:'+floor+cn,function(g,w,h,rnd){
+    var bg=g.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#d4cebd'); bg.addColorStop(1,'#b9b19c');
+    g.fillStyle=bg; g.fillRect(0,0,w,h);
+    g.fillStyle='#24364f'; g.fillRect(12,12,110,h-24);
+    g.textBaseline='middle'; g.textAlign='center';
+    g.fillStyle='#ebe6d8'; g.font='700 54px '+SIGN_FONT; g.fillText(floor,67,h/2+2,96);
+    g.textAlign='left'; g.fillStyle='#1d2938'; g.font='700 44px '+SIGN_FONT; signSpace(g,6);
+    g.fillText(cn,142,h/2-13,arrows?160:220);
+    g.font='600 15px '+SIGN_FONT; g.fillStyle='#525a66'; signSpace(g,4); g.fillText(en,144,h/2+29,arrows?160:220);
+    signSpace(g,0);
+    if(arrows){ g.textAlign='center'; g.fillStyle='#1d2938'; g.font='700 40px '+SIGN_FONT; g.fillText('↑↓',w-42,h/2+1); }
+    g.strokeStyle='#5c574e'; g.lineWidth=3; g.strokeRect(1.5,1.5,w-3,h-3);
+    [[7,7],[w-7,7],[7,h-7],[w-7,h-7]].forEach(function(p){ g.fillStyle='#8a8478'; g.beginPath(); g.arc(p[0],p[1],3.6,0,6.283); g.fill(); });
+    signGrime(g,w,h,rnd,'45,32,20',520);
+    for(var i=0;i<16;i++){ g.fillStyle='rgba(112,70,38,'+(0.07+rnd()*0.15).toFixed(3)+')';
+      g.beginPath(); g.ellipse(rnd()*w,h-3-rnd()*11,3+rnd()*11,1.4+rnd()*3.5,0,0,6.283); g.fill(); }   /* 下沿的锈 */
+  });
+}
+/* 连廊吊牌：原来是一块空白的牌子，补上字 */
+function corridorTex(){
+  return signTex(512,144,'corridor',function(g,w,h,rnd){
+    g.fillStyle='#203a31'; g.fillRect(0,0,w,h);
+    g.strokeStyle='#d8d2bd'; g.lineWidth=3; g.strokeRect(10,10,w-20,h-20);
+    g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#e2dcc8'; g.font='700 56px '+SIGN_FONT; signSpace(g,24);
+    g.fillText('连廊',w/2+12,h/2-12);
+    g.font='600 18px '+SIGN_FONT; g.fillStyle='#aeb09c'; signSpace(g,8); g.fillText('CORRIDOR',w/2+4,h/2+38); signSpace(g,0);
+    signGrime(g,w,h,rnd,'0,0,0',320);
+  });
+}
+/* 车库排号吊牌：深灰底、上沿黄黑斜纹、琥珀色字 */
+function rowTex(n){
+  return signTex(384,128,'row:'+n,function(g,w,h,rnd){
+    g.fillStyle='#2a2b2c'; g.fillRect(0,0,w,h);
+    g.save(); g.beginPath(); g.rect(0,0,w,18); g.clip();
+    for(var x=-30;x<w+30;x+=26){ g.fillStyle='#b8922c'; g.beginPath(); g.moveTo(x,0); g.lineTo(x+13,0); g.lineTo(x-5,18); g.lineTo(x-18,18); g.closePath(); g.fill(); }
+    g.restore();
+    g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#d3ac4a'; g.font='700 52px '+SIGN_FONT;
+    g.fillText('第 '+n+' 排',w/2,h/2+8,w-40);
+    g.font='600 15px '+SIGN_FONT; g.fillStyle='#857a62'; signSpace(g,5); g.fillText('ROW '+(n<10?'0':'')+n,w/2,h-13); signSpace(g,0);
+    signGrime(g,w,h,rnd,'0,0,0',280);
+  });
+}
+/* 小型汽车号牌：蓝底白字白边，440×140 毫米 */
+function plateTex(text){
+  return signTex(352,112,'plate:'+text,function(g,w,h,rnd){
+    g.fillStyle='#cfd3da'; signRR(g,0,0,w,h,12); g.fill();
+    var bg=g.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#2652ab'); bg.addColorStop(1,'#183c86');
+    g.fillStyle=bg; signRR(g,4,4,w-8,h-8,10); g.fill();
+    g.strokeStyle='#e9edf3'; g.lineWidth=3; signRR(g,10,10,w-20,h-20,7); g.stroke();
+    g.fillStyle='#f1f3f6'; g.textAlign='center'; g.textBaseline='middle'; g.font='700 60px '+SIGN_FONT;
+    g.fillText(text,w/2,h/2+3,w-40);
+    [[w*0.22,18],[w*0.78,18]].forEach(function(p){ g.fillStyle='#95a1b8'; g.beginPath(); g.arc(p[0],p[1],4,0,6.283); g.fill(); });
+    var dirt=g.createLinearGradient(0,h*0.55,0,h); dirt.addColorStop(0,'rgba(40,36,28,0)'); dirt.addColorStop(1,'rgba(40,36,28,.28)');
+    g.fillStyle=dirt; g.fillRect(0,0,w,h);
+    signGrime(g,w,h,rnd,'30,26,20',260);
+  });
+}
+/* 讲台上的钥匙移交单：红色印刷的表格，蓝黑墨水手写，盖了教务处的章 */
+function slipTex(){
+  return signTex(256,340,'slip',function(g,w,h,rnd){
+    g.fillStyle='#e2dbc9'; g.fillRect(0,0,w,h);
+    signGrime(g,w,h,rnd,'96,74,44',620);
+    g.strokeStyle='rgba(120,98,66,.28)'; g.lineWidth=1.4; g.beginPath(); g.moveTo(0,h*0.53); g.lineTo(w,h*0.50); g.stroke();   /* 对折过的折痕 */
+    g.textAlign='center'; g.textBaseline='top'; g.fillStyle='#972d27'; g.font='700 25px '+SIGN_FONT; signSpace(g,6);
+    g.fillText('钥匙移交单',w/2+3,18); signSpace(g,0);
+    var rows=['车辆','钥匙','移交至','','记录','经办'], ink=['鄂A · 车库','备用钥匙 1 把','行政楼 五楼','校长办公室','保安岗 停车登记','（字迹潦草）'];
+    g.strokeStyle='rgba(151,45,39,.65)'; g.lineWidth=1.2; g.strokeRect(14,60,w-28,6*42);
+    for(var i=0;i<6;i++){
+      var y=60+i*42;
+      if(i){ g.beginPath(); g.moveTo(14,y); g.lineTo(w-14,y); g.stroke(); }
+      g.textAlign='left'; g.textBaseline='middle'; g.fillStyle='#9a3a33'; g.font='600 15px '+SIGN_FONT; g.fillText(rows[i],22,y+21);
+      g.fillStyle='rgba(30,38,84,.88)'; g.font='600 19px '+SIGN_HAND; g.fillText(ink[i],82+rnd()*4,y+22+(rnd()-.5)*3,w-100);
+    }
+    g.beginPath(); g.moveTo(74,60); g.lineTo(74,60+6*42); g.stroke();
+    g.save(); g.translate(w-64,h-44); g.rotate(-0.22);                                  /* 圆章 */
+    g.strokeStyle='rgba(178,40,36,.6)'; g.lineWidth=3.5; g.beginPath(); g.arc(0,0,30,0,6.283); g.stroke();
+    g.fillStyle='rgba(178,40,36,.6)'; g.font='700 13px '+SIGN_FONT; g.textAlign='center'; g.textBaseline='middle'; g.fillText('教务处',0,9); g.fillText('★',0,-9);
+    g.restore();
+  });
+}
+function signPlate(tex,w,h,d,both){
+  var face=signMat(tex), edge=signEdgeMat();
+  return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[edge,edge,edge,edge,face,both?face:edge]);
+}
+function floorName(R){ return R.floor<0?'B'+(-R.floor):R.floor+'F'; }
+/* 车牌（家具里的车调用）：贴在车头，朝 +x */
+function carPlate(text,x,y,z){
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(0.44,0.14),signMat(plateTex(text)));
+  m.position.set(x,y,z); m.rotation.y=Math.PI/2; m.userData.wayfinding=text; return m;
+}
+function roomSigns(c,G,isWall){
+  var R=c.R, K=c.K, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, tw=c.tw, th=c.th, x, y;
+  if(R.host==='lift'||R.host==='dream'||R.spiral) return;            /* 电梯轿厢里、梦里、钟楼里不挂 */
+  function put(mesh,px,py,pz,rot,hw,hh,hd,text){
+    mesh.position.set(px,py,pz); mesh.rotation.y=rot; mesh.userData.wayfinding=text; c.meshes.push(mesh);
+    if(hw) K.g('metal').proxy({t:'box',c:[px,py,pz],h:[hw,hh,hd],tc:Math.cos(rot),ts:Math.sin(rot)});   /* 给穿模审查看 */
+  }
+  /* 楼梯口、电梯旁的墙上：找离入口最近、正对走道的一面墙，铭牌整块落在这一格墙面里 */
+  function plaque(sx,sy,gw,gd,cn,en,arrows){
+    var best=null, D=[[0,-1],[0,1],[-1,0],[1,0]], mx=sx+(gw-1)/2, my=sy+(gd-1)/2, wx, wy, i;
+    for(wy=sy-2;wy<=sy+gd+1;wy++) for(wx=sx-2;wx<=sx+gw+1;wx++){
+      if(!isWall(wx,wy)) continue;
+      for(i=0;i<4;i++){
+        var d=D[i]; if(G(wy+d[1],wx+d[0])!=='.') continue;
+        var dist=Math.hypot(wx-mx,wy-my)+(d[1]!==0?0:0.25)+wx*1e-4;
+        if(!best||dist<best.dist) best={x:wx,y:wy,d:d,dist:dist};
+      }
+    }
+    if(!best) return;
+    var d=best.d, rot=Math.atan2(d[0],d[1]), text=floorName(R)+' '+cn;
+    put(signPlate(plaqueTex(floorName(R),cn,en,arrows),0.54,0.18,0.012,false),
+      CX(best.x)+d[0]*(tw/2+0.007),1.72,CZ(best.y)+d[1]*(th/2+0.007),rot,0.27,0.09,0.006,text);
+  }
+  for(y=0;y<H;y++) for(x=0;x<W;x++){
+    var ch=R.grid[y][x];
+    if(ch==='S'&&G(y,x-1)!=='S'&&G(y-1,x)!=='S'){
+      var gw=1, gd=1; while(G(y,x+gw)==='S') gw++; while(G(y+gd,x)==='S') gd++;
+      plaque(x,y,gw,gd,'楼梯','STAIRS',true);
+    }
+    if(ch==='J') plaque(x,y,1,1,'电梯','LIFT',false);
+    if(ch==='L'){                                                     /* FURN.L 吊的那块牌子：板面 0.70×0.20，前后两面 */
+      var ly=WALLH-0.25, tex=corridorTex(), mat=signMat(tex);
+      for(var side=-1;side<=1;side+=2){
+        var pl=new THREE.Mesh(new THREE.PlaneGeometry(0.66,0.18),mat);
+        put(pl,CX(x),ly,CZ(y)+side*0.0168,side>0?0:Math.PI,0,0,0,'连廊');
+      }
+    }
+    if(ch==='V'&&R.grid[y].slice(x+1).indexOf('V')<0){                /* 车库：每一排最东头那辆车的上方吊一块排号 */
+      var px=CX(x), pz=CZ(y), top=2.36+0.135, ceil=c.RWH||WALLH;
+      put(signPlate(rowTex(y+1),0.80,0.27,0.02,true),px,2.36,pz,Math.PI/2,0.40,0.135,0.01,'第 '+(y+1)+' 排');
+      K.rod('metal',px,top,pz-0.30,px,ceil,pz-0.30,0.005,0.005,4,0x8a8f93,1.0);
+      K.rod('metal',px,top,pz+0.30,px,ceil,pz+0.30,0.005,0.005,4,0x8a8f93,1.0);
+    }
+  }
+  /* 自己教室的讲台上：那张停车单提到的钥匙移交单 */
+  if(R.id==='teach1'&&typeof Investigation!=='undefined'){
+    var pd=Investigation.podium();
+    if(pd){
+      var slip=new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.2),signMat(slipTex()));
+      slip.position.set(CX(pd[0])+0.23,0.9825,CZ(pd[1])+0.04); slip.rotation.set(-Math.PI/2,0,0.12);
+      slip.userData.wayfinding='移交单'; c.meshes.push(slip);
+    }
+  }
 }

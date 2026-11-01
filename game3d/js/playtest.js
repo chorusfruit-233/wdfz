@@ -29,12 +29,15 @@ var Playtest={data:null,started:0,last:0,mode:'menu',frameBins:null,
   },
   note:function(){
     var el=document.getElementById('playtestNote'),value=el.value.trim();
-    if(value){this.event('观察者记录',value.slice(0,500));el.value='';toast('已记入本地试玩记录');}
+    if(!this.data||!this.data.recording){toast('先点「开始记录」');return;}
+    if(value){this.event('观察者记录',value.slice(0,500));el.value='';this.paint();toast('已记入本地试玩记录');}
   },
   paint:function(){
     var on=!!(this.data&&this.data.recording),button=document.getElementById('playtestToggle');
-    if(button)button.textContent=on?'停止本地试玩记录':'开始新的本地试玩记录';
+    if(button){button.textContent=on?'停止记录':this.data?'重新开始记录':'开始记录';button.classList.toggle('on',on);}
     var download=document.getElementById('playtestDownload');if(download)download.disabled=!this.data;
+    var state=document.getElementById('playtestState');
+    if(state){state.textContent=on?'记录中 · '+this.data.events.length+' 条':this.data?'已停止 · 可下载':'未记录';state.classList.toggle('rec',on);}
   },
   export:function(){
     if(!this.data)return;this.sample();

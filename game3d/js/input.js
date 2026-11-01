@@ -5,7 +5,7 @@ var KEY={}, TOUCH={dx:0,dy:0,run:false,active:false};
 var LOOKDRAG={on:false,x:0,y:0};
 var INPUT={mode:'mouse',lookId:null,lookType:null,stickId:null,stickCenter:null,
   dragDistance:0,blockClickUntil:0,lastTouchAt:-1000,wantsLock:false,
-  lockPending:false,lockToken:0,hadLock:false,unlockedAt:-1000,
+  lockPending:false,lockToken:0,hadLock:false,unlockedAt:-1000,freeCursor:false,
   touchHandled:false};   /* 这一次触摸已经由游戏处理过（松指触发了按钮，或按下时跳过了演出）：浏览器随后补发的 click 一律吞掉 */
 
 function devOwnsInput(target){
@@ -56,7 +56,8 @@ function requestMouseLook(){
   try{result=cv.requestPointerLock();}catch(e){INPUT.lockPending=false;return Promise.resolve(false);}
   return Promise.resolve(result).then(function(){
     if(token!==INPUT.lockToken||INPUT.mode!=='mouse'||!playerInputAllowed()){
-      if(pointerIsLocked())releaseMouseLook();return false;
+      /* 锁定落地时已经不需要了（比如刚按了 Alt）：悄悄放开，不算玩家切出 */
+      if(pointerIsLocked()){INPUT.freeCursor=true;releaseMouseLook();}return false;
     }
     INPUT.lockPending=false;return pointerIsLocked();
   },function(){
@@ -64,6 +65,20 @@ function requestMouseLook(){
     /* 拒绝锁定仍可拖动，不能打断正在进行的触屏手势。 */
     return false;
   });
+}
+/* Alt 或 ` 键：只把鼠标光标放出来，游戏照常运行、不弹暂停菜单（调试浮窗、截图时用）。
+   Esc 仍然是暂停。之后点一下画面（或再按 `）恢复环视；Alt 是修饰键，浏览器不让它重新锁定鼠标。 */
+function freeCursorKey(e){
+  return e.key==='Alt'||e.code==='AltLeft'||e.code==='AltRight'||e.code==='Backquote';
+}
+function toggleFreeCursor(e){
+  if(pointerIsLocked()||INPUT.lockPending){
+    var locked=pointerIsLocked();
+    INPUT.freeCursor=locked;INPUT.wantsLock=false;resetInputState();releaseMouseLook();
+    updateInputUI();return true;
+  }
+  if(e.code==='Backquote'&&INPUT.mode==='mouse'&&playerInputAllowed()){requestMouseLook();return true;}
+  return false;
 }
 function resumeMouseLook(){
   if(INPUT.wantsLock&&INPUT.mode==='mouse'&&playerInputAllowed())requestMouseLook();
@@ -88,7 +103,7 @@ function updateInputUI(){
 }
 function physicalKey(e){
   var codes={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyF:'f',KeyG:'g',
-    KeyH:'h',KeyJ:'j',KeyM:'m',KeyR:'r',Digit1:'1',Digit2:'2',Digit3:'3'};
+    KeyH:'h',KeyJ:'j',KeyM:'m',KeyR:'r',Digit1:'1',Digit2:'2',Digit3:'3',Backquote:'`'};
   return codes[e.code]||e.key.toLowerCase();
 }
 function initTouchActivation(){
@@ -179,6 +194,9 @@ function initInput(){
     var k=physicalKey(e);
     var editing=e.target.matches('input,select,textarea,[contenteditable="true"]');
     if(e.key==='F2'&&(!editing||DEV.on)){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
+    if(freeCursorKey(e)&&!editing&&S.screen==='play'&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
+      e.preventDefault();if(!e.repeat)toggleFreeCursor(e);return;
+    }
     if(devOwnsInput(e.target)){
       if(k==='tab')Dev.focusTrap(e);
       if(k==='escape'){e.preventDefault();if(!e.repeat)Dev.close();}
@@ -237,7 +255,11 @@ function initInput(){
     if(k==='1')useHot(0);
     if(k==='2')useHot(1);
   },{passive:false});
-  window.addEventListener('keyup',function(e){KEY[physicalKey(e)]=false;});
+  window.addEventListener('keyup',function(e){
+    KEY[physicalKey(e)]=false;
+    /* 单按 Alt 松开时，部分浏览器会把焦点移到自己的菜单栏，之后按键就进不了游戏 */
+    if(e.key==='Alt'&&S.screen==='play')e.preventDefault();
+  });
 
   var proEl=document.getElementById('pro');
   if(proEl)proEl.addEventListener('click',function(e){e.stopPropagation();proNext();});
@@ -322,8 +344,11 @@ function initInput(){
   document.addEventListener('pointerlockchange',function(){
     var locked=pointerIsLocked(),wasLocked=INPUT.hadLock;INPUT.hadLock=locked;
     if(locked){
+      INPUT.freeCursor=false;
       if(INPUT.mode!=='mouse'||!playerInputAllowed()){releaseMouseLook();return;}
       if(INPUT.lookType==='mouse')endLook();
+    }else if(INPUT.freeCursor){
+      INPUT.freeCursor=false;INPUT.unlockedAt=performance.now();resetInputState();   /* 按 Alt 放出来的：不暂停 */
     }else if(wasLocked&&INPUT.mode==='mouse'&&playerInputAllowed()&&!devOwnsInput(document.activeElement)&&!(typeof FULLSCREEN!=='undefined'&&FULLSCREEN.busy)){
       INPUT.unlockedAt=performance.now();resetInputState();Game.pause();
     }
