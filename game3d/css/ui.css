@@ -66,6 +66,10 @@ body.touch .hud-card{max-width:min(260px,calc(100vw - 164px - var(--sl) - var(--
 #period.exam{color:#f0c4bc}#period.exam::before{background:var(--ui-bad)}
 @keyframes hudPulse{50%{opacity:.25}}
 #place{margin-top:2px;font-size:12px;color:var(--ui-dim);letter-spacing:.5px}
+#campuspressure{margin-top:4px;font-size:12px;line-height:1.4;color:var(--ui-dim)}
+#campuspressure[data-stage="1"]{color:#e2c58f}
+#campuspressure[data-stage="2"],#campuspressure[data-stage="3"]{color:#e8a58c}
+#campuspressure[data-stage="4"],#campuspressure[data-stage="5"]{color:#ef8a7b}
 .hc-meter{display:flex;align-items:center;gap:8px;margin-top:8px}
 .hc-meter[hidden]{display:none}
 .hc-meter>span{flex:none;width:28px;font:600 10px/1 var(--ui-mono);letter-spacing:1px;color:var(--ui-dim)}

@@ -62,7 +62,7 @@ PHONE.end=function(){
   PHONE.st='over';
   var g=0;
   if(PHONE.cool<=0&&PHONE.score>0){
-    g=Math.min(PH_MAXGAIN,PHONE.score);
+    g=CampusPressure.restGain(Math.min(PH_MAXGAIN,PHONE.score));
     S.san=Math.min(100,S.san+g); PHONE.cool=PH_COOL;
     toast('纸飞机 · 得分 '+PHONE.score+' · SAN +'+g);
   }
@@ -113,6 +113,6 @@ PHONE.draw=function(){
     c.fillStyle='#e8f4ec'; c.font='14px sans-serif';
     c.fillText(PHONE.st==='ready'?'点一下开始':'结束 · 得分 '+PHONE.score,PH_W/2,PH_H/2-10);
     c.font='11px sans-serif'; c.fillStyle='#9fe3c2';
-    c.fillText(PHONE.st==='over'?(PHONE.msg||'再点一下重来'):(PHONE.cool>0?'手机还烫着：这局不回 SAN':'一局最多回 6 点 SAN'),PH_W/2,PH_H/2+16);
+    c.fillText(PHONE.st==='over'?(PHONE.msg||'再点一下重来'):(PHONE.cool>0?'手机还烫着：这局不回 SAN':'一局最多回 '+CampusPressure.restGain(PH_MAXGAIN)+' 点 SAN'),PH_W/2,PH_H/2+16);
   }
 };

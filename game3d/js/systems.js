@@ -78,6 +78,7 @@ function gameClock(){
   return (day-1-(late?1:0))*1440+S.tsec;
 }
 function advanceGameTime(minutes){
+  if(typeof CampusPressure!=='undefined')CampusPressure.observe();
   var remaining=Math.max(0,minutes||0);
   while(remaining>0){
     var before=S.tsec, step=Math.min(remaining,Math.max(0,1500-before));
@@ -103,8 +104,10 @@ function advanceGameTime(minutes){
     if(S.tsec>=1500-1e-9) S.tsec=440;
     else if(step<=0) break;
   }
+  if(typeof CampusPressure!=='undefined')CampusPressure.observe();
 }
 function rewindGameTime(minutes){
+  if(typeof CampusPressure!=='undefined')CampusPressure.observe();
   var remaining=Math.max(0,minutes||0);
   while(remaining>0){
     if(S.tsec<=440) S.tsec=1500;
@@ -165,7 +168,7 @@ function settleSan(){
 /* 仅保留日常恢复；危险环境、异象和躲避巡察者期间不能由课表恢复抵消伤害。 */
 function sanTick(dt,rule,exam){
   if(S.san<=0){settleSan();if(S.dead)return;}
-  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt,exam);
+  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt*CampusPressure.current().passive,exam);
   if(S.pillT>0){var pd=Math.min(dt,S.pillT);S.san+=PILL_RATE*pd;S.pillT-=pd;}
   if(PAT.state==='walk'&&(PAT.locked||HIDE.on))S.san-=dt*(PAT.locked?0.35:0.18);
   settleSan();
@@ -375,7 +378,7 @@ var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30},tunnel:{san:0.60
 function dangerTick(dt){
   var dg=dangerAt(); if(!dg) return;
   var k=(S.talent==='night'&&(dg==='night'||dg==='garage'))?0.55:1;
-  S.san-=dt*DANGER[dg].san*k;
+  S.san-=dt*DANGER[dg].san*k*CampusPressure.current().danger;
   if(!S.dangerSeen) S.dangerSeen={};
   if(!S.dangerSeen[dg]){
     S.dangerSeen[dg]=1;

@@ -18,7 +18,8 @@ class PortalExplorationTest(BrowserCase):
         page.wait_for_function("S.room==='portal_tunnel'")
         self.assertIn('不想靠近',page.locator('#sub').inner_text())
         page.evaluate('window.oldSan=S.san;updateSystems(2)')
-        self.assert_js(page,"dangerAt()==='tunnel'&&Math.abs(S.san-(oldSan-1.2))<1e-6")
+        # 第二天的环境伤害应高于首日基础 1.2；仍受全局 2.5 倍上限约束。
+        self.assert_js(page,"dangerAt()==='tunnel'&&oldSan-S.san>1.2&&oldSan-S.san<=3")
         page.evaluate("""var R=INTERIORS.portal_tunnel;S.x=R.ox+2.5*9;S.y=R.oy+3.5*9;S.ang=-Math.PI/2;
           tryInteract();window.clueCount=RT.clue;PortalExploration.readDiary();""")
         self.assert_js(page,"RT.portalDiary&&RT.clue===clueCount&&!RT.portalSketch&&loadGame().rt.portalDiary")

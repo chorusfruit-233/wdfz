@@ -60,6 +60,7 @@ function update(dt){
   try{ monoTick(dt); }catch(e){}
   try{ Dread.tick(dt); }catch(e){}
   spotTick();
+  CampusPressure.tick();
 }
 function render(dt){
   try{ PCGAME.tick(dt); }catch(e){}
@@ -143,6 +144,7 @@ function hudEl(id){
   return e;
 }
 function updateHUD(){
+  CampusPressure.paint();
   var feel=hudEl('sanfeel'),stage=sanityStage();
   if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=SAN_FEEL[stage];}
   /* 界面也跟着身体状态变（状态条的红线跳得越来越急）；样式里关掉镜头晃动时不动 */

@@ -112,7 +112,7 @@ function patInterval(){
   else if(S.mode==='out') b=rnd(40,70);
   else b=rnd(30,55);
   if(S.diff==='hard') b*=0.75;
-  return b;
+  return Math.max(8,b*CampusPressure.current().patrol);
 }
 function patSolid(x,y){
   if(PAT.room==='out') return solidAtOutdoor(x,y);

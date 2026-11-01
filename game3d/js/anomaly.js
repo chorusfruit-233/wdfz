@@ -545,7 +545,7 @@ function anInterval(){
   base*=1-clamp(S.viol,0,100)/260;
   if(AN.lastBig) base*=1.25;                     /* 大的过去之后，给一口喘气的时间 */
   if(S.mode==='in'&&INTERIORS[S.room]&&INTERIORS[S.room].principal) base*=0.5;   /* 校长办公室：异象频发 */
-  return Math.max(10,base);
+  return Math.max(10,base*CampusPressure.current().anomaly);
 }
 function anScheduleNext(){
   if(!AN.preNext||!AN.pre){ try{ AN.pre = pickAnomaly(); }catch(e){ AN.pre=null; } }

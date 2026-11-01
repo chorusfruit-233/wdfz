@@ -133,6 +133,7 @@ var SAVE_SCHEMA=[
 ];
 function saveGame(){
   try{
+    CampusPressure.observe();
     var d={v:1, clockVersion:2};
     SAVE_SCHEMA.forEach(function(f){ f.save(d); });
     localStorage.setItem('wdfz3d',JSON.stringify(d));
@@ -144,6 +145,7 @@ function applySave(d){
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
   Investigation.migrate();
   SchoolDay.restore();
+  CampusPressure.restore();
 }
 function loadGame(){
   try{
