@@ -1008,6 +1008,48 @@ class ControlsTest(BrowserCase):
             doEnterRoom('teach1');running=false;for(i=0;i<80&&AN.active;i++) anTick(0.05);""")
         self.assert_js(page, "!AN.active&&RT.traces.some(function(t){return t.k==='cup'&&t.room===null})")
 
+    def test_tsinghua_cup_is_modeled_after_the_real_one(self):
+        """按实物：白色杯身下大半圈一幅油画（紫蓝的天、金边，背面 V 形空白里金色「清華」）、
+        开口的不锈钢内胆、淡紫色的杯盖；落地时盖子脱出来滚开；文字描述和这只杯子一致。"""
+        page = self.page()
+        r = page.evaluate("""() => {
+          const cv=cupPaintCanvas(1024), g=cv.getContext('2d'), W=cv.width, H=cv.height;
+          function region(u0,u1,v0,v1){ const x0=Math.floor(u0*W), y0=Math.floor((1-v1)*H), w=Math.max(1,Math.floor((u1-u0)*W)), h=Math.max(1,Math.floor((v1-v0)*H));
+            const d=g.getImageData(x0,y0,w,h).data; let r=0,gg=0,b=0,gold=0,n=d.length/4;
+            for(let i=0;i<d.length;i+=4){ r+=d[i]; gg+=d[i+1]; b+=d[i+2]; if(d[i]>150&&d[i+1]>105&&d[i+2]<130&&d[i]>d[i+2]+60) gold++; }
+            return {r:r/n,g:gg/n,b:b/n,gold}; }
+          const top=region(0.05,0.3,0.88,0.98), sky=region(0.08,0.28,0.38,0.5), name=region(0.45,0.55,0.5,0.8);
+          const m=cupModel(true), meshes=[]; m.traverse(o=>{ if(o.isMesh) meshes.push(o); });
+          const wall=meshes.find(o=>o.material.map), lid=m.userData.lid, lc=lid.geometry.attributes.color;
+          let lr=0,lg=0,lb=0; for(let i=0;i<lc.count;i++){ lr+=lc.getX(i); lg+=lc.getY(i); lb+=lc.getZ(i); } lr/=lc.count; lg/=lc.count; lb/=lc.count;
+          // 从正上方往下看：没盖子能看见内胆底，有盖子先碰到盖面
+          const ray=new THREE.Raycaster(new THREE.Vector3(0.012,0.5,0),new THREE.Vector3(0,-1,0));
+          m.updateMatrixWorld(true); const withLid=ray.intersectObject(m,true)[0].point.y;
+          const open=cupModel(false); open.updateMatrixWorld(true); const inside=ray.intersectObject(open,true)[0].point.y;
+          return {top,sky,name,hasMap:!!wall,lid:[lr,lg,lb],withLid,inside,msg:AN_DEFS.cup.msg};
+        }""")
+        self.assertTrue(min(r['top']['r'], r['top']['g'], r['top']['b']) > 215)            # 上面是白色的哑光杯身
+        self.assertGreater(r['sky']['b'], r['sky']['r'] + 25)                               # 天是紫蓝色
+        self.assertGreater(r['sky']['b'], r['sky']['g'] + 25)
+        self.assertGreater(r['name']['gold'], 300)                                          # 背面金色「清華」
+        self.assertTrue(r['hasMap'])
+        lr, lg, lb = r['lid']
+        self.assertGreater(lb, lr)                                                          # 杯盖淡紫：蓝 > 红 > 绿，而且不暗
+        self.assertGreater(lr, lg)
+        self.assertGreater(lb, 0.45)
+        self.assertGreater(r['withLid'], 0.18)                                              # 盖着：先碰到盖面
+        self.assertLess(r['inside'], 0.02)                                                  # 开着：一直看到内胆底
+        self.assertIn('淡紫色', r['msg'])
+        self.assertNotIn('紫色的保温杯', r['msg'])
+        # 砸到地上：杯身上的盖子藏起来，换一个单独的盖子滚开
+        page = self.page()
+        page.evaluate("""S.x=560*SC;S.y=857*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
+            for(var i=0;i<40&&AN.data.phase<1;i++){ anTick(0.05); anfxUpdate(0.05); }
+            S.y-=14;for(i=0;i<60&&AN.data.phase<2;i++){ anTick(0.05); anfxUpdate(0.05); }
+            anTick(0.05); anfxUpdate(0.05); window.__lid0=ANFX.cup.lidWrap.position.clone();
+            for(i=0;i<10;i++){ anTick(0.05); anfxUpdate(0.05); }""")
+        self.assert_js(page, "!ANFX.cup.cup.userData.lid.visible&&ANFX.cup.lidWrap.visible&&ANFX.cup.lidWrap.position.distanceTo(window.__lid0)>0.2")
+
     def test_brightness_setting_survives_reload(self):
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)

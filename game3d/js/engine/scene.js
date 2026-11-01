@@ -84,7 +84,7 @@ ThreeBackend.applyQuality=function(){
     if(d&&d.figKind)o.geometry=figGeo(d.figKind);
     if(d&&d.fxKind)o.geometry=fxGeo(d.fxKind);
     if(d&&d.patGear)o.geometry=patGearGeo();
-    if(d&&d.cup)o.geometry=cupGeo();
+    if(d&&d.cupPart)o.geometry=cupPartGeo(d.cupPart);
   });
   if(GLR.roomMesh){GLR.roomMesh.userData.roomId=S.room;GLR.roomMesh.userData.roomData=INTERIORS[S.room];sceneCacheRoom(S.room,GLR.roomMesh);}
   if(GLR.outMesh){SCENE_CACHE.out=GLR.outMesh;GLR.outMesh.userData.layout={solid:OUT_SOLID,lamps:OUT_LAMPS};}

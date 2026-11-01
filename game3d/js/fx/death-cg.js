@@ -595,21 +595,27 @@ var DeathCG=(function(){
   /* ---- floor：清华水杯。头顶一声哨音，抬头看见它掉下来，砸中，倒在地上看着它滚走 ---- */
   CG.floor={
     build:function(c){
+      /* 和异象里同一只杯子（fx/cup.js）：白色的杯身画着二校门，淡紫色的盖子 */
       c.cup=new THREE.Group(); c.add(c.cup,0,EYE+9,0.15);
-      var body=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.04,0.2,14),mat(0xc8ccd0)); c.cup.add(body);
-      c.lid=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.045,14),mat(0x6a2c91)); c.lid.position.y=0.12; c.cup.add(c.lid);
+      var body=cupModel(false); body.position.y=-CUP_DIM.h/2; c.cup.add(body);          /* 绕杯身中间翻跟头 */
+      c.lid=c.add(cupLidMesh(),0,0,0);
+      c.lidOff=new THREE.Vector3(0,CUP_DIM.lidY-CUP_DIM.h/2,0);
       c.veil(0x050000);
     },
     update:function(c,k,view){
       var hit=ss(k,1.15,1.55), lie=seg(k,1.6,2.6);
       c.cam(view,k,0.35*hit,1.1*ss(k,0.1,0.7)*(1-hit)-0.3*hit,-1.45*hit);
       var f=Math.pow(seg(k,0.2,1.15),2), h=9*(1-f);
-      if(k<1.15){ c.cup.position.set(0,EYE+h,0.15+h*0.5); c.cup.rotation.set(k*14,0,0.3); c.lid.position.set(0,0.12,0); }
+      if(k<1.15){
+        c.cup.position.set(0,EYE+h,0.15+h*0.5); c.cup.rotation.set(k*14,0,0.3);
+        c.cup.updateMatrix(); c.lid.position.copy(c.lidOff).applyMatrix4(c.cup.matrix); c.lid.quaternion.copy(c.cup.quaternion);   /* 盖子扣在杯口上一起翻 */
+      }
       else{
-        /* 落地以后：杯身横着往前滚，杯盖滚到另一边 */
+        /* 落地以后：杯身横着往前滚，淡紫色的杯盖脱出来滚到另一边 */
         c.cup.position.set(-0.22-0.15*lie,0.045,0.75+0.3*lie);          /* 镜头往一侧偏了，杯子落在视线里 */
         c.cup.rotation.set(lie*9,0,Math.PI/2);
-        c.lid.position.set(0.25+0.6*lie,0,0.1*lie);
+        c.lid.position.set(0.25+0.6*lie,CUP_DIM.lidR,0.75+0.1*lie);
+        c.lid.rotation.set(Math.PI/2,lie*12,0);                        /* 侧躺着，绕自己的轴滚 */
       }
       c.flash('hit',k,1.15,0.4);
       c.shade(0.3*ss(k,1.15,1.3)*(1-ss(k,1.3,1.8))+0.9*ss(k,2.5,3.0));
@@ -769,6 +775,8 @@ var DeathCG=(function(){
       /* 共用的顶点色材质（手、头、笑脸、钟……）和贴了图的眼睛精灵 */
       if(typeof fxVCMat==='function') g.add(new THREE.Mesh(box,fxVCMat()));
       if(typeof gazeEye==='function'){ var eye=gazeEye(0.01,'red'); eye.material.opacity=0.01; g.add(eye); }
+      /* 清华水杯的油画贴图（水杯死亡、异象都用）：材质编好，贴图先传上去 */
+      if(typeof cupMats==='function'){ var cm=cupMats(); g.add(new THREE.Mesh(box,cm.paint)); try{ GLR.renderer.initTexture(cm.paint.map); }catch(e){} }
       g.position.copy(GLR.cam.position); g.updateMatrixWorld(true);
       /* 只编这一小组（灯光、雾取当前场景的），不用把整个校园再走一遍 */
       var prev=GLR.renderer.getRenderTarget();
