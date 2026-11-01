@@ -87,7 +87,9 @@ class TalentTest(BrowserCase):
         page.evaluate("S.talent='code';Talent.state().rulesVersion=2")
         self.assert_js(page, "Talent.modifier('activity.eat')===18&&Talent.modifier('anomaly.feast')===9&&Talent.modifier('danger.garage')===1")
         page.evaluate("S.talent='stomach';S.san=50;S.actCool={};doSanAct('eat')")
-        self.assert_js(page, "S.san===74")
+        # 夹具在第二天：留校压力让休息回复打折。铁胃的 24 仍是基数，和普通吃饭（18）按同一个倍率结算
+        self.assert_js(page, "CampusPressure.current().rest<1&&S.san===50+CampusPressure.restGain(24)"
+                             "&&CampusPressure.restGain(24)>CampusPressure.restGain(18)")
 
     def test_watch_reminds_once_and_never_for_skipped_marks(self):
         page = self.game('watch')
