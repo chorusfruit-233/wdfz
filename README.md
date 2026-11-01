@@ -4,7 +4,7 @@
 
 [开始游戏](https://chorusfruit-233.github.io/wdfz/) · [游戏 Wiki](https://chorusfruit-233.github.io/wdfz/wiki/) · [游戏设计与机制总览](https://chorusfruit-233.github.io/wdfz/docs/game-design-overview.html)
 
-[观看完整通关实录](https://chorusfruit-233.github.io/wdfz/video/playthrough.html)：7 分 57 秒，从全新开局到汽车真结局，脚本操作键鼠、原速无剪辑。提供[生成代码和操作日志](video/游玩示例.md)。
+[观看三条真结局实录](https://chorusfruit-233.github.io/wdfz/video/endings.html)：汽车逃脱、白名单验证、收集材料造门。从全新开局连续游玩，保留游戏原声、章节与操作日志。[生成代码和运行方法](video/游玩示例.md)。
 
 Wiki 收录操作、课表、地点、道具、异象和公开结局路线的攻略；异象详解与结局路线默认折叠，方便避开剧透。游戏主菜单也可以打开 Wiki。
 

@@ -130,6 +130,9 @@ window.Pilot = (() => {
     return path;
   }
 
+  function threatChoice(){
+    return UI.chooseOpen&&/脚步声停在我身后|背后有只手|隔间底下伸来一只手|你作业交了吗|最东边那扇门后面|名字被一道红线划掉/.test(document.getElementById('choices').innerText);
+  }
   async function defense(){
     alive();let handled=false;
     if(!sheltering&&AN.active&&AN.id==='rain'&&S.mode==='out'){
@@ -150,7 +153,10 @@ window.Pilot = (() => {
       }finally{sheltering=false;}
       return true;
     }
-    if(UI.chooseOpen&&AN.active){
+    if(playerInputAllowed()&&nearRoster()){
+      handled=true;stop();event('threat','先处理拦住交互的名单');await tap('e');await sleep(200);
+    }
+    if(threatChoice()){
       handled=true;
       stop();const text=document.getElementById('choices').innerText;
       event('choice',text);
@@ -182,8 +188,9 @@ window.Pilot = (() => {
     return handled;
   }
   async function go(target,radius=11,covered=false){
-    stop();let route=plan(target,radius,covered),i=0,retries=0,deadline=performance.now()+120000;
+    stop();await defense();let route=plan(target,radius,covered),i=0,retries=0,deadline=performance.now()+120000;
     let progress=new PilotNavigation.Progress(performance.now(),PilotNavigation.remaining(S,route,i));
+    const frames=new PilotNavigation.FrameWindow();
     const replan=()=>{stop();route=plan(target,radius,covered);i=0;progress=new PilotNavigation.Progress(performance.now(),PilotNavigation.remaining(S,route,i));};
     event('walk',{target,waypoints:route.length});
     while(i<route.length){
@@ -203,7 +210,8 @@ window.Pilot = (() => {
       const forward=Math.abs(angle(yaw-S.ang))<.16;
       if(S.stam<20||S.mode!=='out'||d<45)sprinting=false;
       else if(S.stam>65)sprinting=true;
-      move(forward?(sprinting?1:PilotNavigation.throttle(d,SPD_WALK,dtG)):0);
+      const frameBudget=frames.update(performance.now(),dtG);
+      move(forward?(sprinting?1:PilotNavigation.throttle(d,SPD_WALK,frameBudget)):0);
       if(progress.update(performance.now(),PilotNavigation.remaining(S,route,i))){
         event('stuck',{target,point:p,reason:'六秒内剩余路程没有减少',retry:retries+1});
         if(retries++>=3)throw Error('连续重规划仍无法前进');
@@ -220,7 +228,13 @@ window.Pilot = (() => {
     await sleep(1400);await tap(String(n));await sleep(650);
   }
   async function interact(target,radius=11){
-    await go(target,radius);await tap('e');await sleep(1000);
+    let interacted=false;
+    for(let attempt=0;attempt<4;attempt++){
+      await go(target,radius);const roster=nearRoster();await tap('e');await sleep(1000);
+      if(roster||threatChoice()){await defense();continue;}
+      interacted=true;break;
+    }
+    if(!interacted)throw Error('交互持续被异象打断');
     const until=performance.now()+6000;
     while(SEARCH.job&&performance.now()<until){alive();await sleep(100);}
     if(SEARCH.job)throw Error('搜查未能完成');event('interact',target);
@@ -232,7 +246,11 @@ window.Pilot = (() => {
   }
   async function stairs(up){
     const before=S.room;await nearest('S',14);
-    if(UI.chooseOpen)await choose(up?1:2);
+    if(UI.chooseOpen){
+      const options=[...document.querySelectorAll('#choices button')].map(b=>b.textContent);
+      const index=options.findIndex(text=>text.includes(up?'上楼':'下楼'));
+      if(index<0)throw Error('当前选项不是预期的楼梯方向');await choose(index+1);
+    }
     await sleep(1000);if(S.room===before)throw Error('楼梯未切换楼层');
   }
   async function bagAction(id,label){

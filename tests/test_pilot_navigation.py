@@ -13,13 +13,13 @@ class SteeringMathTest(unittest.TestCase):
         program = """
         const nav=require('./video/navigation.js');
         const results=[];
-        for(const frames of [[.016],[.3],[.5],[.2,.4,.7,.3]]){
-          let x=0,previous=frames[0],crossings=0;
+        for(const frames of [[.016],[.3],[.5],[.2,.4,.7,.3],[.016,.5]]){
+          let x=0,previous=frames[0],crossings=0,now=0,window=new nav.FrameWindow();
           for(let i=0;i<200&&Math.abs(12-x)>=1;i++){
             let d=12-x,dt=frames[i%frames.length];
-            x+=Math.sign(d)*nav.throttle(Math.abs(d),21,previous)*21*dt;
+            x+=Math.sign(d)*nav.throttle(Math.abs(d),21,window.update(now,previous))*21*dt;
             if(Math.sign(12-x)!==Math.sign(d))crossings++;
-            previous=dt;
+            previous=dt;now+=dt*1000;
           }
           results.push({error:Math.abs(12-x),crossings});
         }
@@ -43,6 +43,23 @@ class SteeringMathTest(unittest.TestCase):
 
 
 class DoorwayNavigationTest(BrowserCase):
+    def test_roster_cannot_be_mistaken_for_stair_direction(self):
+        page = self.page()
+        page.evaluate("""ENTER_VIA='stair';doEnterRoom('admin2');running=false;
+          S.intro=0;S.seated=false;RT.inspection=null;PAT.locked=false;
+          AN.active=true;AN.id='roster';AN.data={rx:S.x,ry:S.y,done:false};
+          window.pump=setInterval(()=>{dtG=.35;updatePlayer(.35);},350);""")
+        for script in ('navigation.js', 'playthrough.js'):
+            page.add_script_tag(path=str(ROOT / 'video' / script))
+        page.evaluate("Pilot.stairs(true).then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)})")
+        page.wait_for_function('window.result', timeout=30000)
+        self.assertEqual(page.evaluate('window.result'), {'ok': True})
+        self.assert_js(page, "S.room==='admin3' && AN.data.done")
+        decisions = page.evaluate("Pilot.log.filter(e=>e.kind==='decision').map(e=>e.detail.text)")
+        self.assertIn('红线', decisions[0])
+        self.assertIn('上楼', decisions[1])
+        page.evaluate('clearInterval(pump)')
+
     def test_recorded_classroom_corner_exits_under_slow_physics_frames(self):
         page = self.page()
         # Reproduce the old recording's stuck location with a still-closed door.

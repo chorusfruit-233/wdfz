@@ -15,6 +15,15 @@ const PilotNavigation = (() => {
     }
     return total;
   }
+  class FrameWindow {
+    constructor() { this.samples = []; }
+    update(now, seconds) {
+      this.samples.push({now, seconds: Math.min(1, seconds || .016)});
+      this.samples = this.samples.filter(s => now - s.now <= 2000);
+      // A single fast frame must not cancel braking learned from a slow frame.
+      return Math.max(...this.samples.map(s => s.seconds));
+    }
+  }
   class Progress {
     constructor(now, remaining) { this.best = remaining; this.since = now; }
     update(now, remaining) {
@@ -23,6 +32,6 @@ const PilotNavigation = (() => {
       return now - this.since > 6000;
     }
   }
-  return {throttle, remaining, Progress};
+  return {throttle, remaining, FrameWindow, Progress};
 })();
 if (typeof module !== 'undefined') module.exports = PilotNavigation;
