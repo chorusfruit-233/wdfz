@@ -83,7 +83,10 @@ class BrowserCase(unittest.TestCase):
             S.x=1580;S.y=1800;S.ang=0;S.pitch=0;S.seated=false;S.intro=0;
             PRO.on=false;PAUSE.on=false;syncCamera(0);updateHUD();
             CUT.enabled=false;SEARCH.on=false;
+            if(typeof DAY_EVENT_CFG!=='undefined'){window.__dayP=DAY_EVENT_CFG.p;DAY_EVENT_CFG.p={anniversary:0,occupied:0};}
         """)
+        # 校庆 / 占课按本局随机种子抽：别的用例不能被随机抽到的特殊日改了 SAN 或课堂回报，
+        # 所以这里关掉；test_special_days 用 window.__dayP 恢复原来的概率。
         return page
 
     def assert_js(self, page, expression, message=None):

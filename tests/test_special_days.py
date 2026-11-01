@@ -9,7 +9,7 @@ class SpecialDayTest(BrowserCase):
     def test_days_are_rolled_once_from_the_run_seed(self):
         page = self.page()
         got = page.evaluate("""(()=>{
-          RT.runSeed=12345;RT.dayEvents={};let a=[];
+          DAY_EVENT_CFG.p=window.__dayP;RT.runSeed=12345;RT.dayEvents={};let a=[];
           for(let d=1;d<=40;d++){S.day=d;a.push(DayEvents.ensure());}
           let first=a.slice();RT.dayEvents={};let b=[];
           for(let d=1;d<=40;d++){S.day=d;b.push(DayEvents.ensure());}

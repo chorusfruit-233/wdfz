@@ -61,7 +61,7 @@ var Speedrun={run:null, proofId:null, hudOn:true,
   finish:function(id){
     var r=Speedrun.run; if(!r||r.status!=='running') return null;
     if(!SPEEDRUN_ROUTES[id]) return null;
-    r.ms=Speedrun.elapsed(); r.route=id;
+    r.ms=Math.round(Speedrun.elapsed()); r.route=id;            /* 记录按整毫秒存，和个人最佳一致 */
     if(Speedrun.proofId!==id&&!r.reason) r.reason='ending_direct';
     Speedrun.proofId=null;
     r.status=r.reason?'invalid':'finished';
@@ -72,7 +72,7 @@ var Speedrun={run:null, proofId:null, hudOn:true,
   fail:function(status,why){
     var r=Speedrun.run; if(!Speedrun.active()) return null;
     if(r.status==='ready'){ Speedrun.run=null; Speedrun.paintHud(true); return null; }   /* 还没起跑就退出：不记 */
-    r.ms=Speedrun.elapsed(); r.status=status; r.why=why||null;
+    r.ms=Math.round(Speedrun.elapsed()); r.status=status; r.why=why||null;
     var res=Speedrun.save(r);
     Speedrun.paintHud(true);
     return res;
