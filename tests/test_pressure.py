@@ -17,17 +17,21 @@ const fs=require('fs'),vm=require('vm'),a=require('assert/strict');
 const c={console,Math,Number,os:()=>{},setTimeout:()=>{},S:{tsec:440,day:1,mode:'out'}};
 vm.createContext(c);
 for(const f of ['core','systems'])vm.runInContext(fs.readFileSync('game3d/js/'+f+'.js','utf8'),c);
-for(const p of c.SCHED.filter(p=>p[2]==='课间')){
- c.S.tsec=p[0];c.S.day=1;c.clockTick(180);a.ok(Math.abs(c.S.tsec-p[1])<1e-7);
+for(const [from,to,seconds] of [[440,770,360],[770,1070,360],[1070,1340,360],[1340,1500,120]]){
+ a.ok(Math.abs(c.realSecondsBetween(from,to)-seconds)<1e-7);
+ c.S.tsec=from;c.S.day=2;c.clockTick(seconds);a.ok(Math.abs(c.S.tsec-(to===1500?440:to))<1e-7);
 }
-c.S.tsec=735;c.clockTick(480);a.ok(Math.abs(c.S.tsec-840)<1e-7);
-c.S.tsec=1040;c.clockTick(480);a.ok(Math.abs(c.S.tsec-1090)<1e-7);
 c.S.tsec=705;c.clockTick(10);a.ok(Math.abs(c.S.tsec-c.BEAST_SLOW_T1)<1e-7);
-c.S.tsec=524.99;c.clockTick(1);a.ok(Math.abs(c.S.tsec-(525+(1-0.01*60/84)*5/60))<1e-7);
-const duration=c.SCHED.reduce((n,p)=>n+(p[1]-p[0])*60/p[4],0)+10-20/84;
+// 铃声前后流速连续；检查边界必须切换到下一阶段。
+c.S.tsec=524.99;c.clockTick(1);a.ok(Math.abs(c.S.tsec-(524.99+c.rateAt(525)/60))<1e-7);
+c.S.tsec=769.99;c.clockTick(1);a.ok(Math.abs(c.S.tsec-(770+(1-.01*60/c.rateAt(769))*50/60))<1e-7);
+for(const time of [770,1070])a.ok(Math.abs(c.realSecondsBetween(c.clockTimeBefore(time,60),time)-60)<1e-7);
+const duration=1200;a.ok(Math.abs(c.realSecondsBetween(440,1500)-duration)<1e-7);
 c.S.tsec=440;c.S.day=1;c.clockTick(duration);a.ok(Math.abs(c.S.tsec-440)<1e-6);a.equal(c.S.day,2);
-c.S.tsec=440;c.S.day=1;let rest=duration;while(rest>1e-8){const d=Math.min(.1,rest);c.clockTick(d);rest-=d;}
-a.ok(Math.abs(c.S.tsec-440)<1e-5);a.equal(c.S.day,2);
+for(const step of [.1,1,13.7,1200]){
+ c.S.tsec=440;c.S.day=1;let rest=duration*3;while(rest>1e-8){const d=Math.min(step,rest);c.clockTick(d);rest-=d;}
+ a.ok(Math.abs(c.S.tsec-440)<1e-5);a.equal(c.S.day,4);
+}
 """
         subprocess.run([node,'-e',script],cwd=ROOT,check=True,timeout=30)
 
@@ -204,7 +208,7 @@ class PressureBrowserTest(BrowserCase):
             (page.locator('.lesson-options button').nth(answer).tap() if touch else page.locator('.lesson-options button').nth(answer).click())
             self.assert_js(page,'!LESSON.on&&playerInputAllowed()&&S.san===sanBefore+2')
             page.evaluate('LESSON.open()')
-            self.assert_js(page,'!LESSON.on')
+            self.assert_js(page,'!LESSON.on&&UI.chooseOpen&&S.san===sanBefore+2')
             page.evaluate('updateHUD()')
             self.assertTrue(page.locator('#lessonOpen').is_hidden())
 
@@ -223,7 +227,7 @@ class PressureBrowserTest(BrowserCase):
         self.assert_js(page,'!LESSON.on&&PAUSE.on&&LESSON.record().left===left')
         page.evaluate('Game.resume();LESSON.open();LESSON.tick(13);updateHUD()')
         self.assert_js(page,'!LESSON.on&&LESSON.record().done&&playerInputAllowed()')
-        self.assertTrue(page.locator('#lessonOpen').is_hidden())
+        self.assertIn('整理到下课',page.locator('#lessonOpen').inner_text())
 
     def test_patrol_chase_and_blink_timer_survive_save_reload(self):
         page=self.classroom()

@@ -1,6 +1,6 @@
 /* 课桌上的短互动：不暂停课堂，每节一次；进度跟随 RT 存档。 */
 'use strict';
-var LESSON={on:false,key:null};
+var LESSON={on:false,key:null,waiting:null};
 var LESSON_TASKS=[
   {text:'老师让我校对课表。三行字里，有一行不该在这里。',choices:['课间可以离开座位','熄灯后继续早读','上课前把书翻开'],answer:1,note:'我把「熄灯后继续早读」划掉了。下一秒，那几个字又渗了出来。'},
   {text:'点名册翻到我这一页。有一处应该先圈出来。',choices:['同一个名字写满了第三排','最后一行的字迹很淡','纸的边缘有一道折痕'],answer:0,note:'我圈出了第三排。每一个名字都是我的。老师没有再往下念。'},
@@ -16,13 +16,15 @@ var LESSON_TASKS=[
 LESSON.currentKey=function(){return S.day+':'+periodAt(S.tsec)[0];};
 LESSON.available=function(){
   return S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!PC.on&&!PHONE.on&&
-    !(S.intro>0)&&!HIDE.on&&!AN.active&&!PAT.locked&&S.seated&&atMySeat()&&needWhere(S.tsec)==='教室';
+    !(S.intro>0)&&!HIDE.on&&!AN.active&&!PAT.locked&&!Inspection.pending()&&!Inspection.upcoming()&&
+    S.seated&&atMySeat()&&needWhere(S.tsec)==='教室';
 };
 LESSON.record=function(){return RT.lessons&&RT.lessons[LESSON.key];};
 LESSON.open=function(){
+  if(LESSON.waiting){LESSON.stopWait();return;}
   if(LESSON.on||!LESSON.available())return;
   var key=LESSON.currentKey();RT.lessons=RT.lessons||{};
-  if(RT.lessons[key]&&RT.lessons[key].done)return;
+  if(RT.lessons[key]&&RT.lessons[key].done){LESSON.offerWait();return;}
   if(!RT.lessons[key])RT.lessons[key]={task:(S.day+Math.floor(periodAt(S.tsec)[0]/5))%LESSON_TASKS.length,left:12,done:false};
   LESSON.key=key;LESSON.on=true;document.body.classList.add('lesson-open');
   var record=LESSON.record(),task=LESSON_TASKS[record.task],el=document.getElementById('lesson');
@@ -52,7 +54,44 @@ LESSON.answer=function(index){
   LESSON.close(false);autoSave();
 };
 LESSON.checkInterrupt=function(){
+  if(LESSON.waiting&&!LESSON.waitAllowed())LESSON.stopWait();
   if(LESSON.on&&(!LESSON.available()||LESSON.key!==LESSON.currentKey()))LESSON.close(false);
+};
+LESSON.waitAllowed=function(){
+  var w=LESSON.waiting;
+  return LESSON.available()&&!LESSON.on&&!(DEV.on&&DEV.freeze)&&PAT.state==='idle'&&!Inspection.quiet()&&
+    (!w||(w.key===LESSON.currentKey()&&S.tsec<w.until&&S.room===w.room));
+};
+LESSON.canWait=function(){
+  var r=RT.lessons&&RT.lessons[LESSON.currentKey()];
+  return !!(r&&r.done&&!r.waitUsed&&LESSON.waitAllowed());
+};
+LESSON.offerWait=function(){
+  if(!LESSON.canWait())return;
+  UI.choice('课堂任务已结束。整理笔记到下课：时间加快，恢复、同化与危险照常结算。遇到危险或集合预警立即停止，也可以随时按 R 或点按钮停止。',[
+    {label:'开始整理（6 倍时间）',fn:LESSON.startWait},
+    {label:'现在离开座位',fn:function(){S.seated=false;resetInputState();}}
+  ]);
+};
+LESSON.startWait=function(){
+  if(!LESSON.canWait())return;
+  var key=LESSON.currentKey();RT.lessons[key].waitUsed=true;
+  LESSON.waiting={key:key,until:periodAt(S.tsec)[1],room:S.room};
+  resetInputState();autoSave();LESSON.paintButton();
+};
+LESSON.stopWait=function(){
+  if(!LESSON.waiting)return;
+  LESSON.waiting=null;autoSave();
+};
+/* 快进仍逐步调用完整模拟，不能直接改钟表或把整段 SAN 恢复白送给玩家。 */
+LESSON.fastForward=function(step){
+  for(var i=0;i<5&&LESSON.waiting;i++){
+    if(!LESSON.waitAllowed()){LESSON.stopWait();break;}
+    var dt=Math.min(step,realSecondsBetween(S.tsec,LESSON.waiting.until));
+    if(dt<1e-8){LESSON.stopWait();break;}
+    RT.studySkipped=(RT.studySkipped||0)+dt;
+    update(dt);
+  }
 };
 LESSON.tick=function(dt){
   LESSON.checkInterrupt();if(!LESSON.on)return;
@@ -69,6 +108,7 @@ LESSON.paintButton=function(){
   if(investigate){investigate.hidden=!available;investigate.textContent=IS_TOUCH?'看停车单':'看停车单 · R';}
   var button=document.getElementById('lessonOpen');if(!button)return;
   var r=RT.lessons&&RT.lessons[LESSON.currentKey()];
-  button.textContent=IS_TOUCH?'看课桌':'看课桌 · R';
-  button.hidden=available||LESSON.on||!LESSON.available()||!!(r&&r.done);
+  var label=LESSON.waiting?'停止整理':r&&r.done?'整理到下课':'看课桌';
+  button.textContent=label+(IS_TOUCH?'':' · R');
+  button.hidden=!LESSON.waiting&&(available||LESSON.on||!LESSON.available()||!!(r&&r.done&&!LESSON.canWait()));
 };

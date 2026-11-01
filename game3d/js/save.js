@@ -64,7 +64,7 @@ var SAVE_SCHEMA=[
   { /* 剧情标志、手里用着的东西、开着的门 */
     save:function(d){ d.rt=RT; d.use=USE; d.openDoors=OPENDOORS; },
     load:function(d){
-      if(d.rt) RT=Object.assign(newRT(),d.rt);
+      if(d.rt){RT=Object.assign(newRT(),d.rt);RT.dayRhythmVersion=d.rt.dayRhythmVersion||0;}
       if(d.use) USE=d.use;
       syncUseState();
       if(d.openDoors) OPENDOORS=d.openDoors;
@@ -111,7 +111,7 @@ var SAVE_SCHEMA=[
   { /* 巡察者的瞬移间隔和追逐状态；路径由当前几何重新计算，不序列化。 */
     save:function(d){
       d.patrol={};
-      ['state','room','next','t','x','y','lock','locked','lost','still','tx','ty','walkT','step','blinkCD','afterBlink'].forEach(function(k){d.patrol[k]=PAT[k];});
+      ['state','room','next','t','x','y','lock','locked','lost','still','tx','ty','walkT','step','blinkCD','afterBlink','cited'].forEach(function(k){d.patrol[k]=PAT[k];});
     },
     load:function(d){
       var p=d.patrol;if(!p||!['idle','warn','walk'].includes(p.state))return;
@@ -119,6 +119,7 @@ var SAVE_SCHEMA=[
       if(![p.x,p.y,p.tx,p.ty].every(Number.isFinite))return;
       ['next','t','x','y','lock','lost','still','tx','ty','walkT','step','blinkCD','afterBlink'].forEach(function(k){if(Number.isFinite(p[k]))PAT[k]=p[k];});
       PAT.state=p.state;PAT.room=p.room;PAT.locked=!!p.locked;PAT.path=null;
+      PAT.cited=!!p.cited||PAT.locked;
       VisualState.patrolRed=PAT.locked?1:0;
     }
   },
@@ -142,6 +143,7 @@ function saveGame(){
 function applySave(d){
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
   Investigation.migrate();
+  SchoolDay.restore();
 }
 function loadGame(){
   try{

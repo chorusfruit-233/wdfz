@@ -1356,17 +1356,16 @@ class ControlsTest(BrowserCase):
         page.evaluate("AN.data={};pickAnomaly=function(){return 'rain'};anOn('chalk')")
         self.assert_js(page, "AN.pre==='rain'&&AN.locked&&AN.preNext>0&&AN.data.until>S.tsec")
 
-    def test_day_budget_reflects_three_minute_breaks_and_eight_minute_activities(self):
+    def test_day_budget_protects_continuous_exploration_between_inspections(self):
         page = self.page()
-        mins = page.evaluate("""(()=>{var t=SCHED.reduce((n,p)=>n+(p[1]-p[0])/p[4],0);
-            return t+(BEAST_SLOW_T1-BEAST_SLOW_T0)*(1/BEAST_RATE-1/RATE.CLASS);})()""")
-        self.assertTrue(43.7 <= mins <= 43.9, mins)
-        free = page.evaluate("SCHED.filter(p=>p[3]==='自由'&&p[0]<LIGHTS_OUT).reduce((n,p)=>n+(p[1]-p[0])/p[4],0)")
-        self.assertGreaterEqual(free, 34)          # 六次课间加午、晚活动
+        mins = page.evaluate("realSecondsBetween(440,1500)/60")
+        self.assertAlmostEqual(mins,20,places=6)
+        free = page.evaluate("realSecondsBetween(770,INSPECT_WARN_TIMES[1])")
+        self.assertAlmostEqual(free,300,places=6)  # 集合之间跨越普通课堂，返程前连续五分钟
 
     def test_full_violation_no_longer_kills_but_blocks_leave(self):
         page = self.page()
-        page.evaluate("S.tsec=600;S.seated=false;S.viol=99.9;S.bag=['leave'];for(var i=0;i<10;i++) updateSystems(0.2)")
+        page.evaluate("S.tsec=700;S.exam=true;S.seated=false;S.viol=99.9;S.bag=['leave'];for(var i=0;i<10;i++) updateSystems(0.2)")
         self.assert_js(page, "!S.dead&&S.viol>=100&&RT.violFull")
         page.evaluate("useItem('leave')")
         self.assert_js(page, "hasItem('leave')&&!onLeave()")
@@ -1666,9 +1665,9 @@ class ControlsTest(BrowserCase):
 
     def test_pill_heals_over_time_snack_lasts_thirty_seconds_and_day_is_brighter(self):
         page = self.page()
-        # 午饭时间（自由时段）：先量 10 秒自然回复，再吃药片比较，多出来的就是药片的 2 点 / 秒
-        page.evaluate("""S.tsec=760;S.san=20;for(var i=0;i<20;i++) updateSystems(0.5);window._base=S.san-20;
-            S.tsec=760;S.san=20;S.bag=['pill','snack'];useItem('pill');for(i=0;i<20;i++) updateSystems(0.5);""")
+        # 午休自由时段，避开集合扣 SAN：先量自然回复，再验证药片每运行秒额外 +2。
+        page.evaluate("""S.tsec=800;S.san=20;for(var i=0;i<20;i++) updateSystems(0.5);window._base=S.san-20;
+            S.tsec=800;S.san=20;S.bag=['pill','snack'];useItem('pill');for(i=0;i<20;i++) updateSystems(0.5);""")
         self.assert_js(page, "Math.abs((S.san-20)-_base-20)<0.01&&S.pillT===20")
         page.evaluate("S.san=10;for(var i=0;i<60;i++) updateSystems(0.5)")
         self.assert_js(page, "S.pillT===0&&S.san>=50")

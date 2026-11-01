@@ -22,7 +22,7 @@ function frame(t){
   accum+=Math.min(dt,1);
   var step=1/60, guard=0;
   while(accum>=step&&guard++<60){
-    try{ update(step); }catch(e){ try{ showErr('update: '+e.message); }catch(_e){} break; }
+    try{ update(step);LESSON.fastForward(step); }catch(e){ try{ showErr('update: '+e.message); }catch(_e){} break; }
     accum-=step;
   }
   try{ render(Math.min(dt,0.25)); }catch(e){ try{ showErr('render: '+e.message); }catch(_e){} }
@@ -156,12 +156,14 @@ function updateHUD(){
   try{ updateMarker(dtG); }catch(e){}
   hudEl('place').textContent=currentPlaceName();
   var p=periodAt(S.tsec), pe=hudEl('period'), leave=onLeave(), examing=S.exam&&p[3]==='教室';
-  pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):(p[2]+' · '+needWhere(S.tsec)));
+  var outing=SchoolDay.excused();
+  pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):
+    outing?('外出登记 · '+SchoolDay.returnLabel()):(p[2]+' · '+(p[3]==='教室'||p[3]==='操场'?'可探索，留意巡察':needWhere(S.tsec))));
   if(CarChase.active())pe.textContent='驾驶逃脱';
   if(typeof Inspection!=='undefined'&&Inspection.active())pe.textContent='学生会检查 · 教室';
-  else if(typeof Inspection!=='undefined'&&Inspection.upcoming()&&!leave)pe.textContent=p[2]+' · 教室（学生会要来）';
-  /* 时段前面的小圆点：绿 = 在该在的地方；黄 = 不在，违规在涨；蓝 = 请假中；红 = 考试 */
-  var pc=leave?'leave':(S.wrong?'warn':(examing?'exam':'ok'));
+  else if(typeof Inspection!=='undefined'&&Inspection.upcoming())pe.textContent='集合将至 · 请回教室';
+  /* 绿 = 普通活动；黄 = 返程或违反要求；蓝 = 登记 / 请假；红 = 考试。 */
+  var pc=Inspection.upcoming()?'warn':(leave||outing?'leave':(S.wrong?'warn':(examing?'exam':'ok')));
   if(pe.className!==pc) pe.className=pc;
   if(hudEl('stamwrap')){
     var snack=(S.snackT||0)>0;                                  /* 士力架起效时，体力条变成金色的剩余时间 */
@@ -206,6 +208,7 @@ function freshState(diff){
   fnPeopleClear();Engine.resetFakeNormal();VisualState.worldNorm=0;
   if(DEV.on)Dev.close(false);
   Dev.clearPreview();Dev.clearAnimation();
+  LESSON.waiting=null;
   LESSON.close(false);
   clearSearch();
   resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
