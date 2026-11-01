@@ -22,6 +22,27 @@ class GeometryTest(BrowserCase):
         issues = page.evaluate("['teach1','admin3','dorm1','garage1','bell1'].flatMap(id=>ClipAudit.room(id)).concat(ClipAudit.outdoor())")
         self.assertEqual([(x['type'], x.get('room'), x.get('a')) for x in issues][:8], [])
 
+    def test_every_room_has_the_same_collision_in_all_five_qualities(self):
+        """五档画质只改模型细节，玩法和碰撞要一样：每个室内场景的家具占地、附加实心和楼梯碰撞逐档比对。
+        电梯门套上的小螺栓以前只在高画质建、又进了占地，教学楼和实验楼十层的电梯格碰撞就随画质变。"""
+        page = self.page()
+        snap = """()=>{var out={};Object.keys(INTERIORS).forEach(function(id){var R=INTERIORS[id];
+            var g=buildRoomGeometry(R);if(g&&g.dispose)g.dispose();
+            out[id]=JSON.stringify([R.foot||null,R.propExtra||null,R.stairExtra||null]);});return out;}"""
+        base = None
+        differs = {}
+        for q in (0, 1, 2, 3, 4):
+            self.set_quality(page, q)
+            got = page.evaluate(snap)
+            if base is None:
+                base = got
+                continue
+            for room, value in got.items():
+                if value != base[room]:
+                    differs.setdefault(room, []).append(q)
+        self.assertGreaterEqual(len(base), 34)
+        self.assertEqual(differs, {}, '这些场景的碰撞随画质变了（场景: 和流畅档不同的画质档）')
+
     # ---------- 碰撞跟着模型 ----------
     def test_furniture_collision_follows_the_model_and_seat_is_solid(self):
         page = self.page()

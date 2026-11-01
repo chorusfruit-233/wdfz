@@ -31,11 +31,14 @@ function liftMat(col){
   if(col===EV_COL.paint||col===EV_COL.paintDark||col===EV_COL.paintDeep) return 'plastic';   /* 烤漆面 */
   return 'metal';
 }
-/* 把预制件图元画进当前 Kit 坐标系：dz / dy 是整体平移；low 档跳过小零件 */
+/* 把预制件图元画进当前 Kit 坐标系：dz / dy 是整体平移；low 档跳过小零件。
+   小零件（螺栓、按钮帽）一律不进碰撞占地：它们只在高画质才建，进了占地就会让五档画质的碰撞不一样 */
 function liftEmit(K,parts,dz,dy){
-  var low=liftLow();
+  var low=liftLow(), cap=K.cap;
   parts.forEach(function(b){
-    if(low&&liftTiny(b)) return;
+    var tiny=liftTiny(b);
+    if(low&&tiny) return;
+    K.cap=tiny?null:cap;
     var m=liftMat(b.col), sh=m==='emit'?1:0.96;
     if(b.type==='cyl'&&LIFT_ON_WALL.test(b.part))                    /* 墙上的按钮、螺栓、支架：轴沿墙面法线（+z），不是竖着 */
       K.rod(m,b.x,b.y+dy,b.z+dz,b.x,b.y+dy,b.z+dz+b.h,b.rb,b.rt,lodSeg(b.nseg||12,6),b.col,sh);
@@ -43,6 +46,7 @@ function liftEmit(K,parts,dz,dy){
     else if(b.type==='rod') K.rod(m,b.x0,b.y0+dy,b.z0+dz,b.x1,b.y1+dy,b.z1+dz,b.r0,b.r1,lodSeg(b.nseg||6,4),b.col,sh);
     else K.box(m,b.x,b.y+dy,b.z+dz,b.sx,b.sy,b.sz,b.col,sh);
   });
+  K.cap=cap;
 }
 /* 门格朝哪一侧开：返回走得进去的那个邻格方向 [dc,dr]（列、行） */
 function liftOpenSide(R,x,y){
