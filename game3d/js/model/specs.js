@@ -3,7 +3,6 @@
 var SCENE_SPEC=Object.freeze({trees:170,shrubs:40});
 var ROOM_THEMES={
   lift:{floor:'fterrazzo',fcol:0x7c888c,wall:0x8a999d,low:0x59666a,ceil:0x9ba7a9},
-  /* 电梯的异常维度：以前一片白，现在是高饱和的分区（群青地面、紫墙、青绿踢脚、品红腰线、深靛天花），具体布置见 room.js dreamDecor */
   /* 异色空间：深靛紫做底，颜色只放在地砖的渐变和发光线上（见 room.js 的 dreamDecor） */
   dream:{floor:'ftile',fcol:0x22267a,wall:0x2b2063,low:0x1f2a6e,skirt:0x120e33,rail:0x3a2c80,ceil:0x0d0b26},
   tunnel:{floor:'fconcrete',fcol:0x69796b,wall:0x87988b,wallMat:'concrete',low:0x3a5142,ceil:0x6a7b70},
