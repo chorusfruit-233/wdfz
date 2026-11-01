@@ -218,9 +218,6 @@ document.addEventListener('keydown',function(ev){
   var el=document.getElementById('archive');
   if(el&&!el.hidden&&ev.key==='Escape'){ ev.preventDefault(); ev.stopPropagation(); DeathArchive.close(); }
 },true);
-document.addEventListener('pointerdown',function(ev){
-  if(!ArchiveReplay.on) return;
-  ev.preventDefault(); ev.stopPropagation(); ArchiveReplay.skip();
-},true);
+/* 点击 / 触摸结束回放由 input.js 处理（和跳过结局演出一样，吞掉松指后补发的 click，免得点到随后出现的「重看」） */
 /* 启动时先把旧死亡日志迁一次：之后新写进旧日志的死亡不会被当成「旧版本记录」 */
 try{ DeathArchive.state(); }catch(e){}

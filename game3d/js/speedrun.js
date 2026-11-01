@@ -125,6 +125,12 @@ var Speedrun={run:null, proofId:null, hudOn:true,
     var r=Speedrun.run, show=!!r&&RUN_MODE==='speedrun'&&S.screen!=='menu'&&Speedrun.hudOn;
     if(el.hidden===show) el.hidden=!show;
     if(!show) return;
+    /* 触屏：右上角是手册 / 暂停 / 全屏和小地图，计时放到小地图下面，不压住按键 */
+    if(IS_TOUCH){
+      var mini=document.getElementById('mini'), mr=mini&&mini.getBoundingClientRect();
+      var top=(mr&&mr.height>0)?Math.round(mr.bottom+8)+'px':'';
+      if(el.style.top!==top) el.style.top=top;
+    }else if(el.style.top) el.style.top='';
     var t=fmtRun(Speedrun.elapsed());
     if(force||el._t!==t){ el._t=t; el.querySelector('b').textContent=t; }
     var tag=r.reason?'无效':(r.status==='ready'?'就绪':(r.status==='finished'?'完成':(r.status==='running'?DIFF_NAME[r.diff]:'结束')));

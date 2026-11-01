@@ -201,3 +201,54 @@ class SpeedrunTest(BrowserCase):
         self.assertNotIn(page.evaluate("ENDINGS.beast.t"), html)
         self.assertNotIn('隐藏', page.locator('#srpick').inner_text())
         self.assertIn('《闸门》', html)
+
+
+class TouchFlowTest(BrowserCase):
+    def mobile(self):
+        context = self.browser.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True)
+        self.contexts.append(context)
+        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}))")
+        page = context.new_page()
+        page.on('pageerror', lambda e: self.errors.append(str(e)))
+        page.goto(self.url, wait_until='load')
+        page.wait_for_function('typeof GLR!=="undefined"&&!!GLR.renderer')
+        return page
+
+    def test_speedrun_clock_does_not_cover_touch_buttons(self):
+        page = self.mobile()
+        page.evaluate("CUT.enabled=false;Speedrun.arm('easy');Game.start('easy',{talent:'code',mode:'speedrun'})")
+        page.wait_for_function("S.screen==='play'&&S.room==='teach1'&&GLR.roomMesh", timeout=60000)
+        page.evaluate("updateHUD();render(1/60)")
+        got = page.evaluate("""(()=>{function rc(id){var r=document.getElementById(id).getBoundingClientRect();return r;}
+          var c=rc('srclock'),hit=[];['tBook','tPause','fullscreen-toggle','mini','tAct','stick'].forEach(function(id){
+            var e=document.getElementById(id);if(!e||e.offsetParent===null)return;var r=e.getBoundingClientRect();
+            if(r.width&&c.left<r.right&&c.right>r.left&&c.top<r.bottom&&c.bottom>r.top)hit.push(id);});
+          return {hit:hit,tag:document.querySelector('#srclock i').textContent,shown:!document.getElementById('srclock').hidden};})()""")
+        self.assertTrue(got['shown'])
+        self.assertEqual(got['hit'], [])
+        self.assertIn('预知梦', got['tag'])
+
+    def test_touch_ending_a_replay_does_not_restart_it(self):
+        page = self.mobile()
+        page.evaluate("""localStorage.setItem('wdfz3d_death_archive_v1',JSON.stringify({version:1,unlocked:{patrol:true},first:{patrol:1},count:{patrol:1},migrated:1}));
+          window.plays=0;var o=ArchiveReplay.play;ArchiveReplay.play=function(id){plays++;return o.call(ArchiveReplay,id)};0""")
+        page.wait_for_timeout(800)
+        page.locator('#btnarchive').tap()
+        page.locator('#arcards .arcard.open button').tap()
+        page.wait_for_function("ArchiveReplay.on&&ANFX.kind==='death'", timeout=30000)
+        page.wait_for_timeout(500)
+        page.touchscreen.tap(195, 300)
+        page.wait_for_timeout(1500)
+        self.assert_js(page, "!ArchiveReplay.on&&plays===1&&!document.getElementById('archive').hidden")
+
+    def test_touch_skip_of_the_opening_then_one_tap_fires_once(self):
+        page = self.mobile()
+        page.evaluate("Game.start('easy',{talent:'code'})")
+        page.wait_for_function("CUT.on&&CUT.id==='opening'", timeout=60000)
+        page.touchscreen.tap(195, 420)
+        page.wait_for_function("S.screen==='play'&&!CUT.on")
+        page.evaluate("window.acts=0;tryInteract=function(){acts++};0")
+        page.wait_for_timeout(300)
+        page.locator('#tAct').tap()
+        page.wait_for_timeout(800)
+        self.assert_js(page, 'acts===1')
