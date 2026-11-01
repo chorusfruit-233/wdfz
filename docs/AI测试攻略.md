@@ -25,7 +25,7 @@ command -v chromium
 | 模型包、贴图包、实例化与室外合批 | `game3d/js/model/assets.js`、`kit.js`、`materials.js`；建模脚本 `tools/blender/`，贴图 `tools/textures/` | `PYTHONPATH=tests python3 -m unittest test_assets test_asset_batching -v`；改了建模脚本要用 `python3 tools/blender/build.py [--only 名字]` 重新打包（需要 `pip install bpy==5.2.3`，只支持 Python 3.13），改了贴图脚本运行 `python3 tools/textures/build_textures.py` |
 | 建模、碰撞、楼梯、空间可达性 | `game3d/js/model/`、`collision.js`、`spiral.js`、`world.js` | `PYTHONPATH=tests python3 -m unittest test_geometry test_model -v`；必要时做下面的几何扫描 |
 | 穿模审查工具（仅建模或玩法更新时） | `tools/clip_audit.py`、`tools/clip_audit.js` | `PYTHONPATH=tests python3 -m unittest test_clip_audit -v` |
-| 宣传片输出安全 | `video/render.py` | `PYTHONPATH=tests python3 -m unittest test_video -v` |
+| 宣传片输出安全、镜头表与脚本 / 配乐一致、不泄露隐藏内容 | `video/render.py`、`video/v1/render.py`、`video/storyboard.json` | `PYTHONPATH=tests python3 -m unittest test_video -v` |
 
 查找已有用例，避免重写同一场景；单项示例：
 
