@@ -65,6 +65,7 @@ var SAVE_SCHEMA=[
     save:function(d){ d.rt=RT; d.use=USE; d.openDoors=OPENDOORS; },
     load:function(d){
       if(d.rt){RT=Object.assign(newRT(),d.rt);RT.dayRhythmVersion=d.rt.dayRhythmVersion||0;}
+      DayEvents.afterLoad(d);                                  /* 旧存档：读进来的那天不补特殊日 */
       if(d.use) USE=d.use;
       syncUseState();
       if(d.openDoors) OPENDOORS=d.openDoors;

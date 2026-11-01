@@ -26,7 +26,7 @@ function anfxClear(){
     if(ANFX.kind==='death'&&!ANFX.preview) ThreeBackend.disposeGroup(ANFX.grp);
     ANFX.grp=null;
   }
-  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;ANFX.faceWalk=null;ANFX.cg=null;ANFX.neck=null;
+  ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.cola=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;ANFX.faceWalk=null;ANFX.cg=null;ANFX.neck=null;
   ANFX.timeline=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
@@ -77,6 +77,8 @@ function anfxSpawn(kind,wx,wy){
     wxMothSpawn(grp,wx,wy);
   } else if(kind==='cup'){
     cupFxSpawn(grp);                            /* 见 fx/cup.js */
+  } else if(kind==='cola'){
+    colaFxSpawn(grp);                           /* 见 fx/cola.js */
   } else if(kind==='exercise'){
     var em=anfxMat(0x1b2226,1.0);
     for(i=0;i<6;i++){
@@ -443,6 +445,8 @@ function anfxUpdate(dt){
     wxMothUpdate(dt);
   } else if(ANFX.kind==='cup'){
     cupFxUpdate(dt);
+  } else if(ANFX.kind==='cola'){
+    colaFxUpdate(dt);
   } else if(ANFX.kind==='exercise'){
     for(i=0;i<ANFX.items.length;i++){
       m=ANFX.items[i];

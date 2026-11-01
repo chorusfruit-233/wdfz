@@ -16,7 +16,7 @@ var AN_DEFS={
     msg:'我：灯一盏接一盏灭了。走廊尽头也暗下来，只剩自己的呼吸。',
     when:function(){return S.mode==='in'&&S.room!=='teach6';},
     tick:function(dt){
-      if(S.mode==='in'&&S.room!=='teach6')S.san-=dt*0.7;
+      if(S.mode==='in'&&S.room!=='teach6')sanDrain(0.7,dt);
       if(AN.t>=24){os('我：灯管轻轻响了一声，又亮了。',3.2);anEnd();}
     }
   },
@@ -28,7 +28,7 @@ var AN_DEFS={
       if(underCover()){
         AN.acc=Math.max(0,AN.acc-dt*0.6);
         if(!d.cov&&S.mode==='out'){ d.cov=1; os('我：躲到了檐下。雨声一下子远了，可我还是能听见它在找我。',3.6); }
-      }else{ AN.acc+=dt; S.san-=dt*0.7; d.cov=0; }
+      }else{ AN.acc+=dt; sanDrain(0.7,dt); d.cov=0; }
       if(AN.acc>(hard?9:14)) anKill('雨灌进了你的肺里。你听见自己在身体里晃，像一只装满水的桶。','drown');
       else if(AN.acc>(hard?5:8)&&!d.warn){ d.warn=1; os('我：喘不上气了。得找个有顶的地方——屋檐、柱廊、车棚，哪里都行。',3.6); }
       if(AN.t>26) anEnd();
@@ -44,7 +44,7 @@ var AN_DEFS={
     tick:function(dt,d,hard){
       var dm=Math.sqrt(dist2(d.src.x,d.src.y,S.x,S.y));
       if(dm>120) AN.acc=Math.max(0,AN.acc-dt*1.4);
-      else { AN.acc+=dt; S.san-=dt*1.6; }
+      else { AN.acc+=dt; sanDrain(1.6,dt); }
       if(AN.acc>(hard?4.5:6.5)) anKill('蛾群把你裹住了。翅膀上的粉落进你的眼睛里，很痒。然后什么都不痒了。','swarm');
       if(AN.t>24) anEnd();
     }
@@ -94,7 +94,7 @@ var AN_DEFS={
     when:function(){ return S.mode==='in'&&(INTERIORS[S.room].host==='teach'||INTERIORS[S.room].host==='dormN'); },
     tick:function(dt,d,hard){
       if(S.seated&&S.room==='teach1'){ os('我：我坐回自己的位子上。钟声在第十二下停了。',3.4); anEnd(); return; }
-      S.san-=dt*0.22;
+      sanDrain(0.22,dt);
       if(AN.t>15) anHurt('第十三下。我数得很清楚——可是我不记得自己是从哪一下开始数的。',20);
     }
   },
@@ -197,7 +197,7 @@ var AN_DEFS={
       }
     },
     tick:function(dt,d,hard){
-      S.san-=dt*0.25;
+      sanDrain(0.25,dt);
       if(AN.t>16) anEnd();
     }
   },
@@ -213,7 +213,7 @@ var AN_DEFS={
       }
       if(KEY['shift']||KEY[' ']||S.run){ AN.acc+=dt*2.6; }
       else { AN.acc+=dt; }
-      S.san-=dt*0.3;
+      sanDrain(0.3,dt);
       if(AN.acc>14){ os('我：门终于是另一扇了。门牌上的班号，比刚才大了一。',3.4); anEnd(); }
     }
   },
@@ -255,7 +255,7 @@ var AN_DEFS={
     },
     tick:function(dt,d,hard){
       var dr=Math.sqrt(dist2(d.c.x,d.c.y,S.x,S.y));
-      if(dr<19){ AN.acc+=dt; S.san-=dt*2.0; if(!d.warn){ d.warn=1; os('我：我踩到粉笔线了。蜡烛的火苗一起朝我这边歪。',3.0); } }
+      if(dr<19){ AN.acc+=dt; sanDrain(2.0,dt); if(!d.warn){ d.warn=1; os('我：我踩到粉笔线了。蜡烛的火苗一起朝我这边歪。',3.0); } }
       else AN.acc=Math.max(0,AN.acc-dt*0.5);
       if(AN.acc>(hard?1.4:2.2)) anKill('你走进了那个圈。正中那个空着的位置，刚好是你的大小。','ring');
       if(AN.t>20) anEnd();
@@ -293,7 +293,7 @@ var AN_DEFS={
     msg:'我：窗外的楼……在动。很慢，一栋一栋地挪。',
     when:function(){ return inClassroomHere(); },
     tick:function(dt,d,hard){
-      S.san-=dt*0.5;
+      sanDrain(0.5,dt);
       if(AN.t>18){ os('我：楼停下来了。整片校园里，只有钟楼一直没动——它在看着别的楼。',4.6); anEnd(); }
     }
   },
@@ -342,7 +342,7 @@ var AN_DEFS={
     tick:function(dt,d,hard){
       var wallX=BOUND.x1*SC;
       var dToWall=Math.abs(wallX-S.x);
-      if(dToWall<150*SC/2){ S.san-=dt*1.2; }
+      if(dToWall<150*SC/2){ sanDrain(1.2,dt); }
       if(dToWall<90*SC/2){ AN.acc+=dt; if(!d.warn){ d.warn=1; os('我：他停下来了。他在等我再走近一点。',3.0); } } else { AN.acc=Math.max(0,AN.acc-dt); }
       if(AN.acc>(hard?1.4:2.2)) anKill('他没有绕到校门口。他把脖子从围栏的缝里伸了进来，一直伸，一直伸。','neck');
       if(AN.t>20) anEnd();
@@ -357,7 +357,7 @@ var AN_DEFS={
     },
     tick:function(dt,d,hard){
       if(underCover()){ AN.acc=Math.max(0,AN.acc-dt*0.6); }
-      else { AN.acc+=dt; S.san-=dt*0.8; }
+      else { AN.acc+=dt; sanDrain(0.8,dt); }
       if(AN.acc>10) anHurt('影子追上来了，和我叠在一起。有一瞬间，我分不清是谁先抬的手。',18);
       if(AN.active&&AN.t>22) anEnd();
     }
@@ -393,7 +393,7 @@ var AN_DEFS={
     msg:'我：雨点落在地上，没有散开。它们在排队。',
     when:function(){ return AN.rained; },
     tick:function(dt,d,hard){
-      S.san-=dt*0.4;
+      sanDrain(0.4,dt);
       if(AN.t>14){ os('我：地上的字写着——明天的天气：阴。明天的值日：你。',4.4); anEnd(); }
     }
   },
@@ -403,7 +403,7 @@ var AN_DEFS={
     when:function(){ var cw=cupWall(); return !!cw&&cw.m<2.4&&!underRoof(); },
     place:function(d){
       d.wall=cupWall(); d.phase=0;
-      d.wob=S.diff==='hard'?0.6:(S.diff==='easy'?1.3:0.9);          /* 在窗台上晃多久才掉 */
+      d.wob=cupWobble();                                              /* 在窗台上晃多久才掉 */
       if(d.wall) return {x:d.wall.x*SC,y:d.wall.y*SC};
     },
     tick:function(dt,d,hard){
@@ -426,6 +426,34 @@ var AN_DEFS={
         else os('我：不远处「哐」的一声，一只杯子在地上弹了两下。我不敢抬头。',3);
       }
       if(d.phase===2&&AN.t-d.tl>2.6) anEnd();
+    }
+  },
+  /* 只由清华水杯欠下：见下面的 colaOwe / colaDrive。不进随机池、没有冷却、不上黑板预告。
+     砸中只扣 SAN（伞、柱廊、雨棚都挡得住），自己不杀人；SAN 本来就见底时照常按 SAN 归零处理。 */
+  cola:{w:0, warn:1, fx:1,
+    cn:'天降可乐', name:'天降可乐', dfx:'floor',
+    msg:'我：头顶很高的地方「哐啷」一声，像有人踢翻了一个易拉罐。它还在滚。',
+    when:function(){ return false; },
+    place:function(d){ d.phase=0; d.warn=COLA_WARN; d.pan=(Math.random()<0.5?-1:1)*rnd(0.35,0.8); return {x:S.x,y:S.y}; },
+    begin:function(d){ try{ SFX.colaRattle&&SFX.colaRattle(d.pan||0,d.warn||COLA_WARN); }catch(e){} },
+    tick:function(dt,d,hard){
+      if(S.mode!=='out'&&d.phase<2){ os('我：我钻进了楼里。外面「嘭」的一声，接着是很长很长的「嘶——」。',3.6); anEnd(); return; }
+      if(d.phase===0&&AN.t>=(d.warn||COLA_WARN)){
+        d.phase=1; d.tf=AN.t; d.lx=S.x; d.ly=S.y;                        /* 对准你这一刻站的地方 */
+        os('我：有东西从天上掉下来了——',1.6,OS_FORCE);
+        try{ SFX.colaFall&&SFX.colaFall(colaFallTime()); }catch(e){}
+      }
+      if(d.phase===1&&AN.t-d.tf>=colaFallTime()){
+        d.phase=2; d.tl=AN.t;
+        var miss=Math.sqrt(dist2(d.lx,d.ly,S.x,S.y))*U2M;
+        try{ SFX.colaHit&&SFX.colaHit(miss); }catch(e){}
+        if(miss<COLA_R&&underRoof()) os('我：「嘭」地砸在头顶的棚子上，滚下来，在我脚边打转。是一罐可乐。',3.6);
+        else if(miss<COLA_R&&USE.brollyShield){ S.san=Math.max(0,S.san-(hard?4:2)); os('我：伞面猛地一沉，有什么东西弹了出去——一罐可乐，摔瘪了，还在往外冒泡。',4.2); }
+        else if(miss<COLA_R){ d.hit=1; anHurt('我：「嘭」——正砸在我肩膀上。是一罐可乐，冰的。罐子瘪了，泡沫顺着袖子往下淌。抬头，天上什么都没有。',13,{keep:1}); }
+        else if(miss<2.4){ S.san=Math.max(0,S.san-(hard?5:3)); os('我：就在我脚边炸开了。一罐可乐，瘪成一团，泡沫「嘶嘶」地往外冒。抬头——天上什么都没有。',4.4); }
+        else os('我：不远处「嘭」的一声。一罐可乐在地上打转，泡沫喷了一地。',3.2);
+      }
+      if(d.phase===2&&AN.t-d.tl>2.8) anEnd();
     }
   }
 };
@@ -567,6 +595,7 @@ function anStart(){
   /* 位置变化可能让新抽到的危险异象没有预警，先给它完整的预警时间。 */
   if(AN_WARN[id]&&id!==planned){ AN.pre=id; AN.next=8; return; }
   AN.id=id; AN.t=0; AN.acc=0; AN.active=true; AN.data={}; AN.sub=0;
+  if(id==='cup') colaOwe();
   RT.anHist=(RT.anHist||[]).concat(id).slice(-6); RT.anSeen=RT.anSeen||{}; RT.anSeen[id]=1;
   AN.lastBig=!AN_SMALL[id];
   if(AN_COOL[id]!==undefined||AN_DEFS[id].rained) AN.cool[id]=gameClock();
@@ -585,8 +614,60 @@ function anEnd(){
   }
   try{ traceAdd(id); }catch(e){}
   try{ SFX.anomalyEnd&&SFX.anomalyEnd(id); }catch(e){}
+  var resume=(id==='cola'&&AN.data&&AN.data.resume)||null;
   AN.id=null; AN.active=false; AN.acc=0;
-  anScheduleNext();
+  if(resume) colaResume(resume); else anScheduleNext();
+}
+
+/* ---------- 天降可乐：清华水杯真正开始以后欠下的一次 ----------
+   RT.colaPending={seq,day,clock}：只在 anStart 里水杯真正开场时写入（调试面板、宣传片、档案回放都不经过这里）；
+   最多挂一个，连着几次水杯也只欠一罐。之后第一次「夜里、在室外、能安全开始」时直接开场，
+   不经过随机抽取、冷却、预告和「刚出过」的过滤，所以不存在抽不到。
+   开场时同一步里清掉 colaPending、记下 colaDone=seq：存档要么还欠着，要么已经在演，不会两样都有。 */
+var COLA_SETTLE=2.5;      /* 夜里在室外连续「能开始」这么多秒才来：刚出门、刚结束别的异象，先缓一口气 */
+function colaOwe(){
+  if(RT.colaPending) return;
+  RT.colaSeq=(RT.colaSeq||0)+1;
+  RT.colaPending={seq:RT.colaSeq,day:S.day,clock:gameClock()};
+}
+/* 现在能不能开始：夜里、在室外、手上没有别的危险（异象、巡察、检查、躲柜、驾驶、过场、选择框、假正常） */
+function colaSafe(){
+  if(!RT.colaPending||S.dead||S.screen!=='play') return false;
+  if(!isNight()||S.mode!=='out') return false;
+  if(AN.active||PAT.state!=='idle'||HIDE.on) return false;
+  if(S.fn&&S.fn.on) return false;
+  if(typeof Inspection!=='undefined'&&(Inspection.active()||Inspection.quiet())) return false;
+  if(typeof CarChase!=='undefined'&&CarChase.active()) return false;
+  if(typeof Elevator!=='undefined'&&Elevator.inRide()) return false;
+  if(typeof CUT!=='undefined'&&CUT.on) return false;
+  if(UI.anyOpen()) return false;
+  return true;
+}
+function colaDrive(dt){
+  if(!colaSafe()){ RT.colaWait=0; return false; }
+  RT.colaWait=(RT.colaWait||0)+dt;
+  if(RT.colaWait<COLA_SETTLE) return false;
+  return colaStart();
+}
+function colaStart(){
+  var p=RT.colaPending; RT.colaWait=0;
+  if(!p) return false;
+  RT.colaPending=null;
+  if(p.seq<=(RT.colaDone||0)) return false;                 /* 这一号已经演过 */
+  RT.colaDone=p.seq;
+  /* 原来排好的下一个异象（包括黑板上预告过的）记下来，可乐结束后原样接上 */
+  var resume={pre:AN.pre||null,next:AN.next,locked:!!AN.locked,lockWait:AN.lockWait||0,preNext:AN.preNext||0};
+  AN.id='cola'; AN.t=0; AN.acc=0; AN.active=true; AN.data={seq:p.seq,owed:p.day,resume:resume}; AN.sub=0;
+  RT.anHist=(RT.anHist||[]).concat('cola').slice(-6); RT.anSeen=RT.anSeen||{}; RT.anSeen.cola=1;
+  AN.lastBig=true;
+  os(AN_MSG.cola,4.2);
+  try{ Playtest.event('异象','cola'); }catch(e){}
+  anOn('cola');
+  return true;
+}
+function colaResume(r){
+  AN.pre=r.pre||null; AN.locked=!!r.locked; AN.lockWait=r.lockWait||0; AN.preNext=r.preNext||0;
+  AN.next=Math.max(Number.isFinite(r.next)?r.next:0,12);   /* 至少空十几秒再来下一个 */
 }
 
 /* 选一个在玩家前方、站得住的点（世界单位） */
@@ -700,6 +781,7 @@ function anDrive(dt){
   if(S.fn&&S.fn.on&&S.fn.v<72){ return; }
   if(!AN.active){
     if(S.room==='portal_tunnel')return;
+    if(colaDrive(dt))return;
     if(typeof Inspection!=='undefined'&&Inspection.quiet())return;
     AN.next -= dt;
     if(AN.next<=0) anStart();

@@ -246,7 +246,9 @@ ThreeBackend.draw=function(dt){
   var _fnOn=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
   GLR.fnNorm=GLR.fnNorm===undefined?0:GLR.fnNorm;
   GLR.fnNorm+= (_fnOn-GLR.fnNorm)*Math.min(1,dt*1.6);
-  u.uFx.value=Math.max(GLR.fnNorm,(GLR.worldNorm||0),(GLRTEST.nofx?1:0));
+  /* 电梯的异常维度：不压饱和度、不加暗角——鲜艳是这个空间本身的样子，离开就恢复（不改灯光和雾的世界状态） */
+  var dreamFx=(S.mode==='in'&&S.room==='lift_dream')?0.85:0;
+  u.uFx.value=Math.max(GLR.fnNorm,(GLR.worldNorm||0),(GLRTEST.nofx?1:0),dreamFx);
   GLR.gaze=(GLR.gaze||0)+((GLR.gazeT||0)-(GLR.gaze||0))*Math.min(1,dt*2.4);
   u.uGaze.value=GLR.gaze;
   u.uHurt.value=GLR.hurt;

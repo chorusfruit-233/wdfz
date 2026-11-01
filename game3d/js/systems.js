@@ -167,7 +167,7 @@ function sanTick(dt,rule,exam){
   if(S.san<=0){settleSan();if(S.dead)return;}
   if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt,exam);
   if(S.pillT>0){var pd=Math.min(dt,S.pillT);S.san+=PILL_RATE*pd;S.pillT-=pd;}
-  if(PAT.state==='walk'&&(PAT.locked||HIDE.on))S.san-=dt*(PAT.locked?0.35:0.18);
+  if(PAT.state==='walk'&&(PAT.locked||HIDE.on))sanDrain(PAT.locked?0.35:0.18,dt);
   settleSan();
 }
 function addViolation(amount,source){
@@ -365,7 +365,7 @@ function roamTick(dt){
   }
   var ddx=S.x-ROAM.x, ddy=S.y-ROAM.y;
   var dist=Math.sqrt(ddx*ddx+ddy*ddy);
-  if(dist<150){ S.san-=dt*1.1; if(!ROAM.seen){ ROAM.seen=1; os('我：车道那头有东西。它不是走路的姿势。',5); } }
+  if(dist<150){ sanDrain(1.1,dt); if(!ROAM.seen){ ROAM.seen=1; os('我：车道那头有东西。它不是走路的姿势。',5); } }
   if(dist<230&&!ROAM.toldSpot){ ROAM.toldSpot=1; os('我：车道中间有个高的东西站着。它没在动。',4.4); }
   if(dist<ROAM_REACH&&!lit&&ROAM.litAcc<ROAM_LIT_NEED*0.5&&S.enterCool<=0){
     kill('你在黑暗里撞上了它。它很高，很冷，一直站在车道中间，等你自己走过去。','grip','garage');
@@ -375,7 +375,7 @@ var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30},tunnel:{san:0.60
 function dangerTick(dt){
   var dg=dangerAt(); if(!dg) return;
   var k=(dg==='night'||dg==='garage')?Talent.modifier('danger.'+dg):1;   /* 暗处适应：只管车库和夜里室外的环境消耗 */
-  S.san-=dt*DANGER[dg].san*k;
+  sanDrain(DANGER[dg].san*k,dt);
   if(!S.dangerSeen) S.dangerSeen={};
   if(!S.dangerSeen[dg]){
     S.dangerSeen[dg]=1;

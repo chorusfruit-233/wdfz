@@ -308,6 +308,7 @@ function ceilingLight(K,x,z,lw,ld,rot,state){
 function roomDecor(c,isRoof){
   var K=c.K, R=c.R, W=c.W, H=c.H, tw=c.tw, th=c.th, halfW=c.halfW, halfH=c.halfH, CX=c.CX, CZ=c.CZ, i, x;
   var teachFl=(R.host==='teach'&&R.floor>=1&&R.floor<=5);
+  if(R.host==='dream'){ dreamDecor(c); return; }
   if(R.host==='tunnel'){
     for(i=2;i<H-2;i+=3){
       K.box('plain',CX(3+(i%3)),.014,CZ(i),1.3,.02,1.8,0x0c1510,1);
@@ -823,3 +824,39 @@ function roomSigns(c,G,isWall){
     }
   }
 }
+
+/* ---- 电梯的异常维度（lift_dream）：高饱和分区 + 发光边线 + 头顶的悬浮几何 ----
+   地面分三区：西边群青、中间品红、靠出口那一段金橙，出口前一条青绿的「路」和箭头；
+   悬浮的方块、倒挂的台阶都在 2.3 米以上，不挡路、不改碰撞。出口门框是最亮、形状最特别的东西，不靠辨色也认得出 */
+function dreamDecor(c){
+  var K=c.K, R=c.R, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, x, y, i;
+  var zone=function(x){ return x<6?0x2032d8:x<12?0xc81c86:0xf08a16; };
+  for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){
+    if(R.grid[y][x]!=='.') continue;
+    var alt=((x+y)&1)?0.82:1;
+    K.box('plain',CX(x),0.006,CZ(y),0.98,0.012,0.98,shadeHex(zone(x),alt),1);
+  }
+  /* 出口：找 J，门前铺一条青绿的路，地上三个箭头指过去 */
+  var ex=-1, ey=-1;
+  for(y=0;y<H;y++) for(x=0;x<W;x++) if(R.grid[y][x]==='J'){ ex=x; ey=y; }
+  if(ex>0){
+    for(x=ex-6;x<ex;x++) if(R.grid[ey][x]==='.') K.box('plain',CX(x),0.016,CZ(ey),0.98,0.012,0.42,0x12e6c8,1);
+    for(i=0;i<3;i++){
+      var ax=CX(ex-5+i*2);
+      K.box('plain',ax,0.024,CZ(ey)-0.12,0.34,0.012,0.08,0xf6fffd,1);
+      K.box('plain',ax,0.024,CZ(ey)+0.12,0.34,0.012,0.08,0xf6fffd,1);
+    }
+  }
+  /* 墙上的发光边线：腰线一圈品红、贴顶一圈青绿 */
+  var hz=c.halfH, hw=c.halfW;
+  [[0x1fffe0,2.88],[0xff3aa8,1.2]].forEach(function(b){
+    K.g('emit').box(0,b[1],-hz+c.th+0.012,(W-2)*c.tw,0.05,0.02,b[0],1);
+    K.g('emit').box(0,b[1],hz-c.th-0.012,(W-2)*c.tw,0.05,0.02,b[0],1);
+    K.g('emit').box(-hw+c.tw+0.012,b[1],0,0.02,0.05,(H-2)*c.th,b[0],1);
+  });
+  /* 头顶：悬浮的方块和倒挂的台阶（错位的透视），都在 2.3 米以上 */
+  var cubes=[[3,3,0.5,2.55,0xffd21a],[5,8,0.35,2.4,0x1fffe0],[10,2,0.42,2.62,0xff3aa8],[13,9,0.3,2.45,0x7a4dff],[15,3,0.38,2.5,0x2bd9ff]];
+  cubes.forEach(function(q){ K.frame(CX(q[0]),CZ(q[1]),q[0]*0.7); K.box('plain',0,q[3],0,q[2],q[2],q[2],q[4],1.1); K.unframe(); });
+  for(i=0;i<5;i++) K.box('plain',CX(9+i),2.94-i*0.1,CZ(6),0.98,0.12,1.2,shadeHex(0xffb21a,1-i*0.08),1);
+}
+

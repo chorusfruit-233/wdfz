@@ -28,7 +28,7 @@ LESSON.open=function(){
   if(!RT.lessons[key])RT.lessons[key]={task:(S.day+Math.floor(periodAt(S.tsec)[0]/5))%LESSON_TASKS.length,left:12,done:false};
   LESSON.key=key;LESSON.on=true;document.body.classList.add('lesson-open');
   var record=LESSON.record(),task=LESSON_TASKS[record.task],el=document.getElementById('lesson');
-  el.querySelector('.lesson-title').textContent=examNow()?'答卷边上的字':'课桌上的字';
+  el.querySelector('.lesson-title').textContent=examNow()?'答卷边上的字':(DayEvents.is('occupied')?'被占的那节课':'课桌上的字');
   el.querySelector('.lesson-text').textContent=task.text;
   var opts=el.querySelector('.lesson-options');opts.textContent='';
   task.choices.forEach(function(label,index){
@@ -49,7 +49,7 @@ LESSON.answer=function(index){
   var r=LESSON.record();if(!r||r.done||r.left<=0)return;
   var task=LESSON_TASKS[r.task];if(index<0||index>=task.choices.length)return;
   r.done=true;
-  if(index===task.answer){r.correct=true;S.san=Math.min(100,S.san+2);addClue('lesson');Investigation.record('lesson:'+r.task,task.note,'事实','课堂提醒');os('我：'+task.note,4.4,OS_KEEP);}
+  if(index===task.answer){r.correct=true;S.san=Math.min(100,S.san+2+DayEvents.lessonBonus());addClue('lesson');Investigation.record('lesson:'+r.task,task.note,'事实','课堂提醒');os('我：'+task.note,4.4,OS_KEEP);}
   else os('我：老师没有说对不对，只让我把纸翻过去。',3.4);
   LESSON.close(false);autoSave();
 };

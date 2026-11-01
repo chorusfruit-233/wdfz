@@ -148,7 +148,7 @@ var Inspection={
       while(c.move>=INSPECT_CONFIG.moveEvery){c.move-=INSPECT_CONFIG.moveEvery;addViolation(INSPECT_CONFIG.moveViolation,'inspection');}
     }
     if(Inspection.looking(c)){
-      c.look+=dt;
+      c.look+=dt*DayEvents.drainMul();                      /* 校庆：注视扣 SAN 的速度也减半 */
       while(c.look>=1){c.look-=1;S.san=Math.max(0,S.san-INSPECT_CONFIG.gazeSan);VisualState.hurt=Math.max(VisualState.hurt||0,.2);}
     }
     if(c.t>=INSPECT_CONFIG.duration)Inspection.finish(c);

@@ -60,6 +60,7 @@ function update(dt){
   try{ monoTick(dt); }catch(e){}
   try{ Dread.tick(dt); }catch(e){}
   try{ Talent.tickWatch(); }catch(e){}            /* 守时（规则 2）：开饭、饭点结束、熄灯前看一眼表 */
+  try{ DayEvents.tick(); }catch(e){}              /* 特殊校园日：当天定一次、早上广播、校庆横幅 */
   spotTick();
 }
 function render(dt){
@@ -155,7 +156,8 @@ function updateHUD(){
   if(cr){ cr.style.display=playerInputAllowed()?'block':'none'; }
   try{ anwTick(dtG); }catch(e){}
   try{ updateMarker(dtG); }catch(e){}
-  hudEl('place').textContent=currentPlaceName();
+  var _tag=DayEvents.tag(), _pl=currentPlaceName()+(_tag?' · '+_tag:'');
+  if(hudEl('place').textContent!==_pl) hudEl('place').textContent=_pl;
   var p=periodAt(S.tsec), pe=hudEl('period'), leave=onLeave(), examing=S.exam&&p[3]==='教室';
   var outing=SchoolDay.excused();
   pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):
@@ -205,6 +207,7 @@ function freshState(diff){
   ExplorationMap.clear();
   document.getElementById('notequery').value='';
   try{ Dread.reset(); }catch(e){}
+  try{ DayDecor.clear(); }catch(e){}
   if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
   fnPeopleClear();Engine.resetFakeNormal();VisualState.worldNorm=0;

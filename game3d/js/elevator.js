@@ -87,7 +87,7 @@ var Elevator={
     ride.button=button;ride.phase='dream';S.san=Math.max(0,S.san-ELEVATOR_CONFIG.dreamSan);settleSan();
     if(S.dead)return;
     doEnterRoom('lift_dream',Elevator.spawn('lift_dream',2,5,0));
-    os('我：门外是一片白色。远处有一道淡蓝色的门。',4,OS_FORCE);
+    os('我：门外的颜色不对——蓝的、紫红的、橘黄的，一块一块拼在一起。地上有一条青绿色的路，通到远处一道发光的门。',4.4,OS_FORCE);
   },
   leaveDream:function(){
     var ride=Elevator.recover();if(ride.phase!=='dream')return;

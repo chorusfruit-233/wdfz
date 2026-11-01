@@ -154,6 +154,7 @@ function sanActFor(R,hit){
 }
 function doSanAct(key){
   var a=SAN_ACTS[key]; if(!a) return;
+  if(DayEvents.closed(key)){ os(DayEvents.closedMsg(key),3.6); return; }   /* 占课：琴房、机房当天不开 */
   S.actCool=S.actCool||{};
   var clockNow=gameClock();
   if(S.actCool[key]&&clockNow<S.actCool[key]){
