@@ -29,6 +29,7 @@ class PlayabilityTest(BrowserCase):
                 page.locator('#choices button').first.click()
                 page.evaluate("let saved=loadGame();freshState('hard');running=false;applySave(saved);UI.open('note')")
                 self.assertIn('行政楼五楼', page.locator('#notein').inner_text())
+                self.assertNotIn('一条都没有', page.locator('#notein').inner_text())
                 self.assertNotIn('portalDiary', page.locator('#notein').inner_text())
 
     def test_concrete_lesson_memory_forgets_without_tools_but_progress_survives(self):
@@ -46,8 +47,10 @@ class PlayabilityTest(BrowserCase):
 
     def test_car_key_record_vehicle_result_and_save_share_one_answer(self):
         page=self.game()
-        page.evaluate("S.bag=['key'];window.plate=Investigation.carKey();window.cell=carRightCell();Investigation.parking();saveGame();let saved=loadGame();freshState('hard');running=false;applySave(saved)")
-        self.assert_js(page,"carRightCell()===cell&&Investigation.carKey()===plate&&Investigation.state().entries.parking.text.includes(String(Number(cell.split(':')[1])+1))")
+        page.evaluate("S.bag=['key'];useItem('key');window.cell=carRightCell();window.plate=Investigation.state().entries.carKey.text")
+        self.assert_js(page,"loadGame().rt.carRight===cell&&loadGame().rt.investigation.entries.carKey.text===plate")
+        page.evaluate("Investigation.parking();let saved=loadGame();freshState('hard');running=false;applySave(saved)")
+        self.assert_js(page,"carRightCell()===cell&&Investigation.state().entries.carKey.text===plate&&Investigation.state().entries.parking.text.includes(String(Number(cell.split(':')[1])+1))")
         page.evaluate("UI.renderNote()")
         self.assertIn(page.evaluate('plate'), page.locator('#notein').inner_text())
 
@@ -112,7 +115,9 @@ class PlayabilityTest(BrowserCase):
         page=self.page(touch=True)
         for w,h in [(390,844),(844,390),(320,568)]:
             page.set_viewport_size({'width':w,'height':h})
+            page.evaluate("TouchLayout.reset();window.nativeWidth=document.getElementById('stick').getBoundingClientRect().width")
             page.evaluate("SET.touchLayout={stick:{x:50,y:90},tAct:{x:50,y:90},ttop:{x:50,y:90}};Settings.comfort('touchSize',125);TouchLayout.apply()")
+            self.assert_js(page,"TouchLayout.rects.stick.w>=nativeWidth")
             self.assert_js(page,"""Object.values(TouchLayout.rects).every(r=>r.x>=0&&r.y>=0&&r.x+r.w<=innerWidth&&r.y+r.h<=innerHeight&&r.w>=44&&r.h>=44)""")
             self.assert_js(page,"""(()=>{let rs=Object.values(TouchLayout.rects);return rs.every((r,i)=>rs.every((q,j)=>i===j||r.x+r.w<=q.x||q.x+q.w<=r.x||r.y+r.h<=q.y||q.y+q.h<=r.y));})()""")
 

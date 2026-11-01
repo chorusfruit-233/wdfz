@@ -32,6 +32,7 @@ var Investigation={
     autoSave();return true;
   },
   notice:function(){
+    S.spots.guard=1;S.spots.garage=1;UI.spotsDirty=true;
     this.record('notice','钥匙移交：行政楼五楼校长办公室。保安岗留有停车记录和备用手电；车库位于校园西侧。','事实','教学楼一楼 · 讲台移交单');
     this.record('carTheory','如果找到钥匙、核对停车记录，也许能开车离开。车库黑影怕持续照射，开门前先看清车道。','推测','移交单背面的手写字');
     this.supply();
@@ -67,6 +68,7 @@ var Investigation={
   carKey:function(){
     var cell=carRightCell().split(':').map(Number),label=this.carName(cell[0],cell[1]);
     this.record('carKey','钥匙环刻着车牌「'+label+'」。在车位前看车牌，再试钥匙。','事实','车钥匙');
+    autoSave();
     return label;
   },
   parking:function(quiet){

@@ -238,14 +238,10 @@ UI.renderNote=function(){
   var ideas=ideasAvailable();
   function sec(t){ h+='<h3>'+t+'</h3>'; }
   function li(t,cls){ h+='<div class="nl'+(cls?' '+cls:'')+'">'+t+'</div>'; }
-  sec('目标');
-  li('找到一条离开学校的路。在理智耗尽之前。','goal');
-  sec('想到的办法');
-  if(!ideas.length) li('（一条都没有。得先走过那些地方。）','dim');
+  if(ideas.length)sec('想到的办法');
   for(var i=0;i<ideas.length;i++) li(ideas[i].n);
-  sec('注意到的事');
-  var any=false;
-  for(var k in S.spots){ li(kLabel(k)); any=true; }
+  var other=[];
+  for(var k in S.spots)other.push(kLabel(k));
   var CLUE_NOTE=[
     ['lesson','课桌上的字会变。上课时可以低头看一看，但别忘了抬头。'],
     ['roomkey','网络中心的门锁着 —— 钥匙可能在行政楼五楼的校长办公室。'],
@@ -258,9 +254,9 @@ UI.renderNote=function(){
     ['bell','钟楼的钟是哑的。可它和十三下钟声有关系。']
   ], ci;
   for(ci=0;ci<CLUE_NOTE.length;ci++){
-    if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0])){ li(CLUE_NOTE[ci][1]); any=true; }
+    if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0]))other.push(CLUE_NOTE[ci][1]);
   }
-  if(!any) li('（还没注意到什么。）','dim');
+  if(other.length){sec('其他地点与线索');other.forEach(function(t){li(t);});}
   var dh=(typeof deathHints==='function')?deathHints():[];
   if(dh.length){ sec('梦里记得的事'); for(var di=0;di<dh.length;di++) li(dh[di]); }
   if(!hasItem('notebook')||!hasItem('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';
