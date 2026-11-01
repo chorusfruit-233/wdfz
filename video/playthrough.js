@@ -59,6 +59,11 @@ window.Pilot = (() => {
     return out;
   }
   function distance(p){return Math.hypot(p.x-S.x,p.y-S.y);}
+  function walkLineClear(target){
+    const d=distance(target),n=Math.ceil(d/1.2);
+    for(let i=1;i<=n;i++)if(Collision.depth(S.x+(target.x-S.x)*i/n,S.y+(target.y-S.y)*i/n,PRAD+.03)>1e-7)return false;
+    return true;
+  }
   function coverRects(){
     return OBJ.flatMap(o=>{
       let r=null;
@@ -157,7 +162,7 @@ window.Pilot = (() => {
     return handled;
   }
   async function go(target,radius=11,covered=false){
-    stop();let route=plan(target,radius,covered),i=0,deadline=performance.now()+120000,progress=performance.now(),old={x:S.x,y:S.y};
+    stop();let route=plan(target,radius,covered),i=0,retries=0,deadline=performance.now()+120000,progress=performance.now(),old={x:S.x,y:S.y};
     event('walk',{target,waypoints:route.length});
     while(i<route.length){
       if(performance.now()>deadline)throw Error('步行超时 '+JSON.stringify(target));
@@ -171,12 +176,16 @@ window.Pilot = (() => {
       // A slow rendered frame advances several fixed physics steps. Accept a
       // bounded arrival radius so the player does not endlessly overshoot a corner.
       const arrival=Math.max(1.6,Math.min(5,SPD_WALK*Math.min(.3,dtG||.016)*.9));
-      if(d<arrival){i++;continue;}
+      if(d<arrival&&(i+1===route.length||walkLineClear(route[i+1]))){i++;continue;}
       const yaw=Math.atan2(p.y-S.y,p.x-S.x);look(yaw);
       const forward=Math.abs(angle(yaw-S.ang))<.16;
       key('w',forward);key('Shift',forward&&S.mode==='out'&&S.stam>45&&d>40);
       if(performance.now()-progress>5000){
-        if(Math.hypot(S.x-old.x,S.y-old.y)<1){event('stuck',{target,point:p});throw Error('碰撞阻挡了路线');}
+        if(Math.hypot(S.x-old.x,S.y-old.y)<1){
+          event('stuck',{target,point:p});stop();
+          if(retries++>=2)throw Error('碰撞阻挡了路线');
+          route=plan(target,radius,covered);i=0;
+        }
         old={x:S.x,y:S.y};progress=performance.now();
       }
       await sleep(50);
@@ -218,9 +227,13 @@ window.Pilot = (() => {
     await sleep(1000);
     while(PRO.on){await sleep(2800);await tap('Enter');}
     await sleep(2500);chapter('自己的课桌与讲台移交单');
-    await tap('r');await sleep(5000);await tap('e');
-    // The normal seated spawn overlaps its chair; walk out before grid planning.
-    key('w',true);await sleep(450);stop();
+    await tap('r');await sleep(5000);
+    // Movement itself stands up. A separate E press leaves a slow frame for the
+    // game's chair-unsticking logic before the first walking input can be consumed.
+    const seat={x:S.x,y:S.y},standDeadline=performance.now()+5000;
+    key('w',true);
+    while(distance(seat)<10&&performance.now()<standDeadline)await sleep(50);
+    stop();
     const podium=cells('T').find(p=>Investigation.isPodium(INTERIORS.teach1,p.c,p.r));
     await interact(podium);await choose(1);
     if(!RT.investigation?.entries.notice)throw Error('未读到讲台移交单');
