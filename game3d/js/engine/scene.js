@@ -169,7 +169,6 @@ ThreeBackend.syncCamera=function(dt,view){
   var dyOff=0, dzOff=0, shake=0;
   if(S.dead){
     var k=S.deadT||0;
-    if(S.death==='floor'||S.death==='deep'){ dyOff=-Math.min(1.25,k*0.62); }
     shake=Math.max(0,1-k*0.5);
   }
   if(GLR.gazeShake&&!S.dead) shake=Math.max(shake,GLR.gazeShake);   /* 被盯着的时候，镜头在抖 */
@@ -193,7 +192,8 @@ ThreeBackend.syncCamera=function(dt,view){
   }
   var angle=view?view.ang:S.ang, spitch=(view?view.pitch:S.pitch)+(S.seated?-0.06:0);
   var dir=new THREE.Vector3(Math.cos(angle)*Math.cos(spitch),Math.sin(spitch),Math.sin(angle)*Math.cos(spitch));
-  GLR.cam.lookAt(p.x+dir.x, S.eyeH+bob+dir.y+(S.floorY||0), p.z+dir.z);
+  /* 目标点也要跟着死亡演出的升降走，否则镜头一沉就变成仰视 */
+  GLR.cam.lookAt(p.x+dir.x, S.eyeH+bob+dir.y+(cameraLift||0)+(S.floorY||0), p.z+dir.z);
 };
 
 ThreeBackend.draw=function(dt){

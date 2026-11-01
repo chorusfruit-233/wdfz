@@ -698,7 +698,7 @@ class ControlsTest(BrowserCase):
         page.evaluate("doEnterRoom('trash1');running=false;S.diff='hard';S.talent='code';S.bag=['elixir'];tryTrashRoute()")
         self.assert_js(page, "!S.dead&&!hasItem('elixir')&&!endsSeen().trash")
         page.evaluate("tryTrashRoute()")
-        self.assert_js(page, "S.dead&&S.death==='deep'&&!endsSeen().trash&&!loadGame()")
+        self.assert_js(page, "S.dead&&S.death==='trash'&&!endsSeen().trash&&!loadGame()")
 
     def test_coin_buys_meal_and_vending_items(self):
         page = self.page()
