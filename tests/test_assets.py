@@ -69,7 +69,7 @@ class AssetLoadingTest(BrowserCase):
     def test_failed_quality_load_can_retry_without_accumulating_callbacks(self):
         context, page = self.new_menu(0)
         page.goto(self.url, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;Game.start('easy');clearIntroTimers()")
+        page.evaluate("PHOTO_TRIED=true;CUT.enabled=false;Game.start('easy');clearIntroTimers()")
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=30000)
         page.evaluate("""running=false;window.collisionBefore=JSON.stringify(INTERIORS.teach1.foot);
             window.originalApply=ThreeBackend.applyQuality;window.applyCount=0;
@@ -91,7 +91,7 @@ class AssetLoadingTest(BrowserCase):
     def test_held_items_follow_loaded_quality_and_release_old_geometry(self):
         context, page = self.new_menu(0)
         page.goto(self.url, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;Game.start('easy');clearIntroTimers()")
+        page.evaluate("PHOTO_TRIED=true;CUT.enabled=false;Game.start('easy');clearIntroTimers()")
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh", timeout=30000)
         page.evaluate("""running=false;S.bag=['torch','brolly','phone'];
             USE.torch=true;USE.brollyShield=true;handsTick(.016);
@@ -111,7 +111,7 @@ class AssetLoadingTest(BrowserCase):
     def test_rapid_quality_changes_apply_a_delayed_pack_only_once(self):
         context, page = self.new_menu(0)
         page.goto(self.url, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;Game.start('easy');clearIntroTimers()")
+        page.evaluate("PHOTO_TRIED=true;CUT.enabled=false;Game.start('easy');clearIntroTimers()")
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=30000)
         page.evaluate("""running=false;window.originalApply=ThreeBackend.applyQuality;window.applyCount=0;
             ThreeBackend.applyQuality=function(){applyCount++;return originalApply.apply(this,arguments);};0;""")

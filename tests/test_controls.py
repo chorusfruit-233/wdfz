@@ -52,6 +52,10 @@ class ControlsTest(BrowserCase):
                 self.assertIn('放出鼠标（不暂停）', controls)
                 self.assertIn('自己教室', controls)
                 self.assertIn('声音与文字', page.locator('#settings').inner_text())
+                survival = page.locator('#survival').inner_text()
+                self.assertIn('第一次能操作', survival)              # 速通模式的计时口径
+                self.assertIn('尚未记录', survival)                  # 死亡档案室
+                self.assertIn('校庆日', page.locator('#events').inner_html())
                 page.get_by_role('link', name='← 返回游戏').click()
                 page.wait_for_url('**/index.html')
                 self.assertTrue(page.locator('#btncont').is_visible())

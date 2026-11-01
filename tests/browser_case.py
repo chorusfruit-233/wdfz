@@ -52,6 +52,7 @@ class BrowserCase(unittest.TestCase):
     def start_from_menu(page, index=0, touch=False):
         """主菜单点难度 → 选第一项天赋 → 开始（新局要先选天赋）。"""
         act = (lambda loc: loc.tap()) if touch else (lambda loc: loc.click())
+        page.evaluate("if(typeof CUT!=='undefined')CUT.enabled=false")   # 开场 CG 另有 test_opening 覆盖，这里直接交接
         act(page.locator('#menu .mcard').nth(index))
         act(page.locator('#tpcards .tpcard').first)
         act(page.locator('#tpGo'))
