@@ -28,6 +28,7 @@
     <div id="place">武大附中 · 校园</div>
     <div id="sanfeel" role="status" aria-live="polite">呼吸平稳</div>
     <button id="lessonOpen" type="button" onclick="LESSON.open()" hidden>看课桌 · R</button>
+    <button id="investigateOpen" type="button" onclick="Investigation.openDesk()" hidden>看停车单 · R</button>
     <div class="hc-meter" id="stamrow" hidden><span>体力</span><div id="stamwrap"><div id="stambar"></div></div></div>
   </div>
   <div class="bl"><canvas id="mini" width="150" height="150"></canvas></div>
@@ -68,8 +69,8 @@
         </div>
       </section>
       <section class="jpage" id="think"><div class="jlead" id="thinkhint"></div><div id="ideas"></div></section>
-      <section class="jpage" id="note"><div id="notein"></div></section>
-      <section class="jpage" id="mapv"><div id="mapc"></div><div class="maplegend"><i class="me"></i>你在这里 <i class="mg"></i>校门</div></section>
+      <section class="jpage" id="note"><label for="notequery">查找调查记录</label><input id="notequery" type="search" maxlength="80" placeholder="地点或关键词" oninput="UI.renderNote()"><div id="notein"></div></section>
+      <section class="jpage" id="mapv"><div id="maptools"></div><div id="floormap" hidden></div><div id="mapc"></div><div class="maplegend"><i class="me"></i>你在这里 <i class="mg"></i>校门</div></section>
     </div>
   </div>
 </div>
@@ -79,12 +80,30 @@
   <button class="primary" onclick="Game.resume()">继续</button>
   <button onclick="Game.saveNow()">保存进度</button>
   <button onclick="UI.open('set')">设置</button>
+  <details class="playtest-tools"><summary>本地试玩记录</summary><p>可选。只保留在本页内存中；记录后可下载，供回顾卡点和操作耗时。不会上传，刷新页面会清空。</p>
+    <button id="playtestToggle" type="button" onclick="Playtest.toggle()">开始新的本地试玩记录</button>
+    <label for="playtestNote">观察或求助情况</label><textarea id="playtestNote" maxlength="500" rows="2"></textarea>
+    <button type="button" onclick="Playtest.note()">记下观察</button><button id="playtestDownload" type="button" onclick="Playtest.export()" disabled>下载记录 JSON</button>
+  </details>
   <button onclick="Game.quit()">回到主菜单</button>
   <div class="pkeys" id="pkeys"></div>
   <button class="ghost" onclick="Dev.toggle()">调试 (F2)</button>
 </div></div>
 <div id="set"><div class="pbox">
   <div class="ptitle">设置</div>
+  <div class="srow"><label for="mouseSense">鼠标灵敏度</label><input type="range" id="mouseSense" min="25" max="250" step="5" oninput="Settings.comfort('mouseSense',this.value)"><b id="mouseSenseValue"></b></div>
+  <div class="srow"><label for="touchSense">触屏灵敏度</label><input type="range" id="touchSense" min="25" max="250" step="5" oninput="Settings.comfort('touchSense',this.value)"><b id="touchSenseValue"></b></div>
+  <div class="srow"><label for="textSize">字幕与选项字号</label><input type="range" id="textSize" min="85" max="150" step="5" oninput="Settings.comfort('textSize',this.value)"><b id="textSizeValue"></b></div>
+  <div class="srow"><label for="touchSize">触屏控件尺寸</label><input type="range" id="touchSize" min="85" max="125" step="5" oninput="Settings.comfort('touchSize',this.value)"><b id="touchSizeValue"></b></div>
+  <details id="layoutSettings"><summary>调整触屏位置</summary>
+    <p>在示意图中预览位置。横竖屏分别按当前画面约束到可触及范围，按钮相碰时会自动避让。</p>
+    <label for="layoutTarget">调整控件</label><select id="layoutTarget" onchange="TouchLayout.paint()"><option value="stick">移动摇杆</option><option value="tAct">交互按钮</option><option value="ttop">手册与暂停</option></select>
+    <label for="layoutX">水平位置</label><input id="layoutX" type="range" min="0" max="100" oninput="TouchLayout.change('x',this.value)">
+    <label for="layoutY">垂直位置</label><input id="layoutY" type="range" min="0" max="100" oninput="TouchLayout.change('y',this.value)">
+    <div id="layoutPreview" aria-label="触屏位置示意图"><i data-control="stick">移动</i><i data-control="tAct">交互</i><i data-control="ttop">暂停 / 手册</i></div>
+    <button type="button" onclick="TouchLayout.reset()">触屏布局归位</button>
+  </details>
+  <button type="button" onclick="Settings.resetComfort()">恢复操作与文字默认值</button>
   <div class="srow"><span>音量</span><input type="range" id="sVol" min="0" max="100" value="70" oninput="Settings.vol(this.value)"><b id="sVolV">70</b></div>
   <div class="srow"><span>亮度</span><input type="range" id="sBr" min="60" max="150" value="100" oninput="Settings.bright(this.value)"><b id="sBrV">100</b></div>
   <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
@@ -101,7 +120,7 @@
   <button onclick="Game.resume()">返回游戏</button>
 </div></div>
 <div id="die"><div class="t">你 死 了 。</div><div class="m" id="diem"></div>
-  <div id="dieepi"></div><button onclick="Game.quit()">回到主菜单</button></div>
+  <div id="dieepi"></div><p id="diecause"></p><button onclick="Game.quit()">回到主菜单</button></div>
 <div id="menu">
   <div class="mtop"><span>武大附中</span><i>/</i><span>校园异闻档案</span><b>单人探索 · 3D</b></div>
   <div class="mleft">
@@ -310,6 +329,9 @@
 <script src="game3d/js/pcgame.js"></script>
 <script src="game3d/js/phone.js"></script>
 <script src="game3d/js/lesson.js"></script>
+<script src="game3d/js/investigation.js"></script>
+<script src="game3d/js/exploration-map.js"></script>
+<script src="game3d/js/playtest.js"></script>
 <script src="game3d/js/mono.js"></script>
 <script src="game3d/js/mobile.js"></script>
 <script src="game3d/js/prologue.js"></script>

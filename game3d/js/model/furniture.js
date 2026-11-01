@@ -89,6 +89,8 @@ FURN.V=function(c,x,y,cx,cz){
     if(g[y-1]&&g[y-1][x+k2]==='#'){ cz+=0.40; break; }
   }
   c.ao(cx,cz,3.9,2.3,1.0);
+  var plate=wayfindingSign(Investigation.carName(x,y),cx+1.91,.62,cz,.95);
+  plate.rotation.y=Math.PI/2;c.meshes.push(plate);
   c.solid(cx,cz,3.70,1.85);              /* 碰撞按整个车身，不止一格 */
   K.frame(cx,cz,0);
   K.asset('car_sedan',0,0,0,0,{tint:{body:col}});

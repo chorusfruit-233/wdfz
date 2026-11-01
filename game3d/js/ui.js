@@ -57,7 +57,7 @@ UI.open=function(id){
   if(id==='bag') UI.renderBag();
   if(id==='note') UI.renderNote();
   if(id==='think') UI.renderThink();
-  if(id==='mapv') UI.renderMap();
+  if(id==='mapv'){if(previous!=='mapv')ExplorationMap.selected=null;UI.renderMap();}
   updateTouchUI();
 };
 UI.close=function(id,resume){
@@ -234,7 +234,7 @@ UI.renderHot=function(){
   }
 };
 UI.renderNote=function(){
-  var h='';
+  var h=Investigation.render();
   var ideas=ideasAvailable();
   function sec(t){ h+='<h3>'+t+'</h3>'; }
   function li(t,cls){ h+='<div class="nl'+(cls?' '+cls:'')+'">'+t+'</div>'; }
@@ -294,6 +294,7 @@ function mapLabel(c,txt,x,y,cw,ch){
   c.fillText(txt,clamp(x,3,cw-w-3),clamp(y,13,ch-4));
 }
 UI.renderMap=function(){
+  if(ExplorationMap.render())return;
   var el=document.getElementById('mapc');
   var bw=BOUND.x1-BOUND.x0, bh=BOUND.y1-BOUND.y0;
   /* 按手册内容区的实际大小铺满（以前固定取窗口的 60% × 76%） */

@@ -9,6 +9,11 @@
 
 var PORTAL_PARTS=['coil','lens','vial','battery'];
 var PORTAL_BLUEPRINT_FLOORS=[2,4,5];
+var PORTAL_OBSERVATIONS={
+  2:{text:'教师台上是分层试管与操作记录：静置后，发光的重液沉在底部；上层透明。图纸夹在记录后面，要求先圈出应保留的那一层。',options:['保留上层透明液','保留底层发光液','把两层倒回去混合'],answer:1,why:'发光重液会沉底；离心机的试剂来自底层。',note:'二楼图纸：发光重液沉底。离心机能够分离出造门用的试剂。'},
+  4:{text:'教师台的校园挂图标着「北 ↑」。纸角画了实验楼一楼的门框，镜片在左，电池在右；背面要求抄出：面朝北时，左边是什么方向？',options:['东','南','西'],answer:2,why:'面朝北时，左西右东。先确认参照方向，再读图。',note:'四楼图纸：朝北读图，左西右东；透镜应面向门框。装置并不是在打开学校的校门。'},
+  5:{text:'教师台上的谱页被裁成接线顺序。三个标签写着：「先把线圈接入；再安装透镜；最后接通电池」。纸夹只需依次按下正确标签。',options:['电池','线圈','透镜'],order:[1,2,0],note:'五楼图纸：线圈 → 透镜 → 电池。最后才接电，免得门朝向尚未确定就启动。'}
+};
 var PortalExploration={
   count:function(){
     var found=RT.portalBlueprints||{};
@@ -35,6 +40,7 @@ var PortalExploration={
     if(S.room!=='portal_tunnel')return;
     if(!RT.portalDiary)addClue('portalDiary');
     RT.portalDiary=true;spotMark('portal');
+    Investigation.record('portalDiary','前人的日记：图纸在实验楼二、四、五楼教师台，基座在一楼。页边写着：「名单把我认回来了，却没有告诉我墙外是什么。」','事实','隧道日记');
     os('我：日记里写着：「我把造门的图纸分开放在实验楼二楼、四楼和五楼的教师台。基座留在物理实验室。」',6,OS_FORCE);
     autoSave();
   },
@@ -42,7 +48,28 @@ var PortalExploration={
     if(!R||R.host!=='lab'||S.room!==R.id||!RT.portalDiary||RT.portalSketch||PORTAL_BLUEPRINT_FLOORS.indexOf(R.floor)<0)return false;
     var found=RT.portalBlueprints||(RT.portalBlueprints={});
     if(found[R.floor])return false;
+    this.challenge(R);return true;
+  },
+  challenge:function(R){
+    var task=PORTAL_OBSERVATIONS[R.floor],run=RT,room=R.id;
+    var work=RT.portalWork||(RT.portalWork={}),step=Number.isInteger(work[R.floor])?clamp(work[R.floor],0,2):0;
+    var options=task.options.map(function(label,index){return {label:label,fn:function(){
+      if(RT!==run||S.room!==room||S.mode!=='in'||S.dead||S.screen!=='play'||(RT.portalBlueprints||{})[R.floor])return;
+      if(index===(task.order?task.order[step]:task.answer)){
+        if(task.order&&step<2){work[R.floor]=step+1;autoSave();PortalExploration.challenge(R);return;}
+        PortalExploration.award(R);return;
+      }
+      work[R.floor]=0;
+      os('我：'+(task.why||'顺序不对。标签要求先线圈、再透镜，最后通电。')+'可以再看一次记录。',5,OS_KEEP);autoSave();
+    }};});
+    options.push({label:'放下，稍后再看',fn:function(){autoSave();}});
+    UI.choice(task.text+(task.order?'（已正确操作 '+step+'/3 步）':''),options);
+  },
+  award:function(R){
+    var found=RT.portalBlueprints||(RT.portalBlueprints={});
+    if(found[R.floor])return;
     found[R.floor]=true;
+    Investigation.record('blueprint:'+R.floor,PORTAL_OBSERVATIONS[R.floor].note,'验证',R.name+' · 教师台');
     var count=PortalExploration.count();
     if(count===PORTAL_BLUEPRINT_FLOORS.length){
       RT.portalSketch=1;addClue('portal');spotMark('portal');

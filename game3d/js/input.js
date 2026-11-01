@@ -231,7 +231,7 @@ function initInput(){
     if(['w','a','s','d',' ','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0)e.preventDefault();
     KEY[k]=true;if(e.repeat)return;
     if(k==='e')tryInteract();
-    if(k==='r')LESSON.open();
+    if(k==='r'&&!Investigation.openDesk())LESSON.open();
     if(k==='f')toggleTorch();
     if(k==='g')dropSelected();
     if(k==='1')useHot(0);
@@ -253,8 +253,8 @@ function initInput(){
     if(!pointerIsLocked()||INPUT.mode!=='mouse'||!playerInputAllowed()||devOwnsInput(document.activeElement))return;
     var mx=e.movementX||0,my=e.movementY||0;
     if(!isFinite(mx)||!isFinite(my))return;
-    S.ang+=clamp(mx,-maxDelta,maxDelta)*.0022;
-    S.pitch=clamp(S.pitch-clamp(my,-maxDelta,maxDelta)*.0022,-1.25,1.25);
+    S.ang+=clamp(mx,-maxDelta,maxDelta)*.0022*lookSensitivity(false);
+    S.pitch=clamp(S.pitch-clamp(my,-maxDelta,maxDelta)*.0022*lookSensitivity(false),-1.25,1.25);
   });
   cv.addEventListener('pointerdown',function(e){
     if(!playerInputAllowed()||e.button>0)return;
@@ -276,7 +276,8 @@ function initInput(){
     // 全屏/旋转屏幕造成的坐标突变只丢弃这一帧，下一帧仍能继续转向。
     if(Math.abs(dx)>maxDelta||Math.abs(dy)>maxDelta)return;
     INPUT.dragDistance+=Math.hypot(dx,dy);
-    S.ang+=dx*.0042;S.pitch=clamp(S.pitch-dy*.0042,-1.25,1.25);
+    var sense=lookSensitivity(INPUT.lookType!=='mouse');
+    S.ang+=dx*.0042*sense;S.pitch=clamp(S.pitch-dy*.0042*sense,-1.25,1.25);
   },{passive:true});
   function lookEnd(e){
     if(e.pointerId!==INPUT.lookId)return;

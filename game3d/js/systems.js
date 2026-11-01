@@ -162,7 +162,7 @@ function capStamina(){S.stam=clamp(Number.isFinite(S.stam)?S.stam:0,0,staminaMax
 function restoreStamina(amount){S.stam=Math.min(staminaMax(),S.stam+amount);capStamina();}
 function settleSan(){
   S.san=clamp(Number.isFinite(S.san)?S.san:100,0,100);capStamina();
-  if(S.san<=0&&!S.dead){kill('你一直撑着的那根弦，断了。','vignette');if(!S.dead&&S.san<=0)S.san=1;}
+  if(S.san<=0&&!S.dead){kill('你一直撑着的那根弦，断了。','vignette','san');if(!S.dead&&S.san<=0)S.san=1;}
 }
 /* 仅保留日常恢复；危险环境、异象和躲避巡察者期间不能由课表恢复抵消伤害。 */
 function sanTick(dt,rule,exam){
@@ -246,7 +246,7 @@ function updateSystems(dt){
 function resolveAssimilation(){
   S.hiddenLatch=false;S.hiddenAsked=false;S.hiddenWindow=0;
   if(S.dead)return;
-  kill('你在自己的位子上坐好了。椅子很合身，像是照着你做的。这一次，不用再起来了。','names');
+  kill('你在自己的位子上坐好了。椅子很合身，像是照着你做的。这一次，不用再起来了。','names','assimilation');
   /* 免疫、药丸或调试无敌挡下后回落，避免每帧再次触发；不提供人为脱身选项。 */
   if(!S.dead){S.tt=86;S.ttTier=4;}
 }
@@ -369,7 +369,7 @@ function roamTick(dt){
   if(dist<150){ S.san-=dt*1.1; if(!ROAM.seen){ ROAM.seen=1; os('我：车道那头有东西。它不是走路的姿势。',5); } }
   if(dist<230&&!ROAM.toldSpot){ ROAM.toldSpot=1; os('我：车道中间有个高的东西站着。它没在动。',4.4); }
   if(dist<ROAM_REACH&&!lit&&ROAM.litAcc<ROAM_LIT_NEED*0.5&&S.enterCool<=0){
-    kill('你在黑暗里撞上了它。它很高，很冷，一直站在车道中间，等你自己走过去。','grip');
+    kill('你在黑暗里撞上了它。它很高，很冷，一直站在车道中间，等你自己走过去。','grip','garage');
   }
 }
 var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30},tunnel:{san:0.60}};

@@ -104,13 +104,14 @@ var CarChase={
       /* 路口往哪边走只看路牌，界面上不直接写出来；追影只说远近 */
       var near=d.pursuit/CAR_CHASE_CONFIG.pursuitLimit, chase=near>.75?'黑影就在车后':near>.4?'后视镜里的黑影越来越近':near>.1?'后面有东西跟着':'后视镜里暂时是空的';
       var hint=CAR_CHASE_CONFIG.forks.some(function(f){var dd=f[0]-d.distance;return dd>0&&dd<85;})?'前方路口，看清路牌':'避开路障，沿路前进';
-      var text='驾驶 '+Math.floor(d.distance)+' / '+CAR_CHASE_CONFIG.distance+' 米 · 车辆 '+d.hp+'/3 · '+chase+'\n'+hint+'\nW / ↑ 前进，A D / ← → 转向；触屏用摇杆';
+      var brake=!!(KEY.s||KEY.arrowdown)||(TOUCH.active&&TOUCH.dy>.3);
+      var text='驾驶 '+Math.floor(d.distance)+' / '+CAR_CHASE_CONFIG.distance+' 米 · 车辆 '+d.hp+'/3 · '+chase+'\n'+hint+' · '+(brake?'正在刹车':'车速 '+Math.round(d.speed))+'\n'+(IS_TOUCH?'摇杆向前加速、左右转向、向后刹车':'W / ↑ 加速，A D / ← → 转向，S / ↓ 刹车');
       if(hud.textContent!==text)hud.textContent=text;
     }
   },
   fail:function(message,checkpoint){
     var d=RT.carChase;if(!d)return;
-    kill(message,'grip');
+    kill(message,'grip','car_chase');
     if(S.dead)return;
     d.distance=checkpoint;d.speed=0;d.hp=3;d.pursuit=0;
     d.nextObstacle=CAR_CHASE_CONFIG.obstacles.filter(function(o){return o[0]<=checkpoint;}).length;

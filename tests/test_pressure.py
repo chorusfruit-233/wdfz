@@ -37,7 +37,7 @@ class PressureBrowserTest(BrowserCase):
         page=self.page(touch=touch)
         page.evaluate("Game.start('hard');clearIntroTimers();running=false")
         page.wait_for_function("GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'&&GLR.roomMesh.userData.roomData===INTERIORS.teach1")
-        page.evaluate("S.intro=0;S.day=2;S.talent='code';S.tt=0;S.san=70;S.bag=[];AN.active=false;PAT.locked=false;PAT.next=1000;updateHUD()")
+        page.evaluate("S.intro=0;S.day=2;S.talent='code';S.tt=0;S.san=70;S.bag=[];AN.active=false;PAT.locked=false;PAT.next=1000;Investigation.openDesk();updateHUD()")
         return page
 
     def test_absence_is_not_san_loss_but_danger_is(self):

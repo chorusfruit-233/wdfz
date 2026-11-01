@@ -441,7 +441,7 @@ function patTick(dt){
   d=Math.hypot(S.x-PAT.x,S.y-PAT.y);
   if(PAT.afterBlink<=0&&d<PAT_CATCH&&patLOS()&&!patIgnores()&&(!HIDE.on||HIDE.seen)&&!S.dead){
     kill(HIDE.on?'柜门被拉开了。外面没有光，只有它弯下来的脸，和一只伸进来的手。'
-                :'一只手从后面按住了我的头顶，很轻，像在点名。灯全红了。我被它带走了，带回了那个空着的座位。','grip');
+                :'一只手从后面按住了我的头顶，很轻，像在点名。灯全红了。我被它带走了，带回了那个空着的座位。','grip','patrol');
     return;
   }
   if(!PAT.locked&&PAT.walkT>45) patEnd('我：灯恢复了。脚步声往楼梯那边去了。');

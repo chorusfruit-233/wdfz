@@ -213,9 +213,10 @@ function canteenHint(h,R){ return (R.host==='canteen'&&!mealNow())?(hasItem('coi
 var TILE_HINT={
   '=':function(h,R){ var need=doorLockNeed(R,h.c,h.r); return (need&&!hasItem(need))?'开门（锁着）':'开门'; },
   O:'出去', H:'躲进柜子',
-  M:function(){ return hasItem('coin')?'投币（售货机）':'售货机'; },
+  M:function(){ return '查看售货机与补给'; },
   k:canteenHint, t:canteenHint,
-  L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:'上车',
+  L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return Investigation.carHint(h);},
+  T:function(){return S.room==='teach1'?'看移交单 / 拿粉笔':'看讲台';},
   D:function(){ return (S.room==='lab3')?'门禁管理终端':'使用终端'; },
   X:'钻进去',
   K:function(h,R){ return (R&&R.host==='admin')?'看办公桌':'看实验台'; },
@@ -236,6 +237,7 @@ function interactHint(){
   if(R&&!first&&hit2_seatNear(R)) return '坐下';
   if(S.mode==='in'){
     if(!h) return '';
+    var recovery=sanActFor(R,h);if(recovery)return SAN_ACTS[recovery].n+'（SAN +'+SAN_ACTS[recovery].san+'，'+SAN_ACTS[recovery].min+' 分钟）';
     var th=TILE_HINT[h.ch];
     if(th===undefined) return '翻找';
     return (typeof th==='function')?th(h,R):th;
@@ -335,14 +337,13 @@ function tryInteract(){
   if(ch==='d'||ch==='f'||ch==='R'){ searchContainer(hit.c,hit.r); return; }
   if(ch==='T'){
     if(S.room==='teach1'){
-      if(hasItem('chalk')) os('我：讲台上有一支粉笔，我已经带了一支。',2.8);
-      else if(addItem('chalk')) os('我：讲台上有一支粉笔。',2.8);
+      Investigation.notice();
     }
     else os('我：讲台是空的。',2.2);
     return;
   }
   if(ch==='c'){ useCar(hit.c,hit.r); return; }
-  if(ch==='V'){ useCar(hit.c,hit.r); return; }        /* 车库的车位格是 'V'，'c' 是教室椅子 */
+  if(ch==='V'){ Investigation.inspectCar(hit.c,hit.r); return; }
   if(ch==='D'){
     if(S.room==='admin3') useData(); else useTerminal();
     return;
@@ -356,25 +357,32 @@ function tryInteract(){
   }
   if(ch==='b'){ os('我：床。可是现在不能睡。',2.4); return; }
   if(ch==='k'&&R.host==='guard'){
+    Investigation.parking(true);
+    guardSupplies();
+    if(Investigation.state().entries.notice)Investigation.supplyOffer(function(){});
+    return;
+  }
+  if(R.host==='canteen'&&(ch==='t'||ch==='k')){ canteenWindow(); return; }
+  if(ch==='M'){if(Investigation.state().entries.notice)Investigation.supplyOffer(useVending);else useVending();return;}
+  if(ch==='t'||ch==='k'){ os('我：没有能吃的。',2.0); return; }
+  if(ch==='B'||ch==='G'){ useStall(); return; }
+  if(ch==='w'){ S.san=Math.min(100,S.san+4); os('我：洗了把脸。',2.2); return; }
+  os('我：用不上。',1.8);
+}
+function guardSupplies(){
     /* 钥匙以前就挂在这儿，太容易了；现在收到了校长办公室 */
     if(!RT.guardKeysTold){
       RT.guardKeysTold=1; addClue('keys');
-      os('我：柜台下面的钥匙钩全空了。钩子旁边贴着一张条：「钥匙一律上交校长办公室（行政楼五楼）」。',4.8,OS_KEEP);
-      if(!hasItem('torch')) setTimeout(function(){ if(!S.dead&&!hasItem('torch')&&addItem('torch')) os('我：抽屉里倒是有一把手电筒。去车库之前，把它带上。',3.8); },2600);
+      var light=hasItem('torch')||addItem('torch');
+      os('我：钥匙已上交行政楼五楼校长办公室。停车记录和避险便签记在手册里了。'+(light?'抽屉里的手电带好了，去车库前记得打开。':'手电还在抽屉里，装不下了，腾出一格再来拿。'),6,OS_KEEP);
+      autoSave();
       return;
     }
     if(!hasItem('torch')){
       if(addItem('torch')) os('我：柜台下面还有一把手电筒。去车库之前，把它带上。',4.2);
       return;
     }
-    os('我：柜台下面没有别的了。',2.0); return;
-  }
-  if(R.host==='canteen'&&(ch==='t'||ch==='k')){ canteenWindow(); return; }
-  if(ch==='M'){ useVending(); return; }
-  if(ch==='t'||ch==='k'){ os('我：没有能吃的。',2.0); return; }
-  if(ch==='B'||ch==='G'){ useStall(); return; }
-  if(ch==='w'){ S.san=Math.min(100,S.san+4); os('我：洗了把脸。',2.2); return; }
-  os('我：用不上。',1.8);
+    Investigation.parking();return;
 }
 
 /* 地理实验室的挂图：每张会圈出一个你还没去过的地方 */
@@ -640,6 +648,7 @@ function useTerminal(){
   }
   RT.hacked=true;
   addClue('comp');
+  Investigation.record('whitelistWritten','网络中心已经写入我的学号。后台记录里，同一个名字对应着不同时期的照片。下一步要到行政楼三楼同步数据。','验证','实验楼三楼 · 网络中心');
   if(S.talent==='code') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
   else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,OS_KEEP);
   os2later('我：还得去行政楼三楼，把数据同步过去。',5200);
@@ -654,6 +663,8 @@ function useData(){
   if(!RT.hacked){ os('我：它要我输入一个我不该知道的东西。屏幕右下角写着：数据源 · 实验楼 3F 网络中心。',3.8); return; }
   if(RT.data){ os('我：已经同步过了。',2.0); return; }
   RT.data=true;
+  Investigation.record('whitelistSynced','行政楼三楼同步完成：门禁认的是学号与照片。西小门现在认得我了，但名字留在系统里会怎样？','验证','行政楼三楼 · 门禁机');
+  autoSave();
   os('我：进度条走完了。屏幕上弹出一张照片——是我。照片底下写着：已登记。西小门的闸机，现在认得我了。',5.2,OS_KEEP);
 }
 function tryGateWest(){

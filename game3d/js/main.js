@@ -2,6 +2,8 @@
 'use strict';
 
 function onEnterRoom(id,restoring){
+  ExplorationMap.observe();
+  Playtest.event(restoring?'读档进入':'进入地点',id);
   if(id==='garage1') os('我：车库里没有灯。空气是潮的，有一股铁和机油的味道。远处有水在滴。',3.6);
   if(id==='portal_tunnel') os('我：不想靠近。墙上的黑色黏液还在缓慢流动。',4.5,OS_FORCE);
   try{ Dread.enter(id,restoring); }catch(e){}
@@ -14,6 +16,7 @@ function frame(t){
   if(!running) { lastT=t; return; }
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
+  Playtest.frame(dt);
   QualityWatch.tick(dtG,S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!(DEV.on&&DEV.freeze)&&!document.hidden);
   /* 允许一秒内的慢帧按真实时间补齐固定步；更长的卡顿仍有上限，避免恢复时跑出大量积压。 */
   accum+=Math.min(dt,1);
@@ -38,8 +41,10 @@ function update(dt){
     return;
   }
   if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
+  Playtest.simulation(dt);
   if(CarChase.active()){clockTick(dt);CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
+  ExplorationMap.tick(dt);
   if(Elevator.inRide()){
     if(S.room!=='lift_dream')clockTick(dt);
     Elevator.tick(dt);settleSan();return;
@@ -193,6 +198,8 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  ExplorationMap.clear();
+  document.getElementById('notequery').value='';
   try{ Dread.reset(); }catch(e){}
   if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
@@ -255,6 +262,7 @@ var Game={
     if(waitForGameAssets(function(){Game.start(diff);}))return;
     try{
     freshState(diff);
+    Playtest.event('开始新局',diff);
     var R1=INTERIORS['teach1'];
     /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */
     S.mode='in'; S.room='teach1'; S.x=R1.ox+48.5*9; S.y=R1.oy+6.5*9; S.seated=true;

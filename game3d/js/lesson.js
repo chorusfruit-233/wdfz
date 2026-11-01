@@ -47,7 +47,7 @@ LESSON.answer=function(index){
   var r=LESSON.record();if(!r||r.done||r.left<=0)return;
   var task=LESSON_TASKS[r.task];if(index<0||index>=task.choices.length)return;
   r.done=true;
-  if(index===task.answer){S.san=Math.min(100,S.san+2);addClue('lesson');os('我：'+task.note,4.4,OS_KEEP);}
+  if(index===task.answer){r.correct=true;S.san=Math.min(100,S.san+2);addClue('lesson');Investigation.record('lesson:'+r.task,task.note,'事实','课堂提醒');os('我：'+task.note,4.4,OS_KEEP);}
   else os('我：老师没有说对不对，只让我把纸翻过去。',3.4);
   LESSON.close(false);autoSave();
 };
@@ -65,8 +65,10 @@ LESSON.paint=function(){
   document.getElementById('lessonTime').textContent='课堂仍在继续 · '+Math.ceil(LESSON.record().left)+' 秒';
 };
 LESSON.paintButton=function(){
+  var investigate=document.getElementById('investigateOpen'),available=Investigation.deskAvailable();
+  if(investigate){investigate.hidden=!available;investigate.textContent=IS_TOUCH?'看停车单':'看停车单 · R';}
   var button=document.getElementById('lessonOpen');if(!button)return;
   var r=RT.lessons&&RT.lessons[LESSON.currentKey()];
   button.textContent=IS_TOUCH?'看课桌':'看课桌 · R';
-  button.hidden=LESSON.on||!LESSON.available()||!!(r&&r.done);
+  button.hidden=available||LESSON.on||!LESSON.available()||!!(r&&r.done);
 };

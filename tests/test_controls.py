@@ -1128,6 +1128,8 @@ class ControlsTest(BrowserCase):
         self.assertEqual(page.evaluate('fmtClock(S.tsec)'), '12:10')
         page.evaluate("""S.mode='in';S.room='teach1';S.seated=false;S.bag=[];RT=newRT();
             nearWorld=function(){return {ch:'T'}};hit2_seatNear=function(){return false};tryInteract();""")
+        self.assert_js(page,"UI.chooseOpen&&Investigation.visible('notice')")
+        page.locator('#choices button').filter(has_text='拿讲台上的粉笔').click()
         self.assert_js(page, "hasItem('chalk')&&document.getElementById('sub').textContent.includes('粉笔')")
 
     def test_exercise_includes_all_courts_and_night_dorm_accumulates_violations(self):

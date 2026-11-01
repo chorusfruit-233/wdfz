@@ -137,6 +137,16 @@ function buildRoomGeometry(R){
   R.doorSpecs=c.doors;
   var grp=K.build();
   grp.add(buildDoorLeaves(R));
+  /* 导向牌与车牌在所有画质保留，属于可用于判断的场景信息。 */
+  for(var sy=0;sy<H;sy++)for(var sx=0;sx<W;sx++){
+    var tile=R.grid[sy][sx],label=null,width=1.6;
+    if(tile==='S'&&G(sy,sx-1)!=='S'&&G(sy-1,sx)!=='S')label=R.floor+'F · 楼梯 ↑↓';
+    if(tile==='J')label=R.floor+'F · 电梯';
+    if(tile==='L')label='二楼 · 连廊';
+    if(tile==='T'&&R.id==='teach1')label='移交单 · 钥匙去向';
+    if(tile==='V'&&R.grid[sy].slice(sx+1).indexOf('V')<0)label='第 '+(sy+1)+' 排';
+    if(label){var sign=wayfindingSign(label,CX(sx),2.25,CZ(sy),width);if(tile==='V')sign.rotation.y=Math.PI/2;c.meshes.push(sign);}
+  }
   c.meshes.forEach(function(m){ grp.add(m); });                 /* 黑板上的粉笔字这种单独的网格 */
   return grp;
 }
@@ -642,4 +652,15 @@ function roomDecay(c){
       propDecal(K,0,'d',hx+0.2,RWH-0.002,hzc+0.2,1.6,1.4,0x5a4a32,1.3);
     });
   }
+}
+
+/* 双面、非发光光源的文字牌；不改变通路碰撞，随房间一起释放贴图。 */
+function wayfindingSign(text,x,y,z,width){
+  var cv=document.createElement('canvas');cv.width=512;cv.height=96;
+  var c=cv.getContext('2d');c.fillStyle='#1b302c';c.fillRect(0,0,512,96);
+  c.strokeStyle='#c7dbbd';c.lineWidth=4;c.strokeRect(4,4,504,88);
+  c.fillStyle='#f0f3dd';c.font='bold 38px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(text,256,48,480);
+  var tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
+  var mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,width*96/512),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
+  mesh.position.set(x,y,z);mesh.userData.wayfinding=text;return mesh;
 }

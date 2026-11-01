@@ -26,8 +26,11 @@ class PortalExplorationTest(BrowserCase):
         page.evaluate("""S.x=R.ox+3.5*9;S.y=R.oy+1.5*9;S.ang=-Math.PI/2;tryInteract()""")
         page.wait_for_function("S.room==='lab1'")
         self.assert_js(page,"RT.portalBaseSeen&&Collision.depth(S.x,S.y,PRAD)<1e-7")
-        page.evaluate("""S.bag=['coin','chalk','snack','battery','pill','pen','notebook','memo'];
-          for(const f of [2,4,5]){doEnterRoom('lab'+f);useFacility('K',INTERIORS[S.room]);}""")
+        page.evaluate("S.bag=['coin','chalk','snack','battery','pill','pen','notebook','memo']")
+        for floor,answers in [(2,[1]),(4,[2]),(5,[1,2,0])]:
+            page.evaluate("f=>{doEnterRoom('lab'+f);useFacility('K',INTERIORS[S.room]);}",floor)
+            for answer in answers:
+                page.locator('#choices button').nth(answer).click()
         self.assert_js(page,"RT.portalSketch&&PortalExploration.count()===3&&S.bag.length===8&&loadGame().rt.portalSketch")
         page.evaluate("doEnterRoom('lab1');S.bag=['coil','lens','vial','battery'];portalBench()")
         page.locator('#choices button').filter(has_text='把它们接起来').click()
