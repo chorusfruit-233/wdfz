@@ -68,7 +68,9 @@ function tracesBuild(force){
     else if(t.k==='handprint'){ for(j=0;j<3;j++) flat(mWet,0.14,0.18,p.x+j*0.35,p.z+(j%2)*0.2,0.3*j); }
     else if(t.k==='fence'){ for(j=0;j<6;j++) anfxBox(g,mDark,0.02,0.18,0.14,p.x+0.02,0.6+hash2(i,j)*0.7,p.z-1.5+j*0.6); }
     else if(t.k==='cup'){                               /* 摔瘪的保温杯躺在地上，地砖砸出一个白印 */
-      var cgy=cupGroundY(p.x,p.z), cm=cupMesh(); cm.scale.set(2.2,2.2,1.7); cm.rotation.set(0,hash2(i,7)*6.28,Math.PI/2); cm.position.set(p.x,cgy+0.07,p.z); g.add(cm);
+      var cgy=cupGroundY(p.x,p.z), cm=cupModel(false); cm.scale.set(2.2,2.2,1.7); cm.rotation.set(0,hash2(i,7)*6.28,Math.PI/2); cm.position.set(p.x,cgy+0.07,p.z); g.add(cm);
+      var la=hash2(i,11)*6.28, ld=cupLidMesh(); ld.scale.setScalar(2.2); ld.rotation.set(0,la,Math.PI/2);                /* 淡紫色的盖子滚在一边 */
+      ld.position.set(p.x+Math.cos(la+1.2)*0.9,cgy+CUP_DIM.lidR*2.2,p.z+Math.sin(la+1.2)*0.9); g.add(ld);
       flat(anfxMat(0xd8d4cc,0.5),0.22,0.18,p.x+0.05,p.z-0.02,hash2(i,3)*3,cgy+0.014);
     }
     else if(t.k==='bowl'){ anfxBox(g,anfxMat(0xe8e2d4,1.0),0.16,0.08,0.16,p.x+0.6,0.04,p.z); anfxBox(g,anfxMat(0x3a2a1a,1.0),0.012,0.2,0.012,p.x+0.6,0.14,p.z); }

@@ -399,7 +399,7 @@ var AN_DEFS={
   },
   cup:{w:0.8, lethal:1, warn:1, fx:1, cool:150,
     cn:'清华水杯', name:'清华水杯', dfx:'floor',
-    msg:'我：头顶上叮叮当当地响。抬头——四楼的窗台上，一只紫色的保温杯在晃。',
+    msg:'我：头顶上叮叮当当地响。抬头——四楼的窗台上，一只白色的杯子在晃，盖子是淡紫色的。',
     when:function(){ var cw=cupWall(); return !!cw&&cw.m<2.4&&!underRoof(); },
     place:function(d){
       d.wall=cupWall(); d.phase=0;
@@ -418,11 +418,11 @@ var AN_DEFS={
         var miss=Math.sqrt(dist2(d.lx,d.ly,S.x,S.y))*U2M;                  /* 米 */
         try{ SFX.cupHit&&SFX.cupHit(miss); }catch(e){}
         if(miss<CUP_R&&!underRoof()){
-          anKill('头顶上一声闷响。我最后看见的，是一只紫色的保温杯，杯身上印着四个字：清华大学。它比我想象的要重。','floor');
+          anKill('头顶上一声闷响。我最后看见的，是一只白色的杯子，杯身上画着清华的二校门，金色的两个字：清華。它比我想象的要重。','floor');
           return;
         }
         if(miss<CUP_R) os('我：「当」的一声，砸在头顶的雨棚上，又弹到了地上。',3.4);
-        else if(miss<2.6){ S.san-=hard?9:6; os('我：就砸在我脚边。杯子摔瘪了，杯身上印着「清华大学」。杯盖滚开，里面的水还是热的。',4.4); }
+        else if(miss<2.6){ S.san-=hard?9:6; os('我：就砸在我脚边。杯子摔瘪了，杯身上画着清华的二校门。淡紫色的杯盖滚开，里面的水还是热的。',4.4); }
         else os('我：不远处「哐」的一声，一只杯子在地上弹了两下。我不敢抬头。',3);
       }
       if(d.phase===2&&AN.t-d.tl>2.6) anEnd();
