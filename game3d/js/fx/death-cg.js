@@ -238,7 +238,7 @@ var DeathCG=(function(){
   /* ---- swarm：蛾群。远处一团，绕成一根柱子把你围住，最后扑满镜头 ---- */
   CG.swarm={
     build:function(c){
-      var i,r=c.rand,geo=new THREE.PlaneGeometry(0.17,0.1),m=mat(0x8a7a62,undefined,{side:THREE.DoubleSide});      /* 灰白的蛾子，暗处也看得见 */
+      var i,r=c.rand,geo=new THREE.PlaneGeometry(0.17,0.1),m=mat(0x111111,undefined,{side:THREE.DoubleSide});      /* 与蛾群异象一致，保持黑色 */
       c.moths=[]; c.mothIM=c.inst(geo,m,70);                 /* 70 只蛾子一次画完 */
       for(i=0;i<70;i++) c.moths.push({m:{a:r()*6.283,r:0.6+r()*1.6,h:0.4+r()*2.4,sp:1.6+r()*1.8,ph:r()*6.283}});
       c.veil(0x0c0905);
