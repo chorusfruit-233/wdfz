@@ -137,9 +137,8 @@
   <div class="pcf" id="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" id="pcexit" onclick="PCGAME.stop()">退出电脑</button>
   <button type="button" class="pcx" onclick="PCGAME.stop()" aria-label="退出电脑">✕ 退出</button>
   <div id="pcpad"><button type="button" data-d="0,-1" aria-label="上">▲</button><button type="button" data-d="-1,0" aria-label="左">◀</button><button type="button" data-d="1,0" aria-label="右">▶</button><button type="button" data-d="0,1" aria-label="下">▼</button></div></div>
-<div id="devbackdrop" aria-hidden="true"></div>
 <div id="devbounds" aria-hidden="true"></div>
-<div id="dev" role="dialog" aria-modal="true" aria-labelledby="devTitle">
+<div id="dev" role="dialog" aria-modal="false" aria-labelledby="devTitle" aria-describedby="devhelp">
   <header class="devhead">
     <div class="devdrag" id="devdrag" role="group" tabindex="0" aria-label="移动调试面板：按住拖动，或使用方向键移动，Home 键归位" title="按住拖动；方向键移动，Home 键归位">
       <span class="devgrip" aria-hidden="true">⠿</span>
@@ -148,7 +147,8 @@
     <button type="button" class="devreset" onclick="Dev.resetPanelPosition()" aria-label="调试面板归位" title="调试面板归位">归位</button>
     <button type="button" class="devclose" onclick="Dev.close()" aria-label="关闭调试面板">×</button>
   </header>
-  <div class="devrun"><span id="devrun" role="status"></span><button type="button" id="devfreeze" onclick="Dev.toggleFreeze()">继续模拟</button></div>
+  <div class="devrun"><span id="devrun" role="status"></span><button type="button" id="devfreeze" onclick="Dev.toggleFreeze()">暂停游戏</button></div>
+  <p class="devhelp" id="devhelp">点击窗口外操作游戏 · F2 关闭 · Esc 释放鼠标</p>
   <nav class="devtabs" aria-label="调试功能">
     <button type="button" data-dev-tab="status" aria-controls="dev-page-status" aria-pressed="true" onclick="Dev.tab('status')">状态</button>
     <button type="button" data-dev-tab="scene" aria-controls="dev-page-scene" aria-pressed="false" onclick="Dev.tab('scene')">场景</button>
@@ -211,7 +211,7 @@
       <div class="devsection"><div><h3>氛围</h3><p>五分钟体验切片：安静、先听后见、危险操作、兑现或落空、余韵</p></div></div>
       <div class="devbuttons"><button type="button" onclick="DreadSlice.start();Dev.close()">开始五分钟切片</button><button type="button" onclick="Dread.falseThreat(Dread.pickAmbient(),1)">来一声假威胁</button></div>
     </section>
-    <p class="devhint">打开面板时默认暂停游戏模拟；真实时间倒计时仍会继续。<span class="devkbd">F2 或 Esc 可关闭。</span></p>
+    <p class="devhint">浮窗默认不冻结游戏，可手动暂停；真实时间倒计时仍会继续。<span class="devkbd">F2 关闭，面板内 Esc 也可关闭。</span></p>
   </div>
   <div class="devfooter"><span id="devmessage" role="status" aria-live="polite">调试操作会改变当前游戏状态。</span><span id="devscroll" hidden>↓ 可滚动</span></div>
 </div>

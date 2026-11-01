@@ -136,8 +136,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05040
 body.touch #pcgame .pcx{display:block}
 body.touch #pcpad{display:grid}
 body.touch #pcgame>button:not(.pcx){display:none}
-#devbackdrop{position:fixed;inset:0;z-index:119;display:none;background:rgba(0,0,0,.22);touch-action:none}
-body.dev-open #devbackdrop{display:block}body.dev-open #toast{z-index:130}
+body.dev-open #toast{z-index:130}
 #devbounds{position:fixed;inset:calc(8px + env(safe-area-inset-top,0px)) calc(8px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));visibility:hidden;pointer-events:none}
 #dev{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:120;display:none;
   flex-direction:column;overflow:hidden;width:min(460px,calc(100vw - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));
@@ -163,6 +162,7 @@ body.dev-open #devbackdrop{display:block}body.dev-open #toast{z-index:130}
 #dev .devrun{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 18px 12px;color:#a4d7b9;font-size:12px;flex:none}
 #dev .devrun span:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;background:#80c9a5}
 #dev .devrun button{min-height:36px;padding:5px 10px;font-size:12px}
+#dev .devhelp{padding:0 18px 8px;font-size:11px;line-height:1.5;color:#91ac9c;flex:none}
 #dev .devtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:0 14px 10px;border-bottom:1px solid rgba(130,180,155,.18);flex:none}
 #dev .devtabs button{background:transparent;border-color:transparent;min-height:40px;padding:7px 4px;color:#98b8a7}
 #dev .devtabs button[aria-pressed=true]{background:#244334;border-color:#48785b;color:#e8f8ed}

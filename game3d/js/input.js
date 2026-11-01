@@ -8,10 +8,16 @@ var INPUT={mode:'mouse',lookId:null,lookType:null,stickId:null,stickCenter:null,
   lockPending:false,lockToken:0,hadLock:false,unlockedAt:-1000,
   touchHandled:false};   /* 这一次触摸已经由游戏处理过（松指触发了按钮，或按下时跳过了演出）：浏览器随后补发的 click 一律吞掉 */
 
+function devOwnsInput(target){
+  return !!(typeof DEV!=='undefined'&&DEV.on&&target&&target.closest&&target.closest('#dev'));
+}
+function devInputBlocked(){
+  return typeof DEV!=='undefined'&&DEV.on&&(DEV.freeze||!!DEV.drag);
+}
 function playerInputAllowed(){
   return S.screen==='play'&&!S.dead&&!PAUSE.on&&!UI.anyOpen()&&
     !(typeof PRO!=='undefined'&&PRO.on)&&!(typeof PC!=='undefined'&&PC.on)&&!(typeof PHONE!=='undefined'&&PHONE.on)&&
-    !(typeof LESSON!=='undefined'&&LESSON.on)&&!(typeof DEV!=='undefined'&&DEV.on)&&!(S.intro>0);
+    !(typeof LESSON!=='undefined'&&LESSON.on)&&!devInputBlocked()&&!(S.intro>0);
 }
 function pointerIsLocked(){return document.pointerLockElement===document.getElementById('cv');}
 function releaseCapture(el,id){
@@ -41,7 +47,7 @@ function releaseMouseLook(){
 }
 function requestMouseLook(){
   if(typeof CarChase!=='undefined'&&CarChase.active())return Promise.resolve(false);
-  if(INPUT.mode!=='mouse'||!playerInputAllowed())return Promise.resolve(false);
+  if(INPUT.mode!=='mouse'||!playerInputAllowed()||devOwnsInput(document.activeElement))return Promise.resolve(false);
   var cv=document.getElementById('cv');
   INPUT.wantsLock=true;
   if(pointerIsLocked())return Promise.resolve(true);
@@ -142,14 +148,27 @@ function initInput(){
   INPUT.mode=IS_TOUCH?'touch':'mouse';
   var cv=document.getElementById('cv'),stick=document.getElementById('stick');
   initTouchActivation();
+  document.addEventListener('focusin',function(e){
+    if(devOwnsInput(e.target)){resetInputState();releaseMouseLook();updateTouchUI();}
+  });
   document.addEventListener('pointerdown',function(e){
+    /* 调试浮窗只接管自己的控件；点回游戏时，同一次手势就能重新移动或转向。 */
+    if(devOwnsInput(e.target)){
+      if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();else useMouseInput();
+      resetInputState();releaseMouseLook();return;
+    }
+    if(devOwnsInput(document.activeElement)){
+      document.activeElement.blur();
+      if(e.target===cv||(e.target.closest&&e.target.closest('#touch')))cv.focus({preventScroll:true});
+      updateTouchUI();
+    }
     if(S.screen==='cut'){
       /* 按下就跳过演出；松指后补发的 click 会落在随后出现的结局界面按钮上，要吞掉 */
       if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
       cutSkip(); return;
     }
     /* 死亡演出中：按下跳到结果（死亡界面或惊醒）；补发的 click 同样不能点到随后出现的按钮 */
-    if(S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING&&!(typeof DEV!=='undefined'&&DEV.on)){
+    if(S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING){
       if(deathSkip()&&(e.pointerType==='touch'||e.pointerType==='pen'))INPUT.touchHandled=true;
       return;
     }
@@ -160,12 +179,16 @@ function initInput(){
     var k=physicalKey(e);
     var editing=e.target.matches('input,select,textarea,[contenteditable="true"]');
     if(e.key==='F2'&&(!editing||DEV.on)){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
-    if(k==='tab'&&DEV.on){Dev.focusTrap(e);return;}
+    if(devOwnsInput(e.target)){
+      if(k==='tab')Dev.focusTrap(e);
+      if(k==='escape'){e.preventDefault();if(!e.repeat)Dev.close();}
+      return;
+    }
+    if(k==='escape'&&DEV.on&&DEV.freeze){e.preventDefault();if(!e.repeat)Dev.close();return;}
     if(editing){
       if(k!=='escape')return;
       e.target.blur();
     }
-    if(k==='escape'&&DEV.on){e.preventDefault();if(!e.repeat)Dev.close();return;}
     if(PRO.on){
       if(k===' '||k==='enter'){e.preventDefault();if(!e.repeat)proNext();}
       return;
@@ -196,7 +219,7 @@ function initInput(){
       return;
     }
     if(UI.chooseOpen&&!PAUSE.on&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)UI.choiceKey(+k);return;}
-    if(PAUSE.on||DEV.on||UI.chooseOpen||S.intro>0)return;
+    if(PAUSE.on||devInputBlocked()||UI.chooseOpen||S.intro>0)return;
     if(typeof CarChase!=='undefined'&&CarChase.active()){
       if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){e.preventDefault();KEY[k]=true;}
       return;
@@ -227,7 +250,7 @@ function initInput(){
   });
   var maxDelta=160;
   document.addEventListener('mousemove',function(e){
-    if(!pointerIsLocked()||INPUT.mode!=='mouse'||!playerInputAllowed())return;
+    if(!pointerIsLocked()||INPUT.mode!=='mouse'||!playerInputAllowed()||devOwnsInput(document.activeElement))return;
     var mx=e.movementX||0,my=e.movementY||0;
     if(!isFinite(mx)||!isFinite(my))return;
     S.ang+=clamp(mx,-maxDelta,maxDelta)*.0022;
@@ -300,7 +323,7 @@ function initInput(){
     if(locked){
       if(INPUT.mode!=='mouse'||!playerInputAllowed()){releaseMouseLook();return;}
       if(INPUT.lookType==='mouse')endLook();
-    }else if(wasLocked&&INPUT.mode==='mouse'&&playerInputAllowed()&&!(typeof FULLSCREEN!=='undefined'&&FULLSCREEN.busy)){
+    }else if(wasLocked&&INPUT.mode==='mouse'&&playerInputAllowed()&&!devOwnsInput(document.activeElement)&&!(typeof FULLSCREEN!=='undefined'&&FULLSCREEN.busy)){
       INPUT.unlockedAt=performance.now();resetInputState();Game.pause();
     }
     updateInputUI();

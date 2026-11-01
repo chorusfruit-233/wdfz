@@ -1,7 +1,7 @@
 /* 里世界 3D · 调试面板 */
 'use strict';
 
-var DEV={on:false,fast:false,god:false,freeze:true,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0,panelPos:null,drag:null,dragReady:false};
+var DEV={on:false,fast:false,god:false,freeze:false,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0,panelPos:null,drag:null,dragReady:false};
 var DEV_POI=[
   ['北门',514,115],['西小门',214,624],['南门',386,1276],
   ['大操场',344,350],['花园雕塑',535,1020],['车库入口',485,163],
@@ -27,7 +27,7 @@ var Dev={
       return;
     }
     if(typeof LESSON!=='undefined'&&LESSON.on)LESSON.close(false);
-    DEV.on=true;DEV.freeze=true;DEV.refreshT=0;document.body.classList.add('dev-open');
+    DEV.on=true;DEV.freeze=false;DEV.refreshT=0;document.body.classList.add('dev-open');
     var el=document.getElementById('dev'); if(el) el.style.display='flex';
     DEV.lists={
       room:Object.keys(INTERIORS).map(function(k){return [k,(INTERIORS[k].name||k)+' ('+k+')'];}),
@@ -62,7 +62,9 @@ var Dev={
     el.classList.toggle('dev-short',height<300);
     el.style.maxWidth=width+'px';
     el.style.maxHeight=Math.min(height,window.innerHeight*.82)+'px';
-    var pos=DEV.panelPos||{x:b.left+4,y:b.top+4};
+    /* 触屏横屏时默认放在中间，留出两侧的摇杆和交互键。用户拖动过的位置仍保留。 */
+    var defaultX=IS_TOUCH&&width>height?b.left+(width-el.getBoundingClientRect().width)/2:b.left+4;
+    var pos=DEV.panelPos||{x:defaultX,y:b.top+4};
     Dev.placePanel(pos.x,pos.y,false);Dev.scrollHint();
   },
   resetPanelPosition:function(){Dev.endPanelDrag();DEV.panelPos=null;Dev.fitPanel();},
@@ -143,13 +145,16 @@ var Dev={
     if(!DEV.on)return;
     function put(id,text){var el=document.getElementById(id);if(el&&el.textContent!==text)el.textContent=text;}
     var otherPause=PAUSE.on||UI.anyOpen()||PC.on||PRO.on;
-    var state=S.screen!=='play'?'未进入游戏':S.dead?'角色已死亡':otherPause?'游戏菜单已暂停':DEV.freeze?'调试暂停中':'模拟运行中';
+    var state=S.screen!=='play'?'未进入游戏':S.dead?'角色已死亡':otherPause?'游戏菜单已暂停':DEV.freeze?'调试暂停中':'游戏运行中';
     put('devrun',state);put('devclock','第 '+S.day+' 天 · '+fmtClock(S.tsec));
     put('devsanValue',String(Math.round(S.san)));put('devstamValue',Math.round(S.stam)+'/'+Math.round(staminaMax()));
     put('devviolValue',String(Math.round(S.viol)));put('devttValue',String(Math.round(S.tt)));
     put('devactive',AN.active?(AN_NAME[AN.id]||AN.id||'未知'):'无');
     var freeze=document.getElementById('devfreeze');
-    if(freeze){freeze.textContent=DEV.freeze?'继续模拟':'暂停模拟';freeze.disabled=S.screen!=='play'||S.dead||otherPause;}
+    if(freeze){
+      freeze.textContent=DEV.freeze||PAUSE.on||UI.openPanel==='pause'?'继续游戏':'暂停游戏';
+      freeze.disabled=S.screen!=='play'||S.dead||PC.on||PRO.on||UI.chooseOpen||!!(UI.openPanel&&UI.openPanel!=='pause');
+    }
     Dev.pos();if(DEV.tab==='status')Dev.look();Dev.paint();Dev.scrollHint();
   },
   scrollHint:function(){
@@ -157,7 +162,16 @@ var Dev={
     hint.hidden=body.scrollHeight<=body.clientHeight+1;
     hint.textContent=body.scrollTop+body.clientHeight>=body.scrollHeight-1?'↑ 可滚动':'↓ 可滚动';
   },
-  toggleFreeze:function(){DEV.freeze=!DEV.freeze;Dev.refresh();},
+  toggleFreeze:function(){
+    if(!DEV.on||S.screen!=='play'||S.dead||PC.on||PRO.on||UI.chooseOpen||(UI.openPanel&&UI.openPanel!=='pause'))return;
+    var resume=DEV.freeze||PAUSE.on||UI.openPanel==='pause';
+    resetInputState();DEV.freeze=!resume;
+    if(resume){
+      if(PAUSE.on||UI.openPanel==='pause')Game.resume();
+      document.getElementById('cv').focus({preventScroll:true});
+    }else releaseMouseLook();
+    Dev.refresh();updateTouchUI();
+  },
   focusTrap:function(e){
     var panel=document.getElementById('dev');if(!panel)return;
     var all=Array.prototype.slice.call(panel.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex="0"]'));
