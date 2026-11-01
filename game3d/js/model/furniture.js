@@ -89,6 +89,8 @@ FURN.V=function(c,x,y,cx,cz){
     if(g[y-1]&&g[y-1][x+k2]==='#'){ cz+=0.40; break; }
   }
   c.ao(cx,cz,3.9,2.3,1.0);
+  /* 车头的蓝牌：盖在车模型自带的空白牌照上（模型里牌照前面在 x=1.899、高 0.40），号码和钥匙环、调查笔记一致 */
+  c.meshes.push(carPlate(Investigation.carName(x,y),cx+1.9025,0.40,cz));
   c.solid(cx,cz,3.70,1.85);              /* 碰撞按整个车身，不止一格 */
   K.frame(cx,cz,0);
   K.asset('car_sedan',0,0,0,0,{tint:{body:col}});

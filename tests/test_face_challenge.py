@@ -27,6 +27,8 @@ class FaceChallengeTest(BrowserCase):
                 # 答错扣 SAN、换一道没出过的题，进度不变
                 self.assert_js(page, "UI.chooseOpen&&RT.faceQuiz.done===0&&!RT.end")
                 self.assertLess(page.evaluate('S.san'), san)
+                self.assertIn('已通过的题目仍然保留',page.locator('#choices').inner_text())
+                page.locator('#choices button').filter(has_text='继续验证').click()
                 swapped = page.evaluate('RT.faceQuiz.order[0]')
                 self.assertNotEqual(swapped, first)
                 self.assertEqual(len(set(page.evaluate('RT.faceQuiz.order'))), 3)

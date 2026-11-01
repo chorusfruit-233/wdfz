@@ -199,7 +199,7 @@ function useCar(cx,cy){
   if(!hasItem('key')&&S.talent!=='drive'){ os('我：车门锁着。',2.4); return; }
   if(RT.carUsed){ os('我：已经开过一辆了。',2.4); return; }
   if(roamGuardsCar()){
-    kill('你拉开车门，钻进去，摸到钥匙孔。后视镜里，它就站在后座上，弯着腰，脸贴着车顶。','grip');
+    kill('你拉开车门，钻进去，摸到钥匙孔。后视镜里，它就站在后座上，弯着腰，脸贴着车顶。','grip','car_entry');
     return;
   }
   var cell=cx+':'+cy;
@@ -208,9 +208,11 @@ function useCar(cx,cy){
   /* 拧钥匙要一会儿：站着别动，那东西还在车道上 */
   holdJob(1.6,function(){
     if(S.dead) return;
-    if(roamGuardsCar()){ kill('钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip'); return; }
+    if(roamGuardsCar()){ kill('钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip','car_entry'); return; }
     if(cell!==carRightCell()){
       RT.carTried[cell]=1;
+      Investigation.record('vehicle:'+cell,Investigation.carName(cx,cy)+'：已试，钥匙不匹配。','验证','车库');
+      autoSave();
       var n=Object.keys(RT.carTried).length;
       os(pick(['我：钥匙插进去，拧不动。不是这辆。','我：锁孔是对的，钥匙齿不对。下一辆。','我：车门开了一条缝，又自己合上了。不是它。'])+'（试过 '+n+' 辆）',2.6);
       return;
@@ -248,6 +250,18 @@ var FACE_QUESTIONS=[
   {text:'「先天下之忧而忧，后天下之乐而乐」出自哪一篇？',choices:['《岳阳楼记》','《醉翁亭记》','《出师表》'],answer:0},
   {text:'阻值 6 Ω 和 3 Ω 的两个电阻并联，总电阻是多少？',choices:['2 Ω','4.5 Ω','9 Ω'],answer:0}
 ];
+var FACE_EXPLANATIONS=[
+  '分解为 (x−2)(x−3)=0，较大根是 3。',
+  '满足条件的点数有 6 种，共 36 种等可能结果，所以是 1/6。',
+  '第 8 项是 2+(8−1)×3=23。',
+  '配方得到 (x−2)²+3，最小值是 3。',
+  'sin 30° 和 cos 60° 都是 1/2，相加为 1。',
+  '2 的 5 次方是 32，因此结果为 5。',
+  '由 v=gt 得 10×2=20 m/s。',
+  '两个氢加一个氧：2×1+16=18 g/mol。',
+  '这是范仲淹《岳阳楼记》中的句子。',
+  '并联电阻满足 1/R=1/6+1/3=1/2，所以是 2 Ω。'
+];
 var FaceChallenge={
   state:function(){
     var q=RT.faceQuiz;
@@ -276,14 +290,18 @@ var FaceChallenge={
         {label:'暂时留下',fn:function(){}}
       ]);return;
     }
-    var question=FACE_QUESTIONS[q.order[q.done]],opts=question.choices.map(function(label,i){
+    var questionId=q.order[q.done],question=FACE_QUESTIONS[questionId],opts=question.choices.map(function(label,i){
       return {label:label,fn:function(){
         if(i===question.answer){q.done++;autoSave();FaceChallenge.open();return;}
         S.san=Math.max(0,S.san-FACE_WRONG_SAN*dif().san);settleSan();
+        var feedback=FACE_EXPLANATIONS[questionId];
+        Investigation.record('face:'+questionId,feedback,'验证','西小门 · 验证反馈');
         FaceChallenge.swap(q);autoSave();
         if(S.dead)return;
-        os('我：闸机长长地响了一声。屏幕上换了一道题，像是在嫌我慢。',3.2);
-        FaceChallenge.open();
+        UI.choice('验证未通过（SAN −'+(FACE_WRONG_SAN*dif().san)+'）。'+feedback+' 已通过的题目仍然保留。',[
+          {label:'继续验证',fn:function(){FaceChallenge.open();}},
+          {label:'先离开',fn:function(){}}
+        ]);
       }};
     });
     opts.push({label:'暂时离开',fn:function(){}});
@@ -293,7 +311,7 @@ var FaceChallenge={
 function tryTrashRoute(){
   if(S.mode!=='in'||S.room!=='trash1'){ os('我：得先进垃圾房。',2.4); return; }
   addClue('trash');
-  kill('桶盖合上了。外面有人敲了两下，像在确认里面有没有人。','trash');
+  kill('桶盖合上了。外面有人敲了两下，像在确认里面有没有人。','trash','trash');
 }
 function tryBeastRoute(){
   if(!inToiletHere()||S.room!=='teach1'){ os('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
@@ -335,6 +353,15 @@ var DFX_SFX={laugh:'crack',shatter:'crack',grip:'slam',squeeze:'slam',bell:'bell
   deep:'crack',freeze:'blink',voice:'blink',names:'blink',slit:'door',default:'blink'};
 /* 反复死在同一种东西上：优先给可读的线索，而不是降低难度（恐怖计划 P2） */
 var DEATH_LOG_KEY='wdfz3d_deaths';
+var DEATH_SOURCES={
+  patrol:{cause:'巡察者追到了你；灯光与脚步是它进入区域的信号。',hint:'灯按拍子闪时先找遮蔽。被锁定后，背对它站住；当着它的面钻进柜子会被记住。'},
+  garage:{cause:'你与车道上的黑影接触了。',hint:'车库的黑影能被手电持续照射暂时逼退，也会被落地的硬币引开。先观察距离再穿过车道。'},
+  car_entry:{cause:'试车门时，车库黑影仍守在车辆附近。',hint:'拉车门需要原地停留。先照退或引开车道上的黑影，确认车旁安全再拧钥匙。'},
+  car_chase:{cause:'驾驶中的路障、岔路或追兵使这次逃离中断。',hint:'路口前看路牌并提前转向。可以向后拉摇杆或按 S 刹车；长时间停下会让追兵靠近。'},
+  san:{cause:'你的理智已经耗尽；此前的危险与消耗累积到了极限。',hint:'留意呼吸和画面变化。恢复前先离开危险区域，再选择吃饭、药片或其他恢复活动。'},
+  assimilation:{cause:'同化到达了极限。长期按要求坐着也有代价。',hint:'一直留在座位上会逐渐同化。安排离座探索，别只依赖上课恢复。'},
+  trash:{cause:'那个垃圾桶是陷阱，合上的桶盖没有通向外面。',hint:'垃圾桶不能带你逃离学校；找其他有证据支持的办法。'}
+};
 var DEATH_HINTS={
   grip:'灯按拍子闪，是它要来了。先找柜子躲好；已经被它盯上，就背对它站着别动。',
   drown:'雨下大了，就往有顶的地方去：屋檐、柱廊、车棚都行。',
@@ -349,29 +376,35 @@ var DEATH_HINTS={
   trash:'垃圾房里那个桶，不是出口。'
 };
 function deathLogRead(){ try{ return JSON.parse(localStorage.getItem(DEATH_LOG_KEY)||'{}')||{}; }catch(e){ return {}; } }
-function deathLogAdd(fx){
+function deathLogAdd(fx,source){
   var d=deathLogRead(); d.counts=d.counts||{}; d.counts[fx]=(d.counts[fx]||0)+1;
-  d.last=(d.last||[]).concat([{fx:fx,day:S.day,where:S.mode==='in'?S.room:'out'}]).slice(-12);
+  d.sources=d.sources||{};if(source)d.sources[source]=(d.sources[source]||0)+1;
+  d.last=(d.last||[]).concat([{fx:fx,source:source||null,day:S.day,where:S.mode==='in'?S.room:'out'}]).slice(-12);
   try{ localStorage.setItem(DEATH_LOG_KEY,JSON.stringify(d)); }catch(e){}
 }
 /* 死过两次以上、而且有对应线索的死法，最多三条，最近的在前 */
 function deathHints(){
   var d=deathLogRead(), c=d.counts||{}, out=[], seen={}, i;
-  var order=(d.last||[]).slice().reverse().map(function(e){ return e.fx; });
+  var order=(d.last||[]).slice().reverse();
   for(i=0;i<order.length&&out.length<3;i++){
-    var fx=order[i]; if(seen[fx]) continue; seen[fx]=1;
-    if((c[fx]||0)>=2&&DEATH_HINTS[fx]) out.push(DEATH_HINTS[fx]);
+    var entry=order[i],source=entry.source,fx=entry.fx,key=source||fx;
+    if(seen[key])continue;seen[key]=1;
+    if(source&&DEATH_SOURCES[source]){if((d.sources||{})[source]>=2)out.push(DEATH_SOURCES[source].hint);}
+    else if(fx!=='grip'&&(source?(d.sources||{})[source]:c[fx]||0)>=2&&DEATH_HINTS[fx])out.push(DEATH_HINTS[fx]);
   }
   return out;
 }
-function kill(msg,fx){
+function kill(msg,fx,source){
   if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
   if(S.dead||S.death) return;
   if(hasItem('elixir')){ elixirSave(); return; }      /* 不知名药丸：替你死一次 */
   if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
-  try{ deathLogAdd(S.death); }catch(e){}
+  Playtest.event('死亡',source||S.death);
+  try{ deathLogAdd(S.death,source); }catch(e){}
+  var cause=DEATH_SOURCES[source];
+  if(cause)Investigation.record('failure:'+source,cause.cause,'验证','刚才的经历');
   if(typeof Inspection!=='undefined')Inspection.cancel();
   if(typeof Elevator!=='undefined')Elevator.cancel();
   if(typeof CarChase!=='undefined'&&RT.carChase)CarChase.cancel();
@@ -396,6 +429,7 @@ function kill(msg,fx){
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
     var el=document.getElementById('die');
     document.getElementById('diem').textContent=msg;
+    document.getElementById('diecause').textContent=cause?cause.cause:'';
     el.style.display='flex';
     try{ var rv=document.getElementById('dieRevive'); if(rv) rv.style.display=(typeof DEV!=='undefined'&&DEV.on)?'block':'none'; }catch(e){}
   }
@@ -469,6 +503,7 @@ function triggerEnding(id,skipCut){
   if(S.screen==='cut'||S.screen==='end') return;
   if(id==='trash'){tryTrashRoute();return;}
   RT.end=id;
+  Playtest.event('结局',id);
   var e=ENDINGS[id];
   endMark(id);
   if(!e.fake) clearSave();                    /* 假结局之后还能接着玩 */
@@ -481,9 +516,13 @@ function showEndingCard(id){
   /* 结局卡：样式在 game.css（#ends），和死亡、暂停同一套档案式界面 */
   var tag=e.fake?'<div class="etag fake">假 结 局</div>':(e.true?'<div class="etag">真 结 局</div>':'');
   var more=e.fake?'<button type="button" class="ewake" onclick="fakeWake()">……再睁开眼</button>':'';
+  var echo='';
+  if(id==='car'&&Investigation.state().entries.parking)echo='你想起停车登记上空着的离校栏。这一次，车没有回到原来的车位。';
+  if(id==='face'&&RT.data)echo='闸机认出了那张照片。你离开了，但那个名字仍属于学校。';
+  if(id==='portal'&&RT.portalDiary)echo='日记里的人一直在寻找校门。你终于明白，图纸画的是另一道边界。';
   var html='<div id="ends">'+tag+
     '<div class="et">'+e.t+'</div>'+
-    '<div class="el">'+e.l.join('<br>')+'</div>'+
+    '<div class="el">'+e.l.join('<br>')+(echo?'<br><br>'+echo:'')+'</div>'+
     '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+more+
     '<button type="button" class="equit" onclick="Game.quit()">回到主菜单</button></div>';
   var d=document.createElement('div');

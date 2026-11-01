@@ -623,7 +623,7 @@ function anHurt(msg,loss,opt){
     try{ SFX.sting&&SFX.sting(); }catch(e){}
   }
   os(msg,4.4);
-  if(S.san<=0&&!S.dead){ kill('你一直撑着的那根弦，断了。','vignette'); return; }
+  if(S.san<=0&&!S.dead){ kill('你一直撑着的那根弦，断了。','vignette','san'); return; }
   if(!opt.keep) anEnd();
 }
 /* 能躲雨的地方：屋里、柱廊下、车棚、连廊下 */
@@ -693,7 +693,7 @@ function turnSmileTick(dt,d){
 }
 function anKill(msg,fx){
   var f=fx||DFX_MAP[AN.id]||'vignette';
-  kill(msg,f);
+  kill(msg,f,'an:'+AN.id);
 }
 
 function anDrive(dt){

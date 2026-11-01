@@ -100,6 +100,7 @@ function useItem(id){
   var nm=ITEMS[id]?ITEMS[id].n:id;
   if(ITEM_USE.hasOwnProperty(id)){ ITEM_USE[id](id,nm); return; }
   if(ITEM_READ[id]){
+    if(id==='key'){os('我：钥匙环刻着「'+Investigation.carKey()+'」。要去车位前核对。',4,OS_KEEP);return;}
     os('我：'+nm+'。'+ITEMS[id].d,3.0);
     toast(nm+(hasItem('notebook')&&hasItem('pen')?' · 线索会写进本子':''));
     return;
@@ -194,7 +195,7 @@ function mealNow(){ return MEALS.some(function(m){ return S.tsec>=m[0]&&S.tsec<m
 function canteenWindow(){
   if(!hasItem('coin')){ os('我：窗口里的人头也不抬：「饭点过了。要吃，拿钱来。」',3.2); return; }
   UI.choice('窗口里还剩一点饭菜。「一个硬币一份。」',[
-    {label:'投一枚硬币买饭（SAN +24）',fn:function(){
+    {label:'投一枚硬币买饭（SAN +24，游戏时间 10 分钟）',fn:function(){
       UI.closeChoice(); removeItem('coin');
       S.san=Math.min(100,S.san+24); restoreStamina(30);
       advanceGameTime(10);

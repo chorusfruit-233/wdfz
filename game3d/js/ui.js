@@ -47,7 +47,7 @@ UI.open=function(id){
   UI.openPanel=id;
   if(JOURNAL_TABS[id]){
     UI.lastTab=id;
-    var jr=document.getElementById('journal'); if(jr) jr.style.display='flex';
+    var jr=document.getElementById('journal'); if(jr){jr.style.display='flex';jr.classList.toggle('map-open',id==='mapv');}
     var tabs=document.querySelectorAll('#journal .jtabs button');
     for(var i=0;i<tabs.length;i++){ var on=tabs[i].getAttribute('data-tab')===id; tabs[i].classList.toggle('on',on); tabs[i].setAttribute('aria-selected',String(on)); }
     el.style.display='block';
@@ -57,7 +57,7 @@ UI.open=function(id){
   if(id==='bag') UI.renderBag();
   if(id==='note') UI.renderNote();
   if(id==='think') UI.renderThink();
-  if(id==='mapv') UI.renderMap();
+  if(id==='mapv'){if(previous!=='mapv')ExplorationMap.selected=null;UI.renderMap();}
   updateTouchUI();
 };
 UI.close=function(id,resume){
@@ -234,18 +234,14 @@ UI.renderHot=function(){
   }
 };
 UI.renderNote=function(){
-  var h='';
+  var h=Investigation.render();
   var ideas=ideasAvailable();
   function sec(t){ h+='<h3>'+t+'</h3>'; }
   function li(t,cls){ h+='<div class="nl'+(cls?' '+cls:'')+'">'+t+'</div>'; }
-  sec('目标');
-  li('找到一条离开学校的路。在理智耗尽之前。','goal');
-  sec('想到的办法');
-  if(!ideas.length) li('（一条都没有。得先走过那些地方。）','dim');
+  if(ideas.length)sec('想到的办法');
   for(var i=0;i<ideas.length;i++) li(ideas[i].n);
-  sec('注意到的事');
-  var any=false;
-  for(var k in S.spots){ li(kLabel(k)); any=true; }
+  var other=[];
+  for(var k in S.spots)other.push(kLabel(k));
   var CLUE_NOTE=[
     ['lesson','课桌上的字会变。上课时可以低头看一看，但别忘了抬头。'],
     ['roomkey','网络中心的门锁着 —— 钥匙可能在行政楼五楼的校长办公室。'],
@@ -258,9 +254,9 @@ UI.renderNote=function(){
     ['bell','钟楼的钟是哑的。可它和十三下钟声有关系。']
   ], ci;
   for(ci=0;ci<CLUE_NOTE.length;ci++){
-    if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0])){ li(CLUE_NOTE[ci][1]); any=true; }
+    if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0]))other.push(CLUE_NOTE[ci][1]);
   }
-  if(!any) li('（还没注意到什么。）','dim');
+  if(other.length){sec('其他地点与线索');other.forEach(function(t){li(t);});}
   var dh=(typeof deathHints==='function')?deathHints():[];
   if(dh.length){ sec('梦里记得的事'); for(var di=0;di<dh.length;di++) li(dh[di]); }
   if(!hasItem('notebook')||!hasItem('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';
@@ -294,6 +290,7 @@ function mapLabel(c,txt,x,y,cw,ch){
   c.fillText(txt,clamp(x,3,cw-w-3),clamp(y,13,ch-4));
 }
 UI.renderMap=function(){
+  if(ExplorationMap.render())return;
   var el=document.getElementById('mapc');
   var bw=BOUND.x1-BOUND.x0, bh=BOUND.y1-BOUND.y0;
   /* 按手册内容区的实际大小铺满（以前固定取窗口的 60% × 76%） */

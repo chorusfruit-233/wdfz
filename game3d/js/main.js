@@ -2,6 +2,8 @@
 'use strict';
 
 function onEnterRoom(id,restoring){
+  ExplorationMap.observe();
+  Playtest.event(restoring?'读档进入':'进入地点',id);
   if(id==='garage1') os('我：车库里没有灯。空气是潮的，有一股铁和机油的味道。远处有水在滴。',3.6);
   if(id==='portal_tunnel') os('我：不想靠近。墙上的黑色黏液还在缓慢流动。',4.5,OS_FORCE);
   try{ Dread.enter(id,restoring); }catch(e){}
@@ -14,6 +16,7 @@ function frame(t){
   if(!running) { lastT=t; return; }
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
+  Playtest.frame(dt);
   QualityWatch.tick(dtG,S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!(DEV.on&&DEV.freeze)&&!document.hidden);
   /* 允许一秒内的慢帧按真实时间补齐固定步；更长的卡顿仍有上限，避免恢复时跑出大量积压。 */
   accum+=Math.min(dt,1);
@@ -38,8 +41,10 @@ function update(dt){
     return;
   }
   if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
+  Playtest.simulation(dt);
   if(CarChase.active()){clockTick(dt);CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
+  ExplorationMap.tick(dt);
   if(Elevator.inRide()){
     if(S.room!=='lift_dream')clockTick(dt);
     Elevator.tick(dt);settleSan();return;
@@ -193,6 +198,8 @@ function clearIntroTimers(){
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
 function freshState(diff){
+  ExplorationMap.clear();
+  document.getElementById('notequery').value='';
   try{ Dread.reset(); }catch(e){}
   if(typeof CarChase!=='undefined')CarChase.clearVisual();
   if(typeof Inspection!=='undefined')Inspection.clearFx();
@@ -255,6 +262,7 @@ var Game={
     if(waitForGameAssets(function(){Game.start(diff);}))return;
     try{
     freshState(diff);
+    Playtest.event('开始新局',diff);
     var R1=INTERIORS['teach1'];
     /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */
     S.mode='in'; S.room='teach1'; S.x=R1.ox+48.5*9; S.y=R1.oy+6.5*9; S.seated=true;
@@ -315,9 +323,11 @@ var Game={
     if(pk) pk.innerHTML=IS_TOUCH?
       '<span>左下摇杆</span>移动（推到底就是跑）<span>右侧滑动</span>环视<span>交互键</span>上面写着能做的事<span>手册</span>背包 · 思索 · 笔记 · 地图':
       '<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>移动<span><kbd>Shift</kbd></span>奔跑<span><kbd>E</kbd></span>交互<span><kbd>F</kbd></span>手电'+
-      '<span><kbd>1</kbd><kbd>2</kbd></span>快捷栏<span><kbd>G</kbd></span>丢弃选中<span><kbd>Tab</kbd></span>背包<span><kbd>H</kbd></span>思索<span><kbd>J</kbd></span>笔记<span><kbd>M</kbd></span>地图';
+      '<span><kbd>1</kbd><kbd>2</kbd></span>快捷栏<span><kbd>G</kbd></span>丢弃选中<span><kbd>Tab</kbd></span>背包<span><kbd>H</kbd></span>思索<span><kbd>J</kbd></span>笔记<span><kbd>M</kbd></span>地图'+
+      '<span><kbd>Alt</kbd></span>放出鼠标，游戏不暂停；点画面收回';
     if(pk&&CarChase.active())pk.textContent=IS_TOUCH?'驾驶：摇杆向前加速、左右转向、向后刹车。':'驾驶：W / ↑ 加速，A D / ← → 转向，S / ↓ 刹车。';
     document.body.classList.add('paused');
+    try{ Playtest.paint(); }catch(e){}
     UI.open('pause');
   },
   pauseToggle:function(){

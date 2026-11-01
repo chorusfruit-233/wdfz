@@ -141,6 +141,7 @@ function saveGame(){
 /* 把存档里的数据写回游戏状态（调用前先 freshState） */
 function applySave(d){
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
+  Investigation.migrate();
 }
 function loadGame(){
   try{
