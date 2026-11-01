@@ -1,0 +1,40 @@
+{
+  "title": "武大附中 · 里世界",
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "acts": [
+    {"id": "day1", "name": "第一天：一切正常（白天）"},
+    {"id": "day2", "name": "第二天：同样的机位，开始不对劲（黄昏）"},
+    {"id": "day3", "name": "第三天：异象（夜里）"},
+    {"id": "rules", "name": "规则与出路"},
+    {"id": "end", "name": "死法闪切、片名、尾声"}
+  ],
+  "shots": [
+    {"id": "d1card", "act": "day1", "dur": 3.0, "card": "第一天"},
+    {"id": "d1gate", "act": "day1", "dur": 4.0, "loc": "武汉大学附属中学", "note": "北门"},
+    {"id": "d1class", "act": "day1", "dur": 4.5, "loc": "高二（六）班", "note": "你的座位在这里"},
+    {"id": "d1hall", "act": "day1", "dur": 3.5, "loc": "教学楼一楼", "note": "走廊"},
+    {"id": "d1cup", "act": "day1", "dur": 3.5, "loc": "教学楼", "note": "四楼窗台上有一只杯子"},
+    {"id": "d2card", "act": "day2", "dur": 2.0, "card": "第二天"},
+    {"id": "d2gate", "act": "day2", "dur": 3.0},
+    {"id": "d2class", "act": "day2", "dur": 3.5},
+    {"id": "d2hall", "act": "day2", "dur": 3.5},
+    {"id": "d2cup", "act": "day2", "dur": 4.5},
+    {"id": "d3card", "act": "day3", "dur": 2.4, "card": "第三天", "glitch": "第一天"},
+    {"id": "rain", "act": "day3", "dur": 3.2, "stamp": "异象", "text": "下不完的雨"},
+    {"id": "moth", "act": "day3", "dur": 3.0, "stamp": "异象", "text": "蛾群"},
+    {"id": "bell", "act": "day3", "dur": 3.2, "stamp": "异象", "text": "钟敲十三下"},
+    {"id": "garage", "act": "day3", "dur": 3.5, "loc": "地下车库", "note": "十六辆车，只有一辆能开"},
+    {"id": "patrol", "act": "day3", "dur": 4.4, "stamp": "巡察者", "text": "灯一红，它就来了"},
+    {"id": "locker", "act": "day3", "dur": 3.8, "caption": "躲进柜子。别出声。"},
+    {"id": "rule", "act": "rules", "dur": 3.2, "lines": ["规则只有一条：", "活过今天。"]},
+    {"id": "slip", "act": "rules", "dur": 3.2, "caption": "线索，都留在学校里。"},
+    {"id": "car", "act": "rules", "dur": 4.2, "caption": "开车冲出去，"},
+    {"id": "face", "act": "rules", "dur": 4.0, "caption": "让闸机认出你，"},
+    {"id": "portal", "act": "rules", "dur": 4.0, "caption": "或者，造一扇门。"},
+    {"id": "deaths", "act": "end", "dur": 5.0, "clips": ["follow", "laugh", "floor", "grip"]},
+    {"id": "title", "act": "end", "dur": 7.0, "lines": ["武大附中 · 里世界"], "sub": "每一天，都和昨天一样。"},
+    {"id": "tag", "act": "end", "dur": 3.6, "lines": ["……你作业交了吗？"]}
+  ]
+}
