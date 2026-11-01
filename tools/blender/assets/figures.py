@@ -372,17 +372,5 @@ def pat_gear(A):
     A.box(M, (hxr + 0.062, hyr + 0.29, 0.06), (0.012, 0.03, 0.09), 0x50565a, 1.0, bev=0.003, name='clip', proxy=False)
 
 
-@asset('cup_tsinghua', ao=0.3, ground=False)
-def cup_tsinghua(A):
-    """清华紫的保温杯：银色杯底、紫色杯身（腰身微收）、一圈白色字带（细细的几道字划）、银色杯口圈、杯盖和盖顶。"""
-    n = 20
-    A.lathe(M, (0, 0, 0), [(0.0, 0.0), (0.038, 0.0), (0.041, 0.004), (0.041, 0.012)], 0xb8bec4, 1.1, seg=n, name='base')
-    A.lathe(M, (0, 0, 0), [(0.042, 0.012), (0.044, 0.05), (0.043, 0.10), (0.044, 0.17), (0.044, 0.182)], 0x5b2a86, 1.0, seg=n, cap0=False, cap1=False, name='body')
-    A.cyl(M, (0, 0.11, 0), 0.0448, 0.0448, 0.032, 0xf2eee6, 1.05, seg=n, caps=False, name='band')
-    if not A.lo:
-        for k in range(8):
-            a = -0.5 + k * 0.14
-            A.box(M, (math.sin(a) * 0.0452, 0.126, math.cos(a) * 0.0452), (0.006, 0.014, 0.001), 0x5b2a86, 1.0, rot=(0, a, 0), name='glyph', proxy=False)
-    A.cyl(M, (0, 0.182, 0), 0.045, 0.045, 0.012, 0xb8bec4, 1.15, seg=n, caps=False, name='rim')
-    A.lathe(M, (0, 0.194, 0), [(0.044, 0.0), (0.044, 0.035), (0.04, 0.045), (0.0, 0.045)], 0x4a2270, 0.95, seg=n, name='lid')
-    A.cyl(M, (0, 0.239, 0), 0.026, 0.024, 0.012, 0xb8bec4, 1.1, seg=n, round_=0.003, name='lid_top')
+# 清华水杯（cup_tsinghua）已改在游戏里建模：game3d/js/fx/cup.js。按实物是白色杯身上一整圈油画（二校门、松树、金边、「清華」），
+# 要一张专用的画布贴图和按圆周展开的 u/v，模型包的格式不带这些；旧的紫色保温杯在下次重新打包时从包里去掉。

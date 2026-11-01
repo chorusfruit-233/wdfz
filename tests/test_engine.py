@@ -79,6 +79,42 @@ class EngineTest(BrowserCase):
                 self.assert_js(page, 'NC.list[0].children[0].geometry.attributes.position.count>oldFigure.attributes.position.count')
         self.assert_js(page, 'NC.list[0].children[0].geometry===oldFigure')
 
+    def test_cup_quality_switch_updates_texture_without_restarting_effects(self):
+        for scene in ('anomaly', 'trace', 'death_preview'):
+            with self.subTest(scene=scene):
+                page = self.page()
+                page.evaluate("""kind => {
+                  S.x=560*SC;S.y=857*SC;enterWorldOut();
+                  if(kind==='anomaly'){
+                    AN.pre='cup';AN.locked=true;anStart();anTick(.1);anfxUpdate(.1);
+                  }else if(kind==='trace'){
+                    RT.traces=[{k:'cup',room:null,x:S.x,y:S.y}];tracesBuild(true);
+                  }else{
+                    deathFX('floor',{preview:true});anfxUpdate(1.8);
+                  }
+                  window.cupMeshes=[];
+                  GLR.scene.traverse(o=>{if(o.geometry&&o.geometry.userData.cupPart)cupMeshes.push(o);});
+                  window.cupSnapshot=()=>JSON.stringify([AN,ANFX.t,RT.traces,
+                    cupMeshes.map(o=>[o.uuid,o.parent.uuid,o.position.toArray(),o.quaternion.toArray(),o.scale.toArray(),o.visible])]);
+                  window.cupBefore=cupSnapshot();
+                  window.cupVertices=cupMeshes.reduce((n,o)=>n+o.geometry.attributes.position.count,0);
+                  window.cupDisposed=0;
+                  new Set(cupMeshes.map(o=>o.material)).forEach(m=>m.addEventListener('dispose',()=>cupDisposed++));
+                  window.cupPaints=()=>cupMeshes.filter(o=>o.material.map);
+                }""", scene)
+                self.assert_js(page, "cupPaints().length===1&&cupPaints()[0].material.map.image.width===512")
+                for quality, width in ((3, 1024), (0, 512)):
+                    self.set_quality(page, quality)
+                    self.assertEqual(page.evaluate('cupPaints()[0].material.map.image.width'), width)
+                    self.assert_js(page, 'cupSnapshot()===cupBefore&&cupDisposed===0')
+                    vertices = page.evaluate('cupMeshes.reduce((n,o)=>n+o.geometry.attributes.position.count,0)')
+                    original = page.evaluate('cupVertices')
+                    if quality == 3:
+                        self.assertGreater(vertices, original)
+                    else:
+                        self.assertEqual(vertices, original)
+                    page.evaluate('render(0)')
+
     def test_outdoor_collision_is_identical_at_all_four_qualities(self):
         page = self.page()
         page.evaluate("""S.mode='out';S.room=null;enterWorldOut();window.colliders=JSON.stringify(OUT_SOLID);
