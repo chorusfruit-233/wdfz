@@ -48,16 +48,33 @@ def encode(directory, audio):
 def validate_success(result):
     """Do not publish an incomplete run, a fake ending, or a debug-assisted run."""
     state, checks = result.get('state', {}), result.get('runtime_checks', {})
-    if (not state.get('finished') or state.get('failed') or state.get('dead')
-            or state.get('screen') != 'end' or state.get('ending') != 'car'
+    route = result.get('settings', {}).get('route', 'car')
+    if (route not in ('car', 'face', 'portal') or not state.get('finished') or state.get('failed') or state.get('dead')
+            or state.get('screen') != 'end' or state.get('ending') != route
             or result.get('error') or result.get('page_errors')):
-        raise ValueError('未完成无页面错误的汽车通关')
+        raise ValueError('未完成无页面错误的指定真结局')
     if any(checks.get(k) is not False for k in ('devOpen', 'godMode', 'fastMovement')):
         raise ValueError('调试功能被启用或未能验证')
     if checks.get('searchEnabled') is not True or checks.get('cutscenesEnabled') is not True:
         raise ValueError('搜查或过场演出被跳过')
-    if not any(s.get('chase') and s['chase'].get('distance', 0) > 250 for s in result.get('observations', [])):
+    if route == 'car' and not any(s.get('chase') and s['chase'].get('distance', 0) > 250 for s in result.get('observations', [])):
         raise ValueError('缺少实际驾驶过程')
+    if route != 'car':
+        milestones = [e['detail'] for e in result.get('events', []) if e.get('kind') == 'milestone']
+        needed = (['whitelistWritten', 'whitelistSynced', 'whitelistVerified'] if route == 'face' else
+                  ['portalDiary', 'blueprint2', 'blueprint4', 'blueprintsComplete', 'portalAssembled'])
+        if [m for m in milestones if m in needed] != needed:
+            raise ValueError('缺少按顺序完成的路线过程')
+        progress = state.get('progress', {})
+        if route == 'face' and not (progress.get('hacked') and progress.get('data') and progress.get('quiz') == 3):
+            raise ValueError('白名单身份或验证不完整')
+        if route == 'portal':
+            if not (progress.get('diary') and progress.get('sketch') and progress.get('portalOpen')
+                    and set(progress.get('blueprints', [])) == {'2', '4', '5'}):
+                raise ValueError('造门调查未完成')
+            if not any(e.get('kind') == 'materials' and set(e.get('detail', [])) == {'coil', 'lens', 'vial', 'battery'}
+                       for e in result.get('events', [])):
+                raise ValueError('缺少实际装配材料')
 
 
 def main():
@@ -65,6 +82,7 @@ def main():
     ap.add_argument('--out', type=Path, default=ROOT / 'video/build/playthrough')
     ap.add_argument('--timeout', type=int, default=1200)
     ap.add_argument('--quality', type=int, choices=range(5), default=0, help='游戏内画质档位（0–4）')
+    ap.add_argument('--route', choices=('car', 'face', 'portal'), default='car', help='汽车 / 白名单 / 造门真结局')
     ap.add_argument('--gpu', action='store_true', help='使用浏览器默认 GPU 后端，代替软件渲染')
     ap.add_argument('--no-video', action='store_true', help='验证路线，仅生成日志和末帧')
     args = ap.parse_args()
@@ -79,8 +97,9 @@ def main():
     result['source_dirty'] = bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip())
     result['settings'] = {'quality': args.quality, 'difficulty': 'easy', 'viewport': [960, 540],
                           'automated_inputs': True, 'reads_map_and_state': True, 'speed': 1,
-                          'fresh_browser_profile': True, 'route': 'car', 'software_renderer': not args.gpu}
-    for filename in ('playthrough.js', 'playthrough.py', 'game-audio.js', 'capture.py', 'example.py', 'playthrough.html'):
+                          'fresh_browser_profile': True, 'route': args.route, 'software_renderer': not args.gpu,
+                          'controls': 'touch_joystick_and_look_with_keyboard_actions'}
+    for filename in ('navigation.js', 'playthrough.js', 'playthrough.py', 'game-audio.js', 'capture.py', 'example.py', 'playthrough.html'):
         result.setdefault('generator_sha256', {})[filename] = hashlib.sha256((ROOT / 'video' / filename).read_bytes()).hexdigest()
     with game_server() as url, sync_playwright() as pw:
         browser = launch_browser(pw, software=not args.gpu)
@@ -100,8 +119,9 @@ def main():
             page.wait_for_timeout(2000)
             page.locator("button[onclick=\"Game.start('easy')\"]").click()
             page.wait_for_function("S.screen==='play'", timeout=60000)
+            page.add_script_tag(path=str(ROOT / 'video/navigation.js'))
             page.add_script_tag(path=str(ROOT / 'video/playthrough.js'))
-            page.evaluate('Pilot.start()')
+            page.evaluate('(route)=>Pilot.start(route)', args.route)
             deadline = time.monotonic() + args.timeout
             while time.monotonic() < deadline:
                 page.wait_for_timeout(1000)

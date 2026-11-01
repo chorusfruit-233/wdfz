@@ -56,7 +56,7 @@ class PlaythroughOutputTest(unittest.TestCase):
     def test_invalid_options_do_not_create_output(self):
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / 'new'
-            for arguments in (['--timeout', '0'], ['--quality', '-1']):
+            for arguments in (['--timeout', '0'], ['--quality', '-1'], ['--route', 'trash']):
                 proc = subprocess.run([sys.executable, 'video/playthrough.py', '--out', str(output), *arguments],
                                       cwd=ROOT, capture_output=True, text=True, timeout=20)
                 self.assertNotEqual(proc.returncode, 0)
@@ -112,6 +112,41 @@ class PlaythroughOutputTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'SHA-256'):
                 package_example(folder, {'video': {'sha256': '0' * 64}})
             self.assertFalse((folder / 'index.html').exists())
+
+    def test_other_endings_require_their_actual_ordered_route(self):
+        base = {'state': {'finished': True, 'dead': False, 'screen': 'end'},
+                'runtime_checks': {'devOpen': False, 'godMode': False, 'fastMovement': False,
+                                   'searchEnabled': True, 'cutscenesEnabled': True}}
+        routes = {
+            'face': ({'hacked': True, 'data': True, 'quiz': 3},
+                     ['whitelistWritten', 'whitelistSynced', 'whitelistVerified']),
+            'portal': ({'diary': True, 'blueprints': ['2', '4', '5'], 'sketch': True, 'portalOpen': True},
+                       ['portalDiary', 'blueprint2', 'blueprint4', 'blueprintsComplete', 'portalAssembled'])}
+        for route, (progress, milestones) in routes.items():
+            result = deepcopy(base)
+            result['settings'] = {'route': route}
+            result['state'].update(ending=route, progress=progress)
+            result['events'] = [{'kind': 'milestone', 'detail': m} for m in milestones]
+            result['events'].append({'kind': 'materials', 'detail': ['coil', 'lens', 'vial', 'battery']})
+            playthrough.validate_success(result)
+            for events in (result['events'][1:], list(reversed(result['events']))):
+                wrong = deepcopy(result)
+                wrong['events'] = events
+                with self.assertRaisesRegex(ValueError, '路线过程'):
+                    playthrough.validate_success(wrong)
+            wrong = deepcopy(result)
+            wrong['state']['ending'] = 'car'
+            with self.assertRaises(ValueError):
+                playthrough.validate_success(wrong)
+            wrong = deepcopy(result)
+            wrong['state']['progress'] = {}
+            with self.assertRaises(ValueError):
+                playthrough.validate_success(wrong)
+            if route == 'portal':
+                wrong = deepcopy(result)
+                wrong['events'].pop()
+                with self.assertRaisesRegex(ValueError, '材料'):
+                    playthrough.validate_success(wrong)
 
 
 if __name__ == '__main__':
