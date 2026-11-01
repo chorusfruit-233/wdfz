@@ -178,7 +178,7 @@ function dropSelected(){
   }
 }
 function inBeastWindow(){ return S.tsec>=BEAST_T0&&S.tsec<BEAST_T1; }
-function hasClock(){ return S.talent==='watch'||hasItem('watch'); }
+function hasClock(){ return Talent.capability('clock').ok; }
 
 function addClue(id){
   if(!S.clues[id]) S.clues[id]=S.day;

@@ -48,6 +48,14 @@ class BrowserCase(unittest.TestCase):
             context.close()
         self.assertEqual(self.errors, [], 'Unexpected page errors')
 
+    @staticmethod
+    def start_from_menu(page, index=0, touch=False):
+        """主菜单点难度 → 选第一项天赋 → 开始（新局要先选天赋）。"""
+        act = (lambda loc: loc.tap()) if touch else (lambda loc: loc.click())
+        act(page.locator('#menu .mcard').nth(index))
+        act(page.locator('#tpcards .tpcard').first)
+        act(page.locator('#tpGo'))
+
     def page(self, touch=False, hybrid=False):
         context = self.browser.new_context(
             viewport={'width': 390, 'height': 844} if touch else {'width': 1000, 'height': 700},

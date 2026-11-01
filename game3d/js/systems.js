@@ -374,7 +374,7 @@ function roamTick(dt){
 var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30},tunnel:{san:0.60}};
 function dangerTick(dt){
   var dg=dangerAt(); if(!dg) return;
-  var k=(S.talent==='night'&&(dg==='night'||dg==='garage'))?0.55:1;
+  var k=(dg==='night'||dg==='garage')?Talent.modifier('danger.'+dg):1;   /* 暗处适应：只管车库和夜里室外的环境消耗 */
   S.san-=dt*DANGER[dg].san*k;
   if(!S.dangerSeen) S.dangerSeen={};
   if(!S.dangerSeen[dg]){

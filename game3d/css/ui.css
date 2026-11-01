@@ -482,3 +482,36 @@ body.touch #sub{font-size:calc(15px * var(--read-scale))}
 .playtest-tools textarea::placeholder{color:var(--ui-faint)}
 .playtest-tools textarea:focus{outline:none;border-color:var(--ui-acc)}
 .playtest-tools .pt-note{width:100%;margin-top:8px}
+
+/* ---------- 新局：选天赋（《天赋系统重构》5.1） ---------- */
+#tpick{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;overflow-y:auto;
+  padding:calc(18px + var(--st)) calc(14px + var(--sr)) calc(18px + var(--sb)) calc(14px + var(--sl));background:rgba(3,2,2,.86);font-family:var(--ui-font);color:var(--ui-text)}
+#tpick[hidden]{display:none}
+.tpbox{width:min(980px,100%);margin:auto;padding:22px 22px 18px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:var(--ui-r);
+  outline:1px solid rgba(221,213,196,.06);outline-offset:-7px;box-shadow:0 24px 70px rgba(0,0,0,.72)}
+.tphead{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--ui-line)}
+.tphead b{font:400 20px var(--ui-serif);letter-spacing:6px;color:#f1eadc}
+.tphead i{font-style:normal;font-size:12px;letter-spacing:2px;color:#e0857a;border:1px solid rgba(214,93,82,.6);padding:0 6px;border-radius:2px}
+.tplead{margin:10px 0 14px;font-size:12px;letter-spacing:1px;color:var(--ui-dim)}
+.tpcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.tpcard{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:44px;padding:12px 14px;text-align:left;cursor:pointer;
+  font:13px/1.7 var(--ui-font);color:var(--ui-text);background:rgba(221,213,196,.03);border:1px solid var(--ui-line);border-left:2px solid var(--ui-line2);border-radius:2px}
+.tpcard:hover{border-color:var(--ui-line2);background:rgba(221,213,196,.06)}
+.tpcard.on{border-color:var(--ui-acc);border-left-color:var(--ui-acc);background:var(--ui-acc-bg)}
+.tpcard b{font:400 16px var(--ui-serif);letter-spacing:3px;color:#f1eadc}
+.tpcard b small{margin-left:6px;font:11px var(--ui-font);letter-spacing:0;color:var(--ui-faint)}
+.tpcard em{font-style:normal;font-size:12px;color:var(--ui-dim)}
+.tpcard .tpdo{color:var(--ui-text)}
+.tpcard .tplim{font-size:12px;color:#cdb98d}
+.tpcard .tplim small{margin-right:8px;font-size:11px;letter-spacing:2px;color:var(--ui-faint)}
+.tptags{display:flex;flex-wrap:wrap;gap:6px}
+.tptags i{font-style:normal;font-size:11px;letter-spacing:1px;padding:0 6px;color:var(--ui-dim);border:1px solid var(--ui-line);border-radius:2px}
+.tpfoot{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:16px}
+.tpfoot button{min-height:44px;padding:8px 18px;font:14px var(--ui-font);letter-spacing:2px;color:var(--ui-text);cursor:pointer;background:rgba(221,213,196,.03);border:1px solid var(--ui-line);border-radius:2px}
+.tpfoot button.primary{background:var(--seal-bg);border-color:rgba(181,51,47,.75);color:#f3e2d8}
+.tpfoot button:disabled{opacity:.45;cursor:default}
+#notein .nl.talent-note{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:1px solid var(--ui-line);border-left:2px solid var(--ui-acc)}
+#notein .nl.talent-note::before{display:none}
+#notein .talent-note b{font:400 15px var(--ui-serif);letter-spacing:3px;color:#f1eadc}
+#notein .talent-note b small{margin-left:10px;font:12px var(--ui-font);letter-spacing:1px;color:#e0857a}
+#notein .talent-note em{font-style:normal;font-size:12px;color:#cdb98d}

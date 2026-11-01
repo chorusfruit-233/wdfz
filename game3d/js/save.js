@@ -38,18 +38,18 @@ var SAVE_SCHEMA=[
     }
   },
   { /* 天赋免疫、课表违规的计时与档位 */
-    save:function(d){ d.immuneUsed=!!S.immuneUsed; d.tt=S.tt; d.ttTier=S.ttTier; },
-    load:function(d){ S.immuneUsed=!!d.immuneUsed; S.tt=saveNum(d.tt,0,100); S.ttTier=d.ttTier||0; }
+    save:function(d){ d.immuneUsed=!!S.immuneUsed; d.tt=S.tt; d.ttTier=S.ttTier; },          /* immuneUsed 只为旧版本读档保留，从 talentState 派生 */
+    load:function(d){ S.tt=saveNum(d.tt,0,100); S.ttTier=d.ttTier||0; }
   },
   { /* 考试模式 */
     save:function(d){ d.exam=!!S.exam; d.examCur=S.examCur; d.examSeat=S.examSeat||0; d.examTot=S.examTot||0; },
     load:function(d){ S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0; }
   },
   { /* 背包、快捷栏、天赋、搜过的地方、线索、坐着没有 */
-    save:function(d){ d.bag=S.bag; d.hot=S.hot; d.talent=S.talent; d.spots=S.spots; d.clues=S.clues; d.seated=S.seated; },
+    save:function(d){ d.bag=S.bag; d.hot=S.hot; d.talent=Talent.id(); d.talentState=Talent.serialize(); d.spots=S.spots; d.clues=S.clues; d.seated=S.seated; },
     load:function(d){
       S.bag=d.bag||[]; S.hot=d.hot||[null,null];
-      S.talent=d.talent||S.talent; S.spots=d.spots||{}; S.clues=d.clues||{};
+      Talent.normalizeSaved(d); S.spots=d.spots||{}; S.clues=d.clues||{};       /* 天赋 ID 校验与迁移：未知 / 缺失 → 没有天赋，不沿用读档前的值 */
       S.seated=!!d.seated;
     }
   },

@@ -181,7 +181,7 @@ function trapWhere(route){
   return (out&&mx>BOUND.x1-70)?null:'我：得先走到东边的围墙底下。';
 }
 function tryCarRoute(){
-  if(!hasItem('key')&&S.talent!=='drive'){ os('我：我没有钥匙。',2.6); return; }
+  if(!Talent.capability('car').ok){ os('我：我没有钥匙。',2.6); return; }
   if(S.mode!=='in'||S.room!=='garage1'){ os('我：得先下到车库去。',2.6); return; }
   os('我：牌号对得上的那两辆，油表不是零。',4);
 }
@@ -197,7 +197,8 @@ function carRightCell(){
   return RT.carRight;
 }
 function useCar(cx,cy){
-  if(!hasItem('key')&&S.talent!=='drive'){ os('我：车门锁着。',2.4); return; }
+  var cap=Talent.capability('car');
+  if(!cap.ok){ os('我：车门锁着。',2.4); return; }
   if(RT.carUsed){ os('我：已经开过一辆了。',2.4); return; }
   if(roamGuardsCar()){
     kill('你拉开车门，钻进去，摸到钥匙孔。后视镜里，它就站在后座上，弯着腰，脸贴着车顶。','grip','car_entry');
@@ -206,21 +207,23 @@ function useCar(cx,cy){
   var cell=cx+':'+cy;
   RT.carTried=RT.carTried||{};
   if(RT.carTried[cell]){ os('我：这辆试过了。不是它。',1.8); return; }
-  /* 拧钥匙要一会儿：站着别动，那东西还在车道上 */
-  holdJob(1.6,function(){
+  /* 拧钥匙要一会儿：站着别动，那东西还在车道上。搭线（车感好、没钥匙）要更久 */
+  var wire=cap.via==='hotwire';
+  holdJob(cap.sec,function(){
     if(S.dead) return;
-    if(roamGuardsCar()){ kill('钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip','car_entry'); return; }
+    if(roamGuardsCar()){ kill(wire?'我还蹲在方向盘底下捏着两根线，车窗上就贴上来一张脸。':'钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip','car_entry'); return; }
     if(cell!==carRightCell()){
       RT.carTried[cell]=1;
-      Investigation.record('vehicle:'+cell,Investigation.carName(cx,cy)+'：已试，钥匙不匹配。','验证','车库');
+      Investigation.record('vehicle:'+cell,Investigation.carName(cx,cy)+(wire?'：已试，搭线打不着。':'：已试，钥匙不匹配。'),'验证','车库');
       autoSave();
       var n=Object.keys(RT.carTried).length;
-      os(pick(['我：钥匙插进去，拧不动。不是这辆。','我：锁孔是对的，钥匙齿不对。下一辆。','我：车门开了一条缝，又自己合上了。不是它。'])+'（试过 '+n+' 辆）',2.6);
+      os(pick(wire?['我：线碰上了，仪表盘一点反应都没有。不是这辆。','我：电瓶是死的。下一辆。','我：火花跳了一下就没了。不是它。']
+                  :['我：钥匙插进去，拧不动。不是这辆。','我：锁孔是对的，钥匙齿不对。下一辆。','我：车门开了一条缝，又自己合上了。不是它。'])+'（试过 '+n+' 辆）',2.6);
       return;
     }
     carDrive();
   });
-  os(S.talent==='drive'?'我：我弯下腰去摸方向盘底下的线……':'我：我把钥匙插进锁孔，慢慢地拧……',1.6);
+  os(wire?'我：我弯下腰去摸方向盘底下的线……这要一会儿。':'我：我把钥匙插进锁孔，慢慢地拧……',cap.sec);
 }
 function carDrive(){
   if(AN.active||Inspection.pending()){os('我：现在走不开，先解决眼前的事。',2.5);return;}
@@ -294,12 +297,13 @@ var FaceChallenge={
     var questionId=q.order[q.done],question=FACE_QUESTIONS[questionId],opts=question.choices.map(function(label,i){
       return {label:label,fn:function(){
         if(i===question.answer){q.done++;autoSave();FaceChallenge.open();return;}
-        S.san=Math.max(0,S.san-FACE_WRONG_SAN*dif().san);settleSan();
+        var remedy=Talent.faceRemedy(), loss=remedy?0:FACE_WRONG_SAN*dif().san;   /* 编程社（规则 2）：第一次答错核对后台，不扣这一次 */
+        S.san=Math.max(0,S.san-loss);settleSan();
         var feedback=FACE_EXPLANATIONS[questionId];
         Investigation.record('face:'+questionId,feedback,'验证','西小门 · 验证反馈');
         FaceChallenge.swap(q);autoSave();
         if(S.dead)return;
-        UI.choice('验证未通过（SAN −'+(FACE_WRONG_SAN*dif().san)+'）。'+feedback+' 已通过的题目仍然保留。',[
+        UI.choice((remedy?'验证未通过。你对照门禁后台核了一遍，这次没有扣到你（编程社，只有一次）。':'验证未通过（SAN −'+loss+'）。')+feedback+' 已通过的题目仍然保留。',[
           {label:'继续验证',fn:function(){FaceChallenge.open();}},
           {label:'先离开',fn:function(){}}
         ]);
@@ -398,8 +402,8 @@ function deathHints(){
 function kill(msg,fx,source){
   if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
   if(S.dead||S.death) return;
-  if(hasItem('elixir')){ elixirSave(); return; }      /* 不知名药丸：替你死一次 */
-  if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
+  if(hasItem('elixir')){ elixirSave(); protectCommit(); return; }      /* 不知名药丸：替你死一次 */
+  if(Talent.tryPreventDeath()){ immuneSave(); protectCommit(); return; }
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   Playtest.event('死亡',source||S.death);
@@ -452,8 +456,20 @@ function elixirSave(){
   os('我：……那粒药丸自己在舌根底下化开了。苦得发麻。我还站着——刚才那一下，像是有人替我挨了。',5.2,OS_FORCE);
   toast('不知名药丸 · 救了你一次');
 }
+/* 保命用掉以后要立刻落盘（以前没在跑异象时只改了内存，刷新就把免疫「退」回来了）。
+   不在这里直接存：调用方后面还要把来源恢复完（驾驶回检查点、同化回落），这一轮同步代码跑完再存完整快照 */
+var PROTECT_SAVE=0;
+function protectCommit(){
+  if(PROTECT_SAVE) return;
+  PROTECT_SAVE=1;
+  Promise.resolve().then(function(){
+    PROTECT_SAVE=0;
+    if(S.screen!=='play'||S.dead) return;
+    try{ saveGame(); }catch(e){ try{ toast('本次变化尚未保存'); }catch(_e){} }
+  });
+}
 function immuneSave(){
-  S.immuneUsed=true;
+  Playtest.event('天赋生效','immune');
   survivalReset();
   os('我：刚才那一下本该要了我的命。可它擦身而过，像是没有认出我。',5.2,OS_FORCE);
   toast('天生免疫 · 挡下了一次致命事件');

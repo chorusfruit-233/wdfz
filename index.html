@@ -139,10 +139,10 @@
     <div class="mschool">武汉大学附属中学</div>
     <div class="mhook">下课铃响了。<br>没有人站起来。<br>他们都在等你先走。</div>
     <div class="mcards">
-      <button class="mcard" onclick="Game.start('easy')">
+      <button class="mcard" onclick="Game.pickTalent('easy')">
         <em>01</em><span><b>预知梦</b><i>第一天死去，你会在座位上惊醒（三次）</i></span><u>→</u>
       </button>
-      <button class="mcard" onclick="Game.start('hard')">
+      <button class="mcard" onclick="Game.pickTalent('hard')">
         <em>02</em><span><b>梦魇</b><i>没有第二次。每个选择都有代价</i></span><u>→</u>
       </button>
       <button class="mcard" id="btncont" onclick="Game.continue_()" style="display:none">
@@ -162,6 +162,12 @@
   <div class="mkeys">WASD 移动 · 鼠标环视 · Shift 奔跑 · E 交互<br>Tab 背包 · F 手电 · H 思索 · J 笔记 · M 地图 · Esc 暂停 · Alt 放出鼠标</div>
   <div class="mfoot"><span>请记住你回去的路。它会变。</span><i>WUDFZ · FIELD RECORD 001</i></div>
 </div>
+<div id="tpick" role="dialog" aria-modal="true" aria-labelledby="tpickTitle" hidden><div class="tpbox">
+  <div class="tphead"><b id="tpickTitle">选一项天赋</b><i id="tpickDiff"></i></div>
+  <p class="tplead">开局前选好，这一局不能再换。不想选也可以交给运气。</p>
+  <div class="tpcards" id="tpcards" role="radiogroup" aria-label="天赋"></div>
+  <div class="tpfoot"><button type="button" id="tpBack" onclick="TalentPick.close()">返回</button><button type="button" id="tpRandom" onclick="TalentPick.random()">随机一项</button><button type="button" class="primary" id="tpGo" onclick="TalentPick.confirm()" disabled>选好了，开始</button></div>
+</div></div>
 <div id="pcgame"><div class="pch">机房 · 贪吃蛇</div><canvas id="pccv" width="320" height="320"></canvas>
   <div class="pcf" id="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" id="pcexit" onclick="PCGAME.stop()">退出电脑</button>
   <button type="button" class="pcx" onclick="PCGAME.stop()" aria-label="退出电脑">✕ 退出</button>
@@ -323,6 +329,7 @@
 <script src="game3d/js/lighting.js"></script>
 <script src="game3d/js/shade.js"></script>
 <script src="game3d/js/state.js"></script>
+<script src="game3d/js/talents.js"></script>
 <script src="game3d/js/input.js"></script>
 <script src="game3d/js/ui.js"></script>
 <script src="game3d/js/systems.js"></script>

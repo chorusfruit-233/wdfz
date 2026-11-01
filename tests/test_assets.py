@@ -38,7 +38,7 @@ class AssetLoadingTest(BrowserCase):
         page.goto(self.url, wait_until='load')
         page.locator('#assetNotice').wait_for(state='visible')
         self.assert_js(page, "!ASSETS.loading[2]&&ASSETS.errors[2]&&!Assets.anyReady()")
-        page.locator('#menu .mcard').first.click()
+        self.start_from_menu(page)
         page.wait_for_function("!ASSETS.loading[2]&&ASSETS.errors[2]", timeout=10000)
         self.assert_js(page, "S.screen==='menu'&&!GLR.roomMesh&&!Assets.anyReady()")
         self.assertIn('失败', page.locator('#assetNoticeText').inner_text())
@@ -46,7 +46,7 @@ class AssetLoadingTest(BrowserCase):
         context.unroute(pattern)
         page.locator('#assetRetry').click()
         page.wait_for_function("Assets.ready(2)&&document.getElementById('assetNotice').hidden", timeout=30000)
-        page.locator('#menu .mcard').first.click()
+        self.start_from_menu(page)
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=30000)
         self.assert_js(page, "INTERIORS.teach1.foot['5,2']&&INTERIORS.teach1.foot['5,2'].length>0")
 

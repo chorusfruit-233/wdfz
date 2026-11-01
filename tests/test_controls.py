@@ -636,7 +636,7 @@ class ControlsTest(BrowserCase):
         page = self.page(touch=True)
         page.evaluate("S.screen='menu';document.getElementById('menu').style.display='block';syncFullscreenUI()")
         self.assert_js(page, "document.querySelector('.mcard').getBoundingClientRect().right<=innerWidth")
-        page.locator('#menu .mcard').first.tap()
+        self.start_from_menu(page, touch=True)                # 先选天赋，再开始
         page.wait_for_timeout(350)
         page.evaluate('running=false;render(0)')
         self.assert_js(page, "S.room==='teach1'&&GLR.renderer.getContext().getError()===0&&!document.getElementById('errbox')")

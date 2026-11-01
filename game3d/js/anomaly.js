@@ -325,7 +325,7 @@ var AN_DEFS={
     tick:function(dt,d,hard){
       if(!inCanteen()){ AN.acc=Math.max(0,AN.acc-dt*0.5); }
       else { AN.acc+=dt; }
-      if(AN.acc>(S.talent==='stomach'?17:9)){
+      if(AN.acc>Talent.modifier('anomaly.feast')){
         advanceGameTime(20);
         anHurt('我回过神来的时候，嘴里有东西。我不记得自己坐下过。面前的碗是空的，上面那张纸条写着我的名字。',22);
       }

@@ -159,7 +159,8 @@ function doSanAct(key){
   if(S.actCool[key]&&clockNow<S.actCool[key]){
     os('我：刚做过。现在没那个心情。',2.4); return;
   }
-  S.san=Math.min(100,S.san+a.san);
+  var gain=key==='eat'?Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */
+  S.san=Math.min(100,S.san+gain);
   var _before=S.tsec;
   advanceGameTime(a.min);
   S.actCool[key]=gameClock()+a.cd;
@@ -170,7 +171,7 @@ function doSanAct(key){
     try{ timeSkipCard(a.min, a.n, S.tsec); }catch(e){}
   }
   os(a.msg,3.6);
-  if(a.min<4) toast('SAN +'+a.san);
+  if(a.min<4) toast('SAN +'+gain);
   try{ SFX.click(); }catch(e){}
 }
 var SKIP_T=null;
@@ -650,7 +651,8 @@ function useTerminal(){
   if(S.room!=='lab3'){ os('我：这台终端连不上。',2.2); return; }
   if(RT.hacked){ os('我：白名单里已经有我那一行了。光标还在闪，像在等我再写点什么。',3.2); return; }
   /* 以前只有随机到「编程社」天赋才走得通；现在网络中心货架上的 U 盘也能做到 */
-  if(S.talent!=='code'&&!hasItem('usb')){
+  var cap=Talent.capability('terminal');
+  if(!cap.ok){
     os('我：屏幕上是一串我看不懂的东西。旁边贴着一张便签：「门禁 U 盘插这里」。',4.0);
     addClue('usb');
     return;
@@ -658,7 +660,7 @@ function useTerminal(){
   RT.hacked=true;
   addClue('comp');
   Investigation.record('whitelistWritten','网络中心已经写入我的学号。后台记录里，同一个名字对应着不同时期的照片。下一步要到行政楼三楼同步数据。','验证','实验楼三楼 · 网络中心');
-  if(S.talent==='code') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
+  if(cap.via==='talent') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
   else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,OS_KEEP);
   os2later('我：还得去行政楼三楼，把数据同步过去。',5200);
 }

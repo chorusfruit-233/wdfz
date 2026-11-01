@@ -59,6 +59,7 @@ function update(dt){
   PHONE.checkInterrupt();                         /* 世界更新中可能死亡、开始异象或打开选择 */
   try{ monoTick(dt); }catch(e){}
   try{ Dread.tick(dt); }catch(e){}
+  try{ Talent.tickWatch(); }catch(e){}            /* 守时（规则 2）：开饭、饭点结束、熄灯前看一眼表 */
   spotTick();
 }
 function render(dt){
@@ -199,6 +200,7 @@ function clearIntroTimers(){
   if(el){ el.style.opacity='0'; setTimeout(function(){ if(!DLG.open) el.style.display='none'; },240); }
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
+var FRESH_TALENT=null;           /* 新局要用的天赋：选择界面确认后才填，freshState 用完即清 */
 function freshState(diff){
   ExplorationMap.clear();
   document.getElementById('notequery').value='';
@@ -217,12 +219,11 @@ function freshState(diff){
   buildRoomBounds();
   S.screen='play';
   S.diff=diff||'easy';
-  var t=TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)];
-  S.talent=t;
+  Talent.begin(FRESH_TALENT&&FRESH_TALENT.id,FRESH_TALENT&&FRESH_TALENT.origin); FRESH_TALENT=null;
   S.tsec=700; S.day=1;
   S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.pillT=0; S.tt=0; S.ttTier=0;
   Engine.resetSan(S.san);
-  S.actCool={}; S.immuneUsed=false;
+  S.actCool={};
   S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
   try{ patReset(); PAT.next=45; }catch(e){}
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
@@ -261,9 +262,12 @@ function waitForGameAssets(start){
   return true;
 }
 var Game={
-  start:function(diff){
-    if(waitForGameAssets(function(){Game.start(diff);}))return;
+  /* 选完难度先选天赋（《天赋系统重构》5.1）：只有点「开始」才初始化新局、覆盖旧存档 */
+  pickTalent:function(diff,mode){ TalentPick.open(diff,mode||'normal'); },
+  start:function(diff,opt){
+    if(waitForGameAssets(function(){Game.start(diff,opt);}))return;
     try{
+    FRESH_TALENT=opt&&opt.talent?{id:opt.talent,origin:opt.origin||'selected'}:null;
     freshState(diff);
     Playtest.event('开始新局',diff);
     var R1=INTERIORS['teach1'];
@@ -321,7 +325,7 @@ var Game={
     if(S.screen!=='play'||S.dead||PAUSE.on)return;
     PAUSE.on=true;
     var pt=document.getElementById('ptalent');
-    if(pt&&TALENTS[S.talent])pt.textContent='天赋 · '+TALENTS[S.talent].n+'　'+TALENTS[S.talent].d;
+    if(pt)pt.textContent=Talent.pauseText();                     /* 任何状态都重新生成，不留上一次的文字 */
     var pk=document.getElementById('pkeys');
     if(pk) pk.innerHTML=IS_TOUCH?
       '<span>左下摇杆</span>移动（推到底就是跑）<span>右侧滑动</span>环视<span>交互键</span>上面写着能做的事<span>手册</span>背包 · 思索 · 笔记 · 地图':
