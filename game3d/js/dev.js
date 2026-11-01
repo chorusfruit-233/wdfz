@@ -1,7 +1,8 @@
 /* 里世界 3D · 调试面板 */
 'use strict';
 
-var DEV={on:false,fast:false,god:false,freeze:false,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0,panelPos:null,drag:null,dragReady:false};
+var DEV={on:false,fast:false,god:false,freeze:false,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0,panelPos:null,drag:null,dragReady:false,
+  minimized:false,ballPos:null,ballMoved:false,scrollTop:0,history:[]};
 var DEV_POI=[
   ['北门',514,115],['西小门',214,624],['南门',386,1276],
   ['大操场',344,350],['花园雕塑',535,1020],['车库入口',485,163],
@@ -27,15 +28,17 @@ var Dev={
       return;
     }
     if(typeof LESSON!=='undefined'&&LESSON.on)LESSON.close(false);
-    DEV.on=true;DEV.freeze=false;DEV.refreshT=0;document.body.classList.add('dev-open');
+    DEV.on=true;DEV.freeze=false;DEV.minimized=false;DEV.refreshT=0;document.body.classList.add('dev-open');
     var el=document.getElementById('dev'); if(el) el.style.display='flex';
+    el.classList.remove('dev-minimized');el.setAttribute('role','dialog');document.getElementById('devball').hidden=true;
     DEV.lists={
       room:Object.keys(INTERIORS).map(function(k){return [k,(INTERIORS[k].name||k)+' ('+k+')'];}),
       out:DEV_POI.map(function(p,i){return [String(i),p[0]];}),
       anom:AN_ID.map(function(id){return [id,(AN_NAME[id]||id)+' ('+id+')'];}),
-      death:DEV_DEATH.map(function(d){return [d[1],d[0]+' ('+d[1]+')'];})
+      death:DEV_DEATH.map(function(d){return [d[1],d[0]+' ('+d[1]+')'];}),
+      item:Object.keys(ITEMS).map(function(id){return [id,ITEMS[id].n+' ('+id+')'];})
     };
-    ['room','out','anom','death'].forEach(Dev.filter);
+    ['room','out','anom','death','item'].forEach(Dev.filter);
     Dev.initPanelDrag();Dev.tab(DEV.tab);Dev.refresh();Dev.fitPanel();updateTouchUI();
     var close=el&&el.querySelector('.devclose');if(close)close.focus({preventScroll:true});
   },
@@ -54,58 +57,84 @@ var Dev={
     x=Math.max(b.left,Math.min(x,Math.max(b.left,b.right-r.width)));
     y=Math.max(b.top,Math.min(y,Math.max(b.top,b.bottom-r.height)));
     el.style.left=x+'px';el.style.top=y+'px';
-    if(remember)DEV.panelPos={x:x,y:y};
+    if(remember)DEV[DEV.minimized?'ballPos':'panelPos']={x:x,y:y};
   },
   fitPanel:function(){
     var el=document.getElementById('dev');if(!DEV.on||!el)return;
     var b=Dev.panelBounds(),width=b.right-b.left,height=b.bottom-b.top;
+    var compact=IS_TOUCH||window.innerWidth<=600||window.matchMedia('(pointer: coarse)').matches;
+    el.classList.toggle('dev-compact',compact);
     el.classList.toggle('dev-short',height<300);
     el.style.maxWidth=width+'px';
-    el.style.maxHeight=Math.min(height,window.innerHeight*.82)+'px';
+    el.style.maxHeight=Math.min(height,window.innerHeight*(compact?(width>height?.74:.62):.82))+'px';
     /* 触屏横屏时默认放在中间，留出两侧的摇杆和交互键。用户拖动过的位置仍保留。 */
     var defaultX=IS_TOUCH&&width>height?b.left+(width-el.getBoundingClientRect().width)/2:b.left+4;
-    var pos=DEV.panelPos||{x:defaultX,y:b.top+4};
+    var pos=DEV.minimized?(DEV.ballPos||{x:b.right-44,y:b.top+(height-44)/2}):(DEV.panelPos||{x:defaultX,y:b.top+4});
     Dev.placePanel(pos.x,pos.y,false);Dev.scrollHint();
   },
-  resetPanelPosition:function(){Dev.endPanelDrag();DEV.panelPos=null;Dev.fitPanel();},
+  setMinimized:function(value){
+    if(!DEV.on||DEV.minimized===value)return;
+    Dev.endPanelDrag();resetInputState();releaseMouseLook();
+    var el=document.getElementById('dev'),body=document.getElementById('devbody'),ball=document.getElementById('devball');
+    if(value)DEV.scrollTop=body.scrollTop;
+    DEV.minimized=value;el.classList.toggle('dev-minimized',value);ball.hidden=!value;
+    el.setAttribute('role',value?'group':'dialog');
+    Dev.refresh();Dev.fitPanel();
+    if(value)document.getElementById('cv').focus({preventScroll:true});
+    else{body.scrollTop=DEV.scrollTop;document.getElementById('devcollapse').focus({preventScroll:true});}
+    updateTouchUI();
+  },
+  resetPanelPosition:function(){Dev.endPanelDrag();DEV[DEV.minimized?'ballPos':'panelPos']=null;Dev.fitPanel();},
   endPanelDrag:function(){
-    var drag=DEV.drag,el=document.getElementById('dev'),handle=document.getElementById('devdrag');
+    var drag=DEV.drag,el=document.getElementById('dev'),handle=drag&&drag.handle;
     DEV.drag=null;if(el)el.classList.remove('dragging');
     if(drag&&handle){try{if(handle.hasPointerCapture(drag.id))handle.releasePointerCapture(drag.id);}catch(e){}}
   },
   initPanelDrag:function(){
     if(DEV.dragReady)return;
-    var handle=document.getElementById('devdrag'),panel=document.getElementById('dev');if(!handle||!panel)return;
+    var panel=document.getElementById('dev');if(!panel)return;
     DEV.dragReady=true;
-    handle.addEventListener('pointerdown',function(e){
-      if(!DEV.on||DEV.drag||!e.isPrimary||e.button!==0)return;
-      var r=panel.getBoundingClientRect();
-      DEV.drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top};
-      panel.classList.add('dragging');handle.focus({preventScroll:true});
-      try{handle.setPointerCapture(e.pointerId);}catch(err){}
-      if(e.cancelable)e.preventDefault();
+    ['devdrag','devball'].forEach(function(id){
+      var handle=document.getElementById(id);
+      handle.addEventListener('pointerdown',function(e){
+        if(!DEV.on||DEV.drag||!e.isPrimary||e.button!==0)return;
+        var r=panel.getBoundingClientRect();DEV.ballMoved=false;
+        DEV.drag={id:e.pointerId,handle:handle,x:e.clientX,y:e.clientY,left:r.left,top:r.top};
+        panel.classList.add('dragging');handle.focus({preventScroll:true});
+        try{handle.setPointerCapture(e.pointerId);}catch(err){}
+        if(e.cancelable)e.preventDefault();
+      });
+      handle.addEventListener('lostpointercapture',end);
+      handle.addEventListener('keydown',function(e){
+        if(!DEV.on)return;
+        if(e.key==='Enter'||e.key===' ')DEV.ballMoved=false;
+        if(e.key==='Home'){e.preventDefault();Dev.resetPanelPosition();return;}
+        var delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
+        if(!delta)return;
+        e.preventDefault();var r=panel.getBoundingClientRect(),step=e.shiftKey?48:16;
+        Dev.placePanel(r.left+delta[0]*step,r.top+delta[1]*step,true);
+      });
+    });
+    document.getElementById('devball').addEventListener('click',function(e){
+      if(DEV.ballMoved){e.preventDefault();return;}Dev.setMinimized(false);
     });
     window.addEventListener('pointermove',function(e){
       var d=DEV.drag;if(!d||e.pointerId!==d.id)return;
       if(e.pointerType==='mouse'&&e.buttons===0){Dev.endPanelDrag();return;}
+      if(DEV.minimized){
+        if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>10)DEV.ballMoved=true;
+        if(!DEV.ballMoved)return;
+      }
       Dev.placePanel(d.left+e.clientX-d.x,d.top+e.clientY-d.y,true);
       if(e.cancelable)e.preventDefault();
     },{passive:false});
-    function end(e){if(DEV.drag&&e.pointerId===DEV.drag.id)Dev.endPanelDrag();}
+    function end(e){if(DEV.drag&&e.pointerId===DEV.drag.id){if(e.type==='pointercancel')DEV.ballMoved=true;Dev.endPanelDrag();}}
     window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
-    handle.addEventListener('lostpointercapture',end);window.addEventListener('blur',Dev.endPanelDrag);
-    handle.addEventListener('keydown',function(e){
-      if(!DEV.on)return;
-      if(e.key==='Home'){e.preventDefault();Dev.resetPanelPosition();return;}
-      var delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
-      if(!delta)return;
-      e.preventDefault();var r=panel.getBoundingClientRect(),step=e.shiftKey?48:16;
-      Dev.placePanel(r.left+delta[0]*step,r.top+delta[1]*step,true);
-    });
+    window.addEventListener('blur',Dev.endPanelDrag);
     function viewportChanged(){
       Dev.endPanelDrag();Dev.fitPanel();
       var active=document.activeElement;
-      if(DEV.on&&active&&panel.contains(active)&&active.matches('input,select')){
+      if(DEV.on&&active&&panel.contains(active)&&active.matches('input,select,textarea')){
         requestAnimationFrame(function(){if(DEV.on&&document.activeElement===active)active.scrollIntoView({block:'nearest',inline:'nearest'});});
       }
     }
@@ -125,18 +154,23 @@ var Dev={
     if(matches.some(function(x){return x[0]===previous;}))select.value=previous;
     select.disabled=!matches.length;if(go)go.disabled=!matches.length;
     if(count)count.textContent=matches.length+' / '+source.length+' 项';
+    if(kind==='item')Dev.refreshInventory();
   },
   tab:function(id){
-    if(['status','scene','events','tools'].indexOf(id)<0)return;
+    if(['status','scene','items','events','tools'].indexOf(id)<0)return;
     DEV.tab=id;
-    ['status','scene','events','tools'].forEach(function(name){
+    ['status','scene','items','events','tools'].forEach(function(name){
       var page=document.getElementById('dev-page-'+name),button=document.querySelector('[data-dev-tab="'+name+'"]');
       if(page)page.hidden=name!==id;if(button)button.setAttribute('aria-pressed',String(name===id));
     });
     var body=document.getElementById('devbody');if(body)body.scrollTop=0;
     Dev.refresh();Dev.fitPanel();
   },
-  report:function(msg){var el=document.getElementById('devmessage');if(el)el.textContent=msg;toast(msg);},
+  report:function(msg){
+    var el=document.getElementById('devmessage');if(el)el.textContent=msg;
+    DEV.history.push({time:new Date().toISOString(),message:msg});if(DEV.history.length>20)DEV.history.shift();
+    toast(msg);
+  },
   canUse:function(){
     if(S.screen==='play'&&!S.dead)return true;
     Dev.report(S.dead?'角色已死亡，请先复活。':'请先开始游戏。');return false;
@@ -146,6 +180,10 @@ var Dev={
     function put(id,text){var el=document.getElementById(id);if(el&&el.textContent!==text)el.textContent=text;}
     var otherPause=PAUSE.on||UI.anyOpen()||PC.on||PRO.on;
     var state=S.screen!=='play'?'未进入游戏':S.dead?'角色已死亡':otherPause?'游戏菜单已暂停':DEV.freeze?'调试暂停中':'游戏运行中';
+    var ball=document.getElementById('devball');
+    ball.classList.toggle('is-paused',S.screen!=='play'||S.dead||otherPause||DEV.freeze);
+    ball.setAttribute('aria-label','展开调试面板 · '+state);ball.title='点击展开 · 按住拖动 · '+state;
+    if(DEV.minimized)return;
     put('devrun',state);put('devclock','第 '+S.day+' 天 · '+fmtClock(S.tsec));
     put('devsanValue',String(Math.round(S.san)));put('devstamValue',Math.round(S.stam)+'/'+Math.round(staminaMax()));
     put('devviolValue',String(Math.round(S.viol)));put('devttValue',String(Math.round(S.tt)));
@@ -155,7 +193,14 @@ var Dev={
       freeze.textContent=DEV.freeze||PAUSE.on||UI.openPanel==='pause'?'继续游戏':'暂停游戏';
       freeze.disabled=S.screen!=='play'||S.dead||PC.on||PRO.on||UI.chooseOpen||!!(UI.openPanel&&UI.openPanel!=='pause');
     }
-    Dev.pos();if(DEV.tab==='status')Dev.look();Dev.paint();Dev.scrollHint();
+    Dev.pos();if(DEV.tab==='status')Dev.look();
+    if(DEV.tab==='items')Dev.refreshInventory();
+    if(DEV.tab==='tools')Dev.refreshDiagnostics();
+    var inspection=RT.inspection,ride=RT.elevatorRide;
+    put('devpatrol',PAT.locked?'追逐中':PAT.state==='idle'?'等待 · '+Math.ceil(PAT.next)+' 秒':PAT.state==='warn'?'预警中':'巡逻中');
+    put('devinspection',inspection&&inspection.current?'检查中 · '+Math.max(0,INSPECT_CONFIG.duration-inspection.current.t).toFixed(1)+' 秒':inspection&&inspection.queue.length?'排队 '+inspection.queue.length+' 次':'无');
+    put('devtravel',CarChase.active()?'驾驶 · '+Math.round(RT.carChase.distance)+' 米':ride?'电梯 · '+ride.phase:'步行');
+    Dev.paint();Dev.scrollHint();
   },
   scrollHint:function(){
     var body=document.getElementById('devbody'),hint=document.getElementById('devscroll');if(!body||!hint)return;
@@ -174,7 +219,7 @@ var Dev={
   },
   focusTrap:function(e){
     var panel=document.getElementById('dev');if(!panel)return;
-    var all=Array.prototype.slice.call(panel.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex="0"]'));
+    var all=Array.prototype.slice.call(panel.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]'));
     var controls=all.filter(function(el){return el.getClientRects().length>0;});if(!controls.length)return;
     var i=controls.indexOf(document.activeElement),target=null;
     if(e.shiftKey&&(i<=0))target=controls[controls.length-1];
@@ -189,6 +234,116 @@ var Dev={
     if(['san','stam','viol','tt'].indexOf(key)<0)return;
     S[key]=value;capStamina();
     Dev.report(key.toUpperCase()+' 已设为 '+Math.round(S[key]*10)/10);Dev.refresh();
+  },
+  refreshInventory:function(){
+    var select=document.getElementById('devitem');if(!select)return;
+    var id=select.value,item=ITEMS[id],owned=!!item&&hasItem(id),alive=S.screen==='play'&&!S.dead;
+    document.getElementById('devbag').textContent=S.bag.length+' / 8 格 · '+(S.bag.map(function(k){return ITEMS[k]?ITEMS[k].n:k;}).join('、')||'空背包');
+    document.getElementById('devitemInfo').textContent=item?(owned?'已持有 · ':'未持有 · ')+item.d:'没有匹配的物品';
+    document.getElementById('devitemGo').disabled=!alive||!item||owned||S.bag.length>=8;
+    ['devitemRemove','devitemHot1','devitemHot2'].forEach(function(key){document.getElementById(key).disabled=!alive||!owned;});
+    document.getElementById('devhotbar').textContent=S.hot.map(function(k,i){return (i+1)+'：'+(ITEMS[k]?ITEMS[k].n:'空');}).join(' · ');
+  },
+  editItem:function(action,slot){
+    if(!Dev.canUse())return;
+    var id=document.getElementById('devitem').value,item=ITEMS[id];if(!item)return;
+    if(action==='add'){
+      if(hasItem(id)){Dev.report('背包里已有此物品。');return;}
+      if(S.bag.length>=8){Dev.report('背包已满，请先移除一件物品。');return;}
+      addItem(id);Dev.report('已添加：'+item.n);
+    }else if(action==='remove'){
+      if(!removeItem(id)){Dev.report('背包里没有此物品。');return;}
+      Dev.report('已移除：'+item.n);
+    }else if(action==='hot'&&(slot===0||slot===1)){
+      if(!hasItem(id)){Dev.report('请先将物品加入背包。');return;}
+      S.hot[slot]=id;bagChanged();Dev.report(item.n+' → 快捷栏 '+(slot+1));
+    }else return;
+    Dev.refreshInventory();
+  },
+  canChangeTime:function(){
+    if(!Dev.canUse())return false;
+    var queued=RT.inspection&&RT.inspection.queue.some(function(item){return !Inspection.stale(item);});
+    if(Elevator.inRide()||CarChase.active()||Inspection.active()||INSPECT_FX.scatter||queued){
+      Dev.report('请先结束电梯、驾驶或检查，再调整时间。');return false;
+    }
+    return true;
+  },
+  setTime:function(value){
+    var raw=value===undefined?document.getElementById('devtime').value:value;
+    if(!/^\d{2}:\d{2}$/.test(raw)){Dev.report('请输入有效的时分。');return;}
+    var parts=raw.split(':').map(Number),target=parts[0]*60+parts[1];
+    if(parts[0]>23||parts[1]>59||(target>=60&&target<440)){Dev.report('可选时段为 07:20–次日 00:59；01:00 后会跳到早晨。');return;}
+    if(target<60)target+=1440;
+    if(!Dev.canChangeTime())return;
+    Dev.time(target-S.tsec);document.getElementById('devtime').value=raw;
+  },
+  canStageEvent:function(){
+    if(!Dev.canUse())return false;
+    if(PRO.on||PC.on||PHONE.on||LESSON.on||UI.chooseOpen||S.intro>0||Elevator.inRide()||CarChase.active()){
+      Dev.report('请先退出当前互动或移动流程。');return false;
+    }
+    if(AN.active||Inspection.pending()||PAT.state!=='idle'){
+      Dev.report('请先结束当前异象、巡察或检查。');return false;
+    }
+    return true;
+  },
+  startPatrol:function(){
+    if(!Dev.canStageEvent())return;
+    if(!patEligible()){Dev.report('此地点或时段不允许巡察；白天可在上课时到教学楼，夜间到室外。');return;}
+    patStart();Dev.report('巡察预警已开始；躲藏和请假规则照常生效。');Dev.refresh();
+  },
+  stopPatrol:function(){
+    if(!Dev.canUse())return;
+    if(PAT.state==='idle'){Dev.report('当前没有巡察。');return;}
+    patEnd();Dev.report('当前巡察已结束，后续仍按正常间隔出现。');Dev.refresh();
+  },
+  startInspection:function(){
+    if(!Dev.canStageEvent())return;
+    Inspection.start({day:S.day,slot:S.tsec<920?0:1});
+    Dev.report('手动检查已开始，会按站位、移动和注视行为结算。');Dev.refresh();
+  },
+  cancelInspection:function(){
+    if(!Dev.canUse())return;Inspection.cancel();if(RT.inspection)RT.inspection.queue=[];
+    Dev.report('当前及排队检查已取消，不结算本次奖惩；已扣数值保留。');Dev.refresh();
+  },
+  stopPreview:function(){
+    if(!Dev.canUse())return;Dev.clearPreview();Dev.clearAnimation();Dev.report('调试预览已停止。');
+  },
+  refreshDiagnostics:function(){
+    var renderer=GLR.renderer,info=renderer&&renderer.info;
+    document.getElementById('devrender').textContent=info?'几何体 '+info.memory.geometries+' · 纹理 '+info.memory.textures+' · 着色程序 '+(info.programs?info.programs.length:0):'渲染器未就绪';
+    document.getElementById('devinput').textContent=(INPUT.mode==='touch'?'触屏':'鼠标')+' · '+(pointerIsLocked()?'鼠标已捕获':'鼠标未捕获')+' · '+(playerInputAllowed()?'允许游戏输入':'游戏输入暂停');
+    document.getElementById('devquality').textContent=Quality.get().label+' · '+innerWidth+' × '+innerHeight;
+    document.getElementById('devhistory').textContent=DEV.history.slice(-5).map(function(entry){return entry.message;}).join('\n')||'尚无调试操作';
+  },
+  diagnosticSnapshot:function(){
+    var info=GLR.renderer&&GLR.renderer.info,inspection=RT.inspection,ride=RT.elevatorRide;
+    return {version:1,capturedAt:new Date().toISOString(),
+      game:{screen:S.screen,dead:S.dead,day:S.day,time:fmtClock(S.tsec),minutes:S.tsec,mode:S.mode,room:S.room,
+        position:{x:S.x,y:S.y,angle:S.ang,pitch:S.pitch},san:S.san,stamina:S.stam,violation:S.viol,assimilation:S.tt,
+        bag:S.bag.slice(),hotbar:S.hot.slice()},
+      events:{anomaly:AN.active?{id:AN.id,elapsed:AN.t}:null,forecast:AN.pre||null,
+        patrol:{state:PAT.state,locked:PAT.locked,next:PAT.next},
+        inspection:inspection?{active:!!inspection.current,queued:inspection.queue.length}:null,
+        elevator:ride?{host:ride.host,phase:ride.phase,target:ride.target}:null,
+        driving:CarChase.active(),hiding:HIDE.on},
+      debug:{freeze:DEV.freeze,god:DEV.god,fast:DEV.fast,search:SEARCH.on},
+      input:{mode:INPUT.mode,pointerLocked:pointerIsLocked(),allowed:playerInputAllowed(),panel:UI.openPanel||null,choice:UI.chooseOpen},
+      rendering:{quality:Quality.get().label,viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},
+        memory:info?{geometries:info.memory.geometries,textures:info.memory.textures,programs:info.programs?info.programs.length:0}:null},
+      recentActions:DEV.history.slice()};
+  },
+  makeReport:function(){
+    var field=document.getElementById('devreport');field.hidden=false;
+    field.value=JSON.stringify(Dev.diagnosticSnapshot(),null,2);Dev.fitPanel();
+    field.focus({preventScroll:true});field.select();field.scrollIntoView({block:'nearest'});
+    Dev.report('诊断已生成，可复制文本或下载；不写入游戏存档。');
+    return field.value;
+  },
+  downloadReport:function(){
+    var data=Dev.makeReport(),url=URL.createObjectURL(new Blob([data],{type:'application/json'})),link=document.createElement('a');
+    link.href=url;link.download='wdfz-debug-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';
+    document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
   },
   pos:function(){
     var el=document.getElementById('devpos'); if(!el) return;
@@ -276,7 +431,13 @@ var Dev={
   search:function(){ SEARCH.on=!SEARCH.on; clearSearch(); Dev.paint(); Dev.report(SEARCH.on?'翻找读条：开':'翻找读条：关（立刻翻完）'); },
   god:function(){ DEV.god=!DEV.god; Dev.paint(); Dev.report(DEV.god?'无敌：开':'无敌：关'); },
   san:function(){ if(!Dev.canUse())return;S.san=100; S.stam=100;S.tired=false; Dev.report('SAN / 体力已恢复');Dev.refresh(); },
-  time:function(min){ if(!Dev.canUse())return;if(min>=0) advanceGameTime(min); else rewindGameTime(-min);patEndIfInvalid();Dev.report('时间 '+(min>0?'+':'')+min+' 分钟');Dev.refresh(); },
+  time:function(min){
+    if(!Number.isFinite(min)||!Dev.canChangeTime())return;
+    /* 调试暂停时 tick 不运行；过期检查要及时丢弃，回拨也不能让它们重新变为有效。 */
+    function prune(){if(RT.inspection)RT.inspection.queue=RT.inspection.queue.filter(function(item){return !Inspection.stale(item);});}
+    prune();if(min>=0)advanceGameTime(min);else rewindGameTime(-min);prune();
+    patEndIfInvalid();Dev.report('时间已调整至第 '+S.day+' 天 '+fmtClock(S.tsec));Dev.refresh();
+  },
   endActiveAnomaly:function(){
     if(AN.active){if(UI.chooseOpen)UI.closeChoice();anEnd();}
     /* 拍肩异象结束后笑脸仍可能停留数秒，切场景或替换时一并移除。 */

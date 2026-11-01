@@ -1,4 +1,6 @@
 """调试面板的真实浏览器操作、场景切换和存档边界。"""
+import json
+
 from browser_case import BrowserCase
 
 
@@ -56,11 +58,14 @@ class DebugPanelTest(BrowserCase):
         page.keyboard.press('Shift+Tab')
         self.assertTrue(page.locator('.devreset').evaluate('(el)=>document.activeElement===el'))
         page.keyboard.press('Shift+Tab')
+        self.assertTrue(page.locator('#devcollapse').evaluate('(el)=>document.activeElement===el'))
+        page.keyboard.press('Shift+Tab')
         self.assertTrue(page.locator('#devdrag').evaluate('(el)=>document.activeElement===el'))
         page.keyboard.press('Shift+Tab')
         self.assertEqual(page.evaluate('document.activeElement.textContent'),'复活角色')
         page.keyboard.press('Tab')
         self.assertTrue(page.locator('#devdrag').evaluate('(el)=>document.activeElement===el'))
+        page.keyboard.press('Tab')
         page.keyboard.press('Tab')
         page.keyboard.press('Tab')
         self.assertTrue(page.locator('.devclose').evaluate('(el)=>document.activeElement===el'))
@@ -174,11 +179,233 @@ class DebugPanelTest(BrowserCase):
     def test_panel_clicks_do_not_skip_death_but_game_clicks_do(self):
         page = self.game()
         self.open_panel(page)
-        page.evaluate("S.day=2;S.bag=[];kill('测试死亡','vignette');DEATH_PENDING.at-=700")
+        # 此处只验证点击隔离；自动结束另有时间轴测试，不让机器负载抢先结束两秒演出。
+        page.evaluate("""const schedule=window.setTimeout;let finishTimer;
+          window.setTimeout=(fn,ms)=>{const id=schedule(fn,ms);if(ms===DeathTimeline.duration('vignette')*1000)finishTimer=id;return id;};
+          try{S.day=2;S.bag=[];kill('测试死亡','vignette');}finally{window.setTimeout=schedule;clearTimeout(finishTimer);}
+          DEATH_PENDING.at-=700;""")
+        page.wait_for_timeout(2200)
         page.locator('[data-dev-tab="scene"]').click()
         self.assert_js(page,"!!DEATH_PENDING&&getComputedStyle(document.getElementById('die')).display==='none'")
         page.mouse.click(850,650)
         self.assert_js(page,"DEV.on&&!DEATH_PENDING&&getComputedStyle(document.getElementById('die')).display!=='none'")
+
+    def test_minimize_is_a_tiny_ball_and_restores_panel_without_a_password(self):
+        for touch in (False, True):
+            with self.subTest(touch=touch):
+                page = self.game(touch=touch)
+                self.open_panel(page)
+                page.locator('[data-dev-tab="scene"]').tap() if touch else page.locator('[data-dev-tab="scene"]').click()
+                page.locator('#devroomFilter').fill('lab')
+                page.evaluate('Dev.placePanel(40,60,true);document.getElementById("devbody").scrollTop=50;window.savedScroll=document.getElementById("devbody").scrollTop')
+                old=page.locator('#dev').bounding_box()
+                page.locator('#devcollapse').tap() if touch else page.locator('#devcollapse').click()
+                self.assert_js(page,'DEV.on&&DEV.minimized&&!DEV.freeze&&playerInputAllowed()')
+                self.assertFalse(page.locator('#devbody').is_visible())
+                self.assertEqual(page.locator('#dev').bounding_box()['width'],44)
+                self.assertLessEqual(page.locator('#devball span').bounding_box()['width'],20)
+                page.evaluate("window.prompt=()=>{throw Error('展开不应再次询问密码')};S.seated=true")
+                if touch:
+                    page.locator('#tAct').tap()
+                else:
+                    page.keyboard.press('e')
+                self.assert_js(page,'DEV.minimized&&!S.seated')
+                page.locator('#devball').tap() if touch else page.locator('#devball').click()
+                self.assert_js(page,'DEV.on&&!DEV.minimized&&!DEV.freeze')
+                self.assertEqual(page.locator('#devroomFilter').input_value(),'lab')
+                self.assert_js(page,'document.getElementById("devbody").scrollTop===savedScroll')
+                self.assertAlmostEqual(page.locator('#dev').bounding_box()['x'],old['x'],delta=1)
+                self.assertAlmostEqual(page.locator('#dev').bounding_box()['y'],old['y'],delta=1)
+                page.keyboard.press('F2')
+                self.assert_js(page,'!DEV.on')
+
+    def test_ball_drag_does_not_expand_or_turn_camera_and_tap_still_works(self):
+        for touch in (False, True):
+            with self.subTest(touch=touch):
+                page=self.game(touch=touch)
+                self.open_panel(page)
+                page.locator('#devcollapse').tap() if touch else page.locator('#devcollapse').click()
+                page.evaluate('window.oldView=[S.ang,S.pitch];Dev.placePanel(25,150,true)')
+                old=page.locator('#devball').bounding_box()
+                x,y=old['x']+22,old['y']+22
+                if touch:self.swipe(page,(x,y),(x+95,y+50))
+                else:
+                    page.mouse.move(x,y)
+                    page.mouse.down()
+                    page.mouse.move(x+95,y+50,steps=5)
+                    page.mouse.up()
+                self.assert_js(page,'DEV.minimized&&!DEV.drag&&S.ang===oldView[0]&&S.pitch===oldView[1]')
+                moved=page.locator('#devball').bounding_box()
+                self.assertGreater(moved['x'],old['x']+80)
+                self.assertGreater(moved['y'],old['y']+40)
+                page.locator('#devball').tap() if touch else page.locator('#devball').click()
+                self.assert_js(page,'!DEV.minimized')
+                page.locator('#devcollapse').tap() if touch else page.locator('#devcollapse').click()
+                self.assertAlmostEqual(page.locator('#devball').bounding_box()['x'],moved['x'],delta=1)
+                page.locator('#devball').focus()
+                page.keyboard.press('ArrowRight')
+                page.keyboard.press('Home')
+                self.assert_js(page,"(()=>{const b=Dev.panelBounds(),r=document.getElementById('devball').getBoundingClientRect();return Math.abs(r.right-b.right)<1&&Math.abs(r.y-(b.top+(b.bottom-b.top-44)/2))<1})()")
+                page.keyboard.press('Enter')
+                self.assert_js(page,'!DEV.minimized')
+
+    def test_ball_preserves_freeze_survives_orientation_and_closes_on_quit(self):
+        page=self.game(touch=True)
+        self.open_panel(page)
+        page.locator('#devfreeze').tap()
+        page.locator('#devcollapse').tap()
+        page.evaluate('window.beforeTime=S.tsec;Dev.placePanel(999,999,true);update(1)')
+        self.assert_js(page,'DEV.freeze&&DEV.minimized&&S.tsec===beforeTime&&!playerInputAllowed()')
+        self.assertIn('暂停',page.locator('#devball').get_attribute('aria-label'))
+        page.set_viewport_size({'width':844,'height':390})
+        page.wait_for_function("(()=>{let r=document.getElementById('dev').getBoundingClientRect();return r.right<=innerWidth-7&&r.bottom<=innerHeight-7})()")
+        ball=page.locator('#devball').bounding_box()
+        self.touch(page,'touchStart',[{'x':ball['x']+22,'y':ball['y']+22}])
+        self.touch(page,'touchCancel',[])
+        self.assert_js(page,'!DEV.drag&&DEV.minimized')
+        page.locator('#devball').tap()
+        self.assert_js(page,'DEV.freeze&&!DEV.minimized')
+        page.locator('#devfreeze').tap()
+        page.locator('#devcollapse').tap()
+        page.evaluate('Game.quit()')
+        self.assertFalse(page.locator('#devball').is_visible())
+        self.assert_js(page,'!DEV.on')
+
+    def test_mobile_panel_is_compact_and_every_tab_has_reachable_controls(self):
+        for width,height in ((320,568),(390,844),(844,390)):
+            with self.subTest(width=width,height=height):
+                page=self.game(touch=True)
+                page.set_viewport_size({'width':width,'height':height})
+                self.open_panel(page)
+                rect=page.locator('#dev').bounding_box()
+                self.assertLessEqual(rect['width'],300)
+                self.assertLessEqual(rect['height'],height*(.74 if width>height else .62)+1)
+                for tab in ('status','scene','items','events','tools'):
+                    page.locator('[data-dev-tab="'+tab+'"]').tap()
+                    self.assert_js(page,"document.getElementById('devbody').clientHeight>=70")
+                    self.assert_js(page,"(()=>{let b=document.getElementById('devbody');return b.scrollWidth<=b.clientWidth})()")
+                    self.assert_js(page,"Array.from(document.querySelectorAll('#dev button')).filter(e=>e.getClientRects().length).every(e=>e.getBoundingClientRect().height>=44)")
+                page.locator('#devreportGo').tap()
+                self.assertTrue(page.locator('#devreport').is_visible())
+                page.locator('#devcollapse').tap()
+                self.assertEqual(page.locator('#devball').bounding_box()['width'],44)
+
+    def test_inventory_editor_respects_capacity_and_cleans_hand_and_hotbar(self):
+        page=self.game()
+        self.open_panel(page)
+        page.evaluate("S.bag=['card'];S.hot=[null,null];bagChanged()")
+        page.locator('[data-dev-tab="items"]').click()
+        page.locator('#devitemFilter').fill('torch')
+        page.locator('#devitemGo').click()
+        self.assert_js(page,"hasItem('torch')&&S.bag.length===2")
+        self.assertTrue(page.locator('#devitemGo').is_disabled())
+        page.locator('#devitemHot1').click()
+        page.evaluate("toggleTorch();Dev.refresh()")
+        self.assert_js(page,"S.hot[0]==='torch'&&USE.torch")
+        page.locator('#devitemRemove').click()
+        self.assert_js(page,"!hasItem('torch')&&!USE.torch&&S.hot[0]===null")
+        page.evaluate("S.bag=Object.keys(ITEMS).filter(k=>k!=='torch').slice(0,8);window.oldBag=JSON.stringify(S.bag);Dev.refresh()")
+        self.assertTrue(page.locator('#devitemGo').is_disabled())
+        page.evaluate("Dev.editItem('add')")
+        self.assert_js(page,'JSON.stringify(S.bag)===oldBag')
+        page.locator('#devitemFilter').fill('does-not-exist')
+        for key in ('devitemGo','devitemRemove','devitemHot1','devitemHot2'):
+            self.assertTrue(page.locator('#'+key).is_disabled())
+
+    def test_compact_layout_does_not_jump_during_mouse_touch_switch(self):
+        page=self.game(touch=True)
+        self.open_panel(page)
+        rect=page.locator('#dev').bounding_box()
+        page.locator('[data-dev-tab="scene"]').click()
+        self.assert_js(page,"DEV.tab==='scene'&&INPUT.mode==='mouse'")
+        self.assertEqual(page.locator('#dev').bounding_box()['width'],rect['width'])
+        page.locator('#devcollapse').click()
+        self.assert_js(page,'DEV.minimized')
+        page.locator('#devball').tap()
+        self.assert_js(page,"!DEV.minimized&&INPUT.mode==='touch'&&DEV.tab==='scene'")
+        self.assertEqual(page.locator('#dev').bounding_box()['width'],rect['width'])
+
+    def test_exact_time_keeps_clock_rules_and_blocks_special_flows(self):
+        page=self.game()
+        self.open_panel(page)
+        page.locator('[data-dev-tab="scene"]').click()
+        page.evaluate('S.tsec=760;S.day=1;RT.inspection=null;S.fn.note=true')
+        page.locator('#devtime').fill('12:50')
+        page.locator('#devtimeGo').click()
+        self.assert_js(page,'S.tsec===770&&Inspection.state().queue.length===1')
+        page.evaluate("Dev.setTime('13:00')")
+        self.assert_js(page,'S.tsec===770')
+        page.evaluate('Dev.cancelInspection()')
+        page.locator('#devtime').fill('22:40')
+        page.locator('#devtimeGo').click()
+        self.assert_js(page,'S.tsec===1360&&S.day===2')
+        page.evaluate("Dev.setTime('00:30')")
+        self.assert_js(page,'S.tsec===1470&&S.day===2')
+        page.evaluate("Dev.setTime('03:00');Dev.setTime('25:00');Dev.setTime('bad');Dev.setTime('12:99')")
+        self.assert_js(page,'S.tsec===1470&&S.day===2')
+        page.evaluate("Dev.setTime('07:20')")
+        self.assert_js(page,'S.tsec===440&&S.day===1&&!Inspection.pending()')
+        page.evaluate("doEnterRoom('lift_teach');window.oldTime=S.tsec;Dev.setTime('12:00')")
+        self.assert_js(page,'S.tsec===oldTime')
+
+    def test_event_tools_prevent_overlap_and_inspection_uses_actual_rules(self):
+        page=self.game()
+        self.open_panel(page)
+        page.locator('[data-dev-tab="events"]').click()
+        page.evaluate('S.tsec=550;S.seated=false')
+        page.locator('#devpatrolStart').click()
+        self.assert_js(page,"PAT.state==='warn'")
+        page.locator('#devinspectionStart').click()
+        self.assert_js(page,'!Inspection.active()')
+        page.locator('#devpatrolStop').click()
+        page.evaluate('S.san=90;S.viol=30;S.tt=0;S.pitch=1.1;S.moving=false')
+        page.locator('#devinspectionStart').click()
+        self.assert_js(page,'Inspection.active()')
+        page.evaluate('Inspection.tick(8)')
+        self.assert_js(page,'!Inspection.active()&&S.san===87&&S.viol===22&&S.tt===3')
+        page.locator('#devinspectionStop').click()
+        page.locator('#devinspectionStart').click()
+        page.evaluate('Inspection.state().queue.push({day:S.day,slot:0})')
+        page.locator('#devinspectionStop').click()
+        self.assert_js(page,'!Inspection.pending()&&!INSPECT_FX.group&&S.san===87&&S.viol===22')
+        page.evaluate("Dev.triggerAnomaly('rain')")
+        page.locator('#devpatrolStart').click()
+        page.locator('#devinspectionStart').click()
+        self.assert_js(page,"AN.active&&PAT.state==='idle'&&!Inspection.active()")
+        page.evaluate('Dev.anomEnd();S.tsec=1370;Dev.startPatrol()')
+        self.assert_js(page,"PAT.state==='idle'")
+        page.evaluate('hideIn({c:28,r:16});Dev.stopPatrol()')
+        self.assert_js(page,"HIDE.on&&PAT.state==='idle'")
+
+    def test_stop_preview_leaves_anomalies_and_player_state_intact(self):
+        page=self.game()
+        self.open_panel(page)
+        page.evaluate("window.oldPlayer=JSON.stringify(S);document.getElementById('devdeath').value='grip';Dev.previewDeath();Dev.anim(2);render(.5);Dev.stopPreview()")
+        self.assert_js(page,'!DEV.previewFx&&!DEV.previewTimer&&!VisualState.deathAnim')
+        self.assert_js(page,"S.ang===JSON.parse(oldPlayer).ang&&S.pitch===JSON.parse(oldPlayer).pitch&&S.eyeLift===JSON.parse(oldPlayer).eyeLift")
+        page.evaluate("Dev.triggerAnomaly('rain');Dev.stopPreview()")
+        self.assert_js(page,"AN.active&&AN.id==='rain'&&!!WX.rain")
+
+    def test_diagnostic_export_does_not_modify_save_and_contains_current_state(self):
+        page=self.game()
+        self.open_panel(page)
+        page.evaluate("saveGame();window.saved=localStorage.getItem('wdfz3d');window.beforeState=JSON.stringify(S);Dev.report('测试诊断')")
+        page.locator('[data-dev-tab="tools"]').click()
+        page.locator('#devreportGo').click()
+        data=json.loads(page.locator('#devreport').input_value())
+        self.assertEqual(data['game']['room'],'teach1')
+        self.assertEqual(data['recentActions'][-1]['message'],'测试诊断')
+        self.assertIn('memory',data['rendering'])
+        with page.expect_download() as download:
+            page.locator('#devreportDownload').click()
+        result=download.value
+        self.assertTrue(result.suggested_filename.endswith('.json'))
+        with open(result.path(),encoding='utf-8') as f:
+            self.assertEqual(json.load(f)['game']['room'],'teach1')
+        self.assert_js(page,"JSON.stringify(S)===beforeState&&localStorage.getItem('wdfz3d')===saved")
+        page.evaluate("for(let i=0;i<30;i++)Dev.report('操作 '+i);Dev.refresh()")
+        self.assert_js(page,"DEV.history.length===20&&Dev.diagnosticSnapshot().recentActions.length===20")
+        self.assertIn('操作 29',page.locator('#devhistory').inner_text())
 
     def test_filter_teleport_and_hiding_cleanup(self):
         page = self.game()
