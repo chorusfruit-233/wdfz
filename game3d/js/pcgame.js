@@ -15,7 +15,7 @@ var PCGAME={
   },
   rf:function(){ return {x:(Math.random()*16)|0, y:(Math.random()*16)|0}; },
   stop:function(){
-    var gain=Math.min(20, 6+PC.score*2);
+    var gain=CampusPressure.restGain(Math.min(20, 6+PC.score*2));
     if(PC.score>0){ S.san=Math.min(100,S.san+gain); toast('SAN +'+gain+'（得分 '+PC.score+'）'); }
     PC.on=false;
     var el=document.getElementById('pcgame'); if(el) el.style.display='none';

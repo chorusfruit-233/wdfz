@@ -188,10 +188,11 @@ function doSanAct(key){
   if(S.actCool[key]&&clockNow<S.actCool[key]){
     os('我：刚做过。现在没那个心情。',2.4); return;
   }
-  var gain=key==='eat'?Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */
-  S.san=Math.min(100,S.san+gain);
   var _before=S.tsec;
   advanceGameTime(a.min);
+  var base=key==='eat'?Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */
+  var gain=CampusPressure.restGain(base);  /* 按休息结束时的压力结算，跨夜休息不能绕过衰减。 */
+  S.san=Math.min(100,S.san+gain);
   S.actCool[key]=gameClock()+a.cd;
   restoreStamina(25);
   if(key==='piano'){ try{ SFX.resume(); SFX.moonlight(); }catch(e){} }
@@ -200,7 +201,7 @@ function doSanAct(key){
     try{ timeSkipCard(a.min, a.n, S.tsec); }catch(e){}
   }
   os(a.msg,3.6);
-  if(a.min<4) toast('SAN +'+gain);
+  toast('SAN +'+gain+(CampusPressure.current().stage>0?' · 校园压力使休息效果减弱':''));
   try{ SFX.click(); }catch(e){}
 }
 var SKIP_T=null;

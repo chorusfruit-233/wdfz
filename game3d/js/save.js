@@ -136,6 +136,7 @@ var SAVE_SCHEMA=[
 function saveSlot(){ return (typeof RUN_MODE!=='undefined'&&RUN_MODE==='speedrun')?'wdfz3d_speedrun_slot':'wdfz3d'; }
 function saveGame(){
   try{
+    CampusPressure.observe();
     var d={v:1, clockVersion:2};
     SAVE_SCHEMA.forEach(function(f){ f.save(d); });
     localStorage.setItem(saveSlot(),JSON.stringify(d));
@@ -147,6 +148,7 @@ function applySave(d){
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
   Investigation.migrate();
   SchoolDay.restore();
+  CampusPressure.restore();
   try{ Elevator.fixCabinPosition(); }catch(e){}
 }
 function loadGame(){

@@ -12,7 +12,7 @@ class DaySimulationTest(BrowserCase):
         return page.evaluate("""([profile,days])=>{
           /* 好学生：一直坐在自己座位上，熄灯后回宿舍；逃课生：整天待在室外操场边 */
           /* 从早读 07:20 跑到 01:00 跳回早上为止，就是自然推进的一整天 */
-          S.tsec=440;let dt=0.25, real=0, log=[], prev=S.tsec, wraps=0, minSan=S.san, maxViol=S.viol, peak=[0], seat0={x:S.x,y:S.y};
+          S.tsec=440;let dt=0.25, real=0, log=[], prev=S.tsec, wraps=0, minSan=S.san, daytimeMinSan=S.san, maxViol=S.viol, peak=[0], seat0={x:S.x,y:S.y};
           if(profile==='truant'){S.seated=false;S.mode='out';S.room=null;S.x=290*SC;S.y=430*SC;}
           while(wraps<days&&real<4000*days&&!S.dead){
             AN.active=false;AN.next=1e9;PAT.next=1e9;patReset();
@@ -21,10 +21,11 @@ class DaySimulationTest(BrowserCase):
               let R=INTERIORS.dorm1;S.x=R.ox+R.cols*R.tw/2;S.y=R.oy+R.rows*R.th/2;}
             if(profile==='good'&&!night&&S.room!=='teach1'){S.mode='in';S.room='teach1';S.x=seat0.x;S.y=seat0.y;S.seated=true;}
             updateSystems(dt);real+=dt;if(S.tsec<prev){wraps++;peak.push(0);}prev=S.tsec;minSan=Math.min(minSan,S.san);maxViol=Math.max(maxViol,S.viol);
+            if(!night)daytimeMinSan=Math.min(daytimeMinSan,S.san);
             peak[peak.length-1]=Math.max(peak[peak.length-1],S.tt);
             if(Math.abs(real%300)<dt/2)log.push([Math.round(real),Math.round(S.tsec),Math.round(S.san),Math.round(S.viol),Math.round(S.tt)]);
           }
-          return {real,dead:S.dead,day:S.day,clock:S.tsec,minSan,maxViol,san:S.san,viol:S.viol,tt:S.tt,peak:peak.map(Math.round),log,inspections:Object.keys((RT.inspection||{}).seen||{}).length};
+          return {real,dead:S.dead,day:S.day,clock:S.tsec,minSan,daytimeMinSan,maxViol,san:S.san,viol:S.viol,tt:S.tt,peak:peak.map(Math.round),log,inspections:Object.keys((RT.inspection||{}).seen||{}).length};
         }""", [profile, days])
 
     def test_full_compliance_survives_day_one_but_not_day_two(self):
@@ -42,8 +43,10 @@ class DaySimulationTest(BrowserCase):
     def test_truancy_does_not_drain_san_and_day_lasts_20_minutes(self):
         r = self.simulate('truant')
         self.assertFalse(r['dead'], r)
-        # 普通离席不持续加违规或扣 SAN；检查与夜间规则仍结算。
-        self.assertGreater(r['minSan'], 60, r)
+        # 白天普通离席仍不扣 SAN；晚间升压使在室外熬完整夜消耗明显增加。
+        self.assertGreater(r['daytimeMinSan'], 90, r)
+        self.assertGreater(r['minSan'], 30, r)
+        self.assertLess(r['minSan'], 60, r)
         self.assertGreater(r['maxViol'], 50, r)
         self.assertEqual(r['inspections'], 2, r)
         self.assertAlmostEqual(r['real'], 20*60, delta=.25, msg=r)

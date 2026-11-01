@@ -63,6 +63,7 @@ function update(dt){
   try{ Talent.tickWatch(); }catch(e){}            /* 守时（规则 2）：开饭、饭点结束、熄灯前看一眼表 */
   try{ DayEvents.tick(); }catch(e){}              /* 特殊校园日：当天定一次、早上广播、校庆横幅 */
   spotTick();
+  CampusPressure.tick();
 }
 function render(dt){
   try{ PCGAME.tick(dt); }catch(e){}
@@ -149,6 +150,7 @@ function hudEl(id){
   return e;
 }
 function updateHUD(){
+  CampusPressure.paint();
   var feel=hudEl('sanfeel'),stage=sanityStage();
   if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=SAN_FEEL[stage];}
   /* 界面也跟着身体状态变（状态条的红线跳得越来越急）；样式里关掉镜头晃动时不动 */

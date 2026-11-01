@@ -26,6 +26,7 @@ def package_example(directory, result):
     summary = {'duration': duration, 'source_commit': result['source_commit'],
                'sha256': result['video']['sha256'], 'bytes': result['video']['bytes'],
                'ending': result['state']['ending'], 'talent': result['state']['talent'],
+               'controls': result.get('settings', {}).get('controls', 'keyboard_mouse'),
                'chapters': chapters}
     poster_time = next((c['seconds'] for c in chapters if c['title'] == '自己的课桌与讲台移交单'), 0)
     subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-n', '-ss', str(poster_time + 1),

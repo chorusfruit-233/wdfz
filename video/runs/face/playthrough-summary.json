@@ -1,0 +1,51 @@
+{
+  "duration": 638.92,
+  "source_commit": "e8c38e4d07a6b75d40b05e2a016dd9ced1ba54c6",
+  "sha256": "04ea78a3f9c72402a90bd6ebc476ecaee96777d4e1a36699b12e116499a32738",
+  "bytes": 26858597,
+  "ending": "face",
+  "talent": "code",
+  "controls": "touch_joystick_and_look_with_keyboard_actions",
+  "chapters": [
+    {
+      "seconds": 0,
+      "title": "主菜单 · 全新开局"
+    },
+    {
+      "seconds": 6,
+      "title": "醒来，阅读开场"
+    },
+    {
+      "seconds": 45,
+      "title": "自己的课桌与讲台移交单"
+    },
+    {
+      "seconds": 56,
+      "title": "等待第一次集合检查"
+    },
+    {
+      "seconds": 137,
+      "title": "前往行政楼寻找钥匙"
+    },
+    {
+      "seconds": 272,
+      "title": "搜查校长办公室"
+    },
+    {
+      "seconds": 281,
+      "title": "前往实验楼三楼网络中心"
+    },
+    {
+      "seconds": 415,
+      "title": "返回行政楼，同步门禁身份"
+    },
+    {
+      "seconds": 542,
+      "title": "前往西小门，完成白名单验证"
+    },
+    {
+      "seconds": 625,
+      "title": "真结局：《白名单》"
+    }
+  ]
+}

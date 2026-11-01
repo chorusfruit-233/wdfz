@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>完整通关示例 · 武大附中里世界</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#101413;color:#e2e6df;font:16px/1.65 system-ui,sans-serif}
+  main{max-width:1060px;margin:auto;padding:32px 20px 56px}a{color:#c5dbbc;text-underline-offset:4px}
+  header{margin-bottom:22px}.eyebrow{color:#9aab96;letter-spacing:.15em;font-size:12px}h1{font-size:clamp(26px,4vw,38px);font-weight:500;margin:8px 0}
+  p{color:#aab3a7;margin:8px 0}.meta{font-size:14px}video{display:block;width:100%;aspect-ratio:16/9;background:#050705;border:1px solid #344033;border-radius:8px}
+  .actions{display:flex;gap:20px;flex-wrap:wrap;margin:18px 0 28px;font-size:14px}h2{font-size:17px;font-weight:500;margin:24px 0 12px}
+  ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));list-style:none;padding:0;gap:8px}
+  button{display:flex;gap:12px;width:100%;text-align:left;align-items:center;background:#1a211a;color:#dce4d7;border:1px solid #344033;border-radius:5px;padding:12px;font:inherit;font-size:14px;cursor:pointer}
+  button:hover{background:#283326}button:focus-visible,a:focus-visible{outline:2px solid #d1dd92;outline-offset:3px}time{color:#9fbb91;font-variant-numeric:tabular-nums}
+  footer{border-top:1px solid #30392e;padding-top:18px;margin-top:32px;font-size:13px;color:#9fa89a}
+  @media(max-width:600px){main{padding:22px 14px 32px}ol{grid-template-columns:1fr}.actions{gap:14px}}
+</style>
+<main>
+  <header>
+    <span class="eyebrow">武大附中 · 里世界</span>
+    <h1>从醒来到离开</h1>
+    <p id="route">完整通关示例</p>
+    <p class="meta" id="meta">预知梦难度 · 键鼠脚本操作 · 原速、无剪辑</p>
+  </header>
+  <video id="movie" controls playsinline preload="metadata" poster="playthrough-poster.jpg" aria-label="从新游戏到真结局的完整录像">
+    <source src="playthrough.mp4" type="video/mp4">
+    浏览器无法播放。请使用下方链接下载 MP4。
+  </video>
+  <div class="actions">
+    <a href="playthrough.mp4" download>下载完整视频</a>
+    <a href="https://github.com/chorusfruit-233/wdfz/blob/main/video/游玩示例.md">查看制作代码与运行方法</a>
+    <a href="https://chorusfruit-233.github.io/wdfz/">自己玩一局</a>
+    <a href="https://chorusfruit-233.github.io/wdfz/video/endings.html">其他真结局录像</a>
+  </div>
+  <h2>按阶段观看</h2>
+  <p class="meta">章节只用于跳转；录像保留全部等待、探索和遇险过程。</p>
+  <ol id="chapters" aria-label="章节导航"></ol>
+  <footer>
+    脚本读取地图和游戏状态，通过正常键盘、触屏或鼠标输入操作。这是预设路线的自动游玩示例，并非真人初见实况。
+    <br>画面与声音均来自正在运行的游戏。软件渲染环境的实际帧率较低；可在自己的 GPU 环境中重新生成。
+    <br><a href="playthrough-run.json.gz" download>下载本次操作与状态日志</a>
+  </footer>
+</main>
+<script>
+  const video=document.getElementById('movie');
+  function stamp(seconds){return Math.floor(seconds/60)+':'+String(Math.floor(seconds%60)).padStart(2,'0');}
+  fetch('playthrough-summary.json').then(r=>{if(!r.ok)throw Error('metadata');return r.json();}).then(run=>{
+    const title={car:'《闸门》 · 汽车逃脱',face:'《白名单》 · 身份验证',portal:'《门》 · 收集与装配'}[run.ending]||run.ending;
+    document.getElementById('route').textContent='完整通关示例 · '+title;
+    document.title=title+' · 武大附中里世界';
+    const controls=run.controls==='touch_joystick_and_look_with_keyboard_actions'?'摇杆与按键脚本操作':'键鼠脚本操作';
+    document.getElementById('meta').textContent=stamp(run.duration)+' · 预知梦难度 · '+controls+' · 原速、无剪辑';
+    for(const chapter of run.chapters){
+      const li=document.createElement('li'),button=document.createElement('button'),time=document.createElement('time');
+      button.type='button';time.textContent=stamp(chapter.seconds);button.append(time,document.createTextNode(chapter.title));
+      button.addEventListener('click',async()=>{
+        if(video.readyState<1){
+          await new Promise(resolve=>video.addEventListener('loadedmetadata',resolve,{once:true}));
+        }
+        video.currentTime=chapter.seconds;video.play().catch(()=>{});
+      });
+      li.append(button);document.getElementById('chapters').append(li);
+    }
+  }).catch(()=>{document.getElementById('chapters').textContent='章节信息暂时不可用，仍可使用播放器观看完整录像。';});
+</script>
+</html>

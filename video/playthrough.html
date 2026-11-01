@@ -20,10 +20,10 @@
   <header>
     <span class="eyebrow">武大附中 · 里世界</span>
     <h1>从醒来到离开</h1>
-    <p>完整通关示例 · 汽车逃脱路线</p>
+    <p id="route">完整通关示例</p>
     <p class="meta" id="meta">预知梦难度 · 键鼠脚本操作 · 原速、无剪辑</p>
   </header>
-  <video id="movie" controls playsinline preload="metadata" poster="playthrough-poster.jpg" aria-label="从新游戏到汽车真结局的完整录像">
+  <video id="movie" controls playsinline preload="metadata" poster="playthrough-poster.jpg" aria-label="从新游戏到真结局的完整录像">
     <source src="playthrough.mp4" type="video/mp4">
     浏览器无法播放。请使用下方链接下载 MP4。
   </video>
@@ -31,12 +31,13 @@
     <a href="playthrough.mp4" download>下载完整视频</a>
     <a href="https://github.com/chorusfruit-233/wdfz/blob/main/video/游玩示例.md">查看制作代码与运行方法</a>
     <a href="https://chorusfruit-233.github.io/wdfz/">自己玩一局</a>
+    <a href="https://chorusfruit-233.github.io/wdfz/video/endings.html">其他真结局录像</a>
   </div>
   <h2>按阶段观看</h2>
   <p class="meta">章节只用于跳转；录像保留全部等待、探索和遇险过程。</p>
   <ol id="chapters" aria-label="章节导航"></ol>
   <footer>
-    脚本读取地图和游戏状态来操作键鼠。这是预设路线的自动游玩示例，并非真人初见实况。
+    脚本读取地图和游戏状态，通过正常键盘、触屏或鼠标输入操作。这是预设路线的自动游玩示例，并非真人初见实况。
     <br>画面与声音均来自正在运行的游戏。软件渲染环境的实际帧率较低；可在自己的 GPU 环境中重新生成。
     <br><a href="playthrough-run.json.gz" download>下载本次操作与状态日志</a>
   </footer>
@@ -45,7 +46,11 @@
   const video=document.getElementById('movie');
   function stamp(seconds){return Math.floor(seconds/60)+':'+String(Math.floor(seconds%60)).padStart(2,'0');}
   fetch('playthrough-summary.json').then(r=>{if(!r.ok)throw Error('metadata');return r.json();}).then(run=>{
-    document.getElementById('meta').textContent=stamp(run.duration)+' · 预知梦难度 · 键鼠脚本操作 · 原速、无剪辑';
+    const title={car:'《闸门》 · 汽车逃脱',face:'《白名单》 · 身份验证',portal:'《门》 · 收集与装配'}[run.ending]||run.ending;
+    document.getElementById('route').textContent='完整通关示例 · '+title;
+    document.title=title+' · 武大附中里世界';
+    const controls=run.controls==='touch_joystick_and_look_with_keyboard_actions'?'摇杆与按键脚本操作':'键鼠脚本操作';
+    document.getElementById('meta').textContent=stamp(run.duration)+' · 预知梦难度 · '+controls+' · 原速、无剪辑';
     for(const chapter of run.chapters){
       const li=document.createElement('li'),button=document.createElement('button'),time=document.createElement('time');
       button.type='button';time.textContent=stamp(chapter.seconds);button.append(time,document.createTextNode(chapter.title));

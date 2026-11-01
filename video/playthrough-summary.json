@@ -1,54 +1,55 @@
 {
-  "duration": 477.2,
-  "source_commit": "9b6d51b3ed43e82c656455327ac112095c4da3d4",
-  "sha256": "88e3538d60ac7b49bb4a781fefc57e6f07149c45b7a7200bef842cb7dd5ab3a1",
-  "bytes": 21781209,
+  "duration": 439.64,
+  "source_commit": "01b41ae5f0f30878793990b2995e76008c100c74",
+  "sha256": "0772e69fd107a26498778de6452a08a41c5211cf6e633cb74ffadcf73082542e",
+  "bytes": 20418637,
   "ending": "car",
-  "talent": "drive",
+  "talent": "watch",
+  "controls": "touch_joystick_and_look_with_keyboard_actions",
   "chapters": [
     {
       "seconds": 0,
       "title": "主菜单 · 全新开局"
     },
     {
-      "seconds": 9,
+      "seconds": 8,
       "title": "醒来，阅读开场"
     },
     {
-      "seconds": 53,
+      "seconds": 49,
       "title": "自己的课桌与讲台移交单"
     },
     {
-      "seconds": 63,
+      "seconds": 60,
       "title": "等待第一次集合检查"
     },
     {
-      "seconds": 144,
+      "seconds": 140,
       "title": "前往行政楼寻找钥匙"
     },
     {
-      "seconds": 300,
+      "seconds": 249,
       "title": "搜查校长办公室"
     },
     {
-      "seconds": 316,
+      "seconds": 263,
       "title": "前往保安岗核对停车记录"
     },
     {
-      "seconds": 403,
+      "seconds": 358,
       "title": "进入车库，持续照射黑影"
     },
     {
-      "seconds": 436,
+      "seconds": 401,
       "title": "启动汽车，驶离校园"
     },
     {
-      "seconds": 446,
+      "seconds": 411,
       "title": "避开路障，按路牌选择出口"
     },
     {
-      "seconds": 463,
-      "title": "真结局：驾车离开"
+      "seconds": 426,
+      "title": "真结局：《闸 门》"
     }
   ]
 }

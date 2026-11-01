@@ -1,0 +1,63 @@
+{
+  "duration": 815.24,
+  "source_commit": "e8c38e4d07a6b75d40b05e2a016dd9ced1ba54c6",
+  "sha256": "c0c8af75c02729a631249e4cb2da42c4929fae8aea6f7ba6ff17320e6968eda7",
+  "bytes": 32399753,
+  "ending": "portal",
+  "talent": "night",
+  "controls": "touch_joystick_and_look_with_keyboard_actions",
+  "chapters": [
+    {
+      "seconds": 0,
+      "title": "主菜单 · 全新开局"
+    },
+    {
+      "seconds": 9,
+      "title": "醒来，阅读开场"
+    },
+    {
+      "seconds": 51,
+      "title": "自己的课桌与讲台移交单"
+    },
+    {
+      "seconds": 61,
+      "title": "等待第一次集合检查"
+    },
+    {
+      "seconds": 142,
+      "title": "前往行政楼寻找钥匙"
+    },
+    {
+      "seconds": 251,
+      "title": "搜查校长办公室"
+    },
+    {
+      "seconds": 276,
+      "title": "物理实验室：调查基座后的隧道"
+    },
+    {
+      "seconds": 460,
+      "title": "化学实验室：读图纸并分离发光试剂"
+    },
+    {
+      "seconds": 545,
+      "title": "网络中心：取得服务器铜线圈"
+    },
+    {
+      "seconds": 594,
+      "title": "地理与音乐教室：拼齐三张图纸"
+    },
+    {
+      "seconds": 711,
+      "title": "在音乐教室稍作休息"
+    },
+    {
+      "seconds": 718,
+      "title": "返回基座：装配并走进门"
+    },
+    {
+      "seconds": 799,
+      "title": "真结局：《门》"
+    }
+  ]
+}
