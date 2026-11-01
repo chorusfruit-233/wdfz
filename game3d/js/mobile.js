@@ -126,6 +126,9 @@ var TouchLayout={rects:{},
     var baseRects=this.rects,placed=[];this.rects={};
     var fullscreen=document.getElementById('fullscreen-toggle').getBoundingClientRect();
     if(IS_TOUCH&&fullscreen.width)placed.push({x:fullscreen.x,y:fullscreen.y,w:fullscreen.width,h:fullscreen.height});
+    /* 快捷栏在 HUD 层，覆盖摇杆时会误用物品；按当前 CSS 布局预留整排的命中区。 */
+    var hot=document.getElementById('hot').getBoundingClientRect();
+    if(IS_TOUCH&&hot.width&&hot.height)placed.push({x:hot.x,y:hot.y,w:hot.width,h:hot.height});
     ['stick','tAct','ttop','tside'].forEach(function(id){
       var el=document.getElementById(id);if(!el)return;
       var base=baseRects[id],size=id==='tside'?58:Math.min(Math.max(44,(base.w||100)*scale),right-left,id==='stick'?h*.48:id==='tAct'?h*.4:right-left);

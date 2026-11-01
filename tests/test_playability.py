@@ -166,6 +166,44 @@ class PlayabilityTest(BrowserCase):
             page.evaluate("SET.touchLayout={ttop:{x:90,y:8}};TouchLayout.apply()")
             self.assert_js(page,"""(()=>{let b=document.getElementById('fullscreen-toggle').getBoundingClientRect();return Object.values(TouchLayout.rects).every(r=>r.x+r.w<=b.x||b.right<=r.x||r.y+r.h<=b.y||b.bottom<=r.y);})()""")
 
+    def test_custom_touch_controls_avoid_quick_slots_after_resize_and_restore(self):
+        page=self.page(touch=True)
+        for width,height in [(390,844),(844,390),(320,568)]:
+            page.set_viewport_size({'width':width,'height':height})
+            for size in (85,100,125):
+                for control in ('stick','tAct','ttop'):
+                    with self.subTest(viewport=(width,height),size=size,control=control):
+                        page.evaluate("""([id,size])=>{
+                          const hot=document.getElementById('hot').getBoundingClientRect();
+                          SET.touchLayout={[id]:{x:(hot.x+hot.width/2)/innerWidth*100,y:(hot.y+hot.height/2)/innerHeight*100}};
+                          Settings.comfort('touchSize',size);
+                          SET.touchLayout=null;SET.touchSize=100;loadSet();
+                        }""",[control,size])
+                        self.assert_js(page,"""(()=>{
+                          const hot=document.getElementById('hot').getBoundingClientRect();
+                          return hot.width>0&&hot.height>0&&Object.values(TouchLayout.rects).every(r=>
+                            r.x+r.w<=hot.x||hot.right<=r.x||r.y+r.h<=hot.y||hot.bottom<=r.y);
+                        })()""")
+                        self.assert_js(page,"""Object.values(TouchLayout.rects).every(r=>
+                          r.x>=0&&r.y>=0&&r.x+r.w<=innerWidth&&r.y+r.h<=innerHeight)""")
+
+    def test_custom_joystick_touch_does_not_consume_quick_items(self):
+        page=self.page(touch=True)
+        page.evaluate("""S.bag=['pill','snack'];S.hot=['pill','snack'];updateHUD();
+          TouchLayout.pick('stick');TouchLayout.change('x',50);TouchLayout.change('y',73);
+          SET.touchLayout=null;loadSet();""")
+        stick=page.locator('#stick').bounding_box()
+        x,y=stick['x']+stick['width']/2,stick['y']+stick['height']/2
+        self.touch(page,'touchStart',[{'x':x,'y':y,'id':1}])
+        self.touch(page,'touchMove',[{'x':x,'y':y-25,'id':1}])
+        self.assert_js(page,"TOUCH.active&&TOUCH.dy<0&&INPUT.stickId!==null")
+        self.touch(page,'touchEnd',[])
+        self.assert_js(page,"S.bag.includes('pill')&&S.bag.includes('snack')&&!TOUCH.active")
+        page.locator('#hot .hslot').nth(0).tap()
+        self.assert_js(page,"!S.bag.includes('pill')&&S.bag.includes('snack')&&S.pillT>0")
+        page.locator('#hot .hslot').nth(1).tap()
+        self.assert_js(page,"!S.bag.includes('snack')&&S.snackT>0")
+
     def test_notebook_focus_follows_discovered_routes_without_restoring_forgotten_text(self):
         page=self.game()
         page.evaluate("Investigation.notice();UI.closeChoice();doEnterRoom('portal_tunnel');PortalExploration.readDiary();UI.open('note')")
