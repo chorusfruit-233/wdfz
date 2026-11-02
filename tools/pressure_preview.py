@@ -18,7 +18,7 @@ try:
     p.evaluate("running=false;S.san=8;capStamina();for(let i=0;i<20;i++)render(.2)")
     p.screenshot(path=str(out/'低SAN身体反应.png'))
     report['low_san']=p.evaluate("({label:document.getElementById('sanfeel').textContent,stamina:S.stam,cap:staminaMax(),numericBar:!!document.getElementById('sanbar')})")
-    p.evaluate("""S.san=100;GLR.sanSense=1;S.tsec=700;S.seated=false;S.eyeH=EYE;S.run=false;S.moving=true;let r=INTERIORS.teach1;
+    p.evaluate("""S.san=100;GLR.sanSense=1;S.tsec=700;S.seated=false;VisualState.camera.eyeH=EYE;S.run=false;S.moving=true;let r=INTERIORS.teach1;
       S.x=r.ox+30.5*r.tw;S.y=r.oy+18.5*r.th;S.ang=0;S.pitch=0;Settings.bright(150);
       patReset();PAT.room='teach1';PAT.state='walk';PAT.locked=true;PAT.lock=1;
       PAT.x=S.x+70;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;PAT.blinkCD=.8;patAddFig();
