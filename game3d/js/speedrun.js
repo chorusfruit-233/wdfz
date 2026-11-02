@@ -63,6 +63,7 @@ var Speedrun={run:null, proofId:null, hudOn:true,
     if(!SPEEDRUN_ROUTES[id]) return null;
     r.ms=Math.round(Speedrun.elapsed()); r.route=id;            /* 记录按整毫秒存，和个人最佳一致 */
     if(Speedrun.proofId!==id&&!r.reason) r.reason='ending_direct';
+    if(!r.reason&&typeof Dev!=='undefined'&&Dev.modifiersActive()) r.reason='debug';   /* 没开面板、从控制台打开的调试开关：照样无效 */
     Speedrun.proofId=null;
     r.status=r.reason?'invalid':'finished';
     var res=Speedrun.save(r);

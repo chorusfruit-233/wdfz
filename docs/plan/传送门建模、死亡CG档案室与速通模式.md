@@ -353,10 +353,10 @@
 ### 9.3 P2 速通模式
 
 - `game3d/js/speedrun.js`：`idle → ready → running → finished / failed / abandoned / invalid`。第一次 `playerInputAllowed()` 时起表；`max(performance.now 差, Date.now 差)` 计 RTA；`triggerEnding` 时停表（不等演出）；同一 runId 只记一次。规则版本 `SPEEDRUN_RULES=1`。
-- 有效路线：`car / face / portal`，正常路线在调用结局前登记 `Speedrun.proof()`；不经登记直接调用结局记 `ending_direct` 无效；打开调试面板记 `debug` 无效；死透记失败（预知梦惊醒不停表），回菜单记放弃。隐藏成功路线单独记录，只有本机已见该结局才出现在成绩表。
+- 有效路线：`car / face / portal`，正常路线在调用结局前登记 `Speedrun.proof()`；不经登记直接调用结局记 `ending_direct` 无效；打开调试面板记 `debug` 无效；快跑、无敌和关掉的翻找读条关面板、开新局都不复位，开速通时由 `app/session.js` 调 `Dev.clearModifiers()` 恢复常规状态，结算时这几个开关开着也记 `debug` 无效（2026-11-02 按评审补）；死透记失败（预知梦惊醒不停表），回菜单记放弃。隐藏成功路线单独记录，只有本机已见该结局才出现在成绩表。
 - 存储：`wdfz3d_speedrun_v1`（最近 20 次 + `r规则|难度|路线` 的个人最佳）；速通独立存档槽 `wdfz3d_speedrun_slot`，「继续上次」只读普通槽，速通不能读档续跑。
 - 界面：主菜单入口与难度 / 成绩面板、游戏内右上角计时（不挡状态卡、字幕、地图和触屏键）、结局卡成绩、死亡界面「未通关」一行。
-- 自动化：`SpeedrunTest`（菜单流程与起表时机、RTA 与时钟异常、通关记 PB 且不重复、直接调结局无效、调试 / 死亡 / 放弃 / 读档、惊醒不停表、隐藏路线不出现）。截图：`pictures/死亡档案室与速通模式/`。
+- 自动化：`SpeedrunTest`（菜单流程与起表时机、RTA 与时钟异常、通关记 PB 且不重复、直接调结局无效、调试 / 死亡 / 放弃 / 读档、普通局留下的调试开关不带进速通、惊醒不停表、隐藏路线不出现）。截图：`pictures/死亡档案室与速通模式/`。
 - 未做：三条路线 × 两难度的自然通关计时记录；系统休眠的真机验证。
 
 ### 9.4 P3 新局 3D 开场 CG
