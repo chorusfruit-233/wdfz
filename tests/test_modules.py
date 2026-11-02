@@ -208,7 +208,8 @@ class ModuleBrowserTest(BrowserCase):
           S.bag.push('chalk');useItem('chalk');
           return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,back:S.room,panel:!!document.getElementById('modTools'),
             sub:document.getElementById('sub').innerText}}""")
-        self.assertEqual(result['n'], 36)
+        total = len(manifest())
+        self.assertEqual(result['n'], total - 3)                  # 清单里的模块数减去拿掉的三个
         self.assertEqual(result['bad'], 0)
         self.assertEqual((result['maze'], result['chalk']), ('undefined', 'undefined'))
         self.assertEqual(result['inside'], 'lift_dream')
