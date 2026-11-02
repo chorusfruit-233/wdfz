@@ -158,10 +158,10 @@ class EngineTest(BrowserCase):
             raise
         page.evaluate("PHOTO_TRIED=true;localStorage.setItem('wdfz_pro','1');Settings.q(3)")
         self.start_from_menu(page)
-        page.wait_for_function("S.screen==='play'&&S.room==='teach1'")
-        # 超精细的模型包是异步读的，读好以后 applyQuality 会把场景重建一次：先等它读好再停循环、断言，
-        # 否则正赶上重建时 GLR.roomMesh 是空的（main 上约一半的概率失败）
-        page.wait_for_function('Assets.ready()', timeout=60000)
+        # 开局进教室有一段淡入：S.room 先变成 teach1，教室场景要等淡入的回调才建好（模型包也是异步读的）。
+        # 只等 S.room 就停循环断言，正赶上还没建好时 GLR.roomMesh 是空的（main 上单独跑约一半失败）。
+        page.wait_for_function("S.screen==='play'&&S.room==='teach1'&&Assets.ready()&&!!GLR.roomMesh"
+                               "&&GLR.roomMesh.userData.roomData===INTERIORS.teach1", timeout=60000)
         page.evaluate('clearIntroTimers();running=false;S.intro=0;render(.016)')
         self.assert_js(page, "Engine.ready()&&GLR.roomMesh&&QUALITY===3&&!document.getElementById('errbox')")
         self.assertEqual(remote, [])
