@@ -1,5 +1,6 @@
 """全部音效重做（2026-11-02）：声音库配方、调用点、按类别校准的响度、每次播放的随机变化、上下课铃、
 脚下材质钩子、试听面板，以及以前调用了却不存在的 SFX.chalk / SFX.deep / SFX.stopDeath。"""
+import math
 import re
 from pathlib import Path
 
@@ -65,6 +66,37 @@ class SoundBankTest(BrowserCase):
         self.assertEqual(off, [], '响度表过期：运行 python tools/sound_levels.py')
         loud = [f"{x['id']} 峰值 {x['pk']}" for x in r['rows'] if x['pk'] > -1.0]
         self.assertEqual(loud, [])
+
+    def test_layer_reverb_follows_calibration_volume_and_stop(self):
+        """PR #27 审查意见：写在单层上的混响（例如 event.bell 的泛音 wet）也要吃出口增益——响度校准、opt.k、stop 淡出。
+        离线渲染时把混响发送接到输出、干声接到不出声的节点，只听混响那一路。"""
+        page = self.game()
+        r = page.evaluate("""async()=>{
+          async function wetOnly(opt,fadeAt){
+            SoundPlayer.seed(5);
+            const sr=22050,a=new OfflineAudioContext(1,sr*4,sr),wet=a.createGain(),sink=a.createGain();
+            wet.connect(a.destination);
+            const nb=a.createBuffer(1,sr*2,sr),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=((i*7919)%2003)/1001.5-1;
+            const E={ctx:a,now:()=>0,noise:()=>nb,strict:true,dry:()=>sink,pan:()=>null,
+              send:(c,w)=>{const g=a.createGain();g.gain.value=w;g.connect(wet);return g;}};
+            const h=SoundPlayer.render(E,'event.bell',opt,false);
+            if(fadeAt!==undefined)SoundPlayer.fade(h,fadeAt);
+            const x=(await a.startRendering()).getChannelData(0);
+            let pk=0,late=0;for(let i=0;i<x.length;i++){const v=Math.abs(x[i]);if(v>pk)pk=v;if(i>sr*0.8&&v>late)late=v;}
+            return {pk,late,fx:!!h.fx};
+          }
+          const raw=await wetOnly({raw:true}), cal=await wetOnly({}), half=await wetOnly({k:0.5}), mute=await wetOnly({k:0}), stopped=await wetOnly({},0.3);
+          SoundPlayer.seed(null);
+          const live=SoundPlayer.play('event.bell'), click=SoundPlayer.play('ui.click');
+          return {raw,cal,half,mute,stopped,level:SOUND_LEVELS['event.bell'],liveFx:!!(live&&live.fx),clickFx:!!(click&&click.fx)};}""")
+        self.assertTrue(r['cal']['fx'])
+        db = 20 * math.log10(r['cal']['pk'] / r['raw']['pk'])
+        self.assertAlmostEqual(db, r['level'], delta=0.3)                    # 混响也吃响度校准（event.bell 约 −9 dB）
+        self.assertAlmostEqual(r['half']['pk'] / r['cal']['pk'], 0.5, delta=0.02)   # 也跟着 opt.k
+        self.assertEqual(r['mute']['pk'], 0)                                 # k=0：连混响都没有
+        self.assertLess(r['stopped']['late'], r['cal']['late'] * 0.01)        # 淡出时混响一起停
+        self.assertTrue(r['liveFx'])                                         # 游戏混音里：钟有自己的那一路混响
+        self.assertFalse(r['clickFx'])                                       # 没写单层 wet 的音效不多建节点
 
     def test_each_play_is_slightly_different_but_equally_loud(self):
         page = self.game()

@@ -67,13 +67,13 @@ var SoundPlayer=(function(){
     lfo.frequency.value=num(L.vib[0],o,i,5); lg.gain.value=f*num(L.vib[1],o,i,0.01);
     lfo.connect(lg); lg.connect(param); lfo.start(t); lfo.stop(t+dur+0.06);
   }
-  /* 一层的输出：[am] → [低通] → 包络 → 目标；wet 另开一路混响 */
+  /* 一层的输出：[am] → [低通] → 包络 → 目标；wet 另开一路混响（经 ch.send，和干声一样吃出口增益） */
   function tail(E,ch,L,src,t,atk,hold,dur,peak,dst,o,i){
     var a=E.ctx, node=src, am=amNode(E,L,t,dur,o,i);
     if(am){ node.connect(am); node=am; }
     if(L.lp){ var lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=num(L.lp,o,i,2000); node.connect(lp); node=lp; }
     var g=a.createGain(); envelope(g.gain,t,atk,hold,dur,peak); node.connect(g); g.connect(dst);
-    var w=num(L.wet,o,i,0); if(w>0){ var s=E.send(ch.cat,w); if(s) g.connect(s); }
+    var w=num(L.wet,o,i,0); if(w>0){ var s=ch.send(w); if(s) g.connect(s); }
     return g;
   }
   function voice(E,ch,L,t,peak,fk,dst,o,i){
@@ -100,14 +100,14 @@ var SoundPlayer=(function(){
       src.start(t,rng()*1.6); src.stop(t+dur+0.06);
     }else if(L.t==='bell'){
       f=num(L.f,o,i,220)*fk;
-      var parts=L.partials||BELL, bw=num(L.wet,o,i,0);
+      var parts=L.partials||BELL, bw=num(L.wet,o,i,0), bsend=bw>0?ch.send(bw):null;
       for(j=0;j<parts.length;j++){
         var pf=f*parts[j][0]; if(pf>nyq) continue;
         var po=a.createOscillator(); po.type='sine'; po.frequency.value=pf*(1+(rng()-0.5)*0.002);
         var pd=Math.max(0.05,dur*parts[j][2]);
         var pg=a.createGain(); envelope(pg.gain,t,num(L.atk,o,i,0.002),0,pd,peak*parts[j][1]);
         po.connect(pg); pg.connect(dst);
-        if(bw>0){ var bs=E.send(ch.cat,bw); if(bs) pg.connect(bs); }
+        if(bsend) pg.connect(bsend);
         po.start(t); po.stop(t+pd+0.06);
       }
     }else if(L.t==='vowel'){
@@ -169,7 +169,9 @@ var SoundPlayer=(function(){
     }
     return end;
   }
-  /* 一个音效的出口：input →（整体声像）→ mix；各自带声像的层走 raw → mix；mix →（发闷）→ 分类总线 + 混响 */
+  /* 一个音效的出口：input →（整体声像）→ mix；各自带声像的层走 raw → mix；mix →（发闷）→ 分类总线 + 混响。
+     写在单层上的混响（配方里某一层的 wet，例如钟的泛音）另走 fx：增益和 mix 一样是 gk（opt.k、随机浮动、响度校准），
+     发闷时同样过低通，stop() 淡出时连它一起——以前直接接到混响发送，会漏掉校准、k=0 时还听得见、也停不掉。 */
   function chain(E,D,o,gk){
     var a=E.ctx, out=E.dry(D.cat); if(!out) return null;
     var input=a.createGain(), raw=a.createGain(), mix=a.createGain(), last=mix, lp=o.lp===undefined?1:o.lp;
@@ -181,7 +183,23 @@ var SoundPlayer=(function(){
     last.connect(out);
     var wet=o.wet!==undefined?o.wet:(D.wet!==undefined?D.wet:(CAT_WET[D.cat]||0.3));
     if(wet>0){ var s=E.send(D.cat,wet); if(s) last.connect(s); }
-    return {cat:D.cat,input:input,raw:raw,mix:mix};
+    var ch={cat:D.cat,input:input,raw:raw,mix:mix,fx:null,send:null};
+    var fxState=0;                                   /* 0 还没建；1 建好；-1 这个环境没有混响 */
+    ch.send=function(w){
+      if(fxState===0){
+        var to=E.send(D.cat,1);
+        if(!to) fxState=-1;
+        else{
+          var fx=a.createGain(); fx.gain.value=gk;
+          if(lp<0.98){ var mf2=a.createBiquadFilter(); mf2.type='lowpass'; mf2.frequency.value=350+9000*lp*lp; mf2.Q.value=0.7; fx.connect(mf2); mf2.connect(to); }
+          else fx.connect(to);
+          ch.fx=fx; fxState=1;
+        }
+      }
+      if(fxState<0) return null;
+      var g=a.createGain(); g.gain.value=w; g.connect(ch.fx); return g;
+    };
+    return ch;
   }
   /* ---------- 一个音效 ---------- */
   function render(E,id,opt,plan){
@@ -204,7 +222,7 @@ var SoundPlayer=(function(){
       rdt+=num(R.every,o,r,0.3)*Math.pow(num(R.accel,o,0,1),r); rg*=num(R.decay,o,0,1);
     }
     if(plan) return end;
-    return {id:id,cat:D.cat,gain:ch.mix,end:end};
+    return {id:id,cat:D.cat,gain:ch.mix,fx:ch.fx,end:end};
   }
 
   /* ---------- 游戏里的输出：SFX 的分类总线、混响、方位 ---------- */
@@ -227,13 +245,22 @@ var SoundPlayer=(function(){
     }
     return h;
   }
-  /* 停掉某一类（或全部）正在响的声音：0.04 秒淡出 */
+  /* 从 at 秒起 0.04 秒淡出一个正在响的音效：干声和它自己的混响（fx）一起 */
+  function fade(h,at){
+    if(!h) return false;
+    [h.gain,h.fx].forEach(function(n){
+      if(!n) return;
+      try{ n.gain.cancelScheduledValues(at); n.gain.setTargetAtTime(0,at,0.04); }catch(e){}
+    });
+    return true;
+  }
+  /* 停掉某一类（或全部）正在响的声音 */
   function stop(c){
     if(typeof SFX==='undefined'||!SFX.synth) return 0;
     var a=SFX.synth().ctx(), n=0; if(!a) return 0;
     active=active.filter(function(h){
       if(c&&h.cat!==c) return h.end>a.currentTime;
-      try{ h.gain.gain.cancelScheduledValues(a.currentTime); h.gain.gain.setTargetAtTime(0,a.currentTime,0.04); n++; }catch(e){}
+      if(fade(h,a.currentTime)) n++;
       return false;
     });
     return n;
@@ -309,7 +336,7 @@ var SoundPlayer=(function(){
     return bad;
   }
   return {
-    play:play, stop:stop, render:render, length:length, has:function(id){ return !!def(id); }, def:def, cat:cat, ids:ids,
+    play:play, stop:stop, fade:fade, render:render, length:length, has:function(id){ return !!def(id); }, def:def, cat:cat, ids:ids,
     level:function(id){ var t=typeof SOUND_LEVELS!=='undefined'?SOUND_LEVELS[id]:undefined; return typeof t==='number'?t:null; },
     measure:measure, validate:validate, loudness:loudness,
     active:function(){ var a=(typeof SFX!=='undefined'&&SFX.synth)?SFX.synth().ctx():null, now=a?a.currentTime:0; return active.filter(function(h){ return h.end>now; }).map(function(h){ return h.id; }); },
