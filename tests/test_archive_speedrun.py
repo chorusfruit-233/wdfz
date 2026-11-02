@@ -186,6 +186,21 @@ class SpeedrunTest(BrowserCase):
         page.evaluate("Game.continue_()")
         self.assert_js(page, "RUN_MODE==='normal'&&!Speedrun.run")
 
+    def test_debug_switches_left_on_in_a_normal_game_do_not_carry_into_a_run(self):
+        """普通局里开的快跑 / 无敌 / 关读条，关面板、开新局都不复位：开速通时要清掉，带着它们不能记成绩。"""
+        page = self.page()
+        page.evaluate("DEV.fast=true;DEV.god=true;SEARCH.on=false")      # 普通局里开过，面板已经关了
+        self.start_run(page)
+        self.assert_js(page, "!DEV.fast&&!DEV.god&&SEARCH.on&&!Dev.modifiersActive()")
+        page.evaluate("running=false;update(1/60);Speedrun.run.p0-=60000;Speedrun.run.w0-=60000")
+        page.evaluate("Speedrun.proof('car');triggerEnding('car',true)")
+        self.assert_js(page, "Speedrun.run.status==='finished'&&Speedrun.best('easy','car')===Speedrun.run.ms")
+        page.evaluate("Game.quit()")
+        # 跑的途中不开面板、从控制台打开：结算时判无效，不进个人最佳
+        self.start_run(page)
+        page.evaluate("running=false;update(1/60);DEV.god=true;Speedrun.proof('face');triggerEnding('face',true)")
+        self.assert_js(page, "Speedrun.run.status==='invalid'&&Speedrun.run.reason==='debug'&&Speedrun.best('easy','face')===null")
+
     def test_dream_wake_keeps_the_clock_running(self):
         page = self.page()
         self.start_run(page, 'easy')
