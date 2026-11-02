@@ -1,0 +1,145 @@
+# 模块化与 Mod 规范
+
+> 2026-11-02 按用户手稿要求建立：把项目整理成模块化形式，以后更新时只改相关模块、不用遍历全部代码；新功能可以通过直接放入 / 上传文件插入，并提供 Mod 入口供测试和自制内容使用。本文是开发约定，也是写 Mod 的说明。实施计划与验收见 [虚空迷宫、粉笔记号与模块化](plan/虚空迷宫、粉笔记号与模块化.md)。
+
+## 1. 总体结构
+
+```text
+index.html                      页面结构；只加载 modules.js、manifest.js，然后 GameModules.boot()
+game3d/js/modules.js            模块注册表、钩子、模块状态存档、Mod 接口与加载器（最先加载，不依赖游戏脚本）
+game3d/manifest.js              模块清单：全部脚本的唯一登记处，顺序 = 加载顺序
+game3d/js/*.js、model/、engine/、fx/   原有代码，按清单分组成模块（文件位置不变）
+game3d/js/modules/<id>/         新功能模块（每个功能一个目录）
+game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js 是登记表
+```
+
+加载过程：`index.html` → `modules.js`（定义 `GameModules`）→ `manifest.js`（逐个 `GameModules.define`）→ `GameModules.boot()` 按清单顺序用 `document.write` 写入全部 `<script>`（同步、保序，`file://` 双击打开也能用）→ 核对每个模块声明的导出 → 加载 Mod → `DOMContentLoaded` 时 `main.js` 的 `boot()` 启动游戏，末尾发 `boot` 钩子。
+
+### 1.1 模块清单
+
+`game3d/manifest.js` 每个模块一段：
+
+| 字段 | 含义 |
+| --- | --- |
+| `id` | 模块 ID（小写、连字符），全局唯一 |
+| `name` / `desc` | 中文名与职责：负责什么、和谁交互 |
+| `files` | 这个模块的全部脚本，按加载顺序 |
+| `exports` | 对外提供、别的模块会直接用的全局名字；加载后自动核对，缺了会记到「Mod 与模块」面板和 `GameModules.errors()` |
+| `emits` | 这个模块在代码里发出的钩子（`GameModules.emit/first`） |
+| `uses` | 这个模块监听的钩子 |
+
+当前 38 个模块（第三方库、基础、地图数据、画质、模型资源包、渲染引擎层、建模、世界与碰撞、钟楼旋梯、巡察者与躲藏、传送门路线、电梯、驾驶逃脱、镜头与演出、特效、灯光与阴影、游戏状态、天赋/特殊日/速通/死亡档案、输入、界面、校规与日程、异象与恐惧、物品、剧情/死亡/结局、交互、声音、存档与设置、调试面板、小游戏与课堂、调查与楼层草图、试玩记录、独白、移动端外壳、前情提要、粉笔记号、虚空迷宫、Mod 管理，以及最后加载的主循环）。具体职责以清单为准。
+
+**改功能的做法**：先在清单里找到模块 → 只读它登记的文件和它 `uses` / `emits` 的钩子 → 改完跑这个模块对应的测试（见第 6 节）。跨模块改动先看对方的 `exports` 是否需要变；导出名字改了，同时改清单。
+
+### 1.2 旧代码与新代码
+
+- 原有文件**位置不变**（测试、工具、录像脚本都按路径引用），按职责归入清单里的模块；加载顺序与改造前逐个相同（`tests/test_modules.py` 核对）。
+- 新功能一律做成 `game3d/js/modules/<id>/` 下的独立模块，通过钩子、房间接口和清单接入，尽量不改旧文件。本轮的「粉笔记号」「虚空迷宫」「Mod 管理」就是这样加进来的，旧文件只加了钩子调用点。
+- 功能模块要能**整块拿掉**：别的代码用到它时先判断 `typeof X!=='undefined'`，并保留原来的行为作兜底（例如没有 `void-maze` 时电梯回到原来的白色空间，没有 `chalk-marks` 时粉笔只「看一眼说明」）。`tests/test_modules.py` 会把这三个功能模块从清单里拿掉再启动游戏验证。
+- 渲染对象（`THREE.*`、`GLR.*`）只出现在引擎、建模、特效类文件里；玩法逻辑文件不直接建渲染对象（`test_engine` 已有检查）。新模块同样拆成「逻辑」和「画面」两个文件，例如 `chalk-marks/marks.js` 与 `marks-fx.js`。
+- 全局名字：一个模块尽量只导出一个命名空间对象（`VoidMaze`、`ChalkMarks`）加少量配置表（`MAZE_CFG`）；配置数值集中在配置表里，便于调参和测试。
+
+## 2. 钩子
+
+`GameModules.on(name, fn, {owner, priority})` 挂监听；`emit` 全部调用；`first` 依次调用，第一个返回非 `undefined/null/false` 的值作数。某个监听抛错只记录（`GameModules.errors()`）并跳过，不影响其他监听和游戏。
+
+| 钩子 | 发出位置 | 方式 | 参数 / 返回 |
+| --- | --- | --- | --- |
+| `interiors` | `map.js` `buildInteriorData` 末尾（只一次） | emit | 模块在这里新增或改写室内场景（`mkFloor`） |
+| `boot` | `main.js` `boot()` 末尾 | emit | 界面、渲染都已就绪 |
+| `loaded` | `modules.js`，全部脚本和 Mod 加载完 | emit | — |
+| `reset` | `GameModules.resetAll()`（新局 `freshState` 末尾） | emit | 清本局状态 |
+| `tick` | `main.js` `update()`，每个模拟步（暂停、手册打开、死亡时不发） | emit | `dt`（秒） |
+| `enterRoom` | `main.js` `onEnterRoom` | emit | `id, restoring` |
+| `leaveRoom` | `world.js` `doEnterRoom` / `doExitRoom` 开头 | emit | `from`（房间 ID 或 `null` 表示室外）, `to` |
+| `interact` | `interact.js` `tryInteract`（站起、出柜、名单之后，默认交互之前） | first | 返回 `true` 表示已处理 |
+| `hint` | `interact.js` `interactHint` | first | 返回提示文字 |
+| `itemUse` | `items.js` `useItem` 开头 | first | `id`；返回 `true` 表示已处理 |
+| `clockText` | `main.js` `updateHUD` | first | 返回要显示的时间文字 |
+| `mapBlocked` | `ui.js` 打开地图页、`main.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
+| `lightState` | `lighting.js` `lightState()` 末尾 | emit | `st`：可改 `amb/hemi/dir/ptK`；`st.steady=true` 灯不闪；`st.fog={r,g,b,density}` 改雾 |
+| `clearWorld` | `engine/scene.js` 换场景前 | emit | 撤掉模块自己加进场景的东西 |
+| `sceneBuilt` | `engine/scene.js` 房间 / 室外场景建好后 | emit | `roomId`（室外为 `null`） |
+| `devTab` | `dev.js` 切换调试面板页签 | emit | `id`；模块加的页签（`DEV_TABS.push`）在这里画内容 |
+
+**加钩子的规则**：只在「多个模块都可能要插手」的流程点加；名字用小驼峰动词或名词；在清单里对应模块的 `emits` 登记；在本表补一行；`tests/test_modules.py` 会检查清单里的 `emits` 确实在该模块文件里发出、`uses` 的钩子确实有人发。热路径（碰撞、每帧移动）不用全局钩子，用下面的房间接口。
+
+## 3. 房间接口
+
+模块通过 `interiors` 钩子 `mkFloor(id, name, host, floor, grid)` 建房间后，可以给房间对象挂这些字段（只对这个房间生效，不进入别的房间的热路径）：
+
+| 字段 | 调用处 | 作用 |
+| --- | --- | --- |
+| `R.build(R)` | `model/room.js` `buildRoomGeometry` | 返回整间房的 `THREE.Group`，不按网格建墙地 |
+| `R.collide(x, y, r)` | `collision.js` | 额外嵌入深度（世界单位），与网格碰撞相加 |
+| `R.solid(x, y)` | `world.js` `solidAtInterior` | 这一点是否实心（防卡位、粉笔找墙会用） |
+| `R.moved()` | `world.js` `moveBy` 每一小步之后 | 更新高度（台阶、坠落） |
+| `R.onEnter(spawn)` | `world.js` `doEnterRoom`，防卡位之前 | 定落点和高度；读档时 `spawn.restoreVisit` 为真 |
+| `R.ownHeight` | `spiral.js` | 房间自己管 `S.floorY`，离开钟楼逻辑不清零 |
+| `R.noMap` | `exploration-map.js` | 不画楼层草图 |
+| `R.noClock` | `main.js` | 游戏钟不走，课表一栏显示 `???` |
+
+灯光：往 `ROOM_LIGHTS[id]` 写 `[x, y, z, 颜色, 强度系数, 距离]`（场景米，房间中心为原点）。
+
+## 4. 模块状态存档
+
+`GameModules.persistent(id, {save, load, reset})`：`save()` 返回可 JSON 化的对象，存在存档的 `d.mods[id]`（Mod 用 `api.store` / `persist` 存的在 `d.mods['mod:'+它的 id]`，和模块分开）；读档时先 `reset()` 再 `load(data)`；新局只 `reset()`。不要往 `S`、`RT` 里塞模块自己的字段（除非确实是全局剧情状态），这样存档字段表 `SAVE_SCHEMA` 不用改，旧存档也不受影响。
+
+## 5. Mod
+
+### 5.1 三种来源
+
+1. **自带**：`game3d/mods/<id>.js`，在 `game3d/mods/index.js` 登记一行后，玩家可在暂停菜单「Mod 与模块」或调试面板「Mod」页打开（默认关闭，开关存在浏览器里，刷新生效）。
+2. **网址**：`?mod=<id>`（多个用逗号）直接加载 `game3d/mods/<id>.js`，不用登记，适合测试。
+3. **上传**：在「Mod 与模块」里选择本地 `.js` 文件，源码存进这台设备浏览器的 `localStorage`（键 `wdfz_mods`，单个上限 512 KB），可启用、停用、删除，刷新生效。不会上传到任何服务器。
+
+网址加 `?nomod` 为**安全模式**：一个 Mod 都不加载（模块照常），用于 Mod 把游戏弄坏时恢复。Mod 只能是本地或本仓库的文件；上传的源码在页面里执行，权限与游戏脚本相同——只导入自己信得过的文件。
+
+### 5.2 写法
+
+文件里调用一次 `GameModules.mod({...})`：
+
+```js
+GameModules.mod({
+  id:'my-mod',            // 必填：字母、数字、-、_，最多 48 位，全局唯一
+  name:'我的 Mod', version:'1.0.0', author:'你的名字', desc:'一句话说明',
+  api:'1.0',              // 依赖的接口大版本；与 GameModules.API_VERSION 大版本不同则不启用
+  priority:0,             // 可选：hooks 里监听的优先级
+  hooks:{ tick:function(dt){ /* … */ } },          // 可选：直接挂钩子
+  persist:{ save:function(){ return {}; }, load:function(d){}, reset:function(){} },   // 可选：存档
+  init:function(api){ /* 启动时调用一次 */ }
+});
+```
+
+`init(api)` 拿到的稳定接口：
+
+| 接口 | 说明 |
+| --- | --- |
+| `api.version` / `api.id` | 接口版本、自己的 ID |
+| `api.on(name, fn, opt)` / `api.off(name, fn)` | 挂 / 摘钩子（自动记成这个 Mod 的） |
+| `api.say(text, sec)` / `api.toast(text)` | 字幕 / 轻提示 |
+| `api.state()` | 返回 `S`（直接读写，自担兼容风险） |
+| `api.addItem(id, {name, desc, glyph, color, use})` | 新物品定义；`use` 是「用」的函数 |
+| `api.giveItem(id)` | 放进背包（满了会提示） |
+| `api.addRoom(id, {name, host, floor, grid, build, collide, solid, moved, onEnter, noMap, noClock})` | 新室内场景（需在 `boot` 之后调用） |
+| `api.enterRoom(id, spawn)` | 带淡入淡出进入房间 |
+| `api.store({save, load, reset})` | 存档里存这个 Mod 自己的状态 |
+| `api.modules()` | 模块清单与核对状态 |
+
+示例见 `game3d/mods/example-hello.js`（进门提示、存档、加物品）。
+
+### 5.3 出错与兼容
+
+- Mod 的 `init` 抛错：这个 Mod 标记为「出错，已停用」，它挂的钩子全部摘掉，游戏继续。
+- 钩子运行时抛错：只跳过这一次并记录，其他监听照常。
+- 接口大版本不同：不启用，记录原因。
+- `api` 以外直接改全局变量的 Mod，不保证在游戏更新后继续可用。
+- Mod 不得修改或绕开玩家 Wiki 的彩蛋保密规则；仓库自带的 Mod 不得包含隐藏结局、隐藏时刻或隐藏异常的内容。
+
+## 6. 测试与文档约定
+
+- 新模块：在清单登记 → `node --check` → 写 `tests/test_<模块>.py`（逻辑 + 浏览器回归）→ 跑 `tests/test_modules.py` 确认清单、导出、钩子一致。
+- 只改某个模块时，先跑它自己的测试和 `test_modules`，再按需要跑全量；改了建模或玩法才跑穿模检查（`python tools/clip_audit.py`）。
+- 新增或改名钩子、房间接口、Mod 接口：同步本文第 2–5 节；Mod 接口有不兼容变化时把 `GameModules.API_VERSION` 的大版本加一。
+- 文件结构说明见 [3D更新说明](3D更新说明.md) 开头；测试命令见 [测试说明](测试说明.md)。

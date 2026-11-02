@@ -13,6 +13,7 @@ function roomTheme(R){
 }
 
 function buildRoomGeometry(R){
+  if(R.build) return buildCustomRoom(R);
   S.__pianoPlaced=0;
   SHAFT_ACC=[];                    /* 收集窗户，给光影模块画窗光 */
   R.stats={desk:0, cubicle:0, chair:0, seat:0};
@@ -140,6 +141,15 @@ function buildRoomGeometry(R){
   grp.add(buildDoorLeaves(R));
   c.meshes.forEach(function(m){ grp.add(m); });                 /* 黑板上的粉笔字这种单独的网格 */
   return grp;
+}
+
+/* 模块自带模型的房间（R.build，例如虚空迷宫）：不按网格建墙和地面，只把副作用字段清干净 */
+function buildCustomRoom(R){
+  SHAFT_ACC=null;
+  R.stats={desk:0, cubicle:0, chair:0, seat:0};
+  R.stairExtra=[]; R.propExtra=[]; R.foot={}; R.shafts=[]; R.doorSpecs=[];
+  var grp=R.build(R);
+  return grp||new THREE.Group();
 }
 
 /* ---- 门：墙厚 1 米，门洞两侧有门套；门扇在 +z 一侧（走廊那边）；开着的门扇转 90° 贴在门洞边 ---- */

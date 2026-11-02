@@ -48,6 +48,8 @@ class ControlsTest(BrowserCase):
                 self.assertTrue(spoiler.locator('table').is_visible())
                 self.assertEqual(spoiler.locator('tbody tr').count(), 25)
                 self.assertIn('模型加载失败', page.locator('#faq').inner_text())
+                self.assertIn('?nomod', page.locator('#faq').inner_text())           # Mod 入口与安全模式
+                self.assertIn('粉笔还能做记号', page.locator('#items').inner_text())  # 粉笔记号
                 controls = page.locator('#controls').inner_text()
                 self.assertIn('放出鼠标（不暂停）', controls)
                 self.assertIn('自己教室', controls)

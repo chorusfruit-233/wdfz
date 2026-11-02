@@ -2,6 +2,7 @@
 'use strict';
 
 function onEnterRoom(id,restoring){
+  GameModules.emit('enterRoom',id,!!restoring);
   ExplorationMap.observe();
   Playtest.event(restoring?'读档进入':'进入地点',id);
   if(id==='garage1') os('我：车库里没有灯。空气是潮的，有一股铁和机油的味道。远处有水在滴。',3.6);
@@ -46,8 +47,10 @@ function update(dt){
   if(CarChase.active()){clockTick(dt);CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
   ExplorationMap.tick(dt);
+  GameModules.emit('tick',dt);                   /* 模块的每步更新（虚空迷宫的坠落和 SAN 流失在这里） */
+  if(S.dead)return;
   if(Elevator.inRide()){
-    if(S.room!=='lift_dream')clockTick(dt);
+    if(!roomClockFrozen())clockTick(dt);
     Elevator.tick(dt);settleSan();return;
   }
   Elevator.tick(dt);
@@ -129,6 +132,10 @@ function drawMini(dt){
     else c.fillStyle='rgba(110,140,110,.24)';
     c.fillRect(X(o.x),Y(o.y),o.w*sc,o.h*sc);
   }
+  if(GameModules.first('mapBlocked')){                         /* 地图在这里不能用：只剩一片乱线 */
+    c.clearRect(0,0,W,H); c.fillStyle='rgba(160,170,165,.35)'; c.font='12px monospace'; c.textAlign='center';
+    c.fillText('? ? ?',W/2,H/2+4); return;
+  }
   var px=X(S.x/SC), py=Y(S.y/SC);
   /* 室内坐标不是室外地图上的位置（在车库里点会落到行政楼上）：室内就标在所在那栋楼上 */
   var R=S.mode==='in'?INTERIORS[S.room]:null, ho=R?objById(R.host):null;
@@ -155,7 +162,8 @@ function updateHUD(){
   if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=SAN_FEEL[stage];}
   /* 界面也跟着身体状态变（状态条的红线跳得越来越急）；样式里关掉镜头晃动时不动 */
   if(document.body.dataset.san!==String(stage))document.body.dataset.san=stage;
-  hudEl('clock').textContent=hasClock()?fmtClock(S.tsec):'时间不明';
+  var _ct=GameModules.first('clockText');                     /* 模块可以接管时间显示（虚空迷宫里是「???」） */
+  hudEl('clock').textContent=_ct!==undefined?String(_ct):(hasClock()?fmtClock(S.tsec):'时间不明');
   var sc=hudEl('secclock');
   if(sc){sc.hidden=true;sc.textContent='';}
   var cr=hudEl('cross');
@@ -171,8 +179,10 @@ function updateHUD(){
   if(CarChase.active())pe.textContent='驾驶逃脱';
   if(typeof Inspection!=='undefined'&&Inspection.active())pe.textContent='学生会检查 · 教室';
   else if(typeof Inspection!=='undefined'&&Inspection.upcoming())pe.textContent='集合将至 · 请回教室';
+  var frozen=roomClockFrozen();
+  if(frozen)pe.textContent='???';                             /* 时钟冻结的地方（虚空迷宫）：课表也没有意义 */
   /* 绿 = 普通活动；黄 = 返程或违反要求；蓝 = 登记 / 请假；红 = 考试。 */
-  var pc=Inspection.upcoming()?'warn':(leave||outing?'leave':(S.wrong?'warn':(examing?'exam':'ok')));
+  var pc=frozen?'ok':Inspection.upcoming()?'warn':(leave||outing?'leave':(S.wrong?'warn':(examing?'exam':'ok')));
   if(pe.className!==pc) pe.className=pc;
   if(hudEl('stamwrap')){
     var snack=(S.snackT||0)>0;                                  /* 士力架起效时，体力条变成金色的剩余时间 */
@@ -256,6 +266,7 @@ function freshState(diff){
   document.getElementById('die').style.display='none';
   var _tel=document.getElementById('talent'); if(_tel) _tel._set=false;
   var _hot=document.getElementById('hot'); if(_hot) _hot._sig='';
+  GameModules.resetAll();                        /* 模块和 Mod 的本局状态（粉笔记号、迷宫计时……）清空 */
   if(!running){ running=true; lastT=0; }
 }
 var pendingAssetStart=null;
@@ -461,8 +472,11 @@ function boot(){
   initInput();
   try{ initPcTouch(); }catch(e){}
   paintMenuSave();
+  GameModules.emit('boot');                       /* 模块和 Mod：界面、渲染都已就绪 */
   requestAnimationFrame(frame);
   setTimeout(captureMenuPhoto,420);               /* 先让菜单画出来，再拍那张照片 */
 }
+/* 时钟冻结的房间（R.noClock，例如虚空迷宫）：游戏钟不走 */
+function roomClockFrozen(){ var R=S.mode==='in'?INTERIORS[S.room]:null; return !!(R&&R.noClock); }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
 else boot();

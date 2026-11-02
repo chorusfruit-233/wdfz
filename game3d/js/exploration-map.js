@@ -42,7 +42,7 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   },
   observe:function(){
     if(S.mode!=='in'||S.dead||S.screen!=='play')return;
-    var R=INTERIORS[S.room];if(!R)return;
+    var R=INTERIORS[S.room];if(!R||R.noMap)return;            /* 不能画草图的地方（虚空迷宫） */
     var b=this.seen(R.id),changed=false;
     var c=Math.floor((S.x-R.ox)/R.tw),r=Math.floor((S.y-R.oy)/R.th);
     for(var y=Math.max(0,r-6);y<=Math.min(R.rows-1,r+6);y++)for(var x=Math.max(0,c-6);x<=Math.min(R.cols-1,c+6);x++){

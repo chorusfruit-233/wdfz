@@ -98,11 +98,13 @@ var Elevator={
     var ride=RT.elevatorRide;if(!ride||ride.phase!=='cabin'||!ride.rare)return;
     ride.button=button;ride.phase='dream';S.san=Math.max(0,S.san-ELEVATOR_CONFIG.dreamSan);settleSan();
     if(S.dead)return;
-    doEnterRoom('lift_dream',Elevator.spawn('lift_dream',2,5,0));
+    if(typeof VoidMaze!=='undefined'){VoidMaze.enter(button);return;}   /* 门外是虚空迷宫（模块 void-maze） */
+    doEnterRoom('lift_dream',Elevator.spawn('lift_dream',2,5,0));        /* 没装这个模块时：原来的白色空间 */
     os('我：门外是一片白色。远处有一道淡蓝色的门。',4,OS_FORCE);
   },
   leaveDream:function(){
     var ride=Elevator.recover();if(ride.phase!=='dream')return;
+    if(typeof VoidMaze!=='undefined'){VoidMaze.leave('exit1');return;}
     Elevator.arrive(ride.origin);
     os('我：门合上了。外面的走廊和刚才一样。',3);
   },

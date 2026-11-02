@@ -72,7 +72,11 @@ function spiralSolid(R,wx,wy){
 }
 /* 移动之后更新所处的层和高度 */
 function spiralUpdate(){
-  if(!spiralHere()){ if(S.floorY) S.floorY=0; SP.state='ground'; return; }
+  if(!spiralHere()){
+    var R0=S.mode==='in'?INTERIORS[S.room]:null;
+    if(S.floorY&&!(R0&&R0.ownHeight)) S.floorY=0;                 /* 自己管高度的房间（虚空迷宫）不在这里清零 */
+    SP.state='ground'; return;
+  }
   var R=INTERIORS[S.room], q=spPolar(R,S.x,S.y), ring=(q.r>=SPIRAL.rIn&&q.r<=SPIRAL.rOut);
   if(SP.state==='ground'){
     var d=spWrap(q.th-SPIRAL.th0);

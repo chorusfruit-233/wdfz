@@ -42,6 +42,10 @@ UI.anyOpen=function(){ return !!UI.openPanel||UI.chooseOpen; };
 UI.open=function(id){
   var el=document.getElementById(id);
   if(!el) return;
+  if(id==='mapv'){                                         /* 模块可以让地图在某处失效（虚空迷宫里） */
+    var blocked=GameModules.first('mapBlocked');
+    if(blocked){ os(typeof blocked==='string'?blocked:'我：地图在这里没有用。',2.8); return; }
+  }
   var previous=UI.openPanel;
   if(previous&&previous!==id)UI.close(previous,false);
   UI.openPanel=id;

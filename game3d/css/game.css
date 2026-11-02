@@ -169,7 +169,7 @@ body.dev-open #toast{z-index:130}
 #dev .devrun span:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;background:#80c9a5}
 #dev .devrun button{min-height:36px;padding:5px 10px;font-size:12px}
 #dev .devhelp{padding:0 18px 8px;font-size:11px;line-height:1.5;color:#91ac9c;flex:none}
-#dev .devtabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:0 10px 10px;border-bottom:1px solid rgba(130,180,155,.18);flex:none}
+#dev .devtabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:3px;padding:0 10px 10px;border-bottom:1px solid rgba(130,180,155,.18);flex:none}
 #dev .devtabs button{background:transparent;border-color:transparent;min-height:40px;padding:7px 4px;color:#98b8a7}
 #dev .devtabs button[aria-pressed=true]{background:#244334;border-color:#48785b;color:#e8f8ed}
 #dev .devbody{min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:4px 18px 14px}

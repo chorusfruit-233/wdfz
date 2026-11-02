@@ -16,6 +16,8 @@ var DEV_DEATH=[
   ['碎裂','shatter'],['深坑','deep'],['仪式圈','ring'],['名单','names'],['黑板','chalk'],
   ['走廊','loop'],['双生','twin'],['灯','lamps'],['缝隙','slit'],['挤墙','squeeze'],
   ['对视','face'],['墙','wall'],['笑','laugh'],['镜子','mirror'],['隔间伸手','hand'],['垃圾桶','trash']];
+/* 调试面板的页签；模块可以往里加自己的页（mod-manager 加「Mod」） */
+var DEV_TABS=['status','scene','items','events','tools'];
 var Dev={
   open:function(){
     if(DEV.on)return;
@@ -184,13 +186,14 @@ var Dev={
     if(kind==='item')Dev.refreshInventory();
   },
   tab:function(id){
-    if(['status','scene','items','events','tools'].indexOf(id)<0)return;
+    if(DEV_TABS.indexOf(id)<0)return;
     DEV.tab=id;
-    ['status','scene','items','events','tools'].forEach(function(name){
+    DEV_TABS.forEach(function(name){
       var page=document.getElementById('dev-page-'+name),button=document.querySelector('[data-dev-tab="'+name+'"]');
       if(page)page.hidden=name!==id;if(button)button.setAttribute('aria-pressed',String(name===id));
     });
     var body=document.getElementById('devbody');if(body)body.scrollTop=0;
+    GameModules.emit('devTab',id);                 /* 模块加的页签（例如「Mod」）在这里画自己的内容 */
     Dev.refresh();Dev.fitPanel();
   },
   report:function(msg){

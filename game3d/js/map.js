@@ -271,6 +271,7 @@ function buildInteriorData(){
   mkFloor('guard1','保安岗','guard',1,guardFloor());
   mkFloor('gear1','体育器材室','gear',1,gearFloor());
   if(typeof placeLockers==='function') placeLockers();          /* 储物柜和校长办公室：patrol.js */
+  GameModules.emit('interiors');                                /* 模块在这里加 / 改房间（例如 void-maze 改写 lift_dream） */
 }
 
 var OBJ=[

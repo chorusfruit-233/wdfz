@@ -47,21 +47,23 @@ class ElevatorTest(BrowserCase):
         self.assertEqual(result, [])
 
     def test_dream_freezes_clock_but_allows_movement_and_return(self):
+        """错误的电梯：门外是虚空迷宫（模块 void-maze，专项见 test_void_maze）。这里只看电梯流程的衔接。"""
         page = self.game()
         page.evaluate("""doEnterRoom('lab1',Elevator.landing('lab',1));
           Math.random=()=>0;Elevator.board('lab',1);Elevator.controls();""")
         page.locator('#choices button').filter(has_text='67 层').click()
         self.assert_js(page, "S.room==='lift_dream'&&RT.elevatorRide.phase==='dream'&&S.san===75")
-        self.assert_js(page, "INTERIORS.lift_dream.name==='白色空间'&&ROOM_THEMES.dream.wall===0xf4f5f0")
-        self.assertIn('远处有一道淡蓝色的门', page.locator('#sub').inner_text())
+        self.assert_js(page, "INTERIORS.lift_dream.noClock&&INTERIORS.lift_dream.noMap&&typeof INTERIORS.lift_dream.build==='function'")
+        self.assertIn('身后的电梯门合上了', page.locator('#sub').inner_text())
         self.assert_js(page, "typeof dreamFigTick==='undefined'&&!('uDream' in GLR.postMat.uniforms)")
         result = page.evaluate("""()=>{
-          let before=S.tsec,x=S.x;KEY.w=true;update(1);KEY.w=false;
-          let r={before,after:S.tsec,moved:S.x>x,canSave:saveGame()};
+          let before=S.tsec,x=S.x,y=S.y;S.ang=Math.PI/4;KEY.w=true;update(1);KEY.w=false;
+          let r={before,after:S.tsec,moved:Math.hypot(S.x-x,S.y-y)>1,canSave:saveGame()};
           let save=loadGame();freshState('hard');running=false;applySave(save);
           r.restored=S.room==='lift_dream'&&RT.elevatorRide.phase==='dream';
-          S.x=INTERIORS.lift_dream.ox+15.5*9;S.y=INTERIORS.lift_dream.oy+5.5*9;S.ang=0;tryInteract();
-          r.returned=S.room==='lab1'&&!RT.elevatorRide;
+          const e=MAZE_CFG.exits[0], w=VoidMaze.toWorld(e.x,e.z-0.8);
+          doEnterRoom('lift_dream',{x:w.x,y:w.y,ang:Math.PI/2,maze:{fy:e.h}});tryInteract();
+          r.returned=S.room==='lab1'&&!RT.elevatorRide&&S.floorY===0;
           return r;
         }""")
         self.assertEqual(result['before'], result['after'])
