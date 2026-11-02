@@ -204,3 +204,40 @@ class SoundBankTest(BrowserCase):
         self.assertIn('下课铃', text)
         for word in ('void.', 'sound-bank', 'SOUND_BANK', '异空间'):
             self.assertNotIn(word, text)
+
+    def test_session_boundary_stops_scheduled_audio(self):
+        page = self.game(start=True)
+        r = page.evaluate("""()=>{
+          SoundPlayer.play('event.bell',{at:30});
+          const before=SoundPlayer.active();freshState('hard');running=false;
+          return {before,after:SoundPlayer.active()};
+        }""")
+        self.assertIn('event.bell', r['before'])
+        self.assertEqual(r['after'], [])
+
+    def test_stopping_audition_preserves_game_audio(self):
+        page = self.game()
+        r = page.evaluate("""()=>{
+          SoundPlayer.stop();SoundPlayer.play('foley.door',{at:30});
+          document.getElementById('devsndCat').value='ui';SoundBoard.fill();
+          SoundBoard.playAll();SoundBoard.playAll();
+          return {active:SoundPlayer.active(),playing:SoundBoard.playing};
+        }""")
+        self.assertEqual(r, {'active': ['foley.door'], 'playing': False})
+
+    def test_old_audition_timer_cannot_reset_new_sequence_or_next_session(self):
+        page = self.game(start=True)
+        page.clock.install()
+        duration = page.evaluate("""()=>{
+          document.getElementById('devsndCat').value='ui';SoundBoard.fill();
+          const duration=SoundBoard.ids('ui').reduce((t,id)=>t+SoundPlayer.length(id)+0.6,0);
+          SoundBoard.playAll();SoundBoard.playAll();
+          document.getElementById('devsndCat').value='death';SoundBoard.fill();SoundBoard.playAll();
+          return duration;
+        }""")
+        page.clock.fast_forward(round((duration + 2) * 1000))
+        self.assert_js(page, "SoundBoard.playing&&document.getElementById('devsndAll').textContent==='停止'")
+        page.evaluate('Game.quit()')
+        self.assert_js(page, "!SoundBoard.playing&&SoundPlayer.active().length===0&&document.getElementById('devsndAll').textContent==='整类连放'")
+        page.clock.fast_forward(300000)
+        self.assert_js(page, "!SoundBoard.playing&&SoundPlayer.active().length===0")

@@ -108,6 +108,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 - **接口** `SFX`（`audio.js`）：游戏里原有的调用名一个没改（`SFX.click / door / step / dread / deathFx / anomaly …`），只是改成按声音库播放；新增 `SFX.chalk`（粉笔画记号）、`SFX.deep`（掉进异空间的虚空）、`SFX.stopDeath`——以前代码里调了这三个却不存在，被 `try` 吞掉没有声音。`SFX.schoolBell(v, kind)`：`kind` 为 `'start'` 是上课铃，否则是下课铃。持续的环境层（铺底、风、雨、灯管嗡声、车库低频）还在 `audio.js` 里。
 - 混音：每个类别一条总线（干声、混响各一条，增益是 `SOUND_CATS[类].gain`，默认 1）→ 主音量 → 压缩器；「真实」档的空间混响照旧。
 - 调试面板「工具」页的「声音试听」（模块 `sound-board`）可以按类别挑音效试听、整类连放。
+- 所有一次性音效（包括音频时钟上尚未开始的声音）随 `boundary` 停止，不带入下一局。试听使用 `Lifecycle` 的 `sound-preview` 作用域管理句柄和完成计时器；停止或重开试听只淡出这次试听的声音，游戏声音继续，旧完成回调不能重置新试听。
 
 环境声扩展：
 

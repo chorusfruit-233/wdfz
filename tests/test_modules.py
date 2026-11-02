@@ -180,18 +180,35 @@ class ModuleBrowserTest(BrowserCase):
           const n=GameModules.modules().length, bad=GameModules.modules().filter(m=>m.status!=='ok').length;
           doEnterRoom('lab1',Elevator.landing('lab',1));Math.random=()=>0;Elevator.board('lab',1);Elevator.enterDream('67');
           const inside=S.room, old=!INTERIORS.lift_dream.build&&INTERIORS.lift_dream.cols===18;
+          const before=S.tsec;clockTick(1);const frozen=S.tsec===before;
           S.x=INTERIORS.lift_dream.ox+15.5*9;S.y=INTERIORS.lift_dream.oy+5.5*9;S.ang=0;tryInteract();
           S.bag.push('chalk');useItem('chalk');
-          return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,back:S.room,panel:!!document.getElementById('modTools'),
+          return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,frozen,back:S.room,panel:!!document.getElementById('modTools'),
             sub:document.getElementById('sub').innerText}}""")
         self.assertEqual(result['n'], len(manifest()) - 5)          # 清单里的模块数减去拿掉的五个
         self.assertEqual(result['bad'], 0)
         self.assertEqual((result['maze'], result['chalk']), ('undefined', 'undefined'))
         self.assertEqual(result['inside'], 'lift_dream')
         self.assertTrue(result['old'])
+        self.assertTrue(result['frozen'])
         self.assertEqual(result['back'], 'lab1')
         self.assertFalse(result['panel'])
         self.assertIn('粉笔', result['sub'])                      # 没有记号模块：粉笔回到「看一眼说明」
+
+    def test_room_no_clock_contract_also_applies_outside_elevator(self):
+        page = self.page()
+        page.evaluate("Game.start('hard')")
+        page.wait_for_function("S.room==='teach1'")
+        r = page.evaluate("""()=>{
+          running=false;clearIntroTimers();S.intro=0;
+          const R=INTERIORS[S.room],start=S.tsec;
+          R.noClock=true;clockTick(1);const frozen=S.tsec;
+          R.noClock=false;clockTick(1);
+          return {start,frozen,after:S.tsec,ride:Elevator.inRide()};
+        }""")
+        self.assertFalse(r['ride'])
+        self.assertEqual(r['frozen'], r['start'])
+        self.assertGreater(r['after'], r['start'])
 
     def test_mod_panel_imports_a_file_from_the_pause_menu(self):
         page = self.page()

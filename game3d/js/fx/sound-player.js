@@ -248,14 +248,17 @@ var SoundPlayer=(function(){
   /* 从 at 秒起 0.04 秒淡出一个正在响的音效：干声和它自己的混响（fx）一起 */
   function fade(h,at){
     if(!h) return false;
+    if(at===undefined){ var E=liveEnv(); if(!E) return false; at=E.now(); }
     [h.gain,h.fx].forEach(function(n){
       if(!n) return;
       try{ n.gain.cancelScheduledValues(at); n.gain.setTargetAtTime(0,at,0.04); }catch(e){}
     });
+    h.end=Math.min(h.end,at);
     return true;
   }
   /* 停掉某一类（或全部）正在响的声音 */
   function stop(c){
+    if(!active.length) return 0;
     if(typeof SFX==='undefined'||!SFX.synth) return 0;
     var a=SFX.synth().ctx(), n=0; if(!a) return 0;
     active=active.filter(function(h){
@@ -345,3 +348,5 @@ var SoundPlayer=(function(){
     seed:function(s){ rng=s===undefined||s===null?Math.random:mulberry(s); }
   };
 })();
+/* 音频时钟上的延迟发声也属于本局；新局、读档或回菜单时一并停止。 */
+GameModules.on('boundary',function(){ SoundPlayer.stop(); },{owner:'audio'});

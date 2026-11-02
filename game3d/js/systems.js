@@ -147,6 +147,8 @@ var TT_SEAT={3:'我：……今天几号来着？我想站起来看一眼黑板�
   4:'我：腿麻了。不对——是腿不想动。椅子贴着我的背，像是不想让我起来。'};
 /* 跨时段时分段消耗真实秒；不能把整步时间按旧时速推进，尤其是 11:45 的慢速窗。 */
 function clockTick(dt){
+  var room=S.mode==='in'?INTERIORS[S.room]:null;
+  if(room&&room.noClock)return;
   var left=GameTimeRules.amount(dt);
   while(left>1e-9){
     var t0=S.tsec, boundary=clockBoundary(t0);

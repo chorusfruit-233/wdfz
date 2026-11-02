@@ -221,7 +221,7 @@ function buildInteriorData(){
   }
   mkFloor('lift_teach','教学楼 · 电梯','lift',1,elevatorCabin());
   mkFloor('lift_lab','实验楼 · 电梯','lift',1,elevatorCabin());
-  mkFloor('lift_dream','白色空间','dream',1,elevatorDream());
+  mkFloor('lift_dream','白色空间','dream',1,elevatorDream()).noClock=true;
   mkFloor('portal_tunnel','物理实验室 · 隧道','tunnel',1,portalTunnelFloor());
   var kk2, kRow;
   for(kk2=1;kk2<=5;kk2++){

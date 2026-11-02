@@ -41,19 +41,35 @@ var SoundBoard={
     el.textContent=id+' · 校准 '+(lv===null?'未校准':(lv>0?'+':'')+lv.toFixed(1)+' dB')+' · 约 '+len.toFixed(1)+' 秒';
   },
   play:function(){
+    SoundBoard.stop();
     try{ SFX.resume(); }catch(e){}
     var id=document.getElementById('devsnd').value; if(!id) return;
-    SoundPlayer.play(id);
+    SoundBoard.audition(id);
     try{ Dev.report('试听 '+id); }catch(e){}
+  },
+  audition:function(id,opt){
+    var h=SoundPlayer.play(id,opt);
+    if(h) Lifecycle.scope('sound-preview').own(function(){ SoundPlayer.fade(h); });
+    return h;
+  },
+  stop:function(){
+    Lifecycle.renew('sound-preview');
+    SoundBoard.playing=false;
+    var b=document.getElementById('devsndAll'); if(b) b.textContent='整类连放';
   },
   playAll:function(){
     var b=document.getElementById('devsndAll');
-    if(SoundBoard.playing){ SoundPlayer.stop(); SoundBoard.playing=false; b.textContent='整类连放'; return; }
+    if(SoundBoard.playing){ SoundBoard.stop(); return; }
+    SoundBoard.stop();
     try{ SFX.resume(); }catch(e){}
-    var c=document.getElementById('devsndCat').value, t=0;
-    SoundBoard.ids(c).forEach(function(id){ SoundPlayer.play(id,{at:t}); t+=Math.min(4,SoundPlayer.length(id))+0.6; });
+    var c=document.getElementById('devsndCat').value, t=0, a=SFX.synth().ctx(), now=a?a.currentTime:0;
+    SoundBoard.ids(c).forEach(function(id){
+      var h=SoundBoard.audition(id,{at:t});
+      t=(h?Math.max(t,h.end-now):t+SoundPlayer.length(id))+0.6;
+    });
     SoundBoard.playing=true; b.textContent='停止';
-    setTimeout(function(){ SoundBoard.playing=false; var bb=document.getElementById('devsndAll'); if(bb) bb.textContent='整类连放'; },t*1000);
+    Lifecycle.scope('sound-preview').timeout(function(){ SoundBoard.stop(); },t*1000);
   }
 };
 GameModules.on('boot',function(){ SoundBoard.mount(); },{owner:'sound-board'});
+GameModules.on('boundary',function(){ SoundBoard.stop(); },{owner:'sound-board'});
