@@ -22,7 +22,7 @@ class DayRhythmTest(BrowserCase):
             page.reload(wait_until='load')
             page.evaluate("Game.continue_();running=false;clearIntroTimers();S.intro=0")
             self.assert_js(page, "SchoolDay.excused()&&RT.outing.until===1070")
-            page.evaluate("S.room='admin5'")
+            page.evaluate("doEnterRoom('admin5',PatrolNav.tilePoint('admin5',5,14))")
             self.assert_js(page, "!patIgnores()")
             page.evaluate("S.room='teach1';S.exam=true")
             self.assert_js(page, "!SchoolDay.excused()&&!patIgnores()")
@@ -35,8 +35,8 @@ class DayRhythmTest(BrowserCase):
           S.tsec=700;SchoolDay.grant(true);S.day++;const dayExpired=!SchoolDay.permit();
           S.day--;S.tsec=699;const rewindExpired=!SchoolDay.permit();
           saved.tsec=800;delete saved.rt.dayRhythmVersion;delete saved.rt.outing;
-          saved.rt.investigation={entries:{notice:{text:'移交单',kind:'事实',day:2}},recent:[]};
-          freshState('hard');applySave(saved);const migrated=SchoolDay.permit()&&RT.outing.until===1070;
+          saved.rt.investigation={entries:{notice:{text:'移交单',kind:'事实',day:2}},recent:[]};delete saved.mods.attendanceDuty;
+          freshState('hard');applySave(saved);const migrated=!SchoolDay.permit()&&AttendanceDuty.state.duties.length===0;
           S.tsec=1070;saveGame();saved=loadGame();freshState('hard');applySave(saved);
           return {expired,dayExpired,rewindExpired,migrated,once:!SchoolDay.permit()};
         }""")
@@ -52,15 +52,14 @@ class DayRhythmTest(BrowserCase):
     def test_patrol_records_one_violation_per_encounter_even_after_reload(self):
         page = self.game()
         result = page.evaluate("""()=>{
-          S.seated=false;S.viol=0;S.bag=[];S.tsec=850;
+          S.seated=false;S.viol=0;S.bag=[];S.tsec=850;let p=PatrolNav.tilePoint('teach1',30,18);S.x=p.x;S.y=p.y;
           patReset();PAT.state='walk';PAT.room='teach1';PAT.x=S.x+60;PAT.y=S.y;
-          PAT.tx=PAT.x;PAT.ty=PAT.y;PAT.lock=.99;PAT.walkT=0;PAT.step=100;PAT.blinkCD=100;
-          const sees=patSees;patSees=()=>true;
+          PAT.safety=0;PAT.near=true;PAT.warning=0;PAT.lock=.99;PAT.step=100;PAT.blinkCD=100;
           patTick(.1);const first=S.viol;
           PAT.locked=false;PAT.lock=.99;patTick(.1);const again=S.viol;
           saveGame();const saved=loadGame();freshState('hard');applySave(saved);
           PAT.locked=false;PAT.lock=.99;PAT.blinkCD=100;patTick(.1);
-          patSees=sees;return {first,again,loaded:S.viol,cited:PAT.cited};
+          return {first,again,loaded:S.viol,cited:PAT.cited};
         }""")
         self.assertEqual(result, dict(first=8, again=8, loaded=8, cited=True))
 
@@ -84,7 +83,7 @@ class DayRhythmTest(BrowserCase):
           doEnterRoom('admin5');S.seated=false;S.tsec=INSPECT_WARN_TIMES[0]-.01;
           clockTick(.02);AN.next=0;PAT.next=0;anDrive(.1);patTick(.1);
           S.fn.on=true;S.fn.v=0;S.fn.next=0;S.fn.left=4;S.fn.used={};fnTick(.1);
-          const held=!AN.active&&PAT.state==='idle'&&!UI.chooseOpen&&Inspection.upcoming();
+          const held=!AN.active&&PAT.state==='walk'&&!PatrolWorld.localChase()&&!UI.chooseOpen&&Inspection.upcoming();
           const seconds=realSecondsBetween(INSPECT_WARN_TIMES[0],770);
           S.fn.on=false;AN.active=true;AN.id='blackout';AN.t=0;AN.acc=0;AN.data={};anDrive(1);
           const activeProgresses=AN.t>0;anEnd();
@@ -147,7 +146,7 @@ class DayRhythmTest(BrowserCase):
                   if(stop==='warning')S.tsec=INSPECT_WARN_TIMES[0]-.01;
                   RT.lessons[LESSON.currentKey()]={task:0,left:0,done:true};LESSON.startWait();
                   if(stop==='anomaly'){AN.active=true;AN.id='blackout';AN.data={};}
-                  if(stop==='patrol'){PAT.state='warn';PAT.room=S.room;}
+                  if(stop==='patrol'){PAT.state='walk';PAT.room=S.room;PAT.x=S.x+15;PAT.y=S.y;PAT.safety=0;PAT.locked=true;PAT.transition=null;}
                   if(stop==='pause')PAUSE.on=true;
                   if(stop==='freeze'){DEV.on=true;DEV.freeze=true;}
                   if(stop==='death')S.dead=true;

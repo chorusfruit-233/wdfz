@@ -28,7 +28,7 @@ function dreadBusy(){
   if(S.screen!=='play'||S.dead||(S.intro>0)) return true;
   if(typeof PRO!=='undefined'&&PRO.on) return true;
   if(AN.active) return true;
-  if(typeof PAT!=='undefined'&&PAT.state&&PAT.state!=='idle') return true;
+  if(typeof PAT!=='undefined'&&PAT.state&&PatrolWorld.localChase()) return true;
   if(typeof Inspection!=='undefined'&&Inspection.quiet()) return true;
   if(UI.anyOpen()||(typeof PAUSE!=='undefined'&&PAUSE.on)) return true;
   if(typeof CUT!=='undefined'&&CUT.on) return true;

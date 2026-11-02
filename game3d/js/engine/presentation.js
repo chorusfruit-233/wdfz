@@ -103,9 +103,9 @@ function patAddFig(){
 function patRemoveFig(){if(GLR.patFig){GLR.scene.remove(GLR.patFig);ThreeBackend.disposeGroup(GLR.patFig);GLR.patFig=null;}}
 function patRender(){
   var g=GLR.patFig; if(!g) return;
-  if(VisualState.stage||PAT.state!=='walk'){ g.visible=false; return; }
+  if(VisualState.stage||PAT.state!=='walk'||PAT.room!==patRoomHere()||PAT.transition){ g.visible=false; return; }
   var p=PAT.room==='out'?worldToScene(PAT.x,PAT.y,null):worldToScene(PAT.x,PAT.y,INTERIORS[PAT.room]);
-  g.visible=true; g.position.set(p.x,PAT.room==='out'?0:0,p.z);
+  g.visible=true; g.position.set(p.x,PAT.fy||0,p.z);
   g.lookAt(GLR.cam.position.x,0,GLR.cam.position.z);  /* 人形正面朝 +z，lookAt 正好让它面朝你 */
 }
 

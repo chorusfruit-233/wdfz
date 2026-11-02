@@ -261,7 +261,7 @@
       <label for="devanomFilter">选择异象</label><input id="devanomFilter" type="search" placeholder="搜索名称或 ID" oninput="Dev.filter('anom')">
       <div class="devrow"><select id="devanom" aria-label="选择异象"></select><button type="button" id="devanomGo" onclick="Dev.anom()">触发</button><button type="button" onclick="Dev.anomEnd()">结束</button></div><small id="devanomCount"></small>
       <div class="devsection"><div><h3>巡察与检查</h3><p>巡察遵循地点和时段规则；手动检查立即开始并按实际玩法结算。取消检查不结算结束奖惩。</p></div></div>
-      <div class="devbuttons"><button type="button" id="devpatrolStart" onclick="Dev.startPatrol()">开始巡察预警</button><button type="button" id="devpatrolStop" onclick="Dev.stopPatrol()">结束当前巡察</button><button type="button" id="devinspectionStart" onclick="Dev.startInspection()">开始实际检查</button><button type="button" id="devinspectionStop" onclick="Dev.cancelInspection()">取消检查及排队</button></div>
+      <div class="devbuttons"><button type="button" id="devpatrolStart" onclick="Dev.startPatrol()">重置常驻巡察</button><button type="button" id="devpatrolStop" onclick="Dev.stopPatrol()">解除普通追逐</button><button type="button" id="devinspectionStart" onclick="Dev.startInspection()">开始实际检查</button><button type="button" id="devinspectionStop" onclick="Dev.cancelInspection()">取消检查及排队</button></div>
       <div class="devsection"><div><h3>画面演出</h3><p>仅播放画面效果</p></div></div>
       <div class="devrow"><select id="devanim" aria-label="选择画面演出"><option value="1">融入</option><option value="2">雨</option><option value="3">镜面</option></select><button type="button" onclick="Dev.anim(+document.getElementById('devanim').value)">播放</button></div>
       <div class="devsection"><div><h3>死亡效果</h3><p>预览不会消耗道具或删除存档</p></div></div>

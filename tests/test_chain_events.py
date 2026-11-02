@@ -51,9 +51,9 @@ class ColaChainTest(BrowserCase):
         page.evaluate("S.tsec=1350;doEnterRoom('teach1');running=false")
         self.run_until(page, 'AN.active', steps=200)
         self.assert_js(page, "!AN.active&&RT.colaPending")             # 夜里在楼里不来
-        page.evaluate(NIGHT_OUT + "PAT.state='walk'")
+        page.evaluate(NIGHT_OUT + "PAT.state='walk';PAT.room='out';PAT.x=S.x+35;PAT.y=S.y;PAT.locked=true;PAT.safety=0;PAT.transition=null;")
         self.run_until(page, 'AN.active', steps=200)
-        self.assert_js(page, "!AN.active&&RT.colaPending")             # 巡察在场时先不来
+        self.assert_js(page, "!AN.active&&RT.colaPending")             # 本地实际追逐时先不来
         page.evaluate("PAT.state='idle'")
         self.run_until(page, 'AN.active', steps=200)
         self.assert_js(page, "AN.id==='cola'&&!RT.colaPending&&RT.colaDone===1&&ANFX.kind==='cola'")

@@ -96,65 +96,31 @@ class PressureBrowserTest(BrowserCase):
             if protection=='elixir':self.assert_js(page,"!hasItem('elixir')")
             if protection=='immune':self.assert_js(page,'S.immuneUsed')
 
-    def test_patrol_blinks_respect_obstacles_and_night_is_outdoor_only(self):
+    def test_patrol_blinks_keep_distance_budget_and_night_is_outdoor_only(self):
         page=self.classroom()
         self.assert_js(page,"(S.room='admin5',S.tsec=1345,!patEligible())")
         self.assert_js(page,"(S.mode='out',patEligible())")
-        page.evaluate("""S.mode='in';S.room='teach1';S.tsec=700;S.seated=false;
-          PAT.room='teach1';PAT.state='walk';PAT.x=S.x+60;PAT.y=S.y;PAT.tx=S.x+90;PAT.ty=S.y;
-          PAT.locked=false;PAT.lock=0;PAT.walkT=0;PAT.blinkCD=.8;PAT.still=0;patAddFig();
-          window.old=[PAT.x,PAT.y];patTick(.1);""")
-        self.assert_js(page,'PAT.x===old[0]&&PAT.y===old[1]&&!GLR.patFig.userData.eye')
-        # 一个薄障碍：即便一跳可越过，沿途仍不能穿越。
-        page.evaluate("""let r=INTERIORS.teach1;window.orig={grid:r.grid,foot:r.foot,extra:r.propExtra,stair:r.stairExtra};
-          r.grid=Array.from({length:r.rows},()=>Array(r.cols).fill('.'));r.foot={};r.stairExtra=[];
-          r.propExtra=[];r.patNav=null;PAT.x=r.cx-8;PAT.y=r.cy;PAT.tx=r.cx+20;PAT.ty=r.cy;
-          patBlink(10);window.jumped=PAT.x>r.cx-8&&PAT.x<=r.cx+2.01;
-          r.propExtra=[{x0:0,x1:.1,z0:-20,z1:20}];r.patNav=null;
-          PAT.x=r.cx-8;PAT.y=r.cy;PAT.tx=r.cx+20;PAT.ty=r.cy;patBlink(34);
-          window.blocked=PAT.x<r.cx-2.5&&Collision.depth(PAT.x,PAT.y,PAT_BODY/U2M,r)<1e-7;
-          Object.assign(r,{grid:orig.grid,foot:orig.foot,propExtra:orig.extra,stairExtra:orig.stair});r.patNav=null;""")
-        self.assert_js(page,'jumped&&blocked')
+        result=page.evaluate("""()=>{
+          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',30,18));S.tsec=700;S.seated=false;
+          patReset();PAT.safety=0;PAT.near=true;PAT.warning=0;PAT.room='teach1';PAT.x=S.x+80;PAT.y=S.y;
+          PAT.locked=true;PAT.lastSeen=PatrolNav.point(S.room,S.x,S.y);PAT.blinkCD=.8;
+          let before=[PAT.x,PAT.y];patTick(.1);let still=PAT.x===before[0]&&PAT.y===before[1];
+          patTick(.71);return {still,distance:Math.hypot(PAT.x-before[0],PAT.y-before[1]),grace:PAT.afterBlink>0};
+        }""")
+        self.assertTrue(result['still']);self.assertGreater(result['distance'],0)
+        self.assertLessEqual(result['distance'],31*.75+.001);self.assertTrue(result['grace'])
 
-    def test_patrol_leaves_when_the_allowed_time_ends(self):
+    def test_patrol_stops_ordinary_chase_but_remains_when_the_allowed_time_ends(self):
         page=self.classroom()
-        for state in ('warn','walk'):
-            with self.subTest(location='out',state=state):
-                page.evaluate("""state=>{
-                  patReset();S.mode='out';S.room=null;S.tsec=1499.99;S.day=3;
-                  S.seated=false;S.dead=false;S.moving=true;
-                  PAT.state=state;PAT.room='out';PAT.t=3.59;PAT.walkT=0;
-                  PAT.locked=state==='walk';PAT.lock=PAT.locked?1:0;
-                  PAT.x=S.x+8;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
-                  PAT.blinkCD=10;PAT.afterBlink=0;PAT.step=10;
-                  VisualState.patrolFlick=1;VisualState.patrolRed=PAT.locked?1:0;
+        for room,clock in [('out',1499.99),('teach1',524.99),('teach1',1339.99),('admin5',1339.99)]:
+            with self.subTest(room=room,clock=clock):
+                page.evaluate("""([room,clock])=>{
+                  patReset();S.mode=room==='out'?'out':'in';S.room=room==='out'?null:room;S.tsec=clock;S.day=3;
+                  S.seated=false;S.dead=false;PAT.state='walk';PAT.room=room;PAT.locked=true;PAT.lock=1;
+                  PAT.x=S.x+8;PAT.y=S.y;PAT.blinkCD=10;PAT.afterBlink=0;
                   clockTick(.1);patTick(.1);
-                }""",state)
-                self.assert_js(page,"!isNight()&&S.tsec>=440&&PAT.state==='idle'&&!PAT.locked&&!S.dead")
-                self.assert_js(page,'VisualState.patrolFlick===0&&VisualState.patrolRed===0')
-            with self.subTest(location='classroom',state=state):
-                page.evaluate("""state=>{
-                  patReset();S.mode='in';S.room='teach1';S.tsec=524.99;
-                  S.seated=false;S.dead=false;S.moving=true;
-                  PAT.state=state;PAT.room='teach1';PAT.t=3.59;PAT.walkT=0;
-                  PAT.locked=state==='walk';PAT.lock=PAT.locked?1:0;
-                  PAT.x=S.x+8;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
-                  PAT.blinkCD=10;PAT.afterBlink=0;PAT.step=10;
-                  clockTick(.1);patTick(.1);
-                }""",state)
-                self.assert_js(page,"needWhere(S.tsec)==='自由'&&PAT.state==='idle'&&!PAT.locked&&!S.dead")
-            for room in ('teach1','admin5'):
-                with self.subTest(location=room,transition='night',state=state):
-                    page.evaluate("""({state,room})=>{
-                      patReset();S.mode='in';S.room=room;S.tsec=1339.99;
-                      S.seated=false;S.dead=false;S.moving=true;
-                      PAT.state=state;PAT.room=room;PAT.t=3.59;PAT.walkT=0;
-                      PAT.locked=state==='walk';PAT.lock=PAT.locked?1:0;
-                      PAT.x=S.x+8;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
-                      PAT.blinkCD=10;PAT.afterBlink=0;PAT.step=10;
-                      clockTick(.1);patTick(.1);
-                    }""",{'state':state,'room':room})
-                    self.assert_js(page,"isNight()&&PAT.state==='idle'&&!PAT.locked&&!S.dead")
+                }""",[room,clock])
+                self.assert_js(page,"PAT.state==='walk'&&!PAT.locked&&!S.dead&&VisualState.patrolRed===0")
 
     def test_patrol_does_not_disappear_just_because_player_is_exempt(self):
         page=self.classroom()
@@ -169,10 +135,10 @@ class PressureBrowserTest(BrowserCase):
                   PAT.blinkCD=10;PAT.afterBlink=0;PAT.step=10;S.moving=true;
                   patTick(.1);
                 }""",exemption)
-                self.assert_js(page,"patEligible()&&patIgnores()&&PAT.state==='walk'&&PAT.locked&&PAT.lost>0")
-        page.evaluate("""patReset();S.tsec=525;S.mode='in';S.room='admin5';
-          PAT.room='admin5';PAT.state='warn';PAT.t=0;patTick(.1);""")
-        self.assert_js(page,"patEligible()&&PAT.state==='warn'")
+                self.assert_js(page,"patEligible()&&patIgnores()&&PAT.state==='walk'&&!PAT.locked")
+        page.evaluate("""patReset();S.tsec=525;doEnterRoom('admin5',PatrolNav.tilePoint('admin5',5,14));
+          PAT.room='admin5';PAT.state='walk';patTick(.1);""")
+        self.assert_js(page,"patEligible()&&PAT.state==='walk'")
 
     def test_dawn_ends_patrol_before_it_can_drain_san(self):
         page=self.classroom()
@@ -181,7 +147,7 @@ class PressureBrowserTest(BrowserCase):
           PAT.state='walk';PAT.room='out';PAT.locked=true;PAT.lock=1;PAT.walkT=0;
           PAT.x=S.x+8;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
           PAT.blinkCD=10;PAT.afterBlink=0;PAT.step=10;updateSystems(.1);""")
-        self.assert_js(page,"!isNight()&&PAT.state==='idle'&&!S.dead&&S.san>0")
+        self.assert_js(page,"!isNight()&&PAT.state==='walk'&&!PAT.locked&&!S.dead&&S.san>0")
 
     def test_office_key_probability_and_full_bag(self):
         page=self.page()
@@ -231,7 +197,7 @@ class PressureBrowserTest(BrowserCase):
 
     def test_patrol_chase_and_blink_timer_survive_save_reload(self):
         page=self.classroom()
-        page.evaluate("""S.seated=false;let r=INTERIORS.teach1;
+        page.evaluate("""S.seated=false;let r=INTERIORS.teach1;S.x=r.ox+35.5*r.tw;S.y=r.oy+18.5*r.th;PAT.safety=0;PAT.near=true;
           PAT.room='teach1';PAT.state='walk';PAT.x=r.ox+30.5*r.tw;PAT.y=r.oy+18.5*r.th;
           PAT.tx=PAT.x+18;PAT.ty=PAT.y;PAT.locked=true;PAT.lock=1;PAT.lost=.7;
           PAT.blinkCD=.42;PAT.afterBlink=.1;window.savedPose=[PAT.x,PAT.y];saveGame();""")

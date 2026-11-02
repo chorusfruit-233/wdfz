@@ -25,7 +25,7 @@ var GameTimeRules={
       b=points[i];if(clock<b.clock)break;a=b;stage=i+1;
     }
     var t=a===b?0:Math.max(0,Math.min(1,(clock-a.clock)/(b.clock-a.clock))),value={clock:clock,stage:stage};
-    ['anomaly','patrol','danger','passive','rest'].forEach(function(key){value[key]=a[key]+(b[key]-a[key])*t;});
+    ['anomaly','danger','passive','rest'].forEach(function(key){value[key]=a[key]+(b[key]-a[key])*t;});
     return value;
   }
 };

@@ -1,0 +1,72 @@
+[
+  {
+    "file": "01-桌面终端.png",
+    "viewport": {
+      "width": 1000,
+      "height": 700
+    }
+  },
+  {
+    "file": "02-手机应用.png",
+    "viewport": {
+      "width": 1000,
+      "height": 700
+    }
+  },
+  {
+    "file": "03-服务器.png",
+    "viewport": {
+      "width": 1000,
+      "height": 700
+    }
+  },
+  {
+    "file": "04-走廊.png",
+    "viewport": {
+      "width": 1000,
+      "height": 700
+    }
+  },
+  {
+    "file": "05-档案.png",
+    "viewport": {
+      "width": 1000,
+      "height": 700
+    }
+  },
+  {
+    "file": "06-校园.png",
+    "viewport": {
+      "width": 1000,
+      "height": 700
+    }
+  },
+  {
+    "file": "07-竖屏终端.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "file": "08-短屏终端.png",
+    "viewport": {
+      "width": 390,
+      "height": 340
+    }
+  },
+  {
+    "file": "09-竖屏手机.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "file": "10-竖屏档案.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    }
+  }
+]

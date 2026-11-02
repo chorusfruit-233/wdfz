@@ -544,6 +544,10 @@ body.touch #sub{font-size:calc(15px * var(--read-scale))}
 #srrecords th{font-weight:400;letter-spacing:2px;color:var(--ui-faint)}
 #srrecords td:last-child{font-family:var(--ui-mono);color:#efe7d6}
 #srrecords .srsub{margin:14px 0 6px;font-size:11px;letter-spacing:2px;color:var(--ui-faint)}
+/* 看手机时摇杆已收起，字幕移到底部空区，避免覆盖应用说明或操作按钮。 */
+body.phone-open #phone{padding-top:48px;padding-bottom:100px}
+body.phone-open #phone .phbody{max-height:calc(100dvh - 164px)}
+body.phone-open #sub{bottom:calc(14px + var(--sb));max-width:min(760px,calc(100vw - 32px))}
 #srrecords ul{list-style:none;margin:0;padding:0;font-size:12px}
 #srrecords li{display:flex;gap:12px;padding:4px 0;border-bottom:1px dashed var(--ui-line)}
 #srrecords li span{flex:1;color:var(--ui-dim)}

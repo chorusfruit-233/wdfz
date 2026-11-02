@@ -16,7 +16,7 @@ class TalentTest(BrowserCase):
         page.evaluate("S.screen='menu';document.getElementById('menu').style.display='block'")
         page.evaluate("localStorage.setItem('wdfz3d',JSON.stringify({keep:1}))")
         page.locator('#menu .mcard').first.click()
-        self.assert_js(page, "!document.getElementById('tpick').hidden&&document.querySelectorAll('#tpcards .tpcard').length===6&&document.getElementById('tpGo').disabled")
+        self.assert_js(page, "!document.getElementById('tpick').hidden&&document.querySelectorAll('#tpcards .tpcard').length===7&&document.getElementById('tpGo').disabled")
         self.assert_js(page, "S.screen==='menu'&&JSON.parse(localStorage.getItem('wdfz3d')).keep===1")
         self.assertIn('暗处适应', page.locator('#tpcards').inner_text())
         self.assertIn('限制', page.locator('#tpcards').inner_text())

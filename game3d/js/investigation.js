@@ -20,7 +20,7 @@ var Investigation={
     j.recent=j.recent.filter(function(k){return k!==id;}).concat(id).slice(-8);
   },
   visible:function(id){return !!this.state().entries[id]&&hasClue('investigation:'+id);},
-  idle:function(){return S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!PC.on&&!PHONE.on&&!LESSON.on&&!HIDE.on&&!AN.active&&!PAT.locked&&!Inspection.pending()&&!(S.intro>0);},
+  idle:function(){return S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!PC.on&&!PHONE.on&&!LESSON.on&&!HIDE.on&&!AN.active&&!PatrolWorld.localChase()&&!Inspection.pending()&&!(S.intro>0);},
   deskAvailable:function(){
     var R=INTERIORS.teach1;
     return this.idle()&&S.mode==='in'&&S.room==='teach1'&&Math.hypot(S.x-(R.ox+48.5*9),S.y-(R.oy+6.5*9))<24&&!this.visible('desk');
@@ -35,12 +35,12 @@ var Investigation={
     S.spots.guard=1;S.spots.garage=1;UI.spotsDirty=true;
     this.record('notice','钥匙移交：行政楼五楼校长办公室。保安岗留有停车记录和备用手电；车库位于校园西侧。','事实','教学楼一楼 · 讲台移交单');
     this.record('carTheory','如果找到钥匙、核对停车记录，也许能开车离开。车库黑影怕持续照射，开门前先看清车道。','推测','移交单背面的手写字');
-    this.record('timePressure','最好当天找到出口。首日晚间起异象和巡察越来越密，第二天起危险区更耗精神，休息也更难恢复。睡觉不会让校园恢复安全；已拿到的通关物品还在。','事实','移交单 · 留校提醒');
+    this.record('timePressure','最好当天找到出口。首日晚间起异象越来越密，常驻巡察持续巡逻；第二天起危险区更耗精神，休息也更难恢复。睡觉不会让校园恢复安全；已拿到的通关物品还在。','事实','移交单 · 留校提醒');
     this.supply();
     var supply=this.state().supply;
     this.record('supply','临时补给箱移至'+(supply.site==='guard1'?'保安岗柜台':'食堂售货机旁')+'。可领取一份药片；封条能慢慢拆，也可投一枚硬币解锁。','事实','讲台移交单 · 补给附注');
-    UI.choice('移交单：钥匙在行政楼五楼校长办公室；保安岗有停车记录和备用手电。车库在西侧。外出登记可跨越普通课堂；12:50、17:50 回教室集合，熄灯回宿舍。校长室、考试和夜间仍要小心。尽量当天离校，第二天起校园更危险，休息效果也会减弱。',[
-      {label:'登记外出，记下移交事项',fn:function(){SchoolDay.grant();RT.dayRhythmVersion=1;Investigation.record('outing','讲台可以登记外出，不消耗物品。登记跨越普通课堂；12:50、17:50 必须回教室集合，合规后续签。熄灯回宿舍；校长室和考试不受外出登记保护。','事实','讲台 · 外出登记');autoSave();}},
+    UI.choice('移交单：钥匙在行政楼五楼校长办公室；保安岗有停车记录和备用手电。车库在西侧。第一天不开放外出登记；第二天起许可可跨越普通课堂，但必须参加约定的下一次检查，缺席会被持续追踪。12:50、17:50 回教室集合，熄灯回宿舍。校长室、考试和夜间仍要小心。尽量当天离校，第二天起校园更危险，休息效果也会减弱。',[
+      {label:S.day===1?'阅读登记规定（次日起开放）':'登记外出，记下移交事项',fn:function(){SchoolDay.grant();RT.dayRhythmVersion=1;Investigation.record('outing','第二天起讲台可登记外出，不消耗物品；第一天禁手动和自动登记。许可跨越普通课堂，另外承担下一次检查的到场责任；错过约定检查会被持续追踪。17:50 后的责任是次日 12:50，熄灯仍回宿舍；校长室、考试和夜间不受许可保护。','事实','讲台 · 外出登记');autoSave();}},
       {label:'拿讲台上的粉笔',fn:function(){if(!hasItem('chalk'))addItem('chalk');autoSave();}}
     ]);
   },
@@ -107,6 +107,7 @@ var Investigation={
   },
   goal:function(){
     var focus=this.currentFocus();
+    if(focus==='cyber')return Termination.state.status==='accepted'?'停机请求已提交。保持存活，手机可查看任务状态。':PhoneNetwork.device.download.status==='complete'?'连接实验楼三楼任意电脑，阅读维护终端中的资料。':'用手机接入学校无线网络，等待模拟容器安装。';
     if(focus==='portal'&&(RT.portalDiary||RT.portalSketch||RT.portalOpen))return RT.portalOpen?'装置已启动，可以返回物理实验室的基座。':RT.portalSketch?'对照图纸准备材料。'+portalNeedText():this.visible('portalDiary')||hasClue('portalDiary')?'对照日记，调查实验楼二、四、五楼教师台；已得到 '+PortalExploration.count()+'/3 张图纸。':'造门调查还没结束；日记的文字记不清了，可以回隧道重读。';
     if(focus==='face'&&(S.spots.comp||S.spots.data||RT.hacked))return RT.data?'数据已同步，前往西小门完成闸机验证。':RT.hacked?'网络中心已写入，前往行政楼三楼同步数据。':'调查实验楼三楼的网络中心；留意门锁和终端旁的说明。';
     if(hasItem('key')&&!this.visible('notice'))return '已经有车钥匙。在背包中使用它，读清环上的牌号，再去车辆旁核对。';
@@ -127,7 +128,7 @@ var Investigation={
     var input=document.getElementById('notequery'),query=input?input.value.trim().toLowerCase():'';
     function hit(id){var e=j.entries[id];return me.visible(id)&&(!query||(e.text+' '+e.source).toLowerCase().indexOf(query)>=0);}
     function tag(kind){return '<i class="inv-kind k-'+KIND[kind]+'">'+kind+'</i>';}
-    var routes=this.routes(),names={car:'车辆',face:'白名单',portal:'造门'},focus=this.currentFocus();
+    var routes=this.routes(),names={car:'车辆',face:'白名单',portal:'造门',cyber:'网安'},focus=this.currentFocus();
     /* 标签和高亮按钮要和上面那句目标一致：关注的路线还没发现时，目标文字落回车辆路线 */
     if(!routes.some(function(r){return r[0]===focus;}))focus=routes.some(function(r){return r[0]==='car';})?'car':'';
     var h='<section class="inv-case"><div class="inv-k"><span>当前调查</span>'+(focus?'<b>'+names[focus]+'路线</b>':'')+'</div>'+
@@ -135,6 +136,8 @@ var Investigation={
     if(routes.length>1)h+='<div class="investigation-focus" role="group" aria-label="切换关注的路线"><span>关注</span>'+routes.map(function(route){
       var on=route[0]===focus;return '<button type="button"'+(on?' class="on" aria-pressed="true"':' aria-pressed="false"')+' onclick="Investigation.focus(\''+route[0]+'\')">'+route[1]+'</button>';}).join('')+'</div>';
     h+='</section>';
+    var duty=AttendanceDuty.summary();
+    if(duty||PAT.permanent)h+='<section class="inv-case"><h3>外出记录</h3><p>'+esc(PAT.permanent?'登记后缺席：持续追踪仍生效。假条、重新登记和符纸不能解除。':'')+'</p>'+(duty?'<p>仍须到教室参加：'+esc(duty)+'。许可到期不免除责任；系统取消的检查会顺延。</p>':'')+'</section>';
     var ids=Object.keys(j.entries).filter(hit);
     if(query)h+='<p class="inv-found">'+(ids.length?'找到 '+ids.length+' 条':'没有找到仍能回忆的对应记录。')+'</p>';
     var recent=j.recent.filter(function(id){return !!j.entries[id]&&hit(id);}).slice(-3).reverse();
@@ -148,6 +151,7 @@ var Investigation={
     var progress=[];
     if(j.entries.notice||hasItem('key')||RT.carTried)progress.push(['车辆',(RT.carUsed?'已驶离车库':Talent.capability('car').via==='key'?'有钥匙，能够试车门':Talent.capability('car').ok?'会搭线，能够试车':'尚无开车办法')+'；已试 '+Object.keys(RT.carTried||{}).length+' 辆。',RT.carUsed]);
     if(S.spots.comp||S.spots.data||RT.hacked)progress.push(['白名单',(RT.hacked?'网络中心已写入':'网络中心尚未写入')+'；'+(RT.data?'行政楼数据已同步':'行政楼尚未同步')+(RT.faceQuiz?'；闸机验证 '+RT.faceQuiz.done+'/3':'')+'。',RT.data&&RT.faceQuiz&&RT.faceQuiz.done>=3]);
+    if(PhoneNetwork.device.initialized)progress.push(['网安仙人',Termination.state.status==='accepted'?'服务器已接受请求，保持存活。':PhoneNetwork.device.download.status==='complete'?'容器就绪，前往机房终端。':PhoneNetwork.device.network?'已接入学校网络。':'用手机接入学校网络。',Termination.state.status==='completed']);
     if(RT.portalDiary||RT.portalSketch||RT.portalOpen)progress.push(['造门',(RT.portalOpen?'装置已启动':RT.portalSketch?'图纸齐全；'+portalNeedText():'已获得 '+PortalExploration.count()+'/3 张图纸'+(this.visible('portalDiary')||hasClue('portalDiary')?'；还需调查实验楼 '+PORTAL_BLUEPRINT_FLOORS.filter(function(f){return !(RT.portalBlueprints||{})[f];}).join('、')+' 楼教师台':'；日记的文字已模糊，可以回去重读'))+'。',RT.portalOpen]);
     if(progress.length)h+='<h3>路线进度</h3><div class="inv-progress">'+progress.map(function(p){return '<div class="'+(p[2]?'done':'')+'"><b>'+p[0]+'</b><span>'+esc(p[1])+'</span></div>';}).join('')+'</div>';
     return h;
@@ -157,6 +161,7 @@ var Investigation={
     if(j.entries.notice||hasItem('key')||RT.carTried)out.push(['car','车辆']);
     if(S.spots.comp||S.spots.data||RT.hacked)out.push(['face','白名单']);
     if(RT.portalDiary||RT.portalSketch||RT.portalOpen)out.push(['portal','造门']);
+    if(hasItem('phone')||PhoneNetwork.device.initialized)out.push(['cyber','网安仙人']);
     return out;
   },
   focus:function(id){if(!this.routes().some(function(r){return r[0]===id;}))return;this.state().focus=id;UI.renderNote();autoSave();},

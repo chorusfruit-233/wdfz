@@ -6,7 +6,7 @@ var PILL_SEC=30, PILL_RATE=2;              /* 药片：30 秒里每秒回 2 点 
 var OPENDOORS={};
 var DOOR_LOCKS={'lab3:41:15':'roomkey'};
 function doorLockNeed(R,c,r){ return DOOR_LOCKS[R.id+':'+c+':'+r]||null; }
-function doorKeyAt(R,c,r){ return S.room+':'+c+':'+r; }
+function doorKeyAt(R,c,r){ return R.id+':'+c+':'+r; }
 function doorKey(R,wx,wy){
   var c=Math.floor((wx-R.ox)/R.tw), r=Math.floor((wy-R.oy)/R.th);
   return doorKeyAt(R,c,r);
@@ -40,6 +40,7 @@ function inventoryAdd(id){
   if(result==='full'){os('我：装不下了。',2.4);return false;}
   if(result!=='added')return false;
   try{ SFX.pickup(); }catch(e){}
+  if(id==='phone'&&typeof PhoneNetwork!=='undefined')PhoneNetwork.acquire();
   os('我：拿到了「'+ITEMS[id].n+'」。',2.6);
   bagChanged();
   return true;

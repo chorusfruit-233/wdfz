@@ -306,7 +306,7 @@ var ClipAudit=(function(){
     /* 巡察者：按它真实用的细网格（patrol.js 的 patNav，门都当开着），能站的小格中心离物件不到 0.28 米就是擦到了 */
     if(R.host==='teach'||R.host==='admin'||R.host==='lab'){
       var nv=patNav(R), N=PAT_NAV_N, pseen={};
-      function freeAt(i,j){ if(i<0||j<0||i>=nv.W||j>=nv.H) return false; return !nv.blk[i+j*nv.W]; }
+      function freeAt(i,j){ if(i<0||j<0||i>=nv.W||j>=nv.H) return false; return PatrolNav.free(R.id,i,j); }
       list.forEach(function(p){
         if(p.wall||!/^furn:/.test(p.o)) return;
         samples(p).forEach(function(q){

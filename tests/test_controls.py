@@ -694,18 +694,18 @@ class ControlsTest(BrowserCase):
         page.evaluate("S.x=GATE_N.x*SC;S.y=(GATE_N.y+20)*SC;chooseIdea('front')")
         self.assert_js(page, "UI.chooseOpen")
 
-    def test_patroller_locks_on_hides_and_back_turned_escape(self):
+    def test_patroller_locks_on_hides_and_back_turn_is_not_an_escape(self):
         page = self.page()
         page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;
             var R=INTERIORS.teach1;S.x=R.ox+30.5*9;S.y=R.oy+18.5*9;S.ang=0;S.moving=false;
-            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+70;PAT.y=S.y;PAT.tx=S.x;PAT.ty=S.y;
+            patReset();PAT.room='teach1';PAT.state='walk';PAT.walkT=0;PAT.x=S.x+70;PAT.y=S.y;PAT.safety=0;PAT.near=true;PAT.warning=0;
             for(var i=0;i<40&&!(PAT.locked&&GLR.patrolRed>0);i++) patTick(0.1);""")
         self.assert_js(page, "PAT.locked&&GLR.patrolRed>0&&!S.dead")
-        # 背对它、一动不动 2.5 秒：它走过去
-        page.evaluate("PAT.x=S.x+80;PAT.y=S.y;PAT.path=null;S.ang=Math.PI;for(var i=0;i<28;i++){S.moving=false;patTick(0.1);}")
-        self.assert_js(page, "PAT.state==='idle'&&!S.dead")
+        # 背对仍会追逐；只推进一秒，避免把被抓误当作脱离。
+        page.evaluate("window.beforePat=PAT.x;S.ang=Math.PI;for(var i=0;i<10;i++){S.moving=false;patTick(0.1);}")
+        self.assert_js(page, "PAT.state==='walk'&&PAT.locked&&PAT.x<beforePat&&!S.dead")
         # 没被看见时躲进柜子：它不会锁定
-        page.evaluate("""PAT.room='teach1';PAT.state='walk';PAT.locked=false;PAT.lock=0;PAT.walkT=0;
+        page.evaluate("""patReset();PAT.room='admin1';PAT.locked=false;PAT.lock=0;
             hideIn({c:28,r:16});PAT.x=S.x+60;PAT.y=S.y+20;for(var i=0;i<20;i++) patTick(0.1);""")
         self.assert_js(page, "HIDE.on&&!HIDE.seen&&!PAT.locked&&!S.dead")
         page.evaluate("hideOut()")
@@ -829,8 +829,8 @@ class ControlsTest(BrowserCase):
     def test_patroller_reaches_seen_locker_without_crossing_walls(self):
         page = self.page()
         page.evaluate("""doEnterRoom('teach1');running=false;S.tsec=860;S.seated=false;patReset();
-            hideIn({c:28,r:16});HIDE.seen=true;var R=INTERIORS.teach1;
-            OPENDOORS['teach1:25:15']=1;PAT.room='teach1';PAT.state='walk';PAT.locked=true;
+            hideIn({c:28,r:16});HIDE.seen=true;PatrolWorld.observeLocker(28,16);var R=INTERIORS.teach1;
+            OPENDOORS['teach1:25:15']=1;PAT.room='teach1';PAT.state='walk';PAT.locked=true;PAT.safety=0;PAT.near=true;
             PAT.lost=0;PAT.walkT=0;PAT.x=R.ox+25.5*R.tw;PAT.y=R.oy+13.5*R.th;PAT.path=null;
             window.__caught=false;window.__crossedWall=false;kill=function(){__caught=true};
             for(var i=0;i<160&&!__caught;i++){
@@ -1223,7 +1223,7 @@ class ControlsTest(BrowserCase):
 
     def test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them(self):
         page = self.page()
-        self.assert_js(page, "TAL_KEYS.length===6&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd','thin'].every(x=>!TAL_KEYS.includes(x))")
+        self.assert_js(page, "TAL_KEYS.length===7&&TAL_KEYS.includes('tech')&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd','thin'].every(x=>!TAL_KEYS.includes(x))")
         page.evaluate("S.talent='map';saveGame();Game.continue_();running=false")
         self.assert_js(page, "S.talent==='map'&&TALENTS[S.talent].n==='过目不忘'")
 
@@ -1387,9 +1387,9 @@ class ControlsTest(BrowserCase):
         page.evaluate("advanceGameTime(LEAVE_MIN+1);updateSystems(0.1)")
         self.assert_js(page, "!onLeave()&&!RT.leaveUntil&&!patIgnores()")
 
-    def test_phone_only_plays_paper_plane_and_restores_a_little_san(self):
+    def test_phone_paper_plane_app_restores_a_little_san(self):
         page = self.page()
-        page.evaluate("S.bag=['phone'];S.san=50;S.tsec=700;useItem('phone')")
+        page.evaluate("S.bag=['phone'];S.san=50;S.tsec=700;useItem('phone');PHONE.selectApp('plane')")
         self.assert_js(page, "PHONE.on&&document.getElementById('phone').style.display==='flex'&&GLR.torch.intensity===0&&!playerInputAllowed()")
         page.evaluate("var t0=S.tsec,x0=S.x;KEY.w=true;update(0.5);KEY.w=false;window._t0=t0;window._x0=x0")
         self.assert_js(page, "S.tsec>_t0&&S.x===_x0")          # 世界照走，人站着不动
@@ -1429,6 +1429,7 @@ class ControlsTest(BrowserCase):
                 else:
                     phone.dblclick()
                 self.assert_js(page, "PHONE.on&&!UI.anyOpen()&&document.getElementById('bag').style.display==='none'")
+                page.evaluate("PHONE.selectApp('plane')")
                 self.assertTrue(page.locator('#phcv').is_visible())
                 page.evaluate("window._t0=S.tsec;window._x0=S.x;S.stam=20;S.snackT=5;KEY.w=true;update(0.5)")
                 self.assert_js(page, 'PHONE.on&&S.tsec>_t0&&S.x===_x0&&S.stam>20&&S.snackT<5')
@@ -1446,7 +1447,7 @@ class ControlsTest(BrowserCase):
                     page.evaluate("UI.choice('纸条', [{label:'收起',fn:function(){}}]);update(.1)")
                     self.assert_js(page, 'UI.chooseOpen&&!PHONE.on')
                 elif situation == 'anomaly':
-                    page.evaluate("spotTick=function(){};AN.pre='turn';AN.locked=true;anStart();window._message=document.getElementById('sub').textContent;update(.1)")
+                    page.evaluate("PHONE.selectApp('plane');spotTick=function(){};AN.pre='turn';AN.locked=true;anStart();window._message=document.getElementById('sub').textContent;update(.1)")
                     self.assert_js(page, "!PHONE.on&&AN.active&&document.getElementById('sub').textContent===_message")
                 elif situation == 'death':
                     page.evaluate("S.san=0;update(.1)")

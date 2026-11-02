@@ -110,20 +110,18 @@ class CampusEventTest(BrowserCase):
         self.assertEqual(result['late'],{'active':False,'queue':0,'san':80,'viol':30})
         self.assertTrue(result['soon'])
 
-    def test_inspection_defers_new_patrols_but_allows_existing_patrols_to_end(self):
+    def test_inspection_only_quiets_a_patrol_that_has_arrived_locally(self):
         page=self.game()
         result=page.evaluate("""()=>{
-          doEnterRoom('admin5');S.tsec=770;S.seated=false;patReset();PAT.next=0;
-          Inspection.start({day:2,slot:0});patTick(.1);
-          const activeHeld=PAT.state==='idle';
-          Inspection.finish(Inspection.state().current);patTick(.1);
-          const scatterHeld=PAT.state==='idle';
-          Inspection.tick(8);patTick(.1);
-          const resumed=PAT.state==='warn';
-          Inspection.state().queue.push({day:2,slot:0});Inspection.tick(.1);
-          const queued=!Inspection.active();const before=PAT.t;patTick(.1);
-          const progressed=PAT.t>before;patEnd();Inspection.tick(.1);
-          return {activeHeld,scatterHeld,resumed,queued,progressed,started:Inspection.active()};
+          S.tsec=770;S.seated=false;patReset();PAT.safety=0;PAT.blinkCD=0;
+          Inspection.start({day:2,slot:0});let old=[PAT.x,PAT.y];patTick(1.1);
+          const remoteMoved=PAT.state==='walk'&&(PAT.x!==old[0]||PAT.y!==old[1]||PAT.transition&&PAT.transition.remaining<2);
+          let p=PatrolNav.tilePoint('teach1',30,18);S.x=p.x;S.y=p.y;
+          PAT.room=S.room;PAT.x=S.x+60;PAT.y=S.y;PAT.transition=null;PAT.permanent=true;PAT.locked=true;
+          old=[PAT.x,PAT.y];patTick(.5);const localWait=PAT.x===old[0]&&PAT.y===old[1]&&!PatrolWorld.localChase();
+          Inspection.finish(Inspection.state().current);patTick(.5);
+          const calm=PAT.x===old[0]&&PAT.y===old[1];
+          Inspection.tick(8.1);patTick(1.1);
+          return {remoteMoved,localWait,calm,resumed:PAT.permanent&&(PAT.x!==old[0]||PAT.y!==old[1])};
         }""")
-        self.assertEqual(result,{'activeHeld':True,'scatterHeld':True,'resumed':True,
-                                 'queued':True,'progressed':True,'started':True})
+        self.assertEqual(result,dict(remoteMoved=True,localWait=True,calm=True,resumed=True))

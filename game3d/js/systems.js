@@ -169,9 +169,8 @@ function settleSan(){
 /* 仅保留日常恢复；危险环境、异象和躲避巡察者期间不能由课表恢复抵消伤害。 */
 function sanTick(dt,rule,exam){
   if(S.san<=0){settleSan();if(S.dead)return;}
-  if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt*CampusPressure.current().passive,exam);
+  if(!dangerAt()&&!AN.active&&!PatrolWorld.localThreat()&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt*CampusPressure.current().passive,exam);
   if(S.pillT>0){var pd=Math.min(dt,S.pillT);PlayerStats.changeSan(PILL_RATE*pd,'systems');S.pillT-=pd;}
-  if(PAT.state==='walk'&&(PAT.locked||HIDE.on))sanDrain(PAT.locked?0.35:0.18,dt,'systems');
   settleSan();
 }
 function addViolation(amount,source){
@@ -228,10 +227,10 @@ function ttTick(dt,nw){
   }
   if(S.tt<100) S.hiddenLatch=false;
 }
-function updateSystems(dt){
+function updateSystems(dt,clockAdvanced){
   if(S.dead||S.screen!=='play') return;
-  clockTick(dt);
-  try{ patEndIfInvalid(); }catch(e){}
+  if(!clockAdvanced)clockTick(dt);
+  patEndIfInvalid();
   try{ fnTick(dt); }catch(e){}
   if(typeof Inspection!=='undefined')Inspection.tick(dt);
   if(S.dead)return;
@@ -245,7 +244,7 @@ function updateSystems(dt){
   if(S.dead)return;
   dangerTick(dt);
   roamTick(dt);
-  try{ patTick(dt); }catch(e){}
+
   settleSan();
 }
 

@@ -9,7 +9,7 @@ window.Pilot = (() => {
   const keys = {w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD',e:'KeyE',r:'KeyR',f:'KeyF',
     Shift:'ShiftLeft',Enter:'Enter',Escape:'Escape',Tab:'Tab',1:'Digit1',2:'Digit2',3:'Digit3'};
   let phase = '准备', failed = null, finished = false, started = performance.now(), sheltering=false;
-  let selectedRoute='car', stickAmount=0, sprinting=false;
+  let selectedRoute='car', stickAmount=0, sprinting=false, evadingPatrol=false, lastEvade=-Infinity;
   const angle = n => Math.atan2(Math.sin(n), Math.cos(n));
   function snapshot() {
     return {seconds:+((performance.now()-started)/1000).toFixed(2),phase,
@@ -168,10 +168,25 @@ window.Pilot = (() => {
         labels.some(t=>t.includes('不回头'))?'不回头':labels[0];
       await choose(labels.findIndex(t=>t.includes(wanted))+1);
     }
-    if(PAT.locked){
-      handled=true;
-      stop();event('threat','背对巡察者，停下等待');const until=performance.now()+12000;
-      while(PAT.locked&&performance.now()<until){alive();look(Math.atan2(S.y-PAT.y,S.x-PAT.x));await sleep(60);}
+    if(PatrolWorld.localChase()&&!evadingPatrol&&performance.now()-lastEvade>8000){
+      lastEvade=performance.now();
+      if(PAT.permanent){event('threat','永久追踪仍在继续，沿当前路线移动');}
+      else{
+        // Only react to a visible local threat. Find real occlusion and walk via
+        // ordinary inputs; turning the camera away no longer clears a chase.
+        const candidates=[];
+        for(let dy=-120;dy<=120;dy+=24)for(let dx=-120;dx<=120;dx+=24){
+          const p={x:S.x+dx,y:S.y+dy},d=Math.hypot(dx,dy);
+          if(d<30||d>135||Collision.depth(p.x,p.y,PRAD+.1)>1e-7)continue;
+          if(PatrolNav.los(PatrolWorld.position(),PatrolNav.point(patRoomHere(),p.x,p.y,S.floorY)))continue;
+          try{const route=plan(p,5),cost=PilotNavigation.remaining(S,route,0);if(cost<220)candidates.push({p,cost});}catch(e){}
+        }
+        candidates.sort((a,b)=>a.cost-b.cost);
+        if(candidates.length){
+          handled=true;evadingPatrol=true;event('threat','绕过实体遮挡，脱离巡察视线');
+          try{await go(candidates[0].p,5);}finally{evadingPatrol=false;}
+        }else event('threat','附近没有可达遮挡，继续沿当前路线撤离');
+      }
     }
     if(Inspection.active()){
       handled=true;
@@ -356,7 +371,7 @@ window.Pilot = (() => {
   }
   async function waitQuiet(){
     stop();const end=performance.now()+90000;
-    while(AN.active||Inspection.pending()||PAT.locked){
+    while(AN.active||Inspection.pending()||PatrolWorld.localChase()){
       alive();await defense();if(performance.now()>end)throw Error('等待危险结束超时');await sleep(100);
     }
   }
