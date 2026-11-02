@@ -102,6 +102,7 @@ var ChalkMarks=(function(){
       erase(near); os('我：用袖子把记号擦掉了，只剩一片白印。',2.2); autoSave();
     }});
     opts.push({label:'算了',fn:function(){}});
+    if(UI.openPanel&&typeof JOURNAL_TABS!=='undefined'&&JOURNAL_TABS[UI.openPanel]) UI.close(UI.openPanel,false);   /* 从背包里用：先合上手册，看得见要画的地方 */
     UI.choice(t.face==='wall'?'在墙上画什么？':'在地上画什么？',opts);
     return true;
   }

@@ -135,7 +135,11 @@ var VoidMaze=(function(){
     MZ.respawning=true; MZ.falls++;
     S.san=Math.max(0,S.san-C.fallSan);
     Playtest.event('坠入虚空',MZ.falls);
-    if(S.san<=0){ kill('我一直往下掉，掉到忘了自己是从哪里开始掉的。','vignette','san'); MZ.respawning=false; return; }
+    if(S.san<=0){
+      kill('我一直往下掉，掉到忘了自己是从哪里开始掉的。','vignette','san');
+      if(S.dead){ MZ.respawning=false; return; }
+      if(S.san<=0) S.san=1;                                   /* 药丸 / 天赋 / 调试无敌挡下了：照常回到出生区域 */
+    }
     try{ SFX.deep(); }catch(e){}
     fadeTo(function(){ if(here()&&!S.dead) respawn(); else MZ.respawning=false; });
   }
@@ -144,7 +148,11 @@ var VoidMaze=(function(){
     if(!here()||S.dead||!(dt>0)||!MZ.ready) return;            /* 读档后、淡入进房间之前不算（那时高度还没恢复） */
     MZ.t+=dt;
     S.san-=drainRate(MZ.t)*dt;                         /* 越久掉得越快：满 SAN 大约 20 分钟掉完 */
-    if(S.san<=0){ S.san=0; kill('黑暗里，我已经想不起自己是从哪扇门进来的。','vignette','san'); return; }
+    if(S.san<=0){
+      S.san=0; kill('黑暗里，我已经想不起自己是从哪扇门进来的。','vignette','san');
+      if(S.dead) return;
+      if(S.san<=0) S.san=1;                                   /* 被挡下了（与 settleSan 相同的处理） */
+    }
     if(!MZ.told.long&&MZ.t>300){ MZ.told.long=1; os('我：在这里待得越久，越难想起外面是什么样子。得找到门。',3.6); }
     ambience(dt);
     var p=toScene(S.x,S.y), fy=S.floorY||0;

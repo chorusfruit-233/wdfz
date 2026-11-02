@@ -30,7 +30,7 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   },
   has:function(R,c,r){var b=this.seen(R.id);return !!(b&&c>=0&&r>=0&&c<R.cols&&r<R.rows&&b[r*R.cols+c]);},
   count:function(id){var b=this.seen(id),n=0;if(b)for(var i=0;i<b.length;i++)n+=b[i];return n;},
-  rooms:function(){var all=this.state(),me=this;return Object.keys(all).filter(function(id){return !!INTERIORS[id]&&me.count(id)>0;});},
+  rooms:function(){var all=this.state(),me=this;return Object.keys(all).filter(function(id){return !!INTERIORS[id]&&!INTERIORS[id].noMap&&me.count(id)>0;});},   /* 旧存档里白色空间的草图不再列出 */
   visible:function(R,c,r,tc,tr){
     var dx=tc-c,dy=tr-r,n=Math.max(Math.abs(dx),Math.abs(dy))*2;
     for(var i=1;i<n;i++){

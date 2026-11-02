@@ -43,6 +43,7 @@ var ModManager={
     box.onclick=function(ev){
       var b=ev.target&&ev.target.closest?ev.target.closest('[data-mm]'):null; if(!b) return;
       var k=b.getAttribute('data-mm'), id=b.getAttribute('data-id');
+      if(k==='file'||k==='msg') return;                          /* 点选文件框：交给浏览器的文件选择，别重画（会把输入框换掉） */
       if(k==='toggle'){ var cur=GameModules.uploaded().filter(function(m){ return m.id===id; })[0]; GameModules.setUploaded(id,!(cur&&cur.enabled)); ModManager.say('已'+(cur&&cur.enabled?'停用':'启用')+'，刷新页面后生效'); }
       else if(k==='remove'){ GameModules.removeUploaded(id); ModManager.say('已删除，刷新页面后生效'); }
       else if(k==='builtin'){ var on=b.getAttribute('aria-pressed')!=='true'; GameModules.setBuiltin(id,on); ModManager.say((on?'已打开':'已关闭')+'，刷新页面后生效'); }
