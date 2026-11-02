@@ -227,6 +227,7 @@ class TouchFlowTest(BrowserCase):
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
         page.wait_for_function('typeof GLR!=="undefined"&&!!GLR.renderer')
+        page.evaluate("if(typeof WUDA_KID_CFG!=='undefined')WUDA_KID_CFG.chance=0")   # 隐藏天赋的 3% 手电不打乱背包
         return page
 
     def test_speedrun_clock_does_not_cover_touch_buttons(self):

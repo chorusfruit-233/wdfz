@@ -1,17 +1,18 @@
 /* 里世界 3D · 隐藏彩蛋天赋「武大子弟」（模块 wuda-kid）——内部内容，不进玩家 Wiki
    效果：开局自带一支手电筒（放进背包和快捷栏 1）。
    隐藏：不在天赋选择、随机池和暂停里的天赋说明中出现；不占 S.talent，和本局抽到 / 选的天赋同时生效（叠加）。
-   开关在这台设备上：主菜单连点三下校名「武汉大学附属中学」打开，再连点三下关上（确定性触发，不随机），
-   记在本机存储 wdfz_wuda。只在新开局时生效（newGame 钩子）：读档按存档里记的，速通局不给（成绩要公平）。
+   怎么得到：每次新开局有 3% 的几率；另外主菜单连点三下校名「武汉大学附属中学」可以把它打开（再连点三下关上），
+   打开以后每次新开局都有（记在本机存储 wdfz_wuda）。只在新开局时生效（newGame 钩子）：读档按存档里记的，
+   速通局不给（成绩要公平）。
    本局是否生效随存档保存在 d.mods['wuda-kid']。 */
 'use strict';
 
-var WUDA_KID_CFG={key:'wdfz_wuda', clicks:3, windowMs:1600, item:'torch', tellAfter:6,
+var WUDA_KID_CFG={key:'wdfz_wuda', chance:0.03, clicks:3, windowMs:1600, item:'torch', tellAfter:6,
   line:'我：书包侧袋里有一支手电。……小时候在珞珈山上跑，天一黑就得带着它。',
   onText:'……你想起来了：你家就住在珞珈山下。', offText:'……还是当个普通的转学生吧。'};
 
 var WudaKid=(function(){
-  var C=WUDA_KID_CFG, st={on:false,told:false,t:0}, taps=[];
+  var C=WUDA_KID_CFG, st={on:false,told:false,t:0,via:null}, taps=[];
   var store=StorageAdapter.create(function(){ return localStorage; });
   function armed(){ var r=store.read(C.key); return !!(r.ok&&r.value==='1'); }
   function setArmed(v){ if(v) store.write(C.key,'1'); else store.remove(C.key); }
@@ -33,26 +34,30 @@ var WudaKid=(function(){
     try{ toast(on?C.onText:C.offText); }catch(e){}
     return on;
   }
-  return {
+  var api={
     active:function(){ return st.on; }, armed:armed, tap:tap, grant:grant, state:st,
+    roll:function(){ return Math.random(); },                 /* 单独一处取随机数：测试可以替换 */
+    /* 菜单打开过：必定有；否则按 3% 几率 */
+    pick:function(){ return armed()?'menu':(api.roll()<C.chance?'chance':null); },
     newGame:function(o){
       if(o&&o.mode==='speedrun') return false;
-      if(!armed()) return false;
-      st.on=true; st.told=false; st.t=0; grant(); return true;
+      var via=api.pick(); if(!via) return false;
+      st.on=true; st.via=via; st.told=false; st.t=0; grant(); return true;
     },
     tick:function(dt){
       if(!st.on||st.told||!(dt>0)) return;
       st.t+=dt; if(st.t<C.tellAfter) return;
       st.told=true; try{ os(C.line,4.2); }catch(e){}
     },
-    reset:function(){ st.on=false; st.told=false; st.t=0; },
-    load:function(d){ st.on=!!(d&&d.on); st.told=!!(d&&d.told); st.t=st.told?C.tellAfter:0; }
+    reset:function(){ st.on=false; st.told=false; st.t=0; st.via=null; },
+    load:function(d){ st.on=!!(d&&d.on); st.told=!!(d&&d.told); st.via=st.on?(d.via==='menu'?'menu':'chance'):null; st.t=st.told?C.tellAfter:0; }
   };
+  return api;
 })();
 (function(){
   var own={owner:'wuda-kid'};
   GameModules.persistent('wuda-kid',{
-    save:function(){ return WudaKid.state.on?{on:true,told:WudaKid.state.told}:undefined; },
+    save:function(){ return WudaKid.state.on?{on:true,told:WudaKid.state.told,via:WudaKid.state.via}:undefined; },
     load:WudaKid.load, reset:WudaKid.reset});
   GameModules.on('newGame',WudaKid.newGame,own);
   GameModules.on('tick',WudaKid.tick,own);

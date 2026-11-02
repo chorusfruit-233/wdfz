@@ -1,5 +1,6 @@
-"""隐藏彩蛋天赋「武大子弟」（内部内容，不进玩家 Wiki）：主菜单连点三下校名切换；新开局自带手电、和正常天赋叠加；
-不出现在天赋选择、随机池和暂停说明里；读档按存档、速通不给；从清单拿掉后游戏照常。"""
+"""隐藏彩蛋天赋「武大子弟」（内部内容，不进玩家 Wiki）：每次新开局 3% 几率；主菜单连点三下校名打开后必定有；
+新开局自带手电、和正常天赋叠加；不出现在天赋选择、随机池和暂停说明里；读档按存档、速通不给；从清单拿掉后游戏照常。
+公共夹具把几率设成 0（别的用例不被随机的手电打乱），这里用 window.__wudaChance 核对原值。"""
 from pathlib import Path
 
 from browser_case import BrowserCase
@@ -59,6 +60,29 @@ class WudaKidTest(BrowserCase):
           for(let i=0;i<60*9;i++)update(1/60);window.os=o;return said.filter(t=>t.indexOf('手电')>=0);}""")
         self.assertEqual(len(r), 1)
         self.assertIn('珞珈山', r[0])
+
+    def test_three_percent_chance_on_a_new_game_without_the_menu_switch(self):
+        page = self.page()
+        r = page.evaluate("""()=>{localStorage.removeItem('wdfz_wuda');WUDA_KID_CFG.chance=window.__wudaChance;
+          let n=0;const N=20000;for(let i=0;i<N;i++){if(WudaKid.pick()==='chance')n++;}
+          return {chance:window.__wudaChance,rate:n/N};}""")
+        self.assertEqual(r['chance'], 0.03)
+        self.assertGreater(r['rate'], 0.02)                              # 两万次里大约 3%
+        self.assertLess(r['rate'], 0.04)
+        # 抽中：和正常天赋叠加、开局有手电，存档记下来源
+        page.evaluate("WUDA_KID_CFG.chance=window.__wudaChance;WudaKid.roll=function(){return 0.01;}")
+        self.start(page, talent='drive', origin='selected')
+        r = page.evaluate("""()=>{saveGame();return {talent:S.talent,bag:S.bag.slice(),via:WudaKid.state.via,saved:loadGame().mods['wuda-kid']};}""")
+        self.assertEqual((r['talent'], r['bag'], r['via']), ('drive', ['torch'], 'chance'))
+        self.assertEqual(r['saved']['via'], 'chance')
+        # 没抽中
+        page.evaluate("WudaKid.roll=function(){return 0.5;}")
+        self.start(page, talent='drive', origin='selected')
+        self.assertEqual(page.evaluate('[S.bag.slice(),WudaKid.active()]'), [[], False])
+        # 菜单打开过：不看几率，必定有
+        page.evaluate("WudaKid.roll=function(){return 0.99;};localStorage.setItem('wdfz_wuda','1')")
+        self.start(page, talent='drive', origin='selected')
+        self.assertEqual(page.evaluate('[S.bag.slice(),WudaKid.state.via]'), [['torch'], 'menu'])
 
     def test_off_by_default_never_in_speedrun_and_saves_follow_the_run(self):
         page = self.page()

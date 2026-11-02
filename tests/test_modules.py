@@ -78,7 +78,7 @@ class ModuleBrowserTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url + query, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;running=false")
+        page.evaluate("PHOTO_TRIED=true;running=false;if(typeof WUDA_KID_CFG!=='undefined')WUDA_KID_CFG.chance=0")
         return page
 
     def test_all_modules_load_and_verify_without_mods(self):
