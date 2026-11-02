@@ -34,7 +34,8 @@ class VoidMazeTest(BrowserCase):
         page.evaluate("""Game.start('hard');""")
         page.wait_for_function("S.room==='teach1'&&GLR.roomMesh")
         page.evaluate("""running=false;clearIntroTimers();S.intro=0;S.day=1;S.tsec=760;S.san=100;AN.active=false;AN.id=null;
-          AN.next=1e5;patReset();PAT.next=1e5;RT.inspection=null;DEV.god=false;""" + WALK)
+          AN.next=1e5;patReset();PAT.next=1e5;RT.inspection=null;DEV.god=false;
+          S.talent='code';Talent.state().consumed={};""" + WALK)      # 新局随机抽天赋：抽到「天生免疫」会挡下一次致死，SAN 流失的时间就对不上
         return page
 
     def test_wrong_elevator_leads_into_the_dark_maze(self):
