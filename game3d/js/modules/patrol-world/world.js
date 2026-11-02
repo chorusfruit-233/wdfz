@@ -56,7 +56,7 @@ var PatrolWorld=(function(){
   function clearChase(){var active=PAT.locked||PAT.lastSeen||PAT.search>0||PAT.cited;PAT.cited=false;PAT.lock=0;PAT.locked=false;PAT.lost=0;PAT.lastSeen=null;PAT.search=0;
     if(active){PAT.rejoin=true;PAT.behavior=PAT.investigation?'investigate':'return';framePath=null;}}
   function rescued(){HIDE.seen=false;PAT.permanent=false;clearChase();PAT.rejoin=true;PAT.safety=3.6;VisualState.patrolRed=0;Mechanics.dirty=true;}
-  function registeredAbsence(id){PAT.permanent=true;PAT.absence=id;PAT.behavior='chase';framePath=null;toast('外出登记的缺席已被记录。');}
+  function registeredAbsence(id){PAT.permanent=true;PAT.absence=id;PAT.behavior='chase';framePath=null;toast('外出登记后未归：持续追踪已生效，重新登记和假条不能解除。');}
   function banish(){
     PAT.state='idle';PAT.respawn=30;PAT.rejoin=true;PAT.locked=false;PAT.lock=0;PAT.lost=0;PAT.lastSeen=null;PAT.search=0;PAT.cited=false;HIDE.seen=false;PAT.transition=null;PAT.warning=0;PAT.near=false;framePath=null;patRemoveFig();
     VisualState.patrolFlick=0;VisualState.patrolRed=0;
@@ -98,11 +98,13 @@ var PatrolWorld=(function(){
   function mazeRoute(a,b){
     var gate=PAT.mazeGateway||{host:'teach',origin:1},floor=gate.host+gate.origin,landing=Elevator.landing(gate.host,gate.origin),p=PatrolNav.point(floor,landing.x,landing.y);
     if(b.scene==='lift_dream'&&a.scene!=='lift_dream'){
-      if(a.scene===floor&&Math.hypot(a.x-p.x,a.y-p.y)<6){var spawnPoint=VoidMaze.toWorld(0,0);return {transition:{from:a,to:PatrolNav.point('lift_dream',spawnPoint.x,spawnPoint.y,0),remaining:2,total:2,kind:'special'}};}
+      if(a.scene===floor&&Math.hypot(a.x-p.x,a.y-p.y)<6){var spawnPoint=typeof VoidMaze!=='undefined'?VoidMaze.toWorld(0,0):Elevator.spawn('lift_dream',2,5,0);return {transition:{from:a,to:PatrolNav.point('lift_dream',spawnPoint.x,spawnPoint.y,0),remaining:2,total:2,kind:'special'}};}
       return PatrolNav.route(a,p);
     }
     if(a.scene==='lift_dream'&&b.scene!=='lift_dream'){
-      var exit=MAZE_CFG.exits[0],w=VoidMaze.toWorld(exit.x,exit.z),q=PatrolNav.point('lift_dream',w.x,w.y,exit.h);
+      var q;
+      if(typeof VoidMaze!=='undefined'){var exit=MAZE_CFG.exits[0],w=VoidMaze.toWorld(exit.x,exit.z);q=PatrolNav.point('lift_dream',w.x,w.y,exit.h);}
+      else q=PatrolNav.entry('lift_dream','J');
       if(Math.hypot(a.x-q.x,a.y-q.y)<7&&Math.abs(a.fy-q.fy)<1)return {transition:{from:a,to:p,remaining:2,total:2,kind:'special'}};
       return {points:PatrolNav.path(a,q)};
     }
@@ -215,7 +217,7 @@ var PatrolWorld=(function(){
       if(!['walk','idle'].includes(PAT.state))PAT.state='walk';
       function navigable(scene){return scene==='lift_dream'||Object.prototype.hasOwnProperty.call(PATROL_GEOMETRY,scene);}
       if(!navigable(PAT.room)){put(spawn());PAT.transition=null;PAT.safety=3.6;saveReport('patrolWorld','非法场景已恢复到固定出生点，追踪策略保留');}
-      if(PAT.room!=='lift_dream'&&PAT.room!=='bell1')PAT.fy=0;
+      if(PAT.room!=='bell1'&&(PAT.room!=='lift_dream'||typeof VoidMaze==='undefined'))PAT.fy=0;
       if(PAT.room==='bell1')PAT.fy=clamp(PAT.fy,0,SPIRAL.topH);
       if(!['patrol','investigate','chase','search','return','transit'].includes(PAT.behavior))PAT.behavior='patrol';
       PAT.near=d.near===true;PAT.lock=clamp(PAT.lock,0,1);PAT.lost=clamp(PAT.lost,0,1e6);PAT.regionSeq=Math.floor(saveNum(d.regionSeq,0,1e9));
@@ -232,7 +234,7 @@ var PatrolWorld=(function(){
       PAT.queue=PAT.queue.filter(function(e,i,a){return a.findIndex(function(q){return q.regionId===e.regionId;})===i;});
       PAT.routeIndex=Math.floor(saveNum(d.routeIndex,0,routeData().nodes.length-1));
       if(PAT.transition&&(!validPoint(PAT.transition.to)||!validPoint(PAT.transition.from)||!Number.isFinite(PAT.transition.total)||PAT.transition.total<=0||PAT.transition.total>3||!Number.isFinite(PAT.transition.remaining)||PAT.transition.remaining<0||PAT.transition.remaining>PAT.transition.total)){PAT.transition=null;saveReport('patrolWorld','无效连接进度已取消');}
-      if(!PAT.transition&&PAT.room==='lift_dream'){
+      if(!PAT.transition&&PAT.room==='lift_dream'&&typeof VoidMaze!=='undefined'){
         var mq=VoidMaze.toScene(PAT.x,PAT.y),mh=VoidMaze.groundAt(mq.x,mq.z,PAT.fy+.45);
         if(!Number.isFinite(mh)||Math.abs(mh-PAT.fy)>.45||VoidMaze.depthAt(mq.x,mq.z,.30,PAT.fy)>1e-7){put(spawn());PAT.safety=3.6;saveReport('patrolWorld','无支撑的迷宫落点已恢复，追踪策略保留');}
       }
@@ -242,7 +244,7 @@ var PatrolWorld=(function(){
           bp.r>=SPIRAL.rIn+.29&&bp.r<=SPIRAL.rOut-.29&&(PAT.fy===SPIRAL.topH?(spTopOffset(bp.th)<-SPIRAL.hole||spTopOffset(bp.th)>=-SPIRAL.arrive):Math.abs(spWrap(bp.th-SPIRAL.th0-PAT.fy/SPIRAL.turnH*TAU))<.12);
         if(!bellValid){put(spawn());PAT.safety=3.6;saveReport('patrolWorld','非法旋梯落点已恢复，追踪策略保留');}
       }
-      if(PAT.room!=='lift_dream'&&PAT.room!=='bell1'&&!PAT.transition){var p=PatrolNav.snap(PAT.room,position());if(p&&Math.hypot(p.x-PAT.x,p.y-PAT.y)<30){var n=PatrolNav.grid(PAT.room);if(!PatrolNav.free(PAT.room,Math.floor((PAT.x-n.ox)/n.step),Math.floor((PAT.y-n.oy)/n.step))){put(p);saveReport('patrolWorld','巡察嵌入碰撞，恢复到邻近安全点');}}else{put(spawn());PAT.safety=3.6;saveReport('patrolWorld','巡察碰撞落点已修复');}}
+      if((PAT.room!=='lift_dream'||typeof VoidMaze==='undefined')&&PAT.room!=='bell1'&&!PAT.transition){var p=PatrolNav.snap(PAT.room,position());if(p&&Math.hypot(p.x-PAT.x,p.y-PAT.y)<30){var n=PatrolNav.grid(PAT.room);if(!PatrolNav.free(PAT.room,Math.floor((PAT.x-n.ox)/n.step),Math.floor((PAT.y-n.oy)/n.step))){put(p);saveReport('patrolWorld','巡察嵌入碰撞，恢复到邻近安全点');}}else{put(spawn());PAT.safety=3.6;saveReport('patrolWorld','巡察碰撞落点已修复');}}
       framePath=null;
     }
   });

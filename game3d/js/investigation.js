@@ -35,12 +35,12 @@ var Investigation={
     S.spots.guard=1;S.spots.garage=1;UI.spotsDirty=true;
     this.record('notice','钥匙移交：行政楼五楼校长办公室。保安岗留有停车记录和备用手电；车库位于校园西侧。','事实','教学楼一楼 · 讲台移交单');
     this.record('carTheory','如果找到钥匙、核对停车记录，也许能开车离开。车库黑影怕持续照射，开门前先看清车道。','推测','移交单背面的手写字');
-    this.record('timePressure','最好当天找到出口。首日晚间起异象和巡察越来越密，第二天起危险区更耗精神，休息也更难恢复。睡觉不会让校园恢复安全；已拿到的通关物品还在。','事实','移交单 · 留校提醒');
+    this.record('timePressure','最好当天找到出口。首日晚间起异象越来越密，常驻巡察持续巡逻；第二天起危险区更耗精神，休息也更难恢复。睡觉不会让校园恢复安全；已拿到的通关物品还在。','事实','移交单 · 留校提醒');
     this.supply();
     var supply=this.state().supply;
     this.record('supply','临时补给箱移至'+(supply.site==='guard1'?'保安岗柜台':'食堂售货机旁')+'。可领取一份药片；封条能慢慢拆，也可投一枚硬币解锁。','事实','讲台移交单 · 补给附注');
-    UI.choice('移交单：钥匙在行政楼五楼校长办公室；保安岗有停车记录和备用手电。车库在西侧。外出登记可跨越普通课堂；12:50、17:50 回教室集合，熄灯回宿舍。校长室、考试和夜间仍要小心。尽量当天离校，第二天起校园更危险，休息效果也会减弱。',[
-      {label:'登记外出，记下移交事项',fn:function(){SchoolDay.grant();RT.dayRhythmVersion=1;Investigation.record('outing','讲台可以登记外出，不消耗物品。登记跨越普通课堂；12:50、17:50 必须回教室集合，合规后续签。熄灯回宿舍；校长室和考试不受外出登记保护。','事实','讲台 · 外出登记');autoSave();}},
+    UI.choice('移交单：钥匙在行政楼五楼校长办公室；保安岗有停车记录和备用手电。车库在西侧。第一天不开放外出登记；第二天起许可可跨越普通课堂，但必须参加约定的下一次检查，缺席会被持续追踪。12:50、17:50 回教室集合，熄灯回宿舍。校长室、考试和夜间仍要小心。尽量当天离校，第二天起校园更危险，休息效果也会减弱。',[
+      {label:S.day===1?'阅读登记规定（次日起开放）':'登记外出，记下移交事项',fn:function(){SchoolDay.grant();RT.dayRhythmVersion=1;Investigation.record('outing','第二天起讲台可登记外出，不消耗物品；第一天禁手动和自动登记。许可跨越普通课堂，另外承担下一次检查的到场责任；错过约定检查会被持续追踪。17:50 后的责任是次日 12:50，熄灯仍回宿舍；校长室、考试和夜间不受许可保护。','事实','讲台 · 外出登记');autoSave();}},
       {label:'拿讲台上的粉笔',fn:function(){if(!hasItem('chalk'))addItem('chalk');autoSave();}}
     ]);
   },
@@ -136,6 +136,8 @@ var Investigation={
     if(routes.length>1)h+='<div class="investigation-focus" role="group" aria-label="切换关注的路线"><span>关注</span>'+routes.map(function(route){
       var on=route[0]===focus;return '<button type="button"'+(on?' class="on" aria-pressed="true"':' aria-pressed="false"')+' onclick="Investigation.focus(\''+route[0]+'\')">'+route[1]+'</button>';}).join('')+'</div>';
     h+='</section>';
+    var duty=AttendanceDuty.summary();
+    if(duty||PAT.permanent)h+='<section class="inv-case"><h3>外出记录</h3><p>'+esc(PAT.permanent?'登记后缺席：持续追踪仍生效。假条、重新登记和符纸不能解除。':'')+'</p>'+(duty?'<p>仍须到教室参加：'+esc(duty)+'。许可到期不免除责任；系统取消的检查会顺延。</p>':'')+'</section>';
     var ids=Object.keys(j.entries).filter(hit);
     if(query)h+='<p class="inv-found">'+(ids.length?'找到 '+ids.length+' 条':'没有找到仍能回忆的对应记录。')+'</p>';
     var recent=j.recent.filter(function(id){return !!j.entries[id]&&hit(id);}).slice(-3).reverse();

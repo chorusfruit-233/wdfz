@@ -30,6 +30,9 @@ PhoneEnergy.advance(d,tech?600:300,{held:true,tech,classroom:true});assert(Math.
 let d=PhoneEnergy.fresh();d.initialized=true;d.battery=50;PhoneEnergy.advance(d,120,{held:true,computer:true});assert.equal(d.battery,50);
 PhoneEnergy.advance(d,120,{held:true,computer:true,tech:true});assert(Math.abs(d.battery-30)<1e-7);
 d.wireless={status:'running',target:200,elapsed:10};PhoneEnergy.advance(d,60,{held:false});assert.equal(d.wireless.elapsed,10);assert(Math.abs(d.battery-20)<1e-7);
+let warnings=PhoneEnergy.fresh();warnings.initialized=true;
+let first=PhoneEnergy.advance(warnings,600,{held:true}),again=PhoneEnergy.advance(warnings,600,{held:true});
+assert.deepEqual(first,['low20','low5','off']);assert.deepEqual(again,[]);
 """)
     def test_segmentation_matches_many_small_steps(self):
         self.js("""

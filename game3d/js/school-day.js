@@ -15,7 +15,7 @@ var SchoolDay={
     if(isNight()){if(!quiet)toast('熄灯后不能登记外出 · 请回宿舍');return false;}
     RT.outing={day:S.day,from:S.tsec,until:this.deadline()};
     AttendanceDuty.grant(quiet?'inspection':'manual');
-    if(!quiet)toast('外出登记已记下 · '+this.returnLabel());
+    if(!quiet)toast('外出登记已记下 · '+this.returnLabel()+'；到场责任：'+AttendanceDuty.summary());
     return true;
   },
   returnLabel:function(){

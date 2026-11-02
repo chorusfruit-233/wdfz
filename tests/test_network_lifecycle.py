@@ -147,3 +147,34 @@ class NetworkLifecycleTest(BrowserCase):
           let first=PAT.investigation.regionId,next=PAT.queue.map(x=>x.regionId),before=JSON.stringify(PAT.queue);
           doEnterRoom('lab3',PatrolNav.tilePoint('lab3',41,10));PatrolWorld.tick(.1);
           return first==='admin5:office0'&&next.join(',')==='admin5:office1'&&JSON.stringify(PAT.queue)===before&&PatrolWorld.region()===null&&!PAT.permanent;})()""")
+
+    def test_night_save_does_not_roll_tomorrows_duty_a_second_day(self):
+        p=self.game()
+        self.assert_js(p,"""(()=>{S.day=2;S.tsec=1080;SchoolDay.grant(false);advanceGameTime(280);
+          let night=S.day===3&&S.tsec===1360;saveGame();applySave(loadGame());
+          let kept=AttendanceDuty.state.duties[0].targetCheckId==='3:0'&&Investigation.render().includes('第 3 天 12:50');
+          AttendanceDuty.state.duties.push({dutyId:'old',status:'pending',targetCheckId:'2:1'});
+          AttendanceDuty.cancel({day:2,slot:1});let rolled=AttendanceDuty.state.duties.every(x=>x.targetCheckId==='3:0');
+          advanceGameTime(140);let morning=S.day===3&&S.tsec===440;
+          AttendanceDuty.settle({day:3,slot:0,compliant:false});updateHUD();return night&&kept&&rolled&&morning&&PAT.permanent&&Investigation.render().includes('持续追踪仍生效')&&document.getElementById('period').textContent.includes('持续追踪');})()""")
+
+    def test_container_pause_button_preserves_elapsed_time(self):
+        p=self.game(touch=True)
+        p.evaluate("addItem('phone');PhoneNetwork.startWireless();PhoneNetwork.device.wireless.target=180;PhoneNetwork.tick(185);PHONE.start()")
+        p.locator('#phapps [data-app="container"]').tap()
+        p.locator('#phtool [data-action="download"]').tap()
+        p.evaluate('PhoneNetwork.tick(30)')
+        self.assert_js(p,"PhoneNetwork.device.download.status==='paused'&&PhoneNetwork.device.download.elapsed===5")
+        p.locator('#phtool [data-action="download"]').tap()
+        p.evaluate('PhoneNetwork.tick(55)')
+        self.assert_js(p,"PhoneNetwork.device.download.status==='complete'&&PhoneNetwork.device.download.elapsed===60&&document.querySelector('[data-action=download]').disabled")
+
+    def test_location_updates_floor_transit_and_banish_then_stops_without_power(self):
+        p=self.game();self.ready(p)
+        self.assert_js(p,"""(()=>{TerminalUI.close();PAT.room='admin3';PAT.transition=null;PHONE.start();PHONE.selectApp('location');
+          let text=()=>document.querySelector('#phtool [data-copy]').textContent;
+          let floor=text()==='行政楼／3F';let g=PatrolNav.graph();
+          PAT.transition={from:g.nodes['admin3:stairs'],to:g.nodes['admin4:stairs'],kind:'stairs',total:2,remaining:1};PHONE.paintApps();
+          let transit=text()==='楼梯／3F→4F';PatrolWorld.banish();PHONE.paintApps();let absent=text()==='信号暂不可用';
+          PhoneNetwork.device.battery=0;PhoneNetwork.device.powered=false;PHONE.checkInterrupt();
+          PAT.state='walk';PAT.room='admin5';return floor&&transit&&absent&&!PHONE.on&&!PhoneNetwork.location().includes('行政楼');})()""")

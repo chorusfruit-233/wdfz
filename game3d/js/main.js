@@ -180,6 +180,7 @@ function updateHUD(){
   if(CarChase.active())pe.textContent='驾驶逃脱';
   if(typeof Inspection!=='undefined'&&Inspection.active())pe.textContent='学生会检查 · 教室';
   else if(typeof Inspection!=='undefined'&&Inspection.upcoming())pe.textContent='集合将至 · 请回教室';
+  if(PAT.permanent)pe.textContent+=' · 持续追踪';
   var frozen=roomClockFrozen();
   if(frozen)pe.textContent='???';                             /* 时钟冻结的地方（虚空迷宫）：课表也没有意义 */
   /* 绿 = 普通活动；黄 = 返程或违反要求；蓝 = 登记 / 请假；红 = 考试。 */

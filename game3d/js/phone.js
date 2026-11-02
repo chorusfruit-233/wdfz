@@ -123,6 +123,7 @@ PHONE.selectApp=function(app){
   el.querySelectorAll('[data-app]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.app===app));});
   var tool=el.querySelector('#phtool');tool.innerHTML='<p data-copy></p>';
   if(app==='wireless'){var b=document.createElement('button');b.type='button';b.dataset.action='wireless';b.onclick=function(){PhoneNetwork.toggleWireless();PHONE.paintApps();};tool.appendChild(b);}
+  if(app==='container'){var dl=document.createElement('button');dl.type='button';dl.dataset.action='download';dl.onclick=function(){PhoneNetwork.toggleDownload();PHONE.paintApps();};tool.appendChild(dl);}
   if(app==='sync'){var sync=document.createElement('button');sync.type='button';sync.textContent='同步门禁数据';sync.onclick=function(){PhoneNetwork.sync();PHONE.paintApps();};tool.appendChild(sync);}
   if(app==='plane')PHONE.draw();PHONE.paintApps();
 };
@@ -131,16 +132,18 @@ PHONE.paintApps=function(){
   function text(node,value){if(node&&node.textContent!==value)node.textContent=value;}
   text(el.querySelector('#phstatus'),'电量 '+Math.floor(d.battery)+'% · '+(d.network?'学校网络已连接':'尚未联网')+(Talent.has('tech')?' · 耗电 ×2':''));
   var copy='',w=d.wireless;
-  if(app==='home')copy='工具查看时不能移动，世界仍在运行。收起手机后，后台任务继续。教室可充电，机房电脑可以接线。';
+  if(app==='home')copy='工具查看时不能移动，世界仍在运行。收起手机后，后台任务继续。原教室无渗透时，从空电充满：普通约 5 分钟，科技党约 10 分钟。机房接线只抵普通基础耗电；科技党仍每分钟净掉 10 点。';
   if(app==='wireless'){
     copy=w.status==='complete'?'无线接入完成。定位与门禁同步已解锁。':w.status==='idle'?'接入学校无线网络需要 180—600 运行秒，执行期间耗电翻倍。':
       (w.status==='paused'?'已暂停':'正在接入')+' · '+Math.floor(w.elapsed/w.target*100)+'% · 剩余 '+Math.ceil(w.target-w.elapsed)+' 秒';
     var b=el.querySelector('[data-action="wireless"]');if(b){b.disabled=w.status==='complete';text(b,w.status==='running'?'暂停任务':w.status==='idle'?'开始接入':w.status==='complete'?'已连接':'继续任务');}
+    if(Talent.has('tech')&&w.status!=='complete')copy+=' 科技党执行渗透时，即使在原教室也会净掉电。';
   }
   if(app==='location')copy=PhoneNetwork.location();
   if(app==='sync')copy=RT.data?'门禁数据已经同步。':d.network?'仍需先在网络中心写入白名单；联网手机可以完成同步。':'先接入学校网络。';
-  if(app==='container')copy=(d.download.status==='complete'?'模拟 Kali Linux 容器已就绪，可在机房电脑旁打开终端。':d.download.status==='idle'?'无线接入完成后，自动安装容器。':
-      '容器安装 '+Math.floor(d.download.elapsed/60*100)+'% · 剩余 '+Math.ceil(60-d.download.elapsed)+' 秒')+
+  if(app==='container'){copy=(d.download.status==='complete'?'模拟 Kali Linux 容器已就绪，可在机房电脑旁打开终端。':d.download.status==='idle'?'无线接入完成后，自动安装容器。':
+      (d.download.status==='paused'?'安装已暂停 ':'容器安装 ')+Math.floor(d.download.elapsed/60*100)+'% · 剩余 '+Math.ceil(60-d.download.elapsed)+' 秒')+
       (Termination.state.status==='accepted'?'\n服务器停机剩余 '+Math.ceil(Termination.state.remaining)+' 运行秒。':'');
+    var dl=el.querySelector('[data-action="download"]');if(dl){dl.disabled=!['running','paused'].includes(d.download.status);text(dl,d.download.status==='running'?'暂停下载':d.download.status==='paused'?'继续下载':d.download.status==='complete'?'已安装':'等待联网');}}
   text(el.querySelector('[data-copy]'),copy);
 };

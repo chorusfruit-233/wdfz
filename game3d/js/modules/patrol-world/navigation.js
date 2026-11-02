@@ -4,7 +4,19 @@ var PatrolNav=(function(){
   var grids={},graph=null,localCache={};
   function point(scene,x,y,fy){return {scene:scene,x:x,y:y,fy:fy||0};}
   function grid(id){
-    if(grids[id])return grids[id];var d=PATROL_GEOMETRY[id];if(!d)return null;
+    if(grids[id])return grids[id];var d=PATROL_GEOMETRY[id];
+    /* 移除可选迷宫模块时，电梯仍会进入原白色空间；直接从纯地图生成其墙体栅格。 */
+    if(!d&&id==='lift_dream'&&typeof VoidMaze==='undefined'){
+      var R=INTERIORS[id],W=R.cols*4,H=R.rows*4,step=R.tw/4,bytes=new Uint8Array(Math.ceil(W*H/8)),radius=.30/U2M;
+      for(var y=0;y<H;y++)for(var x=0;x<W;x++){
+        var wx=R.ox+(x+.5)*step,wy=R.oy+(y+.5)*step,c=Math.floor(x/4),r=Math.floor(y/4),blocked=false;
+        for(var j=Math.max(0,r-1);j<=Math.min(R.rows-1,r+1);j++)for(var i=Math.max(0,c-1);i<=Math.min(R.cols-1,c+1);i++)
+          if(R.grid[j][i]==='#'&&wx>R.ox+i*R.tw-radius&&wx<R.ox+(i+1)*R.tw+radius&&wy>R.oy+j*R.th-radius&&wy<R.oy+(j+1)*R.th+radius)blocked=true;
+        if(blocked){var k=x+y*W;bytes[k>>3]|=1<<(k&7);}
+      }
+      return grids[id]={W:W,H:H,step:step,ox:R.ox,oy:R.oy,bytes:bytes};
+    }
+    if(!d)return null;
     var raw=atob(d.bits),bytes=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
     return grids[id]=Object.assign({},d,{bytes:bytes});
   }
@@ -43,6 +55,7 @@ var PatrolNav=(function(){
     out.reverse();return out;
   }
   function maze(a,b){
+    if(typeof VoidMaze==='undefined')return planar(a,b);
     /* 半米平面步长，脚高是节点的一部分；只沿体素顶面与 MAZE_WALK 连续表面走。 */
     function node(p){var q=VoidMaze.toScene(p.x,p.y);return {x:Math.round(q.x*2)/2,z:Math.round(q.z*2)/2,h:p.fy||0};}
     function key(p){return p.x+','+p.z+','+Math.round(p.h*1000);}
@@ -163,7 +176,7 @@ var PatrolNav=(function(){
     for(var i=1;i<steps;i++){
       var x=a.x+(b.x-a.x)*i/steps,y=a.y+(b.y-a.y)*i/steps;
       if(a.scene==='out'){if(PATROL_GEOMETRY.out.occluders.some(function(r){return x>r[0]&&x<r[2]&&y>r[1]&&y<r[3];}))return false;}
-      else if(a.scene==='lift_dream'){var p=VoidMaze.toScene(x,y);if(VoidMaze.depthAt(p.x,p.z,0,a.fy||0))return false;}
+      else if(a.scene==='lift_dream'&&typeof VoidMaze!=='undefined'){var p=VoidMaze.toScene(x,y);if(VoidMaze.depthAt(p.x,p.z,0,a.fy||0))return false;}
       else {var tile=tileAt(R,x,y);if(tile==='#'||tile==='='&&!doorIsOpen(R,x,y))return false;}
     }
     return true;

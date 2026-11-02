@@ -58,6 +58,11 @@ var PhoneNetwork={device:PhoneEnergy.fresh(),connection:null,page:'home',
     if(!this.available())return;
     var w=this.device.wireless;if(w.status==='running'){w.status='paused';autoSave();}else this.startWireless();
   },
+  toggleDownload:function(){
+    if(!this.available()||!this.device.network)return;
+    var task=this.device.download;if(task.status!=='running'&&task.status!=='paused')return;
+    task.status=task.status==='running'?'paused':'running';autoSave();
+  },
   sync:function(){
     if(!this.available()||!this.device.network){toast('手机需要电量与学校网络连接');return false;}
     return WhitelistSync.commit('phone');

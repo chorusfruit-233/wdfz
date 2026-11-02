@@ -82,3 +82,13 @@ class PatrolWorldTest(BrowserCase):
           GameModules.emit('leaveRoom','teach1','teach2');let target=PAT.lastSeen;
           doEnterRoom('teach2',PatrolNav.tilePoint('teach2',42,18));PatrolWorld.tick(.1);
           return seen&&target.scene==='teach2'&&target.x===g.nodes['teach2:stairs'].x&&JSON.stringify(PAT.lastSeen)===JSON.stringify(target);})()""")
+
+    def test_inspection_and_calm_hold_only_the_local_permanent_entity(self):
+        p=self.game()
+        self.assert_js(p,"""(()=>{PAT.permanent=true;PAT.room=S.room;PAT.x=S.x+80;PAT.y=S.y;PAT.warning=0;PAT.safety=0;PAT.near=true;
+          Inspection.start({day:1,slot:0});let x=PAT.x,y=PAT.y,c=RT.inspection.current;PatrolWorld.tick(8);
+          let held=PAT.x===x&&PAT.y===y&&!PAT.locked&&PAT.permanent;
+          Inspection.finish(c);for(let i=0;i<70;i++){Inspection.tick(.1);PatrolWorld.tick(.1);}
+          let calm=PAT.x===x&&PAT.y===y&&!PAT.locked&&PAT.permanent;
+          for(let i=0;i<20;i++){Inspection.tick(.1);PatrolWorld.tick(.1);}
+          return held&&calm&&PAT.permanent&&(PAT.x!==x||PAT.y!==y);})()""")
