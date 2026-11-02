@@ -64,7 +64,7 @@ var Game={
     if(waitForGameAssets(function(){Game.start(diff,opt);}))return;
     try{
     FRESH_TALENT=opt&&opt.talent?{id:opt.talent,origin:opt.origin||'selected'}:null;
-    if(opt&&opt.mode==='speedrun'){ if(!Speedrun.active()) Speedrun.arm(diff); }
+    if(opt&&opt.mode==='speedrun'){ if(!Speedrun.active()) Speedrun.arm(diff); Dev.clearModifiers(); }   /* 普通局留下的快跑 / 无敌 / 关读条不带进速通 */
     else Speedrun.disarm();                                    /* 普通新局：回到普通存档槽 */
     freshState(diff);
     Playtest.event('开始新局',diff);

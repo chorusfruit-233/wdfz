@@ -459,6 +459,14 @@ var Dev={
   fast:function(){ DEV.fast=!DEV.fast; Dev.paint(); Dev.report(DEV.fast?'快跑：开':'快跑：关'); },
   search:function(){ SEARCH.on=!SEARCH.on; clearSearch(); Dev.paint(); Dev.report(SEARCH.on?'翻找读条：开':'翻找读条：关（立刻翻完）'); },
   god:function(){ DEV.god=!DEV.god; Dev.paint(); Dev.report(DEV.god?'无敌：开':'无敌：关'); },
+  /* 这三个开关关掉面板、开新局都不复位（方便测试）。速通不能带着它们记成绩：开速通时清掉，结算时再查一次 */
+  modifiersActive:function(){ return !!(DEV.fast||DEV.god||(typeof SEARCH!=='undefined'&&!SEARCH.on)); },
+  clearModifiers:function(){
+    if(!Dev.modifiersActive()) return false;
+    DEV.fast=false; DEV.god=false; SEARCH.on=true; clearSearch();
+    Dev.paint(); Dev.report('速通：已关掉调试开关（快跑、无敌恢复为关，翻找读条恢复为开）');
+    return true;
+  },
   san:function(){ if(!Dev.canUse())return;PlayerStats.setSan(100,'debug');PlayerStats.setStamina(100,'debug');S.tired=false; Dev.report('SAN / 体力已恢复');Dev.refresh(); },
   time:function(min){
     if(!Number.isFinite(min)||!Dev.canChangeTime())return;
