@@ -9,10 +9,12 @@ var DeathTimeline=(function(){
     lamps:3.4,slit:3.6,squeeze:3.6,face:3,wall:2,laugh:3.2,mirror:2,hand:2,trash:3.6
   };
   function duration(type){return durations[type]||durations.vignette;}
+  /* 模块登记自己的死亡演出时长（秒），和 DeathCG.register 配合 */
+  function define(type,sec){ if(!type||!(sec>0)||!isFinite(sec)) return false; durations[type]=sec; return true; }
   function sample(type,elapsed){
     var total=duration(type), progress=Math.max(0,Math.min(1,elapsed/total));
     return {duration:total,progress:progress,
       phase:progress<0.2?'warning':progress<0.55?'contact':progress<0.86?'struggle':'end'};
   }
-  return {durations:durations,duration:duration,sample:sample};
+  return {durations:durations,duration:duration,sample:sample,define:define};
 })();

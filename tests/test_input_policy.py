@@ -92,7 +92,7 @@ class InputPolicyBrowserTest(BrowserCase):
 
     def test_context_exposes_debug_freeze_without_freezing_unfocused_panel(self):
         page = self.page()
-        page.evaluate("window.prompt=()=>Dev.open.toString().match(/password!==(?:'|\")([^'\"]+)/)[1];Dev.open();DEV.freeze=false")
+        page.evaluate("Dev.open();DevLock.submit(DEV_CODE);DEV.freeze=false")
         self.assert_js(page, "GamePolicy.simulationAllowed(gameInputContext())&&playerInputAllowed()")
         page.evaluate("DEV.freeze=true")
         self.assert_js(page, "!GamePolicy.simulationAllowed(gameInputContext())&&!playerInputAllowed()")

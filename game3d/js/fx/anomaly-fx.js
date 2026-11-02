@@ -16,9 +16,9 @@ function anfxW2S(wx,wy){
 }
 function anfxClear(){
   try{ wxClear(); }catch(e){}
-  if(ANFX.hiddenWorld&&ANFX.hiddenWorld.mesh){
-    ANFX.hiddenWorld.mesh.visible=ANFX.hiddenWorld.visible;
-    ANFX.hiddenWorld=null;
+  if(ANFX.hidden){                                     /* 演出藏起来的场景（Ctx.hideWorld），倒着还原 */
+    for(var hi=ANFX.hidden.length-1;hi>=0;hi--) ANFX.hidden[hi].obj.visible=ANFX.hidden[hi].visible;
+    ANFX.hidden=null;
   }
   if(ANFX.grp){
     GLR.scene.remove(ANFX.grp);

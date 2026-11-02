@@ -7,16 +7,25 @@ from browser_case import BrowserCase
 class DebugPanelTest(BrowserCase):
     def game(self, touch=False):
         page = self.page(touch=touch)
+        page._dev_touch = touch
         page.evaluate("Game.start('hard');clearIntroTimers();running=false")
         page.wait_for_function("S.room==='teach1'&&GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS.teach1")
         page.evaluate("S.intro=0;AN.active=false;PAT.next=1000;AN.next=1000;S.tt=0;S.talent='code'")
-        # 密码校验由 test_debug_panel_requires_password 单独覆盖；其他测试只替代提示框输入。
-        page.evaluate("window.prompt=()=>Dev.open.toString().match(/password!==(?:'|\")([^'\"]+)/)[1]")
+        # 密码的各种情况由 test_controls 的 test_debug_panel_requires_password 单独覆盖；这里只是正常点进去。
         return page
+
+    def unlock(self, page):
+        """在页面里画的数字键盘上把调试密码点进去（触屏页用 tap），等面板出现。"""
+        page.locator('#devlock').wait_for(state='visible')
+        press = (lambda loc: loc.tap()) if getattr(page, '_dev_touch', False) else (lambda loc: loc.click())
+        for d in page.evaluate('DEV_CODE'):
+            press(page.locator(f'#devlock [data-k="{d}"]'))
+        press(page.locator('#devlock [data-k="ok"]'))
+        page.locator('#dev').wait_for(state='visible')
 
     def open_panel(self, page):
         page.keyboard.press('F2')
-        page.locator('#dev').wait_for(state='visible')
+        self.unlock(page)
 
     def test_freeze_is_explicit_and_closing_restores_game_input(self):
         page = self.game()
@@ -38,6 +47,7 @@ class DebugPanelTest(BrowserCase):
         page = self.game()
         page.evaluate('Game.pause()')
         page.locator('#pause button').filter(has_text='调试').click()
+        self.unlock(page)
         self.assertFalse(page.locator('#devfreeze').is_disabled())
         self.assertIn('游戏菜单已暂停',page.locator('#devrun').inner_text())
         page.locator('[data-dev-tab="scene"]').click()
@@ -45,6 +55,7 @@ class DebugPanelTest(BrowserCase):
         page.keyboard.press('F2')
         self.assert_js(page,"!DEV.on&&PAUSE.on&&UI.openPanel==='pause'")
         page.locator('#pause button').filter(has_text='调试').click()
+        self.unlock(page)
         page.locator('[data-dev-tab="scene"]').click()
         page.locator('#devroomFilter').focus()
         page.keyboard.press('Escape')
@@ -149,6 +160,7 @@ class DebugPanelTest(BrowserCase):
                 page.evaluate('Game.pause()')
                 button=page.locator('#pause button').filter(has_text='调试')
                 button.tap() if touch else button.click()
+                self.unlock(page)
                 self.assert_js(page,'DEV.on&&PAUSE.on')
                 button=page.locator('#devfreeze')
                 self.assertEqual(button.inner_text(),'继续游戏')
@@ -183,6 +195,7 @@ class DebugPanelTest(BrowserCase):
         page.set_viewport_size({'width':844,'height':390})
         page.evaluate('Game.pause()')
         page.locator('#pause button').filter(has_text='调试').tap()
+        self.unlock(page)
         page.locator('#devfreeze').tap()
         self.assert_js(page,"DEV.on&&!PAUSE.on&&['stick','tAct'].every(id=>{const el=document.getElementById(id),r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));})")
         page.evaluate('S.seated=true')
@@ -217,14 +230,14 @@ class DebugPanelTest(BrowserCase):
                 self.assertFalse(page.locator('#devbody').is_visible())
                 self.assertEqual(page.locator('#dev').bounding_box()['width'],44)
                 self.assertLessEqual(page.locator('#devball span').bounding_box()['width'],20)
-                page.evaluate("window.prompt=()=>{throw Error('展开不应再次询问密码')};S.seated=true")
+                page.evaluate("S.seated=true")
                 if touch:
                     page.locator('#tAct').tap()
                 else:
                     page.keyboard.press('e')
                 self.assert_js(page,'DEV.minimized&&!S.seated')
                 page.locator('#devball').tap() if touch else page.locator('#devball').click()
-                self.assert_js(page,'DEV.on&&!DEV.minimized&&!DEV.freeze')
+                self.assert_js(page,'DEV.on&&!DEV.minimized&&!DEV.freeze&&!DevLock.on&&document.getElementById("devlock").hidden')   # 展开不再要密码
                 self.assertEqual(page.locator('#devroomFilter').input_value(),'lab')
                 self.assert_js(page,'document.getElementById("devbody").scrollTop===savedScroll')
                 self.assertAlmostEqual(page.locator('#dev').bounding_box()['x'],old['x'],delta=1)
@@ -783,6 +796,7 @@ class DebugPanelTest(BrowserCase):
         page = self.game(touch=True)
         page.evaluate('Game.pause()')
         page.locator('#pause button').filter(has_text='调试').tap()
+        self.unlock(page)
         panel=page.locator('#dev')
         initial=panel.bounding_box()
         handle=page.locator('#devdrag').bounding_box()
@@ -807,6 +821,7 @@ class DebugPanelTest(BrowserCase):
     def test_touch_drag_cancel_and_orientation_change_release_the_pointer(self):
         page = self.game(touch=True)
         page.evaluate('Dev.open()')
+        self.unlock(page)
         panel=page.locator('#dev')
         handle=page.locator('#devdrag').bounding_box()
         x,y=handle['x']+25,handle['y']+20
@@ -830,6 +845,7 @@ class DebugPanelTest(BrowserCase):
     def test_second_touch_cannot_take_over_a_drag(self):
         page = self.game(touch=True)
         page.evaluate('Dev.open()')
+        self.unlock(page)
         panel=page.locator('#dev')
         handle=page.locator('#devdrag').bounding_box()
         x,y=handle['x']+20,handle['y']+20
@@ -852,7 +868,7 @@ class DebugPanelTest(BrowserCase):
                 page.set_viewport_size({'width':width,'height':height})
                 page.evaluate('Game.pause()')
                 page.locator('#pause button').filter(has_text='调试').tap()
-                page.locator('#dev').wait_for(state='visible')
+                self.unlock(page)
                 self.assert_js(page,"(()=>{let r=document.getElementById('dev').getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight})()")
                 self.assert_js(page,"Array.from(document.querySelectorAll('#dev .devstats strong')).every(el=>el.scrollWidth<=el.clientWidth)")
                 self.assert_js(page,"parseFloat(getComputedStyle(document.getElementById('devstatvalue')).fontSize)>=16")

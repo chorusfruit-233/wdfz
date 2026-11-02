@@ -39,7 +39,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 
 - 原有文件**位置不变**（测试、工具、录像脚本都按路径引用），按职责归入清单里的模块；加载顺序与改造前逐个相同（`tests/test_modules.py` 核对）。
 - 新功能一律做成 `game3d/js/modules/<id>/` 下的独立模块，通过钩子、房间接口和清单接入，尽量不改旧文件。本轮的「粉笔记号」「虚空迷宫」「Mod 管理」就是这样加进来的，旧文件只加了钩子调用点。
-- 功能模块要能**整块拿掉**：别的代码用到它时先判断 `typeof X!=='undefined'`，并保留原来的行为作兜底（例如没有 `void-maze` 时电梯回到原来的白色空间，没有 `chalk-marks` 时粉笔只「看一眼说明」）。`tests/test_modules.py` 会把这三个功能模块从清单里拿掉再启动游戏验证。
+- 功能模块要能**整块拿掉**：别的代码用到它时先判断 `typeof X!=='undefined'`，并保留原来的行为作兜底（例如没有 `void-maze` 时电梯回到原来的白色空间，没有 `chalk-marks` 时粉笔只「看一眼说明」；模块自己的死亡演出通过 `DeathCG.register` 接入，拿掉模块就没有这两段演出）。`tests/test_modules.py` 会把这三个功能模块从清单里拿掉再启动游戏验证。
 - 渲染对象（`THREE.*`、`GLR.*`）只出现在引擎、建模、特效类文件里；玩法逻辑文件不直接建渲染对象（`test_engine` 已有检查）。新模块同样拆成「逻辑」和「画面」两个文件，例如 `chalk-marks/marks.js` 与 `marks-fx.js`。
 - 全局名字：一个模块尽量只导出一个命名空间对象（`VoidMaze`、`ChalkMarks`）加少量配置表（`MAZE_CFG`）；配置数值集中在配置表里，便于调参和测试。
 - 和 main 的接口配合：SAN、违规、同化、体力只经 `PlayerStats` 写（例如虚空迷宫的流失与坠落用 `PlayerStats.changeSan`，被挡下的死亡回到 1，与 `settleSan()` 相同）；延时回调用 `Lifecycle.scope(名字).timeout / guard`，不要裸用 `setTimeout`；新局和回菜单时要收掉的东西听 `reset` / `boundary` 钩子（`app/session.js` 用 `Lifecycle.register('game-modules', …)` 发 `boundary`）；判断现在能不能操作、谁在接收按键，看 `GamePolicy`。
@@ -114,6 +114,15 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 
 - `SFX.scape(id, {build, tick, level, bed, quiet})`：登记一整片环境声。`build(A)` 返回 `{gain: GainNode, …}`；`tick(dt, A, nodes)` 放零星声音；`bed` 是原来的校园铺底保留多少（默认 0）；`quiet` 为真时停掉旋律、远处怪声、滴水和上下课铃。用哪一片由 `soundscape` 钩子决定（虚空迷宫的「宇宙空寂」就是这样接入的）。低 SAN 心跳、巡察者心跳、蛾群等和玩法有关的声音不受影响。
 - `SFX.synth()`：`{ctx, master, out, reverb, tone, noise, noiseP, vowel, loopNoise, setG, now, bus, send, pan, noiseBuf}`，给模块搭持续的环境声；一次性音效请写成配方用 `SoundPlayer`。`SFX.scapeCut(sec)` 把当前整片环境声掐断几秒。随「音乐 / 环境」开关和音量设置。
+
+### 4.2 死亡演出（`fx/death-cg.js`、`fx/death-timeline.js`）
+
+2026-11-02 起模块可以加自己的死亡演出（虚空迷宫的「迷失」「坠落」就是这样接入的，见 `modules/void-maze/maze-death.js`）：
+
+- `DeathCG.register(类型, {build(c), update(c, k, view)})`：登记一种演出，同名覆盖内置。`build` 搭模型，`update` 按经过的秒数 `k` 摆模型和镜头——所有位置只由 `k` 算，帧率高低结果一样。`c` 是演出上下文：`add / mesh / box / fig / fx / merged / inst`（建在「视线坐标系」里：原点在脚下，+z 是死的那一刻的视线方向，本地 +x 在画面左边）、`veil`（收束用的黑幕）、`cam(view, k, 偏航, 俯仰, 下沉)`（镜头；偏航为正往右转）、`shade`、`flash`（只闪一次，亮度封顶 0.5）、`cue`（声音到点只响一次）、`face`、`hideWorld()`（藏起当前房间或室外，场景里标了 `userData.worldPart` 的东西——例如粉笔记号——一起藏，清场时还原）。往 `c` 上挂自己的东西时别用它已有的字段名（`type F preview rand base shk flashed cued lift veilMesh`）。常用小工具在 `DeathCG.kit`：`seg / sm / ss / lerp3 / rng / mat / setI`。
+- `DeathTimeline.define(类型, 秒)`：登记时长（四段式至少 3 秒；死亡界面在演出放完后出现）。
+- 配套：死亡音写成声音库里的 `death.<类型>`（`SFX.deathFx` 会先放 `death.base`）；墓志铭 `DFX_EPI[类型]`、死因与复盘提示 `DEATH_SOURCES[来源] = {cause, hint}` 由模块的逻辑文件填；调试面板的预览列表 `DEV_DEATH.push([名字, 类型])`；死亡档案的条目登记在 `death-archive.js`（档案启动时就要认得全部 ID，所以写在那里；属于内部内容的标 `secret:1`，没死过不出现、不算总数）。
+- 性能与可读性约束由 `tests/test_death_timeline.py` 统一检查：每种演出在场景之外最多再加 30 次绘制、只用开局预热过的材质组合（不在死的那一刻现编着色器）、帧率无关、四个阶段画面不同、闪光不超过 0.5、关掉「镜头晃动」时不晃。
 
 ## 5. Mod
 

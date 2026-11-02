@@ -43,7 +43,7 @@ class SoundBankTest(BrowserCase):
             self.assertIn('dread.' + kind, ids)
         for sf in ('tile', 'stair', 'garage', 'roof', 'grass', 'track', 'court', 'road', 'void', 'wet', 'squeak'):
             self.assertIn('step.' + sf, ids)
-        self.assertEqual(len(r['kinds']), 28)
+        self.assertEqual(len(r['kinds']), 30)                     # 28 种 + 虚空迷宫的迷失、坠落
         # 游戏里调用的 SFX.xxx 都存在（以前 SFX.chalk、SFX.deep、SFX.stopDeath 调了却不存在，被 try 吞掉没声音）
         calls = set()
         for text in src.values():
@@ -177,8 +177,8 @@ class SoundBankTest(BrowserCase):
 
     def test_dev_tools_page_auditions_every_sound(self):
         page = self.game(start=True)
-        page.evaluate("window.prompt=()=>Dev.open.toString().match(/password!==(?:'|\")([^'\"]+)/)[1]")   # 密码另有用例
         page.keyboard.press('F2')
+        page.evaluate("DevLock.submit(DEV_CODE)")                     # 数字键盘的点击输入另有用例
         page.locator('#dev').wait_for(state='visible')
         page.evaluate("Dev.tab('tools')")
         r = page.evaluate("""()=>{const cat=document.getElementById('devsndCat'), snd=document.getElementById('devsnd');

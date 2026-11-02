@@ -222,3 +222,98 @@ class VoidMazeTest(BrowserCase):
         self.assertTrue(r['air'])
         self.assertLess(r['fy'], 4)
 
+
+    def test_dying_in_the_maze_plays_its_own_cinematics_and_records_its_own_cause(self):
+        """死在迷宫里不再用校园里那一圈黑影：理智耗尽是「迷失」（void），掉进虚空死掉是「坠落」（abyss）。
+        各有自己的死因（复盘提示、死亡档案）和墓志铭；演出期间迷宫本身和地上的粉笔都藏起来，清场后还原。"""
+        page = self.game()
+        r = page.evaluate("""()=>{localStorage.removeItem('wdfz3d_death_archive_v1');
+          goMaze('teach');S.talent='code';S.bag=[];S.san=0.01;
+          const chalk=()=>GLR.scene.children.find(o=>o.name==='chalk-marks');
+          const before={room:GLR.roomMesh.visible,chalk:!!chalk()&&chalk().visible};
+          update(0.5);
+          const during={dead:S.dead,death:S.death,cg:ANFX.cg&&ANFX.cg.type,room:GLR.roomMesh.visible,chalk:chalk().visible,
+            hold:DeathTimeline.duration(S.death),epi:DFX_EPI[S.death],hint:!!DEATH_SOURCES.void_lost.hint,
+            arc:Object.keys(DeathArchive.state().unlocked)};
+          anfxClear();
+          return {before,during,after:{room:GLR.roomMesh.visible,chalk:chalk().visible}};}""")
+        self.assertEqual(r['before'], {'room': True, 'chalk': True})
+        self.assertEqual(r['during']['death'], 'void')
+        self.assertEqual(r['during']['cg'], 'void')
+        self.assertTrue(r['during']['dead'])
+        self.assertFalse(r['during']['room'] or r['during']['chalk'])
+        self.assertGreaterEqual(r['during']['hold'], 3.5)
+        self.assertEqual(r['during']['epi'], '你从那扇门前走过了很多次。')
+        self.assertTrue(r['during']['hint'])
+        self.assertEqual(r['during']['arc'], ['void_lost'])               # 不再记成校园里的「那根弦」（san）
+        self.assertEqual(r['after'], {'room': True, 'chalk': True})
+        # 理智只剩一点的时候掉进虚空：坠落
+        page = self.game()
+        r = page.evaluate("""()=>{localStorage.removeItem('wdfz3d_death_archive_v1');
+          goMaze('teach');S.talent='code';S.bag=[];S.san=2;walk([[0,-15]]);
+          const w=VoidMaze.toWorld(-1.4,-15);S.x=w.x;S.y=w.y;S.ang=Math.PI;
+          for(let i=0;i<300&&!S.dead;i++){KEY.w=true;update(1/60);}KEY.w=false;
+          const out={dead:S.dead,death:S.death,cg:ANFX.cg&&ANFX.cg.type,epi:DFX_EPI[S.death],arc:Object.keys(DeathArchive.state().unlocked),
+            hidden:!GLR.roomMesh.visible};
+          anfxClear();return out;}""")
+        self.assertEqual(r, {'dead': True, 'death': 'abyss', 'cg': 'abyss', 'epi': '下面站着的，是刚进来的你。',
+                             'arc': ['void_fall'], 'hidden': True})
+
+    def test_the_two_storyboards_move_through_their_beats(self):
+        """分镜按时间走：迷失——前面那扇门先暗、再合成一道缝，转身以后两边的门一扇扇裂开亮起，最后一格格暗下去；
+        坠落——画着箭头的方块三次从面前掠过，下面那块方地越来越近，手电最后照到镜头。"""
+        page = self.game()
+        r = page.evaluate("""()=>{doEnterRoom('teach1');S.ang=0.3;S.pitch=0;syncCamera(0);
+          function at(id,k,fn){deathFX(id,{preview:true});anfxUpdate(k);const v=fn(ANFX.cg);anfxClear();return v;}
+          const m=new THREE.Matrix4(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();
+          function sc(im,i){im.getMatrixAt(i,m);m.decompose(p,q,s);return +s.x.toFixed(2);}
+          const door=k=>at('void',k,c=>({front:sc(c.doors[2],0),frontLit:sc(c.doors[1],0)>0,
+            side:[2,3,4,5,6,7].map(i=>sc(c.doors[2],i)),lit:[1,2,3,4,5,6,7].filter(i=>sc(c.doors[1],i)>0).length}));
+          const fall=k=>at('abyss',k,c=>{const cam=GLR.cam.position.clone(),b=new THREE.Vector3();c.beam.getWorldPosition(b);
+            const dir=new THREE.Vector3(0,0,1).applyQuaternion(c.beam.getWorldQuaternion(new THREE.Quaternion()));
+            return {mark:c.mark.visible,below:+(cam.y-c.pad.getWorldPosition(new THREE.Vector3()).y).toFixed(1),
+              aim:+dir.dot(cam.sub(b).normalize()).toFixed(2)};});
+          return {v:[0.3,1.0,1.6,2.1,2.9,3.3].map(door),a:[0.4,0.8,1.1,1.55,2.3,2.6,2.98].map(fall)};}""")
+        v, a = r['v'], r['a']
+        self.assertEqual(v[0]['front'], 1)
+        self.assertTrue(v[0]['frontLit'])                               # 一开始：前面那扇门的门缝亮着
+        self.assertFalse(v[1]['frontLit'])                              # 1.0 秒：灭了
+        self.assertEqual(v[2]['front'], 0)                              # 1.6 秒：合成一道缝，没了
+        self.assertEqual(v[0]['side'], [0] * 6)                         # 两边的门一开始都不在
+        self.assertEqual(v[3]['side'], [1] * 6)                         # 2.1 秒：全部裂开了，门缝都亮着
+        self.assertEqual(v[3]['lit'], 7)
+        self.assertLess(v[4]['lit'], 3)                                 # 一格格暗下去
+        self.assertEqual(v[5]['lit'], 0)
+        self.assertEqual([x['mark'] for x in a], [False, False, True, True, True, False, False])   # 三次：1.1、1.55、2.45 秒前后
+        below = [x['below'] for x in a]
+        self.assertTrue(all(x > y for x, y in zip(below, below[1:])), below)   # 下面那块方地越来越近
+        self.assertGreater(below[0], 30)
+        self.assertLess(a[3]['aim'], 0.9)                               # 手电先在地上找
+        self.assertGreater(a[-1]['aim'], 0.99)                          # 最后照到脸上
+
+    def test_secret_archive_entries_appear_only_after_dying_here_and_replay_in_the_maze(self):
+        """迷宫里两种死法的死亡档案标了 secret：没死过不出现、不算进总数；死过以后单独记一个「隐藏」数，可以重看（回放舞台就是迷宫）。"""
+        page = self.page()
+        page.evaluate("""localStorage.setItem('wdfz3d_death_archive_v1',JSON.stringify({version:1,unlocked:{'an:cup':true},first:{'an:cup':1},count:{'an:cup':1},migrated:1}));
+          S.screen='menu';document.getElementById('menu').style.display='block';running=true""")
+        page.locator('#btnarchive').click()
+        public = page.evaluate("DEATH_ARCHIVE.filter(e=>!e.secret).length")
+        state = "()=>({cards:[...document.querySelectorAll('#arcards .arcard')].map(c=>c.dataset.id),head:document.getElementById('arCount').textContent,html:document.getElementById('archive').innerHTML})"
+        r = page.evaluate(state)
+        self.assertEqual(len(r['cards']), public)
+        self.assertEqual(r['head'], f'已记录 1 / {public}')
+        self.assertNotIn('void_lost', r['cards'])
+        self.assertNotIn('哪一扇门', r['html'])
+        page.evaluate("DeathArchive.record('void_lost','void');DeathArchive.paint()")
+        r = page.evaluate(state)
+        self.assertEqual(len(r['cards']), public + 1)
+        self.assertEqual(r['head'], f'已记录 1 / {public} · 隐藏 1')
+        self.assertIn('哪一扇门', r['html'])
+        self.assertNotIn('void_fall', r['cards'])
+        page.locator('#arcards .arcard[data-id="void_lost"] button').click()
+        page.wait_for_function("ArchiveReplay.on&&ANFX.kind==='death'&&ANFX.deathType==='void'", timeout=20000)
+        self.assert_js(page, "S.room==='lift_dream'&&S.screen==='replay'&&!GLR.roomMesh.visible")
+        page.wait_for_timeout(500)
+        page.mouse.click(500, 350)
+        page.wait_for_function("!ArchiveReplay.on")
+        self.assert_js(page, "S.screen==='menu'&&ANFX.kind!=='death'&&GLR.roomMesh.visible&&!document.getElementById('archive').hidden")

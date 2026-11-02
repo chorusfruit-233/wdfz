@@ -168,7 +168,7 @@ Lifecycle.register('pending-start',function(){pendingAssetStart=null;});
 Lifecycle.register('prologue',function(){proCancel();});
 Lifecycle.register('cutscene',function(){if(CUT.on){CUT.done=null;cutFinish();}});
 Lifecycle.register('death',function(){S.deadId=(S.deadId||0)+1;DEATH_PENDING=null;});
-Lifecycle.register('preview',function(){if(DEV.on)Dev.close(false);Dev.clearPreview();Dev.clearAnimation();});
+Lifecycle.register('preview',function(){if(DevLock.on)DevLock.close();if(DEV.on)Dev.close(false);Dev.clearPreview();Dev.clearAnimation();});
 Lifecycle.register('world-effects',function(){CarChase.clearVisual();Inspection.clearFx();fnPeopleClear();Engine.resetFakeNormal();VisualState.worldNorm=0;anfxClear();});
 Lifecycle.register('lesson',function(){LESSON.waiting=null;LESSON.close(false);});
 Lifecycle.register('interaction',function(){clearSearch();resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();});
