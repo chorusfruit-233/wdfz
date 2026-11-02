@@ -31,7 +31,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `emits` | 这个模块在代码里发出的钩子（`GameModules.emit/first`） |
 | `uses` | 这个模块监听的钩子 |
 
-当前 42 个模块：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
+当前 44 个模块：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
 
 **改功能的做法**：先在清单里找到模块 → 只读它登记的文件和它 `uses` / `emits` 的钩子 → 改完跑这个模块对应的测试（见第 6 节）。跨模块改动先看对方的 `exports` 是否需要变；导出名字改了，同时改清单。
 
@@ -67,6 +67,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `sceneBuilt` | `engine/scene.js` 房间 / 室外场景建好后 | emit | `roomId`（室外为 `null`） |
 | `devTab` | `dev.js` 切换调试面板页签 | emit | `id`；模块加的页签（`DEV_TABS.push`）在这里画内容 |
 | `boundary` | `app/session.js`：`Lifecycle.boundary` 时（新局 `new-session`、回菜单 `menu`） | emit | `reason`；收掉上一局的画面效果、计时 |
+| `newGame` | `app/session.js` `Game.start`，`freshState` 之后（只在新开局，读档不发） | emit | `{diff, mode}`（`mode` 为 `normal` / `speedrun`）；开局才给的东西（例如内部彩蛋天赋的手电） |
 | `frame` | `main.js` `render()`，每个画面帧 | emit | `dt`；表现层自己的动画（彩蛋的反色、黑影淡入淡出） |
 | `soundscape` | `audio.js` 每帧 | first | 返回要用的整片环境声 ID（见第 4.1 节） |
 | `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |

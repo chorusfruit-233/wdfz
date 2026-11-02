@@ -105,8 +105,10 @@
     files:['game3d/js/modules/mod-manager/mod-manager.js'], exports:['ModManager'], uses:['boot','devTab']},
   {id:'sound-board', name:'声音试听', desc:'调试面板「工具」页的「声音试听」：按类别挑声音库里的音效试听、整类连放，显示响度校准值。',
     files:['game3d/js/modules/sound-board/sound-board.js'], exports:['SoundBoard'], uses:['boot']},
+  {id:'wuda-kid', name:'隐藏天赋「武大子弟」（内部）', desc:'彩蛋天赋：开局自带手电筒，和正常天赋叠加，不在天赋选择和说明里出现；主菜单连点三下校名切换（本机）。不进玩家 Wiki，可从清单拿掉。',
+    files:['game3d/js/modules/wuda-kid/wuda-kid.js'], exports:['WudaKid','WUDA_KID_CFG'], uses:['newGame','tick','boot']},
   {id:'session', name:'会话', desc:'新局、继续、暂停、恢复、回菜单；Lifecycle.boundary 清掉上一局的定时器和回调。freshState 末尾调 GameModules.resetAll（发 reset）。',
-    files:['game3d/js/app/session.js'], exports:['Game','freshState','clearIntroTimers'], emits:['boundary']},
+    files:['game3d/js/app/session.js'], exports:['Game','freshState','clearIntroTimers'], emits:['boundary','newGame']},
   {id:'main', name:'主循环与启动', desc:'主循环、HUD、启动（boot 末尾发 boot 钩子；每个模拟步发 tick）。必须最后加载。',
     files:['game3d/js/main.js'], exports:['boot','update'], emits:['boot','tick','frame','enterRoom','clockText','mapBlocked']}
 ].forEach(function(m){ GameModules.define(m); });
