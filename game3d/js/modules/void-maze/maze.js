@@ -242,11 +242,18 @@ var VoidMaze=(function(){
     if(typeof ChalkMarks==='undefined') return;
     function W(x,z){ return toWorld(x,z); }
     var a=W(13,1.97), b=W(2.6,-32), c=W(-20.6,-5);
-    ChalkMarks.preset(C.room,[
+    var list=[
       {face:'wall',x:a.x,y:a.y,h:1.5,f:8,a:-Math.PI/2,s:'x'},
       {face:'floor',x:b.x,y:b.y,h:4,a:Math.PI,s:'x'},
       {face:'floor',x:c.x,y:c.y,h:0,a:-Math.PI/2,s:'q'}
-    ]);
+    ];
+    /* 回环：四个拐角地上都有前人画的箭头，全顺着同一个方向——跟着走只会绕回原地 */
+    [[-10,28,Math.PI],[-20,28,Math.PI/2],[-20,36,0],[-10,36,-Math.PI/2]].forEach(function(p){ var w=W(p[0],p[1]); list.push({face:'floor',x:w.x,y:w.y,h:-8,a:p[2],s:'up'}); });
+    /* 柱林：入口这一侧几根柱子上刻着「正」字，像有人在数自己绕了几圈 */
+    [[9.98,13.5],[9.98,19.5],[12.98,22.5]].forEach(function(p){ var w=W(p[0],p[1]); list.push({face:'wall',x:w.x,y:w.y,h:1.35,f:0,a:Math.PI,s:'bar'}); });
+    /* 窄梁对面的平台：一个问号 */
+    var d=W(19,-36.6); list.push({face:'floor',x:d.x,y:d.y,h:4,a:-Math.PI/2,s:'q'});
+    ChalkMarks.preset(C.room,list);
   },own);
   GameModules.on('tick',tick,own);
   GameModules.on('leaveRoom',function(from,to){

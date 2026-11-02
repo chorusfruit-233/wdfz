@@ -68,6 +68,7 @@ var Game={
     if(opt&&opt.mode==='speedrun'){ if(!Speedrun.active()) Speedrun.arm(diff); Dev.clearModifiers(); }   /* 普通局留下的快跑 / 无敌 / 关读条不带进速通 */
     else Speedrun.disarm();                                    /* 普通新局：回到普通存档槽 */
     freshState(diff);
+    GameModules.emit('newGame',{diff:diff,mode:opt&&opt.mode==='speedrun'?'speedrun':'normal'});   /* 模块：只在新开局（不含读档）时做的事 */
     Playtest.event('开始新局',diff);
     var R1=INTERIORS['teach1'];
     /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */

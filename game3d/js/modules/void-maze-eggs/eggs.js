@@ -10,12 +10,15 @@
 
 var MAZE_EGG_CFG={
   invert:{pitch:-0.85, stare:3.2, dur:1.15, cooldown:150, reach:3.2},
-  /* 位置是迷宫的场景米（见 content/void-maze-data.js）；zone=[x0,x1,z0,z1,脚下高度]；face 是人影面朝的方向；
+  /* 位置是迷宫的场景米（见 modules/void-maze/maze-data.js）；zone=[x0,x1,z0,z1,脚下高度]；face 是人影面朝的方向；
      view：玩家朝向与人影方向的夹角小于它才出现；look：盯着看这么久消失；near：走到这么近消失；timeout：最多停留秒数 */
   shadows:[
     {id:'bridge', x:-9,  z:-17,  h:0,    face:0,            zone:[-4.2,-1,-18,-16,0],    view:1.1, look:1.3, near:0,   timeout:14, cue:'steps'},
     {id:'tower',  x:13,  z:-9,   h:5.5,  face:Math.PI/2,    zone:[12,14,0,2,8],          view:0.9, look:1.2, near:0,   timeout:12, cue:'whisper'},
-    {id:'exit',   x:-3,  z:36.3, h:-8,   face:-Math.PI/2,   zone:[-4,-2,27.6,31,-8],     view:1.0, look:1.0, near:5.2, timeout:12, cue:'steps'}
+    {id:'exit',   x:-3,  z:36.3, h:-8,   face:-Math.PI/2,   zone:[-4,-2,27.6,31,-8],     view:1.0, look:1.0, near:5.2, timeout:12, cue:'steps'},
+    /* 第三轮的新结构：走过窄梁到了对面平台，回头——梁的起点站着一个人；柱林深处，两排柱子之间 */
+    {id:'catwalk',x:16.5,z:-27.6,h:4,    face:-Math.PI/2,   zone:[16,22,-38,-35,4],      view:0.8, look:1.2, near:0,   timeout:12, cue:'whisper'},
+    {id:'pillars',x:20,  z:31.5, h:0,    face:Math.PI,      zone:[8,11.5,13,20,0],       view:0.9, look:1.1, near:6,   timeout:14, cue:'steps'}
   ]
 };
 

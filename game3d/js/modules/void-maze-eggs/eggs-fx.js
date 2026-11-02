@@ -38,7 +38,6 @@ var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
   },
   onEvent:function(ev){
     if(!ev||typeof GLR==='undefined'||!GLR.scene) return;
-    var A=SFX.synth();
     if(ev.kind==='invert'){
       VoidEggFx.inv={t:0,dur:ev.dur,on:true};
       VoidEggFx.abyss=VoidEggFx.drop(VoidEggFx.abyss);
@@ -48,7 +47,7 @@ var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
       a.position.set(hx,hy-2.1,hz);
       a.rotation.y=Math.atan2(p.x-hx,p.z-hz);
       GLR.scene.add(a); VoidEggFx.abyss=a;
-      try{ SFX.scapeCut(ev.dur+0.35); A.tone(46,1.3,'sine',0.13,28); A.noise(0.45,0.05,150,0,'lowpass',1,0.6); }catch(e){}
+      try{ SFX.scapeCut(ev.dur+0.35); SoundPlayer.play('void.thud'); }catch(e){}
     }else if(ev.kind==='invertEnd'){
       VoidEggFx.inv.on=false;
       VoidEggFx.abyss=VoidEggFx.drop(VoidEggFx.abyss);
@@ -62,7 +61,7 @@ var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
       try{ SFX.dread(ev.cue||'steps',{pan:VoidEggFx.pan(ev.x,ev.z),k:0.32,muffled:false,behind:false}); }catch(e){}
     }else if(ev.kind==='shadowHide'){
       var s=VoidEggFx.shadow;
-      if(s&&s.id===ev.id){ s.out=true; if(ev.how!=='leave'){ try{ A.noise(0.7,0.025,520,0,'bandpass',0.8,0.7,0.3); }catch(e){} } else s.g=VoidEggFx.drop(s.g); }
+      if(s&&s.id===ev.id){ s.out=true; if(ev.how!=='leave'){ try{ SoundPlayer.play('void.gust',{pan:VoidEggFx.pan(ev.x,ev.z)}); }catch(e){} } else s.g=VoidEggFx.drop(s.g); }
     }
   },
   frame:function(dt){

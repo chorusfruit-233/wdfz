@@ -31,7 +31,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `emits` | 这个模块在代码里发出的钩子（`GameModules.emit/first`） |
 | `uses` | 这个模块监听的钩子 |
 
-当前 42 个模块：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
+当前 44 个模块：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
 
 **改功能的做法**：先在清单里找到模块 → 只读它登记的文件和它 `uses` / `emits` 的钩子 → 改完跑这个模块对应的测试（见第 6 节）。跨模块改动先看对方的 `exports` 是否需要变；导出名字改了，同时改清单。
 
@@ -67,8 +67,10 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `sceneBuilt` | `engine/scene.js` 房间 / 室外场景建好后 | emit | `roomId`（室外为 `null`） |
 | `devTab` | `dev.js` 切换调试面板页签 | emit | `id`；模块加的页签（`DEV_TABS.push`）在这里画内容 |
 | `boundary` | `app/session.js`：`Lifecycle.boundary` 时（新局 `new-session`、回菜单 `menu`） | emit | `reason`；收掉上一局的画面效果、计时 |
+| `newGame` | `app/session.js` `Game.start`，`freshState` 之后（只在新开局，读档不发） | emit | `{diff, mode}`（`mode` 为 `normal` / `speedrun`）；开局才给的东西（例如内部彩蛋天赋的手电） |
 | `frame` | `main.js` `render()`，每个画面帧 | emit | `dt`；表现层自己的动画（彩蛋的反色、黑影淡入淡出） |
 | `soundscape` | `audio.js` 每帧 | first | 返回要用的整片环境声 ID（见第 4.1 节） |
+| `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |
 | `mazeEvent` | `modules/void-maze-eggs/eggs.js`（内部彩蛋） | emit | `{kind, …}`：`invert / invertEnd / shadowShow / shadowHide` |
 
 **加钩子的规则**：只在「多个模块都可能要插手」的流程点加；名字用小驼峰动词或名词；在清单里对应模块的 `emits` 登记；在本表补一行；`tests/test_modules.py` 会检查清单里的 `emits` 确实在该模块文件里发出、`uses` 的钩子确实有人发。热路径（碰撞、每帧移动）不用全局钩子，用下面的房间接口。
@@ -96,10 +98,22 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 
 临时停用模块或用 `?nomod` 排障后继续本局，未加载模块的数据仍原样保留，重新启用后可以恢复；开始新局时全部清空。存取均传递 JSON 副本，回调抛错时保留最后一份可序列化的数据。已注册的 `save()` 明确返回 `undefined` 才删除该项；返回 `null` 则保存 `null`。
 
-### 4.1 声音扩展（`audio.js`）
+### 4.1 声音（`sound-bank.js`、`fx/sound-player.js`、`audio.js`）
+
+2026-11-02 全部音效重做后，一次性音效分三层：
+
+- **声音库** `game3d/js/sound-bank.js`（只有数据）：`SOUND_CATS` 是 11 个类别和各自的响度目标（dBFS），`SOUND_BANK` 是全部配方，名字形如 `类别.名字`（`ui.click`、`step.tile`、`event.bellStart`、`death.drown`……）。配方由若干层组成：`tone`（振荡器，可滑音、颤音）、`noise`（滤波噪声，可扫频）、`bell`（钟的泛音组）、`vowel`（像人声的共振峰，`voice` 浊音、`breath` 气声）、`fm`（金属声）；每层可以重复（`n / every / accel / decay / fstep`）、振幅调制（`am`）、单独加混响或声像；整段也能重复（`rep`）。数值可以写 `[最小, 最大]`，每次播放重新取，所以同一声不会两次一样。字段说明见 `fx/sound-player.js` 开头。
+- **响度校准** `game3d/js/sound-levels.js`：由 `python tools/sound_levels.py` 生成，不要手改。它在无头 Chromium 里离线渲染每个配方，量 K 加权的 100 毫秒最大响度，按「类别目标 + 配方的 `lv`」算出校准值，同时写出给人看的[音效响度表](音效响度表.md)。改了配方要重跑，`tests/test_sound_bank.py` 会核对表是不是最新的、校准后峰值不超过 −1 dBFS。
+- **播放器** `SoundPlayer`（`fx/sound-player.js`）：`play(id, {k, pan, lp, pitch, at, len, wet})` 返回句柄；`stop(类别)` 淡出正在响的声音（`SFX.stopDeath()` 就是 `stop('death')`）；`length / measure / validate / ids / def / level`；Mod 用 `SoundPlayer.add(id, 配方)` 加自己的音效（同名覆盖内置）。响度倍率（`k`、随机浮动、校准）放在每个音效出口的增益上，不进包络——包络从 0.0001 起落，峰值一变曲线形状就变，校准会不准；写在单层上的混响（某一层的 `wet`）汇到这个音效自己的 `fx` 再发到混响，`fx` 的增益与出口相同，`stop()` / `fade(句柄, 时刻)` 两路一起淡出。延迟（`at`）由音频时钟排程，不开定时器。
+- **接口** `SFX`（`audio.js`）：游戏里原有的调用名一个没改（`SFX.click / door / step / dread / deathFx / anomaly …`），只是改成按声音库播放；新增 `SFX.chalk`（粉笔画记号）、`SFX.deep`（掉进异空间的虚空）、`SFX.stopDeath`——以前代码里调了这三个却不存在，被 `try` 吞掉没有声音。`SFX.schoolBell(v, kind)`：`kind` 为 `'start'` 是上课铃，否则是下课铃。持续的环境层（铺底、风、雨、灯管嗡声、车库低频）还在 `audio.js` 里。
+- 混音：每个类别一条总线（干声、混响各一条，增益是 `SOUND_CATS[类].gain`，默认 1）→ 主音量 → 压缩器；「真实」档的空间混响照旧。
+- 调试面板「工具」页的「声音试听」（模块 `sound-board`）可以按类别挑音效试听、整类连放。
+- 所有一次性音效（包括音频时钟上尚未开始的声音）随 `boundary` 停止，不带入下一局。试听使用 `Lifecycle` 的 `sound-preview` 作用域管理句柄和完成计时器；停止或重开试听只淡出这次试听的声音，游戏声音继续，旧完成回调不能重置新试听。
+
+环境声扩展：
 
 - `SFX.scape(id, {build, tick, level, bed, quiet})`：登记一整片环境声。`build(A)` 返回 `{gain: GainNode, …}`；`tick(dt, A, nodes)` 放零星声音；`bed` 是原来的校园铺底保留多少（默认 0）；`quiet` 为真时停掉旋律、远处怪声、滴水和上下课铃。用哪一片由 `soundscape` 钩子决定（虚空迷宫的「宇宙空寂」就是这样接入的）。低 SAN 心跳、巡察者心跳、蛾群等和玩法有关的声音不受影响。
-- `SFX.synth()`：`{ctx, master, out, reverb, tone, noise, noiseP, vowel, loopNoise, setG, now}`，给模块做一次性音效；`SFX.scapeCut(sec)` 把当前整片环境声掐断几秒。随「音乐 / 环境」开关和音量设置。
+- `SFX.synth()`：`{ctx, master, out, reverb, tone, noise, noiseP, vowel, loopNoise, setG, now, bus, send, pan, noiseBuf}`，给模块搭持续的环境声；一次性音效请写成配方用 `SoundPlayer`。`SFX.scapeCut(sec)` 把当前整片环境声掐断几秒。随「音乐 / 环境」开关和音量设置。
 
 ## 5. Mod
 
@@ -142,6 +156,8 @@ GameModules.mod({
 | `api.store({save, load, reset})` | 存档里存这个 Mod 自己的状态 |
 | `api.modules()` | 模块清单与核对状态 |
 
+声音不在 `api` 里，直接用全局接口：一次性音效 `SoundPlayer.add(id, 配方)` 加、`SoundPlayer.play(id, opt)` 放（配方格式见第 4.1 节，名字建议用 `mod.<你的 id>.<名字>`）；整片环境声用 `SFX.scape()`。
+
 示例见 `game3d/mods/example-hello.js`（进门提示、存档、加物品）。
 
 ### 5.3 出错与兼容
@@ -155,6 +171,7 @@ GameModules.mod({
 ## 6. 测试与文档约定
 
 - 新模块：在清单登记 → `node --check` → 写 `tests/test_<模块>.py`（逻辑 + 浏览器回归）→ 跑 `tests/test_modules.py` 确认清单、导出、钩子一致 → 跑 `python tools/check_modules.py`（加载、启动顺序、纯规则边界、数值写入归属）。
+- 改了声音库的配方：`python tools/sound_levels.py` 重新生成响度校准和[音效响度表](音效响度表.md)。
 - 只改某个模块时，先跑它自己的测试和 `test_modules`，再按需要跑全量；改了建模或玩法才跑穿模检查（`python tools/clip_audit.py`）。
 - 新增或改名钩子、房间接口、Mod 接口：同步本文第 2–5 节；Mod 接口有不兼容变化时把 `GameModules.API_VERSION` 的大版本加一。
 - 文件结构说明见 [3D更新说明](3D更新说明.md) 开头；测试命令见 [测试说明](测试说明.md)。

@@ -1,0 +1,16 @@
+{
+  "scope": "PR #27 independent targeted and integration checks; deduplicated across the listed logs",
+  "tested_code_commit": "6d1030d",
+  "tests": 218,
+  "passed": 217,
+  "skipped": {
+    "test_engine.EngineTest.test_local_file_start_with_network_disabled": "skipped '此环境的 Chromium 管理策略禁止 file://；另有断网本地资源加载测试'"
+  },
+  "failed": {},
+  "logs": [
+    "PR27音效与生命周期复核.log.gz",
+    "PR27集成复核.log.gz",
+    "PR27时钟兼容复核.log.gz"
+  ],
+  "collision": "PR27迷宫碰撞.json"
+}

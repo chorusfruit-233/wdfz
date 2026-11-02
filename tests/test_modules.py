@@ -78,7 +78,7 @@ class ModuleBrowserTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url + query, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;running=false")
+        page.evaluate("PHOTO_TRIED=true;running=false;if(typeof WUDA_KID_CFG!=='undefined')WUDA_KID_CFG.chance=0")
         return page
 
     def test_all_modules_load_and_verify_without_mods(self):
@@ -163,13 +163,13 @@ class ModuleBrowserTest(BrowserCase):
         self.assertTrue(result['chalk'])
 
     def test_feature_modules_can_be_removed_from_the_manifest(self):
-        """从清单里拿掉虚空迷宫（连同它的彩蛋）、粉笔记号、Mod 管理四个功能模块，游戏照常启动；电梯退回原来的白色空间。"""
+        """从清单里拿掉虚空迷宫（连同它的彩蛋）、粉笔记号、Mod 管理、隐藏天赋五个功能模块，游戏照常启动；电梯退回原来的白色空间。"""
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)
         context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));")
         src = (ROOT / 'game3d/manifest.js').read_text(encoding='utf-8')
         src = src.replace("].forEach(function(m){ GameModules.define(m); });",
-                          "].filter(function(m){ return ['void-maze','void-maze-eggs','chalk-marks','mod-manager'].indexOf(m.id)<0; }).forEach(function(m){ GameModules.define(m); });")
+                          "].filter(function(m){ return ['void-maze','void-maze-eggs','chalk-marks','mod-manager','wuda-kid'].indexOf(m.id)<0; }).forEach(function(m){ GameModules.define(m); });")
         context.route('**/game3d/manifest.js', lambda route: route.fulfill(status=200, content_type='text/javascript', body=src))
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
@@ -180,18 +180,35 @@ class ModuleBrowserTest(BrowserCase):
           const n=GameModules.modules().length, bad=GameModules.modules().filter(m=>m.status!=='ok').length;
           doEnterRoom('lab1',Elevator.landing('lab',1));Math.random=()=>0;Elevator.board('lab',1);Elevator.enterDream('67');
           const inside=S.room, old=!INTERIORS.lift_dream.build&&INTERIORS.lift_dream.cols===18;
+          const before=S.tsec;clockTick(1);const frozen=S.tsec===before;
           S.x=INTERIORS.lift_dream.ox+15.5*9;S.y=INTERIORS.lift_dream.oy+5.5*9;S.ang=0;tryInteract();
           S.bag.push('chalk');useItem('chalk');
-          return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,back:S.room,panel:!!document.getElementById('modTools'),
+          return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,frozen,back:S.room,panel:!!document.getElementById('modTools'),
             sub:document.getElementById('sub').innerText}}""")
-        self.assertEqual(result['n'], len(manifest()) - 4)          # 清单里的模块数减去拿掉的四个
+        self.assertEqual(result['n'], len(manifest()) - 5)          # 清单里的模块数减去拿掉的五个
         self.assertEqual(result['bad'], 0)
         self.assertEqual((result['maze'], result['chalk']), ('undefined', 'undefined'))
         self.assertEqual(result['inside'], 'lift_dream')
         self.assertTrue(result['old'])
+        self.assertTrue(result['frozen'])
         self.assertEqual(result['back'], 'lab1')
         self.assertFalse(result['panel'])
         self.assertIn('粉笔', result['sub'])                      # 没有记号模块：粉笔回到「看一眼说明」
+
+    def test_room_no_clock_contract_also_applies_outside_elevator(self):
+        page = self.page()
+        page.evaluate("Game.start('hard')")
+        page.wait_for_function("S.room==='teach1'")
+        r = page.evaluate("""()=>{
+          running=false;clearIntroTimers();S.intro=0;
+          const R=INTERIORS[S.room],start=S.tsec;
+          R.noClock=true;clockTick(1);const frozen=S.tsec;
+          R.noClock=false;clockTick(1);
+          return {start,frozen,after:S.tsec,ride:Elevator.inRide()};
+        }""")
+        self.assertFalse(r['ride'])
+        self.assertEqual(r['frozen'], r['start'])
+        self.assertGreater(r['after'], r['start'])
 
     def test_mod_panel_imports_a_file_from_the_pause_menu(self):
         page = self.page()

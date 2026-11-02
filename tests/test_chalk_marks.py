@@ -87,7 +87,7 @@ class ChalkMarksTest(BrowserCase):
         self.assertEqual(r['room'], 'lift_dream')
         self.assertEqual(r['f'], 5.5)
         self.assertGreater(r['y'], 5.5)                            # 画在 5.5 米高的平台那一层的墙上
-        self.assertEqual(r['n'], 4)                                # 自己画的 1 个 + 迷宫里原有的 3 个旧记号
+        self.assertEqual(r['n'], 12)                               # 自己画的 1 个 + 迷宫里原有的 11 个旧记号
 
     def test_limits_keep_saves_small(self):
         page = self.game()

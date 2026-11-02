@@ -180,8 +180,8 @@ class VoidMazeTest(BrowserCase):
           return {hint, has:hasItem('chalk'), marks:ChalkFx.count(), preset:ChalkMarks.visible('lift_dream').filter(m=>m.old).length}}""")
         self.assertEqual(r['hint'], '捡起粉笔')
         self.assertTrue(r['has'])
-        self.assertEqual(r['preset'], 3)
-        self.assertEqual(r['marks'], 3)
+        self.assertEqual(r['preset'], 11)
+        self.assertEqual(r['marks'], 11)
 
     def test_layout_tables_are_consistent(self):
         page = self.game()
@@ -195,3 +195,30 @@ class VoidMazeTest(BrowserCase):
         self.assertEqual(r['bad'], [])
         self.assertEqual(r['exits'], [['exit1', True], ['exit2', True]])
         self.assertEqual(r['spawnFloor'], 0)
+
+    def test_new_structures_pillar_hall_catwalk_and_loop_are_walkable(self):
+        """第三轮新结构：柱林（南厅往东）、窄梁（4 米走廊往北，没有栏杆）、回环（出口走廊中间往西，绕一圈回原地）。"""
+        page = self.game()
+        r = page.evaluate("""()=>{goMaze('teach');
+          const ph=walk([[0,4],[0,13],[4.5,13],[4.5,16],[9,15.5],[12,15],[12,27],[15,27],[15,33]]), phH=S.floorY;
+          goMaze('teach');
+          const cw=walk([[0,1],[11,1],[13,1],[19,1],[19,-9],[19,-11],[19,-24],[17,-24],[17,-26],[16.5,-27.5],[16.5,-35.6],[19,-36.5]]), cwH=S.floorY;
+          goMaze('teach');
+          const lp=walk([[0,4],[0,13],[-5,13],[-9,13],[-15,13],[-15,23],[-9,23],[-9,13.2],[-7,13],[-3,13],[-3,25],[-6,25.5],[-6,28],[-10,28],
+            [-20,28],[-20,36],[-10,36],[-10,28]]), lpH=S.floorY;
+          const core=VoidMaze.depthAt(-15,32,0,-8)>0;
+          return {ph,phH,cw,cwH,lp,lpH,core,pillars:MAZE_SOLID.filter(s=>s.id.indexOf('PHcols')===0).length};}""")
+        self.assertTrue(r['ph']['ok'], r['ph'])
+        self.assertEqual(r['phH'], 0)
+        self.assertEqual(r['pillars'], 28)
+        self.assertTrue(r['cw']['ok'], r['cw'])
+        self.assertEqual(r['cwH'], 4)                                   # 走过窄梁到了对面平台
+        self.assertTrue(r['lp']['ok'], r['lp'])
+        self.assertEqual(r['lpH'], -8)
+        self.assertTrue(r['core'])                                      # 回环中间是实心的
+        # 窄梁两侧就是虚空：往旁边一步就掉下去
+        r = page.evaluate("""()=>{goMaze('teach');const w=VoidMaze.toWorld(16.5,-31);S.x=w.x;S.y=w.y;S.floorY=4;VoidMaze.MZ.air=false;VoidMaze.MZ.ready=true;
+          S.ang=0;KEY.w=true;for(let i=0;i<40;i++)update(1/60);KEY.w=false;return {air:VoidMaze.MZ.air,fy:S.floorY};}""")
+        self.assertTrue(r['air'])
+        self.assertLess(r['fy'], 4)
+
