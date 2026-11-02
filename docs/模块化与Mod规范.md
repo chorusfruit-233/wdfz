@@ -50,7 +50,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `boot` | `main.js` `boot()` 末尾 | emit | 界面、渲染都已就绪 |
 | `loaded` | `modules.js`，全部脚本和 Mod 加载完 | emit | — |
 | `reset` | `GameModules.resetAll()`（新局 `freshState` 末尾） | emit | 清本局状态 |
-| `tick` | `main.js` `update()`，每个模拟步（暂停、手册打开、死亡时不发） | emit | `dt`（秒） |
+| `tick` | `main.js` `update()`，每个模拟步（暂停、手册或选择框打开、前情提要、驾驶逃脱、死亡时不发） | emit | `dt`（秒） |
 | `enterRoom` | `main.js` `onEnterRoom` | emit | `id, restoring` |
 | `leaveRoom` | `world.js` `doEnterRoom` / `doExitRoom` 开头 | emit | `from`（房间 ID 或 `null` 表示室外）, `to` |
 | `interact` | `interact.js` `tryInteract`（站起、出柜、名单之后，默认交互之前） | first | 返回 `true` 表示已处理 |
