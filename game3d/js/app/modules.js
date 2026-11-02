@@ -14,7 +14,7 @@ var GameModules=(function(){
   var API_VERSION='1.0';
   var STORE_KEY='wdfz_mods';           /* 上传的 Mod：[{id,name,code,enabled,added}] */
   var ENABLE_KEY='wdfz_mods_on';        /* 内置 Mod 的开关：{id:true} */
-  var modules=[], byId={}, hooks={}, mods=[], modById={}, errors=[], persist=[], builtin=[], loaded=false;
+  var modules=[], byId={}, hooks={}, mods=[], modById={}, errors=[], persist=[], builtin=[], loaded=false, layerList=[];
   var EMPTY=[];
 
   function qs(){ try{ return location.search||''; }catch(e){ return ''; } }
@@ -67,12 +67,23 @@ var GameModules=(function(){
   }
 
   /* ---------- 模块登记（manifest.js 调用） ---------- */
+  /* ---------- 分层（计划「项目解耦与模块化」第 4 节）：清单先登记各层的目录和不许越界的依赖 ---------- */
+  function layers(list){
+    layerList=(list||[]).map(function(l){ return {id:l.id,name:l.name||l.id,dir:l.dir,desc:l.desc||'',forbid:(l.forbid||[]).slice()}; });
+    return layerList;
+  }
+  function layerOf(file){
+    for(var i=0;i<layerList.length;i++) if(file.indexOf(layerList[i].dir)===0) return layerList[i].id;
+    return null;
+  }
   function define(meta){
     if(!meta||!meta.id) throw new Error('模块缺少 id');
     if(byId[meta.id]) throw new Error('模块 id 重复：'+meta.id);
     var m={id:meta.id,name:meta.name||meta.id,desc:meta.desc||'',files:(meta.files||[]).slice(),
       exports:(meta.exports||[]).slice(),emits:(meta.emits||[]).slice(),uses:(meta.uses||[]).slice(),
       status:'pending',missing:[]};
+    m.layers=m.files.map(function(f){ return layerOf(f); });
+    m.files.forEach(function(f,i){ if(layerList.length&&!m.layers[i]) log('layer',m.id,f+' 不在任何一层的目录里'); });
     modules.push(m); byId[m.id]=m;
     return m;
   }
@@ -247,7 +258,9 @@ var GameModules=(function(){
     setBuiltin:setBuiltin,
     upload:upload, uploaded:function(){ return stored().map(function(x){ return {id:x.id,name:x.name,enabled:!!x.enabled,added:x.added,file:x.file,size:(x.code||'').length}; }); },
     setUploaded:setStored, removeUploaded:removeStored,
-    modules:function(){ return modules.map(function(m){ return {id:m.id,name:m.name,desc:m.desc,files:m.files.slice(),exports:m.exports.slice(),emits:m.emits.slice(),uses:m.uses.slice(),status:m.status,missing:m.missing.slice()}; }); },
+    modules:function(){ return modules.map(function(m){ return {id:m.id,name:m.name,desc:m.desc,files:m.files.slice(),layers:(m.layers||[]).slice(),exports:m.exports.slice(),emits:m.emits.slice(),uses:m.uses.slice(),status:m.status,missing:m.missing.slice()}; }); },
+    layers:layers, layerOf:layerOf,
+    layerList:function(){ return layerList.map(function(l){ return Object.assign({},l,{forbid:l.forbid.slice()}); }); },
     module:function(id){ return byId[id]||null; },
     mods:function(){ return mods.map(function(m){ return {id:m.id,name:m.name,version:m.version,author:m.author,desc:m.desc,source:m.source,status:m.status}; }); },
     hookNames:function(){ return Object.keys(hooks).filter(function(n){ return hooks[n].length; }).sort(); },

@@ -62,7 +62,7 @@ ThreeBackend.boot=function(){
     uniforms:{
       tDiffuse:{value:rt.texture},tDepth:{value:rt.texture},tHands:{value:rt.texture},uHands:{value:0},uAO:{value:0},uNear:{value:cam.near},uFar:{value:cam.far},uAA:{value:0},
       uTime:{value:0}, uRes:{value:new THREE.Vector2(2,2)},
-      uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0}, uBloom:{value:0}, uGrain:{value:1},
+      uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0}, uBloom:{value:0}, uGrain:{value:1}, uInvert:{value:0},
       uFx:{value:GLRTEST.nofx?1.0:0.0}
     },
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
@@ -71,7 +71,7 @@ ThreeBackend.boot=function(){
 'uniform sampler2D tDiffuse;uniform float uTime;uniform vec2 uRes;',
 'uniform sampler2D tDepth;uniform float uAO;uniform float uNear;uniform float uFar;uniform float uAA;',
 'uniform sampler2D tHands;uniform float uHands;',
-'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;uniform float uBloom;uniform float uGrain;',
+'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;uniform float uBloom;uniform float uGrain;uniform float uInvert;',
 'varying vec2 vUv;',
 'float hash(vec2 p){',
 '  p = fract(p * vec2(443.8975, 397.2973));',
@@ -179,6 +179,8 @@ ThreeBackend.boot=function(){
 /* 以前满屏的颗粒顺带把纯黑抬亮了一点；颗粒减弱后补一个很浅的暗部抬升，暗处的轮廓仍看得出来 */
 '  outc+=vec3(0.011)*(1.0-smoothstep(0.0,0.3,gLum))*(1.0-uFx);',
 '  outc+=gn*(0.012+0.026*(1.0-smoothstep(0.03,0.45,gLum)))*(1.0+0.7*wob)*(1.0-uFx)*uGrain;',
+/* 反色（表现层的彩蛋用；0 = 正常，1 = 完全反色）：只作用于 3D 画面，界面和字幕不受影响 */
+'  outc=mix(outc,vec3(1.0)-clamp(outc,0.0,1.0),uInvert);',
 '  gl_FragColor=vec4(outc,1.0);',
 '}',
     ].join('\n'),

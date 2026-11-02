@@ -205,6 +205,26 @@ var SFX=(function(){
     s.connect(f); f.connect(g); s.start(0,Math.random());
     return {s:s,f:f,g:g};
   }
+  /* ---- 整片环境声（soundscape）：模块用 SFX.scape(id, def) 登记，当前要哪一片由 soundscape 钩子决定 ----
+     def.build(A) 返回 {gain:GainNode, …}（gain 由这里推子控制），def.tick(dt, A, nodes) 放零星的一次性声音；
+     def.bed：原来的铺底、风、嗡声保留多少（默认 0，全换掉）；def.quiet：是否停掉旋律、远处怪声、滴水、上下课铃（默认停）。
+     低 SAN 心跳、巡察者心跳、蛾群这些和玩法有关的声音不受影响。 */
+  var SCAPES={}, SC_NODES={}, scapeCutUntil=0;
+  function synthApi(){
+    return {ctx:ctx, master:master, out:out, reverb:function(){ master(); return revIn; }, tone:tone, noise:noise, noiseP:noiseP,
+      vowel:vowel, loopNoise:loopNoise, setG:setG, now:function(){ return ac?ac.currentTime:0; }};
+  }
+  function scapeTick(dt,on,duck){
+    var sid=on?GameModules.first('soundscape'):undefined, sd=sid&&SCAPES[sid]?SCAPES[sid]:null, cut=(L&&L.t<scapeCutUntil)?0:1;
+    Object.keys(SCAPES).forEach(function(k){
+      var def=SCAPES[k], want=!!sd&&k===sid, n=SC_NODES[k];
+      if(want&&!n){ try{ n=SC_NODES[k]=def.build(synthApi()); }catch(e){ SCAPES[k]=null; delete SCAPES[k]; return; } }
+      if(!n||!n.gain) return;
+      setG(n.gain.gain,want?(def.level||0.06)*duck*cut:0,want?(cut?2.2:0.04):1.4);
+      if(want&&cut&&def.tick){ try{ def.tick(dt,synthApi(),n); }catch(e){} }
+    });
+    return sd;
+  }
   function buildLayers(){
     var a=ctx(); if(!a||L) return;
     var d=master(); if(!d) return;
@@ -319,35 +339,37 @@ var SFX=(function(){
     var sanityStress=clamp((75-san)/75,0,1);
     var tension=clamp((anomaly?0.55:0)+(100-san)/160+(S.viol||0)/220,0,1);
     var garage=play&&S.mode==='in'&&S.room==='garage1';
+    var scape=scapeTick(dt,on,duck), bedK=scape?(scape.bed||0):1, quietScape=!!scape&&scape.quiet!==false;
+    var bd=duck*bedK, btc=bedK<1?0.8:null;            /* 整片环境声接管时：原来的铺底按 bed 缩放（默认全停） */
     /* 混响跟着空间走：车库、钟楼里很空，教室一般，室外几乎没有 */
     if(revIn) setG(revIn.gain,spaceWet(),0.4);
     /* 铺底 */
-    setG(L.padG.gain,(on?0.045+0.05*tension:0)*duck,dtc||1.2);
+    setG(L.padG.gain,(on?0.045+0.05*tension:0)*bd,btc||dtc||1.2);
     setG(L.padF.frequency,on?(180+tension*700+(out_?0:-40)):200,1.5);
     var root=garage?41.2:(out_?(night>0.5?49:55):46.25);
     L.osc[0].frequency.setTargetAtTime(root,a.currentTime,2);
     L.osc[1].frequency.setTargetAtTime(root*1.5*(tension>0.6?0.944:1),a.currentTime,2);   /* 紧张时五度降成三全音 */
     L.osc[2].frequency.setTargetAtTime(root*(1.01+sanityStress*0.045),a.currentTime,2);
     L.osc[3].frequency.setTargetAtTime(root*(2-sanityStress*0.11),a.currentTime,2);
-    setG(L.tenG.gain,(on?Math.max(0,tension-0.45)*0.05:0)*duck,dtc||0.8);
+    setG(L.tenG.gain,(on?Math.max(0,tension-0.45)*0.05:0)*bd,btc||dtc||0.8);
     /* 环境 */
     var rainOn=on&&anomaly&&(id==='rain'||id==='raindots');
     var cover=rainOn&&S.mode==='in';
-    setG(L.wind.g.gain,(on&&out_?0.020+0.012*night+(rainOn?0.02:0):(on&&S.room==='teach6'?0.03:0))*duck,dtc||1.0);
+    setG(L.wind.g.gain,(on&&out_?0.020+0.012*night+(rainOn?0.02:0):(on&&S.room==='teach6'?0.03:0))*bd,btc||dtc||1.0);
     setG(L.rain.g.gain,rainOn?(cover?0.03:0.11):0,0.6);
     setG(L.rain2.g.gain,rainOn?(cover?0.005:0.035):0,0.6);
-    setG(L.humG.gain,(on&&S.mode==='in'&&!garage&&S.room!=='bell1'&&S.room!=='teach6'?0.010+0.006*Math.abs(Math.sin(L.t*0.7)):0)*duck,dtc||0.5);
-    setG(L.rumble.g.gain,(on&&garage?0.09:(on&&id==='shifting'?0.12:0))*duck,dtc||0.8);
+    setG(L.humG.gain,(on&&S.mode==='in'&&!garage&&S.room!=='bell1'&&S.room!=='teach6'?0.010+0.006*Math.abs(Math.sin(L.t*0.7)):0)*bd,btc||dtc||0.5);
+    setG(L.rumble.g.gain,(on&&garage?0.09:(on&&id==='shifting'?0.12:0))*bd,btc||dtc||0.8);
     if(!on||duck<1) return;
     /* 八音盒一样的旋律：稀疏、不成调 */
     L.nextMel-=dt;
-    if(L.nextMel<=0){
+    if(L.nextMel<=0&&!quietScape){
       L.nextMel=rnd(5,11)*(1-tension*0.4);
       var sc=MEL[tension>0.5?1:0], n=1+Math.floor(Math.random()*3), j;
       for(j=0;j<n;j++){ var f=sc[Math.floor(Math.random()*sc.length)]*(Math.random()<0.3?2:1); note(f,j*rnd(0.35,0.7),2.6,0.016,'triangle',0.8); }
     }
     /* 夜里室外：虫鸣，偶尔整片同时停下 */
-    if(out_&&night>0.6&&!rainOn){
+    if(out_&&night>0.6&&!rainOn&&!quietScape){
       L.nextCricket-=dt;
       if(L.nextCricket<=0){
         L.nextCricket=rnd(0.25,1.1);
@@ -386,22 +408,23 @@ var SFX=(function(){
         tone(58,0.18,'sine',hv,38); tone(52,0.2,'sine',hv*0.7,34,0.16);
       }
     }
-    /* 上下课铃：时段一变就响 */
+    /* 上下课铃：时段一变就响（整片环境声安静时不响） */
     try{
       var per=periodAt(S.tsec)[2];
-      if(L.lastPeriod!==null&&per!==L.lastPeriod&&S.mode==='in'){ schoolBell(); }
+      if(quietScape){}
+      else if(L.lastPeriod!==null&&per!==L.lastPeriod&&S.mode==='in'){ schoolBell(); }
       else if(L.lastPeriod!==null&&per!==L.lastPeriod){ schoolBell(0.4); }
       L.lastPeriod=per;
     }catch(e){}
     L.nextStinger-=dt*(1+tension*1.5);
-    if(L.nextStinger<=0){
+    if(L.nextStinger<=0&&!quietScape){
       L.nextStinger=rnd(16,40);
       /* 和 dread.js 的假威胁共用一份惊吓预算：同一片地方不连着响 */
       var okS=true; try{ if(typeof Dread!=='undefined') okS=!dreadBusy()&&Dread.allow(1); }catch(e){}
       if(okS){ stinger(); try{ if(typeof Dread!=='undefined') Dread.note('stinger',1); }catch(e){} }
     }
     /* 屋里夜里：不知道哪儿在滴水；偶尔一声暖气片 / 墙里的「咔」 */
-    if(!out_&&!garage&&night>0.5){
+    if(!out_&&!garage&&night>0.5&&!quietScape){
       L.nextIndoorDrip=(L.nextIndoorDrip||2)-dt;
       if(L.nextIndoorDrip<=0){ L.nextIndoorDrip=rnd(2.5,7); tone(rnd(1100,1700),0.10,'sine',0.010,500,0,0.9); }
       if(Math.random()<dt*0.03) noiseP(0.03,0.04,1800,0,'highpass',1,rnd(-1,1),0.7);
@@ -448,6 +471,11 @@ var SFX=(function(){
     moonlight: moonlight,
     resume:function(){ ctx(); },
     ambient:function(){ var a=ctx(); if(!a) return; try{ buildLayers(); }catch(e){} bgOn=true; },
+    /* 模块扩展点：整片环境声与一次性合成音（见文件中段 SCAPES 的说明） */
+    scape:function(id,def){ if(id&&def&&typeof def.build==='function') SCAPES[id]=def; },
+    scapeCut:function(sec){ var a=ctx(); if(!a) return; scapeCutUntil=(L?L.t:0)+Math.max(0,sec||0); Object.keys(SC_NODES).forEach(function(k){ var n=SC_NODES[k]; if(n&&n.gain) setG(n.gain.gain,0,0.03); }); },
+    scapeNow:function(){ var sid=GameModules.first('soundscape'); return (sid&&SCAPES[sid])?sid:null; },
+    synth:function(){ return synthApi(); },
     stopAmbient:function(){ bgOn=false; },
     tick:function(dt){
       try{ realRev(); }catch(e){}                       /* 空间混响不依赖背景音：关掉「音乐/环境」时脚步等音效也要跟着空间变 */

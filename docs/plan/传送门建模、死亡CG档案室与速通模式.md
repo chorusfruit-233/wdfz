@@ -20,10 +20,10 @@
 
 | 子系统 | 当前代码已具备（静态核对） | 本计划新增／重做 |
 | --- | --- | --- |
-| 传送门路线 | `game3d/js/portal.js` 已有隧道、前人日记、楼层图纸、收集四类材料、实验台组装与进入结局；`game3d/js/cutscene.js` 已有三颗材料球体、`TorusGeometry` 光环和 `CircleGeometry` 光盘演出 | **真正重做可见的传送门三维主体与装置建模**，让搭建前后、可交互阶段和结局 CG 使用一致的视觉资源 |
-| 死亡 CG | `game3d/js/fx/death-cg.js`、`death-timeline.js` 有分死因的 CG 和时序；`game3d/js/dev.js` 当前列出 **30 个效果 ID**（含 `hand`、`trash`），旧计划曾称 28 种 | 新增独立于调试面板的**玩家档案室**；每种实际经历过的不同死法恰好解锁一个条目，可重看对应 CG |
-| 死亡记录 | `game3d/js/story.js` 的 `deathLogAdd()` 已把死亡类型 `fx`、来源 `source` 和计数存至 `wdfz3d_deaths`；已有死亡提示 | 从可信的实际死亡流程发放永久档案解锁；避免调试、预览、保命成功及重复死因造成误解锁 |
-| 游戏开场 | `game3d/js/prologue.js` 已有文字式前情提要、闭眼睁眼及世界切换；`Game.start()` 首次进入会播放前情提要 | 升级为进入新游戏时的 3D 电影式开场 CG，支持跳过、无缝交接、老玩家重看及速通起跑计时协调 |
+| 传送门路线 | `game3d/js/domain/portal.js` 已有隧道、前人日记、楼层图纸、收集四类材料、实验台组装与进入结局；`game3d/js/fx/cutscene.js` 已有三颗材料球体、`TorusGeometry` 光环和 `CircleGeometry` 光盘演出 | **真正重做可见的传送门三维主体与装置建模**，让搭建前后、可交互阶段和结局 CG 使用一致的视觉资源 |
+| 死亡 CG | `game3d/js/fx/death-cg.js`、`death-timeline.js` 有分死因的 CG 和时序；`game3d/js/dev/dev.js` 当前列出 **30 个效果 ID**（含 `hand`、`trash`），旧计划曾称 28 种 | 新增独立于调试面板的**玩家档案室**；每种实际经历过的不同死法恰好解锁一个条目，可重看对应 CG |
+| 死亡记录 | `game3d/js/domain/story.js` 的 `deathLogAdd()` 已把死亡类型 `fx`、来源 `source` 和计数存至 `wdfz3d_deaths`；已有死亡提示 | 从可信的实际死亡流程发放永久档案解锁；避免调试、预览、保命成功及重复死因造成误解锁 |
+| 游戏开场 | `game3d/js/ui/prologue.js` 已有文字式前情提要、闭眼睁眼及世界切换；`Game.start()` 首次进入会播放前情提要 | 升级为进入新游戏时的 3D 电影式开场 CG，支持跳过、无缝交接、老玩家重看及速通起跑计时协调 |
 | 结局与成绩 | `story.js` 的 `triggerEnding()` 和 `ENDINGS`、`save.js` 的 `wdfz3d_ends` 已支持结局留存；菜单有“预知梦／梦魇／继续上次” | 单独的速通挑战入口、真正的实时时长统计、结算成绩、单机个人最佳纪录和有效性判断 |
 
 **依赖**：[全死亡与结局 CG 重制](全死亡方式与结局CG重制、隐藏触发时刻校准.md)、[校园事件、电梯与逃脱流程重做](校园事件、电梯与逃脱流程重做.md)、[可玩性与整体体验提升](可玩性与整体体验提升.md)、[恐怖体验深化与验证](恐怖体验深化与验证.md)。本计划不得把这些计划的已实现事项重计为新增交付，亦不得提前宣称真人／安卓真机验收完成。
@@ -44,7 +44,7 @@
 
 ### 2.2 建模与场景集成
 
-- [ ] 先检查 `game3d/js/model/room.js`、`model/kit.js`、`model/materials.js`、`game3d/js/portal.js` 和 `game3d/js/cutscene.js` 中已有实验台及演出模型；建立尺寸、局部坐标、玩家视高与碰撞边界的基线，不重造已有材料拾取系统。
+- [ ] 先检查 `game3d/js/model/room.js`、`model/kit.js`、`model/materials.js`、`game3d/js/domain/portal.js` 和 `game3d/js/fx/cutscene.js` 中已有实验台及演出模型；建立尺寸、局部坐标、玩家视高与碰撞边界的基线，不重造已有材料拾取系统。
 - [ ] 设计独立的可复用传送门模型／组件生成器（例如 `game3d/js/model/portal.js`，实际文件名可按项目结构调整），明确**未组装、可组装、充能、开启、进入、关闭**各阶段的对象显示与动画状态。
 - [ ] 让探索阶段模型、实验台交互后的常驻门和结局过场**共用同一套外观配置及部件**；可以让 CG 创建独立实例，但不能变成“平时一张图，过场另一套门”。
 - [ ] 模型与实验台／附近家具的碰撞、遮挡、第一人称镜头、可操作距离一致；门后缘、支撑梁不能挡住必经路线，玩家不能卡进模型、从环体走穿到墙里。
@@ -156,7 +156,7 @@
 
 **新增用户需求：在点击“开始游戏”进入新一局时，先播放完整的游戏启动 CG，然后自然交接给玩家控制。** 这是一段真正的 3D 镜头与环境演出，不是仅在网页加载时播放 Logo、简单视频封面或文字页。
 
-现有 `game3d/js/prologue.js` 已提供 `PRO_PAGES` 文字式前情提要、`proShow/proNext/proEnd`、闭眼睁眼的 `eyelid/proWake` 和“正常世界变成里世界”的切换；`game3d/js/main.js` 的 `Game.start()` 根据 `proSeen()` 首次显示前情提要，老玩家直接进入。**应基于现有前情逻辑升级**，保留必要叙事和状态，不创建冲突的第二套开场流程。
+现有 `game3d/js/ui/prologue.js` 已提供 `PRO_PAGES` 文字式前情提要、`proShow/proNext/proEnd`、闭眼睁眼的 `eyelid/proWake` 和“正常世界变成里世界”的切换；`game3d/js/app/main.js` 的 `Game.start()` 根据 `proSeen()` 首次显示前情提要，老玩家直接进入。**应基于现有前情逻辑升级**，保留必要叙事和状态，不创建冲突的第二套开场流程。
 
 ### 5.2 电影式分镜（建议艺术方案）
 
@@ -199,10 +199,10 @@
 
 | 范围 | 已存在的机制 | 新要求与注意事项 |
 | --- | --- | --- |
-| 清华水杯 | \`game3d/js/anomaly.js\` 中 \`AN_DEFS.cup\`：当前晃动前摇按难度为 **1.3 / 0.9 / 0.6 真实秒**（预知梦／其他／梦魇），随后按约 1.5 秒自由落体；杯子模型与碎裂效果在 \`game3d/js/fx/cup.js\` | 缩短**窗台晃动前摇**，保留落点影子、重力掉落和玩家可躲避性；新增一次真实杯子事件触发后的后继异象状态 |
+| 清华水杯 | \`game3d/js/domain/anomaly.js\` 中 \`AN_DEFS.cup\`：当前晃动前摇按难度为 **1.3 / 0.9 / 0.6 真实秒**（预知梦／其他／梦魇），随后按约 1.5 秒自由落体；杯子模型与碎裂效果在 \`game3d/js/fx/cup.js\` | 缩短**窗台晃动前摇**，保留落点影子、重力掉落和玩家可躲避性；新增一次真实杯子事件触发后的后继异象状态 |
 | 天降可乐 | 当前 \`AN_DEFS\` 无该事件，未找到现有独立模型／规则 | 新建独立异象、视听、判定、结果与跨时段排队；不把它做成杯子效果的更名 |
-| 电梯异常维度 | \`game3d/js/map.js\` 的 \`lift_dream\`、\`game3d/js/elevator.js\` 的 \`enterDream/leaveDream\` 已有可探索白色几何空间；\`model/specs.js\` 的 \`ROOM_THEMES.dream\` 以 \`0xf5f5f0\`、\`0xf4f5f0\` 等近白配色为主 | 重绘与人影已从 PR #25 撤回；2026-11-02 按用户手稿重做为虚空迷宫，入口与时间冻结规则沿用（6.4 节） |
-| SAN | \`game3d/js/systems.js\` 的 \`sanTick\`、\`anomaly.js\` 异象、\`inspection.js\` 学生会检查、危险区等分别可扣 SAN | 校庆当天所有**随时间持续发生的 SAN 下降速率**统一 ×0.5，避免只覆盖其中一两个来源 |
+| 电梯异常维度 | \`game3d/js/content/map.js\` 的 \`lift_dream\`、\`game3d/js/domain/elevator.js\` 的 \`enterDream/leaveDream\` 已有可探索白色几何空间；\`model/specs.js\` 的 \`ROOM_THEMES.dream\` 以 \`0xf5f5f0\`、\`0xf4f5f0\` 等近白配色为主 | 重绘与人影已从 PR #25 撤回；2026-11-02 按用户手稿重做为虚空迷宫，入口与时间冻结规则沿用（6.4 节） |
+| SAN | \`game3d/js/domain/systems.js\` 的 \`sanTick\`、\`anomaly.js\` 异象、\`inspection.js\` 学生会检查、危险区等分别可扣 SAN | 校庆当天所有**随时间持续发生的 SAN 下降速率**统一 ×0.5，避免只覆盖其中一两个来源 |
 | 时间 | `core.js` 的 `DAY_PHASES/SCHED/rateAt`、`systems.js` 的 `clockTick/advanceGameTime`、`school-day.js` 外出登记 | 当前普通自然日 1200 秒；两个集合点、跨课时许可与返程预警共同保障连续探索。特殊日不得覆盖此基线 |
 
 ### 6.2 新增“天降可乐”连锁异象
@@ -295,12 +295,12 @@
 | --- | --- | --- |
 | 传送门建模 | `game3d/js/model/room.js`、`model/kit.js`、`portal.js`、`cutscene.js` | 建立实体组件、场景表现和状态一致的 CG 复用 |
 | 死亡档案注册与解锁 | `story.js` 的 `kill/deathLogAdd`、`fx/death-cg.js`、`fx/death-timeline.js`、`dev.js` | 统一死因 ID、可信解锁入口、独立持久化及回放预览 |
-| 启动 CG 与前情提要 | `game3d/js/prologue.js`、`game3d/js/main.js`、`cutscene.js` | 电影式 3D 分镜、首玩／重看／跳过、镜头和游戏状态交接、速通起跑协调 |
+| 启动 CG 与前情提要 | `game3d/js/ui/prologue.js`、`game3d/js/app/main.js`、`cutscene.js` | 电影式 3D 分镜、首玩／重看／跳过、镜头和游戏状态交接、速通起跑协调 |
 | 杯子连锁异象与前摇 | `anomaly.js`、`fx/cup.js`、`audio.js`、`systems.js` | 缩短真实前摇、持久待触发事件、夜间室外必现可乐、碰撞与躲避测试 |
 | 电梯异常维度（当前 PR 撤回） | `map.js`、`elevator.js`、`model/specs.js`、`model/room.js`、`lighting.js` | 已按 2026-11-02 手稿重做为虚空迷宫（模块 `void-maze`，`game3d/js/modules/void-maze/`）；`map.js` 原 `elevatorDream()` 网格由模块的 `interiors` 钩子替换 |
 | 每日事件与时长 | `core.js`、`systems.js`、`inspection.js`、`save.js` | 校庆 SAN 流失减半、占课内容变体、自然日 20 分钟且固定事件与连续探索预算不受破坏 |
-| 主菜单与 UI | `index.html`、`game3d/js/main.js`、`game3d/js/ui.js` | 增加“死亡档案室”和“速通模式”入口，保持现有菜单与触屏风格 |
-| 速通计时与成绩 | `game3d/js/main.js`、`story.js`、`save.js` | 独立计时状态机、终点钩子、PB 与异常运行判定 |
+| 主菜单与 UI | `index.html`、`game3d/js/app/main.js`、`game3d/js/ui/ui.js` | 增加“死亡档案室”和“速通模式”入口，保持现有菜单与触屏风格 |
+| 速通计时与成绩 | `game3d/js/app/main.js`、`story.js`、`save.js` | 独立计时状态机、终点钩子、PB 与异常运行判定 |
 | 回归与证据 | `tests/test_controls.py`、`tests/test_death_timeline.py`、`tests/test_dev_panel.py`、`tests/test_model.py`、`tests/test_engine.py` | 按功能加专项测试、截图、性能与触屏验证 |
 
 - 功能分开落地，但共享仓库统一的状态、资源释放、输入恢复和错误反馈约定；日志和存储字段不泄漏隐藏路线的公开文本。
@@ -343,7 +343,7 @@
 
 ### 9.2 P1 死亡 CG 档案室
 
-- 注册表 `DEATH_ARCHIVE`（`game3d/js/death-archive.js`）：18 种真实死因 → 演出 → 标题 / 一句记录 → 回放舞台：巡察者、车库黑影、车门、驾驶、SAN 归零、同化、垃圾桶、暴雨、蛾群、课间操、粉笔圈、围栏的人、天台的另一个、清华水杯、假正常笑出声、正门、翻墙、东围墙的路人。同一演出的不同死因分开建档（例如四种「伸手」）。补齐了笑死（`laugh`）与三条「主意」（`trap_out / trap_wall / trap_beg`）的来源。
+- 注册表 `DEATH_ARCHIVE`（`game3d/js/app/death-archive.js`）：18 种真实死因 → 演出 → 标题 / 一句记录 → 回放舞台：巡察者、车库黑影、车门、驾驶、SAN 归零、同化、垃圾桶、暴雨、蛾群、课间操、粉笔圈、围栏的人、天台的另一个、清华水杯、假正常笑出声、正门、翻墙、东围墙的路人。同一演出的不同死因分开建档（例如四种「伸手」）。补齐了笑死（`laugh`）与三条「主意」（`trap_out / trap_wall / trap_beg`）的来源。
 - 解锁点：`kill()` 通过药丸、天生免疫、调试无敌之后、写死亡日志之前；`KILL_CTX='debug'`（`Dev.death`）、调试面板开着、档案回放时都不解锁。预知梦惊醒算真实经历。新记录提示在死亡演出结束后弹出。
 - 存储：`wdfz3d_death_archive_v1`（`version / unlocked / first / count / legacy / pending / migrated`）；启动时迁移一次旧 `wdfz3d_deaths`，只迁入有明确来源的记录，来源不明的只记条数。坏 JSON、未知 ID 安全降级。
 - 回放：主菜单进入，隔离舞台（户外空地或对应房间的默认入口），`S.screen='replay'`，预览模式播放同一份演出；按演出自身进度收尾（低帧率时不被墙钟截断），点击 / 空格 / Esc 结束；不调用 `kill / saveGame / deathLogAdd`。
@@ -352,7 +352,7 @@
 
 ### 9.3 P2 速通模式
 
-- `game3d/js/speedrun.js`：`idle → ready → running → finished / failed / abandoned / invalid`。第一次 `playerInputAllowed()` 时起表；`max(performance.now 差, Date.now 差)` 计 RTA；`triggerEnding` 时停表（不等演出）；同一 runId 只记一次。规则版本 `SPEEDRUN_RULES=1`。
+- `game3d/js/app/speedrun.js`：`idle → ready → running → finished / failed / abandoned / invalid`。第一次 `playerInputAllowed()` 时起表；`max(performance.now 差, Date.now 差)` 计 RTA；`triggerEnding` 时停表（不等演出）；同一 runId 只记一次。规则版本 `SPEEDRUN_RULES=1`。
 - 有效路线：`car / face / portal`，正常路线在调用结局前登记 `Speedrun.proof()`；不经登记直接调用结局记 `ending_direct` 无效；打开调试面板记 `debug` 无效；死透记失败（预知梦惊醒不停表），回菜单记放弃。隐藏成功路线单独记录，只有本机已见该结局才出现在成绩表。
 - 存储：`wdfz3d_speedrun_v1`（最近 20 次 + `r规则|难度|路线` 的个人最佳）；速通独立存档槽 `wdfz3d_speedrun_slot`，「继续上次」只读普通槽，速通不能读档续跑。
 - 界面：主菜单入口与难度 / 成绩面板、游戏内右上角计时（不挡状态卡、字幕、地图和触屏键）、结局卡成绩、死亡界面「未通关」一行。
@@ -361,7 +361,7 @@
 
 ### 9.4 P3 新局 3D 开场 CG
 
-- `game3d/js/opening.js`：`CUT_DEF.opening` 复用结局过场框架，六段分镜（正常的第四节 / 老师从头再念 / 粉笔灰停住 / 颜色褪去闭眼 / 第一人称醒来 / 交接），字幕沿用原前情提要。首次完整版 26 秒，`wdfz_pro` 已记则短版 11 秒（从第 4 段起）。
+- `game3d/js/fx/opening.js`：`CUT_DEF.opening` 复用结局过场框架，六段分镜（正常的第四节 / 老师从头再念 / 粉笔灰停住 / 颜色褪去闭眼 / 第一人称醒来 / 交接），字幕沿用原前情提要。首次完整版 26 秒，`wdfz_pro` 已记则短版 11 秒（从第 4 段起）。
 - `Opening.handoff()` 幂等：座位、朝向、坐姿、世界色调、同学变影子都落在同一状态；看完和在任一镜头跳过的结果逐字段相同。演出中 `S.screen='cut'` + `PRO.on`，世界不更新、不扣 SAN、不出异象巡察、不能操作；回主菜单收掉过场；读档不重播；没有 3D 场景时退回文字版 `proShow()`。速通从交接后第一次能操作起表。
 - 自动化：`tests/test_opening.py`。截图：`pictures/开场CG/`（六段）。
 - 未做：五档画质逐一截图（已截精细档）、安卓真机、音频自动播放限制下的听感。

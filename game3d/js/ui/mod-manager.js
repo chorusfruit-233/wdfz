@@ -35,8 +35,16 @@ var ModManager={
         '<button type="button" data-mm="builtin" data-id="'+E(m.id)+'" aria-pressed="'+m.enabled+'">'+(m.enabled?'已开':'打开')+'</button>');
     }).join('')+'</ul>':'<p>没有。</p>');
     h.push('<div class="pt-row"><button type="button" data-mm="reload">刷新页面生效</button><button type="button" data-mm="safe">安全模式重开</button></div>');
+    var LY=G.layerList?G.layerList():[];
+    if(LY.length){
+      var cnt={}; mods0.forEach(function(m){ (m.layers||[]).forEach(function(l){ cnt[l]=(cnt[l]||0)+1; }); });
+      h.push('<details class="mm-mods"><summary>分层（'+LY.length+'）</summary><ul class="mm-list">'+LY.map(function(l){
+        return row(E(l.name)+' <code>'+E(l.id)+'</code>',E(l.dir)+' · '+(cnt[l.id]||0)+' 个文件 · '+E(l.desc),'');
+      }).join('')+'</ul></details>');
+    }
     h.push('<details class="mm-mods"><summary>模块清单（'+mods0.length+'）</summary><ul class="mm-list">'+mods0.map(function(m){
-      return row(E(m.name),E(m.id)+' · '+m.files.length+' 个文件'+(m.status==='ok'?'':' · 缺少 '+E(m.missing.join('、'))),'');
+      var ls=(m.layers||[]).filter(function(x,i,a){ return x&&a.indexOf(x)===i; }).join(' / ');
+      return row(E(m.name),E(m.id)+' · '+m.files.length+' 个文件'+(ls?' · '+E(ls):'')+(m.status==='ok'?'':' · 缺少 '+E(m.missing.join('、'))),'');
     }).join('')+'</ul></details>');
     if(errs.length) h.push('<h5>加载与运行错误</h5><ul class="mm-err">'+errs.slice(-8).map(function(e){ return '<li>'+E(e.kind)+' · '+E(e.who)+'：'+E(e.message)+'</li>'; }).join('')+'</ul>');
     box.innerHTML=h.join('');

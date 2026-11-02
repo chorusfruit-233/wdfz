@@ -195,71 +195,7 @@ function initInput(){
     if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();
     else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen'&&INPUT.stickId===null)useMouseInput();
   },{capture:true,passive:true});
-  window.addEventListener('keydown',function(e){
-    var k=physicalKey(e);
-    var editing=e.target.matches('input,select,textarea,[contenteditable="true"]');
-    if(e.key==='F2'&&(!editing||DEV.on)){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
-    if(freeCursorKey(e)&&!editing&&S.screen==='play'&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
-      e.preventDefault();if(!e.repeat)toggleFreeCursor(e);return;
-    }
-    if(devOwnsInput(e.target)){
-      if(k==='tab')Dev.focusTrap(e);
-      if(k==='escape'){e.preventDefault();if(!e.repeat)Dev.close();}
-      return;
-    }
-    if(k==='escape'&&DEV.on&&DEV.freeze){e.preventDefault();if(!e.repeat)Dev.close();return;}
-    if(editing){
-      if(k!=='escape')return;
-      e.target.blur();
-    }
-    if(PRO.on){
-      if(k===' '||k==='enter'){e.preventDefault();if(!e.repeat)proNext();}
-      return;
-    }
-    if(S.screen==='cut'){ if(k===' '||k==='enter'||k==='escape'){e.preventDefault();cutSkip();} return; }   /* 跳过结局演出 */
-    if(S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING&&(k===' '||k==='enter'||k==='escape')){   /* 跳过死亡演出 */
-      e.preventDefault();if(!e.repeat)deathSkip();return;
-    }
-    if(S.screen!=='play'||S.dead||e.ctrlKey||e.metaKey||e.altKey)return;
-    if(k==='escape'){
-      e.preventDefault();if(e.repeat)return;
-      if(PC.on){PCGAME.stop();return;}
-      if(PHONE.on){PHONE.stop();return;}
-      if(LESSON.on){LESSON.close(true);return;}
-      if(UI.openPanel==='set'){UI.close('set',false);if(PAUSE.on)UI.open('pause');return;}
-      if(UI.openPanel&&UI.openPanel!=='pause'){UI.close(UI.openPanel);return;}
-      if(PAUSE.on&&performance.now()-INPUT.unlockedAt<200)return;
-      Game.pauseToggle();return;
-    }
-    if(k===' '&&e.target.closest('button,a,[role="button"]'))return;
-    if(PC.on){
-      if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){KEY[k]=true;e.preventDefault();}
-      return;
-    }
-    if(LESSON.on){if(/^[1-3]$/.test(k)){e.preventDefault();if(!e.repeat)LESSON.answer(+k-1);}return;}
-    if(PHONE.on){
-      if([' ','w','arrowup','enter'].indexOf(k)>=0){e.preventDefault();if(!e.repeat)PHONE.flap();}
-      return;
-    }
-    if(UI.chooseOpen&&!PAUSE.on&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)UI.choiceKey(+k);return;}
-    if(PAUSE.on||devInputBlocked()||UI.chooseOpen||S.intro>0)return;
-    if(typeof CarChase!=='undefined'&&CarChase.active()){
-      if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){e.preventDefault();KEY[k]=true;}
-      return;
-    }
-    if(['tab','h','j','m'].indexOf(k)>=0){
-      e.preventDefault();if(!e.repeat)UI.toggle({tab:'bag',h:'think',j:'note',m:'mapv'}[k]);return;
-    }
-    if(!playerInputAllowed())return;
-    if(['w','a','s','d',' ','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0)e.preventDefault();
-    KEY[k]=true;if(e.repeat)return;
-    if(k==='e')tryInteract();
-    if(k==='r'&&!Investigation.openDesk())LESSON.open();
-    if(k==='f')toggleTorch();
-    if(k==='g')dropSelected();
-    if(k==='1')useHot(0);
-    if(k==='2')useHot(1);
-  },{passive:false});
+  window.addEventListener('keydown',function(e){ routeKey(e);   },{passive:false});
   window.addEventListener('keyup',function(e){
     KEY[physicalKey(e)]=false;
     /* 单按 Alt 松开时，部分浏览器会把焦点移到自己的菜单栏，之后按键就进不了游戏 */
@@ -413,3 +349,101 @@ function updatePlayer(dt){
   syncCamera(dt);
 }
 var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=30,STAM_BACK=35;
+
+/* ---------- 键盘分派表（计划「项目解耦与模块化」5.1 / M1）----------
+   按下一个键时从上往下找第一个 match 的上下文接手；run 返回 false 表示「处理了一部分，交给下一层」。
+   最近一次接手的上下文记在 INPUT.route（调试面板状态页显示），表本身导出为 KEY_ROUTES。
+   与改造前的 if 链逐条对应，只调了一处顺序（A-01）：过场（S.screen==='cut'，开场 CG、结局演出）排在旧的文字前情提要
+   （PRO.on）前面。开场演出时为了冻结世界 PRO.on 也是真的，以前空格被 proNext() 接走，开场跳不过去。
+   触屏 / 鼠标点击的分派还在各自的监听里（迁移见计划第 10 节）。 */
+var SKIP_KEYS={' ':1,enter:1,escape:1};
+var MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
+var KEY_ROUTES=[
+  {id:'dev-toggle', desc:'F2：打开 / 关闭调试面板',
+    match:function(c){ return c.e.key==='F2'&&(!c.editing||DEV.on); },
+    run:function(c){ c.e.preventDefault(); if(!c.e.repeat&&typeof Dev!=='undefined') Dev.toggle(); }},
+  {id:'free-cursor', desc:'Alt / `：放出或收回鼠标（游戏不暂停）',
+    match:function(c){ return freeCursorKey(c.e)&&!c.editing&&S.screen==='play'&&!c.e.ctrlKey&&!c.e.metaKey&&!c.e.shiftKey; },
+    run:function(c){ c.e.preventDefault(); if(!c.e.repeat) toggleFreeCursor(c.e); }},
+  {id:'dev-panel', desc:'焦点在调试面板里：Tab 留在面板内，Esc 关闭',
+    match:function(c){ return devOwnsInput(c.e.target); },
+    run:function(c){ if(c.k==='tab') Dev.focusTrap(c.e); if(c.k==='escape'){ c.e.preventDefault(); if(!c.e.repeat) Dev.close(); } }},
+  {id:'dev-freeze', desc:'调试冻结时：Esc 关闭面板',
+    match:function(c){ return c.k==='escape'&&DEV.on&&DEV.freeze; },
+    run:function(c){ c.e.preventDefault(); if(!c.e.repeat) Dev.close(); }},
+  {id:'editing', desc:'输入框里打字；Esc 离开输入框后继续往下分派',
+    match:function(c){ return c.editing; },
+    run:function(c){ if(c.k!=='escape') return true; c.e.target.blur(); return false; }},
+  {id:'cutscene', desc:'过场（开场 CG、结局演出）：空格 / 回车 / Esc 跳过',
+    match:function(){ return S.screen==='cut'; },
+    run:function(c){ if(SKIP_KEYS[c.k]){ c.e.preventDefault(); cutSkip(); } }},
+  {id:'prologue', desc:'文字前情提要：空格 / 回车翻页',
+    match:function(){ return PRO.on; },
+    run:function(c){ if(c.k===' '||c.k==='enter'){ c.e.preventDefault(); if(!c.e.repeat) proNext(); } }},
+  {id:'death-skip', desc:'死亡演出：空格 / 回车 / Esc 跳过',
+    match:function(c){ return S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING&&!!SKIP_KEYS[c.k]; },
+    run:function(c){ c.e.preventDefault(); if(!c.e.repeat) deathSkip(); }},
+  {id:'not-playing', desc:'不在游玩中，或按着 Ctrl / ⌘ / Alt：不接',
+    match:function(c){ return S.screen!=='play'||S.dead||c.e.ctrlKey||c.e.metaKey||c.e.altKey; },
+    run:function(){}},
+  {id:'escape', desc:'Esc：依次关电脑、手机、课堂、设置、手册，最后暂停 / 继续',
+    match:function(c){ return c.k==='escape'; },
+    run:function(c){
+      c.e.preventDefault(); if(c.e.repeat) return;
+      if(PC.on){ PCGAME.stop(); return; }
+      if(PHONE.on){ PHONE.stop(); return; }
+      if(LESSON.on){ LESSON.close(true); return; }
+      if(UI.openPanel==='set'){ UI.close('set',false); if(PAUSE.on) UI.open('pause'); return; }
+      if(UI.openPanel&&UI.openPanel!=='pause'){ UI.close(UI.openPanel); return; }
+      if(PAUSE.on&&performance.now()-INPUT.unlockedAt<200) return;
+      Game.pauseToggle();
+    }},
+  {id:'button-space', desc:'焦点在按钮上：空格交给按钮自己',
+    match:function(c){ return c.k===' '&&!!c.e.target.closest('button,a,[role="button"]'); },
+    run:function(){}},
+  {id:'pc', desc:'机房电脑小游戏：方向键',
+    match:function(){ return PC.on; },
+    run:function(c){ if(MOVE_KEYS.indexOf(c.k)>=0){ KEY[c.k]=true; c.e.preventDefault(); } }},
+  {id:'lesson', desc:'课堂短任务：1–3 选答案',
+    match:function(){ return LESSON.on; },
+    run:function(c){ if(/^[1-3]$/.test(c.k)){ c.e.preventDefault(); if(!c.e.repeat) LESSON.answer(+c.k-1); } }},
+  {id:'phone', desc:'手机纸飞机：空格 / W / ↑ / 回车往上飘',
+    match:function(){ return PHONE.on; },
+    run:function(c){ if([' ','w','arrowup','enter'].indexOf(c.k)>=0){ c.e.preventDefault(); if(!c.e.repeat) PHONE.flap(); } }},
+  {id:'choice', desc:'选择框：数字键直接选',
+    match:function(c){ return UI.chooseOpen&&!PAUSE.on&&/^[1-9]$/.test(c.k); },
+    run:function(c){ c.e.preventDefault(); if(!c.e.repeat) UI.choiceKey(+c.k); }},
+  {id:'blocked', desc:'暂停、调试拦截、选择框、开局倒计时：不接游戏键',
+    match:function(){ return PAUSE.on||devInputBlocked()||UI.chooseOpen||S.intro>0; },
+    run:function(){}},
+  {id:'car', desc:'驾驶逃脱：方向键',
+    match:function(){ return typeof CarChase!=='undefined'&&CarChase.active(); },
+    run:function(c){ if(MOVE_KEYS.indexOf(c.k)>=0){ c.e.preventDefault(); KEY[c.k]=true; } }},
+  {id:'journal', desc:'Tab / H / J / M：手册的背包、思索、笔记、地图',
+    match:function(c){ return ['tab','h','j','m'].indexOf(c.k)>=0; },
+    run:function(c){ c.e.preventDefault(); if(!c.e.repeat) UI.toggle({tab:'bag',h:'think',j:'note',m:'mapv'}[c.k]); }},
+  {id:'player', desc:'游玩：移动、E 交互、R 课桌 / 课堂、F 手电、G 丢弃、1 / 2 快捷栏',
+    match:function(){ return true; },
+    run:function(c){
+      var k=c.k, e=c.e;
+      if(!playerInputAllowed()) return;
+      if(['w','a','s','d',' ','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0) e.preventDefault();
+      KEY[k]=true; if(e.repeat) return;
+      if(k==='e') tryInteract();
+      if(k==='r'&&!Investigation.openDesk()) LESSON.open();
+      if(k==='f') toggleTorch();
+      if(k==='g') dropSelected();
+      if(k==='1') useHot(0);
+      if(k==='2') useHot(1);
+    }}
+];
+function routeKey(e){
+  var c={e:e,k:physicalKey(e),editing:!!(e.target&&e.target.matches&&e.target.matches('input,select,textarea,[contenteditable="true"]'))};
+  for(var i=0;i<KEY_ROUTES.length;i++){
+    var r=KEY_ROUTES[i];
+    if(!r.match(c)) continue;
+    INPUT.route=r.id;
+    if(r.run(c)!==false) return r.id;
+  }
+  return null;
+}

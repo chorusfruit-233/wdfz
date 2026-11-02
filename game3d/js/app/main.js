@@ -86,6 +86,7 @@ function render(dt){
   if(CarChase.active()&&S.screen==='play')CarChase.draw();
   try{ PortalDevice.tick(dt); }catch(e){}          /* 物理实验室演示台上的传送门：按剧情状态摆、每帧动 */
   try{ LiftDoors.tick(dt); }catch(e){}             /* 电梯层门：电梯到这一层时滑开 */
+  GameModules.emit('frame',dt);                     /* 表现层每帧：模块自己的画面动画（彩蛋的反色、黑影淡入淡出） */
   Engine.draw(dt); updateHUD(); drawMini(dt);
   try{ Speedrun.paintHud(); }catch(e){}
 }
@@ -220,6 +221,7 @@ function clearIntroTimers(){
 }
 var FRESH_TALENT=null;           /* 新局要用的天赋：选择界面确认后才填，freshState 用完即清 */
 function freshState(diff){
+  Session.begin('fresh');                        /* 新局 / 继续：一次新的会话，上一局登记的定时器和回调全部作废 */
   ExplorationMap.clear();
   document.getElementById('notequery').value='';
   try{ Dread.reset(); }catch(e){}
@@ -369,6 +371,7 @@ var Game={
     Game.resume();
   },
   quit:function(){
+    Session.end('quit');
     if(typeof CarChase!=='undefined'&&CarChase.active()){autoSave();CarChase.clearVisual();}
     try{ Speedrun.fail('abandoned','quit'); if(RUN_MODE==='speedrun'){ clearSave(); } RUN_MODE='normal'; Speedrun.paintHud(true); }catch(e){}   /* 速通中途回菜单：记放弃，丢掉速通的存档槽 */
     if(typeof Inspection!=='undefined')Inspection.clearFx();

@@ -1,0 +1,53 @@
+{
+ "game3d/js/adapters/mobile.js": {
+  "GLR": 1
+ },
+ "game3d/js/app/death-archive.js": {
+  "GLR": 6
+ },
+ "game3d/js/domain/campus-pressure.js": {
+  "DOM": 1
+ },
+ "game3d/js/domain/car-chase.js": {
+  "DOM": 5,
+  "GLR": 18,
+  "THREE": 26
+ },
+ "game3d/js/domain/day-events.js": {
+  "DOM": 1,
+  "GLR": 3,
+  "THREE": 9
+ },
+ "game3d/js/domain/inspection.js": {
+  "GLR": 4,
+  "THREE": 3
+ },
+ "game3d/js/domain/interact.js": {
+  "DOM": 3
+ },
+ "game3d/js/domain/investigation.js": {
+  "DOM": 1
+ },
+ "game3d/js/domain/items.js": {
+  "DOM": 2
+ },
+ "game3d/js/domain/patrol.js": {
+  "DOM": 3
+ },
+ "game3d/js/domain/story.js": {
+  "DOM": 11,
+  "storage": 2
+ },
+ "game3d/js/domain/talents.js": {
+  "DOM": 11
+ },
+ "game3d/js/fx/classroom.js": {
+  "stateWrite": 1
+ },
+ "game3d/js/fx/cutscene.js": {
+  "stateWrite": 8
+ },
+ "game3d/js/fx/opening.js": {
+  "stateWrite": 5
+ }
+}

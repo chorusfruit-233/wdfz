@@ -13,14 +13,16 @@ from browser_case import BrowserCase
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def manifest():
+def manifest(with_layers=False):
     """用 node 读出清单（不启动浏览器）。"""
     node = shutil.which('node')
     if not node:
         raise unittest.SkipTest('需要 node')
-    script = """const fs=require('fs');const out=[];global.GameModules={define:m=>out.push(m)};
+    script = """const fs=require('fs');const out={layers:[],modules:[]};
+      global.GameModules={layers:l=>{out.layers=l;},define:m=>out.modules.push(m)};
       eval(fs.readFileSync('game3d/manifest.js','utf8'));console.log(JSON.stringify(out));"""
-    return json.loads(subprocess.run([node, '-e', script], cwd=ROOT, check=True, capture_output=True, text=True).stdout)
+    data = json.loads(subprocess.run([node, '-e', script], cwd=ROOT, check=True, capture_output=True, text=True).stdout)
+    return data if with_layers else data['modules']
 
 
 class ManifestStaticTest(unittest.TestCase):
@@ -31,12 +33,12 @@ class ManifestStaticTest(unittest.TestCase):
         for f in files:
             self.assertTrue((ROOT / f).is_file(), f)
         on_disk = sorted(str(p.relative_to(ROOT)) for p in (ROOT / 'game3d/js').rglob('*.js'))
-        on_disk.remove('game3d/js/modules.js')                     # 注册表本身由 index.html 直接加载
+        on_disk.remove('game3d/js/app/modules.js')                 # 注册表本身由 index.html 直接加载
         self.assertEqual(sorted(f for f in files if f.startswith('game3d/js/')), on_disk, '有脚本没进清单')
         html = (ROOT / 'index.html').read_text(encoding='utf-8')
-        self.assertEqual(re.findall(r'<script src="([^"]+)"', html), ['game3d/js/modules.js', 'game3d/manifest.js'])
+        self.assertEqual(re.findall(r'<script src="([^"]+)"', html), ['game3d/js/app/modules.js', 'game3d/manifest.js'])
         self.assertIn('GameModules.boot()', html)
-        self.assertEqual(files[-1], 'game3d/js/main.js', '主循环必须最后加载')
+        self.assertEqual(files[-1], 'game3d/js/app/main.js', '主循环必须最后加载')
         ids = [m['id'] for m in mods]
         self.assertEqual(len(ids), len(set(ids)))
         for m in mods:
@@ -45,10 +47,32 @@ class ManifestStaticTest(unittest.TestCase):
 
     def test_feature_logic_files_do_not_touch_the_renderer(self):
         """新模块把逻辑和画面分开：逻辑文件里不出现 THREE / GLR。"""
-        for rel in ('game3d/js/modules/void-maze/maze-data.js', 'game3d/js/modules/void-maze/maze.js',
-                    'game3d/js/modules/chalk-marks/marks.js', 'game3d/js/modules.js'):
+        for rel in ('game3d/js/content/void-maze-data.js', 'game3d/js/domain/void-maze.js',
+                    'game3d/js/domain/chalk-marks.js', 'game3d/js/app/modules.js', 'game3d/js/app/session.js'):
             src = (ROOT / rel).read_text(encoding='utf-8')
             self.assertIsNone(re.search(r'\b(?:THREE|GLR)\s*\.', src), rel)
+
+    def test_files_live_in_layer_directories_and_boundaries_only_shrink(self):
+        """计划「项目解耦与模块化」第 4 节：每个文件在某一层的目录里；按层的禁止规则扫描，越界只许比基线少。"""
+        import sys
+        sys.path.insert(0, str(ROOT / 'tools'))
+        import module_audit
+        data = manifest(with_layers=True)
+        ids = [l['id'] for l in data['layers']]
+        self.assertEqual(ids, ['app', 'content', 'domain', 'adapters', 'engine', 'model', 'fx', 'ui', 'dev', 'lib'])
+        for m in data['modules']:
+            for f in m['files']:
+                self.assertTrue(any(f.startswith(l['dir']) for l in data['layers']), f)
+        for p in (ROOT / 'game3d/js').iterdir():                       # game3d/js 下只剩分层目录
+            self.assertTrue(p.is_dir() and p.name in ids, p.name)
+        baseline = json.loads((ROOT / 'tests/module_boundaries.json').read_text(encoding='utf-8'))
+        now = module_audit.scan(data)
+        grown = []
+        for f, rules in now.items():
+            for rule, n in rules.items():
+                if n > baseline.get(f, {}).get(rule, 0):
+                    grown.append(f'{f}: {rule} {baseline.get(f, {}).get(rule, 0)} → {n}')
+        self.assertEqual(grown, [], '新增了分层越界；把逻辑和画面 / 页面 / 存储分开，或说明理由后再更新基线')
 
     def test_declared_hooks_match_the_code(self):
         mods = manifest()
@@ -184,7 +208,7 @@ class ModuleBrowserTest(BrowserCase):
           S.bag.push('chalk');useItem('chalk');
           return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,back:S.room,panel:!!document.getElementById('modTools'),
             sub:document.getElementById('sub').innerText}}""")
-        self.assertEqual(result['n'], 35)
+        self.assertEqual(result['n'], 36)
         self.assertEqual(result['bad'], 0)
         self.assertEqual((result['maze'], result['chalk']), ('undefined', 'undefined'))
         self.assertEqual(result['inside'], 'lift_dream')
@@ -192,6 +216,42 @@ class ModuleBrowserTest(BrowserCase):
         self.assertEqual(result['back'], 'lab1')
         self.assertFalse(result['panel'])
         self.assertIn('粉笔', result['sub'])                      # 没有记号模块：粉笔回到「看一眼说明」
+
+    def test_session_scopes_drop_stale_callbacks(self):
+        """计划 5.3：换场景取消场景作用域的定时器；新局 / 回菜单让旧会话的回调全部作废；淡入淡出的回调过期也会撤掉黑幕。"""
+        page = self.page()
+        page.evaluate("Game.start('hard')")
+        page.wait_for_function("S.room==='teach1'")
+        page.evaluate("running=false;clearIntroTimers();S.intro=0;window.hit=[];0")
+        page.evaluate("""()=>{Session.timeout(()=>hit.push('scene'),40,'scene');Session.timeout(()=>hit.push('session'),40);
+          window.g=Session.guard(()=>hit.push('guard'));doExitRoom();}""")
+        page.wait_for_timeout(150)
+        self.assertEqual(page.evaluate('hit'), ['session'])              # 换场景：场景作用域的被取消，会话的照常
+        page.evaluate("Session.timeout(()=>hit.push('old'),40);freshState('hard');running=false;g();0")
+        page.wait_for_timeout(150)
+        self.assertEqual(page.evaluate('hit'), ['session'])              # 新的一局：旧会话的定时器和包过的回调都不执行
+        page.evaluate("doEnterRoom('teach1');enterRoom('teach2');Game.quit();0")
+        page.wait_for_timeout(600)
+        r = page.evaluate("({screen:S.screen,room:S.room,fade:getComputedStyle(document.getElementById('fade')).opacity,live:Session.live()})")
+        self.assertEqual(r['screen'], 'menu')
+        self.assertNotEqual(r['room'], 'teach2')                          # 回菜单以后，淡出途中的进房间不再执行
+        self.assertEqual(float(r['fade']), 0)                             # 黑幕照常撤掉
+        self.assertFalse(r['live'])
+
+    def test_keyboard_routes_put_cutscenes_before_the_old_prologue(self):
+        """计划 5.1 / A-01：开场 CG 时 PRO.on 也是真的，以前空格被旧前情提要接走；现在过场排在前面，空格直接跳过开场。"""
+        page = self.page()
+        ids = page.evaluate('KEY_ROUTES.map(r=>r.id)')
+        self.assertLess(ids.index('cutscene'), ids.index('prologue'))
+        self.assertEqual(ids[-1], 'player')
+        page.evaluate("CUT.enabled=true;localStorage.removeItem('wdfz_pro');Game.start('easy',{talent:'code'})")
+        page.wait_for_function("CUT.on&&CUT.id==='opening'", timeout=60000)
+        page.wait_for_timeout(800)
+        self.assert_js(page, "PRO.on&&S.screen==='cut'")
+        page.keyboard.press('Space')
+        page.wait_for_function("S.screen==='play'&&!CUT.on", timeout=5000)
+        self.assertEqual(page.evaluate('INPUT.route'), 'cutscene')
+        self.assert_js(page, "playerInputAllowed()&&!PRO.on")
 
     def test_mod_panel_imports_a_file_from_the_pause_menu(self):
         page = self.page()

@@ -342,7 +342,7 @@ var Dev={
   refreshDiagnostics:function(){
     var renderer=GLR.renderer,info=renderer&&renderer.info;
     document.getElementById('devrender').textContent=info?'几何体 '+info.memory.geometries+' · 纹理 '+info.memory.textures+' · 着色程序 '+(info.programs?info.programs.length:0):'渲染器未就绪';
-    document.getElementById('devinput').textContent=(INPUT.mode==='touch'?'触屏':'鼠标')+' · '+(pointerIsLocked()?'鼠标已捕获':'鼠标未捕获')+' · '+(playerInputAllowed()?'允许游戏输入':'游戏输入暂停');
+    document.getElementById('devinput').textContent=(INPUT.mode==='touch'?'触屏':'鼠标')+' · '+(pointerIsLocked()?'鼠标已捕获':'鼠标未捕获')+' · '+(playerInputAllowed()?'允许游戏输入':'游戏输入暂停')+' · 按键归属：'+(INPUT.route||'—');
     document.getElementById('devquality').textContent=Quality.get().label+' · '+innerWidth+' × '+innerHeight;
     document.getElementById('devhistory').textContent=DEV.history.slice(-5).map(function(entry){return entry.message;}).join('\n')||'尚无调试操作';
   },

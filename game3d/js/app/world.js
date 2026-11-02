@@ -142,9 +142,10 @@ function showBanner(txt){
 function fadeTo(fn){
   var f=document.getElementById('fade');
   if(!f){ fn(); return; }
+  var run=Session.guard(fn);                   /* 淡出期间回了主菜单 / 开了新局：旧的回调作废，黑幕照常撤掉 */
   f.style.transition='opacity .16s ease'; f.style.opacity='1';
   setTimeout(function(){
-    try{ fn(); }catch(e){ try{ console.error(e); }catch(_e){} }
+    try{ run(); }catch(e){ try{ console.error(e); }catch(_e){} }
     f.style.transition='opacity .30s ease'; f.style.opacity='0';
   },170);
 }
@@ -193,6 +194,7 @@ function unstick(){
 }
 function doEnterRoom(id,spawn){
   GameModules.emit('leaveRoom',S.mode==='in'?S.room:null,id);
+  Session.sceneChange(id);                     /* 上一个场景登记的定时器到此作废 */
   if(typeof FN_P!=='undefined'&&FN_P.grp&&FN_P.room!==id)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
   try{ spiralReset(); }catch(e){}
@@ -229,6 +231,7 @@ function doEnterRoom(id,spawn){
 function exitRoom(){ fadeTo(function(){ doExitRoom(); }); }
 function doExitRoom(){
   GameModules.emit('leaveRoom',S.mode==='in'?S.room:null,null);
+  Session.sceneChange(null);
   if(typeof FN_P!=='undefined'&&FN_P.grp)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
   var R=INTERIORS[S.room]; if(!R) return;
