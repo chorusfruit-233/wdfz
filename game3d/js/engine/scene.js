@@ -233,6 +233,7 @@ ThreeBackend.draw=function(dt){
   try{ handsTick(dt); }catch(e){}
   try{ if(!debugFrozen)hallucTick(dt); }catch(e){}
   try{ if(!debugFrozen)apparTick(dt); }catch(e){}
+  try{ if(!debugFrozen)dreamFigTick(dt); }catch(e){}        /* 异色空间里的人影：fx/dream-figures.js */
   GLR.cam.updateMatrixWorld();
   entFace();
   var u=GLR.postMat.uniforms;

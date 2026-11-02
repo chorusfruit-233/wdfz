@@ -157,3 +157,81 @@ class DreamPaletteTest(BrowserCase):
         page.evaluate("render(0.016)")
         self.assert_js(page, "GLR.postMat.uniforms.uFx.value<0.85&&GLR.postMat.uniforms.uDream.value===0&&GLR.postMat.uniforms.uBreath.value===0")
         self.assert_js(page, "!(GLR.amb.color.r>GLR.amb.color.g*4)")
+
+
+class DreamFiguresTest(BrowserCase):
+    """异色空间里的人影（fx/dream-figures.js）：站在光前面的黑影，没看着时转过来；走近、盯着看就不见；
+    走远、背对电梯口时身后先响脚步声，回头看电梯门里站着一个。只是吓人：没有碰撞、不扣 SAN、每次进来重摆。"""
+
+    def enter(self, page):
+        page.evaluate("Game.start('hard');clearIntroTimers();running=false;S.intro=0;AN.active=false;AN.next=1e6;PAT.next=1e6;")
+        page.wait_for_function("S.room==='teach1'&&GLR.roomMesh")
+        page.evaluate("""doEnterRoom('lift_dream',Elevator.spawn('lift_dream',2,5,0));running=false;
+          window.vanished=0;window.steps=0;SFX.vanish=function(){vanished++;};SFX.dread=function(k){if(k==='steps')steps++;};""")
+        page.wait_for_function("S.room==='lift_dream'&&GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS.lift_dream")
+        page.evaluate("syncCamera(0);render(0.016)")
+
+    @staticmethod
+    def put(page, c, r, ang):
+        page.evaluate(f"(()=>{{const R=INTERIORS.lift_dream;S.x=R.ox+{c}*R.tw;S.y=R.oy+{r}*R.th;S.ang={ang};S.pitch=0;syncCamera(0);}})()")
+
+    def test_figures_turn_when_unseen_vanish_up_close_or_under_a_stare_and_never_hurt(self):
+        page = self.page()
+        self.enter(page)
+        self.assert_js(page, "DFIG.items.length===4&&DFIG.items.every(i=>i.g.visible&&!i.gone)&&!DFIG.follow.g.visible")
+        self.assert_js(page, "DFIG.items.concat([DFIG.follow]).every(i=>{const w=dreamFigWorld(INTERIORS.lift_dream,i.d);return !solidAt(w.x,w.y);})")
+        self.assert_js(page, "DFIG.mat.isMeshBasicMaterial&&DFIG.mat.color.getHex()<0x101010")
+        san = page.evaluate("S.san")
+        # 背过身去：东边那几个转过来朝着你
+        page.evaluate("S.ang=Math.PI;syncCamera(0);render(0.016)")
+        self.assert_js(page, """(()=>{const it=DFIG.items.find(i=>i.d.id==='north'),p=it.g.position,c=GLR.cam.position;
+            return angDiff(it.g.rotation.y,Math.atan2(c.x-p.x,c.z-p.z))<1e-6;})()""")
+        # 面壁的那个不转
+        self.assert_js(page, "Math.abs(DFIG.items.find(i=>i.d.id==='wall').g.rotation.y-Math.PI)<1e-9")
+        # 盯着看一会儿就不见（高的那个，8 米外）
+        page.evaluate("""(()=>{const R=INTERIORS.lift_dream,t=DFIG.items.find(i=>i.d.id==='tall'),w=dreamFigWorld(R,t.d);
+            S.x=R.ox+8.5*R.tw;S.y=R.oy+5.5*R.th;S.ang=Math.atan2(w.y-S.y,w.x-S.x);syncCamera(0);})()""")
+        page.evaluate("render(0.016)")
+        self.assert_js(page, "!DFIG.items.find(i=>i.d.id==='tall').gone")
+        for _ in range(4):
+            page.evaluate("render(0.4)")
+        self.assert_js(page, "DFIG.items.find(i=>i.d.id==='tall').gone&&vanished>=1")
+        # 走近也不见
+        self.assert_js(page, "!DFIG.items.find(i=>i.d.id==='north').gone")
+        self.put(page, 13.0, 3.2, 0)
+        page.evaluate("render(0.016)")
+        self.assert_js(page, "DFIG.items.find(i=>i.d.id==='north').gone")
+        self.assertEqual(page.evaluate("S.san"), san)
+
+    def test_the_one_that_follows_you_out_of_the_elevator(self):
+        page = self.page()
+        self.enter(page)
+        self.put(page, 5.0, 5.5, 0.0)           # 离电梯口不到 6 米：不来
+        for _ in range(4):
+            page.evaluate("render(0.5)")
+        self.assert_js(page, "!DFIG.follow.shown&&steps===0")
+        self.put(page, 9.6, 5.5, 0.0)           # 走远了、背对电梯口：先响脚步声，过一会儿它才站好
+        page.evaluate("render(0.5)")
+        self.assert_js(page, "steps===1&&!DFIG.follow.shown")
+        for _ in range(3):
+            page.evaluate("render(0.5)")
+        self.assert_js(page, "DFIG.follow.shown&&DFIG.follow.g.visible&&steps===1")
+        self.put(page, 9.6, 5.5, 3.14159)       # 回头：它站在半开的电梯门前；盯着看一秒就不见了
+        page.evaluate("render(0.016)")
+        self.assert_js(page, "DFIG.follow.g.visible&&!DFIG.follow.gone")
+        for _ in range(3):
+            page.evaluate("render(0.5)")
+        self.assert_js(page, "DFIG.follow.gone&&!DFIG.follow.g.visible")
+
+    def test_figures_reset_each_visit_hide_outside_and_replace_the_random_apparition(self):
+        page = self.page()
+        self.enter(page)
+        self.put(page, 13.0, 3.2, 0)
+        page.evaluate("render(0.016)")
+        self.assert_js(page, "DFIG.items.find(i=>i.d.id==='north').gone")
+        page.evaluate("APPAR.next=0;apparTick(0.016)")               # 这里不另出随机的远处人影
+        self.assert_js(page, "!APPAR.g||!APPAR.g.visible")
+        page.evaluate("doEnterRoom('lab1',Elevator.landing('lab',1));running=false;syncCamera(0);render(0.016)")
+        self.assert_js(page, "!DFIG.g.visible&&DFIG.room===null")
+        page.evaluate("doEnterRoom('lift_dream',Elevator.spawn('lift_dream',2,5,0));running=false;syncCamera(0);render(0.016)")
+        self.assert_js(page, "DFIG.g.visible&&DFIG.items.every(i=>!i.gone&&i.g.visible)&&!DFIG.follow.shown")
