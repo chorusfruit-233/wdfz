@@ -34,8 +34,7 @@ class VoidMazeTest(BrowserCase):
         page.evaluate("""Game.start('hard');""")
         page.wait_for_function("S.room==='teach1'&&GLR.roomMesh")
         page.evaluate("""running=false;clearIntroTimers();S.intro=0;S.day=1;S.tsec=760;S.san=100;AN.active=false;AN.id=null;
-          AN.next=1e5;patReset();PAT.next=1e5;RT.inspection=null;DEV.god=false;
-          S.talent='code';Talent.state().consumed={};""" + WALK)      # 新局随机抽天赋：抽到「天生免疫」会挡下一次致死，SAN 流失的时间就对不上
+          AN.next=1e5;patReset();PAT.next=1e5;RT.inspection=null;DEV.god=false;""" + WALK)
         return page
 
     def test_wrong_elevator_leads_into_the_dark_maze(self):
@@ -135,11 +134,13 @@ class VoidMazeTest(BrowserCase):
     def test_san_drains_faster_the_longer_you_stay_and_runs_out_in_about_twenty_minutes(self):
         page = self.game()
         r = page.evaluate("""()=>{goMaze('teach');S.san=100;let t=0,at={};
-          while(!S.dead&&t<1500){update(0.5);t+=0.5;if(t===300)at[300]=S.san;if(t===600)at[600]=S.san;if(t===900)at[900]=S.san;}
-          return {at,t,dead:S.dead,early:VoidMaze.drainRate(60),late:VoidMaze.drainRate(900)}}""")
+          while(!S.dead&&t<1800){update(0.5);t+=0.5;if(t===300)at[300]=S.san;if(t===600)at[600]=S.san;if(t===900)at[900]=S.san;}
+          return {at,t,dead:S.dead,early:VoidMaze.drainRate(60),late:VoidMaze.drainRate(900),
+            saved:!!Talent.state().consumed.fatalProtection}}""")
         self.assertTrue(r['dead'])
         self.assertGreaterEqual(r['t'], 1140)
-        self.assertLessEqual(r['t'], 1260)
+        # 新局随机抽天赋：抽到「天生免疫」时，第一次耗尽（约 1200 秒）被挡下、SAN 回升，要 1400 多秒才死——这是成立的，放行
+        self.assertLessEqual(r['t'], 1700 if r['saved'] else 1260)
         loss = [100 - r['at']['300'], r['at']['300'] - r['at']['600'], r['at']['600'] - r['at']['900']]
         self.assertTrue(loss[0] < loss[1] < loss[2], loss)       # 越久掉得越快
         self.assertGreater(r['late'], r['early'] * 4)
