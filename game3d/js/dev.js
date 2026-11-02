@@ -29,6 +29,7 @@ var Dev={
     }
     if(typeof LESSON!=='undefined'&&LESSON.on)LESSON.close(false);
     DEV.on=true;DEV.freeze=false;DEV.minimized=false;DEV.refreshT=0;document.body.classList.add('dev-open');
+    try{ Speedrun.invalidate('debug'); }catch(e){}                /* 速通中打开调试面板：这次成绩无效 */
     var el=document.getElementById('dev'); if(el) el.style.display='flex';
     el.classList.remove('dev-minimized');el.setAttribute('role','dialog');document.getElementById('devball').hidden=true;
     DEV.lists={
@@ -59,12 +60,38 @@ var Dev={
     el.style.left=x+'px';el.style.top=y+'px';
     if(remember)DEV[DEV.minimized?'ballPos':'panelPos']={x:x,y:y};
   },
+  /* 手机横屏：摇杆和交互键之间那一条，同时让开右上角的手册 / 暂停（按控件的实际位置算，自定义的触屏布局也照顾到）。
+     触屏控件暂时隐藏时（例如暂停），用上一次布局量到的位置 */
+  landBand:function(b){
+    var left=b.left,right=b.right,mid=(b.left+b.right)/2,shown=document.getElementById('touch').style.display==='block';
+    ['stick','tAct','ttop'].forEach(function(id){
+      var r=null,e=document.getElementById(id);
+      if(shown&&e){ var q=e.getBoundingClientRect(); if(q.width&&q.height) r={x:q.left,w:q.width}; }
+      if(!r&&typeof TouchLayout!=='undefined'&&TouchLayout.rects[id]) r={x:TouchLayout.rects[id].x,w:TouchLayout.rects[id].w};
+      if(!r||r.x>b.right||r.x+r.w<b.left) return;
+      if(r.x+r.w/2<mid) left=Math.max(left,r.x+r.w+8); else right=Math.min(right,r.x-8);
+    });
+    return {left:left,right:right};
+  },
   fitPanel:function(){
     var el=document.getElementById('dev');if(!DEV.on||!el)return;
     var b=Dev.panelBounds(),width=b.right-b.left,height=b.bottom-b.top;
     var compact=IS_TOUCH||window.innerWidth<=600||window.matchMedia('(pointer: coarse)').matches;
+    var land=compact&&!DEV.minimized&&width>height;
     el.classList.toggle('dev-compact',compact);
+    el.classList.toggle('dev-land',land);
     el.classList.toggle('dev-short',height<300);
+    el.style.display=land?'grid':'flex';
+    if(land){
+      /* 横屏：占满高度，宽度取摇杆和交互键之间的空当（最宽 560）；空当太窄就居中放 300 宽，盖住一点也比看不见内容强 */
+      var band=Dev.landBand(b),w=Math.min(560,band.right-band.left);
+      if(w<300){ w=Math.min(300,width); band={left:b.left+(width-w)/2,right:b.left+(width+w)/2}; }
+      el.style.width=w+'px';el.style.maxWidth=w+'px';el.style.height=height+'px';el.style.maxHeight=height+'px';
+      var x=DEV.panelPos?DEV.panelPos.x:band.left+(band.right-band.left-w)/2;
+      Dev.placePanel(x,b.top,false);Dev.scrollHint();
+      return;
+    }
+    el.style.width='';el.style.height='';
     el.style.maxWidth=width+'px';
     el.style.maxHeight=Math.min(height,window.innerHeight*(compact?(width>height?.74:.62):.82))+'px';
     /* 触屏横屏时默认放在中间，留出两侧的摇杆和交互键。用户拖动过的位置仍保留。 */
@@ -432,6 +459,14 @@ var Dev={
   fast:function(){ DEV.fast=!DEV.fast; Dev.paint(); Dev.report(DEV.fast?'快跑：开':'快跑：关'); },
   search:function(){ SEARCH.on=!SEARCH.on; clearSearch(); Dev.paint(); Dev.report(SEARCH.on?'翻找读条：开':'翻找读条：关（立刻翻完）'); },
   god:function(){ DEV.god=!DEV.god; Dev.paint(); Dev.report(DEV.god?'无敌：开':'无敌：关'); },
+  /* 这三个开关关掉面板、开新局都不复位（方便测试）。速通不能带着它们记成绩：开速通时清掉，结算时再查一次 */
+  modifiersActive:function(){ return !!(DEV.fast||DEV.god||(typeof SEARCH!=='undefined'&&!SEARCH.on)); },
+  clearModifiers:function(){
+    if(!Dev.modifiersActive()) return false;
+    DEV.fast=false; DEV.god=false; SEARCH.on=true; clearSearch();
+    Dev.paint(); Dev.report('速通：已关掉调试开关（快跑、无敌恢复为关，翻找读条恢复为开）');
+    return true;
+  },
   san:function(){ if(!Dev.canUse())return;PlayerStats.setSan(100,'debug');PlayerStats.setStamina(100,'debug');S.tired=false; Dev.report('SAN / 体力已恢复');Dev.refresh(); },
   time:function(min){
     if(!Number.isFinite(min)||!Dev.canChangeTime())return;
@@ -523,7 +558,8 @@ var Dev={
     Dev.clearPreview();
     var wasGod=DEV.god;
     DEV.god=false;
-    try{ kill('【Dev】测试死亡演出：'+t,t); }finally{ DEV.god=wasGod; }
+    KILL_CTX='debug';
+    try{ kill('【Dev】测试死亡演出：'+t,t); }finally{ DEV.god=wasGod; KILL_CTX=null; }
     Dev.refresh();
   },
   revive:function(){

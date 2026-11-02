@@ -95,7 +95,7 @@ function fnTick(dt){
   if(f.v>=100){
     f.on=false;
     fnPeopleClear();
-    kill('你笑得停不下来。笑了很久。','laugh');
+    kill('你笑得停不下来。笑了很久。','laugh','laugh');
     return;
   }
   if(f.left===undefined) f.left=4;
@@ -156,9 +156,9 @@ function chooseIdea(id){
       {label:'再想想',fn:function(){ UI.closeChoice(); }},
       {label:'就这么办',fn:function(){
         UI.closeChoice();
-        if(it.route==='trap_out') kill('你从门缝里挤了出去。外面是一条很长的马路，路尽头有一扇校门。你走进去——衣服上还有雨，教学楼里，铃刚刚响。','slit');
-        else if(it.route==='trap_wall') kill('你翻上了墙头。墙外面还有一道墙。再外面，还有一道。你一直翻，翻到手指不再是手指的形状。','squeeze');
-        else kill('路过的那个人停了下来。他慢慢转过头——他没有脸，只有一个很大的、在笑的洞。然后他从墙里直接走了进来。','face');
+        if(it.route==='trap_out') kill('你从门缝里挤了出去。外面是一条很长的马路，路尽头有一扇校门。你走进去——衣服上还有雨，教学楼里，铃刚刚响。','slit','trap_out');
+        else if(it.route==='trap_wall') kill('你翻上了墙头。墙外面还有一道墙。再外面，还有一道。你一直翻，翻到手指不再是手指的形状。','squeeze','trap_wall');
+        else kill('路过的那个人停了下来。他慢慢转过头——他没有脸，只有一个很大的、在笑的洞。然后他从墙里直接走了进来。','face','trap_beg');
       }}
     ]);
     return;
@@ -181,7 +181,7 @@ function trapWhere(route){
   return (out&&mx>BOUND.x1-70)?null:'我：得先走到东边的围墙底下。';
 }
 function tryCarRoute(){
-  if(!hasItem('key')&&S.talent!=='drive'){ os('我：我没有钥匙。',2.6); return; }
+  if(!Talent.capability('car').ok){ os('我：我没有钥匙。',2.6); return; }
   if(S.mode!=='in'||S.room!=='garage1'){ os('我：得先下到车库去。',2.6); return; }
   os('我：牌号对得上的那两辆，油表不是零。',4);
 }
@@ -197,7 +197,8 @@ function carRightCell(){
   return RT.carRight;
 }
 function useCar(cx,cy){
-  if(!hasItem('key')&&S.talent!=='drive'){ os('我：车门锁着。',2.4); return; }
+  var cap=Talent.capability('car');
+  if(!cap.ok){ os('我：车门锁着。',2.4); return; }
   if(RT.carUsed){ os('我：已经开过一辆了。',2.4); return; }
   if(roamGuardsCar()){
     kill('你拉开车门，钻进去，摸到钥匙孔。后视镜里，它就站在后座上，弯着腰，脸贴着车顶。','grip','car_entry');
@@ -206,21 +207,23 @@ function useCar(cx,cy){
   var cell=cx+':'+cy;
   RT.carTried=RT.carTried||{};
   if(RT.carTried[cell]){ os('我：这辆试过了。不是它。',1.8); return; }
-  /* 拧钥匙要一会儿：站着别动，那东西还在车道上 */
-  holdJob(1.6,function(){
+  /* 拧钥匙要一会儿：站着别动，那东西还在车道上。搭线（车感好、没钥匙）要更久 */
+  var wire=cap.via==='hotwire';
+  holdJob(cap.sec,function(){
     if(S.dead) return;
-    if(roamGuardsCar()){ kill('钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip','car_entry'); return; }
+    if(roamGuardsCar()){ kill(wire?'我还蹲在方向盘底下捏着两根线，车窗上就贴上来一张脸。':'钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip','car_entry'); return; }
     if(cell!==carRightCell()){
       RT.carTried[cell]=1;
-      Investigation.record('vehicle:'+cell,Investigation.carName(cx,cy)+'：已试，钥匙不匹配。','验证','车库');
+      Investigation.record('vehicle:'+cell,Investigation.carName(cx,cy)+(wire?'：已试，搭线打不着。':'：已试，钥匙不匹配。'),'验证','车库');
       autoSave();
       var n=Object.keys(RT.carTried).length;
-      os(pick(['我：钥匙插进去，拧不动。不是这辆。','我：锁孔是对的，钥匙齿不对。下一辆。','我：车门开了一条缝，又自己合上了。不是它。'])+'（试过 '+n+' 辆）',2.6);
+      os(pick(wire?['我：线碰上了，仪表盘一点反应都没有。不是这辆。','我：电瓶是死的。下一辆。','我：火花跳了一下就没了。不是它。']
+                  :['我：钥匙插进去，拧不动。不是这辆。','我：锁孔是对的，钥匙齿不对。下一辆。','我：车门开了一条缝，又自己合上了。不是它。'])+'（试过 '+n+' 辆）',2.6);
       return;
     }
     carDrive();
   });
-  os(S.talent==='drive'?'我：我弯下腰去摸方向盘底下的线……':'我：我把钥匙插进锁孔，慢慢地拧……',1.6);
+  os(wire?'我：我弯下腰去摸方向盘底下的线……这要一会儿。':'我：我把钥匙插进锁孔，慢慢地拧……',cap.sec);
 }
 function carDrive(){
   if(AN.active||Inspection.pending()){os('我：现在走不开，先解决眼前的事。',2.5);return;}
@@ -287,19 +290,20 @@ var FaceChallenge={
     var q=FaceChallenge.state();
     if(q.done>=3){
       UI.choice('闸机亮起绿灯。外面的路安静得出奇。',[
-        {label:'通过闸机',fn:function(){triggerEnding('face');}},
+        {label:'通过闸机',fn:function(){Speedrun.proof('face');triggerEnding('face');}},
         {label:'暂时留下',fn:function(){}}
       ]);return;
     }
     var questionId=q.order[q.done],question=FACE_QUESTIONS[questionId],opts=question.choices.map(function(label,i){
       return {label:label,fn:function(){
         if(i===question.answer){q.done++;autoSave();FaceChallenge.open();return;}
-        PlayerStats.changeSan(-FACE_WRONG_SAN*dif().san,'face-answer',{min:0});settleSan();
+        var remedy=Talent.faceRemedy(), loss=remedy?0:FACE_WRONG_SAN*dif().san;   /* 编程社（规则 2）：第一次答错核对后台，不扣这一次 */
+        PlayerStats.changeSan(-loss,'face-answer',{min:0});settleSan();
         var feedback=FACE_EXPLANATIONS[questionId];
         Investigation.record('face:'+questionId,feedback,'验证','西小门 · 验证反馈');
         FaceChallenge.swap(q);autoSave();
         if(S.dead)return;
-        UI.choice('验证未通过（SAN −'+(FACE_WRONG_SAN*dif().san)+'）。'+feedback+' 已通过的题目仍然保留。',[
+        UI.choice((remedy?'验证未通过。你对照门禁后台核了一遍，这次没有扣到你（编程社，只有一次）。':'验证未通过（SAN −'+loss+'）。')+feedback+' 已通过的题目仍然保留。',[
           {label:'继续验证',fn:function(){FaceChallenge.open();}},
           {label:'先离开',fn:function(){}}
         ]);
@@ -322,7 +326,7 @@ function useStall(){
   S.spots.stall=1; UI.spotsDirty=true;
   if(RT.beastDrop&&S.room==='teach1'){
     UI.choice('门后传来一个声音：「你愿意跟我一起走吗？」',[
-      {label:'跟上',fn:function(){triggerEnding('beast');}},
+      {label:'跟上',fn:function(){Speedrun.proof('beast');triggerEnding('beast');}},
       {label:'先等等',fn:function(){os('我：门后没有再催促。',2.5);}}
     ]);
     return;
@@ -398,12 +402,13 @@ function deathHints(){
 function kill(msg,fx,source){
   if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
   if(S.dead||S.death) return;
-  if(hasItem('elixir')){ elixirSave(); return; }      /* 不知名药丸：替你死一次 */
-  if(S.talent==='immune'&&!S.immuneUsed){ immuneSave(); return; }
+  if(hasItem('elixir')){ elixirSave(); protectCommit(); return; }      /* 不知名药丸：替你死一次 */
+  if(Talent.tryPreventDeath()){ immuneSave(); protectCommit(); return; }
   var deathScope=Lifecycle.renew('death');
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   Playtest.event('死亡',source||S.death);
+  var _arc=null; try{ _arc=DeathArchive.record(source,S.death); }catch(e){}   /* 死亡档案：这种死法第一次发生时解锁，演出放完再提示（先于死亡日志，免得把这一次当成旧记录迁进去） */
   try{ deathLogAdd(S.death,source); }catch(e){}
   var cause=DEATH_SOURCES[source];
   if(cause)Investigation.record('failure:'+source,cause.cause,'验证','刚才的经历');
@@ -423,16 +428,19 @@ function kill(msg,fx,source){
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
   var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3);
   if(!wake) clearSave();                 /* 没有下一次了：不能再读档回来 */
+  var _sr=null; if(!wake){ try{ _sr=Speedrun.fail('failed',source||S.death); }catch(e){} }   /* 速通：死透了就停表、记未通关 */
   var _deadId=S.deadId=(S.deadId||0)+1, finished=false;
   /* 演出放完（或被跳过）只收一次：墓志铭、死亡界面或预知梦惊醒。旧的一次死亡被复活取消后不会再写回来 */
   function finish(){
     if(finished||S.deadId!==_deadId||!S.dead) return;
     finished=true;deathScope.cancel(); if(DEATH_PENDING&&DEATH_PENDING.id===_deadId) DEATH_PENDING=null;
+    try{ DeathArchive.notify(_arc); }catch(e){}
     if(wake){ dreamWake(); return; }
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
     var el=document.getElementById('die');
     document.getElementById('diem').textContent=msg;
     document.getElementById('diecause').textContent=cause?cause.cause:'';
+    var _dsr=document.getElementById('diesr'); if(_dsr){ _dsr.textContent=Speedrun.dieText(_sr); _dsr.hidden=!_sr; }
     el.style.display='flex';
     try{ var rv=document.getElementById('dieRevive'); if(rv) rv.style.display=(typeof DEV!=='undefined'&&DEV.on)?'block':'none'; }catch(e){}
   }
@@ -454,8 +462,20 @@ function elixirSave(){
   os('我：……那粒药丸自己在舌根底下化开了。苦得发麻。我还站着——刚才那一下，像是有人替我挨了。',5.2,OS_FORCE);
   toast('不知名药丸 · 救了你一次');
 }
+/* 保命用掉以后要立刻落盘（以前没在跑异象时只改了内存，刷新就把免疫「退」回来了）。
+   不在这里直接存：调用方后面还要把来源恢复完（驾驶回检查点、同化回落），这一轮同步代码跑完再存完整快照 */
+var PROTECT_SAVE=0;
+function protectCommit(){
+  if(PROTECT_SAVE) return;
+  PROTECT_SAVE=1;
+  Promise.resolve().then(function(){
+    PROTECT_SAVE=0;
+    if(S.screen!=='play'||S.dead) return;
+    try{ saveGame(); }catch(e){ try{ toast('本次变化尚未保存'); }catch(_e){} }
+  });
+}
 function immuneSave(){
-  S.immuneUsed=true;
+  Playtest.event('天赋生效','immune');
   survivalReset();
   os('我：刚才那一下本该要了我的命。可它擦身而过，像是没有认出我。',5.2,OS_FORCE);
   toast('天生免疫 · 挡下了一次致命事件');
@@ -510,6 +530,7 @@ function triggerEnding(id,skipCut){
   var e=ENDINGS[id];
   endMark(id);
   if(!e.fake) clearSave();                    /* 假结局之后还能接着玩 */
+  Speedrun.lastResult=e.fake?null:Speedrun.finish(id);   /* 速通在通关确认的这一刻停表，不等结局演出 */
   if(skipCut)showEndingCard(id);else playCut(id,function(){ showEndingCard(id); });
 }
 function showEndingCard(id){
@@ -526,7 +547,7 @@ function showEndingCard(id){
   var html='<div id="ends">'+tag+
     '<div class="et">'+e.t+'</div>'+
     '<div class="el">'+e.l.join('<br>')+(echo?'<br><br>'+echo:'')+'</div>'+
-    '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+more+
+    '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+(e.fake?'':Speedrun.cardHtml(Speedrun.lastResult))+more+
     '<button type="button" class="equit" onclick="Game.quit()">回到主菜单</button></div>';
   var d=document.createElement('div');
   d.innerHTML=html;

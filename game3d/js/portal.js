@@ -111,7 +111,7 @@ function portalBench(){
       Lifecycle.scope('scene').timeout(function(){
         if(RT!==openedRun||!RT.portalOpen||S.dead||S.screen!=='play'||S.mode!=='in'||S.room!=='lab1'||PAUSE.on||UI.anyOpen()) return;
         UI.choice('那个圈在等我。',[
-          {label:'走进去',fn:function(){ UI.closeChoice(); triggerEnding('portal'); }},
+          {label:'走进去',fn:function(){ UI.closeChoice(); Speedrun.proof('portal'); triggerEnding('portal'); }},
           {label:'再等一下',fn:function(){ UI.closeChoice(); os('我：圈还在。它不会等太久。',2.6); }}
         ]);
       },2600);
@@ -123,7 +123,7 @@ function portalBench(){
 function tryPortalRoute(){
   if(RT.portalOpen&&S.mode==='in'&&S.room==='lab1'){
     UI.choice('那个圈还在实验台前面。',[
-      {label:'走进去',fn:function(){ UI.closeChoice(); triggerEnding('portal'); }},
+      {label:'走进去',fn:function(){ UI.closeChoice(); Speedrun.proof('portal'); triggerEnding('portal'); }},
       {label:'再等一下',fn:function(){ UI.closeChoice(); }}
     ]);
     return;

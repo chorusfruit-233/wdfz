@@ -51,7 +51,13 @@ class ControlsTest(BrowserCase):
                 controls = page.locator('#controls').inner_text()
                 self.assertIn('放出鼠标（不暂停）', controls)
                 self.assertIn('自己教室', controls)
+                self.assertIn('隔着墙', controls)                    # 交互判定按格子遮挡
+                self.assertIn('层门会滑开', page.locator('#places').inner_text())   # 电梯门
                 self.assertIn('声音与文字', page.locator('#settings').inner_text())
+                survival = page.locator('#survival').inner_text()
+                self.assertIn('第一次能操作', survival)              # 速通模式的计时口径
+                self.assertIn('尚未记录', survival)                  # 死亡档案室
+                self.assertIn('校庆日', page.locator('#events').inner_html())
                 page.get_by_role('link', name='← 返回游戏').click()
                 page.wait_for_url('**/index.html')
                 self.assertTrue(page.locator('#btncont').is_visible())
@@ -636,7 +642,7 @@ class ControlsTest(BrowserCase):
         page = self.page(touch=True)
         page.evaluate("S.screen='menu';document.getElementById('menu').style.display='block';syncFullscreenUI()")
         self.assert_js(page, "document.querySelector('.mcard').getBoundingClientRect().right<=innerWidth")
-        page.locator('#menu .mcard').first.tap()
+        self.start_from_menu(page, touch=True)                # 先选天赋，再开始
         page.wait_for_timeout(350)
         page.evaluate('running=false;render(0)')
         self.assert_js(page, "S.room==='teach1'&&GLR.renderer.getContext().getError()===0&&!document.getElementById('errbox')")

@@ -157,7 +157,7 @@ class EngineTest(BrowserCase):
                 self.skipTest('此环境的 Chromium 管理策略禁止 file://；另有断网本地资源加载测试')
             raise
         page.evaluate("PHOTO_TRIED=true;localStorage.setItem('wdfz_pro','1');Settings.q(3)")
-        page.locator('#menu .mcard').first.click()
+        self.start_from_menu(page)
         page.wait_for_function("S.screen==='play'&&S.room==='teach1'")
         page.evaluate('clearIntroTimers();running=false;S.intro=0;render(.016)')
         self.assert_js(page, "Engine.ready()&&GLR.roomMesh&&QUALITY===3&&!document.getElementById('errbox')")
@@ -181,7 +181,7 @@ class EngineTest(BrowserCase):
         page.on('requestfailed', lambda r: failed.append(r.url))
         page.goto('http://wdfz.local/index.html', wait_until='load')
         page.evaluate("PHOTO_TRIED=true;localStorage.setItem('wdfz_pro','1');Settings.q(3)")
-        page.locator('#menu .mcard').first.click()
+        self.start_from_menu(page)
         page.wait_for_function("S.screen==='play'&&S.room==='teach1'")
         page.evaluate('clearIntroTimers();running=false;S.intro=0;render(.016)')
         self.assert_js(page, "Engine.ready()&&GLR.roomMesh&&QUALITY===3&&!document.getElementById('errbox')")

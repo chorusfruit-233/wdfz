@@ -131,37 +131,27 @@ var CUT_DEF={
       GLR.worldNorm=cutPhase(k,0.5,0.95);                    /* 整座学校第一次有了颜色 */
       cutFade(k>0.92?(k-0.92)/0.08:0);
     }},
-  /* 《门》：实验台上三样材料一起亮起来，嗡声越来越高；光圈撑开；往后退了半步——然后走进去 */
+  /* 《门》：演示台上的那台装置（和实验室里常驻的是同一个模型）充能、导轨一段段闭合、门内撑开；
+     先往后退半步，再推进去，最后整圈发亮。常驻的那台演出时先藏起来，演完由 PortalDevice 按状态重新摆回 */
   portal:{dur:10,setup:function(d){
-      var p=cutCell('lab1',25,4.2), i; d.p=p;
-      d.parts=[];
-      [[0xc07a3a,-0.5],[0xcfe6ef,0],[0x7fe0a0,0.5]].forEach(function(q){
-        var m=cutAdd(new THREE.Mesh(new THREE.SphereGeometry(0.07,10,8),cutBasic(q[0])));
-        m.position.set(p.x+q[1],1.0,p.z+1.2); d.parts.push(m);
-      });
-      d.ring=cutAdd(new THREE.Mesh(new THREE.TorusGeometry(1,0.07,10,48),new THREE.MeshBasicMaterial({color:0xfff0c0,fog:false})));
-      d.disk=cutAdd(new THREE.Mesh(new THREE.CircleGeometry(0.98,48),new THREE.MeshBasicMaterial({color:0x6fd0ff,fog:false,transparent:true,opacity:0.85})));
-      d.ring.position.set(p.x,1.3,p.z); d.disk.position.set(p.x,1.3,p.z+0.01);
-      d.ring.scale.setScalar(0.01); d.disk.scale.setScalar(0.01);
+      var w=PortalDevice.where()||cutCell('lab1',25,1); d.p=w;
+      if(PortalDevice.P) PortalDevice.P.group.visible=false;
+      d.P=portalBuild(); d.P.group.position.set(w.x,0,w.z); cutAdd(d.P.group); d.P.setState('charge',0);
+      d.cy=d.P.ringY;
       try{ SFX.hum&&SFX.hum(); }catch(e){}
     },frame:function(k,d){
-      var p=d.p, charge=cutPhase(k,0,0.3), form=cutPhase(k,0.25,0.5);
-      d.parts.forEach(function(m,i){
-        var pulse=0.5+0.5*Math.sin(k*(20+i*7)+i);
-        m.scale.setScalar(1+charge*1.2*pulse);
-        m.position.y=1.0+charge*0.35*Math.sin(i+k*6)*0.3;
-      });
-      var s=form*1.1+0.02;
-      d.ring.scale.setScalar(s); d.disk.scale.setScalar(s);
-      d.ring.rotation.z=k*4;
-      d.disk.material.color.setHSL((k*1.5)%1,0.7,0.6);
-      /* 0.5–0.62 往后退半步（不想靠近），0.62 以后推进去 */
-      var hes=cutPhase(k,0.5,0.6)*(1-cutPhase(k,0.62,0.7)), push=cutPhase(k,0.62,0.98);
-      var z=cutLerp(p.z+5.5,p.z+0.2,push)+0.8*hes;
-      cutLook(p.x,1.35,z, p.x,1.3,p.z);
+      var p=d.p, P=d.P;
+      if(k<0.45) P.setState('charge',k/0.45);
+      else if(k<0.62) P.setState('open',1);
+      else P.setState('enter',cutPhase(k,0.62,1));
+      P.tick(CUT.dt||0.016);
+      /* 0.5–0.62 往后退半步（不想靠近），0.62 以后推进去，最后穿过环面 */
+      var hes=cutPhase(k,0.5,0.6)*(1-cutPhase(k,0.62,0.7)), push=cutPhase(k,0.62,0.98), orbit=(1-cutPhase(k,0,0.45))*0.9;
+      var z=cutLerp(p.z+3.4,p.z+0.05,push)+0.6*hes, x=p.x+Math.sin(orbit)*1.2;
+      cutLook(x,cutLerp(1.45,d.cy,push),z, p.x,d.cy,p.z);
       GLR.worldNorm=cutPhase(k,0.6,0.95);
       GLR.flash=k>0.88?(k-0.88)/0.12*0.9:0;
-    }}
+    },clean:function(d){ if(PortalDevice.P) PortalDevice.P.group.visible=true; }}
 };
 
 function playCut(id,done){
@@ -182,7 +172,7 @@ function playCut(id,done){
 }
 function cutTick(dt){
   if(!CUT.on) return;
-  CUT.t+=dt;
+  CUT.t+=dt; CUT.dt=dt;
   var def=CUT_DEF[CUT.id], k=clamp(CUT.t/CUT.dur,0,1);
   try{ def.frame(k,CUT.data); }catch(e){Lifecycle.report('cutscene.frame:'+CUT.id,e);cutFinish();return;}
   if(k>=1) cutFinish();

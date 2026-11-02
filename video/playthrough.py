@@ -11,6 +11,9 @@ from playwright.sync_api import sync_playwright
 from capture import ROOT, game_server, launch_browser
 from example import package_example
 
+# 新局要先选天赋：每条路线用它已发布实录里的那一项（汽车 / 白名单 / 造门）
+ROUTE_TALENT = {'car': 'watch', 'face': 'code', 'portal': 'night'}
+
 
 def probe(path):
     return json.loads(subprocess.check_output([
@@ -97,7 +100,7 @@ def main():
     result['source_dirty'] = bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip())
     result['settings'] = {'quality': args.quality, 'difficulty': 'easy', 'viewport': [960, 540],
                           'automated_inputs': True, 'reads_map_and_state': True, 'speed': 1,
-                          'fresh_browser_profile': True, 'route': args.route, 'software_renderer': not args.gpu,
+                          'fresh_browser_profile': True, 'route': args.route, 'talent': ROUTE_TALENT[args.route], 'software_renderer': not args.gpu,
                           'controls': 'touch_joystick_and_look_with_keyboard_actions'}
     for filename in ('navigation.js', 'playthrough.js', 'playthrough.py', 'game-audio.js', 'capture.py', 'example.py', 'playthrough.html'):
         result.setdefault('generator_sha256', {})[filename] = hashlib.sha256((ROOT / 'video' / filename).read_bytes()).hexdigest()
@@ -117,8 +120,11 @@ def main():
             page.goto(url, wait_until='load')
             page.wait_for_function('typeof GLR!=="undefined" && !!GLR.renderer')
             page.wait_for_timeout(2000)
-            page.locator("button[onclick=\"Game.start('easy')\"]").click()
-            page.wait_for_function("S.screen==='play'", timeout=60000)
+            # 主菜单：预知梦 → 选天赋（和这条路线已发布的实录相同）→ 开始；新局开场 CG 由 Pilot 读开场时用回车跳过
+            page.locator('#menu .mcard').first.click()
+            page.locator('#tpcards .tpcard[data-id="%s"]' % ROUTE_TALENT[args.route]).click()
+            page.locator('#tpGo').click()
+            page.wait_for_function("S.screen==='play'||(CUT.on&&CUT.id==='opening')", timeout=60000)
             page.add_script_tag(path=str(ROOT / 'video/navigation.js'))
             page.add_script_tag(path=str(ROOT / 'video/playthrough.js'))
             page.evaluate('(route)=>Pilot.start(route)', args.route)

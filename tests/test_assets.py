@@ -38,7 +38,7 @@ class AssetLoadingTest(BrowserCase):
         page.goto(self.url, wait_until='load')
         page.locator('#assetNotice').wait_for(state='visible')
         self.assert_js(page, "!ASSETS.loading[2]&&ASSETS.errors[2]&&!Assets.anyReady()")
-        page.locator('#menu .mcard').first.click()
+        self.start_from_menu(page)
         page.wait_for_function("!ASSETS.loading[2]&&ASSETS.errors[2]", timeout=10000)
         self.assert_js(page, "S.screen==='menu'&&!GLR.roomMesh&&!Assets.anyReady()")
         self.assertIn('失败', page.locator('#assetNoticeText').inner_text())
@@ -46,7 +46,7 @@ class AssetLoadingTest(BrowserCase):
         context.unroute(pattern)
         page.locator('#assetRetry').click()
         page.wait_for_function("Assets.ready(2)&&document.getElementById('assetNotice').hidden", timeout=30000)
-        page.locator('#menu .mcard').first.click()
+        self.start_from_menu(page)
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=30000)
         self.assert_js(page, "INTERIORS.teach1.foot['5,2']&&INTERIORS.teach1.foot['5,2'].length>0")
 
@@ -69,7 +69,7 @@ class AssetLoadingTest(BrowserCase):
     def test_failed_quality_load_can_retry_without_accumulating_callbacks(self):
         context, page = self.new_menu(0)
         page.goto(self.url, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;Game.start('easy');clearIntroTimers()")
+        page.evaluate("PHOTO_TRIED=true;CUT.enabled=false;Game.start('easy');clearIntroTimers()")
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=30000)
         page.evaluate("""running=false;window.collisionBefore=JSON.stringify(INTERIORS.teach1.foot);
             window.originalApply=ThreeBackend.applyQuality;window.applyCount=0;
@@ -91,7 +91,7 @@ class AssetLoadingTest(BrowserCase):
     def test_held_items_follow_loaded_quality_and_release_old_geometry(self):
         context, page = self.new_menu(0)
         page.goto(self.url, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;Game.start('easy');clearIntroTimers()")
+        page.evaluate("PHOTO_TRIED=true;CUT.enabled=false;Game.start('easy');clearIntroTimers()")
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh", timeout=30000)
         page.evaluate("""running=false;S.bag=['torch','brolly','phone'];
             USE.torch=true;USE.brollyShield=true;handsTick(.016);
@@ -111,7 +111,7 @@ class AssetLoadingTest(BrowserCase):
     def test_rapid_quality_changes_apply_a_delayed_pack_only_once(self):
         context, page = self.new_menu(0)
         page.goto(self.url, wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;Game.start('easy');clearIntroTimers()")
+        page.evaluate("PHOTO_TRIED=true;CUT.enabled=false;Game.start('easy');clearIntroTimers()")
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=30000)
         page.evaluate("""running=false;window.originalApply=ThreeBackend.applyQuality;window.applyCount=0;
             ThreeBackend.applyQuality=function(){applyCount++;return originalApply.apply(this,arguments);};0;""")

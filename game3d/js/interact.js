@@ -1,6 +1,33 @@
 /* 里世界 3D · 交互：设施、楼梯、搜东西、终端 */
 'use strict';
 
+/* ---- 格子级遮挡（来自 PR #24，略作加固）----
+   以前交互只按距离和朝向挑格子，隔着墙也能翻到隔壁教室的课桌、摸到走廊另一侧的柜子。
+   现在沿玩家→目标采样：墙 '#'、实心楼梯格、关着的门都算挡住；目标自己那一格不参与遮挡
+   （门、楼梯本身是实心格，不跳过的话会把自己挡掉）。
+   斜着站时一条线容易擦到门边的墙角，所以除了目标中心，再试目标格里朝向玩家那两侧的点，任意一条通就算看得见。 */
+function tileLOS(R,x0,y0,x1,y1,tc,tr){
+  if(!R||!R.grid) return true;
+  var dx=x1-x0, dy=y1-y0, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<0.001) return true;
+  var step=Math.max(0.5,Math.min(R.tw,R.th)*0.25), n=Math.ceil(len/step), i;
+  for(i=1;i<n;i++){
+    var t=i/n, px=x0+dx*t, py=y0+dy*t;
+    var c=Math.floor((px-R.ox)/R.tw), r=Math.floor((py-R.oy)/R.th);
+    if(r<0||c<0||r>=R.rows||c>=R.cols) return false;
+    if(c===tc&&r===tr) continue;
+    var ch=R.grid[r][c];
+    if(ch==='#'||isSolidCh(ch)) return false;
+    if(ch==='='&&!doorIsOpen(R,px,py)) return false;
+  }
+  return true;
+}
+function tileVisible(R,hit){
+  if(tileLOS(R,S.x,S.y,hit.x,hit.y,hit.c,hit.r)) return true;
+  var ox=R.tw*0.42*(S.x>hit.x?1:-1), oy=R.th*0.42*(S.y>hit.y?1:-1);
+  return tileLOS(R,S.x,S.y,hit.x+ox,hit.y,hit.c,hit.r)||tileLOS(R,S.x,S.y,hit.x,hit.y+oy,hit.c,hit.r);
+}
+
 function nearWorld(radius){
   if(S.mode==='in'){
     var R=INTERIORS[S.room];
@@ -19,7 +46,8 @@ function nearWorld(radius){
       hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d+off*10});
     }
     hits.sort(function(a,b){return a.score-b.score;});
-    return hits[0]||null;
+    for(var k=0;k<hits.length;k++) if(tileVisible(R,hits[k])) return hits[k];   /* 隔着墙 / 关着的门的不算 */
+    return null;
   }
   var best=null,bd=1e9;
   for(var i=0;i<OBJ.length;i++){
@@ -154,6 +182,7 @@ function sanActFor(R,hit){
 }
 function doSanAct(key){
   var a=SAN_ACTS[key]; if(!a) return;
+  if(DayEvents.closed(key)){ os(DayEvents.closedMsg(key),3.6); return; }   /* 占课：琴房、机房当天不开 */
   S.actCool=S.actCool||{};
   var clockNow=gameClock();
   if(S.actCool[key]&&clockNow<S.actCool[key]){
@@ -161,7 +190,8 @@ function doSanAct(key){
   }
   var _before=S.tsec;
   advanceGameTime(a.min);
-  var gain=CampusPressure.restGain(a.san);  /* 按休息结束时的压力结算，跨夜休息不能绕过衰减。 */
+  var base=key==='eat'?Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */
+  var gain=CampusPressure.restGain(base);  /* 按休息结束时的压力结算，跨夜休息不能绕过衰减。 */
   PlayerStats.changeSan(gain,'interact',{max:100});
   S.actCool[key]=gameClock()+a.cd;
   restoreStamina(25);
@@ -653,7 +683,8 @@ function useTerminal(){
   if(S.room!=='lab3'){ os('我：这台终端连不上。',2.2); return; }
   if(RT.hacked){ os('我：白名单里已经有我那一行了。光标还在闪，像在等我再写点什么。',3.2); return; }
   /* 以前只有随机到「编程社」天赋才走得通；现在网络中心货架上的 U 盘也能做到 */
-  if(S.talent!=='code'&&!hasItem('usb')){
+  var cap=Talent.capability('terminal');
+  if(!cap.ok){
     os('我：屏幕上是一串我看不懂的东西。旁边贴着一张便签：「门禁 U 盘插这里」。',4.0);
     addClue('usb');
     return;
@@ -661,7 +692,7 @@ function useTerminal(){
   RT.hacked=true;
   addClue('comp');
   Investigation.record('whitelistWritten','网络中心已经写入我的学号。后台记录里，同一个名字对应着不同时期的照片。下一步要到行政楼三楼同步数据。','验证','实验楼三楼 · 网络中心');
-  if(S.talent==='code') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
+  if(cap.via==='talent') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
   else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,OS_KEEP);
   os2later('我：还得去行政楼三楼，把数据同步过去。',5200);
 }

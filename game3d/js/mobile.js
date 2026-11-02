@@ -102,6 +102,7 @@ function updateTouchUI(){
     var wasOn=el.style.display==='block';el.style.display=want;
     if(wasOn&&!on)resetInputState();
     if(on)TouchLayout.apply();
+    if(typeof DEV!=='undefined'&&DEV.on){ try{ Dev.fitPanel(); }catch(e){} }   /* 触屏控件出现 / 收起：横屏的调试面板重新让开它们 */
   }
   updateInputUI();syncFullscreenUI();
 }

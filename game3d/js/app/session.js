@@ -9,6 +9,7 @@ function clearIntroTimers(){
   if(el){ el.style.opacity='0'; Lifecycle.scope('intro').timeout(function(){ if(!DLG.open) el.style.display='none'; },240); }
   DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
 }
+var FRESH_TALENT=null;           /* 新局要用的天赋：选择界面确认后才填，freshState 用完即清 */
 function freshState(diff){
   Lifecycle.boundary('new-session');
   ExplorationMap.clear();
@@ -17,12 +18,11 @@ function freshState(diff){
   buildRoomBounds();
   S.screen='play';
   S.diff=diff||'easy';
-  var t=TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)];
-  S.talent=t;
+  Talent.begin(FRESH_TALENT&&FRESH_TALENT.id,FRESH_TALENT&&FRESH_TALENT.origin); FRESH_TALENT=null;   /* 天赋：开局前选好的（talents.js） */
   S.tsec=700; S.day=1;
   S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.pillT=0; S.tt=0; S.ttTier=0;
   Engine.resetSan(S.san);
-  S.actCool={}; S.immuneUsed=false;
+  S.actCool={};                                   /* 免疫用没用过记在 talentState（S.immuneUsed 只是旧字段的别名） */
   S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
   try{ patReset(); PAT.next=45; }catch(e){}
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
@@ -58,9 +58,14 @@ function waitForGameAssets(start){
   return true;
 }
 var Game={
-  start:function(diff){
-    if(waitForGameAssets(function(){Game.start(diff);}))return;
+  /* 选完难度先选天赋（《天赋系统重构》5.1）：只有点「开始」才初始化新局、覆盖旧存档 */
+  pickTalent:function(diff,mode){ TalentPick.open(diff,mode||'normal'); },
+  start:function(diff,opt){
+    if(waitForGameAssets(function(){Game.start(diff,opt);}))return;
     try{
+    FRESH_TALENT=opt&&opt.talent?{id:opt.talent,origin:opt.origin||'selected'}:null;
+    if(opt&&opt.mode==='speedrun'){ if(!Speedrun.active()) Speedrun.arm(diff); Dev.clearModifiers(); }   /* 普通局留下的快跑 / 无敌 / 关读条不带进速通 */
+    else Speedrun.disarm();                                    /* 普通新局：回到普通存档槽 */
     freshState(diff);
     Playtest.event('开始新局',diff);
     var R1=INTERIORS['teach1'];
@@ -69,16 +74,8 @@ var Game={
     enterRoom('teach1',{x:S.x, y:S.y, ang:-PI/2, seated:true});
     syncCamera(0);
     clearIntroTimers();
-    var firstTime=false;
-    try{ firstTime=!proSeen(); }catch(e){}
-    if(firstTime){
-      Lifecycle.scope('intro').timeout(function(){ try{ proShow(); }catch(e){} },320);
-    }else{
-      try{ VisualState.worldNorm=0; }catch(e){}      /* 老玩家直接进里世界，没有"正常世界"那一段 */
-      Lifecycle.scope('intro').timeout(function(){ try{ os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',4.0); }catch(e){} },2400);
-      introT1=Lifecycle.scope('intro').timeout(function(){ os('我：兜里有一张学生证。照片上的人我不认识，可是班号、学号，都是我的。',4.8); },6800);
-      os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
-    }
+    /* 开场 CG（opening.js）：第一次完整版、看过的短版，随时可跳过；演完或跳过都在同一个座位、同一个视角交还控制 */
+    try{ Opening.play(); }catch(e){ try{ proShow(); }catch(_e){} }
     SFX.resume();
     /* 开局先把死亡演出、结局过场要用的着色器编好（第一次进场景、前情提要的时候顿一下，不在死的那一刻顿） */
     Lifecycle.scope('session').timeout(function(){ try{ DeathCG.warm(); }catch(e){} },700);
@@ -87,6 +84,7 @@ var Game={
   },
   continue_:function(){
     if(waitForGameAssets(function(){Game.continue_();}))return;
+    Speedrun.disarm();                                         /* 速通不能读档接着跑；「继续上次」只读普通存档 */
     var d=loadGame();
     if(!d){ toast('没有存档'); return; }
     clearIntroTimers();
@@ -119,7 +117,7 @@ var Game={
     if(S.screen!=='play'||S.dead||PAUSE.on)return;
     PAUSE.on=true;
     var pt=document.getElementById('ptalent');
-    if(pt&&TALENTS[S.talent])pt.textContent='天赋 · '+TALENTS[S.talent].n+'　'+TALENTS[S.talent].d;
+    if(pt)pt.textContent=Talent.pauseText();                     /* 任何状态都重新生成，不留上一次的文字 */
     var pk=document.getElementById('pkeys');
     if(pk) pk.innerHTML=IS_TOUCH?
       '<span>左下摇杆</span>移动（推到底就是跑）<span>右侧滑动</span>环视<span>交互键</span>上面写着能做的事<span>手册</span>背包 · 思索 · 笔记 · 地图':
@@ -179,3 +177,11 @@ Lifecycle.register('spiral',function(){spiralReset();});
 Lifecycle.register('phone',function(){PHONE.stop();});
 Lifecycle.register('computer',function(){PCGAME.cancel();});
 Lifecycle.register('intro',function(){clearIntroTimers();});
+Lifecycle.register('opening',function(){Opening.cancel();});                 /* 新局开场 CG：没演完的直接收掉 */
+Lifecycle.register('day-decor',function(){DayDecor.clear();});               /* 校庆横幅 */
+Lifecycle.register('speedrun',function(reason){                            /* 速通中途回菜单：记放弃，丢掉速通的存档槽 */
+  if(reason!=='menu')return;
+  Speedrun.fail('abandoned','quit');
+  if(RUN_MODE==='speedrun')clearSave();
+  RUN_MODE='normal';Speedrun.paintHud(true);
+});

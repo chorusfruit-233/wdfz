@@ -8,7 +8,8 @@ var Playtest={data:null,started:0,last:0,mode:'menu',frameBins:null,
     this.data={version:1,recording:true,startedAt:new Date().toISOString(),userAgent:navigator.userAgent,
       environment:'由执行者补录真实设备；浏览器信息不证明是真机',settings:JSON.parse(JSON.stringify(SET)),
       viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},
-      seconds:{play:0,menu:0,background:0,death:0},simulationSeconds:0,events:[],discardedEvents:0};
+      seconds:{play:0,menu:0,background:0,death:0},simulationSeconds:0,events:[],discardedEvents:0,
+      talent:{id:Talent.id(),rulesVersion:Talent.rules(),origin:Talent.state().origin}};
     this.event('开始记录');this.paint();
   },
   sample:function(){

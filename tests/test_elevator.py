@@ -52,6 +52,9 @@ class ElevatorTest(BrowserCase):
           Math.random=()=>0;Elevator.board('lab',1);Elevator.controls();""")
         page.locator('#choices button').filter(has_text='67 层').click()
         self.assert_js(page, "S.room==='lift_dream'&&RT.elevatorRide.phase==='dream'&&S.san===75")
+        self.assert_js(page, "INTERIORS.lift_dream.name==='白色空间'&&ROOM_THEMES.dream.wall===0xf4f5f0")
+        self.assertIn('远处有一道淡蓝色的门', page.locator('#sub').inner_text())
+        self.assert_js(page, "typeof dreamFigTick==='undefined'&&!('uDream' in GLR.postMat.uniforms)")
         result = page.evaluate("""()=>{
           let before=S.tsec,x=S.x;KEY.w=true;update(1);KEY.w=false;
           let r={before,after:S.tsec,moved:S.x>x,canSave:saveGame()};

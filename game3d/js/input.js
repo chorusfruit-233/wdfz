@@ -193,6 +193,11 @@ function initInput(){
       if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
       cutSkip(); return;
     }
+    if(S.screen==='replay'&&typeof ArchiveReplay!=='undefined'&&ArchiveReplay.on){
+      /* 死亡档案回放：按下就结束，补发的 click 不能点到随后出现的档案卡片上 */
+      if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
+      ArchiveReplay.skip(); return;
+    }
     /* 死亡演出中：按下跳到结果（死亡界面或惊醒）；补发的 click 同样不能点到随后出现的按钮 */
     if(owner==='death'){
       if(deathSkip()&&(e.pointerType==='touch'||e.pointerType==='pen'))INPUT.touchHandled=true;

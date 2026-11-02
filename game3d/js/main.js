@@ -33,6 +33,7 @@ function update(dt){
   updateIntro(dt);
   PHONE.checkInterrupt();
   LESSON.checkInterrupt();
+  Speedrun.tick();                       /* 速通：第一次能操作时起表（自带判定：在玩、没死、能操作、不在过场） */
   var policy=gameInputContext();
   if(!GamePolicy.presentationAllowed(policy)) return;
   VisualState.time+=dt;
@@ -62,6 +63,8 @@ function update(dt){
   PHONE.checkInterrupt();                         /* 世界更新中可能死亡、开始异象或打开选择 */
   try{ monoTick(dt); }catch(e){}
   try{ Dread.tick(dt); }catch(e){}
+  try{ Talent.tickWatch(); }catch(e){}            /* 守时（规则 2）：开饭、饭点结束、熄灯前看一眼表 */
+  try{ DayEvents.tick(); }catch(e){}              /* 特殊校园日：当天定一次、早上广播、校庆横幅 */
   spotTick();
   CampusPressure.tick();
   anNotifyWarning(anwVisible());
@@ -71,7 +74,10 @@ function render(dt){
   try{ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
   if(CarChase.active()&&S.screen==='play')CarChase.draw();
+  try{ PortalDevice.tick(dt); }catch(e){}          /* 物理实验室演示台上的传送门：按剧情状态摆、每帧动 */
+  try{ LiftDoors.tick(dt); }catch(e){}             /* 电梯层门：电梯到这一层时滑开 */
   Engine.draw(dt); updateHUD(); drawMini(dt);
+  try{ Speedrun.paintHud(); }catch(e){}
 }
 function updateIntro(dt){
   if(!(S.intro>0)) return;
@@ -149,7 +155,8 @@ function updateHUD(){
   if(cr){ cr.style.display=playerInputAllowed()?'block':'none'; }
   try{ anwTick(dtG); }catch(e){}
   try{ updateMarker(dtG); }catch(e){}
-  hudEl('place').textContent=currentPlaceName();
+  var _tag=DayEvents.tag(), _pl=currentPlaceName()+(_tag?' · '+_tag:'');
+  if(hudEl('place').textContent!==_pl) hudEl('place').textContent=_pl;
   var p=periodAt(S.tsec), pe=hudEl('period'), leave=onLeave(), examing=S.exam&&p[3]==='教室';
   var outing=SchoolDay.excused();
   pe.textContent=leave?('请假中 · 还剩 '+leaveLeft()+' 分钟'):(examing?('考试 · '+p[2]):

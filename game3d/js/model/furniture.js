@@ -16,11 +16,8 @@ FURN.J=function(c,x,y,cx,cz){
   if(isDream){
     K.box('plain',cx,1.35,cz,0.14,2.7,0.94,0xe9f7ff,1);
     K.box('plain',cx-0.09,1.4,cz,0.03,2.2,0.70,0x8ec6d1,1);
-  }else{
-    K.box('plain',cx,1.3,cz,0.94,2.6,0.16,0x5c676b,1);
-    K.box('plain',cx,1.15,cz-0.10,0.72,2.1,0.04,0x9ba4a4,1);
-    K.box('plain',cx+0.38,1.15,cz-0.14,0.09,0.35,0.04,0x75a899,1);
-  }
+  }else if(c.R.host==='lift'){ liftCabin(c,x,y,cx,cz); return; }   /* 轿厢：model/lift.js */
+  else { liftLanding(c,x,y,cx,cz); return; }                         /* 走廊上的电梯门：model/lift.js */
   c.solid(cx,cz,c.tw,c.th);
 };
 FURN.j=function(c,x,y,cx,cz){

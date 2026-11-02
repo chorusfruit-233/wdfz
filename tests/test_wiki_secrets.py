@@ -7,7 +7,8 @@ import unittest
 
 WIKI = Path(__file__).resolve().parents[1] / 'wiki'
 # 隐藏路线的名字、内部 ID、时刻和专属线索
-HIDDEN = ['先辈', 'beast', '旧校服', '第三个隔间', '秒针', '慢速窗口']
+HIDDEN = ['先辈', 'beast', '旧校服', '第三个隔间', '秒针', '慢速窗口',
+          '可乐', 'cola', '易拉罐']   # 清华水杯之后的夜间连锁异象：按内部潜在彩蛋处理
 TIME = re.compile(r'11\s*[:：点]\s*45')
 
 

@@ -169,19 +169,4 @@ var ITEM_COL={
 function itemGlyph(id){ return ITEM_GLYPH[id]||'▫'; }
 function itemColor(id){ return ITEM_COL[id]||'#9fb8ab'; }
 
-var TALENTS={
-  code:{n:'编程社',d:'机房那套东西一眼就懂。'},
-  drive:{n:'车感好',d:'我爸教过我怎么开车。'},
-  map:{n:'过目不忘',d:'走过的路不会忘。'},
-  stomach:{n:'铁胃',d:'胃比一般人结实。'},
-  night:{n:'夜视',d:'暗的地方也看得清。'},
-  hand:{n:'手稳',d:'扔东西很少失手。'},
-  watch:{n:'秒表',d:'手腕上有块表，可以查看分钟。'},
-  thin:{n:'瘦小',d:'比同龄人瘦小一圈。'},
-  cold:{n:'血冷',d:'不容易慌。'},
-  known:{n:'熟人',d:'保安叫得出我的名字。'},
-  immune:{n:'天生免疫',d:'总有一次要命的事会绕开我。'},
-  crowd:{n:'藏在人群里',d:'人多的时候不显眼。'}
-};
-/* 已有存档仍可读取旧天赋；新局只随机有实际效果的天赋。 */
-var TAL_KEYS=['code','drive','stomach','night','watch','immune'];
+/* 天赋的名称、效果和可选池见 game3d/js/talents.js（唯一定义源） */

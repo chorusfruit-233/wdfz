@@ -308,6 +308,8 @@ function ceilingLight(K,x,z,lw,ld,rot,state){
 function roomDecor(c,isRoof){
   var K=c.K, R=c.R, W=c.W, H=c.H, tw=c.tw, th=c.th, halfW=c.halfW, halfH=c.halfH, CX=c.CX, CZ=c.CZ, i, x;
   var teachFl=(R.host==='teach'&&R.floor>=1&&R.floor<=5);
+  if(R.host==='lift'){ liftDecor(c); return; }                     /* 轿厢：model/lift.js */
+  if(R.host==='teach'||R.host==='lab') liftDecor(c);               /* 电梯门后井道里的那一节轿厢 */
   if(R.host==='tunnel'){
     for(i=2;i<H-2;i+=3){
       K.box('plain',CX(3+(i%3)),.014,CZ(i),1.3,.02,1.8,0x0c1510,1);
@@ -798,7 +800,7 @@ function roomSigns(c,G,isWall){
       var gw=1, gd=1; while(G(y,x+gw)==='S') gw++; while(G(y+gd,x)==='S') gd++;
       plaque(x,y,gw,gd,'楼梯','STAIRS',true);
     }
-    if(ch==='J') plaque(x,y,1,1,'电梯','LIFT',false);
+    if(ch==='J'&&R.host!=='lift') plaque(x,y,1,1,'电梯','LIFT',false);   /* 轿厢里不挂 */
     if(ch==='L'){                                                     /* FURN.L 吊的那块牌子：板面 0.70×0.20，前后两面 */
       var ly=WALLH-0.25, tex=corridorTex(), mat=signMat(tex);
       for(var side=-1;side<=1;side+=2){

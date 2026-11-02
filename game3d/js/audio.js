@@ -517,6 +517,26 @@ var SFX=(function(){
       noise(0.5,0.09*k,240,0,'lowpass',1,0.4);
       for(var i=0;i<4;i++) tone(rnd(1400,2400),0.05,'triangle',0.02*k,0,0.25+i*rnd(0.12,0.2),0.3);   /* 杯盖滚开 */
     },
+    /* 天降可乐：很高的地方先「哐啷」磕一下、再咕噜噜滚，从一侧传来（pan）；
+       往下掉是短促的翻滚声；落地「嘭」的一声闷响，跟着很长的「嘶——」 */
+    colaRattle:function(pan,dur){
+      var i, d=dur||1.6;
+      noiseP(0.09,0.05,3200,0,'bandpass',2.2,pan,0.5);
+      tone(rnd(1700,2100),0.12,'triangle',0.016,0,0.01,0.5);
+      for(i=0;i<9;i++) noiseP(0.035,0.022,rnd(2400,3600),0.18+i*(d-0.45)/9,'bandpass',3,pan*(1-i/12),0.45);
+      tone(rnd(1300,1600),0.09,'triangle',0.012,0,d*0.55,0.5);
+    },
+    colaFall:function(dur){
+      for(var i=0;i<Math.floor(dur*9);i++) noise(0.03,0.012+i*0.0015,rnd(1800,2600),i/9,'bandpass',2.5,0.2);
+      noise(dur,0.022,700,0,'bandpass',1.0,0.1,dur*0.85);
+    },
+    colaHit:function(missM){
+      var k=clamp(1-missM/14,0.15,1);
+      noise(0.16,0.22*k,520,0,'lowpass',1.2,0.3);                      /* 铝罐瘪掉的闷响 */
+      noise(0.08,0.12*k,2600,0.01,'bandpass',1.4,0.3);
+      noise(2.4,0.05*k,5200,0.08,'highpass',0.6,0.2,0.05);             /* 泡沫「嘶——」 */
+      for(var i=0;i<3;i++) tone(rnd(900,1300),0.06,'triangle',0.012*k,0,0.3+i*rnd(0.2,0.3),0.3);   /* 罐子滚开 */
+    },
     /* 雷：近的先一声炸裂再滚，远的只有闷闷的滚 */
     thunder:function(delay,str,muffled){
       str=clamp(str===undefined?1:str,0.2,1); var lp=muffled?0.55:1;
@@ -568,7 +588,7 @@ var SFX=(function(){
       else if(id==='necker'){ for(i=0;i<10;i++) noise(0.1,0.035,350,i*0.6,'lowpass',1,0.2); }
       else if(id==='shadow'){ noise(1.8,0.04,500,0,'lowpass',1,0.4,1.6); }
       else if(id==='twin'){ for(i=0;i<6;i++) noise(0.08,0.04,900,i*0.5+0.25,'bandpass',1.2,0.5); }
-      else if(id==='cup'){ for(i=0;i<7;i++) tone(rnd(2600,3400),0.06,'triangle',0.012,0,0.1+i*0.13+Math.random()*0.05,0.4); }   /* 窗台上叮叮当当 */
+      else if(id==='cup'){ var cw=(typeof cupWobble==='function')?cupWobble():0.9; for(i=0;i<7;i++) tone(rnd(2600,3400),0.06,'triangle',0.012,0,0.04+i*(cw-0.08)/7+Math.random()*0.03,0.4); }   /* 窗台上叮叮当当：响在晃的那一段里，掉下来之前停 */
       else if(id==='moth'){ for(i=0;i<30;i++) noise(0.05,0.02,rnd(1500,2600),i*0.07,'bandpass',3); }
     },
     anomalyEnd:function(id){ tone(330,1.6,'sine',0.01,320,0,0.8); }

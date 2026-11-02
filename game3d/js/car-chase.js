@@ -147,7 +147,7 @@ var CarChase={
       d.nextFork++;autoSave();
     }
     if(d.distance>=CAR_CHASE_CONFIG.distance&&d.nextFork===CAR_CHASE_CONFIG.forks.length){
-      CarChase.clearVisual();RT.carChase=null;triggerEnding('car',true);return;
+      CarChase.clearVisual();RT.carChase=null;Speedrun.proof('car');triggerEnding('car',true);return;
     }
   }
 };

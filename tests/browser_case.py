@@ -48,6 +48,15 @@ class BrowserCase(unittest.TestCase):
             context.close()
         self.assertEqual(self.errors, [], 'Unexpected page errors')
 
+    @staticmethod
+    def start_from_menu(page, index=0, touch=False):
+        """主菜单点难度 → 选第一项天赋 → 开始（新局要先选天赋）。"""
+        act = (lambda loc: loc.tap()) if touch else (lambda loc: loc.click())
+        page.evaluate("if(typeof CUT!=='undefined')CUT.enabled=false")   # 开场 CG 另有 test_opening 覆盖，这里直接交接
+        act(page.locator('#menu .mcard').nth(index))
+        act(page.locator('#tpcards .tpcard').first)
+        act(page.locator('#tpGo'))
+
     def page(self, touch=False, hybrid=False):
         context = self.browser.new_context(
             viewport={'width': 390, 'height': 844} if touch else {'width': 1000, 'height': 700},
@@ -74,7 +83,10 @@ class BrowserCase(unittest.TestCase):
             S.x=1580;S.y=1800;S.ang=0;S.pitch=0;S.seated=false;S.intro=0;
             PRO.on=false;PAUSE.on=false;syncCamera(0);updateHUD();
             CUT.enabled=false;SEARCH.on=false;
+            if(typeof DAY_EVENT_CFG!=='undefined'){window.__dayP=DAY_EVENT_CFG.p;DAY_EVENT_CFG.p={anniversary:0,occupied:0};}
         """)
+        # 校庆 / 占课按本局随机种子抽：别的用例不能被随机抽到的特殊日改了 SAN 或课堂回报，
+        # 所以这里关掉；test_special_days 用 window.__dayP 恢复原来的概率。
         return page
 
     def assert_js(self, page, expression, message=None):

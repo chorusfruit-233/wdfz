@@ -8,6 +8,8 @@
 
 Wiki 收录操作、课表、地点、道具、异象和公开结局路线的攻略；异象详解与结局路线默认折叠，方便避开剧透。游戏主菜单也可以打开 Wiki。
 
+主菜单除了「预知梦」「梦魇」两种难度（开局前选一项天赋，新局先播一段可跳过的 3D 开场），还有「速通模式」（从第一次能操作计时到真结局，本机记录个人最佳，不占普通存档）和「死亡档案室」（每种死法第一次发生时记一份，可重看死亡演出）。
+
 [游戏设计与机制总览](https://chorusfruit-233.github.io/wdfz/docs/game-design-overview.html) 是面向人类阅读的图解入口：13 个章节、16 幅编号图解，先讲机制用途与相互关系，再展开规则、数值和例外。包含章节搜索、独立剧透折叠、异象筛选和两项规则演示；[单文件 HTML](docs/game-design-overview.html) 可直接在浏览器打开。完整规则与评审材料仍以产品对齐文档和对应代码为准。
 
 本地运行时，在仓库目录执行 `python -m http.server 8000`，然后访问 `http://localhost:8000/`，也可以直接双击打开 `index.html`。游戏所需的脚本和素材均在仓库内：模型和贴图打包在 `game3d/assets/`，开局按画质读一档。模型在 Blender 里用脚本建（`tools/blender/`，改了以后运行 `python tools/blender/build.py` 重新打包，需要 `pip install bpy==5.2.3` 和 Python 3.13），贴图由 `tools/textures/build_textures.py` 离线生成。

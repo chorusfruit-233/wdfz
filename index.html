@@ -20,7 +20,7 @@
 <div id="lookhint" hidden>点击画面恢复鼠标环视 · 按住拖动也可转向</div>
 <div id="qualityHint" role="status" hidden><span>画面持续卡顿，建议降低画质。</span><button type="button" onclick="Settings.q(QUALITY-1)">降低一档</button><button type="button" onclick="QualityWatch.dismiss()" aria-label="关闭画质建议">×</button></div>
 <div id="scan"></div><div id="vig"></div><div id="flash"></div>
-<div id="fade"></div><div id="cutfade"></div><div id="cutbars"><i></i><i></i></div>
+<div id="fade"></div><div id="cutfade"></div><div id="cutbars"><i></i><i></i></div><div id="opcap" aria-live="polite"></div>
 <div id="hud">
   <div class="tl hud-card" id="status">
     <div class="hc-top"><div id="clock">11:40</div><div id="secclock" hidden></div></div>
@@ -131,7 +131,7 @@
   <button onclick="Game.resume()">返回游戏</button></div>
 </div></div>
 <div id="die"><div class="t">你 死 了 。</div><div class="m" id="diem"></div>
-  <div id="dieepi"></div><p id="diecause"></p><button onclick="Game.quit()">回到主菜单</button></div>
+  <div id="dieepi"></div><p id="diecause"></p><p id="diesr" hidden></p><button onclick="Game.quit()">回到主菜单</button></div>
 <div id="menu">
   <div class="mtop"><span>武大附中</span><i>/</i><span>校园异闻档案</span><b>单人探索 · 3D</b></div>
   <div class="mleft">
@@ -140,15 +140,19 @@
     <div class="mschool">武汉大学附属中学</div>
     <div class="mhook">下课铃响了。<br>没有人站起来。<br>他们都在等你先走。</div>
     <div class="mcards">
-      <button class="mcard" onclick="Game.start('easy')">
+      <button class="mcard" onclick="Game.pickTalent('easy')">
         <em>01</em><span><b>预知梦</b><i>第一天死去，你会在座位上惊醒（三次）</i></span><u>→</u>
       </button>
-      <button class="mcard" onclick="Game.start('hard')">
+      <button class="mcard" onclick="Game.pickTalent('hard')">
         <em>02</em><span><b>梦魇</b><i>没有第二次。每个选择都有代价</i></span><u>→</u>
       </button>
       <button class="mcard" id="btncont" onclick="Game.continue_()" style="display:none">
         <em>03</em><span><b>继续上次</b><i>读取最近的存档</i></span><u>→</u>
       </button>
+    </div>
+    <div class="mextra">
+      <button type="button" class="mside" id="btnspeed" onclick="Speedrun.open()"><b>速通模式</b><i>计时到通关，记录个人最佳</i></button>
+      <button type="button" class="mside" id="btnarchive" onclick="DeathArchive.open()"><b>死亡档案室</b><i>每一种死法，记一份档案</i></button>
     </div>
     <div class="mends" id="mends" style="display:none"></div>
     <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
@@ -163,6 +167,28 @@
   <div class="mkeys">WASD 移动 · 鼠标环视 · Shift 奔跑 · E 交互<br>Tab 背包 · F 手电 · H 思索 · J 笔记 · M 地图 · Esc 暂停 · Alt 放出鼠标</div>
   <div class="mfoot"><span>请记住你回去的路。它会变。</span><i>WUDFZ · FIELD RECORD 001</i></div>
 </div>
+<div id="srpick" class="mdialog" role="dialog" aria-modal="true" aria-labelledby="srTitle" hidden><div class="mdbox">
+  <div class="tphead"><b id="srTitle">速通模式</b><i>本机记录 · 规则 1</i></div>
+  <p class="tplead">从第一次能动起计时，到真结局确认的那一刻停表；暂停、过场和切后台都照常计时。不能读档接着跑，打开调试面板的成绩无效。速通有单独的存档，不影响「继续上次」。</p>
+  <div class="srdiff"><button type="button" data-diff="easy" onclick="Speedrun.choose('easy')"><b>预知梦</b><i>第一天死去会惊醒（三次），计时不停</i></button><button type="button" data-diff="hard" onclick="Speedrun.choose('hard')"><b>梦魇</b><i>没有第二次</i></button></div>
+  <div id="srrecords"></div>
+  <div class="tpfoot"><button type="button" id="srBack" onclick="Speedrun.close()">返回</button></div>
+</div></div>
+<div id="archive" class="mdialog" role="dialog" aria-modal="true" aria-labelledby="arTitle" hidden><div class="mdbox wide">
+  <div class="tphead"><b id="arTitle">死亡档案室</b><i id="arCount"></i></div>
+  <p class="tplead">每一种死法第一次发生时记一份。被药丸、天赋挡下的不算，调试面板里的也不算。记录只存在这台设备的浏览器里，清除网站数据会一起清掉。</p>
+  <div class="arcards" id="arcards"></div>
+  <p class="arnote" id="arNote"></p>
+  <div class="tpfoot"><button type="button" id="arBack" onclick="DeathArchive.close()">返回</button></div>
+</div></div>
+<div id="arReplay" hidden><i>死亡档案 · 回放</i><b></b><small>点击、空格或 Esc 结束</small></div>
+<div id="srclock" hidden><i>速通</i><b>00:00:00.00</b></div>
+<div id="tpick" role="dialog" aria-modal="true" aria-labelledby="tpickTitle" hidden><div class="tpbox">
+  <div class="tphead"><b id="tpickTitle">选一项天赋</b><i id="tpickDiff"></i></div>
+  <p class="tplead">开局前选好，这一局不能再换。不想选也可以交给运气。</p>
+  <div class="tpcards" id="tpcards" role="radiogroup" aria-label="天赋"></div>
+  <div class="tpfoot"><button type="button" id="tpBack" onclick="TalentPick.close()">返回</button><button type="button" id="tpRandom" onclick="TalentPick.random()">随机一项</button><button type="button" class="primary" id="tpGo" onclick="TalentPick.confirm()" disabled>选好了，开始</button></div>
+</div></div>
 <div id="pcgame"><div class="pch">机房 · 贪吃蛇</div><canvas id="pccv" width="320" height="320"></canvas>
   <div class="pcf" id="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" id="pcexit" onclick="PCGAME.stop()">退出电脑</button>
   <button type="button" class="pcx" onclick="PCGAME.stop()" aria-label="退出电脑">✕ 退出</button>
@@ -197,12 +223,14 @@
         <div><span>违规</span><strong id="devviolValue">—</strong></div>
         <div><span>同化</span><strong id="devttValue">—</strong></div>
       </div>
+      <div class="devreads">
       <div class="devread"><span>当前位置</span><b id="devpos">—</b></div>
       <div class="devread"><span>准星探测</span><b id="devlook">—</b></div>
       <div class="devread"><span>当前异象</span><b id="devactive">—</b></div>
       <div class="devread"><span>巡察者</span><b id="devpatrol">—</b></div>
       <div class="devread"><span>学生会</span><b id="devinspection">—</b></div>
       <div class="devread"><span>移动流程</span><b id="devtravel">—</b></div>
+      </div>
       <div class="devsection"><div><h3>设定数值</h3><p>范围 0–100；归零或满值可能触发死亡</p></div></div>
       <div class="devrow"><select id="devstatkey" aria-label="选择要设定的数值"><option value="san">SAN</option><option value="stam">体力</option><option value="viol">违规</option><option value="tt">同化</option></select><input id="devstatvalue" type="number" min="0" max="100" step="any" value="50" aria-label="数值"><button type="button" onclick="Dev.setStat()">设定</button></div>
       <div class="devbuttons"><button type="button" onclick="Dev.san()">恢复 SAN / 体力</button><button type="button" onclick="Dev.revive()">复活角色</button></div>
@@ -262,9 +290,11 @@
       <div class="devsection"><div><h3>氛围</h3><p>五分钟体验切片：安静、先听后见、危险操作、兑现或落空、余韵</p></div></div>
       <div class="devbuttons"><button type="button" onclick="DreadSlice.start();Dev.close()">开始五分钟切片</button><button type="button" onclick="Dread.falseThreat(Dread.pickAmbient(),1)">来一声假威胁</button></div>
       <div class="devsection"><div><h3>运行诊断</h3><p>查看当前状态及最近操作；生成的报告只用于排查，不是游戏存档。</p></div></div>
+      <div class="devreads">
       <div class="devread"><span>输入</span><b id="devinput">—</b></div>
       <div class="devread"><span>画质 / 窗口</span><b id="devquality">—</b></div>
       <div class="devread"><span>渲染资源</span><b id="devrender">—</b></div>
+      </div>
       <div class="devbuttons"><button type="button" id="devreportGo" onclick="Dev.makeReport()">生成诊断文本</button><button type="button" id="devreportDownload" onclick="Dev.downloadReport()">下载诊断 JSON</button></div>
       <textarea id="devreport" rows="6" aria-label="诊断报告，可选中复制" readonly hidden></textarea>
       <div class="devsection"><div><h3>最近操作</h3><p>本次页面会话记录最近 20 条，面板展示最后 5 条；随诊断报告导出。</p></div></div>
@@ -306,22 +336,27 @@
 <script src="game3d/js/model/room.js"></script>
 <script src="game3d/js/model/building.js"></script>
 <script src="game3d/js/model/outdoor.js"></script>
+<script src="game3d/js/model/portal.js"></script>
 <script src="game3d/js/world.js"></script>
 <script src="game3d/js/collision.js"></script>
 <script src="game3d/js/spiral.js"></script>
 <script src="game3d/js/model/spiral.js"></script>
 <script src="game3d/js/patrol.js"></script>
 <script src="game3d/js/portal.js"></script>
+<script src="game3d/js/model/elevator-prefab.js"></script>
+<script src="game3d/js/model/lift.js"></script>
 <script src="game3d/js/elevator.js"></script>
 <script src="game3d/js/car-chase.js"></script>
 <script src="game3d/js/hands.js"></script>
 <script src="game3d/js/cutscene.js"></script>
+<script src="game3d/js/opening.js"></script>
 <script src="game3d/js/fx/gaze.js"></script>
 <script src="game3d/js/fx/death-timeline.js"></script>
 <script src="game3d/js/fx/anomaly-fx.js"></script>
 <script src="game3d/js/fx/death-cg.js"></script>
 <script src="game3d/js/fx/weather.js"></script>
 <script src="game3d/js/fx/cup.js"></script>
+<script src="game3d/js/fx/cola.js"></script>
 <script src="game3d/js/fx/smile.js"></script>
 <script src="game3d/js/fx/traces.js"></script>
 <script src="game3d/js/fx/classroom.js"></script>
@@ -329,6 +364,10 @@
 <script src="game3d/js/lighting.js"></script>
 <script src="game3d/js/shade.js"></script>
 <script src="game3d/js/state.js"></script>
+<script src="game3d/js/talents.js"></script>
+<script src="game3d/js/day-events.js"></script>
+<script src="game3d/js/speedrun.js"></script>
+<script src="game3d/js/death-archive.js"></script>
 <script src="game3d/js/input.js"></script>
 <script src="game3d/js/ui.js"></script>
 <script src="game3d/js/systems.js"></script>

@@ -257,6 +257,13 @@ UI.renderNote=function(){
     if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0]))other.push(CLUE_NOTE[ci][1]);
   }
   if(other.length){sec('其他地点与线索');other.forEach(function(t){li(t);});}
+  /* 本局能力：说明、状态和最近生效的几次（《天赋系统重构》5.3） */
+  if(typeof Talent!=='undefined'){
+    var tv=Talent.view();
+    sec('本局能力');
+    h+='<div class="nl talent-note"><b>'+tv.name+(tv.status?'<small>'+tv.status+'</small>':'')+'</b><span>'+tv.does+'</span>'+(tv.limit?'<em>'+tv.limit+'</em>':'')+'</div>';
+    Talent.state().recent.slice().reverse().forEach(function(r){ li('第 '+r.day+' 天 · '+r.text,'dim'); });
+  }
   var dh=(typeof deathHints==='function')?deathHints():[];
   if(dh.length){ sec('梦里记得的事'); for(var di=0;di<dh.length;di++) li(dh[di]); }
   if(!hasItem('notebook')||!hasItem('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';

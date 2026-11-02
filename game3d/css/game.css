@@ -214,6 +214,28 @@ body.dev-open #toast{z-index:130}
 #dev.dev-compact .devfooter{padding:5px 10px;font-size:10px}
 #dev.dev-compact .devstats strong{font-size:12px;letter-spacing:0}
 #dev.dev-compact .devkbd{display:none}
+/* 手机横屏：面板占满高度、夹在摇杆和交互键之间（宽度由 dev.js 按两个控件的位置算）；
+   页签改成左边一列，运行状态和暂停键并进标题行，正文区比原来多两三倍 */
+#dev.dev-land{grid-template-columns:66px minmax(0,1fr) auto auto auto auto;grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"drag drag run collapse reset close" "tabs body body body body body" "tabs foot foot foot foot foot"}
+#dev.dev-land .devhead{display:contents}
+#dev.dev-land .devdrag{grid-area:drag;min-width:0;min-height:44px;margin:4px 0 4px 4px;padding:0 4px}
+#dev.dev-land .devtitle{overflow:hidden}#dev.dev-land h2{overflow:hidden;text-overflow:ellipsis}
+#dev.dev-land .devrun{grid-area:run;min-width:0;padding:4px 4px 4px 8px;gap:6px}
+#dev.dev-land .devrun span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dev.dev-land .devrun button{flex:none;min-height:44px;padding:4px 8px}
+#dev.dev-land .devcollapse{grid-area:collapse;align-self:center}
+#dev.dev-land .devreset{grid-area:reset;align-self:center}
+#dev.dev-land .devclose{grid-area:close;align-self:center;margin-right:2px}
+#dev.dev-land .devhelp{display:none}
+#dev.dev-land .devtabs{grid-area:tabs;display:flex;flex-direction:column;gap:3px;padding:6px 4px;border-bottom:0;
+  border-top:1px solid rgba(130,180,155,.18);border-right:1px solid rgba(130,180,155,.18);overflow-y:auto;overscroll-behavior:contain}
+#dev.dev-land .devtabs button{flex:none;min-height:44px;padding:4px 2px}
+#dev.dev-land .devbody{grid-area:body;border-top:1px solid rgba(130,180,155,.18);padding:0 12px 8px}
+#dev.dev-land .devfooter{grid-area:foot;padding:3px 12px;font-size:10px}
+#dev.dev-land .devsection{margin:8px 0 4px}#dev.dev-land label{margin:6px 0 4px}#dev.dev-land small{min-height:14px;margin-top:2px}
+#dev.dev-land .devreads{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:16px}   /* 读数两列，按钮三列：少翻几屏 */
+#dev.dev-land .devbuttons{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
 @media (max-height:520px){
   #dev .devhead{padding-top:5px;padding-bottom:3px}#dev .devrun{padding-top:3px;padding-bottom:7px}
   #dev .devtabs{padding-bottom:5px}#dev .devfooter{padding-top:5px;padding-bottom:5px}
@@ -390,3 +412,10 @@ body.touch #lessonOpen,body.touch #investigateOpen{min-height:44px;font-size:12p
 #lessonTime{font-size:11px;color:var(--ui-dim)}
 
 body.lesson-open #hud .bc,body.lesson-open #prompt{visibility:hidden}
+/* 开场 CG 的字幕：压在下面那条黑边上，不挡画面 */
+#opcap{position:fixed;left:50%;bottom:calc(11vh + 18px);z-index:43;transform:translateX(-50%);max-width:min(760px,88vw);padding:6px 14px;
+  font:15px/1.9 var(--ui-serif);letter-spacing:2px;text-align:center;color:#e9e1d1;text-shadow:0 1px 6px rgba(0,0,0,.9);
+  opacity:0;transition:opacity .5s;pointer-events:none}
+#opcap.on{opacity:1}
+body:not(.cut) #opcap{display:none}
+@media (max-width:560px){ #opcap{font-size:13px;bottom:calc(11vh + 8px)} }

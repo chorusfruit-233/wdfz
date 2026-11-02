@@ -39,18 +39,18 @@ var SAVE_SCHEMA=[
     }
   },
   { /* 天赋免疫、课表违规的计时与档位 */
-    save:function(d){ d.immuneUsed=!!S.immuneUsed; d.tt=S.tt; d.ttTier=S.ttTier; },
-    load:function(d){ S.immuneUsed=!!d.immuneUsed; S.tt=saveNum(d.tt,0,100); S.ttTier=d.ttTier||0; }
+    save:function(d){ d.immuneUsed=!!S.immuneUsed; d.tt=S.tt; d.ttTier=S.ttTier; },          /* immuneUsed 只为旧版本读档保留，从 talentState 派生 */
+    load:function(d){ S.tt=saveNum(d.tt,0,100); S.ttTier=d.ttTier||0; }
   },
   { /* 考试模式 */
     save:function(d){ d.exam=!!S.exam; d.examCur=S.examCur; d.examSeat=S.examSeat||0; d.examTot=S.examTot||0; },
     load:function(d){ S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0; }
   },
   { /* 背包、快捷栏、天赋、搜过的地方、线索、坐着没有 */
-    save:function(d){ d.bag=S.bag; d.hot=S.hot; d.talent=S.talent; d.spots=S.spots; d.clues=S.clues; d.seated=S.seated; },
+    save:function(d){ d.bag=S.bag; d.hot=S.hot; d.talent=Talent.id(); d.talentState=Talent.serialize(); d.spots=S.spots; d.clues=S.clues; d.seated=S.seated; },
     load:function(d){
       S.bag=d.bag||[]; S.hot=d.hot||[null,null];
-      S.talent=d.talent||S.talent; S.spots=d.spots||{}; S.clues=d.clues||{};
+      Talent.normalizeSaved(d); S.spots=d.spots||{}; S.clues=d.clues||{};       /* 天赋 ID 校验与迁移：未知 / 缺失 → 没有天赋，不沿用读档前的值 */
       S.seated=!!d.seated;
     }
   },
@@ -66,6 +66,7 @@ var SAVE_SCHEMA=[
     save:function(d){ d.rt=RT; d.use=USE; d.openDoors=OPENDOORS; },
     load:function(d){
       if(d.rt){RT=Object.assign(newRT(),d.rt);RT.dayRhythmVersion=d.rt.dayRhythmVersion||0;}
+      DayEvents.afterLoad(d);                                  /* 旧存档：读进来的那天不补特殊日 */
       if(d.use) USE=d.use;
       normalizeUseState();
       if(d.openDoors) OPENDOORS=d.openDoors;
@@ -124,12 +125,14 @@ var SAVE_SCHEMA=[
     load:function(d){ if(S.mode==='in'&&S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign(ROAM,d.roam); }
   }
 ];
+/* 速通用单独的存档槽，不覆盖、不删除普通模式的「继续上次」 */
+function saveSlot(){ return (typeof RUN_MODE!=='undefined'&&RUN_MODE==='speedrun')?'wdfz3d_speedrun_slot':'wdfz3d'; }
 function saveGame(){
   try{
     CampusPressure.observe();
     var d={v:1, clockVersion:2};
     SAVE_SCHEMA.forEach(function(f){ f.save(d); });
-    return GameStorage.write('wdfz3d',JSON.stringify(prepareSave(d)));
+    return GameStorage.write(saveSlot(),JSON.stringify(prepareSave(d)));   /* 速通写自己的存档槽 */
   }catch(e){ saveReport('save',e);return false; }
 }
 /* 把存档里的数据写回游戏状态（调用前先 freshState） */
@@ -139,6 +142,7 @@ function applySave(d){
   Investigation.migrate();
   SchoolDay.restore();
   CampusPressure.restore();
+  try{ Elevator.fixCabinPosition(); }catch(e){}          /* 旧存档站在旧轿厢外围的：放回现在的轿厢正中 */
   return d;
 }
 /* 规则恢复之后由应用流程调用；applySave 本身不构建模型、操纵 DOM 或设置灯光。 */
@@ -149,7 +153,7 @@ function restoreSavePresentation(){
 }
 function loadGame(){
   try{
-    var result=GameStorage.read('wdfz3d');
+    var result=GameStorage.read(saveSlot());
     if(!result.ok||!result.value)return null;
     return prepareSave(JSON.parse(result.value));
   }catch(e){ saveReport('load',e);return null; }
@@ -161,7 +165,7 @@ function autoSave(){
   if(S.screen==='play'&&!S.dead) saveGame();
 }
 function clearSave(){
-  GameStorage.remove('wdfz3d');
+  GameStorage.remove(saveSlot());
 }
 /* 拿到过的结局单独记，不跟存档一起删 */
 var ENDS_KEY='wdfz3d_ends';

@@ -112,7 +112,12 @@ var Investigation={
     if(hasItem('key')&&!this.visible('notice'))return '已经有车钥匙。在背包中使用它，读清环上的牌号，再去车辆旁核对。';
     if(!this.visible('desk')&&!this.visible('notice'))return '先看看自己课桌上的停车单（靠近自己的座位，点「看停车单」或按 R），也可以自由探索。';
     if(!this.visible('notice'))return '停车单提到了教室前方的讲台。走近后交互，看看移交单。';
-    if(!hasItem('key')&&S.talent!=='drive')return '钥匙被收到行政楼五楼校长办公室；出发前可以去保安岗取手电、查看停车记录。';
+    var car=Talent.capability('car');
+    if(!car.ok)return '钥匙被收到行政楼五楼校长办公室；出发前可以去保安岗取手电、查看停车记录。';
+    if(car.via==='hotwire'){
+      if(!this.visible('parking'))return '我会搭线，不用钥匙。保安岗的停车登记能缩小范围；搭线要在车门边蹲一阵，先处理车道上的黑影。';
+      return '去西侧车库，按停车登记的排号找车；搭线要蹲一阵，先用手电或诱饵处理车道上的黑影。';
+    }
     if(!this.visible('parking'))return '已有开车的办法。保安岗停车记录能缩小范围，钥匙上的牌号可供核对。';
     return '去西侧车库核对车牌；先用手电或诱饵处理车道上的黑影，再试车门。';
   },
@@ -141,7 +146,7 @@ var Investigation={
         return '<div class="nl inv-card k-'+KIND[kind]+'"><div class="inv-src">'+(e.day?'第 '+esc(e.day)+' 天 · ':'')+esc(e.source)+'</div><p>'+esc(e.text)+'</p></div>';}).join('');
     });
     var progress=[];
-    if(j.entries.notice||hasItem('key')||RT.carTried)progress.push(['车辆',(RT.carUsed?'已驶离车库':hasItem('key')||S.talent==='drive'?'能够试车门':'尚无开车办法')+'；已试 '+Object.keys(RT.carTried||{}).length+' 辆。',RT.carUsed]);
+    if(j.entries.notice||hasItem('key')||RT.carTried)progress.push(['车辆',(RT.carUsed?'已驶离车库':Talent.capability('car').via==='key'?'有钥匙，能够试车门':Talent.capability('car').ok?'会搭线，能够试车':'尚无开车办法')+'；已试 '+Object.keys(RT.carTried||{}).length+' 辆。',RT.carUsed]);
     if(S.spots.comp||S.spots.data||RT.hacked)progress.push(['白名单',(RT.hacked?'网络中心已写入':'网络中心尚未写入')+'；'+(RT.data?'行政楼数据已同步':'行政楼尚未同步')+(RT.faceQuiz?'；闸机验证 '+RT.faceQuiz.done+'/3':'')+'。',RT.data&&RT.faceQuiz&&RT.faceQuiz.done>=3]);
     if(RT.portalDiary||RT.portalSketch||RT.portalOpen)progress.push(['造门',(RT.portalOpen?'装置已启动':RT.portalSketch?'图纸齐全；'+portalNeedText():'已获得 '+PortalExploration.count()+'/3 张图纸'+(this.visible('portalDiary')||hasClue('portalDiary')?'；还需调查实验楼 '+PORTAL_BLUEPRINT_FLOORS.filter(function(f){return !(RT.portalBlueprints||{})[f];}).join('、')+' 楼教师台':'；日记的文字已模糊，可以回去重读'))+'。',RT.portalOpen]);
     if(progress.length)h+='<h3>路线进度</h3><div class="inv-progress">'+progress.map(function(p){return '<div class="'+(p[2]?'done':'')+'"><b>'+p[0]+'</b><span>'+esc(p[1])+'</span></div>';}).join('')+'</div>';
