@@ -96,20 +96,32 @@ var GameModules=(function(){
     persist.push({id:id,save:spec.save,load:spec.load,reset:spec.reset});
   }
   function saveAll(){
-    var out={};
+    var out=JSON.parse(JSON.stringify(retainedState));
     persist.forEach(function(p){
       if(!p.save) return;
-      try{ var v=p.save(); if(v!==undefined) out[p.id]=JSON.parse(JSON.stringify(v)); }catch(e){ log('save',p.id,e); }
+      try{
+        var v=p.save();
+        if(v===undefined) delete out[p.id];
+        else out[p.id]=JSON.parse(JSON.stringify(v));
+      }catch(e){ log('save',p.id,e); }
     });
+    retainedState=JSON.parse(JSON.stringify(out));
     return out;
   }
+  /* 安全模式或临时停用模块时，保留尚无人接管的数据；只有新局才丢弃旧局状态。 */
+  var retainedState={};
   function loadAll(data){
-    data=(data&&typeof data==='object')?data:{};
+    data=(data&&typeof data==='object'&&!Array.isArray(data))?data:{};
+    retainedState=JSON.parse(JSON.stringify(data));
     persist.forEach(function(p){
-      try{ if(p.reset) p.reset(); if(p.load&&data[p.id]!==undefined) p.load(data[p.id]); }catch(e){ log('load',p.id,e); }
+      try{
+        if(p.reset) p.reset();
+        if(p.load&&retainedState[p.id]!==undefined) p.load(JSON.parse(JSON.stringify(retainedState[p.id])));
+      }catch(e){ log('load',p.id,e); }
     });
   }
   function resetAll(){
+    retainedState={};
     persist.forEach(function(p){ try{ if(p.reset) p.reset(); }catch(e){ log('reset',p.id,e); } });
     emit('reset');
   }
@@ -130,7 +142,11 @@ var GameModules=(function(){
       if(def.persist) persistent(owner,def.persist);
       if(typeof def.init==='function') def.init(api(m));
       m.status='active';
-    }catch(e){ m.status='failed'; offOwner('mod:'+m.id); log('mod',m.id,e); }
+    }catch(e){
+      m.status='failed'; offOwner('mod:'+m.id);
+      persist=persist.filter(function(p){ return p.id!=='mod:'+m.id; });
+      log('mod',m.id,e);
+    }
     return m;
   }
   /* 给 Mod 的稳定接口：只包常用、不常变的入口；需要更深的改动就直接读写全局，自担兼容风险 */

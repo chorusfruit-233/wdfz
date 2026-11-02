@@ -94,6 +94,8 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 
 `GameModules.persistent(id, {save, load, reset})`：`save()` 返回可 JSON 化的对象，存在存档的 `d.mods[id]`（Mod 用 `api.store` / `persist` 存的在 `d.mods['mod:'+它的 id]`，和模块分开）；读档时先 `reset()` 再 `load(data)`；新局只 `reset()`。不要往 `S`、`RT` 里塞模块自己的字段（除非确实是全局剧情状态），这样存档字段表 `SAVE_SCHEMA` 不用改，旧存档也不受影响。
 
+临时停用模块或用 `?nomod` 排障后继续本局，未加载模块的数据仍原样保留，重新启用后可以恢复；开始新局时全部清空。存取均传递 JSON 副本，回调抛错时保留最后一份可序列化的数据。已注册的 `save()` 明确返回 `undefined` 才删除该项；返回 `null` 则保存 `null`。
+
 ### 4.1 声音扩展（`audio.js`）
 
 - `SFX.scape(id, {build, tick, level, bed, quiet})`：登记一整片环境声。`build(A)` 返回 `{gain: GainNode, …}`；`tick(dt, A, nodes)` 放零星声音；`bed` 是原来的校园铺底保留多少（默认 0）；`quiet` 为真时停掉旋律、远处怪声、滴水和上下课铃。用哪一片由 `soundscape` 钩子决定（虚空迷宫的「宇宙空寂」就是这样接入的）。低 SAN 心跳、巡察者心跳、蛾群等和玩法有关的声音不受影响。
@@ -144,7 +146,7 @@ GameModules.mod({
 
 ### 5.3 出错与兼容
 
-- Mod 的 `init` 抛错：这个 Mod 标记为「出错，已停用」，它挂的钩子全部摘掉，游戏继续。
+- Mod 的 `init` 抛错：这个 Mod 标记为「出错，已停用」，它挂的钩子和通过 `persist` / `api.store` 注册的存档回调全部摘掉，旧数据保留，游戏继续。
 - 钩子运行时抛错：只跳过这一次并记录，其他监听照常。
 - 接口大版本不同：不启用，记录原因。
 - `api` 以外直接改全局变量的 Mod，不保证在游戏更新后继续可用。
