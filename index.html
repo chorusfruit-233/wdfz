@@ -223,12 +223,14 @@
         <div><span>违规</span><strong id="devviolValue">—</strong></div>
         <div><span>同化</span><strong id="devttValue">—</strong></div>
       </div>
+      <div class="devreads">
       <div class="devread"><span>当前位置</span><b id="devpos">—</b></div>
       <div class="devread"><span>准星探测</span><b id="devlook">—</b></div>
       <div class="devread"><span>当前异象</span><b id="devactive">—</b></div>
       <div class="devread"><span>巡察者</span><b id="devpatrol">—</b></div>
       <div class="devread"><span>学生会</span><b id="devinspection">—</b></div>
       <div class="devread"><span>移动流程</span><b id="devtravel">—</b></div>
+      </div>
       <div class="devsection"><div><h3>设定数值</h3><p>范围 0–100；归零或满值可能触发死亡</p></div></div>
       <div class="devrow"><select id="devstatkey" aria-label="选择要设定的数值"><option value="san">SAN</option><option value="stam">体力</option><option value="viol">违规</option><option value="tt">同化</option></select><input id="devstatvalue" type="number" min="0" max="100" step="any" value="50" aria-label="数值"><button type="button" onclick="Dev.setStat()">设定</button></div>
       <div class="devbuttons"><button type="button" onclick="Dev.san()">恢复 SAN / 体力</button><button type="button" onclick="Dev.revive()">复活角色</button></div>
@@ -288,9 +290,11 @@
       <div class="devsection"><div><h3>氛围</h3><p>五分钟体验切片：安静、先听后见、危险操作、兑现或落空、余韵</p></div></div>
       <div class="devbuttons"><button type="button" onclick="DreadSlice.start();Dev.close()">开始五分钟切片</button><button type="button" onclick="Dread.falseThreat(Dread.pickAmbient(),1)">来一声假威胁</button></div>
       <div class="devsection"><div><h3>运行诊断</h3><p>查看当前状态及最近操作；生成的报告只用于排查，不是游戏存档。</p></div></div>
+      <div class="devreads">
       <div class="devread"><span>输入</span><b id="devinput">—</b></div>
       <div class="devread"><span>画质 / 窗口</span><b id="devquality">—</b></div>
       <div class="devread"><span>渲染资源</span><b id="devrender">—</b></div>
+      </div>
       <div class="devbuttons"><button type="button" id="devreportGo" onclick="Dev.makeReport()">生成诊断文本</button><button type="button" id="devreportDownload" onclick="Dev.downloadReport()">下载诊断 JSON</button></div>
       <textarea id="devreport" rows="6" aria-label="诊断报告，可选中复制" readonly hidden></textarea>
       <div class="devsection"><div><h3>最近操作</h3><p>本次页面会话记录最近 20 条，面板展示最后 5 条；随诊断报告导出。</p></div></div>

@@ -291,8 +291,11 @@ class DebugPanelTest(BrowserCase):
                 page.set_viewport_size({'width':width,'height':height})
                 self.open_panel(page)
                 rect=page.locator('#dev').bounding_box()
-                self.assertLessEqual(rect['width'],300)
-                self.assertLessEqual(rect['height'],height*(.74 if width>height else .62)+1)
+                if width>height:      # 横屏另有专门的用例：占满高度、夹在摇杆和交互键之间
+                    self.assertLessEqual(rect['width'],560)
+                else:
+                    self.assertLessEqual(rect['width'],300)
+                    self.assertLessEqual(rect['height'],height*.62+1)
                 for tab in ('status','scene','items','events','tools'):
                     page.locator('[data-dev-tab="'+tab+'"]').tap()
                     self.assert_js(page,"document.getElementById('devbody').clientHeight>=70")
@@ -302,6 +305,49 @@ class DebugPanelTest(BrowserCase):
                 self.assertTrue(page.locator('#devreport').is_visible())
                 page.locator('#devcollapse').tap()
                 self.assertEqual(page.locator('#devball').bounding_box()['width'],44)
+
+    def test_landscape_panel_fills_the_height_between_the_touch_controls(self):
+        """手机横屏：页签竖排在左边、状态和暂停并进标题行，面板占满高度、夹在摇杆和交互键之间，
+        不压住摇杆、交互键和右上角的手册 / 暂停；正文区至少是原来竖着叠放时的两倍多。"""
+        for width,height in ((844,390),(740,360),(667,375),(932,430)):
+            with self.subTest(width=width,height=height):
+                page=self.game(touch=True)
+                page.set_viewport_size({'width':width,'height':height})
+                self.open_panel(page)
+                self.assert_js(page,"document.getElementById('dev').classList.contains('dev-land')")
+                rect=page.locator('#dev').bounding_box()
+                self.assertGreaterEqual(rect['height'],height-20)
+                self.assertGreaterEqual(rect['width'],300)
+                self.assertLessEqual(rect['width'],560)
+                self.assert_js(page,"""(()=>{const d=document.getElementById('dev').getBoundingClientRect();
+                    return ['stick','tAct','tBook','tPause'].every(id=>{const r=document.getElementById(id).getBoundingClientRect();
+                      const cx=r.left+r.width/2,cy=r.top+r.height/2;return !(cx>d.left&&cx<d.right&&cy>d.top&&cy<d.bottom);});})()""")
+                # 页签竖排：同一列、从上往下
+                self.assert_js(page,"""(()=>{const t=Array.from(document.querySelectorAll('#dev [data-dev-tab]')).map(b=>b.getBoundingClientRect());
+                    return t.every((r,i)=>Math.abs(r.left-t[0].left)<1&&(i===0||r.top>t[i-1].bottom-1));})()""")
+                # 标题、运行状态、暂停、收起、归位、关闭都在同一行
+                self.assert_js(page,"""(()=>{const top=document.getElementById('devdrag').getBoundingClientRect().top;
+                    return ['devrun','devfreeze','devcollapse'].map(id=>document.getElementById(id)).concat([document.querySelector('#dev .devreset'),document.querySelector('#dev .devclose')])
+                      .every(e=>Math.abs(e.getBoundingClientRect().top-top)<14);})()""")
+                self.assert_js(page,"document.getElementById('devbody').clientHeight>=Math.round(innerHeight*0.66)")
+                for tab in ('status','scene','items','events','tools'):
+                    page.locator('[data-dev-tab="'+tab+'"]').tap()
+                    self.assert_js(page,"(()=>{let b=document.getElementById('devbody');return b.scrollWidth<=b.clientWidth})()")
+                    self.assert_js(page,"Array.from(document.querySelectorAll('#dev button')).filter(e=>e.getClientRects().length).every(e=>e.getBoundingClientRect().height>=44)")
+                    self.assert_js(page,"(()=>{const d=document.getElementById('dev').getBoundingClientRect();return d.left>=0&&d.top>=0&&d.right<=innerWidth&&d.bottom<=innerHeight})()")
+                # 摇杆、交互键照常能用；收起后是小圆点，展开回到横屏布局
+                page.evaluate('S.seated=true')
+                page.locator('#tAct').tap()
+                self.assert_js(page,'!S.seated&&DEV.on')
+                page.locator('#devcollapse').tap()
+                self.assertEqual(page.locator('#devball').bounding_box()['width'],44)
+                self.assert_js(page,"!document.getElementById('dev').classList.contains('dev-land')")
+                page.locator('#devball').tap()
+                self.assert_js(page,"document.getElementById('dev').classList.contains('dev-land')&&!DEV.minimized")
+                # 转成竖屏：回到原来的竖向布局
+                page.set_viewport_size({'width':height,'height':width})
+                page.wait_for_timeout(200)
+                self.assert_js(page,"!document.getElementById('dev').classList.contains('dev-land')&&document.getElementById('dev').getBoundingClientRect().width<=300")
 
     def test_inventory_editor_respects_capacity_and_cleans_hand_and_hotbar(self):
         page=self.game()
@@ -813,8 +859,12 @@ class DebugPanelTest(BrowserCase):
                 panel=page.locator('#dev')
                 before=panel.bounding_box()
                 handle=page.locator('#devdrag').bounding_box()
-                self.swipe(page,(handle['x']+20,handle['y']+20),(handle['x']+50,handle['y']+60))
-                self.assertGreater(panel.bounding_box()['y'],before['y']+20)
+                if width>height:      # 横屏面板占满高度：只能左右挪
+                    self.swipe(page,(handle['x']+20,handle['y']+20),(handle['x']-30,handle['y']+20))
+                    self.assertLess(panel.bounding_box()['x'],before['x']-20)
+                else:
+                    self.swipe(page,(handle['x']+20,handle['y']+20),(handle['x']+50,handle['y']+60))
+                    self.assertGreater(panel.bounding_box()['y'],before['y']+20)
                 self.assert_js(page,"(()=>{let r=document.getElementById('dev').getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight})()")
                 page.locator('[data-dev-tab="events"]').tap()
                 body=page.locator('#devbody')
