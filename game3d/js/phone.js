@@ -21,7 +21,7 @@ function phoneEl(){
 PHONE.start=function(){
   if(PHONE.on) return;
   if(!PhoneNetwork.available()){toast(hasItem('phone')?'手机已断电 · 充到 5% 后自动开机':'没有手机');return;}
-  PHONE.on=true; PHONE.reset();
+  PHONE.on=true; PHONE.reset();document.body.classList.add('phone-open');
   if(UI.openPanel==='bag') UI.close('bag',false);
   resetInputState(); releaseMouseLook();
   var el=phoneEl(); el.style.display='flex';
@@ -36,7 +36,7 @@ PHONE.reset=function(){
 /* 收起手机；dark=true 是被打断（屏幕一下子黑了） */
 PHONE.stop=function(dark){
   if(!PHONE.on) return;
-  PHONE.on=false;
+  PHONE.on=false;document.body.classList.remove('phone-open');
   var el=document.getElementById('phone'); if(el) el.style.display='none';
   /* 不覆盖异象或巡察者刚显示的重要字幕。 */
   if(dark&&!DLG.open) os('我：屏幕一下子黑了。我抬起头。',2.6);
