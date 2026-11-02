@@ -16,7 +16,7 @@ var Elevator={
     return RT.elevatorRide;
   },
   unsafe:function(){
-    return AN.active||PAT.locked||(typeof Inspection!=='undefined'&&Inspection.pending());
+    return AN.active||PatrolWorld.localChase()||(typeof Inspection!=='undefined'&&Inspection.pending());
   },
   spawn:function(room,c,r,angle){
     var R=INTERIORS[room];
@@ -69,7 +69,7 @@ var Elevator={
     var lift=Elevator.state(host);
     RT.elevatorRide={host:host,origin:floor,target:floor,phase:'cabin',
       rare:Math.random()<ELEVATOR_CONFIG.rareChance,remaining:0};
-    lift.floor=floor;lift.phase='occupied';patReset();resetInputState();
+    lift.floor=floor;lift.phase='occupied';patRemoveFig();resetInputState();
     var room='lift_'+host;
     doEnterRoom(room,Elevator.spawn(room,2,1.25,-Math.PI/2));       /* 轿厢正中，面朝轿门 */
     os('我：轿厢很安静。走到按钮前，选一个楼层。',3.5);

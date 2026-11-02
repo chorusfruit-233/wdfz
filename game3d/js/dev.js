@@ -227,7 +227,7 @@ var Dev={
     if(DEV.tab==='items')Dev.refreshInventory();
     if(DEV.tab==='tools')Dev.refreshDiagnostics();
     var inspection=RT.inspection,ride=RT.elevatorRide;
-    put('devpatrol',PAT.locked?'追逐中':PAT.state==='idle'?'等待 · '+Math.ceil(PAT.next)+' 秒':PAT.state==='warn'?'预警中':'巡逻中');
+    put('devpatrol',PAT.permanent?'永久追踪':PAT.state==='idle'?'消灭中 · '+Math.ceil(PAT.respawn)+' 秒':PAT.locked?'追逐中':PAT.behavior||'巡逻中');
     put('devinspection',inspection&&inspection.current?'检查中 · '+Math.max(0,INSPECT_CONFIG.duration-inspection.current.t).toFixed(1)+' 秒':inspection&&inspection.queue.length?'排队 '+inspection.queue.length+' 次':'无');
     put('devtravel',CarChase.active()?'驾驶 · '+Math.round(RT.carChase.distance)+' 米':ride?'电梯 · '+ride.phase:'步行');
     Dev.paint();Dev.scrollHint();
@@ -313,7 +313,7 @@ var Dev={
     if(PRO.on||PC.on||PHONE.on||LESSON.on||UI.chooseOpen||S.intro>0||Elevator.inRide()||CarChase.active()){
       Dev.report('请先退出当前互动或移动流程。');return false;
     }
-    if(AN.active||Inspection.pending()||PAT.state!=='idle'){
+    if(AN.active||Inspection.pending()||PatrolWorld.localChase()){
       Dev.report('请先结束当前异象、巡察或检查。');return false;
     }
     return true;
@@ -326,7 +326,7 @@ var Dev={
   stopPatrol:function(){
     if(!Dev.canUse())return;
     if(PAT.state==='idle'){Dev.report('当前没有巡察。');return;}
-    patEnd();Dev.report('当前巡察已结束，后续仍按正常间隔出现。');Dev.refresh();
+    patEnd();Dev.report('当前巡察已结束，常驻实体继续沿路线移动。');Dev.refresh();
   },
   startInspection:function(){
     if(!Dev.canStageEvent())return;
@@ -488,7 +488,7 @@ var Dev={
     if(typeof Elevator!=='undefined')Elevator.cancel();
     if(typeof CarChase!=='undefined'&&CarChase.active())CarChase.cancel();
     Dev.clearPreview();if(UI.chooseOpen)UI.closeChoice();Dev.endActiveAnomaly();
-    clearSearch();patReset();spiralReset();resetInputState();
+    clearSearch();patRemoveFig();spiralReset();resetInputState();
   },
   tp:function(){
     if(!Dev.canUse())return;

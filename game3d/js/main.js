@@ -30,9 +30,11 @@ function frame(t){
 }
 function update(dt){
   /* 电脑小游戏与开局倒计时原本在世界暂停时也运行；移入应用步进，保留该策略。 */
+  if(document.hidden)return;
   PCGAME.tick(dt);
   updateIntro(dt);
   PHONE.checkInterrupt();
+  TerminalUI.interrupt();
   LESSON.checkInterrupt();
   Speedrun.tick();                       /* 速通：第一次能操作时起表（自带判定：在玩、没死、能操作、不在过场） */
   var policy=gameInputContext();
@@ -45,16 +47,19 @@ function update(dt){
     return;
   }
   if(!GamePolicy.simulationAllowed(policy)) return;
+  Mechanics.begin(dt);
+  try{
+  PatrolWorld.tick(dt);
   repairPlayerPlacement(dt);
   Playtest.simulation(dt);
-  if(CarChase.active()){clockTick(dt);CarChase.tick(dt);return;}
+  if(CarChase.active()){clockTick(dt);Inspection.discardStale();CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
   ExplorationMap.tick(dt);
   GameModules.emit('tick',dt);                   /* 模块的每步更新（虚空迷宫的坠落和 SAN 流失在这里） */
   if(S.dead)return;
   if(Elevator.inRide()){
     if(!roomClockFrozen())clockTick(dt);
-    Elevator.tick(dt);settleSan();return;
+    Inspection.discardStale();Elevator.tick(dt);settleSan();return;
   }
   Elevator.tick(dt);
   try{ PHONE.tick(dt); }catch(e){}
@@ -71,6 +76,7 @@ function update(dt){
   spotTick();
   CampusPressure.tick();
   anNotifyWarning(anwVisible());
+  }finally{Mechanics.finish(dt);}
 }
 function render(dt){
   try{ if(DEV.on){DEV.refreshT-=dt;if(DEV.refreshT<=0){DEV.refreshT=.3;Dev.refresh();}} }catch(e){}

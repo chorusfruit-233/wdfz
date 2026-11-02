@@ -21,10 +21,10 @@ var PortalExploration={
   },
   enter:function(){
     if(S.mode!=='in'||S.room!=='lab1')return;
-    if(AN.active||PAT.locked||Inspection.pending()){
+    if(AN.active||PatrolWorld.localChase()||Inspection.pending()){
       os('我：现在没法进去，先解决眼前的事。',2.5);return;
     }
-    RT.portalReturn={x:S.x,y:S.y,ang:S.ang};patReset();resetInputState();
+    RT.portalReturn={x:S.x,y:S.y,ang:S.ang};patRemoveFig();resetInputState();
     var R=INTERIORS.portal_tunnel;
     enterRoom('portal_tunnel',{x:R.ox+3.5*R.tw,y:R.oy+21.5*R.th,ang:-Math.PI/2});
   },

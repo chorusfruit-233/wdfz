@@ -359,7 +359,7 @@ var DFX_SFX={laugh:'crack',shatter:'crack',grip:'slam',squeeze:'slam',bell:'bell
 /* 反复死在同一种东西上：优先给可读的线索，而不是降低难度（恐怖计划 P2） */
 var DEATH_LOG_KEY='wdfz3d_deaths';
 var DEATH_SOURCES={
-  patrol:{cause:'巡察者追到了你；灯光与脚步是它进入区域的信号。',hint:'灯按拍子闪时先找遮蔽。被锁定后，背对它站住；当着它的面钻进柜子会被记住。'},
+  patrol:{cause:'巡察者追到了你；灯光与脚步是它进入区域的信号。',hint:'灯按拍子闪时先找遮蔽。被锁定后尽快脱离它的视线；当着它的面钻进柜子会被记住。'},
   garage:{cause:'你与车道上的黑影接触了。',hint:'车库的黑影能被手电持续照射暂时逼退，也会被落地的硬币引开。先观察距离再穿过车道。'},
   car_entry:{cause:'试车门时，车库黑影仍守在车辆附近。',hint:'拉车门需要原地停留。先照退或引开车道上的黑影，确认车旁安全再拧钥匙。'},
   car_chase:{cause:'驾驶中的路障、岔路或追兵使这次逃离中断。',hint:'路口前看路牌并提前转向。可以向后拉摇杆或按 S 刹车；长时间停下会让追兵靠近。'},
@@ -368,7 +368,7 @@ var DEATH_SOURCES={
   trash:{cause:'那个垃圾桶是陷阱，合上的桶盖没有通向外面。',hint:'垃圾桶不能带你逃离学校；找其他有证据支持的办法。'}
 };
 var DEATH_HINTS={
-  grip:'灯按拍子闪，是它要来了。先找柜子躲好；已经被它盯上，就背对它站着别动。',
+  grip:'灯按拍子闪，是它要来了。先找柜子躲好；被盯上后应绕过遮挡离开视线，普通追踪会跟丢；登记后缺席引起的永久追踪不会。',
   drown:'雨下大了，就往有顶的地方去：屋檐、柱廊、车棚都行。',
   swarm:'蛾群是从一个地方涌过来的。离那里远一点，它们就跟不上。',
   follow:'操场上那些人开始做操的时候，别站在原地看，走远一点。',
@@ -401,11 +401,12 @@ function deathHints(){
 }
 function kill(msg,fx,source){
   if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
-  if(S.dead||S.death) return;
+  if(S.dead||S.death||S.screen==='cut'||S.screen==='end') return;
   if(hasItem('elixir')){ elixirSave(); protectCommit(); return; }      /* 不知名药丸：替你死一次 */
   if(Talent.tryPreventDeath()){ immuneSave(); protectCommit(); return; }
   var deathScope=Lifecycle.renew('death');
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
+  Termination.cancel();PHONE.stop();TerminalUI.close();
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   Playtest.event('死亡',source||S.death);
   var _arc=null; try{ _arc=DeathArchive.record(source,S.death); }catch(e){}   /* 死亡档案：这种死法第一次发生时解锁，演出放完再提示（先于死亡日志，免得把这一次当成旧记录迁进去） */
@@ -483,7 +484,7 @@ function immuneSave(){
 function survivalReset(){
   VisualState.flash=0.9; VisualState.hurt=0.4;
   PlayerStats.setSan(S.san,'survival',{min:45}); PlayerStats.setViolation(S.viol,'survival',{max:40});
-  try{ if(PAT.state!=='idle') patEnd(null); }catch(e){}
+  PatrolWorld.rescued();
   try{ if(AN.active) anEnd(); }catch(e){}
   try{ if(ROAM.on){ ROAM.stage='wait'; ROAM.waitT=8; ROAM.x=-1e6; ROAM.y=-1e6; ROAM.litAcc=0; } }catch(e){}
   try{ SFX.wake&&SFX.wake(); }catch(e){}
@@ -502,7 +503,7 @@ function dreamWake(){
     UI.closeChoice(); PAUSE.on=false; ROAM.on=false;
     OPENDOORS={};                        /* 回到 11:40：开过的门也都关回去了 */
     examEnd();
-    try{ patReset(); PAT.next=45; }catch(e){}
+    Mechanics.dream();
     var R1=INTERIORS['teach1'];
     doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
     try{ SFX.wake&&SFX.wake(); }catch(e){}
@@ -514,6 +515,7 @@ function dreamWake(){
 }
 
 var ENDINGS={
+  cyber:{t:'《网安仙人》',true:1,l:['服务器接受了最后一条指令。名单、门禁和巡察停止运行。','AnthroPrank AI（安抄派智能）的校园试点终止了。更早的纸质档案和断链后的回执，仍没有答案。','您未能完全理解里世界']},
   car:  {t:'《闸 门》', true:1,l:['你踩下油门的时候，雨刷自己动了起来。','后视镜里，教学楼的窗户一扇一扇地暗下去，像有人在挨个关灯。','开出校门很远，你才敢看一眼副驾。','那里放着一张学生证。照片上的人，你终于认得了。']},
   face: {t:'《白名单》', true:1,l:['闸机「嘀」地亮了一下绿光。','你走出去，回头看了一眼——','里面的天还是黑白的。所有窗口后面都站着一个人，在目送你。','你的名字从那天起，一直留在白名单的最后一行。']},
   /* 假结局：看起来逃出去了，其实又回到了座位上 */
@@ -523,7 +525,8 @@ var ENDINGS={
   portal:{t:'《门》',true:1,l:['光圈合上之前，你回头看了一眼。','实验台、显微镜、离心机，还有教室里那一排排低着的头——都在原地，一动不动。','你没有再回头。','门的那一边是一个普通的下午。铃响了，有人在走廊里叫你的名字，你答应了一声。']}
 };
 function triggerEnding(id,skipCut){
-  if(S.screen==='cut'||S.screen==='end') return;
+  if(S.dead||S.screen==='cut'||S.screen==='end') return;
+  if(id!=='cyber')Termination.cancel();
   if(id==='trash'){tryTrashRoute();return;}
   RT.end=id;
   Playtest.event('结局',id);

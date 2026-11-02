@@ -1,8 +1,4 @@
-/* 里世界 3D · 手机：只剩一个「纸飞机」小游戏
-   点一下（空格 / W / ↑ / 点屏幕）往上飘，穿过书架之间的空隙，撞上就结束。
-   和机房的电脑不同，玩手机时世界不停：时间照走、违规照算，你只是站着不动、低着头。
-   一有异象或者巡察者盯上你，屏幕就黑了。一局结束按得分回一点 SAN（最多 +6），之后手机发烫，
-   要过一阵（45 秒）才能再回 SAN。 */
+/* 手机应用外壳与纸飞机；设备能源、联网和后台任务由 PhoneNetwork 持有。 */
 'use strict';
 
 var PHONE={on:false,st:'ready',y:0,vy:0,pipes:[],score:0,t:0,cool:0,gain:0,msg:''};
@@ -12,9 +8,11 @@ function phoneEl(){
   var el=document.getElementById('phone');
   if(el) return el;
   el=document.createElement('div'); el.id='phone';
-  el.innerHTML='<div class="phbody"><div class="phtop">纸飞机</div><canvas id="phcv" width="'+PH_W+'" height="'+PH_H+'"></canvas>'+
+  el.innerHTML='<div class="phbody"><div class="phtop">校园手机</div><div id="phstatus"></div><nav id="phapps"></nav><div id="phtool"></div><canvas id="phcv" width="'+PH_W+'" height="'+PH_H+'"></canvas>'+
     '<div class="phhint" id="phhint"></div></div><button type="button" class="phx" aria-label="收起手机">✕ 收起</button>';
   document.body.appendChild(el);
+  var apps=[['home','主页'],['wireless','无线接入'],['location','巡察查询'],['sync','门禁同步'],['container','容器状态'],['plane','纸飞机']];
+  apps.forEach(function(a){var b=document.createElement('button');b.type='button';b.textContent=a[1];b.dataset.app=a[0];b.onclick=function(){PHONE.selectApp(a[0]);};el.querySelector('#phapps').appendChild(b);});
   var cv=el.querySelector('canvas');
   cv.addEventListener('pointerdown',function(e){ e.preventDefault(); PHONE.flap(); });
   el.querySelector('.phx').addEventListener('click',function(e){ e.stopPropagation(); PHONE.stop(); });
@@ -22,15 +20,14 @@ function phoneEl(){
 }
 PHONE.start=function(){
   if(PHONE.on) return;
-  if(AN.active){ os('我：现在不是看手机的时候。',2.2); return; }
-  if(PAT.locked){ os('我：它在看着我。我不敢低头。',2.2); return; }
+  if(!PhoneNetwork.available()){toast(hasItem('phone')?'手机已断电 · 充到 5% 后自动开机':'没有手机');return;}
   PHONE.on=true; PHONE.reset();
   if(UI.openPanel==='bag') UI.close('bag',false);
   resetInputState(); releaseMouseLook();
   var el=phoneEl(); el.style.display='flex';
   document.getElementById('phhint').textContent=(IS_TOUCH?'点屏幕往上飘':'空格 / W 往上飘')+' · '+(IS_TOUCH?'右上角收起':'Esc 收起');
   try{ SFX.click(); }catch(e){}
-  PHONE.draw();
+  PHONE.selectApp(PhoneNetwork.page);
   updateTouchUI();
 };
 PHONE.reset=function(){
@@ -47,11 +44,12 @@ PHONE.stop=function(dark){
 };
 PHONE.checkInterrupt=function(){
   if(!PHONE.on) return;
-  var danger=AN.active||PAT.locked;
-  if(S.dead||S.screen!=='play'||danger||PAUSE.on||UI.anyOpen()||PC.on)
+  var danger=PhoneNetwork.page==='plane'&&(AN.active||PatrolWorld.localChase());
+  if(S.dead||S.screen!=='play'||danger||PAUSE.on||UI.anyOpen()||PC.on||Inspection.active()||!PhoneNetwork.available())
     PHONE.stop(danger&&!S.dead&&S.screen==='play');
 };
 PHONE.flap=function(){
+  if(PhoneNetwork.page!=='plane')return;
   if(!PHONE.on) return;
   if(PHONE.st==='over'){ PHONE.reset(); PHONE.draw(); return; }
   if(PHONE.st==='ready') PHONE.st='fly';
@@ -74,7 +72,8 @@ PHONE.end=function(){
 PHONE.tick=function(dt){
   if(PHONE.cool>0) PHONE.cool=Math.max(0,PHONE.cool-dt);
   if(!PHONE.on) return;
-  if(S.dead||S.screen!=='play'||AN.active||PAT.locked){ PHONE.stop(!S.dead); return; }
+  PHONE.checkInterrupt();if(!PHONE.on)return;
+  if(PhoneNetwork.page!=='plane'){PHONE.paintApps();return;}
   if(PHONE.st==='fly'){
     PHONE.vy+=PH_G*dt; PHONE.y+=PHONE.vy*dt; PHONE.t+=dt;
     if(!PHONE.pipes.length||PHONE.pipes[PHONE.pipes.length-1].x<PH_W-120)
@@ -115,4 +114,33 @@ PHONE.draw=function(){
     c.font='11px sans-serif'; c.fillStyle='#9fe3c2';
     c.fillText(PHONE.st==='over'?(PHONE.msg||'再点一下重来'):(PHONE.cool>0?'手机还烫着：这局不回 SAN':'一局最多回 '+CampusPressure.restGain(PH_MAXGAIN)+' 点 SAN'),PH_W/2,PH_H/2+16);
   }
+};
+
+PHONE.selectApp=function(app){
+  if(app==='plane'&&(AN.active||PatrolWorld.localChase())){toast('遇险时不能玩纸飞机');app='home';}
+  PhoneNetwork.page=app;
+  var el=phoneEl();el.querySelector('#phcv').hidden=app!=='plane';el.querySelector('#phhint').hidden=app!=='plane';
+  el.querySelectorAll('[data-app]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.app===app));});
+  var tool=el.querySelector('#phtool');tool.innerHTML='<p data-copy></p>';
+  if(app==='wireless'){var b=document.createElement('button');b.type='button';b.dataset.action='wireless';b.onclick=function(){PhoneNetwork.toggleWireless();PHONE.paintApps();};tool.appendChild(b);}
+  if(app==='sync'){var sync=document.createElement('button');sync.type='button';sync.textContent='同步门禁数据';sync.onclick=function(){PhoneNetwork.sync();PHONE.paintApps();};tool.appendChild(sync);}
+  if(app==='plane')PHONE.draw();PHONE.paintApps();
+};
+PHONE.paintApps=function(){
+  if(!PHONE.on)return;var el=phoneEl(),d=PhoneNetwork.device,app=PhoneNetwork.page;
+  function text(node,value){if(node&&node.textContent!==value)node.textContent=value;}
+  text(el.querySelector('#phstatus'),'电量 '+Math.floor(d.battery)+'% · '+(d.network?'学校网络已连接':'尚未联网')+(Talent.has('tech')?' · 耗电 ×2':''));
+  var copy='',w=d.wireless;
+  if(app==='home')copy='工具查看时不能移动，世界仍在运行。收起手机后，后台任务继续。教室可充电，机房电脑可以接线。';
+  if(app==='wireless'){
+    copy=w.status==='complete'?'无线接入完成。定位与门禁同步已解锁。':w.status==='idle'?'接入学校无线网络需要 180—600 运行秒，执行期间耗电翻倍。':
+      (w.status==='paused'?'已暂停':'正在接入')+' · '+Math.floor(w.elapsed/w.target*100)+'% · 剩余 '+Math.ceil(w.target-w.elapsed)+' 秒';
+    var b=el.querySelector('[data-action="wireless"]');if(b){b.disabled=w.status==='complete';text(b,w.status==='running'?'暂停任务':w.status==='idle'?'开始接入':w.status==='complete'?'已连接':'继续任务');}
+  }
+  if(app==='location')copy=PhoneNetwork.location();
+  if(app==='sync')copy=RT.data?'门禁数据已经同步。':d.network?'仍需先在网络中心写入白名单；联网手机可以完成同步。':'先接入学校网络。';
+  if(app==='container')copy=(d.download.status==='complete'?'模拟 Kali Linux 容器已就绪，可在机房电脑旁打开终端。':d.download.status==='idle'?'无线接入完成后，自动安装容器。':
+      '容器安装 '+Math.floor(d.download.elapsed/60*100)+'% · 剩余 '+Math.ceil(60-d.download.elapsed)+' 秒')+
+      (Termination.state.status==='accepted'?'\n服务器停机剩余 '+Math.ceil(Termination.state.remaining)+' 运行秒。':'');
+  text(el.querySelector('[data-copy]'),copy);
 };

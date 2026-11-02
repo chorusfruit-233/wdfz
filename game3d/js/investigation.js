@@ -20,7 +20,7 @@ var Investigation={
     j.recent=j.recent.filter(function(k){return k!==id;}).concat(id).slice(-8);
   },
   visible:function(id){return !!this.state().entries[id]&&hasClue('investigation:'+id);},
-  idle:function(){return S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!PC.on&&!PHONE.on&&!LESSON.on&&!HIDE.on&&!AN.active&&!PAT.locked&&!Inspection.pending()&&!(S.intro>0);},
+  idle:function(){return S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!PC.on&&!PHONE.on&&!LESSON.on&&!HIDE.on&&!AN.active&&!PatrolWorld.localChase()&&!Inspection.pending()&&!(S.intro>0);},
   deskAvailable:function(){
     var R=INTERIORS.teach1;
     return this.idle()&&S.mode==='in'&&S.room==='teach1'&&Math.hypot(S.x-(R.ox+48.5*9),S.y-(R.oy+6.5*9))<24&&!this.visible('desk');
@@ -107,6 +107,7 @@ var Investigation={
   },
   goal:function(){
     var focus=this.currentFocus();
+    if(focus==='cyber')return Termination.state.status==='accepted'?'停机请求已提交。保持存活，手机可查看任务状态。':PhoneNetwork.device.download.status==='complete'?'连接实验楼三楼任意电脑，阅读维护终端中的资料。':'用手机接入学校无线网络，等待模拟容器安装。';
     if(focus==='portal'&&(RT.portalDiary||RT.portalSketch||RT.portalOpen))return RT.portalOpen?'装置已启动，可以返回物理实验室的基座。':RT.portalSketch?'对照图纸准备材料。'+portalNeedText():this.visible('portalDiary')||hasClue('portalDiary')?'对照日记，调查实验楼二、四、五楼教师台；已得到 '+PortalExploration.count()+'/3 张图纸。':'造门调查还没结束；日记的文字记不清了，可以回隧道重读。';
     if(focus==='face'&&(S.spots.comp||S.spots.data||RT.hacked))return RT.data?'数据已同步，前往西小门完成闸机验证。':RT.hacked?'网络中心已写入，前往行政楼三楼同步数据。':'调查实验楼三楼的网络中心；留意门锁和终端旁的说明。';
     if(hasItem('key')&&!this.visible('notice'))return '已经有车钥匙。在背包中使用它，读清环上的牌号，再去车辆旁核对。';
@@ -127,7 +128,7 @@ var Investigation={
     var input=document.getElementById('notequery'),query=input?input.value.trim().toLowerCase():'';
     function hit(id){var e=j.entries[id];return me.visible(id)&&(!query||(e.text+' '+e.source).toLowerCase().indexOf(query)>=0);}
     function tag(kind){return '<i class="inv-kind k-'+KIND[kind]+'">'+kind+'</i>';}
-    var routes=this.routes(),names={car:'车辆',face:'白名单',portal:'造门'},focus=this.currentFocus();
+    var routes=this.routes(),names={car:'车辆',face:'白名单',portal:'造门',cyber:'网安'},focus=this.currentFocus();
     /* 标签和高亮按钮要和上面那句目标一致：关注的路线还没发现时，目标文字落回车辆路线 */
     if(!routes.some(function(r){return r[0]===focus;}))focus=routes.some(function(r){return r[0]==='car';})?'car':'';
     var h='<section class="inv-case"><div class="inv-k"><span>当前调查</span>'+(focus?'<b>'+names[focus]+'路线</b>':'')+'</div>'+
@@ -148,6 +149,7 @@ var Investigation={
     var progress=[];
     if(j.entries.notice||hasItem('key')||RT.carTried)progress.push(['车辆',(RT.carUsed?'已驶离车库':Talent.capability('car').via==='key'?'有钥匙，能够试车门':Talent.capability('car').ok?'会搭线，能够试车':'尚无开车办法')+'；已试 '+Object.keys(RT.carTried||{}).length+' 辆。',RT.carUsed]);
     if(S.spots.comp||S.spots.data||RT.hacked)progress.push(['白名单',(RT.hacked?'网络中心已写入':'网络中心尚未写入')+'；'+(RT.data?'行政楼数据已同步':'行政楼尚未同步')+(RT.faceQuiz?'；闸机验证 '+RT.faceQuiz.done+'/3':'')+'。',RT.data&&RT.faceQuiz&&RT.faceQuiz.done>=3]);
+    if(PhoneNetwork.device.initialized)progress.push(['网安仙人',Termination.state.status==='accepted'?'服务器已接受请求，保持存活。':PhoneNetwork.device.download.status==='complete'?'容器就绪，前往机房终端。':PhoneNetwork.device.network?'已接入学校网络。':'用手机接入学校网络。',Termination.state.status==='completed']);
     if(RT.portalDiary||RT.portalSketch||RT.portalOpen)progress.push(['造门',(RT.portalOpen?'装置已启动':RT.portalSketch?'图纸齐全；'+portalNeedText():'已获得 '+PortalExploration.count()+'/3 张图纸'+(this.visible('portalDiary')||hasClue('portalDiary')?'；还需调查实验楼 '+PORTAL_BLUEPRINT_FLOORS.filter(function(f){return !(RT.portalBlueprints||{})[f];}).join('、')+' 楼教师台':'；日记的文字已模糊，可以回去重读'))+'。',RT.portalOpen]);
     if(progress.length)h+='<h3>路线进度</h3><div class="inv-progress">'+progress.map(function(p){return '<div class="'+(p[2]?'done':'')+'"><b>'+p[0]+'</b><span>'+esc(p[1])+'</span></div>';}).join('')+'</div>';
     return h;
@@ -157,6 +159,7 @@ var Investigation={
     if(j.entries.notice||hasItem('key')||RT.carTried)out.push(['car','车辆']);
     if(S.spots.comp||S.spots.data||RT.hacked)out.push(['face','白名单']);
     if(RT.portalDiary||RT.portalSketch||RT.portalOpen)out.push(['portal','造门']);
+    if(hasItem('phone')||PhoneNetwork.device.initialized)out.push(['cyber','网安仙人']);
     return out;
   },
   focus:function(id){if(!this.routes().some(function(r){return r[0]===id;}))return;this.state().focus=id;UI.renderNote();autoSave();},

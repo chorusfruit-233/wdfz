@@ -705,12 +705,7 @@ function useTrash(){
 }
 function useData(){
   if(S.room!=='admin3'){ os('我：这台机器不归我管。',2.2); return; }
-  if(!RT.hacked){ os('我：它要我输入一个我不该知道的东西。屏幕右下角写着：数据源 · 实验楼 3F 网络中心。',3.8); return; }
-  if(RT.data){ os('我：已经同步过了。',2.0); return; }
-  RT.data=true;
-  Investigation.record('whitelistSynced','行政楼三楼同步完成：门禁认的是学号与照片。西小门现在认得我了，但名字留在系统里会怎样？','验证','行政楼三楼 · 门禁机');
-  autoSave();
-  os('我：进度条走完了。屏幕上弹出一张照片——是我。照片底下写着：已登记。西小门的闸机，现在认得我了。',5.2,OS_KEEP);
+  WhitelistSync.commit('terminal');
 }
 function tryGateWest(){
   if(!RT.hacked||!RT.data){ os('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); addClue('gatew'); return; }

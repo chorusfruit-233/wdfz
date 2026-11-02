@@ -94,11 +94,11 @@ var Inspection={
   start:function(item){
     var st=Inspection.state(),c={day:item.day,slot:item.slot,t:0,look:0,move:0,
       compliant:inClassroomHere(),room:S.mode==='in'?S.room:'out',points:Inspection.points()};
-    st.current=c;Inspection.buildFx(c);
+    st.current=c;PHONE.stop();TerminalUI.close();Inspection.buildFx(c);
     os('我：走廊里的声音一下子停了。一圈黑影站在附近——别动，也别看它们。',4.5,OS_FORCE);
   },
   cancel:function(){
-    if(RT.inspection)RT.inspection.current=null;
+    if(RT.inspection){AttendanceDuty.cancel(RT.inspection.current);RT.inspection.current=null;}
     Inspection.clearFx();
   },
   scatterTick:function(dt){
@@ -116,26 +116,28 @@ var Inspection={
   finish:function(c){
     var st=Inspection.state();if(st.current!==c)return;
     st.current=null;
-    st.calm=8;
+    st.calm=8;st.calmRoom=c.room;
     if(INSPECT_FX.group)INSPECT_FX.scatter={t:0,duration:.8};
     PlayerStats.changeSan(-((c.compliant?INSPECT_CONFIG.goodSan:INSPECT_CONFIG.badSan)),'inspection',{min:0});
     addViolation(c.compliant?-INSPECT_CONFIG.goodViolation:INSPECT_CONFIG.badViolation,'inspection');
     PlayerStats.changeAssimilation(c.compliant?INSPECT_CONFIG.assimilation:-INSPECT_CONFIG.assimilation,'inspection',{min:0,max:100});
     os(c.compliant?'我：黑影散开了。我还在教室里。':'我：黑影散开了。它们已经记下我不在教室。',3.8,OS_FORCE);
+    AttendanceDuty.settle(c);
     settleSan();if(!S.dead&&S.tt>=100)resolveAssimilation();
     if(c.compliant&&inClassroomHere()&&!S.dead)SchoolDay.grant(true);
     autoSave();
   },
+  discardStale:function(){var st=this.state();while(st.queue.length&&this.stale(st.queue[0]))AttendanceDuty.cancel(st.queue.shift());},
   tick:function(dt){
     Inspection.scatterTick(dt);
     var st=Inspection.state(),c=st.current;
     st.calm=Math.max(0,(st.calm||0)-dt);
     if(!c){
       if(INSPECT_FX.scatter)return;
-      if(S.room==='portal_tunnel')return;
+      if(S.room==='portal_tunnel'){Inspection.discardStale();return;}
       /* 排队太久的（玩家当时在电梯里、在异象里，没法回教室）作废 */
-      while(st.queue.length&&Inspection.stale(st.queue[0]))st.queue.shift();
-      if(st.queue.length&&!AN.active&&!UI.chooseOpen&&PAT.state==='idle'&&!LESSON.on){Inspection.start(st.queue.shift());}
+      while(st.queue.length&&Inspection.stale(st.queue[0]))AttendanceDuty.cancel(st.queue.shift());
+      if(st.queue.length&&!AN.active&&!UI.chooseOpen&&!PatrolWorld.localChase()&&!LESSON.on){Inspection.start(st.queue.shift());}
       return;
     }
     if(S.dead||S.screen!=='play'){st.current=null;Inspection.clearFx();return;}

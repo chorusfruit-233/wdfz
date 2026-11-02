@@ -16,7 +16,7 @@ function devInputBlocked(){
 }
 /* 平台适配入口：策略只接收值，不读取 DOM 或持有这些系统。 */
 function gameInputContext(target,editing){
-  return {screen:S.screen,dead:!!S.dead,prologue:!!(typeof PRO!=='undefined'&&PRO.on),
+  return {hidden:document.hidden,terminal:!!(typeof TerminalUI!=='undefined'&&TerminalUI.on),screen:S.screen,dead:!!S.dead,prologue:!!(typeof PRO!=='undefined'&&PRO.on),
     paused:!!PAUSE.on,panelOpen:!!UI.anyOpen(),choice:!!UI.chooseOpen,
     computer:!!(typeof PC!=='undefined'&&PC.on),phone:!!(typeof PHONE!=='undefined'&&PHONE.on),
     lesson:!!(typeof LESSON!=='undefined'&&LESSON.on),
@@ -207,6 +207,7 @@ function initInput(){
     else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen'&&INPUT.stickId===null)useMouseInput();
   },{capture:true,passive:true});
   window.addEventListener('keydown',function(e){
+    if(typeof TerminalUI!=='undefined'&&TerminalUI.on){if(e.key==='Escape'){e.preventDefault();TerminalUI.close();}return;}
     var k=physicalKey(e);
     var editing=e.target.matches('input,select,textarea,[contenteditable="true"]');
     if(e.key==='F2'&&(!editing||DEV.on)){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
