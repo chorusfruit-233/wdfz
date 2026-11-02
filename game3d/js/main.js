@@ -30,9 +30,11 @@ function frame(t){
 }
 function update(dt){
   /* 电脑小游戏与开局倒计时原本在世界暂停时也运行；移入应用步进，保留该策略。 */
+  if(document.hidden)return;
   PCGAME.tick(dt);
   updateIntro(dt);
   PHONE.checkInterrupt();
+  TerminalUI.interrupt();
   LESSON.checkInterrupt();
   Speedrun.tick();                       /* 速通：第一次能操作时起表（自带判定：在玩、没死、能操作、不在过场） */
   var policy=gameInputContext();
@@ -45,21 +47,25 @@ function update(dt){
     return;
   }
   if(!GamePolicy.simulationAllowed(policy)) return;
+  Mechanics.begin(dt);
+  try{
+  clockTick(dt);
+  PatrolWorld.tick(dt);
+  if(S.dead)return;
   repairPlayerPlacement(dt);
   Playtest.simulation(dt);
-  if(CarChase.active()){clockTick(dt);CarChase.tick(dt);return;}
+  if(CarChase.active()){Inspection.discardStale();CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
   ExplorationMap.tick(dt);
   GameModules.emit('tick',dt);                   /* 模块的每步更新（虚空迷宫的坠落和 SAN 流失在这里） */
   if(S.dead)return;
   if(Elevator.inRide()){
-    if(!roomClockFrozen())clockTick(dt);
-    Elevator.tick(dt);settleSan();return;
+    Inspection.discardStale();Elevator.tick(dt);settleSan();return;
   }
   Elevator.tick(dt);
   try{ PHONE.tick(dt); }catch(e){}
   try{ searchTick(dt); }catch(e){}
-  updateSystems(dt);
+  updateSystems(dt,true);
   anDrive(dt);
   settleSan();
   LESSON.tick(dt);
@@ -71,6 +77,7 @@ function update(dt){
   spotTick();
   CampusPressure.tick();
   anNotifyWarning(anwVisible());
+  }finally{Mechanics.finish(dt);}
 }
 function render(dt){
   try{ if(DEV.on){DEV.refreshT-=dt;if(DEV.refreshT<=0){DEV.refreshT=.3;Dev.refresh();}} }catch(e){}
@@ -173,6 +180,7 @@ function updateHUD(){
   if(CarChase.active())pe.textContent='驾驶逃脱';
   if(typeof Inspection!=='undefined'&&Inspection.active())pe.textContent='学生会检查 · 教室';
   else if(typeof Inspection!=='undefined'&&Inspection.upcoming())pe.textContent='集合将至 · 请回教室';
+  if(PAT.permanent)pe.textContent+=' · 持续追踪';
   var frozen=roomClockFrozen();
   if(frozen)pe.textContent='???';                             /* 时钟冻结的地方（虚空迷宫）：课表也没有意义 */
   /* 绿 = 普通活动；黄 = 返程或违反要求；蓝 = 登记 / 请假；红 = 考试。 */

@@ -24,7 +24,7 @@ function freshState(diff){
   Engine.resetSan(S.san);
   S.actCool={};                                   /* 免疫用没用过记在 talentState（S.immuneUsed 只是旧字段的别名） */
   S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
-  try{ patReset(); PAT.next=45; }catch(e){}
+  try{ patReset(); }catch(e){}
   S.bag=[]; S.hot=[null,null]; S.bagSel=0;
   S.spots={}; S.clues={}; S.notes={}; S.marks={};
   S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.deathView=null; S.seated=false; S.intro=0;
@@ -95,11 +95,7 @@ var Game={
     restoreSavePresentation();
     Engine.resetSan(S.san);
     function restoreAnomalyFX(){
-      if(PAT.state==='walk'){
-        var room=PAT.room==='out'?null:INTERIORS[PAT.room];
-        if(Collision.depth(PAT.x,PAT.y,PAT_BODY/U2M,room)>1e-7)patReset();
-        else patAddFig();
-      }
+      if(PAT.state==='walk'&&PAT.room===patRoomHere())patAddFig();
       if(!AN.id||!AN.active) return;
       try{
         if(HAS_FX[AN.id]) anfxSpawn(AN.id,S.x,S.y);      /* 和 anOn 共用一张表：以前这里另抄了一份，新异象（水杯、雨点成字）读档后看不见 */

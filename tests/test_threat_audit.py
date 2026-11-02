@@ -1,4 +1,4 @@
-"""恐怖计划 P0 / P2 的回归：巡察者卡住会放弃、跟丢后去最后看见的地方、记得躲过的柜子；
+"""恐怖计划 P0 / P2 的回归：巡察者不可达时重规划而不消失、跟丢后去最后看见的地方、记得躲过的柜子；
 SAN / 体力反馈在静音、低画质、触屏和不同帧率下一致；异象不连着重复；反复死在同一处给线索；
 SAN 计划：钥匙保底、课桌短任务题库、坐着同化时的提醒。"""
 from browser_case import BrowserCase
@@ -10,49 +10,26 @@ class ThreatAuditTest(BrowserCase):
           for(var k=0;k<400;k++){var x=R.ox+Math.random()*R.w,y=R.oy+Math.random()*R.h;if(canStand(x,y)){S.x=x;S.y=y;break;}}
           S.seated=false;patReset();void 0""")
 
-    def test_locked_patrol_that_cannot_reach_gives_up(self):
-        page = self.page()
-        self.patrol_room(page)
-        result = page.evaluate("""() => {
-          patStart();for(let i=0;i<40;i++)patTick(0.1);           // 预警 → 出现
-          PAT.locked=true;PAT.lock=1;
-          const realPath=patPath;window.patPath=function(){return null;};   // 到不了你身边
-          const sees=window.patSees;window.patSees=()=>true;              // 一直看得见
-          let t=0;while(PAT.state!=='idle'&&t<20){patTick(0.1);t+=0.1;}
-          window.patPath=realPath;window.patSees=sees;
-          return {gaveUp:PAT.state==='idle',t:+t.toFixed(1),dead:S.dead};
+    def test_unreachable_permanent_patrol_replans_without_giving_up(self):
+        page=self.page();self.patrol_room(page)
+        result=page.evaluate("""() => {
+          PAT.permanent=true;PAT.safety=0;let original=PatrolNav.route;PatrolNav.route=()=>null;
+          for(let i=0;i<200;i++)patTick(.1);PatrolNav.route=original;
+          return {permanent:PAT.permanent,present:PAT.state==='walk',diagnostic:!!PAT.diagnostic,dead:S.dead};
         }""")
-        self.assertTrue(result['gaveUp'], result)
-        self.assertLessEqual(result['t'], 8)
-        self.assertFalse(result['dead'])
+        self.assertEqual(result,dict(permanent=True,present=True,diagnostic=True,dead=False))
 
-    def test_patrol_checks_where_it_last_saw_you_and_the_locker_you_used(self):
-        page = self.page()
-        self.patrol_room(page)
-        result = page.evaluate("""() => {
-          const R=INTERIORS.teach2;let lock=null;
-          for(let r=0;r<R.rows&&!lock;r++)for(let c=0;c<R.cols&&!lock;c++)if(R.grid[r][c]==='H')lock={c,r};
-          const front=lockerFront(R,lock.c,lock.r);
-          // 你又躲进了上次那个柜子，它没看见你钻进去；它一出现就先去那个柜子门口，站一会儿
-          RT.patMem={teach2:lock};hideIn(lock);HIDE.seen=false;
-          patStart();for(let i=0;i<40;i++)patTick(0.1);
-          const goesToLocker=Math.hypot(PAT.tx-front.x,PAT.ty-front.y)<1&&PAT.linger>0;
-          // 停在门口吓人，但抓不到
-          let near=false;
-          for(let i=0;i<520&&PAT.state!=='idle';i++){patTick(0.1);if(Math.hypot(PAT.x-front.x,PAT.y-front.y)<12)near=true;}
-          const safe=!S.dead;hideOut();patReset();
-          // 记得的柜子走不到（被关着的门隔开）：不去，也不在原地卡着
-          const realPath=window.patPath;window.patPath=(x,y)=>Math.hypot(x-front.x,y-front.y)<1?null:realPath(x,y);
-          patStart();for(let i=0;i<40;i++)patTick(0.1);
-          const skipsUnreachable=Math.hypot(PAT.tx-front.x,PAT.ty-front.y)>=1&&!(PAT.linger>0);
-          window.patPath=realPath;patReset();
-          // 跟丢以后：去最后看见你的地方
-          patStart();for(let i=0;i<40;i++)patTick(0.1);
-          PAT.locked=true;PAT.lock=1;PAT.seenX=S.x;PAT.seenY=S.y;PAT.lost=2.4;
-          const sees=window.patSees;window.patSees=()=>false;patTick(0.2);window.patSees=sees;
-          return {goesToLocker,near,safe,skipsUnreachable,lostTarget:PAT.tx===PAT.seenX&&PAT.ty===PAT.seenY&&PAT.linger>0&&!PAT.locked};
+    def test_patrol_searches_last_seen_but_does_not_know_an_unseen_locker(self):
+        page=self.page();self.patrol_room(page)
+        result=page.evaluate("""() => {
+          doEnterRoom('teach2',PatrolNav.tilePoint('teach2',30,18));S.seated=false;
+          patReset();PAT.room='teach2';PAT.x=S.x+70;PAT.y=S.y;PAT.safety=0;PAT.near=true;
+          PAT.locked=true;PAT.lastSeen=PatrolNav.point('teach2',S.x,S.y);PAT.blinkCD=100;
+          let point=JSON.stringify(PAT.lastSeen);const original=PatrolNav.los;PatrolNav.los=()=>false;
+          hideIn({c:12,r:16});let unseen=!HIDE.seen;patTick(2.6);PatrolNav.los=original;
+          return {unseen,safe:!S.dead,present:PAT.state==='walk',searching:!PAT.locked&&PAT.search>0,lastSeen:JSON.stringify(PAT.lastSeen)===point};
         }""")
-        self.assertEqual(result, {'goesToLocker': True, 'near': True, 'safe': True, 'skipsUnreachable': True, 'lostTarget': True})
+        self.assertEqual(result,dict(unseen=True,safe=True,present=True,searching=True,lastSeen=True))
 
     def test_sanity_feedback_does_not_depend_on_sound_quality_or_input(self):
         for touch in (False, True):
@@ -79,7 +56,7 @@ class ThreatAuditTest(BrowserCase):
         self.patrol_room(page)
         result = page.evaluate("""() => {
           function run(dt){S.san=80;PAT.state='walk';PAT.locked=true;PAT.room='teach2';HIDE.on=false;
-            const rule=NEED_RULE['自由'];for(let t=0;t<10-1e-9;t+=dt)sanTick(dt,{san:()=>{},there:()=>true},false);return S.san;}
+            PAT.safety=0;PAT.transition=null;PAT.x=S.x+5;PAT.y=S.y;for(let t=0;t<10-1e-9;t+=dt)Mechanics.finish(dt);return S.san;}
           const a=run(1/20),b=run(1/60);patReset();return Math.abs(a-b);
         }""")
         self.assertLess(result, 1e-6)

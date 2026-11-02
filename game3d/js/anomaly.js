@@ -634,7 +634,7 @@ function colaOwe(){
 function colaSafe(){
   if(!RT.colaPending||S.dead||S.screen!=='play') return false;
   if(!isNight()||S.mode!=='out') return false;
-  if(AN.active||PAT.state!=='idle'||HIDE.on) return false;
+  if(AN.active||PatrolWorld.localChase()||HIDE.on) return false;
   if(S.fn&&S.fn.on) return false;
   if(typeof Inspection!=='undefined'&&(Inspection.active()||Inspection.quiet())) return false;
   if(typeof CarChase!=='undefined'&&CarChase.active()) return false;

@@ -181,9 +181,12 @@ class ModuleBrowserTest(BrowserCase):
           doEnterRoom('lab1',Elevator.landing('lab',1));Math.random=()=>0;Elevator.board('lab',1);Elevator.enterDream('67');
           const inside=S.room, old=!INTERIORS.lift_dream.build&&INTERIORS.lift_dream.cols===18;
           const before=S.tsec;clockTick(1);const frozen=S.tsec===before;
+          const landing=Elevator.landing('lab',1);Object.assign(PAT,{room:'lab1',x:landing.x,y:landing.y,fy:0,permanent:true,safety:0,blinkCD:0,transition:null});
+          PatrolWorld.tick(2.2);const patrol=PAT.room==='lift_dream'&&PAT.permanent&&!!PatrolNav.path(PatrolWorld.position(),PatrolNav.tilePoint('lift_dream',15,5));
+          saveGame();applySave(loadGame());const patrolReload=PAT.room==='lift_dream'&&PAT.permanent;
           S.x=INTERIORS.lift_dream.ox+15.5*9;S.y=INTERIORS.lift_dream.oy+5.5*9;S.ang=0;tryInteract();
           S.bag.push('chalk');useItem('chalk');
-          return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,frozen,back:S.room,panel:!!document.getElementById('modTools'),
+          return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,frozen,patrol,patrolReload,back:S.room,panel:!!document.getElementById('modTools'),
             sub:document.getElementById('sub').innerText}}""")
         self.assertEqual(result['n'], len(manifest()) - 5)          # 清单里的模块数减去拿掉的五个
         self.assertEqual(result['bad'], 0)
@@ -191,6 +194,8 @@ class ModuleBrowserTest(BrowserCase):
         self.assertEqual(result['inside'], 'lift_dream')
         self.assertTrue(result['old'])
         self.assertTrue(result['frozen'])
+        self.assertTrue(result['patrol'])
+        self.assertTrue(result['patrolReload'])
         self.assertEqual(result['back'], 'lab1')
         self.assertFalse(result['panel'])
         self.assertIn('粉笔', result['sub'])                      # 没有记号模块：粉笔回到「看一眼说明」

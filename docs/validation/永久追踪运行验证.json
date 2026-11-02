@@ -1,0 +1,652 @@
+{
+  "kind": "conditioned simulation with debug invulnerability; not a natural playthrough",
+  "fixedStepSeconds": 0.5,
+  "results": [
+    {
+      "goal": {
+        "scene": "teach1",
+        "x": 889.125,
+        "y": 1801.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 63,
+      "tracking": true,
+      "position": {
+        "scene": "teach1",
+        "x": 895.875,
+        "y": 1813.354707730092,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "teach2",
+        "x": 889.125,
+        "y": 1801.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 59.5,
+      "tracking": true,
+      "position": {
+        "scene": "teach2",
+        "x": 895.875,
+        "y": 1811.8988636073764,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "teach3",
+        "x": 889.125,
+        "y": 1801.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 63,
+      "tracking": true,
+      "position": {
+        "scene": "teach3",
+        "x": 895.875,
+        "y": 1813.354707730092,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "teach4",
+        "x": 889.125,
+        "y": 1801.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 65.5,
+      "tracking": true,
+      "position": {
+        "scene": "teach4",
+        "x": 895.875,
+        "y": 1813.354707730092,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "teach5",
+        "x": 889.125,
+        "y": 1801.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 68.5,
+      "tracking": true,
+      "position": {
+        "scene": "teach5",
+        "x": 895.875,
+        "y": 1813.354707730092,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "teach6",
+        "x": 1037.625,
+        "y": 1819.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 69.5,
+      "tracking": true,
+      "position": {
+        "scene": "teach6",
+        "x": 1046.625,
+        "y": 1838.0605518528073,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "admin1",
+        "x": 882.125,
+        "y": 1071.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 7,
+      "tracking": true,
+      "position": {
+        "scene": "admin1",
+        "x": 882.125,
+        "y": 1089.7628246380552,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "admin2",
+        "x": 882.125,
+        "y": 1071.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 9.5,
+      "tracking": true,
+      "position": {
+        "scene": "admin2",
+        "x": 882.125,
+        "y": 1089.7628246380552,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "admin3",
+        "x": 882.125,
+        "y": 1071.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 12.5,
+      "tracking": true,
+      "position": {
+        "scene": "admin3",
+        "x": 882.125,
+        "y": 1089.7628246380552,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "admin4",
+        "x": 882.125,
+        "y": 1071.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 15,
+      "tracking": true,
+      "position": {
+        "scene": "admin4",
+        "x": 882.125,
+        "y": 1089.7628246380552,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "admin5",
+        "x": 882.125,
+        "y": 1071.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 18,
+      "tracking": true,
+      "position": {
+        "scene": "admin5",
+        "x": 882.125,
+        "y": 1089.7628246380552,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "lab1",
+        "x": 895.625,
+        "y": 1400.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 50,
+      "tracking": true,
+      "position": {
+        "scene": "lab1",
+        "x": 902.375,
+        "y": 1407.3087661840736,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "lab2",
+        "x": 895.625,
+        "y": 1400.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 46,
+      "tracking": true,
+      "position": {
+        "scene": "lab2",
+        "x": 902.375,
+        "y": 1404.9209415460184,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "lab3",
+        "x": 1219.625,
+        "y": 1400.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 60,
+      "tracking": true,
+      "position": {
+        "scene": "lab3",
+        "x": 1217.375,
+        "y": 1425.5349025766973,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "lab4",
+        "x": 895.625,
+        "y": 1400.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 52.5,
+      "tracking": true,
+      "position": {
+        "scene": "lab4",
+        "x": 893.375,
+        "y": 1427.0349025766973,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "lab5",
+        "x": 895.625,
+        "y": 1400.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 56,
+      "tracking": true,
+      "position": {
+        "scene": "lab5",
+        "x": 900.125,
+        "y": 1406.5808441227157,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "portal_tunnel",
+        "x": 41.625,
+        "y": 50.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 54.5,
+      "tracking": true,
+      "position": {
+        "scene": "portal_tunnel",
+        "x": 34.087310601229376,
+        "y": 34.087310601229376,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "canteen1",
+        "x": 971.625,
+        "y": 2244.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 100,
+      "tracking": true,
+      "position": {
+        "scene": "canteen1",
+        "x": 987.375,
+        "y": 2246.6100647362946,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "dorm1",
+        "x": 956.625,
+        "y": 2208.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 88,
+      "tracking": true,
+      "position": {
+        "scene": "dorm1",
+        "x": 964.125,
+        "y": 2224.375,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "dorm2",
+        "x": 956.625,
+        "y": 2208.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 91,
+      "tracking": true,
+      "position": {
+        "scene": "dorm2",
+        "x": 977.0569805153394,
+        "y": 2224.375,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "dorm3",
+        "x": 956.625,
+        "y": 2208.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 93.5,
+      "tracking": true,
+      "position": {
+        "scene": "dorm3",
+        "x": 977.0569805153394,
+        "y": 2224.375,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "dorm4",
+        "x": 956.625,
+        "y": 2388.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 106,
+      "tracking": true,
+      "position": {
+        "scene": "dorm4",
+        "x": 964.125,
+        "y": 2404.375,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "dorm5",
+        "x": 956.625,
+        "y": 2388.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 109,
+      "tracking": true,
+      "position": {
+        "scene": "dorm5",
+        "x": 977.0569805153394,
+        "y": 2404.375,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "dorm6",
+        "x": 956.625,
+        "y": 2388.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 111.5,
+      "tracking": true,
+      "position": {
+        "scene": "dorm6",
+        "x": 977.0569805153394,
+        "y": 2404.375,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "garage1",
+        "x": 412.625,
+        "y": 1011.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 45.5,
+      "tracking": true,
+      "position": {
+        "scene": "garage1",
+        "x": 424.4403409815594,
+        "y": 1016.6903409815594,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "trash1",
+        "x": 1546.125,
+        "y": 2183.125,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 58.5,
+      "tracking": true,
+      "position": {
+        "scene": "trash1",
+        "x": 1555.125,
+        "y": 2189.875,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "link1",
+        "x": 1265.125,
+        "y": 1230.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 22.5,
+      "tracking": true,
+      "position": {
+        "scene": "link1",
+        "x": 1265.125,
+        "y": 1217.875,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "link2",
+        "x": 1265.125,
+        "y": 1590.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 46.5,
+      "tracking": true,
+      "position": {
+        "scene": "link2",
+        "x": 1265.125,
+        "y": 1577.875,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "guard1",
+        "x": 1165.625,
+        "y": 338.625,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 42,
+      "tracking": true,
+      "position": {
+        "scene": "guard1",
+        "x": 1174.625,
+        "y": 318.375,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "gear1",
+        "x": 693.625,
+        "y": 921.375,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 32,
+      "tracking": true,
+      "position": {
+        "scene": "gear1",
+        "x": 691.375,
+        "y": 932.625,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "out",
+        "x": 1024.5,
+        "y": 220.5,
+        "fy": 0
+      },
+      "reached": true,
+      "seconds": 56.5,
+      "tracking": true,
+      "position": {
+        "scene": "out",
+        "x": 1016.9821695952489,
+        "y": 228.01783040475112,
+        "fy": 0
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "lift_dream",
+        "x": 189,
+        "y": 701.1000000000001,
+        "fy": -8
+      },
+      "reached": true,
+      "seconds": 88,
+      "tracking": true,
+      "position": {
+        "scene": "lift_dream",
+        "x": 184.5,
+        "y": 684.1266564406747,
+        "fy": -8
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "lift_dream",
+        "x": 153,
+        "y": 18.900000000000013,
+        "fy": 4
+      },
+      "reached": true,
+      "seconds": 84.5,
+      "tracking": true,
+      "position": {
+        "scene": "lift_dream",
+        "x": 157.5,
+        "y": 28.482486355371265,
+        "fy": 4
+      },
+      "diagnostic": null,
+      "errors": []
+    },
+    {
+      "goal": {
+        "scene": "bell1",
+        "x": 839.314824904021,
+        "y": 1849.1450572609622,
+        "fy": 6.4
+      },
+      "reached": true,
+      "seconds": 86.5,
+      "tracking": true,
+      "position": {
+        "scene": "bell1",
+        "x": 859.3404089701316,
+        "y": 1854.1540593516825,
+        "fy": 6.1407713526000265
+      },
+      "diagnostic": null,
+      "errors": []
+    }
+  ]
+}

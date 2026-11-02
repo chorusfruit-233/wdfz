@@ -103,20 +103,6 @@ var SAVE_SCHEMA=[
       if(HIDE.on){HIDE.c=h.c;HIDE.r=h.r;HIDE.seen=!!h.seen;HIDE.t=saveNum(h.t,0,1e8);}
     }
   },
-  { /* 巡察者的瞬移间隔和追逐状态；路径由当前几何重新计算，不序列化。 */
-    save:function(d){
-      d.patrol={};
-      ['state','room','next','t','x','y','lock','locked','lost','still','tx','ty','walkT','step','blinkCD','afterBlink','cited'].forEach(function(k){d.patrol[k]=PAT[k];});
-    },
-    load:function(d){
-      var p=d.patrol;if(!p||!['idle','warn','walk'].includes(p.state))return;
-      if(p.state!=='idle'&&(p.room!==patRoomHere()||!patEligible()))return;
-      if(![p.x,p.y,p.tx,p.ty].every(Number.isFinite))return;
-      ['next','t','x','y','lock','lost','still','tx','ty','walkT','step','blinkCD','afterBlink'].forEach(function(k){if(Number.isFinite(p[k]))PAT[k]=p[k];});
-      PAT.state=p.state;PAT.room=p.room;PAT.locked=!!p.locked;PAT.path=null;
-      PAT.cited=!!p.cited||PAT.locked;
-    }
-  },
   { /* 车库里那个东西（只在车库里存）；钟楼旋梯上的位置（进房间时由 enterRoom 读） */
     save:function(d){
       d.roam=(S.mode==='in'&&S.room==='garage1')?Object.assign({},ROAM):null;
@@ -145,6 +131,7 @@ function applySave(d){
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
   Investigation.migrate();
   SchoolDay.restore();
+  Mechanics.migrate(d);
   CampusPressure.restore();
   try{ Elevator.fixCabinPosition(); }catch(e){}          /* 旧存档站在旧轿厢外围的：放回现在的轿厢正中 */
   return d;
@@ -152,7 +139,7 @@ function applySave(d){
 /* 规则恢复之后由应用流程调用；applySave 本身不构建模型、操纵 DOM 或设置灯光。 */
 function restoreSavePresentation(){
   var el=document.getElementById('hideslits');if(el)el.style.display=HIDE.on?'block':'none';
-  VisualState.patrolRed=PAT.locked?1:0;
+  VisualState.patrolRed=PatrolWorld.localChase()?1:0;
   Engine.torch(USE.torch);
 }
 function loadGame(){
@@ -187,6 +174,6 @@ function paintMenuSave(){
   if(!el) return;
   var seen=endsSeen(), ids=Object.keys(ENDINGS), got=[];
   for(var i=0;i<ids.length;i++) if(seen[ids[i]]) got.push(ENDINGS[ids[i]].t+(ENDINGS[ids[i]].true?'（真）':ENDINGS[ids[i]].fake?'（假）':''));
-  el.textContent=got.length?'已见结局 '+got.length+' / '+ids.length+'　'+got.join(' '):'';
-  el.style.display=got.length?'block':'none';
+  el.textContent=got.length?'已见结局 '+got.length+' / '+ids.length+'　'+got.join(' '):'公开真结局：闸门 · 白名单 · 门 · 网安仙人（未解锁）';
+  el.style.display='block';
 }

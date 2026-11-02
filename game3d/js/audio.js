@@ -394,7 +394,7 @@ var SFX=(function(){
       if(mk>0.6&&Math.random()<dt*6) P('world.mothThump',{k:0.4+mk*0.6});   /* 贴脸时的一团闷响 */
     }
     /* 被巡察者盯上：心跳顶上来 */
-    if(PAT.locked&&S.mode===(PAT.room==='out'?'out':'in')){
+    if(PatrolWorld.localChase()){
       L.nextPatBeat=(L.nextPatBeat||0)-dt;
       if(L.nextPatBeat<=0){ L.nextPatBeat=60/124; P('threat.heartPat'); }
     }

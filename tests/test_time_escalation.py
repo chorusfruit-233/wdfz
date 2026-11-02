@@ -23,21 +23,21 @@ for(const f of ['core','domain/player-stats','domain/game-time','systems','campu
   vm.runInContext(fs.readFileSync('game3d/js/'+f+'.js','utf8'),c);
 function at(clock){c.RT={pressureClock:clock};c.S.day=1;c.S.tsec=700;return c.CampusPressure.current();}
 for(const clock of [700,850,1090]){
-  const p=at(clock);for(const key of ['anomaly','patrol','danger','passive','rest'])a.equal(p[key],1);
+  const p=at(clock);for(const key of ['anomaly','danger','passive','rest'])a.equal(p[key],1);
 }
 let previous=at(1090);
 for(let clock=1091;clock<=10000;clock++){
   const p=at(clock);a.ok(p.danger>=previous.danger);
-  for(const key of ['anomaly','patrol','passive','rest'])a.ok(p[key]<=previous[key]&&p[key]>0);
+  for(const key of ['anomaly','passive','rest'])a.ok(p[key]<=previous[key]&&p[key]>0);
   a.ok(p.danger-previous.danger<.01);previous=p;
 }
 const second=at(1350);a.equal(second.stage,2);
-a.ok(second.anomaly<=.6&&second.patrol<=.6&&second.danger>=1.6&&second.passive<=.5);
+a.ok(second.anomaly<=.6&&second.danger>=1.6&&second.passive<=.5);
 for(const boundary of [1090,1350,2790,4230,5670]){
   const left=at(boundary-.001),right=at(boundary+.001);
-  for(const key of ['anomaly','patrol','danger','passive','rest'])a.ok(Math.abs(left[key]-right[key])<.0001);
+  for(const key of ['anomaly','danger','passive','rest'])a.ok(Math.abs(left[key]-right[key])<.0001);
 }
-for(const key of ['anomaly','patrol','danger','passive','rest'])a.equal(at(5670)[key],at(1e9)[key]);
+for(const key of ['anomaly','danger','passive','rest'])a.equal(at(5670)[key],at(1e9)[key]);
 // 既有 20 分钟自然日不改；大步跳时与逐帧到达同一时刻得到同样的压力。
 let snapshots=[];
 for(const step of [.25,13.7,1200]){
@@ -62,22 +62,22 @@ class EscalationBrowserTest(BrowserCase):
           RT=newRT();S.day=1;S.tsec=700;S.diff='easy';S.san=100;S.viol=0;
           S.mode='in';S.room='teach1';AN.lastBig=false;
           const random=Math.random;Math.random=()=>.5;
-          const base=[anInterval(),patInterval()];
+          const base=[anInterval(),PAT_SPEED,PAT_CHASE];
           AN.pre='rain';AN.next=8;AN.preNext=27;AN.locked=true;
-          PAT.state='warn';PAT.t=3.6;PAT.blinkCD=.75;PAT.afterBlink=.22;PAT.next=21;
+          patReset();PAT.warning=3.6;PAT.blinkCD=.75;PAT.afterBlink=.22;
           S.day=2;S.tsec=1350;
-          const day2=[anInterval(),patInterval()];
+          const day2=[anInterval(),PAT_SPEED,PAT_CHASE];
           S.day=6;S.tsec=800;S.san=0;S.viol=100;S.diff='hard';S.room='admin5';
-          const floor=[anInterval(),patInterval()];Math.random=random;
+          const floor=[anInterval(),PAT_SPEED,PAT_CHASE];Math.random=random;
           return {base,day2,floor,an:[AN.next,AN.preNext,AN.pre,AN.locked],
-            pat:[PAT.state,PAT.t,PAT.blinkCD,PAT.afterBlink,PAT.next]};
+            pat:[PAT.state,PAT.warning,PAT.blinkCD,PAT.afterBlink]};
         }""")
-        self.assertEqual(result['base'], [52, 42.5])
+        self.assertEqual(result['base'], [52, 16, 31])
         self.assertAlmostEqual(result['day2'][0] / result['base'][0], .55)
-        self.assertAlmostEqual(result['day2'][1] / result['base'][1], .60)
-        self.assertEqual(result['floor'], [10, 8])
+        self.assertEqual(result['day2'][1:], [16, 31])
+        self.assertEqual(result['floor'], [10, 16, 31])
         self.assertEqual(result['an'], [8, 27, 'rain', True])
-        self.assertEqual(result['pat'], ['warn', 3.6, .75, .22, 21])
+        self.assertEqual(result['pat'], ['walk', 3.6, .75, .22])
 
     def test_danger_grows_and_passive_recovery_shrinks_without_nerfing_pills_or_talent(self):
         page = self.page()
@@ -183,21 +183,20 @@ class EscalationBrowserTest(BrowserCase):
         result = page.evaluate("""()=>{
           RT=newRT();S.day=2;S.tsec=850;S.mode='in';S.room='teach1';
           AN.id=null;AN.active=false;AN.pre='rain';AN.next=6;AN.preNext=25;AN.locked=true;
-          PAT.state='warn';PAT.room='teach1';PAT.t=2.1;PAT.next=13;
-          PAT.x=100;PAT.y=200;PAT.tx=120;PAT.ty=240;
+          patReset();PAT.warning=2.1;PAT.near=true;
           saveGame();const d=loadGame();freshState('hard');running=false;applySave(d);
           return {stage:CampusPressure.current().stage,an:[AN.next,AN.preNext,AN.pre,AN.locked],
-            pat:[PAT.state,PAT.t,PAT.next]};
+            pat:[PAT.state,PAT.warning,PAT.near]};
         }""")
         self.assertEqual(result['stage'], 2)
         self.assertEqual(result['an'], [6, 25, 'rain', True])
-        self.assertEqual(result['pat'], ['warn', 2.1, 13])
+        self.assertEqual(result['pat'], ['walk', 2.1, True])
 
     def test_notice_waits_for_safe_gap_and_survives_reload_without_spam(self):
         page = self.page()
         result = page.evaluate("""()=>{
           RT=newRT();S.day=2;S.tsec=850;AN.active=false;AN.pre=null;
-          PAT.state='warn';clearIntroTimers();CampusPressure.tick();const blocked=RT.pressureSeen===0;
+          patReset();PAT.room='out';PAT.x=S.x+12;PAT.y=S.y;PAT.safety=0;PAT.locked=true;clearIntroTimers();CampusPressure.tick();const blocked=RT.pressureSeen===0;
           PAT.state='idle';os('线索不能被覆盖',5,OS_KEEP);CampusPressure.tick();
           const dialogue=document.getElementById('sub').textContent;
           clearIntroTimers();CampusPressure.tick();const seen=RT.pressureSeen;

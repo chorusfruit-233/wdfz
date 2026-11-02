@@ -10,16 +10,17 @@ var GamePolicy={
     return c.screen==='play'?'play':c.screen||'menu';
   },
   presentationAllowed:function(c){
-    return c.screen==='play'&&!c.prologue&&!c.debugFrozen;
+    return c.screen==='play'&&!c.prologue&&!c.debugFrozen&&!c.hidden;
   },
   simulationAllowed:function(c){
-    return this.presentationAllowed(c)&&!c.dead&&!c.paused&&!c.panelOpen&&!c.computer;
+    return this.presentationAllowed(c)&&!c.dead&&!c.paused&&!c.panelOpen&&!c.computer&&!c.intro;
   },
   playerAllowed:function(c){
-    return this.simulationAllowed(c)&&!c.phone&&!c.lesson&&!c.debugDragging&&!c.intro;
+    return this.simulationAllowed(c)&&!c.phone&&!c.terminal&&!c.lesson&&!c.debugDragging&&!c.intro;
   },
   inputOwner:function(c){
     if(c.targetDebug)return 'debug';
+    if(c.terminal)return 'terminal';
     if(c.editing)return 'text';
     var mode=this.mode(c);
     if(mode==='cutscene')return 'cutscene';

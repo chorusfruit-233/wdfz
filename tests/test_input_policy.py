@@ -36,7 +36,9 @@ const cases = [
   [{screen:'play', debugDragging:true}, 'play', 'blocked', false, true, true],
   [{screen:'play', targetDebug:true}, 'play', 'debug', true, true, true],
   [{screen:'play', editing:true}, 'play', 'text', true, true, true],
-  [{screen:'play', intro:true}, 'play', 'blocked', false, true, true],
+  [{screen:'play', intro:true}, 'play', 'blocked', false, false, true],
+  [{screen:'play', terminal:true}, 'play', 'terminal', false, true, true],
+  [{screen:'play', hidden:true}, 'play', 'player', false, false, false],
   [{screen:'play', driving:true}, 'play', 'driving', true, true, true],
 ];
 for (const [context, mode, owner, player, simulation, presentation] of cases) {
