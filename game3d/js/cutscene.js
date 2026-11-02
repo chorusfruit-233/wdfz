@@ -51,7 +51,7 @@ var CUT_DEF={
       if(!d.switched){
         d.switched=1;
         if(d.beam) d.beam.visible=false; if(d.thing) d.thing.visible=false;
-        S.mode='out'; S.room=null; S.x=GATE_N.x*SC; S.y=(GATE_N.y-30)*SC; enterWorldOut();
+        Engine.beginOutsideStage();
       }
       /* 0.36–1：已经冲出北门，回头看：门里涌出一排黑影追上来，越追越近，学校的窗一扇扇暗下去 */
       var t=clamp((k-0.36)/0.64,0,1), z=cutLerp(g.z-2,g.z-30,cutEase(t));
@@ -69,7 +69,7 @@ var CUT_DEF={
     }},
   /* 《白名单》：闸机的灯由红变白，「嘀」一声；黑场；已经站在门外，回头——门里一个接一个站满了人，在目送你 */
   face:{dur:10,setup:function(d){
-      S.mode='out'; S.room=null; S.x=(GATE_W.x+30)*SC; S.y=GATE_W.y*SC; enterWorldOut();
+      Engine.beginOutsideStage();
       var g=cutW2S(GATE_W.x,GATE_W.y), i; d.g=g;
       d.lamp=cutAdd(new THREE.Mesh(new THREE.BoxGeometry(0.12,0.12,0.12),cutBasic(0xd23a2e)));
       d.lamp.position.set(g.x+0.4,1.15,g.z+0.9);
@@ -85,7 +85,7 @@ var CUT_DEF={
         /* 面朝闸机：红灯——停一下——变成白的 */
         var ok=k>0.16;
         d.lamp.material.color.setHex(ok?0xe8e4d2:0xd23a2e);
-        if(ok&&!d.beep){ d.beep=1; try{ SFX.click(); setTimeout(function(){ try{SFX.click();}catch(e){} },120); }catch(e){} }
+        if(ok&&!d.beep){ d.beep=1; try{ SFX.click(); Lifecycle.scope('cutscene').timeout(function(){SFX.click();},120); }catch(e){} }
         cutLook(g.x+3.4,1.6,g.z+0.6, g.x,1.3,g.z+0.6);
         d.figs.forEach(function(f){ f.visible=false; });
         cutFade(k>0.24?(k-0.24)/0.06:0);
@@ -161,26 +161,29 @@ function playCut(id,done){
   try{ anfxClear(); }catch(e){}
   try{ UI.closePanelAll(); UI.closeChoice(); }catch(e){}
   resetInputState(); releaseMouseLook();
+  if(CUT.on){CUT.done=null;cutFinish();}
+  Lifecycle.renew('cutscene');
   CUT.on=true; CUT.t=0; CUT.id=id; CUT.dur=def.dur; CUT.done=done; CUT.data={};
   CUT.savedVisual={worldNorm:GLR.worldNorm,dayExpo:GLR.dayExpo};
   S.screen='cut';
   document.body.classList.add('cut');
   cutFade(0);
-  try{ def.setup(CUT.data); }catch(e){ try{ console.error(e); }catch(_e){} }
+  try{ def.setup(CUT.data); }catch(e){Lifecycle.report('cutscene.setup:'+id,e);cutFinish();}
 }
 function cutTick(dt){
   if(!CUT.on) return;
   CUT.t+=dt; CUT.dt=dt;
   var def=CUT_DEF[CUT.id], k=clamp(CUT.t/CUT.dur,0,1);
-  try{ def.frame(k,CUT.data); }catch(e){}
+  try{ def.frame(k,CUT.data); }catch(e){Lifecycle.report('cutscene.frame:'+CUT.id,e);cutFinish();return;}
   if(k>=1) cutFinish();
 }
 function cutFinish(){
   if(!CUT.on) return;
   var def=CUT_DEF[CUT.id];
-  try{ if(def.clean) def.clean(CUT.data); }catch(e){}
+  try{ if(def.clean) def.clean(CUT.data); }catch(e){Lifecycle.report('cutscene.clean:'+CUT.id,e);}
   if(CUT.grp){ GLR.scene.remove(CUT.grp);ThreeBackend.disposeGroup(CUT.grp);CUT.grp=null; }
   CUT.on=false;
+  Lifecycle.scope('cutscene').cancel();Engine.endStage();
   document.body.classList.remove('cut');
   GLR.flash=0;
   if(CUT.savedVisual){

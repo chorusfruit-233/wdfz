@@ -85,7 +85,7 @@ var DayEvents={
   }
 };
 /* 每秒往下掉的 SAN 统一走这里：速度 × 当天的倍率（校庆 0.5）。一次性扣除不要用它。 */
-function sanDrain(rate,dt){ if(rate>0&&dt>0) S.san-=dt*rate*DayEvents.drainMul(); }
+function sanDrain(rate,dt,source){ if(rate>0&&dt>0) PlayerStats.changeSan(-(dt*rate*DayEvents.drainMul()),source||'drain'); }   /* 写入走 PlayerStats（模块边界） */
 
 /* 校庆横幅：教学楼正面二楼，红底黄字。只在校庆当天、人在室外时挂着（单独一组，不进室外合并网格，也不参与碰撞）。 */
 var DayDecor={grp:null,

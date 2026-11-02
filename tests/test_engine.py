@@ -221,7 +221,7 @@ class EngineTest(BrowserCase):
         page = self.page()
         page.set_viewport_size({'width': 2800, 'height': 300})
         page.evaluate('resizeGL();syncCamera(0)')
-        self.assert_js(page, "GLR.cam.near<.08&&GLR.cam.near*Math.sqrt(1+Math.pow(Math.tan(S.fov*PI/360),2)*(1+GLR.cam.aspect*GLR.cam.aspect))<PRAD*U2M")
+        self.assert_js(page, "GLR.cam.near<.08&&GLR.cam.near*Math.sqrt(1+Math.pow(Math.tan(VisualState.camera.fov*PI/360),2)*(1+GLR.cam.aspect*GLR.cam.aspect))<PRAD*U2M")
         self.assert_js(page, 'GLR.postMat.uniforms.uNear.value===GLR.cam.near')
 
     def test_film_grain_is_subtle_in_dark_areas_and_can_be_turned_off(self):

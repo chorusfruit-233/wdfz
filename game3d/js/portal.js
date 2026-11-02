@@ -108,7 +108,7 @@ function portalBench(){
       try{ SFX.bigBell&&SFX.bigBell(0.4); }catch(e){}
       os('我：电池一接上，透镜里的光就漏了出来，在实验台前面撑开一个圈。圈里面——是有颜色的。',5,OS_FORCE);
       var openedRun=RT;
-      setTimeout(function(){
+      Lifecycle.scope('scene').timeout(function(){
         if(RT!==openedRun||!RT.portalOpen||S.dead||S.screen!=='play'||S.mode!=='in'||S.room!=='lab1'||PAUSE.on||UI.anyOpen()) return;
         UI.choice('那个圈在等我。',[
           {label:'走进去',fn:function(){ UI.closeChoice(); Speedrun.proof('portal'); triggerEnding('portal'); }},

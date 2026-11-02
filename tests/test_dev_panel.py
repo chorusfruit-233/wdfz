@@ -550,7 +550,7 @@ class DebugPanelTest(BrowserCase):
           S.ang=1.1;S.pitch=.15;S.eyeLift=.08;syncCamera(0);window.finalRotation=GLR.cam.quaternion.clone();
           anfxUpdate(.2);Dev.clearPreview();""")
         self.assert_js(page,"previewY<baseY-.5&&S.ang===1.1&&S.pitch===.15&&S.eyeLift===.08")
-        self.assert_js(page,'Math.abs(GLR.cam.position.y-(S.eyeH+S.eyeLift+(S.floorY||0)))<1e-6')
+        self.assert_js(page,'Math.abs(GLR.cam.position.y-(VisualState.camera.eyeH+S.eyeLift+(S.floorY||0)))<1e-6')
         self.assert_js(page,'1-Math.abs(GLR.cam.quaternion.dot(finalRotation))<1e-8')
 
     def test_preview_timeout_does_not_clear_a_new_anomaly(self):

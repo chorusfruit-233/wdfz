@@ -96,7 +96,7 @@ var Elevator={
   },
   enterDream:function(button){
     var ride=RT.elevatorRide;if(!ride||ride.phase!=='cabin'||!ride.rare)return;
-    ride.button=button;ride.phase='dream';S.san=Math.max(0,S.san-ELEVATOR_CONFIG.dreamSan);settleSan();
+    ride.button=button;ride.phase='dream';PlayerStats.changeSan(-(ELEVATOR_CONFIG.dreamSan),'elevator',{min:0});settleSan();
     if(S.dead)return;
     doEnterRoom('lift_dream',Elevator.spawn('lift_dream',2,5,0));
     os('我：门外是一片白色。远处有一道淡蓝色的门。',4,OS_FORCE);

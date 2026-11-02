@@ -17,10 +17,14 @@ var CampusPressure={
     '我：几乎没有喘息的空当了。要趁它们离开的间隙往出口走。',
     '我：校园已经彻底变了。但那些躲避它们的办法，应该还管用。'
   ],
-  observe:function(){
+  clock:function(){
     var saved=RT.pressureClock, now=gameClock();
     saved=Number.isFinite(saved)&&saved>=0?saved:700;
     if(S.screen==='play'&&Number.isFinite(now))saved=Math.max(saved,now);
+    return saved;
+  },
+  observe:function(){
+    var saved=this.clock();
     RT.pressureClock=saved;
     return saved;
   },
@@ -30,23 +34,16 @@ var CampusPressure={
     RT.pressureSeen=Number.isInteger(seen)?clamp(seen,0,this.current().stage):0;
   },
   current:function(){
-    var clock=this.observe();
+    /* HUD、灯光与音效可查询压力，但不因此写入权威状态。 */
+    var clock=this.clock();
     if(this._clock===clock)return this._value;
-    var points=this.curve, a=points[0], b=a, stage=0;
-    if(clock>a.clock)stage=1;
-    for(var i=1;i<points.length;i++){
-      b=points[i];
-      if(clock<b.clock)break;
-      a=b;stage=i+1;
-    }
-    var t=a===b?0:clamp((clock-a.clock)/(b.clock-a.clock),0,1);
-    var value={clock:clock,stage:stage};
-    ['anomaly','patrol','danger','passive','rest'].forEach(function(key){value[key]=a[key]+(b[key]-a[key])*t;});
+    var value=GameTimeRules.pressure(this.curve,clock);
     this._clock=clock;this._value=value;
     return value;
   },
   restGain:function(base){return Math.round(base*this.current().rest*10)/10;},
   tick:function(){
+    this.observe();
     var stage=this.current().stage;
     if(stage<=(RT.pressureSeen||0)||S.dead||S.screen!=='play')return;
     /* 不抢剧情、检查或危险预警；多次跨日只补最新一条，不逐条轰炸。 */

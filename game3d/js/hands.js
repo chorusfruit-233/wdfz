@@ -487,7 +487,7 @@ function handsTick(dt){
   if(leftUse) handHold(HANDS.L,leftUse);
   if(rightUse) handHold(HANDS.R,rightUse);
   /* 走路时轻轻晃，跑起来晃得大一点 */
-  var ph=S.walkPhase||0, amp=S.moving?(S.run?0.018:0.009):0.002;
+  var ph=VisualState.camera.walkPhase||0, amp=S.moving?(S.run?0.018:0.009):0.002;
   [HANDS.L,HANDS.R].forEach(function(h,i){
     var b=h.userData.base; if(!b) return;
     var q=ph+i;

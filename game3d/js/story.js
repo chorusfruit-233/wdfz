@@ -298,7 +298,7 @@ var FaceChallenge={
       return {label:label,fn:function(){
         if(i===question.answer){q.done++;autoSave();FaceChallenge.open();return;}
         var remedy=Talent.faceRemedy(), loss=remedy?0:FACE_WRONG_SAN*dif().san;   /* 编程社（规则 2）：第一次答错核对后台，不扣这一次 */
-        S.san=Math.max(0,S.san-loss);settleSan();
+        PlayerStats.changeSan(-loss,'face-answer',{min:0});settleSan();
         var feedback=FACE_EXPLANATIONS[questionId];
         Investigation.record('face:'+questionId,feedback,'验证','西小门 · 验证反馈');
         FaceChallenge.swap(q);autoSave();
@@ -404,6 +404,7 @@ function kill(msg,fx,source){
   if(S.dead||S.death) return;
   if(hasItem('elixir')){ elixirSave(); protectCommit(); return; }      /* 不知名药丸：替你死一次 */
   if(Talent.tryPreventDeath()){ immuneSave(); protectCommit(); return; }
+  var deathScope=Lifecycle.renew('death');
   S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
   S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
   Playtest.event('死亡',source||S.death);
@@ -417,8 +418,9 @@ function kill(msg,fx,source){
   try{ deathFX(S.death); }catch(e){}
   DEATH_MESSAGES[S.death]=msg;
   var f=document.getElementById('flash');
+  deathScope.own(function(){f.style.opacity='0';});
   f.style.background='#1a0000'; f.style.opacity='0.9';
-  setTimeout(function(){ f.style.opacity='0'; f.style.transition='opacity 1.2s'; },40);
+  deathScope.timeout(function(){ f.style.opacity='0'; f.style.transition='opacity 1.2s'; },40);
   VisualState.hurt=0.45;                     /* 以前直接拉满，整屏一层粉，演出本身反而看不清 */
   try{ if(SFX.deathFx) SFX.deathFx(S.death); else SFX.death(); }catch(e){ try{ SFX.death(); }catch(_e){} }
   var _ep=(DFX_EPI[S.death]||'');
@@ -431,7 +433,7 @@ function kill(msg,fx,source){
   /* 演出放完（或被跳过）只收一次：墓志铭、死亡界面或预知梦惊醒。旧的一次死亡被复活取消后不会再写回来 */
   function finish(){
     if(finished||S.deadId!==_deadId||!S.dead) return;
-    finished=true; if(DEATH_PENDING&&DEATH_PENDING.id===_deadId) DEATH_PENDING=null;
+    finished=true;deathScope.cancel(); if(DEATH_PENDING&&DEATH_PENDING.id===_deadId) DEATH_PENDING=null;
     try{ DeathArchive.notify(_arc); }catch(e){}
     if(wake){ dreamWake(); return; }
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
@@ -444,7 +446,7 @@ function kill(msg,fx,source){
   }
   DEATH_PENDING={id:_deadId,finish:finish,at:performance.now()};
   os(msg,2.6,OS_FORCE);
-  setTimeout(finish,_hold);
+  deathScope.timeout(finish,_hold);
 }
 /* 死亡演出可以跳过：至少看 0.6 秒（避免本来想点别的、一下子把整段跳没了），之后点一下或按空格 / 回车直接到结果 */
 var DEATH_PENDING=null;
@@ -480,7 +482,7 @@ function immuneSave(){
 }
 function survivalReset(){
   VisualState.flash=0.9; VisualState.hurt=0.4;
-  S.san=Math.max(S.san,45); S.viol=Math.min(S.viol,40);
+  PlayerStats.setSan(S.san,'survival',{min:45}); PlayerStats.setViolation(S.viol,'survival',{max:40});
   try{ if(PAT.state!=='idle') patEnd(null); }catch(e){}
   try{ if(AN.active) anEnd(); }catch(e){}
   try{ if(ROAM.on){ ROAM.stage='wait'; ROAM.waitT=8; ROAM.x=-1e6; ROAM.y=-1e6; ROAM.litAcc=0; } }catch(e){}
@@ -494,7 +496,7 @@ function dreamWake(){
     AN.active=false; AN.id=null; AN.data={}; AN.t=0; AN.acc=0; AN.pre=null; AN.preNext=0; AN.locked=false;
     AN.next=60;
     S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.pitch=0;S.deathView=null;
-    S.tsec=700; S.san=78; S.viol=0; S.stam=100; S.snackT=0; S.tt=0; S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
+    S.tsec=700; PlayerStats.setSan(78,'dream-wake'); PlayerStats.setViolation(0,'dream-wake'); PlayerStats.setStamina(100,'dream-wake'); S.snackT=0; PlayerStats.setAssimilation(0,'dream-wake'); S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
     VisualState.hurt=0; VisualState.flash=0;
     var f=document.getElementById('flash'); if(f){ f.style.transition='none'; f.style.opacity='0'; }
     UI.closeChoice(); PAUSE.on=false; ROAM.on=false;
@@ -534,7 +536,7 @@ function triggerEnding(id,skipCut){
 function showEndingCard(id){
   var e=ENDINGS[id];
   VisualState.flash=0.6;
-  setTimeout(function(){ VisualState.flash=0; },600);
+  Lifecycle.scope('session').timeout(function(){ VisualState.flash=0; },600);
   /* 结局卡：样式在 game.css（#ends），和死亡、暂停同一套档案式界面 */
   var tag=e.fake?'<div class="etag fake">假 结 局</div>':(e.true?'<div class="etag">真 结 局</div>':'');
   var more=e.fake?'<button type="button" class="ewake" onclick="fakeWake()">……再睁开眼</button>':'';

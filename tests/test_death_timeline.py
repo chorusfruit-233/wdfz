@@ -210,16 +210,16 @@ class DeathTimelineTest(BrowserCase):
         self.assertEqual(result, [True, True, True])
 
     def test_real_storyboard_death_turns_camera_and_releases_once(self):
-        """真实死亡（非预览）也走分镜：镜头量写在玩家状态上，结束时资源只释放一次。"""
+        """真实死亡（非预览）也走分镜：镜头使用独立状态，结束时资源只释放一次。"""
         page = self.page()
         result = page.evaluate("""() => {
           S.ang=0;S.pitch=0;S.eyeLift=0;S.deathView={ang:0,pitch:0,eyeLift:0};
           let old=ThreeBackend.disposeGroup,count=0;
           ThreeBackend.disposeGroup=function(g){count++;return old(g)};
           deathFX('gaze');for(let i=0;i<20;i++)anfxUpdate(.1);
-          let turned=Math.abs(S.ang-Math.PI)<0.05;
+          let turned=Math.abs(ANFX.view.ang-Math.PI)<0.05&&S.ang===0;
           deathFX('grip');for(let i=0;i<30;i++)anfxUpdate(.1);
-          let sank=S.eyeLift<-1;
+          let sank=ANFX.view.eyeLift<-1&&S.eyeLift===0;
           anfxClear();anfxClear();ThreeBackend.disposeGroup=old;
           S.ang=0;S.pitch=0;S.eyeLift=0;S.deathView=null;
           return {turned,sank,count};
@@ -273,7 +273,7 @@ class DeathTimelineTest(BrowserCase):
             self.assertEqual(r['done'], 1, cut_id)
             self.assertEqual(r['bad'], 0, cut_id)
             self.assertTrue(r['cleaned'], cut_id)
-        self.assertEqual(result['car']['mode'], 'out')     # 开车那条从车库切到校门外
+        self.assertEqual(result['car']['mode'], 'in')      # 过场只切舞台；正式驾驶由完成回调传送玩家
 
     def test_death_cinematics_stay_within_a_draw_call_budget(self):
         """性能：每种死亡演出在场景之外最多再加 30 次绘制（手机上每次绘制都有开销）。
@@ -285,7 +285,7 @@ class DeathTimelineTest(BrowserCase):
           for(const [,id] of DEV_DEATH){
             deathFX(id,{preview:true});for(let i=0;i<40;i++)anfxUpdate(DeathTimeline.duration(id)/60);
             GLR.renderer.info.reset();render(0.016);const extra=GLR.renderer.info.render.calls-base;
-            if(extra>30)over[id]=extra;const g=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(g);
+            if(extra>30)over[id]=extra;anfxClear();
           }
           GLR.renderer.info.autoReset=true;return over;
         }""")
@@ -297,7 +297,7 @@ class DeathTimelineTest(BrowserCase):
         result = page.evaluate("""() => {
           doEnterRoom('teach1');syncCamera(0);deathFX('swarm',{preview:true});anfxUpdate(0.5);
           const moths=[];ANFX.grp.traverse(o=>{if(o.isInstancedMesh)moths.push({hex:o.material.color.getHex(),n:o.count});});
-          const g=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(g);
+          anfxClear();
           return moths;
         }""")
         self.assertEqual(sorted(m['hex'] for m in result), [0x080808, 0x111111])   # 身子、翅膀，和 weather.js 一样
@@ -313,7 +313,7 @@ class DeathTimelineTest(BrowserCase):
             const p0=GLR.renderer.info.programs.length;
             deathFX(id,{preview:true});anfxUpdate(DeathTimeline.duration(id)*0.6);render(0.016);
             const n=GLR.renderer.info.programs.length-p0; if(n>0)fresh[id]=n;
-            const g=ANFX.grp;anfxClear();ThreeBackend.disposeGroup(g);
+            anfxClear();
           }
           return {fresh,warmedTwice:DeathCG.warm()};
         }""")

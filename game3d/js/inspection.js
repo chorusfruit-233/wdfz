@@ -118,9 +118,9 @@ var Inspection={
     st.current=null;
     st.calm=8;
     if(INSPECT_FX.group)INSPECT_FX.scatter={t:0,duration:.8};
-    S.san=Math.max(0,S.san-(c.compliant?INSPECT_CONFIG.goodSan:INSPECT_CONFIG.badSan));
+    PlayerStats.changeSan(-((c.compliant?INSPECT_CONFIG.goodSan:INSPECT_CONFIG.badSan)),'inspection',{min:0});
     addViolation(c.compliant?-INSPECT_CONFIG.goodViolation:INSPECT_CONFIG.badViolation,'inspection');
-    S.tt=clamp(S.tt+(c.compliant?INSPECT_CONFIG.assimilation:-INSPECT_CONFIG.assimilation),0,100);
+    PlayerStats.changeAssimilation(c.compliant?INSPECT_CONFIG.assimilation:-INSPECT_CONFIG.assimilation,'inspection',{min:0,max:100});
     os(c.compliant?'我：黑影散开了。我还在教室里。':'我：黑影散开了。它们已经记下我不在教室。',3.8,OS_FORCE);
     settleSan();if(!S.dead&&S.tt>=100)resolveAssimilation();
     if(c.compliant&&inClassroomHere()&&!S.dead)SchoolDay.grant(true);
@@ -149,7 +149,7 @@ var Inspection={
     }
     if(Inspection.looking(c)){
       c.look+=dt*DayEvents.drainMul();                      /* 校庆：注视扣 SAN 的速度也减半 */
-      while(c.look>=1){c.look-=1;S.san=Math.max(0,S.san-INSPECT_CONFIG.gazeSan);VisualState.hurt=Math.max(VisualState.hurt||0,.2);}
+      while(c.look>=1){c.look-=1;PlayerStats.changeSan(-(INSPECT_CONFIG.gazeSan),'inspection',{min:0});VisualState.hurt=Math.max(VisualState.hurt||0,.2);}
     }
     if(c.t>=INSPECT_CONFIG.duration)Inspection.finish(c);
   }

@@ -94,10 +94,10 @@ function useFacility(ch,R){
       toast('预报：'+(AN_CN[AN.pre]||AN.pre));
       addClue('pendulum');
     }else if(AN.active){
-      S.san=Math.max(0,S.san-4);
+      PlayerStats.changeSan(-(4),'interact',{min:0});
       os('我：摆在乱转，转得越来越快。它在说：已经来了。',3.6);
     }else{
-      S.san=Math.min(100,S.san+5);
+      PlayerStats.changeSan(5,'interact',{max:100});
       os('我：摆停在正中，一动不动。它没有给出危险预警。',3.4);
     }
     advanceGameTime(3);
@@ -108,9 +108,9 @@ function useFacility(ch,R){
       if(!addItem('vial')) return true;
       RT.vialTaken=1; os('我：转子转起来，液体分成两层。最底下沉着一线发光的东西，我把它倒进一支空管里。',4.2);
     }
-    else if(v2<46){ S.san=Math.min(100,S.san+7); os('我：转子转起来，液体分成两层。白的在上。',3.6); toast('离心机 · SAN +7'); }
-    else if(v2<72){ S.san=Math.min(100,S.san+2); os('我：离心机停了。管子里的东西还在转。',3.6); toast('离心机 · SAN +2'); }
-    else { S.san=Math.max(0,S.san-5); os('我：配平没配好，整台机器在桌上跳。',3.6); toast('离心机 · SAN −5'); }
+    else if(v2<46){ PlayerStats.changeSan(7,'interact',{max:100}); os('我：转子转起来，液体分成两层。白的在上。',3.6); toast('离心机 · SAN +7'); }
+    else if(v2<72){ PlayerStats.changeSan(2,'interact',{max:100}); os('我：离心机停了。管子里的东西还在转。',3.6); toast('离心机 · SAN +2'); }
+    else { PlayerStats.changeSan(-(5),'interact',{min:0}); os('我：配平没配好，整台机器在桌上跳。',3.6); toast('离心机 · SAN −5'); }
     advanceGameTime(5);
   }else if(ch==='N'){
     rolled=true;
@@ -123,8 +123,8 @@ function useFacility(ch,R){
       return true;
     }
     var v3=facRoll(100);
-    if(v3<58){ S.san=Math.min(100,S.san+4); os('我：调焦旋钮是热的。视野里有东西在慢慢游。',3.6); toast('显微镜 · SAN +4'); }
-    else { S.san=Math.max(0,S.san-4); os('我：镜片里有一只眼睛。它先眨了一下。',3.8); toast('显微镜 · SAN −4'); }
+    if(v3<58){ PlayerStats.changeSan(4,'interact',{max:100}); os('我：调焦旋钮是热的。视野里有东西在慢慢游。',3.6); toast('显微镜 · SAN +4'); }
+    else { PlayerStats.changeSan(-(4),'interact',{min:0}); os('我：镜片里有一只眼睛。它先眨了一下。',3.8); toast('显微镜 · SAN −4'); }
   }else if(ch==='Y'){
     rolled=true;
     addClue('geo');
@@ -135,7 +135,7 @@ function useFacility(ch,R){
     }else{
       os('我：我转了一下地球仪。它转回来，停在原来那一面。',3.2);
     }
-    S.san=Math.min(100,S.san+2);
+    PlayerStats.changeSan(2,'interact',{max:100});
   }else if(ch==='K'){
     if(R.host==='admin'){
       os('我：办公桌上摊着一叠表格。最上面那张的名字被涂掉了。',3.6);
@@ -192,7 +192,7 @@ function doSanAct(key){
   advanceGameTime(a.min);
   var base=key==='eat'?Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */
   var gain=CampusPressure.restGain(base);  /* 按休息结束时的压力结算，跨夜休息不能绕过衰减。 */
-  S.san=Math.min(100,S.san+gain);
+  PlayerStats.changeSan(gain,'interact',{max:100});
   S.actCool[key]=gameClock()+a.cd;
   restoreStamina(25);
   if(key==='piano'){ try{ SFX.resume(); SFX.moonlight(); }catch(e){} }
@@ -216,7 +216,9 @@ function timeSkipCard(mins,actName,tsec){
   if(em) em.textContent=actName||'';
   el.classList.add('on');
   if(SKIP_T) clearTimeout(SKIP_T);
-  SKIP_T=setTimeout(function(){
+  var skipScope=Lifecycle.renew('time-skip');
+  skipScope.own(function(){el.classList.remove('on');});
+  SKIP_T=skipScope.timeout(function(){
     if(el) el.classList.remove('on');
   }, 760);
 }
@@ -226,15 +228,15 @@ function useRoster(timeoutMs){
   var d=AN.data;
   if(hasItem('pen')||hasItem('chalk')){
     d.done=true;
-    S.san=Math.min(100,S.san+6);
+    PlayerStats.changeSan(6,'interact',{max:100});
     os('我：我在那道红线旁边，把自己的名字一笔一画重新写了一遍。写完以后，红线淡了。',4.4);
     addClue('roster');
     return;
   }
   UI.choice('名单上，我的名字被一道红线划掉了。手边没有笔。',[
-    {label:'把它撕下来',fn:function(){ UI.closeChoice(); d.done=true; addViolation(8); S.san=Math.max(0,S.san-5);
+    {label:'把它撕下来',fn:function(){ UI.closeChoice(); d.done=true; addViolation(8); PlayerStats.changeSan(-(5),'interact',{min:0});
       os('我：纸撕下来的时候，下面还贴着一张。一模一样，连那道红线都是新的。……至少我把它撕了。',4.6); }},
-    {label:'用指甲把名字刻回去',fn:function(){ UI.closeChoice(); d.done=true; S.san=Math.max(0,S.san-10);
+    {label:'用指甲把名字刻回去',fn:function(){ UI.closeChoice(); d.done=true; PlayerStats.changeSan(-(10),'interact',{min:0});
       os('我：指甲劈了。名字刻上去了，歪歪扭扭的，渗着一点红。',4.0); }},
     {label:'不管它',fn:function(){ UI.closeChoice(); }}
   ],{timeoutMs:Number.isFinite(timeoutMs)?Math.max(1,timeoutMs):5000});
@@ -405,7 +407,7 @@ function tryInteract(){
   if(ch==='M'){if(Investigation.state().entries.notice)Investigation.supplyOffer(useVending);else useVending();return;}
   if(ch==='t'||ch==='k'){ os('我：没有能吃的。',2.0); return; }
   if(ch==='B'||ch==='G'){ useStall(); return; }
-  if(ch==='w'){ S.san=Math.min(100,S.san+4); os('我：洗了把脸。',2.2); return; }
+  if(ch==='w'){ PlayerStats.changeSan(4,'interact',{max:100}); os('我：洗了把脸。',2.2); return; }
   os('我：用不上。',1.8);
 }
 function guardSupplies(){
@@ -440,7 +442,7 @@ function useGeoMap(){
 function useBell(){
   if(AN.active&&AN.id==='bell13'){
     os('我：我抱住撞木，用力撞了一下。钟声和那第十三下撞在一起——两边都没了。',4.6);
-    S.san=Math.min(100,S.san+8);
+    PlayerStats.changeSan(8,'interact',{max:100});
     try{ SFX.bigBell&&SFX.bigBell(); }catch(e){}
     anEnd(); return;
   }
@@ -459,7 +461,7 @@ function useAltar(){
     os('我：供桌上的饭还冒着气，筷子竖插在正中。照片上那张脸被剪掉了，校服是我们学校的。香炉底下压着一枚硬币。',5.6);
     return;
   }
-  S.san=Math.max(0,S.san-2);
+  PlayerStats.changeSan(-(2),'interact',{min:0});
   os('我：照片里那个人的手，好像比刚才抬高了一点。',3.2);
 }
 function hit2_seatNear(R){
@@ -492,7 +494,7 @@ function sitDown(){
   if(best){ S.x=best[0]; S.y=best[1]; S.ang=-PI/2; }
   else{ S.x=R.ox+(col+0.5)*R.tw; S.y=R.oy+(row+0.5)*R.th; }
   S.seated=true; S.enterCool=0.5;
-  S.eyeH=EYE;
+  VisualState.camera.eyeH=EYE;
   if(isMine) os('我坐下了。这是我自己的位子。',2.4);
   else os('我坐下了。这个位子不是我的。',2.4);
   SFX.click();
@@ -694,7 +696,7 @@ function useTerminal(){
   else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,OS_KEEP);
   os2later('我：还得去行政楼三楼，把数据同步过去。',5200);
 }
-function os2later(msg,ms){ setTimeout(function(){ if(!S.dead&&S.screen==='play') os(msg,3.6,OS_KEEP); },ms); }
+function os2later(msg,ms){ Lifecycle.scope('session').timeout(function(){ if(!S.dead&&S.screen==='play') os(msg,3.6,OS_KEEP); },ms); }
 function useTrash(){
   if(S.room!=='trash1'){ os('我：这个桶太小了。',2.2); return; }
   tryTrashRoute();

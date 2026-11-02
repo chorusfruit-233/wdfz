@@ -149,7 +149,7 @@ var Opening={on:false,short:false,handed:true,waitT:0,
     try{ syncCamera(0); }catch(e){}
     if(running){ lastT=performance.now(); accum=0; }
     try{ os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8); }catch(e){}
-    introT1=setTimeout(function(){ try{ os('我：兜里有一张学生证。照片上的人我不认识，可是班号、学号，都是我的。',4.8); }catch(e){} },5200);
+    introT1=Lifecycle.scope('intro').timeout(function(){ try{ os('我：兜里有一张学生证。照片上的人我不认识，可是班号、学号，都是我的。',4.8); }catch(e){} },5200);   /* 跟开局字幕同一个作用域：回菜单、重开时一并取消 */
   },
   /* 回主菜单、读档时：没演完的开场直接收掉，不留过场状态 */
   cancel:function(){

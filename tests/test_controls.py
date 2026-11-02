@@ -1409,9 +1409,21 @@ class ControlsTest(BrowserCase):
                 page.evaluate("S.bag=['phone'];S.tsec=700;S.san=90;UI.open('bag')")
                 phone = page.locator('#bags .s').first
                 if touch:
-                    phone.tap()
-                    self.assert_js(page, "!PHONE.on&&UI.openPanel==='bag'")
-                    phone.tap()
+                    # Playwright 的两次 tap 中间还要等待重建的格子稳定；软件 WebGL
+                    # 或并发负载下会超过 340 ms，旧 main 同样会正确地把它当成两次单击。
+                    # 保留真实触摸事件，只控制物品双击使用的 Date.now 时钟；performance
+                    # 不变，手势、补发 click 去重和浏览器事件仍走真实输入路径。
+                    page.evaluate("window._tapClock=Date.now();window._tapDateNow=Date.now;Date.now=()=>window._tapClock;void 0")
+                    try:
+                        phone.tap()
+                        self.assert_js(page, "!PHONE.on&&UI.openPanel==='bag'")
+                        page.evaluate('window._tapClock+=340')
+                        phone.tap()
+                        self.assert_js(page, "!PHONE.on&&UI.openPanel==='bag'")
+                        page.evaluate('window._tapClock+=339')
+                        phone.tap()
+                    finally:
+                        page.evaluate('Date.now=window._tapDateNow;void 0')
                 else:
                     phone.dblclick()
                 self.assert_js(page, "PHONE.on&&!UI.anyOpen()&&document.getElementById('bag').style.display==='none'")

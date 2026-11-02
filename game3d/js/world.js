@@ -133,16 +133,17 @@ function showBanner(txt){
   var el=document.getElementById('banner');
   if(!el) return;
   el.textContent=txt; el.style.opacity='1';
-  clearTimeout(el._t);
-  el._t=setTimeout(function(){ el.style.opacity='0'; },1800);
+  el._t=Lifecycle.renew('banner').timeout(function(){ el.style.opacity='0'; },1800);
 }
 function fadeTo(fn){
+  var transition=Lifecycle.renew('transition');
   var f=document.getElementById('fade');
   if(!f){ fn(); return; }
+  transition.own(function(){f.style.opacity='0';});
   f.style.transition='opacity .16s ease'; f.style.opacity='1';
-  setTimeout(function(){
-    try{ fn(); }catch(e){ try{ console.error(e); }catch(_e){} }
-    f.style.transition='opacity .30s ease'; f.style.opacity='0';
+  transition.timeout(function(){
+    try{ fn(); }catch(e){Lifecycle.report('scene-transition',e);}
+    if(transition.active()){f.style.transition='opacity .30s ease'; f.style.opacity='0';}
   },170);
 }
 var ENTER_VIA=null;          /* 'stair' / 'out'：决定进楼后站在哪 */
@@ -188,11 +189,19 @@ function unstick(){
     }
   }catch(e){}
 }
+/* 场景进入立即校正；后续只在模拟运行时检查，渲染和暂停不移动玩家。 */
+function repairPlayerPlacement(dt){
+  if(S.mode!=='in'||S.dead||HIDE.on)return;
+  S.stuckT=(S.stuckT||0)+dt;
+  if(S.stuckT>0.5){S.stuckT=0;if(solidAt(S.x,S.y))unstick();}
+}
 function doEnterRoom(id,spawn){
+  var R=INTERIORS[id]; if(!R) return;
+  Lifecycle.scope('transition').cancel();
+  Lifecycle.renew('scene');
   if(typeof FN_P!=='undefined'&&FN_P.grp&&FN_P.room!==id)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
   try{ spiralReset(); }catch(e){}
-  var R=INTERIORS[id]; if(!R) return;
   S.mode='in'; S.room=id;
   if(spawn){                                  /* 显式指定落点（开局坐座位） */
     S.x=spawn.x; S.y=spawn.y; if(spawn.ang!==undefined) S.ang=spawn.ang;
@@ -223,9 +232,11 @@ function doEnterRoom(id,spawn){
 }
 function exitRoom(){ fadeTo(function(){ doExitRoom(); }); }
 function doExitRoom(){
+  var R=INTERIORS[S.room]; if(!R) return;
+  Lifecycle.scope('transition').cancel();
+  Lifecycle.renew('scene');
   if(typeof FN_P!=='undefined'&&FN_P.grp)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
-  var R=INTERIORS[S.room]; if(!R) return;
   var o=objById(R.host);
   try{ Dread.enter(null); }catch(e){}
   S.mode='out'; S.room=null; S.seated=false;

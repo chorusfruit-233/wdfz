@@ -138,7 +138,7 @@ var POOL_GEO=null;
 function shadeBuildPools(){
   SHADE.pools.forEach(function(p){ GLR.scene.remove(p); if(p.material) p.material.dispose(); });
   SHADE.pools=[];
-  if(!GLR.roomLights||S.mode!=='in') return;
+  if(!GLR.roomLights||Engine.sceneView().mode!=='in') return;
   if(!POOL_GEO){ POOL_GEO=new THREE.PlaneGeometry(1,1); POOL_GEO.rotateX(-PI/2); }
   GLR.roomLights.forEach(function(L,i){
     if(L.position.y<2||L.position.y>4) return;            /* 只给顶灯（钟楼上头那盏不算） */

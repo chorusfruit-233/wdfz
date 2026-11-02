@@ -55,7 +55,7 @@ def sample(browser, root, label, qualities, frames, pictures):
                     if scene == '教室':
                         page.evaluate("""S.seated=true;S.x=INTERIORS.teach1.ox+48.5*9;
                             S.y=INTERIORS.teach1.oy+6.5*9;S.ang=-Math.PI/2;S.pitch=-.04;
-                            S.eyeH=1.12;syncCamera(0);""")
+                            if(typeof VisualState!=='undefined'&&VisualState.camera)VisualState.camera.eyeH=1.12;else S.eyeH=1.12;syncCamera(0);""")
                     else:
                         page.evaluate("""S.mode='out';S.room=null;S.seated=false;S.tsec=1080;
                             enterWorldOut();GLR.cam.position.set(66.7,2.2,133.3);

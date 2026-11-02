@@ -264,7 +264,7 @@ var SFX=(function(){
   /* 一步：k 是响度（跑起来更响），pan 左右，behind 背后（发闷） */
   function stepSound(sf,k,pan,behind,wet,at){
     var lp=behind?0.55:1, j;
-    if(at){ var a0=ctx(); if(!a0) return; setTimeout(function(){ stepSound(sf,k,pan,behind,wet); },at*1000); return; }
+    if(at){ var a0=ctx(); if(!a0) return; Lifecycle.scope('session').timeout(function(){ stepSound(sf,k,pan,behind,wet); },at*1000); return; }
     if(sf==='tile'){ noiseP(0.07,0.036*k,1150*lp,0,'bandpass',1.2,pan,0.25); noiseP(0.02,0.018*k,3200*lp,0,'highpass',0.7,pan,0.2); }
     else if(sf==='stair'){ noiseP(0.08,0.04*k,800*lp,0,'bandpass',1.0,pan,0.5); tone(150,0.09,'sine',0.03*k,90,0,0.5); }
     else if(sf==='garage'){ noiseP(0.09,0.04*k,900*lp,0,'bandpass',1.0,pan,0.9); noiseP(0.03,0.02*k,2600*lp,0.01,'bandpass',2,pan,0.9); }
