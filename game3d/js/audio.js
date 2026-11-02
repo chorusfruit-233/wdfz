@@ -3,10 +3,10 @@
 
 /* ================= 声音 =================
    全部用 Web Audio 现场合成，不加载任何文件（单文件、离线可玩）。
-   master ─┬─ 直达
-           └─ 混响（生成的冲激响应）
-   持续层：低音铺底（BGM）· 室外风 / 夜里虫鸣 · 室内灯管嗡声 · 车库滴水 · 雨 · 心跳
-   一次性：脚步（分室内外）、门、楼梯、拾取、铃、每种异象 / 死亡各自的声音、远处的怪声 */
+   一次性音效（2026-11-02 全部重做）：配方在 sound-bank.js，由 fx/sound-player.js 合成；这里只决定什么时候放、放哪一个。
+   分类总线 ─┬─ 主音量 → 压缩器 → 扬声器
+             └─ 混响（生成的冲激响应；「真实」档按空间换）
+   持续层（留在这里）：低音铺底（BGM）· 室外风 · 室内灯管嗡声 · 车库低频 · 雨 */
 var SFX=(function(){
   var ac=null,ready=false;
   function ensure(){
@@ -119,6 +119,7 @@ var SFX=(function(){
     }
     return NB;
   }
+  /* 下面几个是旧的底层合成函数：游戏里的音效都改用声音库了，只留给 SFX.synth()（模块、Mod 的环境声）用 */
   function tone(freq,dur,type,gain,slide,at,wet){
     var a=ctx(); if(!a) return;
     var o=a.createOscillator(), g=a.createGain(), t0=a.currentTime+(at||0);
@@ -160,12 +161,6 @@ var SFX=(function(){
     var _d=out(wet||0); if(_d) last.connect(_d);
     s.start(t0,Math.random()*1.5); s.stop(t0+dur+0.05);
   }
-  function note(freq, at, dur, gain, type, wet){ tone(freq,dur,type,gain,0,at,wet); }
-  /* 铜钟：非整数倍泛音 */
-  function bellHit(f0,gain,at,wet){
-    var parts=[[0.5,1.0],[1.0,0.7],[1.19,0.45],[1.56,0.3],[2.0,0.35],[2.74,0.18],[3.76,0.1]];
-    for(var i=0;i<parts.length;i++) tone(f0*parts[i][0],4.2-i*0.4,'sine',gain*parts[i][1],0,at||0,wet===undefined?0.5:wet);
-  }
   /* 像人声的元音：锯齿过两个带通 */
   function vowel(f0,dur,gain,at,fm1,fm2,vib){
     var a=ctx(); if(!a) return;
@@ -179,19 +174,20 @@ var SFX=(function(){
     g.connect(d);
     o.start(t0); lfo.start(t0); o.stop(t0+dur+0.1); lfo.stop(t0+dur+0.1);
   }
+  /* 《月光》：钢琴的音色在声音库（music.piano），这里只排谱 */
   function moonlight(){
     var arp=[207.65, 277.18, 329.63];
     var bass=[69.30, 103.83, 92.50, 103.83, 69.30, 92.50];
     var mel=[415.30, 466.16, 523.25, 466.16, 415.30, 369.99, 415.30, 466.16, 523.25, 622.25, 554.37, 466.16];
     var step=0.155, t=0, bar, i, r;
+    function pn(f,at,len,k){ P('music.piano',{pitch:f/440,at:at,len:len,k:k}); }
     for(bar=0;bar<24;bar++){
       var bf=bass[bar%bass.length];
-      note(bf, t, 3.0, 0.052, 'sine',0.3);
-      note(bf*2, t, 2.4, 0.026, 'triangle',0.3);
-      for(i=0;i<3;i++) for(r=0;r<3;r++) note(arp[(i+r)%3], t+(i*3+r)*step, 1.0, 0.034, 'sine',0.35);
+      pn(bf, t, 3.0, 1.0); pn(bf*2, t, 2.4, 0.45);
+      for(i=0;i<3;i++) for(r=0;r<3;r++) pn(arp[(i+r)%3], t+(i*3+r)*step, 1.0, 0.55);
       if(bar>=4){
-        note(mel[(bar-4)%mel.length], t+0.20, 1.9, 0.040, 'sine',0.4);
-        if(bar%4===2) note(mel[((bar-4)%mel.length+3)%mel.length], t+1.6, 1.5, 0.032, 'sine',0.4);
+        pn(mel[(bar-4)%mel.length], t+0.20, 1.9, 0.8);
+        if(bar%4===2) pn(mel[((bar-4)%mel.length+3)%mel.length], t+1.6, 1.5, 0.6);
       }
       t += 9*step;
     }
@@ -210,10 +206,27 @@ var SFX=(function(){
      def.bed：原来的铺底、风、嗡声保留多少（默认 0，全换掉）；def.quiet：是否停掉旋律、远处怪声、滴水、上下课铃（默认停）。
      低 SAN 心跳、巡察者心跳、蛾群这些和玩法有关的声音不受影响。 */
   var SCAPES={}, SC_NODES={}, scapeCutUntil=0;
+  /* 分类总线：每类声音一条（干声一条、混响一条），增益来自 SOUND_CATS[类].gain（默认 1） */
+  var BUS={}, BUSW={};
+  function catGain(c){ var C=(typeof SOUND_CATS!=='undefined')?SOUND_CATS[c]:null; return C&&typeof C.gain==='number'?C.gain:1; }
+  function bus(c){
+    var a=ctx(); if(!a) return null;
+    var m=master(); if(!m) return null;
+    if(!BUS[c]){ var g=a.createGain(); g.gain.value=catGain(c); g.connect(m); BUS[c]=g; }
+    return BUS[c];
+  }
+  function send(c,w){
+    var a=ctx(); if(!a||!(w>0)) return null;
+    master(); if(!revIn) return null;
+    if(!BUSW[c]){ var g=a.createGain(); g.gain.value=catGain(c); g.connect(revIn); BUSW[c]=g; }
+    var s=a.createGain(); s.gain.value=w; s.connect(BUSW[c]); return s;
+  }
   function synthApi(){
     return {ctx:ctx, master:master, out:out, reverb:function(){ master(); return revIn; }, tone:tone, noise:noise, noiseP:noiseP,
-      vowel:vowel, loopNoise:loopNoise, setG:setG, now:function(){ return ac?ac.currentTime:0; }};
+      vowel:vowel, loopNoise:loopNoise, setG:setG, now:function(){ return ac?ac.currentTime:0; },
+      bus:bus, send:send, pan:function(p){ var a=ctx(); return a?panNode(a,p):null; }, noiseBuf:noiseBuf};
   }
+  function P(id,opt){ try{ return (typeof SoundPlayer!=='undefined')?SoundPlayer.play(id,opt):null; }catch(e){ return null; } }
   function scapeTick(dt,on,duck){
     var sid=on?GameModules.first('soundscape'):undefined, sd=sid&&SCAPES[sid]?SCAPES[sid]:null, cut=(L&&L.t<scapeCutUntil)?0:1;
     Object.keys(SCAPES).forEach(function(k){
@@ -260,8 +273,10 @@ var SFX=(function(){
     L.rumble=loopNoise('lowpass',90,1.0); L.rumble.g.connect(d);
     L.t=0; L.nextMel=4; L.nextStinger=30; L.nextCricket=1; L.nextDrip=1; L.nextBeat=1; L.lastPeriod=null; L.nextThunder=6;
   }
-  /* 脚下是什么：瓷砖、水磨石楼梯、车库水泥、天台碎石、草、塑胶跑道、球场、水泥路 */
+  /* 脚下是什么：瓷砖、水磨石楼梯、车库水泥、天台碎石、草、塑胶跑道、球场、水泥路；模块可以用 stepSurface 钩子换（例如异空间的白色结构） */
   function stepSurface(){
+    var hook; try{ hook=GameModules.first('stepSurface'); }catch(e){}
+    if(hook&&typeof SOUND_BANK!=='undefined'&&SOUND_BANK['step.'+hook]) return hook;
     if(S.mode==='in'){
       if(S.room==='garage1') return 'garage';
       if(S.room==='teach6') return 'roof';
@@ -281,19 +296,14 @@ var SFX=(function(){
   function stepWet(){
     return AN.active&&(AN.id==='rain'||AN.id==='raindots')&&S.mode==='out'&&!underCover();
   }
-  /* 一步：k 是响度（跑起来更响），pan 左右，behind 背后（发闷） */
+  /* 一步：k 是响度（跑起来更响），pan 左右，behind 背后（发闷），at 延迟。左右脚轮流：音高差一点、声像偏一点 */
+  var foot=0;
   function stepSound(sf,k,pan,behind,wet,at){
-    var lp=behind?0.55:1, j;
-    if(at){ var a0=ctx(); if(!a0) return; Lifecycle.scope('session').timeout(function(){ stepSound(sf,k,pan,behind,wet); },at*1000); return; }
-    if(sf==='tile'){ noiseP(0.07,0.036*k,1150*lp,0,'bandpass',1.2,pan,0.25); noiseP(0.02,0.018*k,3200*lp,0,'highpass',0.7,pan,0.2); }
-    else if(sf==='stair'){ noiseP(0.08,0.04*k,800*lp,0,'bandpass',1.0,pan,0.5); tone(150,0.09,'sine',0.03*k,90,0,0.5); }
-    else if(sf==='garage'){ noiseP(0.09,0.04*k,900*lp,0,'bandpass',1.0,pan,0.9); noiseP(0.03,0.02*k,2600*lp,0.01,'bandpass',2,pan,0.9); }
-    else if(sf==='roof'){ for(j=0;j<3;j++) noiseP(0.035,0.022*k,rnd(2400,4200)*lp,j*0.025,'bandpass',1.5,pan,0.08); }
-    else if(sf==='grass'){ noiseP(0.14,0.024*k,2600*lp,0,'bandpass',0.5,pan,0.03,0.04); noiseP(0.06,0.012*k,5000*lp,0.03,'highpass',0.5,pan,0); }
-    else if(sf==='track'){ noiseP(0.08,0.045*k,300*lp,0,'lowpass',0.9,pan,0.03); }
-    else if(sf==='court'){ noiseP(0.06,0.04*k,1400*lp,0,'bandpass',1.4,pan,0.1); if(Math.random()<0.12) tone(rnd(2200,2600),0.06,'sine',0.006*k,2700,0.02); }
-    else { noiseP(0.11,0.042*k,420*lp,0,'lowpass',0.7,pan,0.05); }
-    if(wet){ noiseP(0.12,0.03*k,1700*lp,0.01,'bandpass',0.8,pan,0.05,0.02); noiseP(0.05,0.012*k,4200*lp,0.04,'highpass',0.5,pan,0); }
+    foot=1-foot;
+    var o={k:k,pan:clamp((pan||0)+(foot?0.05:-0.05),-1,1),lp:behind?0.55:1,at:at||0,pitch:foot?0.97:1};
+    P('step.'+sf,o);
+    if(sf==='court'&&Math.random()<0.12) P('step.squeak',{k:k,pan:o.pan,at:(at||0)+0.02});
+    if(wet) P('step.wet',{k:k,pan:o.pan,lp:o.lp,at:o.at});
   }
   /* 混响量：按场景 */
   function spaceWet(){
@@ -307,23 +317,12 @@ var SFX=(function(){
   }
   function setG(param,v,tc){ try{ param.setTargetAtTime(v,ac.currentTime,tc||0.6); }catch(e){} }
   var MEL=[[220,261.6,293.7,311.1,392,440,523.3],[207.7,246.9,277.2,311.1,370,415.3,493.9]];
-  /* 远处的怪声：随机挑一种 */
+  /* 远处的怪声：随机挑一种，随机方位；四成像是隔着楼板 / 墙 */
+  var STINGERS=['dread.knock','dread.whisper','dread.steps','distant.slam','distant.tinnitus','distant.aah',
+    'dread.chair','distant.ball','distant.giggle','dread.door','dread.run'];
   function stinger(){
-    var k=Math.floor(Math.random()*11), i, pan=rnd(-0.9,0.9);
-    if(k>=6){                                                                                          /* 新的几种：有方位（左右） */
-      if(k===6){ for(i=0;i<3;i++) noiseP(rnd(0.5,0.9),0.035,rnd(220,360),i*rnd(0.9,1.4),'lowpass',2.5,pan,0.5,0.15); }   /* 楼上有人在拖椅子 */
-      else if(k===7){ var t0=0, g0=0.05; for(i=0;i<9;i++){ noiseP(0.05,g0,600,t0,'lowpass',3,pan,0.6); t0+=0.42*Math.pow(0.78,i); g0*=0.82; } }   /* 一个球在地上弹，越弹越快、越轻 */
-      else if(k===8){ for(i=0;i<4;i++) vowel(rnd(330,420),0.12,0.010,i*0.16,900,1500,6); }            /* 很轻的一串笑 */
-      else if(k===9){ tone(95,1.6,'sawtooth',0.012,140,0,0.6); noiseP(1.4,0.02,700,0.1,'bandpass',4,pan,0.6,0.4); }   /* 一扇门慢慢被推开 */
-      else { for(i=0;i<10;i++) noiseP(0.08,0.03,rnd(250,380),i*0.21,'lowpass',2,pan*(1-i/12),0.7); }   /* 头顶上有人跑过去 */
-      return;
-    }
-    if(k===0){ for(i=0;i<3;i++) noise(0.09,0.06,260,i*0.32,'lowpass',2,0.7); }                     /* 三下敲门 */
-    else if(k===1){ for(i=0;i<6;i++) noise(0.3,0.012,1800+Math.random()*900,i*0.18,'bandpass',6,0.8,0.12); } /* 低语 */
-    else if(k===2){ for(i=0;i<5;i++) noise(0.12,0.03,380,i*0.52,'lowpass',1,0.6); }                 /* 背后有脚步 */
-    else if(k===3){ noise(0.5,0.08,180,0,'lowpass',1,0.8); tone(70,0.6,'sine',0.06,40,0,0.6); }      /* 远处一扇门被摔上 */
-    else if(k===4){ tone(1240,2.2,'sine',0.010,1180,0,0.9); tone(1310,2.2,'sine',0.008,1250,0.1,0.9); } /* 耳鸣 */
-    else { vowel(240,1.6,0.012,0,500,900,8); }                                                     /* 一声很远的"啊——" */
+    var id=STINGERS[Math.floor(Math.random()*STINGERS.length)];
+    P(id,{pan:rnd(-0.9,0.9),k:rnd(0.75,1),lp:Math.random()<0.4?0.4:1});
   }
   function tick(dt){
     var a=ctx(); if(!a||!L) return;
@@ -366,54 +365,52 @@ var SFX=(function(){
     if(L.nextMel<=0&&!quietScape){
       L.nextMel=rnd(5,11)*(1-tension*0.4);
       var sc=MEL[tension>0.5?1:0], n=1+Math.floor(Math.random()*3), j;
-      for(j=0;j<n;j++){ var f=sc[Math.floor(Math.random()*sc.length)]*(Math.random()<0.3?2:1); note(f,j*rnd(0.35,0.7),2.6,0.016,'triangle',0.8); }
+      for(j=0;j<n;j++){ var f=sc[Math.floor(Math.random()*sc.length)]*(Math.random()<0.3?2:1); P('music.box',{pitch:f/440,at:j*rnd(0.35,0.7)}); }
     }
     /* 夜里室外：虫鸣，偶尔整片同时停下 */
     if(out_&&night>0.6&&!rainOn&&!quietScape){
       L.nextCricket-=dt;
       if(L.nextCricket<=0){
         L.nextCricket=rnd(0.25,1.1);
-        if(Math.sin(L.t*0.05)>-0.7){ var cf=rnd(4200,5200); for(var c=0;c<3;c++) tone(cf,0.035,'sine',0.006,cf*0.98,c*0.06); }
+        if(Math.sin(L.t*0.05)>-0.7) P('world.cricket',{pitch:rnd(0.9,1.1),pan:rnd(-0.8,0.8)});
       }
     }
-    if(garage){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.8,3.0); tone(rnd(900,1500),0.12,'sine',0.03,400,0,0.8); } }
-    if(id==='leak'){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.3,0.8); tone(rnd(700,1300),0.10,'sine',0.04,300,0,0.6); } }
+    if(garage){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.8,3.0); P('world.drip',{pan:rnd(-0.7,0.7),wet:0.9}); } }
+    if(id==='leak'){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.3,0.8); P('world.drip',{k:1.3,pan:rnd(-0.4,0.4)}); } }
     /* 雷声由 fx/weather.js 跟着闪电一起放（SFX.thunder）。打着伞：雨点敲在伞面上；檐下：水往下滴 */
     if(rainOn&&!cover&&USE.brollyShield){
       var nPat=Math.floor(dt*28+Math.random());
-      for(var pi_=0;pi_<nPat;pi_++) tone(rnd(2600,4200),0.03,'sine',rnd(0.004,0.010),rnd(1800,2400),Math.random()*dt);
+      for(var pi_=0;pi_<nPat;pi_++) P('world.patter',{at:Math.random()*dt,pan:rnd(-0.6,0.6)});
     }else if(rainOn&&!cover&&underCover()){
-      L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.15,0.6); tone(rnd(1100,1800),0.08,'sine',0.02,500,0,0.3); }
+      L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.15,0.6); P('world.drip',{k:0.7,pitch:1.2,pan:rnd(-0.6,0.6),wet:0.2}); }
     }
-    if(id==='chalk'&&Math.random()<dt*3) noise(rnd(0.08,0.2),0.015,3200,0,'bandpass',4);
-    if(id==='lamps'&&Math.random()<dt*1.2){ noise(0.04,0.04,4000,0,'highpass'); tone(120,0.25,'square',0.012,118); }
-    if(id==='rite'&&Math.random()<dt*0.4) vowel(rnd(98,110),3.2,0.02,0,520,860,1.5);
+    if(id==='chalk'&&Math.random()<dt*3) P('world.chalkScratch');
+    if(id==='lamps'&&Math.random()<dt*1.2) P('world.lampFlicker',{pan:rnd(-0.8,0.8)});
+    if(id==='rite'&&Math.random()<dt*0.4) P('world.chant');
     /* 蛾群：离得越近扑翅声越密、越响，左右乱飞 */
     if(id==='moth'){
       var md=wxMothDist(), mk=clamp(1-md/12,0,1);
-      if(Math.random()<dt*(5+mk*40)) noiseP(rnd(0.03,0.07),0.006+mk*0.03,rnd(1400,2800),0,'bandpass',3,rnd(-1,1),0.15);
-      if(mk>0.6&&Math.random()<dt*6) noise(0.12,0.01+mk*0.02,rnd(180,260),0,'lowpass',2);   /* 贴脸时的一团闷响 */
+      if(Math.random()<dt*(5+mk*40)) P('world.moth',{k:0.2+mk,pan:rnd(-1,1)});
+      if(mk>0.6&&Math.random()<dt*6) P('world.mothThump',{k:0.4+mk*0.6});   /* 贴脸时的一团闷响 */
     }
     /* 被巡察者盯上：心跳顶上来 */
     if(PAT.locked&&S.mode===(PAT.room==='out'?'out':'in')){
       L.nextPatBeat=(L.nextPatBeat||0)-dt;
-      if(L.nextPatBeat<=0){ L.nextPatBeat=60/124; tone(60,0.16,'sine',0.09,40); tone(54,0.18,'sine',0.065,36,0.15); }
+      if(L.nextPatBeat<=0){ L.nextPatBeat=60/124; P('threat.heartPat'); }
     }
     /* 低 SAN：心跳 */
     if(san<38){
       L.nextBeat-=dt;
       if(L.nextBeat<=0){
         var bpm=70+(38-san)*2.2; L.nextBeat=60/bpm;
-        var hv=0.05+(38-san)/38*0.07;
-        tone(58,0.18,'sine',hv,38); tone(52,0.2,'sine',hv*0.7,34,0.16);
+        P('threat.heartLow',{k:0.42+(38-san)/38*0.58});
       }
     }
-    /* 上下课铃：时段一变就响（整片环境声安静时不响） */
+    /* 上下课铃：时段一变就响。进入「教室」时段是上课铃（急促的电铃），其余是下课铃（四音钟声）；
+       室外远一点、闷一点；整片环境声安静时（比如异空间）不响 */
     try{
-      var per=periodAt(S.tsec)[2];
-      if(quietScape){}
-      else if(L.lastPeriod!==null&&per!==L.lastPeriod&&S.mode==='in'){ schoolBell(); }
-      else if(L.lastPeriod!==null&&per!==L.lastPeriod){ schoolBell(0.4); }
+      var pp=periodAt(S.tsec), per=pp[2];
+      if(L.lastPeriod!==null&&per!==L.lastPeriod&&!quietScape) schoolBell(S.mode==='in'?1:0.45,pp[3]==='教室'?'start':'end');
       L.lastPeriod=per;
     }catch(e){}
     L.nextStinger-=dt*(1+tension*1.5);
@@ -426,47 +423,20 @@ var SFX=(function(){
     /* 屋里夜里：不知道哪儿在滴水；偶尔一声暖气片 / 墙里的「咔」 */
     if(!out_&&!garage&&night>0.5&&!quietScape){
       L.nextIndoorDrip=(L.nextIndoorDrip||2)-dt;
-      if(L.nextIndoorDrip<=0){ L.nextIndoorDrip=rnd(2.5,7); tone(rnd(1100,1700),0.10,'sine',0.010,500,0,0.9); }
-      if(Math.random()<dt*0.03) noiseP(0.03,0.04,1800,0,'highpass',1,rnd(-1,1),0.7);
+      if(L.nextIndoorDrip<=0){ L.nextIndoorDrip=rnd(2.5,7); P('world.drip',{k:0.35,pitch:1.3,pan:rnd(-0.9,0.9),wet:1}); }
+      if(Math.random()<dt*0.03) P('world.creak',{pan:rnd(-1,1)});
     }
   }
-  function schoolBell(v){
+  /* kind：'start' 上课铃、'end' 下课铃（默认）；v 响度，室外给 0.45 时同时发闷 */
+  function schoolBell(v,kind){
     v=v===undefined?1:v;
-    var a=ctx(); if(!a) return;
-    var i; for(i=0;i<22;i++){ tone(i%2?1046:988,0.11,'square',0.010*v,0,i*0.11,0.5); }
-    for(i=0;i<22;i++){ noise(0.05,0.006*v,3000,i*0.11,'bandpass',2,0.4); }
+    return P(kind==='start'?'event.bellStart':'event.bellEnd',{k:v,lp:v<0.7?0.6:1});
   }
-  var DEATH_SND={
-    drown:function(){ for(var i=0;i<14;i++) tone(rnd(300,700),0.12,'sine',0.05,rnd(900,1400),i*0.12+Math.random()*0.05,0.4); noise(2.4,0.10,600,0,'lowpass',0.5,0.5,0.6); },
-    swarm:function(){ for(var i=0;i<40;i++) noise(0.06,0.03,rnd(1200,3000),i*0.05,'bandpass',3); },
-    ring:function(){ vowel(98,3.4,0.05,0,520,860,1.5); vowel(147,3.4,0.03,0.2,600,1000,1.5); bellHit(196,0.05,0.4); },
-    neck:function(){ for(var i=0;i<10;i++) noise(0.14,0.05,rnd(200,500),i*0.24,'lowpass',4,0.4); tone(80,2.4,'sawtooth',0.04,260,0.3,0.3); },
-    laugh:function(){ for(var i=0;i<9;i++) vowel(220+i*12,0.22,0.05,i*0.24,800,1250,4); },
-    bell:function(){ bellHit(110,0.1,0); bellHit(110,0.08,1.4); },
-    voice:function(){ noise(1.6,0.05,2000,0,'bandpass',1.5,0.3); vowel(160,1.6,0.04,0.2,600,1700,6); },
-    follow:function(){ for(var i=0;i<8;i++){ noise(0.08,0.07,300,i*0.5,'lowpass'); tone(i%4===0?440:330,0.1,'square',0.012,0,i*0.5); } },
-    lamps:function(){ for(var i=0;i<8;i++) noise(0.05,0.05,5000,i*0.18,'highpass'); noise(0.4,0.12,1200,1.6,'lowpass',1,0.5); },
-    gaze:function(){ tone(1800,1.4,'sawtooth',0.02,2400,0,0.6); tone(1900,1.4,'sawtooth',0.02,2550,0,0.6); },
-    stare:function(){ for(var i=0;i<30;i++) noise(0.12,0.025,rnd(300,900),0.6+Math.random()*0.2,'lowpass',2,0.3); },
-    freeze:function(){ for(var i=0;i<20;i++) tone(rnd(2500,4500),0.08,'sine',0.02,0,i*0.07,0.6); },
-    shatter:function(){ for(var i=0;i<26;i++) tone(rnd(2000,5200),0.3,'triangle',0.03,0,i*0.03,0.5); },
-    grip:function(){ noise(0.25,0.12,500,0); for(var i=0;i<6;i++) noise(0.2,0.04,250,0.3+i*0.2,'lowpass',2); },
-    hand:function(){ noise(0.5,0.055,380,0.15,'lowpass',2);noise(0.18,0.09,800,0.9,'bandpass',1.4);tone(92,0.7,'sawtooth',0.025,48,1.05,0.4); },
-    trash:function(){ noise(0.35,0.09,420,0.3,'lowpass',2);noise(0.25,0.09,260,1.35,'lowpass',2);noise(0.10,0.1,600,2.0,'bandpass',2);noise(0.10,0.1,600,2.35,'bandpass',2); },
-    names:function(){ for(var i=0;i<12;i++) vowel(130+Math.random()*80,0.3,0.03,i*0.12,600,1000,2); },
-    /* 下面这些原来只有通用的死亡音：按死因各配一段（声音先行，先听见、再看见） */
-    vignette:function(){ for(var i=0;i<5;i++) vowel(92-i*4,0.9,0.03+i*0.006,i*0.42,320,700,1); noise(2.4,0.06,160,0.4,'lowpass',1,0.5,1.4); },        /* 一圈呼吸声往里收 */
-    shadow:function(){ for(var i=0;i<6;i++) noise(0.07,0.05,420,i*0.36+(i%2)*0.04,'lowpass',2,0.4); vowel(180,1.4,0.02,1.6,700,2100,9); },  /* 身后慢一拍的脚步，贴耳的气声 */
-    water:function(){ for(var i=0;i<16;i++) tone(rnd(900,1500),0.07,'sine',0.03,rnd(400,700),Math.pow(i/16,0.6)*2.2,0.6); noise(1.6,0.09,500,1.9,'lowpass',0.8,0.6,0.4); },  /* 滴水越来越密，最后一口灌进来 */
-    deep:function(){ noise(1.8,0.07,900,0,'bandpass',0.7,0.3,1.2); tone(160,1.8,'sine',0.04,40,0,0.4); noise(0.4,0.12,120,2.0,'lowpass',1,0.8); },   /* 往下掉的风声，很远的一声闷响 */
-    chalk:function(){ for(var i=0;i<4;i++){ noise(0.35,0.05,3600+i*300,i*0.5,'bandpass',8,0.3); tone(2600+i*180,0.3,'sawtooth',0.008,2900+i*200,i*0.5,0.3); } },   /* 粉笔在黑板上一下一下刮 */
-    loop:function(){ for(var i=0;i<10;i++) noise(0.07,0.03+i*0.006,950,0.45*(1-Math.pow(0.82,i))/0.18,'bandpass',1.2,0.9); },   /* 同一串脚步，一次比一次近 */
-    twin:function(){ for(var i=0;i<6;i++){ noise(0.07,0.05,600,i*0.5,'lowpass',1.5,0.4); noise(0.07,0.05,600,i*0.5+0.09,'lowpass',1.5,0.4); } },   /* 自己的脚步多了一份，差半拍 */
-    slit:function(){ tone(140,2.2,'sawtooth',0.02,95,0,0.4); noise(1.4,0.04,700,0.5,'bandpass',4,0.3,0.6); },   /* 门缝慢慢被推开 */
-    squeeze:function(){ noise(2.6,0.09,110,0,'lowpass',2,0.4,1.5); for(var i=0;i<5;i++) noise(0.05,0.08,1800,0.8+i*0.35,'highpass',1,0.2); },   /* 墙往里挤，混凝土一声声裂开 */
-    floor:function(){ tone(2400,1.1,'sine',0.02,600,0,0.3); noise(0.25,0.14,900,1.15,'lowpass',1,0.4); for(var i=0;i<5;i++) tone(rnd(1800,3200),0.12,'triangle',0.02,0,1.2+i*0.06,0.5); },   /* 头顶一声往下坠的哨音，砸在身上，碎了一地 */
-    face:function(){ noise(0.35,0.06,1500,0,'bandpass',1,0.2,0.2); tone(62,2.2,'sine',0.05,58,0.6,0.6); }   /* 吸一口气，然后只剩很低的嗡声 */
-  };
+  function deathKinds(){
+    var out=[]; if(typeof SoundPlayer==='undefined') return out;
+    SoundPlayer.ids().forEach(function(id){ if(id.indexOf('death.')===0&&id!=='death.base'&&id!=='death.generic') out.push(id.slice(6)); });
+    return out;
+  }
   return {
     moonlight: moonlight,
     resume:function(){ ctx(); },
@@ -492,133 +462,60 @@ var SFX=(function(){
     },
     /* 有方位、有远近、隔墙发闷的环境声（dread.js 的假威胁）：p={pan,k,muffled,behind} */
     dread:function(kind,p){
-      var a=ctx(); if(!a) return;
       p=p||{pan:0,k:0.5,muffled:false,behind:false};
-      var k=clamp(p.k||0.5,0.05,1), pan=clamp(p.pan||0,-1,1), lp=(p.muffled?0.35:1)*(p.behind?0.7:1), wet=p.muffled?0.85:0.5, i, n;
-      if(kind==='knock'){ for(i=0;i<3;i++) noiseP(0.07,0.075*k,260*lp+90,i*0.34+Math.random()*0.03,'lowpass',2,pan,wet); }
-      else if(kind==='steps'){ n=5+Math.floor(Math.random()*3); for(i=0;i<n;i++) noiseP(0.07,0.055*k*(1-i/(n+3)),900*lp+120,i*0.43,'bandpass',1.2,pan*(1-i/(n*1.6)),wet); }
-      else if(kind==='chair'){ noiseP(0.7,0.045*k,240*lp+90,0,'lowpass',3,pan,wet,0.12); noiseP(0.12,0.03*k,600*lp,0.68,'lowpass',2,pan,wet); }
-      else if(kind==='whisper'){ for(i=0;i<7;i++) noiseP(rnd(0.12,0.3),0.013*k,rnd(1800,3000)*lp,i*rnd(0.12,0.22),'bandpass',6,pan,0.3,0.05); }
-      else if(kind==='door'){ tone(95,1.4,'sawtooth',0.012*k,140,0,wet); noiseP(1.2,0.022*k,700*lp+100,0.1,'bandpass',4,pan,wet,0.4); }
-      else if(kind==='call'){ vowel(rnd(220,280),1.4,0.012*k,0,500*lp+200,900*lp+300,6); }
-      else if(kind==='run'){ for(i=0;i<10;i++) noiseP(0.06,0.065*k,500*lp+200,i*0.17,'lowpass',2,clamp(pan+(i/9-0.5)*1.6,-1,1),wet); }
-      else if(kind==='desk'){ noiseP(0.05,0.085*k,380*lp+100,0,'lowpass',1.5,pan,wet); noiseP(0.4,0.02*k,300*lp+60,0.08,'lowpass',2,pan,wet,0.1); }
-      else if(kind==='radio'){ noiseP(1.8,0.03*k,1800,0,'bandpass',1.2,pan,0.6,0.2); vowel(150,1.6,0.01*k,0.2,600,1700,9); }
+      return P('dread.'+kind,{pan:clamp(p.pan||0,-1,1),k:clamp(p.k||0.5,0.05,1),lp:(p.muffled?0.35:1)*(p.behind?0.7:1),wet:p.muffled?0.85:0.5});
     },
     /* 骤静 */
     duck:function(sec){ if(L) L.duckUntil=L.t+Math.max(0.5,sec||3); },
     ducking:function(){ return !!(L&&L.duckUntil&&L.t<L.duckUntil); },
     /* 异象前兆：低频的压迫感上来，耳朵里一点压力 */
-    precursor:function(k){
-      k=clamp(k===undefined?1:k,0.2,1);
-      tone(42,2.8,'sine',0.05*k,36,0,0.6); noise(2.6,0.025*k,120,0,'lowpass',1,0.6,1.6);
-      tone(1180,2.2,'sine',0.004*k,1160,0.6,0.9);
-    },
+    precursor:function(k){ return P('threat.precursor',{k:clamp(k===undefined?1:k,0.2,1)}); },
     /* 巡察者的脚步：按方位分左右，越近越响，背后的发闷 */
     patStep:function(pan,k,behind,locked){ stepSound(stepSurface(),(locked?1.5:1.1)*k,pan,behind,stepWet()); },
     /* 灯管接触不良：噼啪 + 一下 50Hz 的嗡 */
-    crackle:function(k,pan){
-      k=clamp(k,0,1); if(k<0.05) return;
-      var i, n=2+Math.floor(Math.random()*3);
-      for(i=0;i<n;i++) noiseP(0.018,0.05*k,rnd(3500,6500),i*rnd(0.02,0.05),'highpass',0.7,pan,0.2);
-      tone(100,0.14,'square',0.012*k,98,0,0.2);
-    },
+    crackle:function(k,pan){ k=clamp(k,0,1); if(k<0.05) return null; return P('world.crackle',{k:k,pan:pan||0}); },
     /* 拍肩的笑脸：回头时是身后一串很轻的、憋着的笑；突脸时是一声尖叫贴着耳朵 */
-    smile:function(mode){
-      var i;
-      if(mode==='jump'){
-        tone(46,1.4,'sawtooth',0.12,28,0,0.3); noise(0.5,0.16,2400,0,'bandpass',0.7,0.4,0.004);
-        vowel(520,0.9,0.09,0,900,2600,30); vowel(780,0.8,0.06,0.02,1100,3000,40);
-      }else{
-        for(i=0;i<5;i++) vowel(rnd(300,340),0.14,0.022,0.1+i*0.16,500,1700,4);
-      }
-    },
+    smile:function(mode){ return P(mode==='jump'?'threat.smileJump':'threat.smileBack',mode==='jump'?{}:{pan:0.3,lp:0.8}); },
     /* 清华水杯：往下掉的风声和哨音；落地按离你多远决定多响 */
-    cupFall:function(dur){
-      tone(2200,dur,'sine',0.018,650,0,0.2);
-      noise(dur,0.03,900,0,'bandpass',1.2,0.1,dur*0.8);
-    },
-    cupHit:function(missM){
-      var k=clamp(1-missM/14,0.15,1);
-      bellHit(620,0.035*k,0,0.4);                                     /* 不锈钢的「当」 */
-      noise(0.18,0.16*k,1800,0,'bandpass',0.8,0.3);
-      noise(0.5,0.09*k,240,0,'lowpass',1,0.4);
-      for(var i=0;i<4;i++) tone(rnd(1400,2400),0.05,'triangle',0.02*k,0,0.25+i*rnd(0.12,0.2),0.3);   /* 杯盖滚开 */
-    },
-    /* 天降可乐：很高的地方先「哐啷」磕一下、再咕噜噜滚，从一侧传来（pan）；
-       往下掉是短促的翻滚声；落地「嘭」的一声闷响，跟着很长的「嘶——」 */
-    colaRattle:function(pan,dur){
-      var i, d=dur||1.6;
-      noiseP(0.09,0.05,3200,0,'bandpass',2.2,pan,0.5);
-      tone(rnd(1700,2100),0.12,'triangle',0.016,0,0.01,0.5);
-      for(i=0;i<9;i++) noiseP(0.035,0.022,rnd(2400,3600),0.18+i*(d-0.45)/9,'bandpass',3,pan*(1-i/12),0.45);
-      tone(rnd(1300,1600),0.09,'triangle',0.012,0,d*0.55,0.5);
-    },
-    colaFall:function(dur){
-      for(var i=0;i<Math.floor(dur*9);i++) noise(0.03,0.012+i*0.0015,rnd(1800,2600),i/9,'bandpass',2.5,0.2);
-      noise(dur,0.022,700,0,'bandpass',1.0,0.1,dur*0.85);
-    },
-    colaHit:function(missM){
-      var k=clamp(1-missM/14,0.15,1);
-      noise(0.16,0.22*k,520,0,'lowpass',1.2,0.3);                      /* 铝罐瘪掉的闷响 */
-      noise(0.08,0.12*k,2600,0.01,'bandpass',1.4,0.3);
-      noise(2.4,0.05*k,5200,0.08,'highpass',0.6,0.2,0.05);             /* 泡沫「嘶——」 */
-      for(var i=0;i<3;i++) tone(rnd(900,1300),0.06,'triangle',0.012*k,0,0.3+i*rnd(0.2,0.3),0.3);   /* 罐子滚开 */
-    },
+    cupFall:function(dur){ return P('foley.cupFall',{len:Math.max(0.2,dur||1.2)}); },
+    cupHit:function(missM){ return P('foley.cupHit',{k:clamp(1-missM/14,0.15,1)}); },
+    /* 天降可乐：高处磕一下再滚（pan 一侧）；往下掉；落地「嘭」一声、长长的「嘶——」 */
+    colaRattle:function(pan,dur){ return P('foley.colaRattle',{pan:pan||0,len:dur||1.6}); },
+    colaFall:function(dur){ return P('foley.colaFall',{len:Math.max(0.2,dur||1.2)}); },
+    colaHit:function(missM){ return P('foley.colaHit',{k:clamp(1-missM/14,0.15,1)}); },
     /* 雷：近的先一声炸裂再滚，远的只有闷闷的滚 */
     thunder:function(delay,str,muffled){
-      str=clamp(str===undefined?1:str,0.2,1); var lp=muffled?0.55:1;
-      if(str>0.7) noise(0.35,0.16*str*lp,muffled?900:2400,delay,'lowpass',0.7,0.4,0.004);
-      noise(3.6,0.20*str*lp,muffled?110:170,delay+0.05,'lowpass',0.8,0.7,0.25);
-      noise(2.4,0.12*str*lp,muffled?80:110,delay+0.9,'lowpass',1.2,0.8,0.5);
-      tone(38,2.8,'sine',0.06*str*lp,30,delay+0.1,0.5);
+      str=clamp(str===undefined?1:str,0.2,1);
+      return P(str>0.7?'event.thunder':'event.thunderFar',{at:delay||0,k:str,lp:muffled?0.45:1});
     },
-    click:function(){ tone(880,0.05,'square',0.02,400); },
-    blink:function(){ tone(1400,0.16,'sine',0.04,300); },
-    door:function(){ tone(140,0.5,'sawtooth',0.018,260,0,0.3); noise(0.4,0.03,900,0.05,'bandpass',3,0.3,0.15); noise(0.07,0.06,600,0.48,'lowpass'); },
-    stairs:function(){ for(var i=0;i<5;i++) noise(0.07,0.04,1000,i*0.16,'bandpass',1.2,0.6); },
-    pickup:function(){ tone(1320,0.18,'sine',0.025,0,0,0.5); tone(1760,0.22,'sine',0.018,0,0.06,0.5); },
+    click:function(){ return P('ui.click'); },
+    blink:function(){ return P('ui.blink'); },
+    door:function(){ return P('foley.door'); },
+    stairs:function(){ return P('foley.stairs'); },
+    pickup:function(){ return P('ui.pickup'); },
+    chalk:function(){ return P('foley.chalk'); },                     /* 用粉笔画记号 */
+    deep:function(){ return P('void.fall'); },                        /* 掉进异空间的虚空 */
     anim:function(mode){ var dur=mode===2?3.0:(mode===3?2.6:2.4); VisualState.deathAnim={mode:mode,t:0,dur:dur}; },
-    death:function(){ tone(70,1.6,'sawtooth',0.11,24); noise(1.4,0.07,240); },
-    deathKinds:function(){ return Object.keys(DEATH_SND); },
-    deathFx:function(type){
-      tone(55,2.2,'sawtooth',0.10,22,0,0.3); noise(1.6,0.08,240,0,'lowpass',1,0.4);
-      tone(1500,0.9,'sawtooth',0.018,900,0.05,0.6); tone(1590,0.9,'sawtooth',0.018,960,0.05,0.6);
-      var f=DEATH_SND[type]; if(f) try{ f(); }catch(e){}
-    },
-    sting:function(){ tone(46,1.2,'sawtooth',0.08,30); tone(1250,0.6,'sawtooth',0.02,800,0,0.6); tone(1330,0.6,'sawtooth',0.02,850,0,0.6); noise(0.4,0.06,700,0,'lowpass',1,0.4); },
-    wake:function(){ noise(0.6,0.05,1200,0,'lowpass',0.7,0.5,0.25); tone(220,1.8,'sine',0.03,110,0.1,0.8); },
-    bell:function(){ bellHit(220,0.05,0); },
-    bigBell:function(v){ bellHit(98,0.12*(v===undefined?1:v),0,0.7); },
+    death:function(){ return P('death.generic'); },
+    deathKinds:deathKinds,
+    deathFx:function(type){ P('death.base'); return P('death.'+type); },
+    stopDeath:function(){ return (typeof SoundPlayer!=='undefined')?SoundPlayer.stop('death'):0; },
+    sting:function(){ return P('threat.sting'); },
+    wake:function(){ return P('foley.wake'); },
+    bell:function(){ return P('event.bell'); },
+    bigBell:function(v){ return P('event.bigBell',{k:v===undefined?1:v}); },
     schoolBell:schoolBell,
-    vanish:function(){ noise(0.5,0.035,140,0,'lowpass',1,0.7,0.05); tone(52,0.6,'sine',0.03,38,0,0.5); },   /* 远处的人影不见了的那一下 */
+    vanish:function(){ return P('foley.vanish'); },                   /* 远处的人影不见了的那一下 */
     /* 结局演出：车库里点火；门那边装置充能的嗡声越来越高 */
-    engine:function(){ tone(46,3.4,'sawtooth',0.05,92,0,0.3); noise(3.2,0.045,170,0,'lowpass',1,0.4,0.5); tone(92,2.6,'square',0.012,140,0.6,0.3); },
-    hum:function(){ tone(110,6,'sine',0.035,330,0,0.6); tone(165,6,'sine',0.02,495,0.5,0.6); noise(6,0.02,900,0,'bandpass',3,0.5,3); },
-    alarm:function(){ tone(520,0.8,'square',0.05,180); },
+    engine:function(){ return P('scene.engine'); },
+    hum:function(){ return P('scene.hum'); },
+    alarm:function(){ return P('ui.alarm'); },
     anomaly:function(id){
-      var i;
-      tone(41,2.6,'sine',0.08,30,0,0.5);               /* 每次异象开头：一声很低的下沉 */
-      if(id==='rain'){ noise(3.0,0.14,180,0.2,'lowpass',0.8,0.6,0.3); }
-      else if(id==='turn'){ noise(1.1,0.03,1400,0,'bandpass',2,0.1,0.5); }
-      else if(id==='broad'){ tone(784,0.5,'sine',0.04,0,0,0.5); tone(622,0.8,'sine',0.04,0,0.45,0.5); noise(2.6,0.03,2200,0.9,'bandpass',1,0.2); vowel(150,2.2,0.03,1.0,620,1800,7); }
-      else if(id==='bell13'){ for(i=0;i<13;i++) bellHit(98,0.06,i*1.12,0.6); }
-      else if(id==='exercise'){ for(i=0;i<16;i++){ tone(i%4===0?523:392,0.09,'square',0.012,0,i*0.55,0.6); noise(0.05,0.03,800,i*0.55,'bandpass',2,0.6); } }
-      else if(id==='bells'){ for(i=0;i<30;i++) tone(rnd(2200,3400),0.5,'triangle',0.012,0,Math.random()*1.6,0.4); }
-      else if(id==='hand'){ noise(0.5,0.04,300,0.2,'lowpass',3,0.3,0.2); }
-      else if(id==='repeat'){ for(i=0;i<5;i++) noise(0.25,0.02,2000,i*0.3,'bandpass',5,0.3,0.1); }
-      else if(id==='loop'){ for(i=0;i<8;i++) noise(0.08,0.04,1100,i*0.45,'bandpass',1.2,0.9); }
-      else if(id==='roster'){ for(i=0;i<4;i++) noise(0.2,0.03,4000,i*0.25,'highpass',0.5,0.2); }
-      else if(id==='cold'){ for(i=0;i<6;i++) noise(0.08,0.05,320,i*0.6,'lowpass',2,0.6); }
-      else if(id==='shifting'){ tone(36,6,'sawtooth',0.05,31,0,0.6); }
-      else if(id==='stare'){ for(i=0;i<20;i++) noise(0.14,0.03,rnd(300,700),0.4+Math.random()*0.25,'lowpass',2,0.3); }
-      else if(id==='feast'){ for(i=0;i<10;i++) tone(rnd(2400,3200),0.15,'triangle',0.01,0,Math.random()*3,0.6); }
-      else if(id==='necker'){ for(i=0;i<10;i++) noise(0.1,0.035,350,i*0.6,'lowpass',1,0.2); }
-      else if(id==='shadow'){ noise(1.8,0.04,500,0,'lowpass',1,0.4,1.6); }
-      else if(id==='twin'){ for(i=0;i<6;i++) noise(0.08,0.04,900,i*0.5+0.25,'bandpass',1.2,0.5); }
-      else if(id==='cup'){ var cw=(typeof cupWobble==='function')?cupWobble():0.9; for(i=0;i<7;i++) tone(rnd(2600,3400),0.06,'triangle',0.012,0,0.04+i*(cw-0.08)/7+Math.random()*0.03,0.4); }   /* 窗台上叮叮当当：响在晃的那一段里，掉下来之前停 */
-      else if(id==='moth'){ for(i=0;i<30;i++) noise(0.05,0.02,rnd(1500,2600),i*0.07,'bandpass',3); }
+      P('anomaly.base');                                              /* 每次异象开头：一声很低的下沉 */
+      var o={};
+      if(id==='cup'){ try{ o.len=(typeof cupWobble==='function')?cupWobble():0.9; }catch(e){ o.len=0.9; } }   /* 叮当响在晃的那一段里，掉下来之前停 */
+      return P('anomaly.'+id,o);
     },
-    anomalyEnd:function(id){ tone(330,1.6,'sine',0.01,320,0,0.8); }
+    anomalyEnd:function(id){ return P('anomaly.end'); }
   };
 })();

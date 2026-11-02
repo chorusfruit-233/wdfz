@@ -76,10 +76,12 @@ class VoidMazeEggsTest(BrowserCase):
 
     def test_void_has_its_own_quiet_soundscape(self):
         page = self.game()
-        r = page.evaluate("""()=>{const inside=SFX.scapeNow();doExitRoom();const out=SFX.scapeNow();
-          return {inside,out,cfg:VOID_SOUND_CFG.drone.map(d=>d[0])};}""")
+        r = page.evaluate("""()=>{const inside=SFX.scapeNow(), surf=SFX.surface();doExitRoom();const out=SFX.scapeNow();
+          return {inside,surf,out,outSurf:SFX.surface(),cfg:VOID_SOUND_CFG.drone.map(d=>d[0])};}""")
         self.assertEqual(r['inside'], 'void')
+        self.assertEqual(r['surf'], 'void')                             # 脚下是白色结构：空心的脚步声
         self.assertIsNone(r['out'])
+        self.assertNotEqual(r['outSurf'], 'void')
         self.assertEqual(r['cfg'][:2], [36, 36.6])
 
     def test_eggs_module_can_be_removed_without_breaking_the_maze(self):
@@ -104,3 +106,15 @@ class VoidMazeEggsTest(BrowserCase):
         text = (ROOT / 'wiki/index.html').read_text(encoding='utf-8')
         for word in ('反色', '虚空迷宫', 'void-maze', 'lift_dream', 'mazeEvent'):
             self.assertNotIn(word, text)
+
+    def test_new_structures_have_their_own_shadows(self):
+        page = self.game()
+        r = page.evaluate("""()=>{at(19,-36.5,4,Math.atan2(-27.6+36.5,16.5-19),0);run(0.3);const cw=events.slice(-1)[0];run(1.5);
+          at(9.5,16,0,Math.atan2(31.5-16,20-9.5),0);run(0.3);const ph=events.slice(-1)[0];
+          at(17.5,30,0,0,0);run(0.3);
+          return {cw,ph,ev:events.slice()};}""")
+        self.assertEqual(r['cw'], 'shadowShow:catwalk')
+        self.assertIn('shadowHide:catwalk:look', r['ev'])
+        self.assertEqual(r['ph'], 'shadowShow:pillars')
+        self.assertIn('shadowHide:pillars:near', r['ev'])               # 走进柱林 6 米内就不见了
+
