@@ -101,14 +101,12 @@ function anwSpawn(){
     }
   }
   GLR.scene.add(grp);
-  if(S.diff==='easy'&&AN.pre&&!RT.preTold){
-    RT.preTold=1;
-    os('我：这个时间……我梦见过。',3.4);
-  }
+}
+function anwVisible(){
+  return !!(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&AN_WARN[AN.pre]&&anAllowed(AN.pre)&&AN.next>0&&AN.next<=8&&!UI.anyOpen());
 }
 function anwTick(dt){
-  var show=(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&AN_WARN[AN.pre]&&anAllowed(AN.pre)&&AN.next>0&&AN.next<=8&&!UI.anyOpen());
-  if(!show){ if(ANW.on) anwClear(); return; }
+  if(!anwVisible()){ if(ANW.on) anwClear(); return; }
   var key=Math.round(S.tsec+AN.next*rateAt(S.tsec)/60)+'|'+(S.room||'out');
   if(!ANW.on||ANW.key!==key||ANW.room!==S.room){ anwClear(); ANW.key=key; anwSpawn(); }
   ANW.t+=dt;
@@ -189,6 +187,8 @@ function ncFlip(){
   NC.normal=false; NC.done=true;
   try{ GLR.flash=Math.min(0.55,(GLR.flash||0)+0.4); }catch(e){}
 }
+/* 同班表现是否存在：数值压力由规则层按模拟时间结算。 */
+function ncPressureState(){return !!(NC.grp&&NC.room&&S.mode==='in'&&S.room===NC.room);}
 function ncUpdate(dt){
   if(!NC.grp||!NC.room) return;
   if(S.mode!=='in'||S.room!==NC.room){ ncClear(); return; }
@@ -259,7 +259,6 @@ function ncUpdate(dt){
     f.rotation.y=(f.rotation.y||0)+d3*Math.min(1,dt*2.5);
   }
   if(v>=70&&!S.dead){
-    S.san=Math.max(1,S.san-dt*0.12);
     if(!NC.said){ NC.said=true; os('我：他们都在看着我。可是没有人说话。',4.2); }
   }
 }

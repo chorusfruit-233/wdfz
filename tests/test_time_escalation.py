@@ -19,7 +19,7 @@ const fs=require('fs'),vm=require('vm'),a=require('assert/strict');
 const c={console,Math,Number,os:()=>{},setTimeout:()=>{},RT:{},
   S:{screen:'play',tsec:700,day:1,mode:'out'}};
 vm.createContext(c);
-for(const f of ['core','systems','campus-pressure'])
+for(const f of ['core','domain/player-stats','domain/game-time','systems','campus-pressure'])
   vm.runInContext(fs.readFileSync('game3d/js/'+f+'.js','utf8'),c);
 function at(clock){c.RT={pressureClock:clock};c.S.day=1;c.S.tsec=700;return c.CampusPressure.current();}
 for(const clock of [700,850,1090]){

@@ -89,8 +89,8 @@ var _lc1=null,_lc2=null;
 function mixRGB(a,b,t){ return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]; }
 function lightState(){
   var sun=sunAt(hourNow());
-  var indoor=(S.mode==='in');
-  var roof=indoor&&S.room==='teach6';
+  var indoor=(Engine.sceneView().mode==='in');
+  var roof=indoor&&Engine.sceneView().room==='teach6';
   if(roof) indoor=false;                     /* 天台上头顶就是天 */
   var day=sun.day;
   var wn=GLR.worldNorm||0;
@@ -100,14 +100,14 @@ function lightState(){
   day+=(Math.max(day,0.85)-day)*fnl;
   var st={ day:day, gold:sun.gold, sun:sun, indoor:indoor };
   if(indoor){
-    var g=(S.room==='garage1');
+    var g=(Engine.sceneView().room==='garage1');
     /* 室内的环境光压得很低：亮的只有灯底下和身边（镜头上那盏补光），没开灯的教室、走廊尽头、墙角都沉在暗里。
        白天也只靠窗透进来的阴天的光 */
     st.amb = g?0.025:(0.048+0.028*day);    /* 夜里不开手电也认得出桌椅、门框的轮廓 */
     st.hemi= g?0.015:(0.022+0.030*day);
     st.dir = g?0.015:(0.02+0.09*day);
     st.ptK = g?0.8:(0.30+0.34*day);          /* 灯管老了：白天也只亮一半，夜里更暗、会闪 */
-    if(S.room==='portal_tunnel'){st.amb=0.14;st.hemi=0.1;st.dir=0.08;st.ptK=0.9;}
+    if(Engine.sceneView().room==='portal_tunnel'){st.amb=0.14;st.hemi=0.1;st.dir=0.08;st.ptK=0.9;}
     if(wn>0){
       st.amb=lerp(st.amb,0.38,wn);st.hemi=lerp(st.hemi,0.28,wn);
       st.dir=lerp(st.dir,0.32,wn);st.ptK=lerp(st.ptK,1,wn);
@@ -115,7 +115,7 @@ function lightState(){
     if(typeof AN!=='undefined'&&AN.active&&AN.id==='blackout'){
       st.amb*=0.16;st.hemi*=0.16;st.dir*=0.12;st.ptK=0;st.blackout=true;
     }
-    if(S.room==='lift_dream'){st.amb=1.4;st.hemi=0.8;st.dir=0.35;st.ptK=1;}
+    if(Engine.sceneView().room==='lift_dream'){st.amb=1.4;st.hemi=0.8;st.dir=0.35;st.ptK=1;}
   }else{
     st.amb = 0.075+0.12*day;
     st.hemi= 0.10+0.24*day;
@@ -157,7 +157,7 @@ function updateLighting(){
       var fr=hz[0]/255*fk, fgc=hz[1]/255*fk, fb=hz[2]/255*fk;
       var dens=0.034+(0.019-0.034)*s.day;     /* 白天也有一层潮气，几十米外的楼就灰了 */
       if(AN&&AN.active&&AN.id==='rain'){ dens+=0.030; fr=fr*0.6+0.09; fgc=fgc*0.6+0.10; fb=fb*0.6+0.12; }
-      if(S.mode==='in') dens*=1.4;            /* 天台：雾近一点，楼底下看不清 */
+      if(Engine.sceneView().mode==='in') dens*=1.4;            /* 天台：雾近一点，楼底下看不清 */
       fog.color.setRGB(fr,fgc,fb,THREE.SRGBColorSpace);
       fog.density=dens;
     }else{
@@ -165,7 +165,7 @@ function updateLighting(){
       var fn=1-s.day;
       var nw=s.blackout?0:clamp(GLR.worldNorm||0,0,1);
       fog.color.setRGB(lerp(0.032-0.02*fn,0.32,nw),lerp(0.040-0.024*fn,0.35,nw),lerp(0.042-0.024*fn,0.36,nw),THREE.SRGBColorSpace);
-      fog.density=lerp((S.room==='garage1')?0.09:S.room==='portal_tunnel'?0.04:(0.072+0.03*fn),0.024,nw);
+      fog.density=lerp((Engine.sceneView().room==='garage1')?0.09:Engine.sceneView().room==='portal_tunnel'?0.04:(0.072+0.03*fn),0.024,nw);
     }
   }
   var tt=GLR.time||0;
@@ -224,7 +224,7 @@ function roomFlicker(i,tt,day){
 }
 /* 每盏灯的寿命：大约三成已经坏了（只剩一点余光，偶尔抽一下），两成半亮不亮，其余正常。按房间和序号固定，进出房间不会变 */
 function lampHealth(i){
-  var r=lhash(i*3.1,(S.room||'').length*7.7+(S.room?S.room.charCodeAt(S.room.length-1):0));
+  var r=lhash(i*3.1,(Engine.sceneView().room||'').length*7.7+(Engine.sceneView().room?Engine.sceneView().room.charCodeAt(Engine.sceneView().room.length-1):0));
   if(i===0) return 1;                                   /* 每间屋第一盏总是好的（教室讲台上方那盏），不至于全黑 */
   if(r<0.3) return 0.06+0.9*Math.max(0,Math.sin((GLR.time||0)*0.8+i*4.1)-0.97)*30;
   if(r<0.55) return 0.45;
@@ -261,7 +261,7 @@ function lampTick(s){
   }
   if(!GLR.lampPool) return;
   var i, L=GLR.lampPool;
-  if(S.mode!=='out'||night<0.05||!OUT_LAMPS.length){
+  if(Engine.sceneView().mode!=='out'||night<0.05||!Engine.sceneLamps().length){
     for(i=0;i<L.length;i++) L[i].intensity=0;
     return;
   }
@@ -269,7 +269,7 @@ function lampTick(s){
   if(GLR.lampPick<=0){
     GLR.lampPick=0.35;
     var cx=GLR.cam.position.x, cz=GLR.cam.position.z;
-    var best=OUT_LAMPS.slice().sort(function(a,b){
+    var best=Engine.sceneLamps().slice().sort(function(a,b){
       return ((a.x-cx)*(a.x-cx)+(a.z-cz)*(a.z-cz))-((b.x-cx)*(b.x-cx)+(b.z-cz)*(b.z-cz));
     });
     for(i=0;i<L.length;i++){ var b=best[i]; if(b) L[i].position.set(b.x,b.y-0.25,b.z); L[i].userData.on=!!b; }

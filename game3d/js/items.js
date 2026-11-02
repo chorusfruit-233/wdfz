@@ -13,31 +13,41 @@ function doorKey(R,wx,wy){
 }
 function doorIsOpen(R,wx,wy){ return !!OPENDOORS[doorKey(R,wx,wy)]; }
 
-function hasItem(id){ return S.bag.indexOf(id)>=0; }
+var Inventory={
+  has:function(id){return InventoryRules.has(S,id);},
+  add:function(id){return inventoryAdd(id);},
+  remove:function(id){return inventoryRemove(id);},
+  use:function(id){return inventoryUse(id);},
+  select:function(index){return InventoryRules.select(S,index);},
+  setHot:function(index,id){var ok=InventoryRules.setHot(S,index,id);if(ok)bagChanged();return ok;},
+  clear:function(){InventoryRules.clear(S);syncUseState();bagChanged();},
+  snapshot:function(){return {bag:S.bag.slice(),hot:S.hot.slice(),selected:S.bagSel};}
+};
+function hasItem(id){return Inventory.has(id);}
 /* 手机只剩小游戏，不再当光源；USE.phone 留着只为兼容旧存档，始终为 false */
-function syncUseState(){
+function normalizeUseState(){
   USE.torch=!!USE.torch&&hasItem('torch');
   USE.phone=false;
   USE.brollyShield=!!USE.brollyShield&&hasItem('brolly');
+}
+function syncUseState(){
+  normalizeUseState();
   Engine.torch(USE.torch);
 }
-function addItem(id){
-  if(!id||id==='nothing') return false;
-  if(S.bag.indexOf(id)>=0) return false;
-  if(S.bag.length>=8){ os('我：装不下了。',2.4); return false; }
-  S.bag.push(id);
+function addItem(id){return Inventory.add(id);}
+function inventoryAdd(id){
+  var result=InventoryRules.add(S,id,Object.prototype.hasOwnProperty.call(ITEMS,id));
+  if(result==='full'){os('我：装不下了。',2.4);return false;}
+  if(result!=='added')return false;
   try{ SFX.pickup(); }catch(e){}
   os('我：拿到了「'+ITEMS[id].n+'」。',2.6);
   bagChanged();
   return true;
 }
-function removeItem(id){
-  var i=S.bag.indexOf(id);
-  if(i<0) return false;
-  S.bag.splice(i,1);
+function removeItem(id){return Inventory.remove(id);}
+function inventoryRemove(id){
+  if(!InventoryRules.remove(S,id))return false;
   syncUseState();
-  for(var k=0;k<2;k++) if(S.hot[k]===id) S.hot[k]=null;      /* 快捷栏里也取下来 */
-  if(S.bagSel>=S.bag.length) S.bagSel=Math.max(0,S.bag.length-1);
   bagChanged();
   return true;
 }
@@ -95,7 +105,8 @@ var ITEM_USE={
 };
 /* 拿出来看一眼就收起来的东西 */
 var ITEM_READ={card:1,notebook:1,hw:1,usb:1,key:1,roomkey:1,metronome:1,goggles:1,coat:1,battery:1,chalk:1,pen:1};
-function useItem(id){
+function useItem(id){return Inventory.use(id);}
+function inventoryUse(id){
   if(!id||!hasItem(id)) return;
   var nm=ITEMS[id]?ITEMS[id].n:id;
   if(ITEM_USE.hasOwnProperty(id)){ ITEM_USE[id](id,nm); return; }
@@ -155,8 +166,7 @@ function throwCoin(){
   SFX.step();
 }
 function dropAt(i){
-  if(!S.bag[i]) return;
-  S.bagSel=i;
+  if(!Inventory.select(i)) return;
   dropSelected();
 }
 function dropSelected(){
@@ -197,7 +207,7 @@ function canteenWindow(){
   UI.choice('窗口里还剩一点饭菜。「一个硬币一份。」',[
     {label:'投一枚硬币买饭（SAN +24，游戏时间 10 分钟）',fn:function(){
       UI.closeChoice(); removeItem('coin');
-      S.san=Math.min(100,S.san+24); restoreStamina(30);
+      PlayerStats.changeSan(24,'items',{max:100}); restoreStamina(30);
       advanceGameTime(10);
       os('我：硬币落进铁盒子里，响了很久。饭是热的——这里第一次有热的东西。',3.8); toast('买饭 · SAN +24');
       try{ SFX.click(); }catch(e){}

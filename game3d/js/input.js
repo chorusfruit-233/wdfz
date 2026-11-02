@@ -14,10 +14,20 @@ function devOwnsInput(target){
 function devInputBlocked(){
   return typeof DEV!=='undefined'&&DEV.on&&(DEV.freeze||!!DEV.drag);
 }
+/* 平台适配入口：策略只接收值，不读取 DOM 或持有这些系统。 */
+function gameInputContext(target,editing){
+  return {screen:S.screen,dead:!!S.dead,prologue:!!(typeof PRO!=='undefined'&&PRO.on),
+    paused:!!PAUSE.on,panelOpen:!!UI.anyOpen(),choice:!!UI.chooseOpen,
+    computer:!!(typeof PC!=='undefined'&&PC.on),phone:!!(typeof PHONE!=='undefined'&&PHONE.on),
+    lesson:!!(typeof LESSON!=='undefined'&&LESSON.on),
+    debugFrozen:!!(typeof DEV!=='undefined'&&DEV.on&&DEV.freeze),
+    debugDragging:!!(typeof DEV!=='undefined'&&DEV.on&&DEV.drag),
+    intro:S.intro>0,driving:!!(typeof CarChase!=='undefined'&&CarChase.active()),
+    deathPending:!!(typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING),
+    targetDebug:devOwnsInput(target),editing:!!editing};
+}
 function playerInputAllowed(){
-  return S.screen==='play'&&!S.dead&&!PAUSE.on&&!UI.anyOpen()&&
-    !(typeof PRO!=='undefined'&&PRO.on)&&!(typeof PC!=='undefined'&&PC.on)&&!(typeof PHONE!=='undefined'&&PHONE.on)&&
-    !(typeof LESSON!=='undefined'&&LESSON.on)&&!devInputBlocked()&&!(S.intro>0);
+  return GamePolicy.playerAllowed(gameInputContext());
 }
 function pointerIsLocked(){return document.pointerLockElement===document.getElementById('cv');}
 function releaseCapture(el,id){
@@ -177,13 +187,14 @@ function initInput(){
       if(e.target===cv||(e.target.closest&&e.target.closest('#touch')))cv.focus({preventScroll:true});
       updateTouchUI();
     }
-    if(S.screen==='cut'){
+    var owner=GamePolicy.inputOwner(gameInputContext());
+    if(owner==='cutscene'){
       /* 按下就跳过演出；松指后补发的 click 会落在随后出现的结局界面按钮上，要吞掉 */
       if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
       cutSkip(); return;
     }
     /* 死亡演出中：按下跳到结果（死亡界面或惊醒）；补发的 click 同样不能点到随后出现的按钮 */
-    if(S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING){
+    if(owner==='death'){
       if(deathSkip()&&(e.pointerType==='touch'||e.pointerType==='pen'))INPUT.touchHandled=true;
       return;
     }
@@ -207,12 +218,16 @@ function initInput(){
       if(k!=='escape')return;
       e.target.blur();
     }
-    if(PRO.on){
+    var owner=GamePolicy.inputOwner(gameInputContext());
+    if(owner==='cutscene'){
+      if(k===' '||k==='enter'||k==='escape'){e.preventDefault();if(!e.repeat)cutSkip();}
+      return;
+    }
+    if(owner==='prologue'){
       if(k===' '||k==='enter'){e.preventDefault();if(!e.repeat)proNext();}
       return;
     }
-    if(S.screen==='cut'){ if(k===' '||k==='enter'||k==='escape'){e.preventDefault();cutSkip();} return; }   /* 跳过结局演出 */
-    if(S.dead&&typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING&&(k===' '||k==='enter'||k==='escape')){   /* 跳过死亡演出 */
+    if(owner==='death'&&(k===' '||k==='enter'||k==='escape')){   /* 跳过死亡演出 */
       e.preventDefault();if(!e.repeat)deathSkip();return;
     }
     if(S.screen!=='play'||S.dead||e.ctrlKey||e.metaKey||e.altKey)return;
@@ -227,18 +242,18 @@ function initInput(){
       Game.pauseToggle();return;
     }
     if(k===' '&&e.target.closest('button,a,[role="button"]'))return;
-    if(PC.on){
+    if(owner==='computer'){
       if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){KEY[k]=true;e.preventDefault();}
       return;
     }
-    if(LESSON.on){if(/^[1-3]$/.test(k)){e.preventDefault();if(!e.repeat)LESSON.answer(+k-1);}return;}
-    if(PHONE.on){
+    if(owner==='lesson'){if(/^[1-3]$/.test(k)){e.preventDefault();if(!e.repeat)LESSON.answer(+k-1);}return;}
+    if(owner==='phone'){
       if([' ','w','arrowup','enter'].indexOf(k)>=0){e.preventDefault();if(!e.repeat)PHONE.flap();}
       return;
     }
-    if(UI.chooseOpen&&!PAUSE.on&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)UI.choiceKey(+k);return;}
-    if(PAUSE.on||devInputBlocked()||UI.chooseOpen||S.intro>0)return;
-    if(typeof CarChase!=='undefined'&&CarChase.active()){
+    if(owner==='choice'&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)UI.choiceKey(+k);return;}
+    if(owner==='pause'||owner==='blocked'||owner==='choice')return;
+    if(owner==='driving'){
       if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){e.preventDefault();KEY[k]=true;}
       return;
     }
@@ -262,7 +277,10 @@ function initInput(){
   });
 
   var proEl=document.getElementById('pro');
-  if(proEl)proEl.addEventListener('click',function(e){e.stopPropagation();proNext();});
+  if(proEl)proEl.addEventListener('click',function(e){
+    e.stopPropagation();
+    if(GamePolicy.inputOwner(gameInputContext())==='prologue')proNext();
+  });
   cv.addEventListener('click',function(e){
     if(!playerInputAllowed()||INPUT.mode!=='mouse'||
       (e.pointerType&&e.pointerType!=='mouse')||
@@ -402,7 +420,7 @@ function updatePlayer(dt){
     S.stepT=(S.stepT||0)-dt;
     if(S.stepT<=0){S.stepT=S.run?.30:.46;SFX.step();}
   }else S.stepT=0;
-  if(S.run&&S.moving){if(!snack)S.stam=Math.max(0,S.stam-17*dt);}
+  if(S.run&&S.moving){if(!snack)PlayerStats.changeStamina(-17*dt,'running',{min:0});}
   else restoreStamina(11*dt);
   if(S.enterCool>0)S.enterCool-=dt;
   syncCamera(dt);

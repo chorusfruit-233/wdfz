@@ -6,6 +6,12 @@
    clockVersion 2 起时钟按"天 * 1440 + 当天分钟"连续计；更早的存档读进来时换算一次。 */
 function saveNum(v,lo,hi){ return Number.isFinite(v)?clamp(v,lo,hi):0; }
 function saveObj(v){ return (v&&typeof v==='object'&&!Array.isArray(v))?Object.assign({},v):{}; }
+var SAVE_DIAGNOSTIC=null;
+function saveReport(stage,error){
+  SAVE_DIAGNOSTIC={stage:stage,message:error&&error.message?error.message:String(error)};
+}
+var GameStorage=StorageAdapter.create(function(){return localStorage;},function(e){saveReport(e.operation,e.error);});
+function prepareSave(d){return SaveData.prepare(d,{lightsOut:LIGHTS_OUT,rooms:INTERIORS,items:ITEMS});}
 var SAVE_SCHEMA=[
   { /* 位置和时钟 */
     save:function(d){ d.mode=S.mode; d.room=S.room; d.x=S.x; d.y=S.y; d.ang=S.ang; d.pitch=S.pitch; d.tsec=S.tsec; d.day=S.day; d.diff=S.diff; },
@@ -13,7 +19,6 @@ var SAVE_SCHEMA=[
       S.mode=d.mode||'out'; S.room=d.room||null;
       S.x=d.x; S.y=d.y; S.ang=d.ang||0; S.pitch=d.pitch||0;
       S.tsec=d.tsec; S.day=d.day;
-      if(d.clockVersion!==2&&S.tsec>=0&&S.tsec<60) S.tsec+=1440;
     }
   },
   { /* 身体：SAN、违规、体力、士力架 / 药片 / 手机的剩余时间 */
@@ -31,10 +36,6 @@ var SAVE_SCHEMA=[
     save:function(d){ d.actCool=S.actCool||{}; },
     load:function(d){
       S.actCool=saveObj(d.actCool);
-      if(d.clockVersion!==2){
-        var oldClock=(d.day||1)*1440+d.tsec, newClock=gameClock();
-        Object.keys(S.actCool).forEach(function(k){ if(Number.isFinite(S.actCool[k])) S.actCool[k]=newClock+Math.max(0,S.actCool[k]-oldClock); });
-      }
     }
   },
   { /* 天赋免疫、课表违规的计时与档位 */
@@ -66,7 +67,7 @@ var SAVE_SCHEMA=[
     load:function(d){
       if(d.rt){RT=Object.assign(newRT(),d.rt);RT.dayRhythmVersion=d.rt.dayRhythmVersion||0;}
       if(d.use) USE=d.use;
-      syncUseState();
+      normalizeUseState();
       if(d.openDoors) OPENDOORS=d.openDoors;
     }
   },
@@ -84,12 +85,6 @@ var SAVE_SCHEMA=[
       AN.data=(d.anData&&typeof d.anData==='object')?d.anData:{};
       AN.next=(typeof d.anNext==='number')?d.anNext:45;
       AN.rained=!!d.anRained; AN.cool=d.anCool||{};
-      if(d.clockVersion!==2){
-        var savedClock=gameClock();
-        Object.keys(AN.cool).forEach(function(k){
-          if(Number.isFinite(AN.cool[k])) AN.cool[k]=savedClock-((S.tsec-AN.cool[k]+1440)%1440);
-        });
-      }
       AN.pre=d.anPre||null; AN.preNext=d.anPreNext||0; AN.locked=!!d.anLocked; AN.lockWait=d.anLockWait||0;
       AN.lastBig=!!d.anLastBig; AN.active=!!d.anId;
       if(AN.active&&AN.data.asked&&AN.data.chosen===null&&['turn','hand','repeat','cold'].indexOf(AN.id)>=0){
@@ -105,7 +100,6 @@ var SAVE_SCHEMA=[
       var h=d.hiding,R=S.mode==='in'&&INTERIORS[S.room];
       HIDE.on=!!(h&&R&&Number.isInteger(h.c)&&Number.isInteger(h.r)&&R.grid[h.r]&&R.grid[h.r][h.c]==='H');
       if(HIDE.on){HIDE.c=h.c;HIDE.r=h.r;HIDE.seen=!!h.seen;HIDE.t=saveNum(h.t,0,1e8);}
-      var el=document.getElementById('hideslits');if(el)el.style.display=HIDE.on?'block':'none';
     }
   },
   { /* 巡察者的瞬移间隔和追逐状态；路径由当前几何重新计算，不序列化。 */
@@ -120,7 +114,6 @@ var SAVE_SCHEMA=[
       ['next','t','x','y','lock','lost','still','tx','ty','walkT','step','blinkCD','afterBlink'].forEach(function(k){if(Number.isFinite(p[k]))PAT[k]=p[k];});
       PAT.state=p.state;PAT.room=p.room;PAT.locked=!!p.locked;PAT.path=null;
       PAT.cited=!!p.cited||PAT.locked;
-      VisualState.patrolRed=PAT.locked?1:0;
     }
   },
   { /* 车库里那个东西（只在车库里存）；钟楼旋梯上的位置（进房间时由 enterRoom 读） */
@@ -136,23 +129,30 @@ function saveGame(){
     CampusPressure.observe();
     var d={v:1, clockVersion:2};
     SAVE_SCHEMA.forEach(function(f){ f.save(d); });
-    localStorage.setItem('wdfz3d',JSON.stringify(d));
-    return true;
-  }catch(e){ return false; }
+    return GameStorage.write('wdfz3d',JSON.stringify(prepareSave(d)));
+  }catch(e){ saveReport('save',e);return false; }
 }
 /* 把存档里的数据写回游戏状态（调用前先 freshState） */
 function applySave(d){
+  d=prepareSave(d);                         /* 校验和迁移先完成，再改当前会话；不修改调用者的数据 */
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
   Investigation.migrate();
   SchoolDay.restore();
   CampusPressure.restore();
+  return d;
+}
+/* 规则恢复之后由应用流程调用；applySave 本身不构建模型、操纵 DOM 或设置灯光。 */
+function restoreSavePresentation(){
+  var el=document.getElementById('hideslits');if(el)el.style.display=HIDE.on?'block':'none';
+  VisualState.patrolRed=PAT.locked?1:0;
+  Engine.torch(USE.torch);
 }
 function loadGame(){
   try{
-    var raw=localStorage.getItem('wdfz3d');
-    if(!raw) return null;
-    return JSON.parse(raw);
-  }catch(e){ return null; }
+    var result=GameStorage.read('wdfz3d');
+    if(!result.ok||!result.value)return null;
+    return prepareSave(JSON.parse(result.value));
+  }catch(e){ saveReport('load',e);return null; }
 }
 
 /* 以前只有暂停菜单里能手动存档，死了、结局了存档也还在：「梦魇」可以读档重来。
@@ -161,16 +161,16 @@ function autoSave(){
   if(S.screen==='play'&&!S.dead) saveGame();
 }
 function clearSave(){
-  try{ localStorage.removeItem('wdfz3d'); }catch(e){}
+  GameStorage.remove('wdfz3d');
 }
 /* 拿到过的结局单独记，不跟存档一起删 */
 var ENDS_KEY='wdfz3d_ends';
 function endsSeen(){
-  try{ var d=JSON.parse(localStorage.getItem(ENDS_KEY)||'{}'); return (d&&typeof d==='object')?d:{}; }catch(e){ return {}; }
+  try{ var result=GameStorage.read(ENDS_KEY),d=JSON.parse(result.value||'{}'); return SaveData.record(d)?d:{}; }catch(e){ saveReport('read-endings',e);return {}; }
 }
 function endMark(id){
   var d=endsSeen(); d[id]=1;
-  try{ localStorage.setItem(ENDS_KEY,JSON.stringify(d)); }catch(e){}
+  GameStorage.write(ENDS_KEY,JSON.stringify(d));
 }
 function paintMenuSave(){
   var sc=document.getElementById('btncont');

@@ -63,7 +63,7 @@ PHONE.end=function(){
   var g=0;
   if(PHONE.cool<=0&&PHONE.score>0){
     g=CampusPressure.restGain(Math.min(PH_MAXGAIN,PHONE.score));
-    S.san=Math.min(100,S.san+g); PHONE.cool=PH_COOL;
+    PlayerStats.changeSan(g,'phone',{max:100}); PHONE.cool=PH_COOL;
     toast('纸飞机 · 得分 '+PHONE.score+' · SAN +'+g);
   }
   PHONE.gain=g;

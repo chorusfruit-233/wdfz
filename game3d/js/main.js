@@ -17,7 +17,7 @@ function frame(t){
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
   Playtest.frame(dt);
-  QualityWatch.tick(dtG,S.screen==='play'&&!S.dead&&!PRO.on&&!PAUSE.on&&!UI.anyOpen()&&!(DEV.on&&DEV.freeze)&&!document.hidden);
+  QualityWatch.tick(dtG,GamePolicy.simulationAllowed(gameInputContext())&&!document.hidden);
   /* 允许一秒内的慢帧按真实时间补齐固定步；更长的卡顿仍有上限，避免恢复时跑出大量积压。 */
   accum+=Math.min(dt,1);
   var step=1/60, guard=0;
@@ -28,11 +28,13 @@ function frame(t){
   try{ render(Math.min(dt,0.25)); }catch(e){ try{ showErr('render: '+e.message); }catch(_e){} }
 }
 function update(dt){
+  /* 电脑小游戏与开局倒计时原本在世界暂停时也运行；移入应用步进，保留该策略。 */
+  PCGAME.tick(dt);
+  updateIntro(dt);
   PHONE.checkInterrupt();
   LESSON.checkInterrupt();
-  if(S.screen!=='play') return;
-  if(PRO.on) return;                     /* 前情提要期间世界不动 */
-  if(DEV.on&&DEV.freeze) return;        /* 调试暂停只影响打开面板期间的模拟 */
+  var policy=gameInputContext();
+  if(!GamePolicy.presentationAllowed(policy)) return;
   VisualState.time+=dt;
   updateDialog(dt);
   if(S.dead){
@@ -40,7 +42,8 @@ function update(dt){
     try{ syncCamera(dt); }catch(e){}
     return;
   }
-  if(PAUSE.on||UI.anyOpen()||PC.on){ return; }   /* 玩电脑的时候世界也停着，免得以为安全时被扣 SAN */
+  if(!GamePolicy.simulationAllowed(policy)) return;
+  repairPlayerPlacement(dt);
   Playtest.simulation(dt);
   if(CarChase.active()){clockTick(dt);CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
@@ -61,19 +64,9 @@ function update(dt){
   try{ Dread.tick(dt); }catch(e){}
   spotTick();
   CampusPressure.tick();
+  anNotifyWarning(anwVisible());
 }
 function render(dt){
-  try{ PCGAME.tick(dt); }catch(e){}
-  try{ updateIntro(dt); }catch(e){}
-  try{
-    if(S.mode==='in'&&!S.dead&&!HIDE.on){
-      S.stuckT=(S.stuckT||0)+dt;
-      if(S.stuckT>0.5){
-        S.stuckT=0;
-        if(solidAt(S.x,S.y)){ unstick(); }
-      }
-    }
-  }catch(e){}
   try{ if(DEV.on){DEV.refreshT-=dt;if(DEV.refreshT<=0){DEV.refreshT=.3;Dev.refresh();}} }catch(e){}
   try{ if(AMB_ON&&S.screen==='play'){ if(!SFX._ambOn){ SFX.ambient(); SFX._ambOn=true; } } else if(!AMB_ON&&SFX._ambOn){ SFX.stopAmbient(); SFX._ambOn=false; } }catch(e){}
   try{ SFX.tick(dt); }catch(e){}
@@ -194,189 +187,6 @@ function updateHUD(){
   if(tt){ var tc='tsm'+(USE.torch?' on':'')+(hasItem('torch')?'':' off'); if(tt.className!==tc) tt.className=tc; }
 }
 
-var introT1=0;
-function clearIntroTimers(){
-  if(introT1){ clearTimeout(introT1); introT1=0; }
-  var el=document.getElementById('sub');
-  if(el){ el.style.opacity='0'; setTimeout(function(){ if(!DLG.open) el.style.display='none'; },240); }
-  DLG.open=false; DLG.timer=0; DLG.keep=false; DLG.queue.length=0;
-}
-function freshState(diff){
-  ExplorationMap.clear();
-  document.getElementById('notequery').value='';
-  try{ Dread.reset(); }catch(e){}
-  if(typeof CarChase!=='undefined')CarChase.clearVisual();
-  if(typeof Inspection!=='undefined')Inspection.clearFx();
-  fnPeopleClear();Engine.resetFakeNormal();VisualState.worldNorm=0;
-  if(DEV.on)Dev.close(false);
-  Dev.clearPreview();Dev.clearAnimation();
-  LESSON.waiting=null;
-  LESSON.close(false);
-  clearSearch();
-  resetInputState();releaseMouseLook();UI.closePanelAll();UI.closeChoice();
-  spiralReset();
-  buildInteriorData();
-  buildRoomBounds();
-  S.screen='play';
-  S.diff=diff||'easy';
-  var t=TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)];
-  S.talent=t;
-  S.tsec=700; S.day=1;
-  S.san=100; S.viol=0; S.stam=100; S.tired=false; S.snackT=0; S.pillT=0; S.tt=0; S.ttTier=0;
-  Engine.resetSan(S.san);
-  S.actCool={}; S.immuneUsed=false;
-  S.exam=false; S.examCur=null; S.examSeat=0; S.examTot=0;
-  try{ patReset(); PAT.next=45; }catch(e){}
-  S.bag=[]; S.hot=[null,null]; S.bagSel=0;
-  S.spots={}; S.clues={}; S.notes={}; S.marks={};
-  S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.deathView=null; S.seated=false; S.intro=0;
-  S.fn={v:0,on:false,note:false,n:0,next:0,shown:false};
-  S.mode='out'; S.room=null;
-  S.x=GATE_N.x*SC; S.y=(GATE_N.y+40)*SC;
-  S.ang=PI/2; S.pitch=0; S.eyeH=EYE;
-  S.hiddenLatch=false; S.hiddenAsked=false; S.hiddenWindow=0; S.dangerSeen={};
-  RT=newRT(); USE={torch:false,phone:false,brollyShield:false}; OPENDOORS={}; syncUseState();
-  try{ PHONE.stop(); PHONE.cool=0; MONO.t=30; MONO.recent=[]; }catch(e){}
-  AN.id=null; AN.active=false; AN.next=(S.diff==='hard')?40:60; AN.rained=false; AN.cool={}; AN.lastBig=false; AN.t=0; AN.acc=0;
-  AN.pre=null; AN.preNext=0; AN.locked=false; AN.lockWait=0;
-  ROAM.on=false;
-  ENTS=[]; PAUSE.on=false; document.body.classList.remove('paused');
-  try{ NC.done=false; ncClear(); }catch(e){}
-  try{ skipClear(); }catch(e){}
-  try{ anfxClear(); }catch(e){}
-  document.getElementById('menu').style.display='none';
-  document.getElementById('die').style.display='none';
-  var _tel=document.getElementById('talent'); if(_tel) _tel._set=false;
-  var _hot=document.getElementById('hot'); if(_hot) _hot._sig='';
-  if(!running){ running=true; lastT=0; }
-}
-var pendingAssetStart=null;
-function waitForGameAssets(start){
-  if(Assets.anyReady())return false;
-  pendingAssetStart=start;assetNotice('正在加载模型……',true);
-  Assets.load(Assets.want(),function(lod){
-    if(!pendingAssetStart)return;
-    if(Assets.anyReady()&&S.screen==='menu'){
-      var ready=pendingAssetStart;pendingAssetStart=null;ready();
-    }else if(lod===null)pendingAssetStart=null;
-  });
-  return true;
-}
-var Game={
-  start:function(diff){
-    if(waitForGameAssets(function(){Game.start(diff);}))return;
-    try{
-    freshState(diff);
-    Playtest.event('开始新局',diff);
-    var R1=INTERIORS['teach1'];
-    /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */
-    S.mode='in'; S.room='teach1'; S.x=R1.ox+48.5*9; S.y=R1.oy+6.5*9; S.seated=true;
-    enterRoom('teach1',{x:S.x, y:S.y, ang:-PI/2, seated:true});
-    syncCamera(0);
-    clearIntroTimers();
-    var firstTime=false;
-    try{ firstTime=!proSeen(); }catch(e){}
-    if(firstTime){
-      setTimeout(function(){ try{ proShow(); }catch(e){} },320);
-    }else{
-      try{ VisualState.worldNorm=0; }catch(e){}      /* 老玩家直接进里世界，没有"正常世界"那一段 */
-      setTimeout(function(){ try{ os('我：今天和昨天没有什么不一样。每一天，都和昨天没有什么不一样。',4.0); }catch(e){} },2400);
-      introT1=setTimeout(function(){ os('我：兜里有一张学生证。照片上的人我不认识，可是班号、学号，都是我的。',4.8); },6800);
-      os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
-    }
-    SFX.resume();
-    /* 开局先把死亡演出、结局过场要用的着色器编好（第一次进场景、前情提要的时候顿一下，不在死的那一刻顿） */
-    setTimeout(function(){ try{ DeathCG.warm(); }catch(e){} },700);
-    setTimeout(function(){ try{ if(running&&typeof cupMats==='function') cupMats(); }catch(e){} },12000);   /* 清华水杯的油画：游戏跑起来以后再画（约几十毫秒），第一次见到杯子时不用现画 */
-    }catch(e){ try{ showErr('Game.start: '+e.message); }catch(_e){} }
-  },
-  continue_:function(){
-    if(waitForGameAssets(function(){Game.continue_();}))return;
-    var d=loadGame();
-    if(!d){ toast('没有存档'); return; }
-    clearIntroTimers();
-    freshState(d.diff);
-    applySave(d);
-    Engine.resetSan(S.san);
-    function restoreAnomalyFX(){
-      if(PAT.state==='walk'){
-        var room=PAT.room==='out'?null:INTERIORS[PAT.room];
-        if(Collision.depth(PAT.x,PAT.y,PAT_BODY/U2M,room)>1e-7)patReset();
-        else patAddFig();
-      }
-      if(!AN.id||!AN.active) return;
-      try{
-        if(HAS_FX[AN.id]) anfxSpawn(AN.id,S.x,S.y);      /* 和 anOn 共用一张表：以前这里另抄了一份，新异象（水杯、雨点成字）读档后看不见 */
-      }catch(e){}
-      if(AN.id==='roster'&&!AN.data.done&&Number.isFinite(d.anChoiceMs)) useRoster(d.anChoiceMs);
-    }
-    if(S.mode==='in'&&S.room) enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,seated:S.seated,spiral:d.spiral,restoreVisit:true},restoreAnomalyFX);
-    else { S.mode='out'; S.room=null; enterWorldOut(); syncCamera(0); restoreAnomalyFX(); }
-    setTimeout(function(){ try{ DeathCG.warm(); }catch(e){} },700);
-    setTimeout(function(){ try{ if(running&&typeof cupMats==='function') cupMats(); }catch(e){} },12000);   /* 清华水杯的油画：游戏跑起来以后再画（约几十毫秒），第一次见到杯子时不用现画 */
-    var _tel2=document.getElementById('talent'); if(_tel2) _tel2._set=false;
-    var _hot2=document.getElementById('hot'); if(_hot2) _hot2._sig='';
-    SFX.resume();
-  },
-  pause:function(){
-    try{ paintSet(); }catch(e){}
-    if(S.screen!=='play'||S.dead||PAUSE.on)return;
-    PAUSE.on=true;
-    var pt=document.getElementById('ptalent');
-    if(pt&&TALENTS[S.talent])pt.textContent='天赋 · '+TALENTS[S.talent].n+'　'+TALENTS[S.talent].d;
-    var pk=document.getElementById('pkeys');
-    if(pk) pk.innerHTML=IS_TOUCH?
-      '<span>左下摇杆</span>移动（推到底就是跑）<span>右侧滑动</span>环视<span>交互键</span>上面写着能做的事<span>手册</span>背包 · 思索 · 笔记 · 地图':
-      '<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>移动<span><kbd>Shift</kbd></span>奔跑<span><kbd>E</kbd></span>交互<span><kbd>F</kbd></span>手电'+
-      '<span><kbd>1</kbd><kbd>2</kbd></span>快捷栏<span><kbd>G</kbd></span>丢弃选中<span><kbd>Tab</kbd></span>背包<span><kbd>H</kbd></span>思索<span><kbd>J</kbd></span>笔记<span><kbd>M</kbd></span>地图'+
-      '<span><kbd>Alt</kbd></span>放出鼠标，游戏不暂停；点画面收回';
-    if(pk&&CarChase.active())pk.textContent=IS_TOUCH?'驾驶：摇杆向前加速、左右转向、向后刹车。':'驾驶：W / ↑ 加速，A D / ← → 转向，S / ↓ 刹车。';
-    document.body.classList.add('paused');
-    try{ Playtest.paint(); }catch(e){}
-    UI.open('pause');
-  },
-  pauseToggle:function(){
-    if(PAUSE.on)Game.resume();else Game.pause();
-  },
-  resume:function(){
-    if(S.screen!=='play'||S.dead)return;
-    UI.closePanelAll();resetInputState();
-    PAUSE.on=false; document.body.classList.remove('paused');
-    if(running){lastT=performance.now();accum=0;}
-    resumeMouseLook();updateTouchUI();
-  },
-  saveNow:function(){
-    if(saveGame()) toast('已保存');
-    else toast('保存失败');
-    Game.resume();
-  },
-  quit:function(){
-    if(typeof CarChase!=='undefined'&&CarChase.active()){autoSave();CarChase.clearVisual();}
-    if(typeof Inspection!=='undefined')Inspection.clearFx();
-    fnPeopleClear();Engine.resetFakeNormal();
-    if(DEV.on)Dev.close(false);
-    Dev.clearPreview();Dev.clearAnimation();
-    LESSON.close(false);
-    running=true;
-    clearSearch();
-    try{ patReset(); }catch(e){}
-    clearIntroTimers();
-    S.screen='menu'; S.dead=false;
-    PHONE.stop();
-    resetInputState();releaseMouseLook();
-    try{ if(!MENU_PHOTO) setTimeout(captureMenuPhoto,320); }catch(e){}
-    try{ if(CUT.on){ CUT.done=null; cutFinish(); } }catch(e){}
-    VisualState.worldNorm=0;
-    PAUSE.on=false;document.body.classList.remove('paused');UI.closePanelAll();UI.closeChoice();
-    ['pause','die','bag','note','think','mapv','choices'].forEach(function(id){
-      var e=document.getElementById(id); if(e) e.style.display='none';
-    });
-    var es=document.getElementById('ends'); if(es) es.remove();
-    document.getElementById('menu').style.display='block';
-    document.getElementById('sub').style.display='none';
-    paintMenuSave();
-  }
-};
 var MENU_PHOTO=null, PHOTO_TRIED=false;
 function captureMenuPhoto(){
   if(PHOTO_TRIED) return;
@@ -436,7 +246,7 @@ function boot(){
   loadSet();
   try{ if(IS_TOUCH&&document.body&&document.body.classList) document.body.classList.add('touch'); }catch(e){}
   try{ initMobileShell(); }catch(e){}
-  try{ if((location.search||'').indexOf('dev')>=0) setTimeout(function(){ try{ Dev.open(); }catch(e){} }, 500); }catch(e){}
+  try{ if((location.search||'').indexOf('dev')>=0) Lifecycle.scope('session').timeout(function(){ try{ Dev.open(); }catch(e){} }, 500); }catch(e){}
   try{
     if((location.search||'').indexOf('nocss')>=0){
       ['vig','scan','fade','flash'].forEach(function(id){
@@ -453,7 +263,7 @@ function boot(){
   try{ initPcTouch(); }catch(e){}
   paintMenuSave();
   requestAnimationFrame(frame);
-  setTimeout(captureMenuPhoto,420);               /* 先让菜单画出来，再拍那张照片 */
+  Lifecycle.scope('session').timeout(captureMenuPhoto,420); /* 先让菜单画出来，再拍那张照片 */
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
 else boot();

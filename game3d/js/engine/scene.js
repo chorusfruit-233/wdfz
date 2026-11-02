@@ -56,6 +56,7 @@ ThreeBackend.disposeGroup=function(g,keepData){
   });
 };
 ThreeBackend.clearWorld=function(){
+  ThreeBackend.endStage();
   var i;
   if(typeof APPAR!=='undefined'&&APPAR.g)APPAR.g.visible=false;
   if(GLR.roamFig){GLR.scene.remove(GLR.roamFig);ThreeBackend.disposeGroup(GLR.roamFig);GLR.roamFig=null;}
@@ -71,6 +72,7 @@ ThreeBackend.clearWorld=function(){
 };
 /* 仅替换静态模型，避免切档重置同学位置、堵门、追逐、异象、门和计时器。 */
 ThreeBackend.applyQuality=function(){
+  var staged=!!VisualState.stage;ThreeBackend.endStage();
   ThreeBackend.resize();sceneCacheClear();sceneCacheCheck();matRefreshQuality();
   var old=GLR.roomMesh||GLR.outMesh;
   if(old){
@@ -97,6 +99,7 @@ ThreeBackend.applyQuality=function(){
   if(GLR.roomMesh){GLR.roomMesh.userData.roomId=S.room;GLR.roomMesh.userData.roomData=INTERIORS[S.room];sceneCacheRoom(S.room,GLR.roomMesh);}
   if(GLR.outMesh){SCENE_CACHE.out=GLR.outMesh;GLR.outMesh.userData.layout={solid:OUT_SOLID,lamps:OUT_LAMPS};}
   shadeApplyQuality();
+  if(staged)ThreeBackend.beginOutsideStage();
 };
 ThreeBackend.addRoomLights=function(R){
   var W=R.cols*TTILE*U2M, H=R.rows*TTILE*U2M, i;
@@ -161,8 +164,37 @@ ThreeBackend.enterOutside=function(){
   try{ tracesBuild(); }catch(e){}
 };
 
+/* 结局舞台只替换可见对象与灯光上下文，不传送正式玩家，也不重置碰撞或同学状态。 */
+ThreeBackend.beginOutsideStage=function(){
+  if(VisualState.stage)return VisualState.stage;
+  var mesh=SCENE_CACHE.out,owned=false,lamps,solid=OUT_SOLID,oldLamps=OUT_LAMPS,oldOut=OUTX;
+  if(mesh){lamps=mesh.userData.layout.lamps;}
+  else{
+    try{mesh=buildOutdoorGeometry();lamps=OUT_LAMPS;owned=true;}
+    finally{OUT_SOLID=solid;OUT_LAMPS=oldLamps;OUTX=oldOut;}
+  }
+  var stage={mode:'out',room:null,mesh:mesh,owned:owned,lamps:lamps,hidden:[],parent:mesh.parent,visible:mesh.visible,fog:GLR.scene.fog};
+  GLR.scene.children.slice().forEach(function(o){
+    if(o!==mesh&&o!==CUT.grp&&(o.isGroup||o===GLR.marker||(GLR.roomLights||[]).indexOf(o)>=0)){
+      stage.hidden.push({object:o,visible:o.visible});o.visible=false;
+    }
+  });
+  mesh.visible=true;GLR.scene.add(mesh);VisualState.stage=stage;
+  GLR.scene.fog=new THREE.FogExp2(FOG_COL,0.020);GLR.lampPick=0;
+  return stage;
+};
+ThreeBackend.endStage=function(){
+  var stage=VisualState.stage;if(!stage)return;
+  VisualState.stage=null;
+  if(stage.parent)stage.parent.add(stage.mesh);else GLR.scene.remove(stage.mesh);
+  stage.mesh.visible=stage.visible;
+  stage.hidden.forEach(function(saved){saved.object.visible=saved.visible;});
+  GLR.scene.fog=stage.fog;GLR.lampPick=0;
+  if(stage.owned)ThreeBackend.disposeGroup(stage.mesh);
+};
+
 ThreeBackend.syncCamera=function(dt,view){
-  var p;
+  var p, camera=VisualState.camera;
   if(S.mode==='in'){
     var R=INTERIORS[S.room];
     p=worldToScene(S.x,S.y,R);
@@ -171,8 +203,8 @@ ThreeBackend.syncCamera=function(dt,view){
   }
   var bob=0;
   if(S.moving&&!S.seated){
-    S.walkPhase+=dt*(S.run?13.5:8.5);
-    bob=Math.sin(S.walkPhase)*(S.run?0.052:0.030);
+    camera.walkPhase+=dt*(S.run?13.5:8.5);
+    bob=Math.sin(camera.walkPhase)*(S.run?0.052:0.030);
   }
   var dyOff=0, dzOff=0, shake=0;
   if(S.dead){
@@ -186,22 +218,22 @@ ThreeBackend.syncCamera=function(dt,view){
   }
   if(typeof SHAKE_ON!=='undefined' && !SHAKE_ON){ bob=0; }
   var eyeTarget=S.seated?1.12:EYE;
-  S.eyeH=(S.eyeH===undefined)?EYE:S.eyeH;
-  S.eyeH+= (eyeTarget-S.eyeH)*Math.min(1,dt*9);
+  camera.eyeH=(camera.eyeH===undefined)?EYE:camera.eyeH;
+  camera.eyeH+= (eyeTarget-camera.eyeH)*Math.min(1,dt*9);
   var cameraLift=view?view.eyeLift:S.eyeLift;
-  GLR.cam.position.set(p.x, S.eyeH+bob+dyOff+(cameraLift||0)+(S.floorY||0), p.z+dzOff);   /* floorY：钟楼楼梯上的高度 */
+  GLR.cam.position.set(p.x, camera.eyeH+bob+dyOff+(cameraLift||0)+(S.floorY||0), p.z+dzOff);   /* floorY：钟楼楼梯上的高度 */
   var targetFov=72+(S.run&&S.moving?9:0);
-  S.fov=lerp(S.fov,targetFov,Math.min(1,dt*8));
+  camera.fov=lerp(camera.fov,targetFov,Math.min(1,dt*8));
   /* 超宽屏的近平面角不能越过角色碰撞圆。普通屏保持原来的 0.08 米。 */
-  var tan=Math.tan(S.fov*PI/360),near=Math.min(0.08,PRAD*U2M/(1.3*Math.sqrt(1+tan*tan*(1+GLR.cam.aspect*GLR.cam.aspect))));
-  if(Math.abs(GLR.cam.fov-S.fov)>0.01||Math.abs(GLR.cam.near-near)>0.0001){
-    GLR.cam.fov=S.fov;GLR.cam.near=near;GLR.cam.updateProjectionMatrix();
+  var tan=Math.tan(camera.fov*PI/360),near=Math.min(0.08,PRAD*U2M/(1.3*Math.sqrt(1+tan*tan*(1+GLR.cam.aspect*GLR.cam.aspect))));
+  if(Math.abs(GLR.cam.fov-camera.fov)>0.01||Math.abs(GLR.cam.near-near)>0.0001){
+    GLR.cam.fov=camera.fov;GLR.cam.near=near;GLR.cam.updateProjectionMatrix();
     GLR.postMat.uniforms.uNear.value=near;
   }
   var angle=view?view.ang:S.ang, spitch=(view?view.pitch:S.pitch)+(S.seated?-0.06:0);
   var dir=new THREE.Vector3(Math.cos(angle)*Math.cos(spitch),Math.sin(spitch),Math.sin(angle)*Math.cos(spitch));
   /* 目标点也要跟着死亡演出的升降走，否则镜头一沉就变成仰视 */
-  GLR.cam.lookAt(p.x+dir.x, S.eyeH+bob+dir.y+(cameraLift||0)+(S.floorY||0), p.z+dir.z);
+  GLR.cam.lookAt(p.x+dir.x, camera.eyeH+bob+dir.y+(cameraLift||0)+(S.floorY||0), p.z+dir.z);
 };
 
 ThreeBackend.draw=function(dt){
@@ -218,7 +250,7 @@ ThreeBackend.draw=function(dt){
     GLR.dust.position.y=Math.sin(GLR.dustT*0.25)*0.08;
   }
   if(GLR.roamFig){
-    if(S.mode==='in'&&S.room==='garage1'&&typeof ROAM!=='undefined'&&ROAM.on&&ROAM.x>-1e5){
+    if(!VisualState.stage&&S.mode==='in'&&S.room==='garage1'&&typeof ROAM!=='undefined'&&ROAM.on&&ROAM.x>-1e5){
       var rp=worldToScene(ROAM.x,ROAM.y,INTERIORS['garage1']);
       GLR.roamFig.visible=true;
       GLR.roamFig.position.set(rp.x,0,rp.z);

@@ -22,12 +22,12 @@ function anfxClear(){
   }
   if(ANFX.grp){
     GLR.scene.remove(ANFX.grp);
-    /* 调试预览的资源由 Dev.clearPreview 管理；真实死亡在这里释放。 */
-    if(ANFX.kind==='death'&&!ANFX.preview) ThreeBackend.disposeGroup(ANFX.grp);
+    /* 每个演出实例自己拥有资源；预览被替换或退出时同样在此释放一次。 */
+    if(ANFX.kind==='death') ThreeBackend.disposeGroup(ANFX.grp);
     ANFX.grp=null;
   }
   ANFX.kind=null; ANFX.items=[]; ANFX.t=0; ANFX.cup=null;ANFX.preview=false;ANFX.slit=null;ANFX.squeeze=null;ANFX.faceWalk=null;ANFX.cg=null;ANFX.neck=null;
-  ANFX.timeline=null;
+  ANFX.timeline=null;ANFX.view=null;
   GLR.gazeT=0; GLR.gazeShake=0;
 }
 function anfxMat(col,op){
@@ -297,6 +297,7 @@ function deathFX(type,options){
     var p=anfxW2S(S.x,S.y);
     var grp=new THREE.Group();
     ANFX.kind='death'; ANFX.grp=grp; ANFX.t=0; ANFX.deathType=type||'vignette';ANFX.preview=!!(options&&options.preview);
+    ANFX.view={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
     ANFX.timeline=DeathTimeline.sample(ANFX.deathType,0);
     ANFX.mx=undefined; ANFX.mz=undefined; ANFX.flashed=0;
     var i, m;
@@ -469,7 +470,8 @@ function anfxUpdate(dt){
   } else if(ANFX.kind==='death'){
     var dtp=ANFX.deathType||'vignette', kk=ANFX.t, it, ob;
     /* 预览只改变渲染镜头；玩家可以在预览期间移动或转头。 */
-    var preview=ANFX.preview, view=preview?{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift}:S;
+    var preview=ANFX.preview, view=ANFX.view;
+    if(preview){view.ang=S.ang;view.pitch=S.pitch;view.eyeLift=S.eyeLift||0;}
     if(ANFX.cg){
       DeathCG.update(ANFX.cg,kk,view);
     } else if(dtp==='vignette'){
@@ -525,7 +527,7 @@ function anfxUpdate(dt){
         }
       }
       view.pitch=0.55*Math.abs(Math.sin(Math.min(climb,4)*Math.PI*0.5))*(kk<2.4?1:0)-(kk>2.4?0.08:0);
-      try{syncCamera(0,preview?view:null);}catch(e){}
+      try{syncCamera(0,view);}catch(e){}
     } else if(dtp==='names'){
       for(it=0;it<ANFX.items.length;it++){ ob=ANFX.items[it]; ob.visible=(it%3)<=Math.floor(kk*6)%3; }
     } else if(dtp==='chalk'){

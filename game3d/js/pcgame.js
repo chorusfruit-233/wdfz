@@ -14,9 +14,15 @@ var PCGAME={
     try{ SFX.click(); }catch(e){}
   },
   rf:function(){ return {x:(Math.random()*16)|0, y:(Math.random()*16)|0}; },
+  /* 会话取消与正常离开分开：回菜单或重开不结算上一局小游戏奖励。 */
+  cancel:function(){
+    PC.on=false;PC.want=null;PC.t=0;PC.cd=0;
+    var el=document.getElementById('pcgame');if(el)el.style.display='none';
+    resetInputState();
+  },
   stop:function(){
     var gain=CampusPressure.restGain(Math.min(20, 6+PC.score*2));
-    if(PC.score>0){ S.san=Math.min(100,S.san+gain); toast('SAN +'+gain+'（得分 '+PC.score+'）'); }
+    if(PC.score>0){ PlayerStats.changeSan(gain,'pcgame',{max:100}); toast('SAN +'+gain+'（得分 '+PC.score+'）'); }
     PC.on=false;
     var el=document.getElementById('pcgame'); if(el) el.style.display='none';
     /* 以前这里再加 10*60 游戏分钟（整整 10 小时）。开电脑时已经按活动扣过时间，退出不再跳 */

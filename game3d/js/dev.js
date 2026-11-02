@@ -232,7 +232,8 @@ var Dev={
     var raw=input.value.trim(),value=Number(raw);
     if(!raw||!Number.isFinite(value)||value<0||value>100){Dev.report('请输入 0–100 的数值。');return;}
     if(['san','stam','viol','tt'].indexOf(key)<0)return;
-    S[key]=value;capStamina();
+    var set={san:'setSan',stam:'setStamina',viol:'setViolation',tt:'setAssimilation'};
+    PlayerStats[set[key]](value,'debug',{min:0,max:100});PlayerStats.capStamina();
     Dev.report(key.toUpperCase()+' 已设为 '+Math.round(S[key]*10)/10);Dev.refresh();
   },
   refreshInventory:function(){
@@ -256,7 +257,7 @@ var Dev={
       Dev.report('已移除：'+item.n);
     }else if(action==='hot'&&(slot===0||slot===1)){
       if(!hasItem(id)){Dev.report('请先将物品加入背包。');return;}
-      S.hot[slot]=id;bagChanged();Dev.report(item.n+' → 快捷栏 '+(slot+1));
+      Inventory.setHot(slot,id);Dev.report(item.n+' → 快捷栏 '+(slot+1));
     }else return;
     Dev.refreshInventory();
   },
@@ -319,6 +320,7 @@ var Dev={
   diagnosticSnapshot:function(){
     var info=GLR.renderer&&GLR.renderer.info,inspection=RT.inspection,ride=RT.elevatorRide;
     return {version:1,capturedAt:new Date().toISOString(),
+      flow:GamePolicy.describe(gameInputContext()),lifecycle:Lifecycle.snapshot(),storage:SAVE_DIAGNOSTIC,
       game:{screen:S.screen,dead:S.dead,day:S.day,time:fmtClock(S.tsec),minutes:S.tsec,mode:S.mode,room:S.room,
         position:{x:S.x,y:S.y,angle:S.ang,pitch:S.pitch},san:S.san,stamina:S.stam,violation:S.viol,assimilation:S.tt,
         bag:S.bag.slice(),hotbar:S.hot.slice()},
@@ -430,7 +432,7 @@ var Dev={
   fast:function(){ DEV.fast=!DEV.fast; Dev.paint(); Dev.report(DEV.fast?'快跑：开':'快跑：关'); },
   search:function(){ SEARCH.on=!SEARCH.on; clearSearch(); Dev.paint(); Dev.report(SEARCH.on?'翻找读条：开':'翻找读条：关（立刻翻完）'); },
   god:function(){ DEV.god=!DEV.god; Dev.paint(); Dev.report(DEV.god?'无敌：开':'无敌：关'); },
-  san:function(){ if(!Dev.canUse())return;S.san=100; S.stam=100;S.tired=false; Dev.report('SAN / 体力已恢复');Dev.refresh(); },
+  san:function(){ if(!Dev.canUse())return;PlayerStats.setSan(100,'debug');PlayerStats.setStamina(100,'debug');S.tired=false; Dev.report('SAN / 体力已恢复');Dev.refresh(); },
   time:function(min){
     if(!Number.isFinite(min)||!Dev.canChangeTime())return;
     /* 调试暂停时 tick 不运行；过期检查要及时丢弃，回拨也不能让它们重新变为有效。 */
@@ -491,11 +493,11 @@ var Dev={
     SFX.anim(mode);Dev.report('画面演出已开始');
   },
   clearPreview:function(){
+    Lifecycle.scope('preview').cancel();
     if(DEV.previewTimer)clearTimeout(DEV.previewTimer);DEV.previewTimer=0;
     var fx=DEV.previewFx;DEV.previewFx=null;
     if(fx){
       if(ANFX.grp===fx){anfxClear();if(S.screen==='play'&&!S.dead)syncCamera(0);}
-      ThreeBackend.disposeGroup(fx);
     }
   },
   clearAnimation:function(){
@@ -511,7 +513,7 @@ var Dev={
     DEV.previewFx=ANFX.grp;
     try{SFX.deathFx(t);}catch(e){}
     var previewSeconds=Math.max(3.5,DeathTimeline.duration(t)+0.2);
-    DEV.previewTimer=setTimeout(function(){Dev.clearPreview();},previewSeconds*1000);
+    DEV.previewTimer=Lifecycle.renew('preview').timeout(function(){Dev.clearPreview();},previewSeconds*1000);
     Dev.report('正在预览死亡效果，'+previewSeconds.toFixed(1)+' 秒后自动清理');
   },
   death:function(){
@@ -531,8 +533,8 @@ var Dev={
     var view=S.deathView;S.deathView=null;
     S.dead=false; S.death=null; S.deadT=0;
     if(view){S.ang=view.ang;S.pitch=view.pitch;S.eyeLift=view.eyeLift;}else S.eyeLift=0;
-    if(S.san<=0)S.san=45;
-    if(S.tt>=100){S.tt=86;S.ttTier=4;}
+    if(S.san<=0)PlayerStats.setSan(45,'debug-revive');
+    if(S.tt>=100){PlayerStats.setAssimilation(86,'debug-revive');S.ttTier=4;}
     capStamina();
     var dEl=document.getElementById('die'); if(dEl) dEl.style.display='none';
     var fEl=document.getElementById('flash'); if(fEl) fEl.style.opacity='0';

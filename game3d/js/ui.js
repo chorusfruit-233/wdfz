@@ -144,7 +144,7 @@ var BAGTAP={i:-1,t:0};
 function bagUse(i){
   var now=Date.now();
   var dbl=(BAGTAP.i===i && now-BAGTAP.t<340);
-  S.bagSel=i;
+  if(!Inventory.select(i))return;
   var id=S.bag[i];
   if(!id){ BAGTAP.i=-1; UI.renderBag(); return; }
   if(dbl){ BAGTAP.i=-1; useItem(id); }
@@ -154,8 +154,8 @@ function bagUse(i){
 function hotToggle(slot,i){
   var id=S.bag[i];
   if(!id) return;
-  if(S.hot[slot]===id){ S.hot[slot]=null; toast('快捷栏 '+(slot+1)+'：取下「'+ITEMS[id].n+'」'); }
-  else{ S.hot[slot]=id; toast('「'+ITEMS[id].n+'」→ 快捷栏 '+(slot+1)+(slot?'（按 2）':'（按 1）')); }
+  if(S.hot[slot]===id){ Inventory.setHot(slot,null); toast('快捷栏 '+(slot+1)+'：取下「'+ITEMS[id].n+'」'); }
+  else{ Inventory.setHot(slot,id); toast('「'+ITEMS[id].n+'」→ 快捷栏 '+(slot+1)+(slot?'（按 2）':'（按 1）')); }
   try{ SFX.click(); }catch(e){}
   var el=document.getElementById('hot'); if(el) el._sig='';
   UI.renderHot(); UI.renderBag();

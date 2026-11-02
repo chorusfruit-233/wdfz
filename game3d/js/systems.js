@@ -1,5 +1,8 @@
 /* 里世界 3D · 课表规则、SAN、违规、危险区、车库里的东西 */
 'use strict';
+PlayerStats.bind(function(){return S;});
+/* 稳定的日历命令入口；原函数名保留给尚未迁移的调用者。 */
+var GameTime={now:gameClock,advance:advanceGameTime,rewind:rewindGameTime,tick:clockTick};
 
 function inClassroomHere(){
   if(S.mode!=='in') return false;
@@ -64,7 +67,7 @@ function examTick(dt){
   var p=periodAt(S.tsec), cur=(p[3]==='教室')?p[0]:null;
   if(cur!==S.examCur){
     if(S.examCur!==null&&S.examTot>4){                 /* 上一场结束：交卷 */
-      if(S.examSeat/S.examTot>=0.7){ S.san=Math.min(100,S.san+15); os('我：交卷了。监考的人从我桌上收走卷子，没有看我。……可我记得我写了什么。',4.4); toast('考完一场 · SAN +15'); }
+      if(S.examSeat/S.examTot>=0.7){ PlayerStats.changeSan(15,'systems',{max:100}); os('我：交卷了。监考的人从我桌上收走卷子，没有看我。……可我记得我写了什么。',4.4); toast('考完一场 · SAN +15'); }
       else os('我：这一场我没坐住。收上去的卷子里，我那一张只有名字，名字被人画了一个圈。',4.4);
     }
     S.examCur=cur; S.examSeat=0; S.examTot=0;
@@ -74,65 +77,62 @@ function examTick(dt){
 }
 /* 日数沿用 22:30 切换，01:00 跳到同一日的 07:20。冷却使用连续的游戏分钟。 */
 function gameClock(){
-  var day=Math.max(1,S.day||1), late=S.tsec>=LIGHTS_OUT+10&&day>1;
-  return (day-1-(late?1:0))*1440+S.tsec;
+  return GameTimeRules.continuous(S.day,S.tsec,LIGHTS_OUT);
 }
 function advanceGameTime(minutes){
   if(typeof CampusPressure!=='undefined')CampusPressure.observe();
-  var remaining=Math.max(0,minutes||0);
+  var remaining=GameTimeRules.amount(minutes);
   while(remaining>0){
-    var before=S.tsec, step=Math.min(remaining,Math.max(0,1500-before));
-    S.tsec+=step; remaining-=step;
+    var slice=GameTimeRules.forwardSlice(S.tsec,S.day,remaining,LIGHTS_OUT),before=slice.from,step=slice.used;
+    S.tsec=slice.to; remaining=slice.remaining;
     if(typeof Inspection!=='undefined')Inspection.cross(S.day,before,S.tsec);
     if(S.day===1&&S.fn&&!S.fn.note&&S.tsec>=LIGHTS_OUT){
       S.fn.note=true;
       os('我：口袋里多了一张对折的纸。上面写着——灯前看字字如旧，月下认人人已非。　　　　　——笑时莫出声。',8);
     }
     if(S.exam&&before<LIGHTS_OUT&&S.tsec>=LIGHTS_OUT){ examEnd(); os('我：熄灯了。今天的考试结束了。',3.4); }
-    if((before<LIGHTS_OUT+10&&S.tsec>=LIGHTS_OUT+10)||(S.day===1&&before>=LIGHTS_OUT+10)){
-      S.day=(S.day||1)+1;
+    if(slice.day!==S.day){
+      S.day=slice.day;
       if(S.day===2){
         os('我：……今天几号来着？我想不起来了。',4);
         if(S.fn&&S.fn.note&&!S.fn.on&&S.fn.n===0){
           S.fn.on=true; S.fn.v=0; S.fn.next=10; S.fn.used={}; S.fn.n=0; S.fn.left=4; S.fn.done=false;
           try{ fadeTo(function(){}); }catch(e){}
-          setTimeout(function(){ try{ os('我：第二天。所有东西都回到了原来的位置，颜色也回来了。',5.5); }catch(e){} },1200);
-          setTimeout(function(){ try{ fnPeopleBuild(); }catch(e){} },1800);
+          Lifecycle.scope('session').timeout(function(){ os('我：第二天。所有东西都回到了原来的位置，颜色也回来了。',5.5); },1200);
+          Lifecycle.scope('scene').timeout(function(){ fnPeopleBuild(); },1800);
         }
       }
     }
-    if(S.tsec>=1500-1e-9) S.tsec=440;
+    if(slice.time!==S.tsec) S.tsec=slice.time;
     else if(step<=0) break;
   }
   if(typeof CampusPressure!=='undefined')CampusPressure.observe();
 }
 function rewindGameTime(minutes){
   if(typeof CampusPressure!=='undefined')CampusPressure.observe();
-  var remaining=Math.max(0,minutes||0);
+  var remaining=GameTimeRules.amount(minutes);
   while(remaining>0){
-    if(S.tsec<=440) S.tsec=1500;
-    var before=S.tsec, step=Math.min(remaining,S.tsec-440);
-    S.tsec-=step; remaining-=step;
-    if(before>=LIGHTS_OUT+10&&S.tsec<LIGHTS_OUT+10&&S.day>1) S.day--;
+    var slice=GameTimeRules.backwardSlice(S.tsec,S.day,remaining,LIGHTS_OUT);
+    S.tsec=slice.to; S.day=slice.day; remaining=slice.remaining;
   }
 }
 /* 每个时段规定待在哪里（needWhere 的四种结果）：在不在该在的地方、SAN 每秒怎么变 */
 var NEED_RULE={
   '教室':{
     there:function(){ return atMySeat(); },
-    san:function(dt){ if(atMySeat()) S.san+=0.42*dt; }
+    san:function(dt){ if(atMySeat()) PlayerStats.changeSan(0.42*dt,'systems'); }
   },
   '宿舍':{
     there:function(){ return inDorm(); },
-    san:function(dt){ if(inDorm()) S.san+=0.22*dt; }
+    san:function(dt){ if(inDorm()) PlayerStats.changeSan(0.22*dt,'systems'); }
   },
   '操场':{
     there:function(){ return onField(); },
-    san:function(dt){ if(onField()) S.san+=0.5*dt; }
+    san:function(dt){ if(onField()) PlayerStats.changeSan(0.5*dt,'systems'); }
   },
   '自由':{
     there:function(){ return true; },
-    san:function(dt){ S.san+=0.8*dt; }
+    san:function(dt){ PlayerStats.changeSan(0.8*dt,'systems'); }
   }
 };
 /* 同化值每满 20 说一句 */
@@ -147,40 +147,42 @@ var TT_SEAT={3:'我：……今天几号来着？我想站起来看一眼黑板�
   4:'我：腿麻了。不对——是腿不想动。椅子贴着我的背，像是不想让我起来。'};
 /* 跨时段时分段消耗真实秒；不能把整步时间按旧时速推进，尤其是 11:45 的慢速窗。 */
 function clockTick(dt){
-  var left=Math.max(0,dt);
+  var left=GameTimeRules.amount(dt);
   while(left>1e-9){
     var t0=S.tsec, boundary=clockBoundary(t0);
-    var rate=rateAt(t0), seconds=Math.max(0,(boundary-t0)*60/rate);
-    if(seconds<1e-9){advanceGameTime(1e-8);continue;}
-    var used=Math.min(left,seconds);
-    advanceGameTime(used===seconds?boundary-t0:used*rate/60);left-=used;
+    var slice=GameTimeRules.realTimeSlice(t0,left,boundary,rateAt(t0));
+    advanceGameTime(slice.minutes);
+    if(!slice.nudge)left-=slice.seconds;
   }
 }
-function sanityStage(value){var n=value===undefined?S.san:value;return n>60?0:n>30?1:n>12?2:3;}
+function sanityStage(value){return StatRules.sanityStage(value===undefined?S.san:value);}
 var SAN_FEEL=['呼吸平稳','有些恍惚','心跳很乱','快撑不住了'];
-function staminaMax(){return 40+0.6*clamp(Number.isFinite(S.san)?S.san:100,0,100);}
-function capStamina(){S.stam=clamp(Number.isFinite(S.stam)?S.stam:0,0,staminaMax());}
-function restoreStamina(amount){S.stam=Math.min(staminaMax(),S.stam+amount);capStamina();}
+function staminaMax(){return PlayerStats.staminaMax();}
+function capStamina(){PlayerStats.capStamina();}
+function restoreStamina(amount){PlayerStats.restoreStamina(amount);}
 function settleSan(){
-  S.san=clamp(Number.isFinite(S.san)?S.san:100,0,100);capStamina();
-  if(S.san<=0&&!S.dead){kill('你一直撑着的那根弦，断了。','vignette','san');if(!S.dead&&S.san<=0)S.san=1;}
+  PlayerStats.settle();
+  if(S.san<=0&&!S.dead){kill('你一直撑着的那根弦，断了。','vignette','san');if(!S.dead&&S.san<=0)PlayerStats.setSan(1,'death-prevented');}
 }
 /* 仅保留日常恢复；危险环境、异象和躲避巡察者期间不能由课表恢复抵消伤害。 */
 function sanTick(dt,rule,exam){
   if(S.san<=0){settleSan();if(S.dead)return;}
   if(!dangerAt()&&!AN.active&&!PAT.locked&&!HIDE.on&&!(typeof Inspection!=='undefined'&&Inspection.active()))rule.san(dt*CampusPressure.current().passive,exam);
-  if(S.pillT>0){var pd=Math.min(dt,S.pillT);S.san+=PILL_RATE*pd;S.pillT-=pd;}
-  if(PAT.state==='walk'&&(PAT.locked||HIDE.on))S.san-=dt*(PAT.locked?0.35:0.18);
+  if(S.pillT>0){var pd=Math.min(dt,S.pillT);PlayerStats.changeSan(PILL_RATE*pd,'systems');S.pillT-=pd;}
+  if(PAT.state==='walk'&&(PAT.locked||HIDE.on))PlayerStats.changeSan(-(dt*(PAT.locked?0.35:0.18)),'systems');
   settleSan();
 }
 function addViolation(amount,source){
-  if(amount>0&&source!=='inspection'&&(onLeave()||eveningActivity(S.tsec)))return;
-  S.viol=clamp(S.viol+amount,0,100);
+  PlayerStats.addViolation(amount,source,onLeave()||eveningActivity(S.tsec));
+}
+/* 同学注视的数值判定属于模拟；表现层只报告当前是否存在这一场景。 */
+function ncPressureTick(dt){
+  if(ncPressureState()&&S.viol>=70&&!S.dead)PlayerStats.changeSan(-dt*0.12,'classroom-stare',{min:1});
 }
 /* 普通课堂与课间操不按离席秒数处罚；巡察发现、两次集合、考试和熄灯各自结算。 */
 function violTick(dt,nw,rule,exam){
   if(typeof Inspection!=='undefined'&&Inspection.active()){
-    S.wrong=!inClassroomHere();leaveTick();try{ncUpdate(dt);}catch(e){}return;
+    S.wrong=!inClassroomHere();leaveTick();try{ncUpdate(dt);ncPressureTick(dt);}catch(e){}return;
   }
   var wrong=!rule.there();
   if(!exam&&(nw==='教室'||nw==='操场'))wrong=false;
@@ -192,10 +194,10 @@ function violTick(dt,nw,rule,exam){
   S.wrong=wrong;
   leaveTick();
   if(!onLeave()&&!eveningActivity(S.tsec)&&(wrong||nw==='宿舍')){ addViolation(dt*0.85*vioMul); }
-  else { S.viol=Math.max(0,S.viol-dt*3.2); }
+  else { PlayerStats.changeViolation(-dt*3.2,'decay',{min:0}); }
   try{ skipTick(dt); }catch(e){}
-  try{ ncUpdate(dt); }catch(e){}
-  S.viol=clamp(S.viol,0,100);
+  try{ ncUpdate(dt);ncPressureTick(dt); }catch(e){}
+  PlayerStats.setViolation(S.viol,'settle',{min:0,max:100});
   /* 违规记满不再直接死：班主任在本子上划一笔，之后请假条批不下来，直到违规降下去 */
   if(S.viol>=100&&!RT.violFull){
     RT.violFull=1;
@@ -209,10 +211,10 @@ var TT_CFG={seat:0.26,dorm:0.22,decay:0.6};   /* 20 分钟课表：保留久坐�
 function ttTick(dt,nw){
   if(S.tt>=100){resolveAssimilation();return;}
   if(typeof Inspection!=='undefined'&&Inspection.active())return;
-  if(S.seated&&nw==='教室') S.tt+=TT_CFG.seat*dt;
-  else if(inDorm()&&S.tsec>=EVENING) S.tt+=TT_CFG.dorm*dt;
-  else S.tt=Math.max(0,S.tt-TT_CFG.decay*dt);
-  S.tt=clamp(S.tt,0,100);
+  if(S.seated&&nw==='教室') PlayerStats.changeAssimilation(TT_CFG.seat*dt,'classroom');
+  else if(inDorm()&&S.tsec>=EVENING) PlayerStats.changeAssimilation(TT_CFG.dorm*dt,'dorm');
+  else PlayerStats.changeAssimilation(-TT_CFG.decay*dt,'decay',{min:0});
+  PlayerStats.setAssimilation(S.tt,'settle',{min:0,max:100});
   if(S.tt>=100){
     resolveAssimilation();return;
   }
@@ -250,7 +252,7 @@ function resolveAssimilation(){
   if(S.dead)return;
   kill('你在自己的位子上坐好了。椅子很合身，像是照着你做的。这一次，不用再起来了。','names','assimilation');
   /* 免疫、药丸或调试无敌挡下后回落，避免每帧再次触发；不提供人为脱身选项。 */
-  if(!S.dead){S.tt=86;S.ttTier=4;}
+  if(!S.dead){PlayerStats.setAssimilation(86,'death-prevented');S.ttTier=4;}
 }
 
 /* 请假：两个小时（游戏时间）内不用待在规定的地方，巡察者也不管。RT.leaveUntil 用连续的游戏分钟 */
@@ -368,7 +370,7 @@ function roamTick(dt){
   }
   var ddx=S.x-ROAM.x, ddy=S.y-ROAM.y;
   var dist=Math.sqrt(ddx*ddx+ddy*ddy);
-  if(dist<150){ S.san-=dt*1.1; if(!ROAM.seen){ ROAM.seen=1; os('我：车道那头有东西。它不是走路的姿势。',5); } }
+  if(dist<150){ PlayerStats.changeSan(-(dt*1.1),'systems'); if(!ROAM.seen){ ROAM.seen=1; os('我：车道那头有东西。它不是走路的姿势。',5); } }
   if(dist<230&&!ROAM.toldSpot){ ROAM.toldSpot=1; os('我：车道中间有个高的东西站着。它没在动。',4.4); }
   if(dist<ROAM_REACH&&!lit&&ROAM.litAcc<ROAM_LIT_NEED*0.5&&S.enterCool<=0){
     kill('你在黑暗里撞上了它。它很高，很冷，一直站在车道中间，等你自己走过去。','grip','garage');
@@ -378,7 +380,7 @@ var DANGER={garage:{san:0.55},trash:{san:0.40},night:{san:0.30},tunnel:{san:0.60
 function dangerTick(dt){
   var dg=dangerAt(); if(!dg) return;
   var k=(S.talent==='night'&&(dg==='night'||dg==='garage'))?0.55:1;
-  S.san-=dt*DANGER[dg].san*k*CampusPressure.current().danger;
+  PlayerStats.changeSan(-(dt*DANGER[dg].san*k*CampusPressure.current().danger),'systems');
   if(!S.dangerSeen) S.dangerSeen={};
   if(!S.dangerSeen[dg]){
     S.dangerSeen[dg]=1;

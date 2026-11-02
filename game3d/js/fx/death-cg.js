@@ -1,7 +1,7 @@
 /* 死亡演出：按死因分镜。每种都是「前兆 → 接触／失控 → 临终视角 → 收束」四段，
    所有位置、镜头都只由经过的时间 k（秒）算出来，帧率高低结果一样。
    模型都放在「视线坐标系」里：原点在玩家脚下，+z 是死亡那一刻的视线方向，+y 向上。
-   预览只改渲染镜头，不改玩家状态；真实死亡改 S 上的镜头量（死亡后玩家不能再操作）。 */
+   预览与真实死亡各持有独立镜头上下文，均不改写玩家朝向或高度。 */
 'use strict';
 
 var DeathCG=(function(){
@@ -26,7 +26,8 @@ var DeathCG=(function(){
     var p=anfxW2S(S.x,S.y), F=new THREE.Group();
     F.position.set(p.x,S.floorY||0,p.z); F.rotation.y=Math.PI/2-S.ang; grp.add(F);
     this.type=type; this.F=F; this.preview=preview; this.rand=rng(type);
-    this.base=preview?null:(S.deathView||{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0});
+    var base=(!preview&&S.deathView)||{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
+    this.base=preview?null:{ang:base.ang,pitch:base.pitch,eyeLift:base.eyeLift};
     this.shk=(typeof SHAKE_ON==='undefined'||SHAKE_ON)?1:0;
     this.flashed={}; this.cued={}; this.lift=0; this.veilMesh=null;
   }
@@ -57,7 +58,7 @@ var DeathCG=(function(){
       view.ang=b.ang+(dAng||0);
       view.pitch=clamp((pitch||0)+(b.pitch||0)*(1-ss(k,0,0.4)),-1.45,1.45);
       view.eyeLift=this.lift;
-      try{ syncCamera(0,this.preview?view:null); }catch(e){}
+      try{ syncCamera(0,view); }catch(e){}
       if(this.veilMesh) this.veilMesh.position.set(0,this.camY(),0);
     },
     shade:function(v){ if(this.veilMesh) this.veilMesh.material.opacity=Math.min(0.94,v); },

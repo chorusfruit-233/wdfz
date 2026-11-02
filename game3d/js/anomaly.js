@@ -16,7 +16,7 @@ var AN_DEFS={
     msg:'我：灯一盏接一盏灭了。走廊尽头也暗下来，只剩自己的呼吸。',
     when:function(){return S.mode==='in'&&S.room!=='teach6';},
     tick:function(dt){
-      if(S.mode==='in'&&S.room!=='teach6')S.san-=dt*0.7;
+      if(S.mode==='in'&&S.room!=='teach6')PlayerStats.changeSan(-(dt*0.7),'anomaly');
       if(AN.t>=24){os('我：灯管轻轻响了一声，又亮了。',3.2);anEnd();}
     }
   },
@@ -28,7 +28,7 @@ var AN_DEFS={
       if(underCover()){
         AN.acc=Math.max(0,AN.acc-dt*0.6);
         if(!d.cov&&S.mode==='out'){ d.cov=1; os('我：躲到了檐下。雨声一下子远了，可我还是能听见它在找我。',3.6); }
-      }else{ AN.acc+=dt; S.san-=dt*0.7; d.cov=0; }
+      }else{ AN.acc+=dt; PlayerStats.changeSan(-(dt*0.7),'anomaly'); d.cov=0; }
       if(AN.acc>(hard?9:14)) anKill('雨灌进了你的肺里。你听见自己在身体里晃，像一只装满水的桶。','drown');
       else if(AN.acc>(hard?5:8)&&!d.warn){ d.warn=1; os('我：喘不上气了。得找个有顶的地方——屋檐、柱廊、车棚，哪里都行。',3.6); }
       if(AN.t>26) anEnd();
@@ -44,7 +44,7 @@ var AN_DEFS={
     tick:function(dt,d,hard){
       var dm=Math.sqrt(dist2(d.src.x,d.src.y,S.x,S.y));
       if(dm>120) AN.acc=Math.max(0,AN.acc-dt*1.4);
-      else { AN.acc+=dt; S.san-=dt*1.6; }
+      else { AN.acc+=dt; PlayerStats.changeSan(-(dt*1.6),'anomaly'); }
       if(AN.acc>(hard?4.5:6.5)) anKill('蛾群把你裹住了。翅膀上的粉落进你的眼睛里，很痒。然后什么都不痒了。','swarm');
       if(AN.t>24) anEnd();
     }
@@ -74,7 +74,7 @@ var AN_DEFS={
         if(AN.acc>0.5) anHurt('我回头了。它的脸离我只有一寸——没有五官，只有一层湿透的皮。下一秒，什么都没有了。肩膀上还是凉的。',26,{quiet:1});
       }else{
         AN.acc+=dt;
-        if(AN.acc>=7.8){ S.san=Math.min(100,S.san+6); addClue('turn'); os('我：那只手慢慢松开了。我一直没有回头。',3.4); anEnd(); }
+        if(AN.acc>=7.8){ PlayerStats.changeSan(6,'anomaly',{max:100}); addClue('turn'); os('我：那只手慢慢松开了。我一直没有回头。',3.4); anEnd(); }
       }
     }
   },
@@ -94,7 +94,7 @@ var AN_DEFS={
     when:function(){ return S.mode==='in'&&(INTERIORS[S.room].host==='teach'||INTERIORS[S.room].host==='dormN'); },
     tick:function(dt,d,hard){
       if(S.seated&&S.room==='teach1'){ os('我：我坐回自己的位子上。钟声在第十二下停了。',3.4); anEnd(); return; }
-      S.san-=dt*0.22;
+      PlayerStats.changeSan(-(dt*0.22),'anomaly');
       if(AN.t>15) anHurt('第十三下。我数得很清楚——可是我不记得自己是从哪一下开始数的。',20);
     }
   },
@@ -171,12 +171,12 @@ var AN_DEFS={
           UI.choice('后桌：「你作业交了吗？」',opts,anChoiceOptions(d));
         }
       }else if(d.chosen==='hw'){
-        S.san=Math.min(100,S.san+12); removeItem('hw'); os('我：后面那只手接过了作业本，翻了一页，又翻了一页。然后安静了。',3.6); anEnd();
+        PlayerStats.changeSan(12,'anomaly',{max:100}); removeItem('hw'); os('我：后面那只手接过了作业本，翻了一页，又翻了一页。然后安静了。',3.6); anEnd();
       }else if(d.chosen==='name'){
         anHurt('我说出了一个名字。全班同时应了一声——"到"。没有一个声音是我认识的。',20);
       }else{
         AN.acc+=dt;
-        if(AN.acc>14){ S.san-=6; addClue('repeat'); os('我：他问了十四遍。第十五遍的时候，他叫的是我的名字。',3.6); anEnd(); }
+        if(AN.acc>14){ PlayerStats.changeSan(-(6),'anomaly'); addClue('repeat'); os('我：他问了十四遍。第十五遍的时候，他叫的是我的名字。',3.6); anEnd(); }
       }
     }
   },
@@ -197,7 +197,7 @@ var AN_DEFS={
       }
     },
     tick:function(dt,d,hard){
-      S.san-=dt*0.25;
+      PlayerStats.changeSan(-(dt*0.25),'anomaly');
       if(AN.t>16) anEnd();
     }
   },
@@ -213,7 +213,7 @@ var AN_DEFS={
       }
       if(KEY['shift']||KEY[' ']||S.run){ AN.acc+=dt*2.6; }
       else { AN.acc+=dt; }
-      S.san-=dt*0.3;
+      PlayerStats.changeSan(-(dt*0.3),'anomaly');
       if(AN.acc>14){ os('我：门终于是另一扇了。门牌上的班号，比刚才大了一。',3.4); anEnd(); }
     }
   },
@@ -255,7 +255,7 @@ var AN_DEFS={
     },
     tick:function(dt,d,hard){
       var dr=Math.sqrt(dist2(d.c.x,d.c.y,S.x,S.y));
-      if(dr<19){ AN.acc+=dt; S.san-=dt*2.0; if(!d.warn){ d.warn=1; os('我：我踩到粉笔线了。蜡烛的火苗一起朝我这边歪。',3.0); } }
+      if(dr<19){ AN.acc+=dt; PlayerStats.changeSan(-(dt*2.0),'anomaly'); if(!d.warn){ d.warn=1; os('我：我踩到粉笔线了。蜡烛的火苗一起朝我这边歪。',3.0); } }
       else AN.acc=Math.max(0,AN.acc-dt*0.5);
       if(AN.acc>(hard?1.4:2.2)) anKill('你走进了那个圈。正中那个空着的位置，刚好是你的大小。','ring');
       if(AN.t>20) anEnd();
@@ -278,11 +278,11 @@ var AN_DEFS={
           ],anChoiceOptions(d));
         }
       }else if(d.chosen==='near'){
-        S.san=Math.min(100,S.san+14);
+        PlayerStats.changeSan(14,'anomaly',{max:100});
         os('我：里面挂着一排冻硬的校服，袖子在风里互相敲。最外面那件的胸口，绣着我的名字。……我反而不怕了。',5.4);
         anEnd();
       }else{
-        S.san=Math.max(0,S.san-16);
+        PlayerStats.changeSan(-(16),'anomaly',{min:0});
         os('我：我走了。那股冷气跟着我，一直贴在后颈上，走了很远都没散。',4.2);
         anEnd();
       }
@@ -293,7 +293,7 @@ var AN_DEFS={
     msg:'我：窗外的楼……在动。很慢，一栋一栋地挪。',
     when:function(){ return inClassroomHere(); },
     tick:function(dt,d,hard){
-      S.san-=dt*0.5;
+      PlayerStats.changeSan(-(dt*0.5),'anomaly');
       if(AN.t>18){ os('我：楼停下来了。整片校园里，只有钟楼一直没动——它在看着别的楼。',4.6); anEnd(); }
     }
   },
@@ -342,7 +342,7 @@ var AN_DEFS={
     tick:function(dt,d,hard){
       var wallX=BOUND.x1*SC;
       var dToWall=Math.abs(wallX-S.x);
-      if(dToWall<150*SC/2){ S.san-=dt*1.2; }
+      if(dToWall<150*SC/2){ PlayerStats.changeSan(-(dt*1.2),'anomaly'); }
       if(dToWall<90*SC/2){ AN.acc+=dt; if(!d.warn){ d.warn=1; os('我：他停下来了。他在等我再走近一点。',3.0); } } else { AN.acc=Math.max(0,AN.acc-dt); }
       if(AN.acc>(hard?1.4:2.2)) anKill('他没有绕到校门口。他把脖子从围栏的缝里伸了进来，一直伸，一直伸。','neck');
       if(AN.t>20) anEnd();
@@ -357,7 +357,7 @@ var AN_DEFS={
     },
     tick:function(dt,d,hard){
       if(underCover()){ AN.acc=Math.max(0,AN.acc-dt*0.6); }
-      else { AN.acc+=dt; S.san-=dt*0.8; }
+      else { AN.acc+=dt; PlayerStats.changeSan(-(dt*0.8),'anomaly'); }
       if(AN.acc>10) anHurt('影子追上来了，和我叠在一起。有一瞬间，我分不清是谁先抬的手。',18);
       if(AN.active&&AN.t>22) anEnd();
     }
@@ -393,7 +393,7 @@ var AN_DEFS={
     msg:'我：雨点落在地上，没有散开。它们在排队。',
     when:function(){ return AN.rained; },
     tick:function(dt,d,hard){
-      S.san-=dt*0.4;
+      PlayerStats.changeSan(-(dt*0.4),'anomaly');
       if(AN.t>14){ os('我：地上的字写着——明天的天气：阴。明天的值日：你。',4.4); anEnd(); }
     }
   },
@@ -422,7 +422,7 @@ var AN_DEFS={
           return;
         }
         if(miss<CUP_R) os('我：「当」的一声，砸在头顶的雨棚上，又弹到了地上。',3.4);
-        else if(miss<2.6){ S.san-=hard?9:6; os('我：就砸在我脚边。杯子摔瘪了，杯身上画着清华的二校门。淡紫色的杯盖滚开，里面的水还是热的。',4.4); }
+        else if(miss<2.6){ PlayerStats.changeSan(-(hard?9:6),'anomaly'); os('我：就砸在我脚边。杯子摔瘪了，杯身上画着清华的二校门。淡紫色的杯盖滚开，里面的水还是热的。',4.4); }
         else os('我：不远处「哐」的一声，一只杯子在地上弹了两下。我不敢抬头。',3);
       }
       if(d.phase===2&&AN.t-d.tl>2.6) anEnd();
@@ -616,7 +616,7 @@ function anOff(id){ entClear(); try{ anfxClear(); }catch(e){} }
 function anHurt(msg,loss,opt){
   opt=opt||{};
   var k=(S.diff==='hard')?1.25:0.9;
-  S.san=Math.max(0,S.san-loss*k);
+  PlayerStats.changeSan(-(loss*k),'anomaly',{min:0});
   VisualState.hurt=Math.max(VisualState.hurt||0,0.65);
   if(!opt.quiet){                           /* quiet：不闪白、不加刺耳的音效，只留画面暗下去那一下 */
     VisualState.flash=Math.max(VisualState.flash||0,0.25);
@@ -705,5 +705,13 @@ function anDrive(dt){
     if(AN.next<=0) anStart();
   } else {
     anTick(dt);
+  }
+}
+
+/* 首次看懂预警属于本局进度，由应用模拟提交；画面重建不写入这个标记。 */
+function anNotifyWarning(visible){
+  if(visible&&S.diff==='easy'&&AN.pre&&!RT.preTold){
+    RT.preTold=1;
+    os('我：这个时间……我梦见过。',3.4);
   }
 }

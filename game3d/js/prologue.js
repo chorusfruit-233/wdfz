@@ -16,14 +16,16 @@ var PRO_PAGES=[
 ];
 var PRO={on:false,i:0,seen:false,woke:false,see:false,busy:false};
 function eyelid(close,mid,open){
+  var scope=Lifecycle.renew('eyelid');
   var t=document.getElementById('lidtop'), b=document.getElementById('lidbot');
   if(!t||!b){ mid(); if(open) open(); return; }
+  scope.own(function(){t.style.height='0';b.style.height='0';});
   t.style.height='50%'; b.style.height='50%';
-  setTimeout(function(){
-    try{ mid(); }catch(e){}
-    setTimeout(function(){
+  scope.timeout(function(){
+    try{ mid(); }catch(e){Lifecycle.report('eyelid',e);}
+    scope.timeout(function(){
       t.style.height='0'; b.style.height='0';
-      if(open) setTimeout(open,240);
+      if(open) scope.timeout(open,240);
     }, close||420);
   }, 360);
 }
@@ -45,6 +47,8 @@ function proSeen(){
 }
 function proMark(){ try{ localStorage.setItem('wdfz_pro','1'); }catch(e){} }
 function proShow(){
+  Lifecycle.renew('prologue-text');Lifecycle.renew('eyelid');
+  Lifecycle.renew('prologue');
   var el=document.getElementById('pro');
   if(!el){ proEnd(); return; }
   PRO.on=true; PRO.i=0; PRO.woke=false; PRO.see=false; PRO.busy=false;
@@ -57,20 +61,26 @@ function proShow(){
   el.classList.add('on'); el.style.display='flex';
 }
 function proEnd(){
+  proCancel();
+  proMark();
+  try{ ncFlip(); }catch(e){Lifecycle.report('prologue-end',e);}
+  os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
+}
+/* 取消不写已看标记，也不产生新字幕；新局、读档和退出共用。 */
+function proCancel(){
+  Lifecycle.renew('prologue');Lifecycle.renew('prologue-text');Lifecycle.renew('eyelid');
   PRO.on=false;
+  PRO.busy=false;PRO.woke=false;PRO.see=false;
   var el=document.getElementById('pro');
   if(el){ el.classList.remove('on'); el.classList.remove('see'); el.style.display='none'; }
   try{ document.body.classList.remove('pro'); }catch(e){}
-  proMark();
   try{ VisualState.worldNorm=0; }catch(e){}
-  try{ ncFlip(); }catch(e){}
-  try{ os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8); }catch(e){}
 }
 function proSetText(txt){
   var t=document.getElementById('protext');
   if(!t) return;
   t.style.opacity='0';
-  setTimeout(function(){
+  Lifecycle.renew('prologue-text').timeout(function(){
     if(!PRO.on||!t) return;
     t.textContent=txt; t.style.opacity='1';
   },200);
