@@ -84,6 +84,7 @@ var ModManager={
       pt.parentNode.insertBefore(d,pt.nextSibling);
       d.addEventListener('toggle',function(){ if(d.open) ModManager.render(document.getElementById('modToolsBody')); });
       ModManager.hosts.push(document.getElementById('modToolsBody'));
+      ModManager.render(document.getElementById('modToolsBody'));      /* 先画好：toggle 事件是异步的，展开的那一刻就要有内容 */
       var st=document.getElementById('modToolsState'); if(st) st.textContent=GameModules.safeMode()?'安全模式':(GameModules.mods().length?GameModules.mods().length+' 个 Mod':'');
     }
     var tabs=document.querySelector('.devtabs'), body=document.getElementById('devbody');
@@ -96,6 +97,7 @@ var ModManager={
       page.innerHTML='<div class="devsection"><div><h3>Mod 与模块</h3><p>导入、开关后刷新页面生效；?nomod 是安全模式</p></div></div><div id="devModsBody"></div>';
       body.appendChild(page);
       ModManager.hosts.push(document.getElementById('devModsBody'));
+      ModManager.render(document.getElementById('devModsBody'));
     }
   }
 };

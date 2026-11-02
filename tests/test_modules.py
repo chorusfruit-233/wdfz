@@ -200,7 +200,7 @@ class ModuleBrowserTest(BrowserCase):
         page.evaluate("running=false;clearIntroTimers();S.intro=0;Game.pause()")
         self.assert_js(page, "PAUSE.on&&getComputedStyle(document.getElementById('pause')).display!=='none'")
         page.locator('#modTools > summary').click()
-        self.assertIn('个模块', page.locator('#modToolsBody').inner_text())
+        page.wait_for_function("document.getElementById('modTools').open&&document.getElementById('modToolsBody').innerText.indexOf('个模块')>=0")
         page.locator('#modToolsBody input[type=file]').set_input_files(files=[{
             'name': 'note.js', 'mimeType': 'text/javascript',
             'buffer': "GameModules.mod({id:'note-mod',name:'便条',api:'1.0'});".encode('utf-8')}])
