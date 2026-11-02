@@ -120,7 +120,8 @@ class ColaChainTest(BrowserCase):
 
 
 class DreamPaletteTest(BrowserCase):
-    def test_dream_space_is_saturated_and_the_exit_still_works(self):
+    def test_dream_space_is_a_dark_red_room_with_one_green_exit(self):
+        """异色空间按恐怖感重做：整层暗红、远处沉进红黑的雾，唯一不是红的是尽头的绿色「安全出口」；出口照旧能走。"""
         page = self.page()
         page.evaluate("""Game.start('hard');clearIntroTimers();running=false;S.intro=0;S.day=2;S.tsec=760;
           AN.active=false;AN.id=null;AN.next=1000;patReset();PAT.next=1000;RT.inspection=null;""")
@@ -129,19 +130,30 @@ class DreamPaletteTest(BrowserCase):
           doEnterRoom('lab1',Elevator.landing('lab',1));Math.random=()=>0;Elevator.board('lab',1);Elevator.controls();""")
         page.locator('#choices button').filter(has_text='67 层').click()
         page.wait_for_function("S.room==='lift_dream'&&GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS.lift_dream")
-        # 房间是合并过的网格，颜色在顶点上：统计高饱和顶点的比例和色相分区
-        sat = page.evaluate("""(()=>{let n=0,s=0,hues={},c=new THREE.Color(),hsl={};GLR.roomMesh.traverse(o=>{
+        # 房间是合并过的网格，颜色在顶点上：有颜色的顶点几乎都是红色调，整体很暗；绿只在出口的门缝光上
+        st = page.evaluate("""(()=>{let n=0,red=0,col=0,green=0,lum=0,c=new THREE.Color(),hsl={};GLR.roomMesh.traverse(o=>{
             if(!o.isMesh||!o.geometry||!o.geometry.attributes.color) return;
             const a=o.geometry.attributes.color;
-            for(let i=0;i<a.count;i+=3){ c.setRGB(a.getX(i),a.getY(i),a.getZ(i)); c.getHSL(hsl); n++;
-              if(hsl.s>0.6&&hsl.l>0.12&&hsl.l<0.85){ s++; hues[Math.floor(hsl.h*6)]=1; } }});
-            return {n,s,hues:Object.keys(hues).length};})()""")
-        self.assertGreater(sat['s'] / max(1, sat['n']), 0.4, sat)
-        self.assertGreaterEqual(sat['hues'], 4, sat)
+            for(let i=0;i<a.count;i+=3){ c.setRGB(a.getX(i),a.getY(i),a.getZ(i)); c.getHSL(hsl); n++; lum+=hsl.l;
+              if(hsl.s>0.3&&hsl.l>0.005){ col++; if(hsl.h<0.06||hsl.h>0.94) red++; if(hsl.h>0.25&&hsl.h<0.5) green++; } }});
+            return {n,red,col,green,lum:lum/Math.max(1,n)};})()""")
+        self.assertGreater(st['red'] / max(1, st['col']), 0.9, st)
+        self.assertLess(st['lum'], 0.3, st)
+        self.assertGreater(st['green'], 0, st)
         self.assert_js(page, "ROOM_THEMES.dream.wall!==0xf5f5f0&&INTERIORS.lift_dream.name==='异色空间'")
+        # 出口：自发光的「安全出口」灯牌（不吃红光），三盏暗红的安全灯加一盏照门的绿灯
+        self.assert_js(page, """(()=>{let s=null;GLR.scene.traverse(o=>{if(o.userData&&o.userData.wayfinding==='安全出口')s=o;});
+            return !!s&&[].concat(s.material).some(m=>m.isMeshBasicMaterial&&!!m.map);})()""")
         page.evaluate("render(0.016)")
-        self.assert_js(page, "GLR.postMat.uniforms.uFx.value>=0.85")
+        self.assert_js(page, "GLR.roomLights.filter(L=>L.color.r>L.color.g*4).length===3&&GLR.roomLights.filter(L=>L.color.g>L.color.r*1.5).length===1")
+        # 灯光、雾、后期：暗红的环境光、红黑色的雾；暗角和颗粒开着，关掉镜头晃动时画面不「呼吸」
+        self.assert_js(page, "GLR.amb.color.r>GLR.amb.color.g*4&&GLR.scene.fog.color.r>GLR.scene.fog.color.g*4&&GLR.scene.fog.density>=0.05")
+        self.assert_js(page, "GLR.postMat.uniforms.uFx.value>=0.85&&GLR.postMat.uniforms.uDream.value===1")
+        page.evaluate("SHAKE_ON=false;render(0.016)")
+        self.assert_js(page, "GLR.postMat.uniforms.uBreath.value===0")
+        page.evaluate("SHAKE_ON=true")
         page.evaluate("S.x=INTERIORS.lift_dream.ox+15.5*9;S.y=INTERIORS.lift_dream.oy+5.5*9;S.ang=0;tryInteract()")
         page.wait_for_function("S.room==='lab1'&&!RT.elevatorRide")
         page.evaluate("render(0.016)")
-        self.assert_js(page, "GLR.postMat.uniforms.uFx.value<0.85")
+        self.assert_js(page, "GLR.postMat.uniforms.uFx.value<0.85&&GLR.postMat.uniforms.uDream.value===0&&GLR.postMat.uniforms.uBreath.value===0")
+        self.assert_js(page, "!(GLR.amb.color.r>GLR.amb.color.g*4)")

@@ -827,64 +827,96 @@ function roomSigns(c,G,isWall){
   }
 }
 
-/* ---- 电梯的异常维度（lift_dream）：高饱和分区 + 发光边线 + 头顶的悬浮几何 ----
-   地面分三区：西边群青、中间品红、靠出口那一段金橙，出口前一条青绿的「路」和箭头；
-   悬浮的方块、倒挂的台阶都在 2.3 米以上，不挡路、不改碰撞。出口门框是最亮、形状最特别的东西，不靠辨色也认得出 */
-/* 异色空间（电梯的异常维度）：高饱和，但有主次——
-     底色是深靛紫（墙、顶、悬浮体块），颜色集中在三处：
-     地砖沿着走向从钴蓝渐变到紫、再到玫红；墙上一道发光腰线跟着同样渐变；
-     青绿只给「出路」：引导路、箭头和出口门框，所以全场最亮、最特别的就是出口。
-     悬浮方块是深色体块加发光棱线，倒挂的台阶只在踏步边上留一道琥珀光。 */
-var DREAM_RAMP=[0x1d2f9a,0x4a23a0,0x9a1f72];      /* 钴蓝 → 紫 → 玫红 */
-function dreamRamp(t){
-  t=Math.max(0,Math.min(1,t));
-  var k=t*(DREAM_RAMP.length-1), i=Math.min(DREAM_RAMP.length-2,Math.floor(k)), f=k-i, a=DREAM_RAMP[i], b=DREAM_RAMP[i+1];
-  function ch(c,s){ return (c>>s)&255; }
-  return (Math.round(ch(a,16)+(ch(b,16)-ch(a,16))*f)<<16)|(Math.round(ch(a,8)+(ch(b,8)-ch(a,8))*f)<<8)|Math.round(ch(a,0)+(ch(b,0)-ch(a,0))*f);
+/* ---- 异色空间（电梯的异常维度，lift_dream）：一间被放大的暗房 ----
+   整层只亮暗红的安全灯（南北墙上，一半已经坏了），十几米外沉进红黑色的雾（lighting.js、ROOM_LIGHTS.dream）。
+   地砖发黑，有几摊干掉的深色水渍；墙上有从顶上往下淌的暗痕；一串灰白的赤脚脚印从电梯口一直走到尽头的门前。
+   唯一不是红色的是尽头：门前吊着一块绿色的「安全出口」，门缝和门底下漏出冷白的光（FURN.J），一盏绿灯照着门。
+   头顶挂着几根掉了一头的灯管，倒着的台阶从天花板上长下来——都在 2.1 米以上，不挡路、不改碰撞。
+   恐怖靠暗、红、看不清的远处和「有人先走过」的脚印，不靠频闪；出口始终是全场唯一的绿，路线认得出。 */
+function exitSignTex(){
+  return signTex(384,136,'exit:dream',function(g,w,h,rnd){
+    g.fillStyle='#0b6a37'; g.fillRect(0,0,w,h);
+    g.fillStyle='#eafff1'; g.fillRect(14,14,104,h-28);                  /* 左边白底，里面一个往门口跑的绿色小人 */
+    g.fillStyle='#0b6a37'; g.strokeStyle='#0b6a37'; g.lineCap='round'; g.lineJoin='round';
+    g.beginPath(); g.arc(80,36,10,0,6.283); g.fill();
+    g.lineWidth=11;
+    g.beginPath(); g.moveTo(74,52); g.lineTo(62,84); g.stroke();
+    g.beginPath(); g.moveTo(62,84); g.lineTo(80,100); g.lineTo(74,118); g.stroke();
+    g.beginPath(); g.moveTo(62,84); g.lineTo(46,100); g.lineTo(30,98); g.stroke();
+    g.lineWidth=9;
+    g.beginPath(); g.moveTo(72,58); g.lineTo(92,70); g.stroke();
+    g.beginPath(); g.moveTo(70,60); g.lineTo(50,68); g.stroke();
+    g.fillStyle='#eafff1'; g.textAlign='left'; g.textBaseline='middle';
+    g.font='700 48px '+SIGN_FONT; signSpace(g,4); g.fillText('安全出口',134,h/2-14,236);
+    g.font='700 22px '+SIGN_FONT; signSpace(g,8); g.fillText('EXIT',136,h/2+36,120); signSpace(g,0);
+    signGrime(g,w,h,rnd,'0,24,10',420);
+    for(var i=0;i<10;i++){ g.fillStyle='rgba(20,8,6,'+(0.10+rnd()*0.2).toFixed(3)+')';   /* 下沿积的灰 */
+      g.beginPath(); g.ellipse(rnd()*w,h-2-rnd()*8,4+rnd()*14,1.5+rnd()*3,0,0,6.283); g.fill(); }
+  });
 }
 function dreamDecor(c){
-  var K=c.K, R=c.R, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, x, y, i;
-  var span=Math.max(1,W-3);
+  var K=c.K, R=c.R, W=c.W, H=c.H, CX=c.CX, CZ=c.CZ, hz=c.halfH, hw=c.halfW, x, y, i, rnd=signRand('lift_dream');
+  /* 地砖：两种发黑的暗红交错，每块深浅略有不同（像干掉的漆） */
   for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){
     if(R.grid[y][x]!=='.') continue;
-    var alt=((x+y)&1)?0.86:1;
-    K.box('plain',CX(x),0.006,CZ(y),0.97,0.012,0.97,shadeHex(dreamRamp((x-1)/span),alt),1);
+    K.box('plain',CX(x),0.006,CZ(y),0.97,0.012,0.97,shadeHex(0x2a0d0e,(((x+y)&1)?0.80:1)*(0.88+rnd()*0.24)),1);
   }
-  /* 出口：找 J，门前铺一条发光的青绿引导路，路上三个白色箭头 */
+  /* 干掉的水渍：几片扁圆叠在一起，比地砖更黑 */
+  var sg=lodSeg(18,10);
+  [[4.2,8.3,0.9],[6.4,2.4,0.6],[10.2,6.9,1.1],[12.6,3.3,0.7],[14.8,8.6,0.8],[2.4,9.4,0.5],[15.6,1.9,0.55]].forEach(function(p){
+    for(var k=0;k<3;k++){
+      var r=p[2]*(0.40+rnd()*0.40), ox=(rnd()-0.5)*p[2]*0.9, oz=(rnd()-0.5)*p[2]*0.7;
+      K.cyl('plain',CX(p[0])+ox,0.0122,CZ(p[1])+oz,r,r,0.0016,sg,shadeHex(0x0e0304,0.9+rnd()*0.2),1);
+    }
+  });
+  /* 一串灰白的赤脚脚印：从电梯口一直走到尽头的门前，左右交替，脚尖朝门（朝 +x 走，右脚在 +z 一侧） */
+  var fz=CZ(5), n=0, fx;
+  for(fx=CX(2)+0.7; fx<CX(16)+0.15; fx+=0.56, n++){
+    var side=(n&1)?1:-1, z=fz+side*0.11+(rnd()-0.5)*0.03, col=shadeHex(0x9a8d84,0.82+rnd()*0.22);
+    K.box('plain',fx-0.075,0.0142,z,0.07,0.003,0.062,col,1);                  /* 脚跟 */
+    K.box('plain',fx+0.035,0.0142,z-side*0.008,0.10,0.003,0.078,col,1);       /* 前掌 */
+    for(var t=0;t<4;t++){                                                      /* 脚趾：大脚趾在内侧、最靠前 */
+      var ts=t===0?0.026:0.017;
+      K.box('plain',fx+0.108-t*0.005,0.0142,z-side*(0.030-t*0.020),ts,0.003,ts,col,1);
+    }
+  }
+  /* 暗房安全灯：南北墙各三盏，深色灯罩、暗红灯片。只有三盏真的亮着（和 ROOM_LIGHTS.dream 对上），其余三盏坏了 */
+  [[4,-1,1],[9,-1,0],[14,-1,1],[4,1,0],[9,1,1],[14,1,0]].forEach(function(q){
+    var d=-q[1], zf=q[1]<0?(-hz+c.th):(hz-c.th), x0=CX(q[0]);                  /* d：从墙面指向屋里 */
+    K.box('metal',x0,2.33,zf+d*0.035,0.05,0.10,0.07,0x120607,0.9);
+    K.box('metal',x0,2.2,zf+d*0.065,0.27,0.19,0.13,0x140708,0.9);
+    if(q[2]) K.g('emit').box(x0,2.2,zf+d*0.132,0.21,0.13,0.004,0xd62414,1);
+    else K.box('plain',x0,2.2,zf+d*0.132,0.21,0.13,0.004,0x2a0b0b,1);
+  });
+  /* 墙上从顶往下淌的暗痕（北、南、西三面），长短不一 */
+  for(i=0;i<24;i++){
+    var len=0.35+rnd()*1.6, wd=0.018+rnd()*0.05, sc=shadeHex(0x1c0607,0.75+rnd()*0.4), wall=i%3, u=rnd();
+    if(wall===0) K.box('plain',CX(1)-0.4+u*(CX(16)-CX(1)+0.8),3-len/2,-hz+c.th+0.004,wd,len,0.006,sc,1);
+    else if(wall===1) K.box('plain',CX(1)-0.4+u*(CX(16)-CX(1)+0.8),3-len/2,hz-c.th-0.004,wd,len,0.006,sc,1);
+    else K.box('plain',-hw+c.tw+0.004,3-len/2,CZ(1)-0.4+u*(CZ(10)-CZ(1)+0.8),0.006,len,wd,sc,1);
+  }
+  /* 头顶：几根掉了一头的灯管——一根电线吊着、斜挂下来，另一头的电线断了 */
+  [[3.5,2.8,0.4],[6.2,8.2,-0.3],[10.5,2.4,0.2],[13.4,9.1,-0.5],[15.2,3.2,0.35]].forEach(function(q){
+    var x0=CX(q[0]), z0=CZ(q[1]), dx=Math.cos(q[2])*0.6, dz=Math.sin(q[2])*0.6, ylo=2.20+rnd()*0.10;
+    K.rod('plastic',x0-dx,2.78,z0-dz,x0+dx,ylo,z0+dz,0.045,0.045,lodSeg(8,5),0x1b1515,0.9);
+    K.rod('metal',x0-dx,2.78,z0-dz,x0-dx,3.0,z0-dz,0.006,0.006,4,0x0c0909,0.9);
+    K.rod('metal',x0+dx,2.86,z0+dz,x0+dx,3.0,z0+dz,0.006,0.006,4,0x0c0909,0.9);
+  });
+  /* 倒挂的台阶：发黑的踏步从天花板上一级级长下来 */
+  for(i=0;i<5;i++){
+    var sy=2.94-i*0.1;
+    K.box('plain',CX(9+i),sy,CZ(6),0.98,0.12,1.2,shadeHex(0x1c0708,1-i*0.06),1);
+  }
+  /* 尽头门上方钉着的「安全出口」灯牌：自发光，不吃红光；雾里远远只剩一点绿 */
   var ex=-1, ey=-1;
   for(y=0;y<H;y++) for(x=0;x<W;x++) if(R.grid[y][x]==='J'){ ex=x; ey=y; }
   if(ex>0){
-    for(x=ex-6;x<ex;x++) if(R.grid[ey][x]==='.') K.g('emit').box(CX(x),0.016,CZ(ey),0.98,0.012,0.30,0x1bc7b8,1);
-    for(i=0;i<3;i++){
-      var ax=CX(ex-5+i*2);
-      K.g('emit').box(ax,0.024,CZ(ey)-0.10,0.30,0.012,0.06,0xe9fffb,1);
-      K.g('emit').box(ax,0.024,CZ(ey)+0.10,0.30,0.012,0.06,0xe9fffb,1);
-    }
-  }
-  /* 墙上的发光腰线：一段一段跟着地砖渐变（只在北、南、西三面，东墙是出口） */
-  var hz=c.halfH, hw=c.halfW;
-  for(x=1;x<W-1;x++){
-    var lc=shadeHex(dreamRamp((x-1)/span),1.9);
-    K.g('emit').box(CX(x),1.05,-hz+c.th+0.012,c.tw*0.98,0.035,0.02,lc,1);
-    K.g('emit').box(CX(x),1.05,hz-c.th-0.012,c.tw*0.98,0.035,0.02,lc,1);
-  }
-  K.g('emit').box(-hw+c.tw+0.012,1.05,0,0.02,0.035,(H-2)*c.th,shadeHex(DREAM_RAMP[0],1.9),1);
-  /* 头顶：悬浮的深色方块，棱线发光（颜色取所在位置的渐变色） */
-  var cubes=[[3,3,0.5,2.5],[5,8,0.36,2.35],[10,2,0.42,2.6],[13,9,0.32,2.42],[15,3,0.38,2.5]];
-  cubes.forEach(function(q){
-    var s=q[2], h=s/2, e=0.018, col=shadeHex(dreamRamp((q[0]-1)/span),2.0);
-    K.frame(CX(q[0]),CZ(q[1]),q[0]*0.7);
-    K.box('plain',0,q[3],0,s,s,s,0x1a1446,1);
-    [[0,h,h],[0,h,-h],[0,-h,h],[0,-h,-h]].forEach(function(o){ K.g('emit').box(o[0],q[3]+o[1],o[2],s+e,e,e,col,1); });
-    [[h,h,0],[h,-h,0],[-h,h,0],[-h,-h,0]].forEach(function(o){ K.g('emit').box(o[0],q[3]+o[1],o[2],e,e,s+e,col,1); });
-    [[h,0,h],[h,0,-h],[-h,0,h],[-h,0,-h]].forEach(function(o){ K.g('emit').box(o[0],q[3]+o[1],o[2],e,s+e,e,col,1); });
-    K.unframe();
-  });
-  /* 倒挂的台阶：深紫的踏步，踏步边一道琥珀光 */
-  for(i=0;i<5;i++){
-    var sy=2.94-i*0.1;
-    K.box('plain',CX(9+i),sy,CZ(6),0.98,0.12,1.2,shadeHex(0x2b2063,1-i*0.06),1);
-    K.g('emit').box(CX(9+i)+0.49,sy-0.06,CZ(6),0.02,0.02,1.2,0xffa94d,1);
+    var face=new THREE.MeshBasicMaterial({map:exitSignTex()}), edge=signEdgeMat(), rot=-Math.PI/2;
+    face.userData.disposeMap=true;
+    var sign=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.19,0.03),[edge,edge,edge,edge,face,edge]);
+    var sx=CX(ex)-0.5-0.016, sz=CZ(ey);                              /* 贴在过梁（FURN.J）朝屋里的那一面上 */
+    sign.position.set(sx,2.6,sz); sign.rotation.y=rot; sign.userData.wayfinding='安全出口'; c.meshes.push(sign);
+    K.g('metal').proxy({t:'box',c:[sx,2.6,sz],h:[0.26,0.095,0.015],tc:Math.cos(rot),ts:Math.sin(rot)});   /* 给穿模审查看 */
   }
 }
 
