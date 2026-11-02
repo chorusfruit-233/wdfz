@@ -18,15 +18,15 @@
      q：画质档（0–4，决定读哪一档模型和材质）；a：模型名，逗号分开，每个一格；yaw/pitch：机位角（度）；
      zoom：机位离物体的远近倍数；light：studio（棚拍）/ dark（暗处，打一盏手电似的聚光）；list=1 列出包里所有模型 -->
 <script src="../game3d/lib/three.min.js"></script>
-<script src="../game3d/js/content/core.js"></script>
-<script src="../game3d/js/engine/quality.js"></script>
+<script src="../game3d/js/core.js"></script>
+<script src="../game3d/js/quality.js"></script>
 <script>
   var QS=new URLSearchParams(location.search);
   QUALITY=Quality.normalize(+(QS.get('q')||2));
   localStorage.setItem('zw3d_set',JSON.stringify({q:QUALITY}));
 </script>
 <script src="../game3d/js/model/assets.js"></script>
-<script src="../game3d/js/engine/render.js"></script>
+<script src="../game3d/js/render.js"></script>
 <script src="../game3d/js/model/materials.js"></script>
 <script src="../game3d/js/model/kit.js"></script>
 <script>

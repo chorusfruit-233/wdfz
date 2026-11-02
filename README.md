@@ -14,7 +14,7 @@ Wiki 收录操作、课表、地点、道具、异象和公开结局路线的攻
 
 本地运行时，在仓库目录执行 `python -m http.server 8000`，然后访问 `http://localhost:8000/`，也可以直接双击打开 `index.html`。游戏所需的脚本和素材均在仓库内：模型和贴图打包在 `game3d/assets/`，开局按画质读一档。模型在 Blender 里用脚本建（`tools/blender/`，改了以后运行 `python tools/blender/build.py` 重新打包，需要 `pip install bpy==5.2.3` 和 Python 3.13），贴图由 `tools/textures/build_textures.py` 离线生成。
 
-代码按计划「项目解耦与模块化」分层组织：`game3d/js/` 下按 `app / content / domain / adapters / engine / model / fx / ui / dev` 九层放文件，全部脚本在 `game3d/manifest.js` 里按模块登记并按顺序加载，新功能按层放文件、通过钩子接入，分层越界由测试检查。游戏支持 Mod：暂停菜单「Mod 与模块」可导入本地 `.js`，网址加 `?mod=名字` 加载 `game3d/mods/` 里的 Mod，`?nomod` 为安全模式。约定与写法见[模块化与 Mod 规范](docs/模块化与Mod规范.md)。
+代码按模块组织：全部脚本在 `game3d/manifest.js` 里按模块登记并按顺序加载，新功能做成 `game3d/js/modules/` 下的独立模块，通过钩子接入。游戏支持 Mod：暂停菜单「Mod 与模块」可导入本地 `.js`，网址加 `?mod=名字` 加载 `game3d/mods/` 里的 Mod，`?nomod` 为安全模式。约定与写法见[模块化与 Mod 规范](docs/模块化与Mod规范.md)。
 
 桌面端使用 WASD 移动、鼠标环视、Shift 奔跑、E 交互；上课坐下时可按 R 查看课桌；Tab 打开背包，Esc 关闭面板或暂停；Alt 只放出鼠标、不暂停（点画面收回）。触屏设备使用左侧摇杆移动，滑动屏幕转动视角。页面右上角可切换全屏。
 

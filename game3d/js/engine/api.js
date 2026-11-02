@@ -1,6 +1,6 @@
 /* 游戏层的渲染入口。数值反馈不持有 Three.js 对象；模型与特效留在表现层。 */
 'use strict';
-var VisualState={time:0,hurt:0,flash:0,patrolFlick:0,patrolRed:0,worldNorm:0,gazeShake:0,deathAnim:null};
+var VisualState={time:0,hurt:0,flash:0,patrolFlick:0,patrolRed:0,worldNorm:0,gazeShake:0,deathAnim:null,camera:{walkPhase:0,eyeH:1.65,fov:72},stage:null};
 var QUALITY_LOAD_GENERATION=0;
 var Engine={
   boot:function(){
@@ -14,7 +14,12 @@ var Engine={
   ready:function(){return !!GLR.renderer;},
   resize:function(){if(this.ready())ThreeBackend.resize();},
   draw:function(dt){if(this.ready())ThreeBackend.draw(dt);},
-  resetSan:function(value){ThreeBackend.resetSan(value);},
+  resetSan:function(value){ThreeBackend.resetSan(value);this.resetCamera();},
+  resetCamera:function(){VisualState.camera={walkPhase:0,eyeH:EYE,fov:72};},
+  sceneView:function(){return VisualState.stage||S;},
+  sceneLamps:function(){return VisualState.stage?VisualState.stage.lamps:OUT_LAMPS;},
+  beginOutsideStage:function(){return ThreeBackend.beginOutsideStage();},
+  endStage:function(){return ThreeBackend.endStage();},
   /* 新局 / 回主菜单：假正常的画面平滑值归零，不带到下一局 */
   resetFakeNormal:function(){GLR.fnNorm=0;},
   clearWorld:function(){return ThreeBackend.clearWorld();},

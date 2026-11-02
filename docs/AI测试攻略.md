@@ -20,13 +20,13 @@ command -v chromium
 
 | 改动范围 | 先读的代码 | 有针对性的检查 |
 | --- | --- | --- |
-| 输入、菜单、触屏、存档、玩法、异象、结局 | `game3d/js/app/input.js`、`ui.js`、`mobile.js`、`save.js`、相关玩法模块 | `PYTHONPATH=tests python3 -m unittest test_controls -v`；再按用例名定位 |
+| 输入、菜单、触屏、存档、玩法、异象、结局 | `game3d/js/input.js`、`ui.js`、`mobile.js`、`save.js`、相关玩法模块 | `PYTHONPATH=tests python3 -m unittest test_controls -v`；再按用例名定位 |
 | 渲染、画质、引擎、离线资源 | `game3d/js/engine/`、`render.js`、`quality.js`、`settings.js` | `PYTHONPATH=tests python3 -m unittest test_engine -v` |
 | 模型包、贴图包、实例化与室外合批 | `game3d/js/model/assets.js`、`kit.js`、`materials.js`；建模脚本 `tools/blender/`，贴图 `tools/textures/` | `PYTHONPATH=tests python3 -m unittest test_assets test_asset_batching -v`；改了建模脚本要用 `python3 tools/blender/build.py [--only 名字]` 重新打包（需要 `pip install bpy==5.2.3`，只支持 Python 3.13），改了贴图脚本运行 `python3 tools/textures/build_textures.py` |
 | 建模、碰撞、楼梯、空间可达性 | `game3d/js/model/`、`collision.js`、`spiral.js`、`world.js` | `PYTHONPATH=tests python3 -m unittest test_geometry test_model -v`；必要时做下面的几何扫描 |
 | 穿模审查工具（仅建模或玩法更新时） | `tools/clip_audit.py`、`tools/clip_audit.js` | `PYTHONPATH=tests python3 -m unittest test_clip_audit -v` |
-| 模块清单、分层越界、钩子、会话、键盘分派、Mod 入口 | `game3d/manifest.js`、`game3d/js/app/modules.js`、`app/session.js`、`app/input.js`、`ui/mod-manager.js`、`game3d/mods/`、`tools/module_audit.py` | `PYTHONPATH=tests python3 -m unittest test_modules -v`；结构变了运行 `python3 tools/module_audit.py` 重新生成盘点 |
-| 虚空迷宫、彩蛋、粉笔记号 | `content/void-maze-data.js`、`domain/void-maze.js`、`domain/void-maze-eggs.js`、`fx/void-maze-eggs.js`、`fx/void-maze-sound.js`、`domain/chalk-marks.js`、`domain/elevator.js` | `PYTHONPATH=tests python3 -m unittest test_void_maze test_void_maze_eggs test_chalk_marks test_elevator -v` |
+| 模块清单、钩子、Mod 入口 | `game3d/manifest.js`、`game3d/js/modules.js`、`game3d/js/modules/mod-manager/`、`game3d/mods/` | `PYTHONPATH=tests python3 -m unittest test_modules -v` |
+| 虚空迷宫、粉笔记号 | `game3d/js/modules/void-maze/`、`game3d/js/modules/chalk-marks/`、`elevator.js` | `PYTHONPATH=tests python3 -m unittest test_void_maze test_chalk_marks test_elevator -v` |
 | 宣传片输出安全、镜头表与脚本 / 配乐一致、不泄露隐藏内容 | `video/render.py`、`video/v1/render.py`、`video/storyboard.json` | `PYTHONPATH=tests python3 -m unittest test_video -v` |
 
 查找已有用例，避免重写同一场景；单项示例：
@@ -52,7 +52,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 访问 `http://127.0.0.1:8000/`。确认主菜单显示，选择难度进入教室；桌面用 WASD、鼠标、Shift、E、Tab、Esc，触屏使用摇杆和滑动视角。检查开发者控制台异常及画面上的错误提示。旧入口用 `/3d.html`，Wiki 可从主菜单打开并返回游戏。手动测试结束后停止 HTTP 服务。
 
-调试面板可用 F2 或暂停菜单的「调试」打开；密码在 `game3d/js/dev/dev.js` 的 `Dev.open` 中。面板支持室内外传送、触发异象、调整时间、无敌和状态查看。它适合快速搭建场景，但传送或直接触发异象不能证明正常行走、触发条件或完整剧情链路可用；这些需求还要按玩家路径验证。
+调试面板可用 F2 或暂停菜单的「调试」打开；密码在 `game3d/js/dev.js` 的 `Dev.open` 中。面板支持室内外传送、触发异象、调整时间、无敌和状态查看。它适合快速搭建场景，但传送或直接触发异象不能证明正常行走、触发条件或完整剧情链路可用；这些需求还要按玩家路径验证。
 
 状态会影响复现：`wdfz3d` 是存档，`wdfz3d_ends` 是结局记录，`wdfz3d_deaths` 是跨局的死亡记录（笔记「梦里记得的事」读它），`wdfz_pro` 控制前情提要，`zw3d_set` 保存设置。优先使用新的浏览器上下文或独立临时配置，避免覆盖已有玩家数据；不要直接清除用户浏览器的数据。localStorage 按来源隔离，不同端口可能有不同状态。修改画质、时间、角色位置、房间或事件时，记录初始状态和操作步骤。
 

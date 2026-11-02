@@ -1,0 +1,192 @@
+/* 里世界 3D · 存档 */
+'use strict';
+
+/* 存档字段表：每一组把"存"和"读"写在一起，加字段只改一处，不会存了忘读、读了忘存。
+   读档按表的顺序执行：时钟要先于冷却时间的换算，背包要先于手持状态，模式 / 房间要先于车库里那个东西。
+   clockVersion 2 起时钟按"天 * 1440 + 当天分钟"连续计；更早的存档读进来时换算一次。 */
+function saveNum(v,lo,hi){ return Number.isFinite(v)?clamp(v,lo,hi):0; }
+function saveObj(v){ return (v&&typeof v==='object'&&!Array.isArray(v))?Object.assign({},v):{}; }
+var SAVE_DIAGNOSTIC=null;
+function saveReport(stage,error){
+  SAVE_DIAGNOSTIC={stage:stage,message:error&&error.message?error.message:String(error)};
+}
+var GameStorage=StorageAdapter.create(function(){return localStorage;},function(e){saveReport(e.operation,e.error);});
+function prepareSave(d){return SaveData.prepare(d,{lightsOut:LIGHTS_OUT,rooms:INTERIORS,items:ITEMS});}
+var SAVE_SCHEMA=[
+  { /* 位置和时钟 */
+    save:function(d){ d.mode=S.mode; d.room=S.room; d.x=S.x; d.y=S.y; d.ang=S.ang; d.pitch=S.pitch; d.tsec=S.tsec; d.day=S.day; d.diff=S.diff; },
+    load:function(d){
+      S.mode=d.mode||'out'; S.room=d.room||null;
+      S.x=d.x; S.y=d.y; S.ang=d.ang||0; S.pitch=d.pitch||0;
+      S.tsec=d.tsec; S.day=d.day;
+    }
+  },
+  { /* 身体：SAN、违规、体力、士力架 / 药片 / 手机的剩余时间 */
+    save:function(d){
+      d.san=S.san; d.viol=S.viol; d.stam=S.stam; d.tired=!!S.tired;
+      d.snackT=Math.max(0,S.snackT||0); d.pillT=Math.max(0,S.pillT||0); d.phoneCool=Math.max(0,PHONE.cool||0);
+    },
+    load:function(d){
+      S.san=saveNum(d.san,0,100); S.viol=saveNum(d.viol,0,100); S.stam=saveNum(d.stam,0,staminaMax());
+      S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
+      S.snackT=saveNum(d.snackT,0,SNACK_SEC); S.pillT=saveNum(d.pillT,0,PILL_SEC); PHONE.cool=saveNum(d.phoneCool,0,PH_COOL);
+    }
+  },
+  { /* 设施冷却（按连续时钟记） */
+    save:function(d){ d.actCool=S.actCool||{}; },
+    load:function(d){
+      S.actCool=saveObj(d.actCool);
+    }
+  },
+  { /* 天赋免疫、课表违规的计时与档位 */
+    save:function(d){ d.immuneUsed=!!S.immuneUsed; d.tt=S.tt; d.ttTier=S.ttTier; },          /* immuneUsed 只为旧版本读档保留，从 talentState 派生 */
+    load:function(d){ S.tt=saveNum(d.tt,0,100); S.ttTier=d.ttTier||0; }
+  },
+  { /* 考试模式 */
+    save:function(d){ d.exam=!!S.exam; d.examCur=S.examCur; d.examSeat=S.examSeat||0; d.examTot=S.examTot||0; },
+    load:function(d){ S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0; }
+  },
+  { /* 背包、快捷栏、天赋、搜过的地方、线索、坐着没有 */
+    save:function(d){ d.bag=S.bag; d.hot=S.hot; d.talent=Talent.id(); d.talentState=Talent.serialize(); d.spots=S.spots; d.clues=S.clues; d.seated=S.seated; },
+    load:function(d){
+      S.bag=d.bag||[]; S.hot=d.hot||[null,null];
+      Talent.normalizeSaved(d); S.spots=d.spots||{}; S.clues=d.clues||{};       /* 天赋 ID 校验与迁移：未知 / 缺失 → 没有天赋，不沿用读档前的值 */
+      S.seated=!!d.seated;
+    }
+  },
+  { /* 老存档的同化选择已取消：保留同化值，首个有效更新按满值结果结算。 */
+    save:function(d){ d.hiddenAsked=false; d.hiddenLatch=false; d.hiddenWindow=0; },
+    load:function(){ S.hiddenLatch=false;S.hiddenAsked=false;S.hiddenWindow=0; }
+  },
+  { /* 假正常 */
+    save:function(d){ d.fn=S.fn; },
+    load:function(d){ if(d.fn) S.fn=Object.assign({v:0,on:false,note:false,n:0,next:0,shown:false},d.fn); }
+  },
+  { /* 剧情标志、手里用着的东西、开着的门 */
+    save:function(d){ d.rt=RT; d.use=USE; d.openDoors=OPENDOORS; },
+    load:function(d){
+      if(d.rt){RT=Object.assign(newRT(),d.rt);RT.dayRhythmVersion=d.rt.dayRhythmVersion||0;}
+      DayEvents.afterLoad(d);                                  /* 旧存档：读进来的那天不补特殊日 */
+      if(d.use) USE=d.use;
+      normalizeUseState();
+      if(d.openDoors) OPENDOORS=d.openDoors;
+    }
+  },
+  { /* 异象：正在发生的那一个、节奏、预报、冷却；没答完的选择读档后重新问，剩下的时间接着算 */
+    save:function(d){
+      d.anRained=AN.rained; d.anCool=AN.cool;
+      d.anId=AN.id; d.anT=AN.t; d.anAcc=AN.acc;
+      d.anData=(function(){ try{ return JSON.parse(JSON.stringify(AN.data||{})); }catch(e){ return {}; } })();
+      d.anNext=AN.next; d.anLastBig=AN.lastBig; d.anPre=AN.pre; d.anPreNext=AN.preNext;
+      d.anLocked=!!AN.locked; d.anLockWait=AN.lockWait||0;
+      d.anChoiceMs=(AN.active&&UI.chooseOpen&&UI.choiceTimer)?Math.max(0,UI.choiceDeadline-performance.now()):null;
+    },
+    load:function(d){
+      AN.id=d.anId||null; AN.t=d.anT||0; AN.acc=d.anAcc||0;
+      AN.data=(d.anData&&typeof d.anData==='object')?d.anData:{};
+      AN.next=(typeof d.anNext==='number')?d.anNext:45;
+      AN.rained=!!d.anRained; AN.cool=d.anCool||{};
+      AN.pre=d.anPre||null; AN.preNext=d.anPreNext||0; AN.locked=!!d.anLocked; AN.lockWait=d.anLockWait||0;
+      AN.lastBig=!!d.anLastBig; AN.active=!!d.anId;
+      if(AN.active&&AN.data.asked&&AN.data.chosen===null&&['turn','hand','repeat','cold'].indexOf(AN.id)>=0){
+        AN.data.asked=false;
+        if(Number.isFinite(d.anChoiceMs)) AN.data.choiceRemaining=d.anChoiceMs;
+      }
+      AN.sub=0;
+    }
+  },
+  { /* 躲藏与被发现状态跟随巡察存档；缺少此字段的旧档仍按未躲藏恢复。 */
+    save:function(d){d.hiding=HIDE.on?{c:HIDE.c,r:HIDE.r,seen:HIDE.seen,t:HIDE.t}:null;},
+    load:function(d){
+      var h=d.hiding,R=S.mode==='in'&&INTERIORS[S.room];
+      HIDE.on=!!(h&&R&&Number.isInteger(h.c)&&Number.isInteger(h.r)&&R.grid[h.r]&&R.grid[h.r][h.c]==='H');
+      if(HIDE.on){HIDE.c=h.c;HIDE.r=h.r;HIDE.seen=!!h.seen;HIDE.t=saveNum(h.t,0,1e8);}
+    }
+  },
+  { /* 巡察者的瞬移间隔和追逐状态；路径由当前几何重新计算，不序列化。 */
+    save:function(d){
+      d.patrol={};
+      ['state','room','next','t','x','y','lock','locked','lost','still','tx','ty','walkT','step','blinkCD','afterBlink','cited'].forEach(function(k){d.patrol[k]=PAT[k];});
+    },
+    load:function(d){
+      var p=d.patrol;if(!p||!['idle','warn','walk'].includes(p.state))return;
+      if(p.state!=='idle'&&(p.room!==patRoomHere()||!patEligible()))return;
+      if(![p.x,p.y,p.tx,p.ty].every(Number.isFinite))return;
+      ['next','t','x','y','lock','lost','still','tx','ty','walkT','step','blinkCD','afterBlink'].forEach(function(k){if(Number.isFinite(p[k]))PAT[k]=p[k];});
+      PAT.state=p.state;PAT.room=p.room;PAT.locked=!!p.locked;PAT.path=null;
+      PAT.cited=!!p.cited||PAT.locked;
+    }
+  },
+  { /* 车库里那个东西（只在车库里存）；钟楼旋梯上的位置（进房间时由 enterRoom 读） */
+    save:function(d){
+      d.roam=(S.mode==='in'&&S.room==='garage1')?Object.assign({},ROAM):null;
+      d.spiral=spiralHere()?{state:SP.state,a:SP.a,th:SP.th}:null;
+    },
+    load:function(d){ if(S.mode==='in'&&S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign(ROAM,d.roam); }
+  },
+  { /* 模块和 Mod 的状态：各自登记（GameModules.persistent / Mod 的 persist），按 id 存在 d.mods 里 */
+    save:function(d){ d.mods=GameModules.saveAll(); },
+    load:function(d){ GameModules.loadAll(d.mods); }
+  }
+];
+/* 速通用单独的存档槽，不覆盖、不删除普通模式的「继续上次」 */
+function saveSlot(){ return (typeof RUN_MODE!=='undefined'&&RUN_MODE==='speedrun')?'wdfz3d_speedrun_slot':'wdfz3d'; }
+function saveGame(){
+  try{
+    CampusPressure.observe();
+    var d={v:1, clockVersion:2};
+    SAVE_SCHEMA.forEach(function(f){ f.save(d); });
+    return GameStorage.write(saveSlot(),JSON.stringify(prepareSave(d)));   /* 速通写自己的存档槽 */
+  }catch(e){ saveReport('save',e);return false; }
+}
+/* 把存档里的数据写回游戏状态（调用前先 freshState） */
+function applySave(d){
+  d=prepareSave(d);                         /* 校验和迁移先完成，再改当前会话；不修改调用者的数据 */
+  SAVE_SCHEMA.forEach(function(f){ f.load(d); });
+  Investigation.migrate();
+  SchoolDay.restore();
+  CampusPressure.restore();
+  try{ Elevator.fixCabinPosition(); }catch(e){}          /* 旧存档站在旧轿厢外围的：放回现在的轿厢正中 */
+  return d;
+}
+/* 规则恢复之后由应用流程调用；applySave 本身不构建模型、操纵 DOM 或设置灯光。 */
+function restoreSavePresentation(){
+  var el=document.getElementById('hideslits');if(el)el.style.display=HIDE.on?'block':'none';
+  VisualState.patrolRed=PAT.locked?1:0;
+  Engine.torch(USE.torch);
+}
+function loadGame(){
+  try{
+    var result=GameStorage.read(saveSlot());
+    if(!result.ok||!result.value)return null;
+    return prepareSave(JSON.parse(result.value));
+  }catch(e){ saveReport('load',e);return null; }
+}
+
+/* 以前只有暂停菜单里能手动存档，死了、结局了存档也还在：「梦魇」可以读档重来。
+   现在进出房间、预知梦醒来时自动存；死透了或者打出结局就删档。 */
+function autoSave(){
+  if(S.screen==='play'&&!S.dead) saveGame();
+}
+function clearSave(){
+  GameStorage.remove(saveSlot());
+}
+/* 拿到过的结局单独记，不跟存档一起删 */
+var ENDS_KEY='wdfz3d_ends';
+function endsSeen(){
+  try{ var result=GameStorage.read(ENDS_KEY),d=JSON.parse(result.value||'{}'); return SaveData.record(d)?d:{}; }catch(e){ saveReport('read-endings',e);return {}; }
+}
+function endMark(id){
+  var d=endsSeen(); d[id]=1;
+  GameStorage.write(ENDS_KEY,JSON.stringify(d));
+}
+function paintMenuSave(){
+  var sc=document.getElementById('btncont');
+  if(sc) sc.style.display=loadGame()?'block':'none';
+  var el=document.getElementById('mends');
+  if(!el) return;
+  var seen=endsSeen(), ids=Object.keys(ENDINGS), got=[];
+  for(var i=0;i<ids.length;i++) if(seen[ids[i]]) got.push(ENDINGS[ids[i]].t+(ENDINGS[ids[i]].true?'（真）':ENDINGS[ids[i]].fake?'（假）':''));
+  el.textContent=got.length?'已见结局 '+got.length+' / '+ids.length+'　'+got.join(' '):'';
+  el.style.display=got.length?'block':'none';
+}

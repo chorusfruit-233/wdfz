@@ -221,7 +221,7 @@ class EngineTest(BrowserCase):
         page = self.page()
         page.set_viewport_size({'width': 2800, 'height': 300})
         page.evaluate('resizeGL();syncCamera(0)')
-        self.assert_js(page, "GLR.cam.near<.08&&GLR.cam.near*Math.sqrt(1+Math.pow(Math.tan(S.fov*PI/360),2)*(1+GLR.cam.aspect*GLR.cam.aspect))<PRAD*U2M")
+        self.assert_js(page, "GLR.cam.near<.08&&GLR.cam.near*Math.sqrt(1+Math.pow(Math.tan(VisualState.camera.fov*PI/360),2)*(1+GLR.cam.aspect*GLR.cam.aspect))<PRAD*U2M")
         self.assert_js(page, 'GLR.postMat.uniforms.uNear.value===GLR.cam.near')
 
     def test_film_grain_is_subtle_in_dark_areas_and_can_be_turned_off(self):
@@ -253,8 +253,7 @@ class EngineTest(BrowserCase):
 
     def test_gameplay_modules_do_not_construct_renderer_objects(self):
         root = Path(__file__).resolve().parents[1] / 'game3d/js'
-        for name in ('app/main', 'app/world', 'app/input', 'domain/systems', 'domain/anomaly', 'domain/story', 'domain/items', 'domain/patrol',
-                     'domain/spiral', 'adapters/save', 'domain/state', 'domain/interact', 'ui/prologue', 'domain/dread'):
+        for name in ('main', 'world', 'input', 'systems', 'anomaly', 'story', 'items', 'patrol', 'spiral', 'save', 'state', 'interact', 'prologue', 'dread'):
             source = (root / f'{name}.js').read_text()
             self.assertIsNone(re.search(r'\b(?:THREE|GLR)\s*\.', source), name)
 

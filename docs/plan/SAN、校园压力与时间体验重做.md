@@ -72,7 +72,7 @@
 | 校长办公室 | 每个容器在缺少钥匙时有 18% 概率从未持有的车钥匙、机房钥匙中抽一把；背包满时不会消耗容器。 | 提高车钥匙、机房钥匙的获得率；具体概率和保底方式待确定。 |
 | 时间和课内玩法 | 一天自然推进约 19.7 个现实分钟（含《先辈》慢速窗口）；普通课约 32 秒，课间时长不等；坐课期间主要依靠现有叙事、异象与手机。 | 每次课间 3 分钟，中午和晚上各 8 分钟，均为现实时间；晚上活动不计违规；为上课时间增加可参与内容。 |
 
-代码依据：[课表与常量](../../game3d/js/content/core.js)、[数值和车库跟随者](../../game3d/js/domain/systems.js)、[HUD](../../game3d/js/app/main.js)、[移动和体力](../../game3d/js/app/input.js)、[巡察者](../../game3d/js/domain/patrol.js)、[巡察者外观](../../game3d/js/engine/presentation.js)、[异象](../../game3d/js/domain/anomaly.js)、[搜索](../../game3d/js/domain/interact.js)和[存档](../../game3d/js/adapters/save.js)。当前玩家规则见[产品对齐文档](../产品对齐文档.md)和[游戏 Wiki](../../wiki/index.html)；实施前基线和方案数据保留当时的背景。
+代码依据：[课表与常量](../../game3d/js/core.js)、[数值和车库跟随者](../../game3d/js/systems.js)、[HUD](../../game3d/js/main.js)、[移动和体力](../../game3d/js/input.js)、[巡察者](../../game3d/js/patrol.js)、[巡察者外观](../../game3d/js/engine/presentation.js)、[异象](../../game3d/js/anomaly.js)、[搜索](../../game3d/js/interact.js)和[存档](../../game3d/js/save.js)。当前玩家规则见[产品对齐文档](../产品对齐文档.md)和[游戏 Wiki](../../wiki/index.html)；实施前基线和方案数据保留当时的背景。
 
 ## 三、SAN：来源、反馈与体力
 

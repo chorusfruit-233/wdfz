@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-02",
+  "implementation": "37658d8",
+  "verified_code_commit": "fe7ab4f60842f3b3b8141a3d3a3910c2b6404988",
+  "method": "按当前发现的测试 ID 与完整回归、最终专项复测的结果去重核对；不是一次全量运行全部通过。",
+  "summary": {
+    "tests": 397,
+    "passed": 396,
+    "skipped": [
+      "test_engine.EngineTest.test_local_file_start_with_network_disabled"
+    ],
+    "missing": [],
+    "unresolved": {}
+  },
+  "first_full_run": {
+    "tests": 392,
+    "passed": 388,
+    "failures": 2,
+    "errors": 1,
+    "skipped": 1,
+    "seconds": 1950.298
+  },
+  "final_rechecks": [
+    {
+      "tests": 30,
+      "seconds": 198.189,
+      "log": "收尾专项.log.gz"
+    },
+    {
+      "tests": 1,
+      "seconds": 9.981,
+      "log": "触屏复测.log.gz"
+    },
+    {
+      "tests": 13,
+      "seconds": 22.969,
+      "log": "时间复测.log.gz"
+    }
+  ],
+  "logs": [
+    "完整回归.log.gz",
+    "收尾专项.log.gz",
+    "触屏复测.log.gz",
+    "时间复测.log.gz"
+  ],
+  "car_run": {
+    "file": "模块化汽车路线.json.gz",
+    "seconds": 521.9,
+    "day": 1,
+    "ending": "car",
+    "san": 77.67999999998807,
+    "max_observed_driving_distance": 311.7275000000027,
+    "page_errors": [],
+    "source_note": "启动记录为08959f1工作区有改动；运行时游戏源码为随后提交的37658d8内容，保留原始source_dirty记录。"
+  },
+  "limits": [
+    "Chromium软件WebGL与触屏仿真",
+    "file://被环境策略阻止，断网本地资源测试通过",
+    "真人盲玩、实体手机及真实GPU对照未验收",
+    "保留原共享随机源和同学场景查询兼容边界"
+  ]
+}
