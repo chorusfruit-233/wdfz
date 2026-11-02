@@ -139,7 +139,9 @@ class EscalationBrowserTest(BrowserCase):
           PAUSE.on=true;update(60);PAUSE.on=false;
           UI.toggle('bag');update(60);UI.closePanelAll();
           PRO.on=true;update(60);PRO.on=false;
-          PC.on=true;update(60);PC.on=false;
+          // 通过正式入口初始化小游戏；单改 on 标志会留下空的蛇身，
+          // 现在小游戏在应用更新中推进，不能用未初始化状态代替暂停场景。
+          PCGAME.start();update(60);PCGAME.cancel();
           updateHUD();const unchanged=before===JSON.stringify(CampusPressure.current());
           // 压力不使用日期或浏览器墙钟；独立空间未推进游戏钟时也保持原值。
           doEnterRoom('lift_dream');update(30);CampusPressure.tick();
