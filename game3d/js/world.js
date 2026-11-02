@@ -67,6 +67,7 @@ function solidAtInterior(R,wx,wy){
     }
   }
   if(R.spiral&&typeof spiralSolid==='function'&&spiralSolid(R,wx,wy)) return true;
+  if(R.solid&&R.solid(wx,wy)) return true;                    /* 自带碰撞的房间（模块提供，例如虚空迷宫按高度判断） */
   if(R.foot){                        /* 房间建过模型：按模型真实占地（本格和周围一圈的家具都可能伸过来） */
     var c0=Math.floor((wx-R.ox)/R.tw), r0=Math.floor((wy-R.oy)/R.th), dc, dr, F, fi;
     for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++){
@@ -112,6 +113,7 @@ function moveBy(dx,dy,dt){
   if(!Number.isFinite(dx)||!Number.isFinite(dy))return;
   var n=Math.max(1,Math.ceil((dt||1/60)*Physics.hz),Math.ceil(Math.hypot(dx,dy)/(PRAD*0.5)));
   dx/=n;dy/=n;
+  var MR=S.mode==='in'?INTERIORS[S.room]:null;
   for(var i=0;i<n;i++){
     var before=Collision.depth(S.x,S.y,PRAD),nx=S.x+dx,ny=S.y+dy;
     var ax=Collision.depth(nx,S.y,PRAD);
@@ -119,6 +121,7 @@ function moveBy(dx,dy,dt){
     var ay=Collision.depth(S.x,ny,PRAD);
     if(ay<1e-7||ay<before-1e-7)S.y=ny;
     spiralUpdate();
+    if(MR&&MR.moved)MR.moved();                               /* 房间自己的高度（台阶、坠落）：每一小步之后更新 */
   }
 }
 
@@ -199,6 +202,7 @@ function doEnterRoom(id,spawn){
   var R=INTERIORS[id]; if(!R) return;
   Lifecycle.scope('transition').cancel();
   Lifecycle.renew('scene');
+  GameModules.emit('leaveRoom',S.mode==='in'?S.room:null,id);
   if(typeof FN_P!=='undefined'&&FN_P.grp&&FN_P.room!==id)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
   try{ spiralReset(); }catch(e){}
@@ -217,6 +221,7 @@ function doEnterRoom(id,spawn){
   if(!(spawn&&spawn.seated)) S.seated=false;
   else S.seated=true;
   if(R.spiral&&spawn&&spawn.spiral) spiralRestore(spawn.spiral);
+  if(R.onEnter) R.onEnter(spawn||null);                      /* 房间自己的落点和高度：要在防卡位之前定下来 */
   var via=ENTER_VIA; ENTER_VIA=null;
   enterWorldRoom(id);
   if(!spawn){
@@ -235,6 +240,7 @@ function doExitRoom(){
   var R=INTERIORS[S.room]; if(!R) return;
   Lifecycle.scope('transition').cancel();
   Lifecycle.renew('scene');
+  GameModules.emit('leaveRoom',S.mode==='in'?S.room:null,null);
   if(typeof FN_P!=='undefined'&&FN_P.grp)fnPeopleClear();
   try{ anfxClear(); }catch(e){}
   var o=objById(R.host);

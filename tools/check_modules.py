@@ -28,9 +28,28 @@ def code_only(source):
                   ' ', source)
 
 
+def entry_scripts(root):
+    """实际加载顺序：index.html 直接写的脚本；遇到模块清单 game3d/manifest.js 时，按清单里各模块 files 的先后展开
+    （GameModules.boot 就是按这个顺序写入 <script> 的，见 docs/模块化与Mod规范.md）。"""
+    out = []
+    for src in re.findall(r'<script\b[^>]*\bsrc="([^"]+)"', (root / 'index.html').read_text(encoding='utf-8')):
+        if src.endswith('game3d/manifest.js') and (root / src).is_file():
+            manifest = code_only_keep_strings((root / src).read_text(encoding='utf-8'))
+            for files in re.findall(r'\bfiles\s*:\s*\[([^\]]*)\]', manifest):
+                out.extend(a or b for a, b in re.findall(r"'([^']+)'|\"([^\"]+)\"", files))
+        else:
+            out.append(src)
+    return out
+
+
+def code_only_keep_strings(source):
+    """只去掉注释（清单里的文件名在字符串里）。"""
+    return re.sub(r'/\*[\s\S]*?\*/|(?<![:\'"])//[^\n]*', ' ', source)
+
+
 def check(root=ROOT):
     root = Path(root)
-    scripts = re.findall(r'<script\b[^>]*\bsrc="([^"]+)"', (root / 'index.html').read_text())
+    scripts = entry_scripts(root)
     errors = []
     for path in scripts:
         if '://' in path:

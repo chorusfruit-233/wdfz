@@ -123,6 +123,10 @@ var SAVE_SCHEMA=[
       d.spiral=spiralHere()?{state:SP.state,a:SP.a,th:SP.th}:null;
     },
     load:function(d){ if(S.mode==='in'&&S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign(ROAM,d.roam); }
+  },
+  { /* 模块和 Mod 的状态：各自登记（GameModules.persistent / Mod 的 persist），按 id 存在 d.mods 里 */
+    save:function(d){ d.mods=GameModules.saveAll(); },
+    load:function(d){ GameModules.loadAll(d.mods); }
   }
 ];
 /* 速通用单独的存档槽，不覆盖、不删除普通模式的「继续上次」 */

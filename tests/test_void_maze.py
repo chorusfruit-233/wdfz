@@ -1,0 +1,197 @@
+"""虚空迷宫（错误的电梯通往的空间）：布局连通、两个出口、楼梯改变高度、坠入虚空、SAN 流失、地图与时间、读档。
+
+内部测试；玩家 Wiki 不写这个空间的细节。"""
+from browser_case import BrowserCase
+
+WALK = """
+window.walk=function(pts){
+  for(var k=0;k<pts.length;k++){
+    var t=pts[k], guard=0;
+    while(guard++<5000){
+      var p=VoidMaze.toScene(S.x,S.y), dx=t[0]-p.x, dz=t[1]-p.z;
+      if(Math.hypot(dx,dz)<0.15) break;
+      S.ang=Math.atan2(dz,dx); KEY.w=true; update(1/60); KEY.w=false;
+      if(S.room!==MAZE_CFG.room||S.dead) return {ok:false,at:k,room:S.room};
+    }
+    if(guard>=5000) return {ok:false,at:k,stuck:true};
+  }
+  KEY.w=false; var q=VoidMaze.toScene(S.x,S.y);
+  return {ok:true,x:q.x,z:q.z,fy:S.floorY};
+};
+window.goMaze=function(host,floor){
+  floor=floor||1; doEnterRoom(host+floor,Elevator.landing(host,floor));
+  var r=Math.random; Math.random=function(){return 0;}; Elevator.board(host,floor); Math.random=r;
+  Elevator.enterDream('67');
+  var w=VoidMaze.toWorld(0,0); S.x=w.x; S.y=w.y; S.floorY=0; VoidMaze.MZ.air=false; VoidMaze.MZ.t=0;
+};
+0;
+"""
+
+
+class VoidMazeTest(BrowserCase):
+    def game(self):
+        page = self.page()
+        page.evaluate("""Game.start('hard');""")
+        page.wait_for_function("S.room==='teach1'&&GLR.roomMesh")
+        page.evaluate("""running=false;clearIntroTimers();S.intro=0;S.day=1;S.tsec=760;S.san=100;AN.active=false;AN.id=null;
+          AN.next=1e5;patReset();PAT.next=1e5;RT.inspection=null;DEV.god=false;""" + WALK)
+        return page
+
+    def test_wrong_elevator_leads_into_the_dark_maze(self):
+        page = self.game()
+        page.evaluate("""doEnterRoom('lab3',Elevator.landing('lab',3));S.san=80;
+          Math.random=()=>0;Elevator.board('lab',3);Elevator.controls();""")
+        page.locator('#choices button').filter(has_text='67 层').click()
+        result = page.evaluate("""()=>{const R=INTERIORS.lift_dream, p=VoidMaze.toScene(S.x,S.y), sp=MAZE_CFG.spawn; updateHUD();
+          return {room:S.room, san:S.san, phase:RT.elevatorRide.phase, fy:S.floorY,
+            inSpawn:p.x>=sp.x0&&p.x<=sp.x1&&p.z>=sp.z0&&p.z<=sp.z1, free:Collision.depth(S.x,S.y,PRAD)<1e-7,
+            clock:document.getElementById('clock').textContent, period:document.getElementById('period').textContent,
+            flags:[R.noMap,R.noClock,R.ownHeight,typeof R.build], fog:lightState().fog, mesh:GLR.roomMesh.userData.voidMaze,
+            sub:document.getElementById('sub').innerText}}""")
+        self.assertEqual(result['room'], 'lift_dream')
+        self.assertEqual(result['san'], 75)
+        self.assertEqual(result['phase'], 'dream')
+        self.assertTrue(result['inSpawn'] and result['free'])
+        self.assertEqual(result['fy'], 0)
+        self.assertEqual(result['clock'], '???')
+        self.assertEqual(result['period'], '???')
+        self.assertEqual(result['flags'], [True, True, True, 'function'])
+        self.assertLess(result['fog']['density'], 0.2)
+        self.assertEqual(result['mesh'], 1)
+        self.assertIn('方方正正的白色墙面', result['sub'])
+        # 地图打不开、手表只转圈；游戏钟不走但能走动
+        result = page.evaluate("""()=>{UI.open('mapv');const map=UI.openPanel;S.bag.push('watch');useItem('watch');
+          const before=S.tsec,x=S.x,y=S.y;KEY.w=true;update(1);KEY.w=false;
+          return {map, sub:document.getElementById('sub').innerText, before, after:S.tsec, moved:Math.hypot(S.x-x,S.y-y)>1}}""")
+        self.assertIsNone(result['map'])
+        self.assertIn('指针一圈一圈地转', result['sub'])
+        self.assertEqual(result['before'], result['after'])
+        self.assertTrue(result['moved'])
+
+    def test_both_exits_are_reachable_only_by_stairs_and_lead_to_their_floors(self):
+        page = self.game()
+        # 出口 2：主桥 → 平台 A → 楼梯上 4 米 → 平台 B → 北桥（断口要绕）→ 北走廊
+        r = page.evaluate("""()=>{goMaze('teach',2);
+          const w=walk([[0,-4],[0,-12],[0,-27],[0,-30],[3.2,-30],[8.6,-30],[10.5,-30],[10.5,-32],[3,-32],[3,-26],[-3,-26],[-3,-32],[-7,-32],[-7,-35],[-7,-37.4]]);
+          const hint=interactHint(); tryInteract(); return {w, hint, room:S.room, ride:RT.elevatorRide, lift:Elevator.state('teach').phase}}""")
+        self.assertTrue(r['w']['ok'], r['w'])
+        self.assertEqual(r['w']['fy'], 4)
+        self.assertEqual(r['hint'], '推开门（出口 2）')
+        self.assertEqual(r['room'], 'lab2')                       # 出口 2：另一栋楼、同一层
+        self.assertIsNone(r['ride'])
+        self.assertEqual(r['lift'], 'idle')                       # 原来那台电梯不会一直被占着
+        # 出口 1：南厅 → 西阶梯塔往下绕一圈到 −8 米 → 长走廊（中间矮墙要绕）
+        r = page.evaluate("""()=>{goMaze('lab',4);
+          const w=walk([[0,4],[0,13],[-5,13],[-9,13],[-15,13],[-15,23],[-9,23],[-9,13.2],[-7,13],[-3,13],[-3,25],[-6,25.5],[-6,27.5],[-3,28],[-3,37.4]]);
+          const hint=interactHint(); tryInteract(); return {w, hint, room:S.room, free:Collision.depth(S.x,S.y,PRAD)<1e-7}}""")
+        self.assertTrue(r['w']['ok'], r['w'])
+        self.assertEqual(r['w']['fy'], -8)
+        self.assertEqual(r['hint'], '推开门（出口 1）')
+        self.assertEqual(r['room'], 'lab4')                       # 出口 1：回到上电梯的那一层
+        self.assertTrue(r['free'])
+
+    def test_stairs_tower_climbs_to_a_dead_end_and_walls_block(self):
+        page = self.game()
+        r = page.evaluate("""()=>{goMaze('teach');
+          const a=walk([[0,1],[11,1],[13,1],[19,1]]), h1=S.floorY;
+          const b=walk([[19,-9]]), h2=S.floorY;
+          const c=walk([[13,-9],[13,1]]), top=S.floorY, hint=interactHint();
+          return {a,b,c,h1,h2,top,hint}}""")
+        self.assertTrue(r['a']['ok'] and r['b']['ok'] and r['c']['ok'], r)
+        self.assertEqual([r['h1'], r['h2'], r['top']], [1.5, 4, 8])
+        self.assertEqual(r['hint'], '')                           # 塔顶没有出口
+        # 没有楼梯就上不去：在 0 米高的出生区域对着墙走，被挡住，高度不变
+        r = page.evaluate("""()=>{goMaze('teach');const w=VoidMaze.toWorld(3,4.2);S.x=w.x;S.y=w.y;S.floorY=0;
+          S.ang=Math.PI/2;const y=S.y;KEY.w=true;for(let i=0;i<120;i++)update(1/60);KEY.w=false;
+          return {dz:(S.y-y)/9, fy:S.floorY, free:Collision.depth(S.x,S.y,PRAD)<1e-7}}""")
+        self.assertLess(r['dz'], 0.5)
+        self.assertEqual(r['fy'], 0)
+        self.assertTrue(r['free'])
+
+    def test_falling_into_the_void_costs_a_little_san_and_respawns_in_the_spawn_area(self):
+        page = self.game()
+        page.evaluate("""goMaze('teach');S.san=60;walk([[0,-15]]);
+          window.__san=S.san;const w=VoidMaze.toWorld(-1.4,-15);S.x=w.x;S.y=w.y;S.ang=Math.PI;
+          for(let i=0;i<200&&!VoidMaze.MZ.respawning;i++){KEY.w=true;update(1/60);}KEY.w=false;""")
+        self.assert_js(page, 'VoidMaze.MZ.respawning&&S.floorY<MAZE_CFG.voidY')
+        page.wait_for_function('!VoidMaze.MZ.respawning', timeout=5000)
+        r = page.evaluate("""()=>{const p=VoidMaze.toScene(S.x,S.y), sp=MAZE_CFG.spawn;
+          return {lost:window.__san-S.san, falls:VoidMaze.MZ.falls, fy:S.floorY, air:VoidMaze.MZ.air, dead:S.dead,
+            inSpawn:p.x>=sp.x0&&p.x<=sp.x1&&p.z>=sp.z0&&p.z<=sp.z1, ground:VoidMaze.groundAt(p.x,p.z,0.4),
+            free:Collision.depth(S.x,S.y,PRAD)<1e-7, sub:document.getElementById('sub').innerText}}""")
+        self.assertGreaterEqual(r['lost'], 3)
+        self.assertLess(r['lost'], 3.5)
+        self.assertEqual(r['falls'], 1)
+        self.assertFalse(r['dead'] or r['air'])
+        self.assertTrue(r['inSpawn'] and r['free'])
+        self.assertEqual([r['fy'], r['ground']], [0, 0])
+        self.assertIn('一开始的地方', r['sub'])
+        # 从上层桥掉下去落在下层桥上：不算掉进虚空
+        r = page.evaluate("""()=>{const w=VoidMaze.toWorld(0,-19.5);S.x=w.x;S.y=w.y;S.floorY=4;VoidMaze.MZ.air=true;VoidMaze.MZ.vy=0;
+          for(let i=0;i<120;i++)update(1/60);return {fy:S.floorY,air:VoidMaze.MZ.air,falls:VoidMaze.MZ.falls}}""")
+        self.assertEqual(r, {'fy': 0, 'air': False, 'falls': 1})
+
+    def test_san_drains_faster_the_longer_you_stay_and_runs_out_in_about_twenty_minutes(self):
+        page = self.game()
+        r = page.evaluate("""()=>{goMaze('teach');S.san=100;let t=0,at={};
+          while(!S.dead&&t<1800){update(0.5);t+=0.5;if(t===300)at[300]=S.san;if(t===600)at[600]=S.san;if(t===900)at[900]=S.san;}
+          return {at,t,dead:S.dead,early:VoidMaze.drainRate(60),late:VoidMaze.drainRate(900),
+            saved:!!Talent.state().consumed.fatalProtection}}""")
+        self.assertTrue(r['dead'])
+        self.assertGreaterEqual(r['t'], 1140)
+        # 新局随机抽天赋：抽到「天生免疫」时，第一次耗尽（约 1200 秒）被挡下、SAN 回升，要 1400 多秒才死——这是成立的，放行
+        self.assertLessEqual(r['t'], 1700 if r['saved'] else 1260)
+        loss = [100 - r['at']['300'], r['at']['300'] - r['at']['600'], r['at']['600'] - r['at']['900']]
+        self.assertTrue(loss[0] < loss[1] < loss[2], loss)       # 越久掉得越快
+        self.assertGreater(r['late'], r['early'] * 4)
+
+    def test_save_and_load_keep_height_and_time_inside(self):
+        page = self.game()
+        r = page.evaluate("""()=>{goMaze('teach');walk([[0,1],[11,1],[13,1],[19,1],[19,-9]]);
+          VoidMaze.MZ.t=400;const p=VoidMaze.toScene(S.x,S.y);saveGame();const d=loadGame();
+          freshState('hard');running=false;applySave(d);
+          const before={fy:S.floorY,ready:VoidMaze.MZ.ready};
+          for(let i=0;i<30;i++)update(1/60);                       // 淡入之前世界照走：高度还没恢复，不能先掉下去
+          const waiting={fy:S.floorY,air:VoidMaze.MZ.air};
+          window.__back=0;enterRoom(S.room,{x:S.x,y:S.y,ang:S.ang,restoreVisit:true},function(){window.__back=1;});
+          return {saved:d.mods['void-maze'], p, before, waiting}}""")
+        self.assertEqual(r['saved']['fy'], 4)
+        self.assertEqual(r['before']['ready'], False)
+        self.assertEqual(r['waiting'], {'fy': 0, 'air': False})
+        page.wait_for_function("window.__back===1")
+        r2 = page.evaluate("""()=>{const p=VoidMaze.toScene(S.x,S.y);
+          return {fy:S.floorY, t:VoidMaze.MZ.t, x:p.x, z:p.z, free:Collision.depth(S.x,S.y,PRAD)<1e-7, phase:RT.elevatorRide&&RT.elevatorRide.phase}}""")
+        self.assertEqual(r2['fy'], 4)
+        self.assertEqual(r2['t'], 400)
+        self.assertAlmostEqual(r2['x'], r['p']['x'], places=3)
+        self.assertTrue(r2['free'])
+        self.assertEqual(r2['phase'], 'dream')
+        # 存档里的高度站不住（例如悬在虚空上方）：回到出生区域
+        r3 = page.evaluate("""()=>{const w=VoidMaze.toWorld(6,-18);S.x=w.x;S.y=w.y;S.floorY=0;saveGame();const d=loadGame();
+          freshState('hard');running=false;applySave(d);doEnterRoom('lift_dream',{x:S.x,y:S.y,ang:0,restoreVisit:true});
+          const p=VoidMaze.toScene(S.x,S.y),sp=MAZE_CFG.spawn;return p.x>=sp.x0&&p.x<=sp.x1&&p.z>=sp.z0&&p.z<=sp.z1&&S.floorY===0}""")
+        self.assertTrue(r3)
+
+    def test_chalk_lies_in_the_spawn_area_and_old_marks_are_drawn(self):
+        page = self.game()
+        r = page.evaluate("""()=>{goMaze('teach');S.bag=S.bag.filter(i=>i!=='chalk');
+          const w=VoidMaze.toWorld(MAZE_CFG.chalk.x+0.6,MAZE_CFG.chalk.z);S.x=w.x;S.y=w.y;S.floorY=0;
+          const hint=interactHint();tryInteract();
+          return {hint, has:hasItem('chalk'), marks:ChalkFx.count(), preset:ChalkMarks.visible('lift_dream').filter(m=>m.old).length}}""")
+        self.assertEqual(r['hint'], '捡起粉笔')
+        self.assertTrue(r['has'])
+        self.assertEqual(r['preset'], 3)
+        self.assertEqual(r['marks'], 3)
+
+    def test_layout_tables_are_consistent(self):
+        page = self.game()
+        r = page.evaluate("""()=>{const C=MAZE_CFG, bad=[];
+          const inside=b=>b[0]>C.x0&&b[1]<C.x0+C.cols&&b[4]>C.z0&&b[5]<C.z0+C.rows&&b[2]>=C.y0&&b[3]<C.y0+C.ny;
+          MAZE_AIR.concat(MAZE_SOLID).forEach(a=>{if(!(a.b[0]<a.b[1]&&a.b[2]<a.b[3]&&a.b[4]<a.b[5])||!inside(a.b))bad.push(a.id);});
+          MAZE_WALK.forEach(w=>{const ok=w.x0<w.x1&&w.z0<w.z1&&(w.t==='plat'?Number.isFinite(w.h):w.a0!==w.a1);if(!ok)bad.push(w.id);
+            const steep=w.t==='ramp'?Math.abs(w.h1-w.h0)/Math.abs(w.a1-w.a0):0; if(steep>0.7)bad.push(w.id+':steep');});
+          const sp=C.spawn, exits=C.exits.map(e=>[e.id,VoidMaze.groundAt(e.x,e.z,e.h+0.4)===e.h]);
+          return {bad, exits, spawnFloor:VoidMaze.groundAt((sp.x0+sp.x1)/2,(sp.z0+sp.z1)/2,0.4)}}""")
+        self.assertEqual(r['bad'], [])
+        self.assertEqual(r['exits'], [['exit1', True], ['exit2', True]])
+        self.assertEqual(r['spawnFloor'], 0)

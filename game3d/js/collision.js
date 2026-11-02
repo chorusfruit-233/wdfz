@@ -31,6 +31,7 @@ var Collision={
         rect(R.cx+b.x0/U2M,R.cy+b.z0/U2M,R.cx+b.x1/U2M,R.cy+b.z1/U2M);
       });});
       /* 旋梯是分层扇形通道，沿用层数判定，并覆盖身体圆周与内外栏杆。 */
+      if(R.collide)total+=R.collide(x,y,r);            /* 模块提供的房间碰撞（虚空迷宫：体素与台阶，按身体所在高度） */
       if(R.spiral){
         if(spiralSolid(R,x,y))total+=r;
         for(var i=0;i<8;i++)if(spiralSolid(R,x+Math.cos(i*PI/4)*r,y+Math.sin(i*PI/4)*r))total+=r/8;

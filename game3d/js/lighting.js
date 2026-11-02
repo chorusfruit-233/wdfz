@@ -115,13 +115,13 @@ function lightState(){
     if(typeof AN!=='undefined'&&AN.active&&AN.id==='blackout'){
       st.amb*=0.16;st.hemi*=0.16;st.dir*=0.12;st.ptK=0;st.blackout=true;
     }
-    if(Engine.sceneView().room==='lift_dream'){st.amb=1.4;st.hemi=0.8;st.dir=0.35;st.ptK=1;}
   }else{
     st.amb = 0.075+0.12*day;
     st.hemi= 0.10+0.24*day;
     st.dir = day>0.02 ? (0.11+0.27*day) : 0.11;   /* 云层很厚的阴天：光是散的、灰的，影子很淡 */
     st.ptK = 1;
   }
+  GameModules.emit('lightState',st);         /* 模块可以改某个场景的光；st.fog={r,g,b,density} 改雾 */
   return st;
 }
 function updateLighting(){
@@ -150,7 +150,10 @@ function updateLighting(){
   }
   /* 雾：室外跟着地平线的天色走，白天薄、夜里厚；室内是屋里那种暗 */
   var fog=GLR.scene.fog;
-  if(fog){
+  if(fog&&s.fog){
+    fog.color.setRGB(s.fog.r,s.fog.g,s.fog.b,THREE.SRGBColorSpace);
+    fog.density=s.fog.density;
+  }else if(fog){
     if(!s.indoor){
       var hz=skyRGB(hourNow())[3];
       var fk=0.86;
@@ -172,7 +175,7 @@ function updateLighting(){
   var pf=GLR.patrolFlick||0, pr=GLR.patrolRed||0, sum=0;
   for(i=0;i<GLR.roomLights.length;i++){
     var base=GLR.roomLightBase[i]*s.ptK;
-    var flick=s.blackout?0:roomFlicker(i,tt,s.day)*lampHealth(i)*(typeof dreadLampMul==='function'?dreadLampMul(i,tt):1);
+    var flick=s.blackout?0:s.steady?1:roomFlicker(i,tt,s.day)*lampHealth(i)*(typeof dreadLampMul==='function'?dreadLampMul(i,tt):1);   /* steady：模块要的不闪的光（迷宫出口） */
     if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
     lightCrackle(i,flick);
     sum+=flick;

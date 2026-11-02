@@ -108,6 +108,7 @@ var ITEM_READ={card:1,notebook:1,hw:1,usb:1,key:1,roomkey:1,metronome:1,goggles:
 function useItem(id){return Inventory.use(id);}
 function inventoryUse(id){
   if(!id||!hasItem(id)) return;
+  if(GameModules.first('itemUse',id)) return;               /* 模块可以接管某件东西的用法（粉笔画记号、迷宫里的手表） */
   var nm=ITEMS[id]?ITEMS[id].n:id;
   if(ITEM_USE.hasOwnProperty(id)){ ITEM_USE[id](id,nm); return; }
   if(ITEM_READ[id]){

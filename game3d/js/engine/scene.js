@@ -62,6 +62,7 @@ ThreeBackend.clearWorld=function(){
   if(GLR.roamFig){GLR.scene.remove(GLR.roamFig);ThreeBackend.disposeGroup(GLR.roamFig);GLR.roamFig=null;}
   if(typeof TR!=='undefined'&&TR.g){GLR.scene.remove(TR.g);ThreeBackend.disposeGroup(TR.g);TR.g=null;TR.key='';}
   try{ shadeClearRoom(); }catch(e){}
+  GameModules.emit('clearWorld');                      /* 模块自己的场景物件（粉笔记号）在这里撤 */
   if(GLR.roomMesh){ GLR.scene.remove(GLR.roomMesh); releaseSceneMesh(GLR.roomMesh); GLR.roomMesh=null; }
   if(GLR.outMesh){ GLR.scene.remove(GLR.outMesh); releaseSceneMesh(GLR.outMesh); GLR.outMesh=null; }
   if(GLR.roomLights){
@@ -147,6 +148,7 @@ ThreeBackend.enterRoom=function(roomId){
   try{ tracesBuild(); }catch(e){}
   try{ ncBuild(R); }catch(e){}
   try{ skipClear(); }catch(e){}
+  GameModules.emit('sceneBuilt',roomId);              /* 模块在新场景里摆自己的东西 */
 };
 ThreeBackend.enterOutside=function(){
   clearWorldMesh();sceneCacheCheck();
@@ -162,6 +164,7 @@ ThreeBackend.enterOutside=function(){
   GLR.skyHour=-1; refreshSky();
   GLR.lampPick=0;
   try{ tracesBuild(); }catch(e){}
+  GameModules.emit('sceneBuilt',null);
 };
 
 /* 结局舞台只替换可见对象与灯光上下文，不传送正式玩家，也不重置碰撞或同学状态。 */

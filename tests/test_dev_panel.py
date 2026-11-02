@@ -296,7 +296,7 @@ class DebugPanelTest(BrowserCase):
                 else:
                     self.assertLessEqual(rect['width'],300)
                     self.assertLessEqual(rect['height'],height*.62+1)
-                for tab in ('status','scene','items','events','tools'):
+                for tab in ('status','scene','items','events','mods','tools'):
                     page.locator('[data-dev-tab="'+tab+'"]').tap()
                     self.assert_js(page,"document.getElementById('devbody').clientHeight>=70")
                     self.assert_js(page,"(()=>{let b=document.getElementById('devbody');return b.scrollWidth<=b.clientWidth})()")
@@ -330,7 +330,7 @@ class DebugPanelTest(BrowserCase):
                     return ['devrun','devfreeze','devcollapse'].map(id=>document.getElementById(id)).concat([document.querySelector('#dev .devreset'),document.querySelector('#dev .devclose')])
                       .every(e=>Math.abs(e.getBoundingClientRect().top-top)<14);})()""")
                 self.assert_js(page,"document.getElementById('devbody').clientHeight>=Math.round(innerHeight*0.66)")
-                for tab in ('status','scene','items','events','tools'):
+                for tab in ('status','scene','items','events','mods','tools'):
                     page.locator('[data-dev-tab="'+tab+'"]').tap()
                     self.assert_js(page,"(()=>{let b=document.getElementById('devbody');return b.scrollWidth<=b.clientWidth})()")
                     self.assert_js(page,"Array.from(document.querySelectorAll('#dev button')).filter(e=>e.getClientRects().length).every(e=>e.getBoundingClientRect().height>=44)")

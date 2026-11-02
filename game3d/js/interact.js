@@ -274,6 +274,7 @@ function interactHint(){
   if(bellReach()) return '撞钟';
   if(nearRoster()) return '那张名单';
   if(S.seated) return '站起来';
+  var _mh=GameModules.first('hint'); if(_mh) return String(_mh);
   if(R&&!first&&hit2_seatNear(R)) return '坐下';
   if(S.mode==='in'){
     if(!h) return '';
@@ -297,6 +298,7 @@ function tryInteract(){
   if(S.seated){ S.seated=false; os('我站了起来。',1.6); S.enterCool=0.4; return; }
   if(HIDE.on){ hideOut(); return; }
   if(nearRoster()){ useRoster(); return; }
+  if(GameModules.first('interact')) return;          /* 模块的交互（虚空迷宫的出口、地上的粉笔）先于默认 */
 
   if(S.mode==='out'){
     var nb=nearWorld(0);

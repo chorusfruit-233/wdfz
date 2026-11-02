@@ -30,7 +30,7 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   },
   has:function(R,c,r){var b=this.seen(R.id);return !!(b&&c>=0&&r>=0&&c<R.cols&&r<R.rows&&b[r*R.cols+c]);},
   count:function(id){var b=this.seen(id),n=0;if(b)for(var i=0;i<b.length;i++)n+=b[i];return n;},
-  rooms:function(){var all=this.state(),me=this;return Object.keys(all).filter(function(id){return !!INTERIORS[id]&&me.count(id)>0;});},
+  rooms:function(){var all=this.state(),me=this;return Object.keys(all).filter(function(id){return !!INTERIORS[id]&&!INTERIORS[id].noMap&&me.count(id)>0;});},   /* 旧存档里白色空间的草图不再列出 */
   visible:function(R,c,r,tc,tr){
     var dx=tc-c,dy=tr-r,n=Math.max(Math.abs(dx),Math.abs(dy))*2;
     for(var i=1;i<n;i++){
@@ -42,7 +42,7 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   },
   observe:function(){
     if(S.mode!=='in'||S.dead||S.screen!=='play')return;
-    var R=INTERIORS[S.room];if(!R)return;
+    var R=INTERIORS[S.room];if(!R||R.noMap)return;            /* 不能画草图的地方（虚空迷宫） */
     var b=this.seen(R.id),changed=false;
     var c=Math.floor((S.x-R.ox)/R.tw),r=Math.floor((S.y-R.oy)/R.th);
     for(var y=Math.max(0,r-6);y<=Math.min(R.rows-1,r+6);y++)for(var x=Math.max(0,c-6);x<=Math.min(R.cols-1,c+6);x++){

@@ -43,6 +43,7 @@ function freshState(diff){
   document.getElementById('die').style.display='none';
   var _tel=document.getElementById('talent'); if(_tel) _tel._set=false;
   var _hot=document.getElementById('hot'); if(_hot) _hot._sig='';
+  GameModules.resetAll();                        /* 模块和 Mod 的本局状态（粉笔记号、迷宫计时……）清空 */
   if(!running){ running=true; lastT=0; }
 }
 var pendingAssetStart=null;
@@ -177,6 +178,7 @@ Lifecycle.register('spiral',function(){spiralReset();});
 Lifecycle.register('phone',function(){PHONE.stop();});
 Lifecycle.register('computer',function(){PCGAME.cancel();});
 Lifecycle.register('intro',function(){clearIntroTimers();});
+Lifecycle.register('game-modules',function(reason){GameModules.emit('boundary',reason);});   /* 模块和 Mod：上一局的画面、计时在这里收掉 */
 Lifecycle.register('opening',function(){Opening.cancel();});                 /* 新局开场 CG：没演完的直接收掉 */
 Lifecycle.register('day-decor',function(){DayDecor.clear();});               /* 校庆横幅 */
 Lifecycle.register('speedrun',function(reason){                            /* 速通中途回菜单：记放弃，丢掉速通的存档槽 */

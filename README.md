@@ -14,8 +14,10 @@ Wiki 收录操作、课表、地点、道具、异象和公开结局路线的攻
 
 本地运行时，在仓库目录执行 `python -m http.server 8000`，然后访问 `http://localhost:8000/`，也可以直接双击打开 `index.html`。游戏所需的脚本和素材均在仓库内：模型和贴图打包在 `game3d/assets/`，开局按画质读一档。模型在 Blender 里用脚本建（`tools/blender/`，改了以后运行 `python tools/blender/build.py` 重新打包，需要 `pip install bpy==5.2.3` 和 Python 3.13），贴图由 `tools/textures/build_textures.py` 离线生成。
 
+代码按模块组织：全部脚本在 `game3d/manifest.js` 里按模块登记并按顺序加载，新功能做成 `game3d/js/modules/` 下的独立模块，通过钩子接入。游戏支持 Mod：暂停菜单「Mod 与模块」可导入本地 `.js`，网址加 `?mod=名字` 加载 `game3d/mods/` 里的 Mod，`?nomod` 为安全模式。约定与写法见[模块化与 Mod 规范](docs/模块化与Mod规范.md)。
+
 桌面端使用 WASD 移动、鼠标环视、Shift 奔跑、E 交互；上课坐下时可按 R 查看课桌；Tab 打开背包，Esc 关闭面板或暂停；Alt 只放出鼠标、不暂停（点画面收回）。触屏设备使用左侧摇杆移动，滑动屏幕转动视角。页面右上角可切换全屏。
 
 当前一天自然运行 **20 分钟**：三个连续阶段各 6 分钟，熄灯后 2 分钟。讲台可固定登记外出，许可跨越普通课堂；每天 12:50、17:50 回教室集合，提前 1 分钟广播提醒。SAN 通过视听与身体反应提示，低 SAN 降低体力上限。规则见[产品对齐文档](docs/产品对齐文档.md#survival)，计划状态见[计划目录](docs/plan/README.md)。
 
-项目文档统一收录在 [文档目录](docs/)：包括[游戏设计与机制总览](https://chorusfruit-233.github.io/wdfz/docs/game-design-overview.html)、[产品对齐文档](docs/产品对齐文档.md)、[3D 更新说明](docs/3D更新说明.md)、[3D 代码审查报告](docs/3D代码审查报告.md)、[建模统计](docs/建模统计.md)、[试玩记录](docs/试玩记录.md)、[测试说明](docs/测试说明.md)、[调试面板说明](docs/调试面板说明.md)和仅适用于 Claude 的 [Claude 测试攻略](docs/AI测试攻略.md)。
+项目文档统一收录在 [文档目录](docs/)：包括[游戏设计与机制总览](https://chorusfruit-233.github.io/wdfz/docs/game-design-overview.html)、[产品对齐文档](docs/产品对齐文档.md)、[3D 更新说明](docs/3D更新说明.md)、[3D 代码审查报告](docs/3D代码审查报告.md)、[建模统计](docs/建模统计.md)、[试玩记录](docs/试玩记录.md)、[测试说明](docs/测试说明.md)、[调试面板说明](docs/调试面板说明.md)、[模块化与 Mod 规范](docs/模块化与Mod规范.md)和仅适用于 Claude 的 [Claude 测试攻略](docs/AI测试攻略.md)。
