@@ -42,7 +42,7 @@ class SpecialDayTest(BrowserCase):
           }
           return {
             anomaly:drop(function(dt){AN_DEFS.raindots.tick(dt,AN.data,false);},function(){AN.active=true;AN.id='raindots';AN.t=0;AN.data={};}),
-            patrol:drop(function(dt){sanTick(dt,{san:function(){}},false);},function(){PAT.state='walk';PAT.locked=true;}),
+            patrol:drop(function(dt){Mechanics.finish(dt);},function(){patReset();PAT.state='walk';PAT.room='out';PAT.x=S.x+12;PAT.y=S.y;PAT.safety=0;PAT.locked=true;}),
             danger:drop(function(dt){dangerTick(dt);},function(){doEnterRoom('trash1');running=false;}),
             direct:drop(function(dt){sanDrain(1,dt);},function(){}),
           };

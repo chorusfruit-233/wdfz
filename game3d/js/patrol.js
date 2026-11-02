@@ -50,7 +50,8 @@ var HIDE={on:false,c:0,r:0,seen:false,t:0};
 function lockerFront(R,c,r){ return {x:R.ox+(c+0.5)*R.tw, y:R.oy+(r+1.5)*R.th}; }
 function hideIn(hit){
   var R=INTERIORS[S.room];
-  HIDE.seen=!!(PAT.state==='walk'&&PAT.locked&&patSees());   /* 当着它的面钻进去，等于没躲（要在 HIDE.on 之前算） */
+  HIDE.seen=!!(PAT.state==='walk'&&patSees()&&(PAT.permanent||patEligible()&&!patIgnores()));   /* 当着它的面钻进去，等于没躲（要在 HIDE.on 之前算） */
+  if(HIDE.seen)PatrolWorld.observeLocker(hit.c,hit.r);
   HIDE.on=true; HIDE.c=hit.c; HIDE.r=hit.r; HIDE.t=0;
   S.x=R.ox+(hit.c+0.5)*R.tw; S.y=R.oy+(hit.r+0.62)*R.th; S.ang=PI/2; S.pitch=0;
   resetInputState();
@@ -72,6 +73,7 @@ var PAT={},PAT_SPEED=16,PAT_CHASE=31,PAT_SEE=135,PAT_CATCH=19,PAT_BODY=.30,PAT_N
 var PAT_CFG={lostSearch:true,lostLinger:3,lockerMemory:true,memLinger:4,noise:false};
 function patRoomHere(){return S.mode==='in'?S.room:'out';}
 function patReset(keepHiding){
+  patRemoveFig();VisualState.patrolFlick=0;VisualState.patrolRed=0;
   if(typeof PatrolWorld!=='undefined')PatrolWorld.reset();else patRemoveFig();
   if(!keepHiding){HIDE.on=false;HIDE.seen=false;var el=document.getElementById('hideslits');if(el)el.style.display='none';}
 }
@@ -82,7 +84,7 @@ function patLOS(){return PatrolNav.los(PatrolWorld.position(),PatrolNav.point(pa
 function patTick(dt){PatrolWorld.tick(dt);}
 function patEnd(){if(!PAT.permanent)PatrolWorld.clearChase();}
 function patEndIfInvalid(){if(!PAT.permanent&&(!patEligible()||patIgnores()))PatrolWorld.clearChase();}
-function patStart(){PatrolWorld.reset();}
+function patStart(){patReset(true);}
 function patAppear(){if(!PAT.version)PatrolWorld.reset();}
 function patPath(x,y){return PatrolNav.path(PatrolWorld.position(),PatrolNav.point(PAT.room,x,y,PAT.fy));}
 function patNav(R){return PatrolNav.grid(R.id);}

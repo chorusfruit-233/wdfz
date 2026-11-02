@@ -385,7 +385,7 @@ function initInput(){
     releaseMouseLook();
   }
   window.addEventListener('blur',leaveGame);
-  document.addEventListener('visibilitychange',function(){if(document.hidden)leaveGame();});
+  document.addEventListener('visibilitychange',function(){lastT=performance.now();accum=0;if(document.hidden)leaveGame();});
   window.addEventListener('contextmenu',function(e){if(e.target===cv)e.preventDefault();});
 }
 

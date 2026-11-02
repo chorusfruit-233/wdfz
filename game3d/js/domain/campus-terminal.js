@@ -14,7 +14,7 @@ var CampusTerminal=(function(){
       '/school/assets.tsv':'id zone batch role status\nmirror-'+n%100+' '+zone+' '+batch+' mirror online\nctl-old '+zone+' B099 controller retired\n'+controller+' '+zone+' '+batch+' controller online\nctl-decoy Z00 '+batch+' controller online',
       '/school/runtime.log':'calendar=11:40 active=100 tx=TX-noise node=mirror actor=observer event=prepare\n'+
         'calendar=12:50 active=124 tx='+tx+' node='+controller+' actor=control event=commit token='+word+'\n'+
-        'calendar=11:45 active=118 tx='+tx+' node='+controller+' actor=control event=authorize\n'+
+        'calendar=11:32 active=118 tx='+tx+' node='+controller+' actor=control event=authorize\n'+
         'calendar=11:40 active=110 tx='+tx+' node='+controller+' actor=control event=prepare\n'+
         'calendar=12:50 active=125 tx=TX-noise node='+controller+' actor=observer event=commit token=invalid',
       '/school/services.txt':'维护协议：功能服务依次解除依赖，控制层 control 保留到提交之后，由服务器最后关闭。\n依赖关系 A -> B 表示必须先停 A 才能停 B。\n'+mods[0]+' -> '+mods[1]+'\n'+mods[1]+' -> '+mods[2]+'\n'+mods[2]+' -> control\n清单必须包含 controller、transaction、token、clock=active 和恰好三个 stop 行。',
@@ -88,14 +88,14 @@ var CampusTerminal=(function(){
       .filter(function(x){return x.indexOf(p==='/'?'/':p+'/')===0;}).map(function(x){return x.slice(p==='/'?1:p.length+1).split('/')[0];})
       .filter(function(x,i,arr){return x&&arr.indexOf(x)===i;}).sort().join('\n');}
     if(cmd==='cd'){p=path(s,argv[0]);if(p!=='/'&&p!=='/school'&&s.dirs.indexOf(p)<0)throw new Error('目录不存在。');s.cwd=p;return '';}
-    if(cmd==='mkdir'){p=writable(s,argv[0]);if(s.dirs.length>=32)throw new Error('目录数量已达上限。');if(s.dirs.indexOf(p)<0)s.dirs.push(p);return p;}
+    if(cmd==='mkdir'){if(argv.length!==1)throw new Error('用法：mkdir /work/目录');p=writable(s,argv[0]);if(s.dirs.length>=32)throw new Error('目录数量已达上限。');if(s.dirs.indexOf(p)<0)s.dirs.push(p);return p;}
     if(cmd==='edit'){if(argv.length!==2)throw new Error('用法：edit /work/文件 "内容"，用 \\n 换行。');return '已保存 '+write(s,argv[0],argv[1].replace(/\\n/g,'\n'));}
-    if(cmd==='cp'){data=read(s,argv[0]);if(data===undefined)throw new Error('源文件不存在。');return '已复制 '+write(s,argv[1],data);}
+    if(cmd==='cp'){if(argv.length!==2)throw new Error('用法：cp 源文件 /work/目标');data=read(s,argv[0]);if(data===undefined)throw new Error('源文件不存在。');return '已复制 '+write(s,argv[1],data);}
     if(cmd==='campusctl')return ctl(s,argv);
     if(['cat','grep','head','tail','sort'].indexOf(cmd)<0)throw new Error('不支持的命令。输入 help 查看本模拟环境的命令。');
     var pattern=null,count=10;if(cmd==='grep')pattern=argv.shift();
     if((cmd==='head'||cmd==='tail')&&argv[0]==='-n'){argv.shift();count=Number(argv.shift());if(!Number.isInteger(count)||count<0||count>200)throw new Error('-n 范围为 0—200。');}
-    data=argv.length?read(s,argv[0]):input;if(typeof data!=='string')throw new Error('文件不存在或管道没有输入。');
+    if(argv.length>1)throw new Error('每段命令只接受一个文件；使用管道连接。');data=argv.length?read(s,argv[0]):input;if(typeof data!=='string')throw new Error('文件不存在或管道没有输入。');
     if(cmd==='cat')return data;
     var lines=data.split('\n');if(cmd==='grep'){if(pattern===undefined)throw new Error('grep 需要字串（按原文匹配）。');lines=lines.filter(function(l){return l.indexOf(pattern)>=0;});}
     if(cmd==='sort')lines.sort();if(cmd==='head')lines=lines.slice(0,count);if(cmd==='tail')lines=count?lines.slice(-count):[];return lines.join('\n');

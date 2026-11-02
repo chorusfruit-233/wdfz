@@ -175,3 +175,14 @@ GameModules.mod({
 - 只改某个模块时，先跑它自己的测试和 `test_modules`，再按需要跑全量；改了建模或玩法才跑穿模检查（`python tools/clip_audit.py`）。
 - 新增或改名钩子、房间接口、Mod 接口：同步本文第 2–5 节；Mod 接口有不兼容变化时把 `GameModules.API_VERSION` 的大版本加一。
 - 文件结构说明见 [3D更新说明](3D更新说明.md) 开头；测试命令见 [测试说明](测试说明.md)。
+
+
+## 常驻巡察与网络域接口（2026-11-02）
+
+`PatrolNav` 读取生成的逻辑碰撞与显式连接；`PatrolWorld` 是唯一巡察状态拥有者。渲染缓存、换房间与质量切换不得调用世界 reset。旧 `patReset` 仅用于新会话／显式调试重置，`patEnd` 只解除普通追击。判定附近危险用 `localChase()`／`pressure()`，不要把实体存在或远距 `permanent` 当成本地危险。
+
+`Mechanics.begin(dt)` 与 `finish(dt)` 包围每个被接受的模拟步（包含车辆、电梯提前返回），统一运行秒、能源及服务端仲裁。新增 UI 通过 `GamePolicy` 声明输入所有权；`TerminalUI` 不占 `PC.on`，文本事件不传给游戏按键。真实文档隐藏与软键盘焦点分别处理。
+
+纯规则文件：`domain/phone-energy.js`、`domain/campus-terminal.js`、`domain/route-graph.js`。终端不应引入宿主 shell、网络连接或脚本执行。持久域为 `mechanics`、`patrolWorld`、`attendanceDuty`、`phoneDevice`、`terminalPuzzle`、`termination`；`RT.hacked` 与 `RT.data` 仍是原白名单唯一真值。
+
+碰撞重建工具 `python tools/patrol_geometry.py`，路线工具 `python tools/patrol_route.py`（Playwright、NetworkX）。改变模型代理或地图后重建并核对 `docs/巡察路线生成报告.json`，不可拿渲染缓存有无作为离屏可达依据。最低权匹配与最优性仅限报告声明的骨架。

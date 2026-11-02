@@ -227,10 +227,10 @@ function ttTick(dt,nw){
   }
   if(S.tt<100) S.hiddenLatch=false;
 }
-function updateSystems(dt){
+function updateSystems(dt,clockAdvanced){
   if(S.dead||S.screen!=='play') return;
-  clockTick(dt);
-
+  if(!clockAdvanced)clockTick(dt);
+  patEndIfInvalid();
   try{ fnTick(dt); }catch(e){}
   if(typeof Inspection!=='undefined')Inspection.tick(dt);
   if(S.dead)return;

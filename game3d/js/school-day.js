@@ -23,7 +23,6 @@ var SchoolDay={
     return until===LIGHTS_OUT?'熄灯前回宿舍':fmtClock(until)+' 回教室';
   },
   restore:function(){
-    /* 已看过移交单的旧档补登记一次；新档过期的许可绝不在读档时续签。 */
     /* 旧许可只恢复原期限，不补造检查责任。 */
     RT.dayRhythmVersion=1;
     if(!this.permit())RT.outing=null;

@@ -53,7 +53,7 @@ def generate(data):
     for a,b in sorted(g.edges()):
         if tuple(sorted((a,b))) not in seen:
             walk('admin1:stairs',a);original+=g[a][b]['weight'];seen.add(tuple(sorted((a,b))));walk(b,'admin1:stairs')
-    report={'routeVersion':1,'scope':'仅选定带权校园骨架；不声明连续空间全局最优','nodes':nodes,
+    report={'routeVersion':2,'scope':'仅选定带权校园骨架；不声明连续空间全局最优','weightDefinition':'静态合法路径长度/16 加显式连接时间；瞬移节拍、端点停顿及预警会使实跑耗时更长，totalSeconds 不是实跑计时','nodes':nodes,
         'baseWeightSeconds':base,'matchingExtraSeconds':extra,'totalSeconds':base+extra,'initialCandidateSeconds':original,
         'coverage':{'requiredEdges':len(g.edges()),'coveredEdges':len(covered),'closed':True},'oddNodes':odd,'matching':matching,
         'edges':[{'a':a,'b':b,'seconds':e['weight'],'kind':data['edges'][e['index']]['kind']} for a,b,e in sorted(g.edges(data=True))]}
@@ -63,6 +63,6 @@ if __name__=='__main__':
     try: data=t.page().evaluate('PatrolNav.graph()')
     finally:t.tearDown();BrowserCase.tearDownClass()
     r=generate(data)
-    (ROOT/'game3d/js/modules/patrol-world/route.js').write_text("/* tools/patrol_route.py 生成；权重为 16 单位/秒步行与每层 2 秒楼梯。 */\n'use strict';\nvar PATROL_ROUTE="+json.dumps({'routeVersion':1,'nodes':r['nodes']},separators=(',',':'))+';\n')
+    (ROOT/'game3d/js/modules/patrol-world/route.js').write_text("/* tools/patrol_route.py 生成；权重为 16 单位/秒步行与每层 2 秒楼梯。 */\n'use strict';\nvar PATROL_ROUTE="+json.dumps({'routeVersion':2,'nodes':r['nodes']},separators=(',',':'))+';\n')
     (ROOT/'docs/巡察路线生成报告.json').write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({k:v for k,v in r.items() if k not in ('nodes','edges','oddNodes','matching')},ensure_ascii=False))

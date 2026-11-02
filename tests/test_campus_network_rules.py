@@ -11,6 +11,12 @@ class CampusNetworkRules(unittest.TestCase):
     def test_energy_rates_and_complete_power_boundary(self):
         self.js("""
 for(const tech of [false,true]){const d=PhoneEnergy.fresh();d.initialized=true;PhoneEnergy.advance(d,tech?300:600,{held:true,tech});assert.equal(d.battery,0);assert.equal(d.powered,false);}
+for(const tech of [false,true]){const d=PhoneEnergy.fresh();d.initialized=true;d.wireless={status:'running',target:600,elapsed:0};PhoneEnergy.advance(d,tech?150:300,{held:true,tech});assert.equal(d.battery,0);assert.equal(d.powered,false);}
+// 对齐计划能源表的 3 种供电 × 2 种天赋 × 2 种负载，采用独立的预期净功率。
+for(const [supply,expected] of [['none',[-1/6,-1/3,-1/3,-2/3]],['classroom',[1/3,1/6,1/6,-1/6]],['computer',[0,-1/6,-1/6,-1/2]]]){
+ for(let i=0;i<4;i++){let d=PhoneEnergy.fresh();d.initialized=true;d.battery=50;if(i%2)d.wireless={status:'running',target:600,elapsed:0};
+ PhoneEnergy.advance(d,30,{held:true,tech:i>=2,classroom:supply==='classroom',computer:supply==='computer'});assert(Math.abs(d.battery-(50+30*expected[i]))<1e-7);}
+}
 let d=PhoneEnergy.fresh();d.initialized=true;d.wireless={status:'running',target:600,elapsed:0};
 let events=PhoneEnergy.advance(d,600,{held:true,tech:true,classroom:true});
 assert.equal(d.battery,0);assert.equal(d.wireless.status,'complete');assert(d.network);assert.equal(d.download.elapsed,0);assert(events.indexOf('connected')<events.indexOf('off'));

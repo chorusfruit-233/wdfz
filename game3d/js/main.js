@@ -49,22 +49,23 @@ function update(dt){
   if(!GamePolicy.simulationAllowed(policy)) return;
   Mechanics.begin(dt);
   try{
+  clockTick(dt);
   PatrolWorld.tick(dt);
+  if(S.dead)return;
   repairPlayerPlacement(dt);
   Playtest.simulation(dt);
-  if(CarChase.active()){clockTick(dt);Inspection.discardStale();CarChase.tick(dt);return;}
+  if(CarChase.active()){Inspection.discardStale();CarChase.tick(dt);return;}
   updatePlayer(dt);                              /* 手机屏蔽移动输入，体力和计时仍正常更新 */
   ExplorationMap.tick(dt);
   GameModules.emit('tick',dt);                   /* 模块的每步更新（虚空迷宫的坠落和 SAN 流失在这里） */
   if(S.dead)return;
   if(Elevator.inRide()){
-    if(!roomClockFrozen())clockTick(dt);
     Inspection.discardStale();Elevator.tick(dt);settleSan();return;
   }
   Elevator.tick(dt);
   try{ PHONE.tick(dt); }catch(e){}
   try{ searchTick(dt); }catch(e){}
-  updateSystems(dt);
+  updateSystems(dt,true);
   anDrive(dt);
   settleSan();
   LESSON.tick(dt);

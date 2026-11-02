@@ -44,9 +44,9 @@ class OpeningTest(BrowserCase):
 
     def test_world_is_frozen_and_input_blocked_during_the_opening(self):
         page = self.begin(first=True)
-        page.evaluate("window.s0=S.san;window.t0=S.tsec;window.st0=S.stam;AN.next=0.01;PAT.next=0.01")
+        page.evaluate("window.s0=S.san;window.t0=S.tsec;window.st0=S.stam;window.p0=JSON.stringify(PAT);AN.next=0.01")
         page.wait_for_timeout(1500)
-        self.assert_js(page, "CUT.on&&S.san===s0&&S.tsec===t0&&!AN.active&&PAT.state==='idle'&&!playerInputAllowed()")
+        self.assert_js(page, "CUT.on&&S.san===s0&&S.tsec===t0&&!AN.active&&JSON.stringify(PAT)===p0&&!playerInputAllowed()")
         self.assert_js(page, "saveGame()===true||true")
         page.keyboard.press('Space')
         page.wait_for_function("S.screen==='play'&&!CUT.on")

@@ -320,13 +320,12 @@ var Dev={
   },
   startPatrol:function(){
     if(!Dev.canStageEvent())return;
-    if(!patEligible()){Dev.report('此地点或时段不允许巡察；白天可在上课时到教学楼，夜间到室外。');return;}
-    patStart();Dev.report('巡察预警已开始；躲藏和请假规则照常生效。');Dev.refresh();
+    patStart();Dev.report('唯一巡察者已重置到行政楼一楼楼梯口，沿常驻路线出发。');Dev.refresh();
   },
   stopPatrol:function(){
     if(!Dev.canUse())return;
     if(PAT.state==='idle'){Dev.report('当前没有巡察。');return;}
-    patEnd();Dev.report('当前巡察已结束，常驻实体继续沿路线移动。');Dev.refresh();
+    patEnd();Dev.report(PAT.permanent?'永久追踪仍生效；此按钮只解除普通追逐。':'普通追逐已解除，常驻实体继续沿路线移动。');Dev.refresh();
   },
   startInspection:function(){
     if(!Dev.canStageEvent())return;
@@ -355,7 +354,7 @@ var Dev={
         position:{x:S.x,y:S.y,angle:S.ang,pitch:S.pitch},san:S.san,stamina:S.stam,violation:S.viol,assimilation:S.tt,
         bag:S.bag.slice(),hotbar:S.hot.slice()},
       events:{anomaly:AN.active?{id:AN.id,elapsed:AN.t}:null,forecast:AN.pre||null,
-        patrol:{state:PAT.state,locked:PAT.locked,next:PAT.next},
+        patrol:{state:PAT.state,locked:PAT.locked,permanent:PAT.permanent,scene:PAT.room,routeIndex:PAT.routeIndex,transition:PAT.transition,respawn:PAT.respawn,diagnostic:PAT.diagnostic},
         inspection:inspection?{active:!!inspection.current,queued:inspection.queue.length}:null,
         elevator:ride?{host:ride.host,phase:ride.phase,target:ride.target}:null,
         driving:CarChase.active(),hiding:HIDE.on},
@@ -488,7 +487,7 @@ var Dev={
     if(typeof Elevator!=='undefined')Elevator.cancel();
     if(typeof CarChase!=='undefined'&&CarChase.active())CarChase.cancel();
     Dev.clearPreview();if(UI.chooseOpen)UI.closeChoice();Dev.endActiveAnomaly();
-    clearSearch();patRemoveFig();spiralReset();resetInputState();
+    clearSearch();if(HIDE.on)hideOut();patRemoveFig();spiralReset();resetInputState();
   },
   tp:function(){
     if(!Dev.canUse())return;

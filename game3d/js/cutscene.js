@@ -156,6 +156,7 @@ var CUT_DEF={
 
 function playCut(id,done){
   var def=CUT_DEF[id];
+  PHONE.stop();if(typeof TerminalUI!=='undefined')TerminalUI.close();
   if(!CUT.enabled||!def||!GLR.cam){ done(); return; }
   try{ patRemoveFig(); }catch(e){}
   try{ anfxClear(); }catch(e){}

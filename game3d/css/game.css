@@ -437,4 +437,11 @@ body:not(.cut) #opcap{display:none}
 #campus-terminal form{display:flex;align-items:center;gap:8px;flex-shrink:0}
 #campus-terminal textarea{min-width:0;flex:1;background:#101d18;color:#e2f6e8;border:1px solid #779184;border-radius:4px;padding:8px;font:16px/1.4 monospace;resize:vertical}
 #campus-terminal footer{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:12px}
+#campus-terminal{overflow:auto;overscroll-behavior:contain}
+#campus-terminal.term-compact{padding:8px}
+#campus-terminal.term-compact .term-warning{display:none}
+#campus-terminal.term-compact header{position:sticky;top:0;background:#081012;z-index:1}
+#campus-terminal.term-compact pre{min-height:32px;max-height:28dvh;margin-top:6px;margin-bottom:6px;padding:6px}
+#campus-terminal.term-compact textarea{height:40px;min-height:40px;box-sizing:border-box;resize:none}
+#campus-terminal.term-compact footer{margin-top:6px}
 @media(max-width:600px){#campus-terminal{width:96vw;padding:10px;max-height:94dvh}#campus-terminal form label{position:absolute;clip-path:inset(50%)}#campus-terminal pre{font-size:12px;max-height:38dvh}#campus-terminal footer button{min-height:36px;padding:4px 8px}#campus-terminal header b{font-size:13px}}

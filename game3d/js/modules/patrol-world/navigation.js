@@ -8,7 +8,11 @@ var PatrolNav=(function(){
     var raw=atob(d.bits),bytes=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
     return grids[id]=Object.assign({},d,{bytes:bytes});
   }
-  function free(id,i,j){var g=grid(id);if(!g||i<0||j<0||i>=g.W||j>=g.H)return false;var k=i+j*g.W;return !(g.bytes[k>>3]&(1<<(k&7)));}
+  function free(id,i,j){var g=grid(id);if(!g||i<0||j<0||i>=g.W||j>=g.H)return false;var k=i+j*g.W;if(g.bytes[k>>3]&(1<<(k&7)))return false;
+    if(id==='bell1'){var R=INTERIORS.bell1,p=world(id,i,j),x=(p.x-R.cx)*U2M-SPIRAL.cx,z=(p.y-R.cy)*U2M-SPIRAL.cz,r=Math.hypot(x,z),angle=spWrap(Math.atan2(z,x)-SPIRAL.th0);
+      if(r<SPIRAL.rIn+.30)return false;if(r<SPIRAL.rOut+.30&&(angle<SPIRAL.enter[0]||angle>SPIRAL.enter[1]))return false;}
+    return true;}
+
   function cell(id,p){var g=grid(id);return [Math.floor((p.x-g.ox)/g.step),Math.floor((p.y-g.oy)/g.step)];}
   function world(id,i,j){var g=grid(id);return point(id,g.ox+(i+.5)*g.step,g.oy+(j+.5)*g.step);}
   function snap(id,p){
@@ -63,10 +67,14 @@ var PatrolNav=(function(){
     if(a.fy<.01&&b.fy<.01)return planar(a,b);
     var R=INTERIORS.bell1,C=SPIRAL,r=(C.rIn+C.rOut)/2;
     function p(angle){return point('bell1',R.cx+(C.cx+Math.cos(C.th0+angle)*r)/U2M,R.cy+(C.cz+Math.sin(C.th0+angle)*r)/U2M,angle/TAU*C.turnH);}
+    function topArc(q,reverse){var polar=spPolar(R,q.x,q.y),angle=spWrap(polar.th-C.th0),steps=Math.ceil(Math.abs(angle)/.08),points=[];
+      for(var j=0;j<=steps;j++){var th=C.th0+(steps?angle*j/steps:0);points.push(point('bell1',R.cx+(C.cx+Math.cos(th)*r)/U2M,R.cy+(C.cz+Math.sin(th)*r)/U2M,C.topH));}
+      points.push(q);return reverse?points.reverse():points;
+    }
     var out=[],aa=clamp((a.fy||0)/C.turnH*TAU,0,C.amax),bb=clamp((b.fy||0)/C.turnH*TAU,0,C.amax);
-    if(aa===0){var start=planar(a,p(0));if(!start)return null;out=out.concat(start);}else out.push(a,p(aa));
+    if(aa===0){var start=planar(a,p(0));if(!start)return null;out=out.concat(start);}else if(aa===C.amax)out=topArc(a,true);else out.push(a,p(aa));
     var steps=Math.ceil(Math.abs(bb-aa)/.08);for(var i=1;i<=steps;i++)out.push(p(aa+(bb-aa)*i/steps));
-    if(bb===0){var tail=planar(p(0),b);if(!tail)return null;out=out.concat(tail);}else out.push(b);
+    if(bb===0){var tail=planar(p(0),b);if(!tail)return null;out=out.concat(tail);}else if(bb===C.amax)out=out.concat(topArc(b,false));else out.push(b);
     return out;
   }
   function path(a,b){if(!a||!b||a.scene!==b.scene)return null;if(a.scene==='lift_dream')return maze(a,b);if(a.scene==='bell1')return bell(a,b);return planar(a,b);}
@@ -91,8 +99,12 @@ var PatrolNav=(function(){
         if(last)edge(last,st,'stairs',f<=5&&['admin','lab','teach'].includes(host));last=st;
         if(['admin','lab','teach'].includes(host)&&f<=5){
           var row=host==='teach'?18.5:host==='admin'?19:17;
-          var east=node(id+':east',snap(id,tilePoint(id,R.cols-5,row)));edge(st,east,'walk',true);
-          if(host==='teach'){if(lastEast)edge(lastEast,east,'stairs',true);lastEast=east;}
+          var east=node(id+':east',snap(id,tilePoint(id,host==='teach'?54:R.cols-5,row)));edge(st,east,'walk',true);
+          if(host==='teach'){
+            var right=null;for(var sr=0;sr<R.rows;sr++)for(var sc=R.cols-1;sc>=0;sc--)if(!right&&R.grid[sr][sc]==='S')right=snap(id,tilePoint(id,sc,sr));
+            var eastStairs=node(id+':east-stairs',right);edge(east,eastStairs,'walk',true);
+            if(lastEast)edge(lastEast,eastStairs,'stairs',true);lastEast=eastStairs;
+          }
         }
         if(f===1){node(id+':entry',entry(id,'O'));edge(id+':entry',st,'walk',false);}
         if((host==='teach'||host==='lab')&&f<=5){var landing=Elevator.landing(host,f);node(id+':lift',snap(id,point(id,landing.x,landing.y)));edge(st,id+':lift','walk',false);}
@@ -124,12 +136,20 @@ var PatrolNav=(function(){
     return g;
   }
   function localEdge(a,b){var k=a+'>'+b;if(localCache[k])return localCache[k];var g=build();return localCache[k]=path(g.nodes[a],g.nodes[b]);}
+  function nearestRoute(a,ids){
+    var g=build(),best=null,targets=Array.from(new Set(ids)).sort();
+    Object.keys(g.nodes).sort().forEach(function(s){if(g.nodes[s].scene!==a.scene)return;
+      var lead=length(path(a,g.nodes[s]))/PAT_SPEED;if(!Number.isFinite(lead))return;
+      targets.forEach(function(t){var mid=RouteGraph.shortest(g,s,t);if(!mid)return;var cost=lead+mid.weight;
+        if(!best||cost<best.cost-1e-8||Math.abs(cost-best.cost)<1e-8&&t<best.id)best={id:t,cost:cost};});});
+    return best&&best.id;
+  }
   function route(a,b){
     if(a.scene===b.scene)return {points:path(a,b),transition:null};var g=build(),starts=[],ends=[];
     Object.keys(g.nodes).forEach(function(k){if(g.nodes[k].scene===a.scene)starts.push(k);if(g.nodes[k].scene===b.scene)ends.push(k);});
-    var best=null;
+    var best=null,tail={};ends.forEach(function(e){tail[e]=length(path(g.nodes[e],b))/PAT_CHASE;});
     starts.forEach(function(s){var approach=path(a,g.nodes[s]),lead=length(approach)/PAT_CHASE;if(!Number.isFinite(lead))return;
-      ends.forEach(function(e){var mid=RouteGraph.shortest(g,s,e);if(!mid)return;var cost=lead+mid.weight;
+      ends.forEach(function(e){if(!Number.isFinite(tail[e]))return;var mid=RouteGraph.shortest(g,s,e);if(!mid)return;var cost=lead+mid.weight+tail[e];
         if(!best||cost<best.cost){best={cost:cost,points:approach,nodes:mid.nodes,edges:mid.edges};}});});
     if(!best)return null;
     if(best.points.length>1&&length(best.points)>3)return {points:best.points,transition:null};
@@ -148,6 +168,23 @@ var PatrolNav=(function(){
     }
     return true;
   }
+  function observedExit(from,to,seen){
+    var g=build(),best=null;
+    g.edges.forEach(function(e){var pairs=[[e.a,e.b],[e.b,e.a]];pairs.forEach(function(pair){var a=g.nodes[pair[0]],b=g.nodes[pair[1]];
+      if(a.scene!==from||b.scene!==to)return;
+      if(to==='out'&&INTERIORS[from]&&pair[1]!=='out:'+INTERIORS[from].host)return;
+      var distance=length(path(seen,a));if(!best||distance<best.distance)best={distance:distance,to:b};
+    });});return best&&Number.isFinite(best.distance)?best.to:null;
+  }
+  function approach(a,b,limit){
+    function metric(p,d){return p&&p.length?{distance:length(p)+(d||0),direction:p[Math.min(4,p.length-1)]}:null;}
+    if(a.scene===b.scene){if(Math.hypot(a.x-b.x,a.y-b.y)>limit)return null;return metric(path(a,b));}
+    var g=build(),best=null;
+    g.edges.forEach(function(e){[[e.a,e.b],[e.b,e.a]].forEach(function(pair){var x=g.nodes[pair[0]],y=g.nodes[pair[1]];
+      if(x.scene!==a.scene||y.scene!==b.scene||Math.hypot(a.x-x.x,a.y-x.y)+Math.hypot(b.x-y.x,b.y-y.y)>limit)return;
+      var m=metric(path(a,x),length(path(y,b))+e.weight*PAT_SPEED);if(m&&(!best||m.distance<best.distance))best=m;
+    });});return best;
+  }
   function doorAt(p){var R=INTERIORS[p.scene];if(!R)return null;var c=Math.floor((p.x-R.ox)/R.tw),r=Math.floor((p.y-R.oy)/R.th);return R.grid[r]&&R.grid[r][c]==='='?R.id+':'+c+':'+r:null;}
-  return {doorAt:doorAt,point:point,grid:grid,free:free,snap:snap,path:path,length:length,entry:entry,tilePoint:tilePoint,graph:build,route:route,los:los,localEdge:localEdge};
+  return {doorAt:doorAt,point:point,grid:grid,free:free,snap:snap,path:path,length:length,entry:entry,tilePoint:tilePoint,graph:build,route:route,los:los,localEdge:localEdge,nearestRoute:nearestRoute,observedExit:observedExit,approach:approach};
 })();

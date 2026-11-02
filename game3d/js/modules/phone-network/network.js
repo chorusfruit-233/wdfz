@@ -16,13 +16,16 @@ var Mechanics={schemaVersion:1,rulesVersion:2,activePlaySeconds:0,attemptId:1,ru
     if(this.dirty&&S.screen==='play'){this.dirty=false;autoSave();}
   },
   dream:function(){
-    this.attemptId++;HIDE.on=false;HIDE.seen=false;var slits=document.getElementById('hideslits');if(slits)slits.style.display='none';PhoneNetwork.reset();PhoneNetwork.acquire();TerminalUI.resetPuzzle();Termination.reset();
+    PHONE.stop();this.attemptId++;HIDE.on=false;HIDE.seen=false;var slits=document.getElementById('hideslits');if(slits)slits.style.display='none';PhoneNetwork.reset();PhoneNetwork.acquire();TerminalUI.resetPuzzle();Termination.reset();
     AttendanceDuty.reset();RT.outing=null;PatrolWorld.reset();this.dirty=true;
   },
   migrate:function(d){
-    if(d.mods&&d.mods.mechanics)return;
+    if(d.mods&&d.mods.mechanics){
+      if(!d.mods.phoneDevice){PhoneNetwork.device.initialized=true;PhoneNetwork.device.battery=0;PhoneNetwork.device.powered=false;networkDiagnostic('phoneDevice','缺失设备域，按空电恢复，未赠送电量');}
+      return;
+    }
     this.schemaVersion=1;HIDE.seen=false;PhoneNetwork.acquire();
-    if(S.day===1&&RT.outing){RT.outing=null;toast('旧外出登记已作废：第一天不能登记外出');}
+    if(S.day===1&&d.rt&&d.rt.outing){RT.outing=null;toast('旧外出登记已作废：第一天不能登记外出');}
     saveReport('migration','已升级巡察、设备与运行秒规则；保留背包和原路线进度');
     this.dirty=true;autoSave();this.dirty=false;
   }
@@ -90,7 +93,7 @@ var Termination={state:{status:'idle',requestId:null,remaining:0},
   reset:function(){this.state={status:'idle',requestId:null,remaining:0};},
   submit:function(){
     var p=TerminalUI.puzzle;if(this.state.status==='accepted')return this.state.requestId;
-    if(this.state.status!=='idle'||!p.validated||!CampusTerminal.validate(p,p.validated.path).ok)return null;
+    if(this.state.status!=='idle'||!p.validated||CampusTerminal.run(p,'campusctl shutdown --confirm').request!=='shutdown')return null;
     var id=Mechanics.runSeed+':'+Mechanics.attemptId+':shutdown';
     this.state={status:'accepted',requestId:id,remaining:600};p.acceptedRequestId=id;autoSave();
     Investigation.record('cyberRequest','停机请求已经被服务器接受。接下来必须存活十分钟，手机可以断开。','验证','机房维护终端');return id;
@@ -116,9 +119,9 @@ GameModules.persistent('mechanics',{
 GameModules.persistent('phoneDevice',{
   reset:function(){PhoneNetwork.reset();},save:function(){return Object.assign({},PhoneNetwork.device,{page:PhoneNetwork.page});},
   load:function(d){
-    if(!d||typeof d!=='object'){networkDiagnostic('phoneDevice','设备数据损坏');return;}
+    if(!d||typeof d!=='object'){PhoneNetwork.device.initialized=true;PhoneNetwork.device.battery=0;PhoneNetwork.device.powered=false;networkDiagnostic('phoneDevice','设备数据损坏，按空电恢复');return;}
     var t=PhoneEnergy.fresh();t.initialized=!!d.initialized;t.deviceId=typeof d.deviceId==='string'?d.deviceId:Mechanics.runSeed+':phone';
-    t.battery=networkNumber(d.battery,0,100,0);t.powered=!!d.powered&&t.battery>0;t.warn20=!!d.warn20;t.warn5=!!d.warn5;
+    t.battery=networkNumber(d.battery,0,100,0);if(typeof d.initialized!=='boolean'||!d.initialized&&hasItem('phone')){t.initialized=true;t.battery=0;networkDiagnostic('phoneDevice','设备身份异常，未重发满电手机');}t.powered=!!d.powered&&t.battery>0;t.warn20=!!d.warn20;t.warn5=!!d.warn5;
     ['wireless','download'].forEach(function(k){var q=d[k];if(!q||!['idle','running','paused','complete'].includes(q.status))return;
       var target=k==='download'?60:networkNumber(q.target,180,600,0);if(!target)return;
       t[k]={status:q.status,target:target,elapsed:networkNumber(q.elapsed,0,target,0)};
@@ -131,7 +134,7 @@ GameModules.persistent('phoneDevice',{
 GameModules.persistent('termination',{
   reset:function(){Termination.reset();},save:function(){return Termination.state;},
   load:function(d){if(!d||typeof d!=='object')return;
-    if(d.status==='accepted'&&typeof d.requestId==='string'&&Number.isFinite(d.remaining)&&d.remaining>=0&&d.remaining<=600)
+    if(d.status==='accepted'&&d.requestId===Mechanics.runSeed+':'+Mechanics.attemptId+':shutdown'&&Number.isFinite(d.remaining)&&d.remaining>=0&&d.remaining<=600)
       Termination.state={status:'accepted',requestId:d.requestId,remaining:d.remaining};
     else if(d.status!=='idle')networkDiagnostic('termination','非法停机请求未被恢复为成功');}
 });

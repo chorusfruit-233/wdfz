@@ -35,7 +35,7 @@ class DreadTest(BrowserCase):
         self.room(page)
         result = page.evaluate("""() => {
           DREAD.t=200;DREAD.nextAmb=0;
-          const states=[()=>{AN.active=true},()=>{UI.chooseOpen=true},()=>{PAT.state='walk'},()=>{LESSON.on=true}];
+          const states=[()=>{AN.active=true},()=>{UI.chooseOpen=true},()=>{PAT.state='walk';PAT.room=S.room;PAT.x=S.x;PAT.y=S.y+8;PAT.safety=0;PAT.locked=true;PAT.transition=null;},()=>{LESSON.on=true}];
           const fired=[];
           states.forEach((set,i)=>{const before=DREAD.log.length;set();for(let j=0;j<400;j++)Dread.tick(0.25);
             fired.push(DREAD.log.filter((e,k)=>k>=before&&e.strength>=1).length);

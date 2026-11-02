@@ -1,7 +1,13 @@
 /* 新终端不占 PC.on；文本输入拥有键盘，但世界仍推进。 */
 'use strict';
 var TerminalUI={on:false,puzzle:null,
-  resetPuzzle:function(){this.puzzle=CampusTerminal.fresh(Mechanics.runSeed,Mechanics.attemptId);this.close();},
+  fitViewport:function(){
+    if(!this.on)return;var el=this.element(),v=window.visualViewport,h=v?v.height:innerHeight,w=v?v.width:innerWidth;
+    el.style.top=((v?v.offsetTop:0)+h/2)+'px';el.style.left=((v?v.offsetLeft:0)+w/2)+'px';
+    el.style.width=Math.min(740,w-16)+'px';el.style.maxHeight=Math.max(120,h-16)+'px';
+    el.classList.toggle('term-compact',h<460);
+  },
+  resetPuzzle:function(){this.close();this.puzzle=CampusTerminal.fresh(Mechanics.runSeed,Mechanics.attemptId);},
   element:function(){
     var el=document.getElementById('campus-terminal');if(el)return el;
     el=document.createElement('section');el.id='campus-terminal';el.hidden=true;el.setAttribute('aria-label','校园维护终端');
@@ -10,6 +16,8 @@ var TerminalUI={on:false,puzzle:null,
       '<form><label for="campus-command">命令</label><textarea id="campus-command" rows="2" maxlength="4096" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="help"></textarea>'+ 
       '<button type="submit">执行</button></form><footer><button type="button" data-help>帮助</button><button type="button" data-hint="1">线索位置</button><button type="button" data-hint="2">关联方法</button><span data-power></span></footer>';
     document.body.appendChild(el);
+    if(window.visualViewport){visualViewport.addEventListener('resize',function(){TerminalUI.fitViewport();});visualViewport.addEventListener('scroll',function(){TerminalUI.fitViewport();});}
+    window.addEventListener('resize',function(){TerminalUI.fitViewport();});
     el.querySelector('[data-exit]').onclick=function(){TerminalUI.close();};
     el.querySelector('[data-help]').onclick=function(){TerminalUI.execute('help');};
     el.querySelectorAll('[data-hint]').forEach(function(b){b.onclick=function(){TerminalUI.execute('campusctl hint '+b.dataset.hint);};});
@@ -32,7 +40,7 @@ var TerminalUI={on:false,puzzle:null,
     PHONE.stop();UI.closeChoice();resetInputState();releaseMouseLook();this.on=true;
     var el=this.element();el.hidden=false;el.querySelector('textarea').value=this.puzzle.buffer;
     if(!this.puzzle.history.length)this.puzzle.history.push('模拟维护环境已连接。输入 help 或 cat /school/README。');
-    this.paint();el.querySelector('textarea').focus({preventScroll:true});updateTouchUI();return true;
+    this.paint();this.fitViewport();el.querySelector('textarea').focus({preventScroll:true});updateTouchUI();return true;
   },
   close:function(){
     var el=document.getElementById('campus-terminal');if(el){if(this.on&&this.puzzle)this.puzzle.buffer=el.querySelector('textarea').value;el.hidden=true;}
@@ -65,7 +73,7 @@ GameModules.persistent('terminalPuzzle',{
   load:function(d){
     try{
       if(!d||d.version!==1||d.runSeed!==Mechanics.runSeed||d.attemptId!==Mechanics.attemptId||!d.work||typeof d.work!=='object'||Array.isArray(d.work))throw new Error('谜题种子或工作区无效');
-      if(Object.keys(d.work).length>32||JSON.stringify(d).length>300000)throw new Error('谜题数据过大');
+      if(Object.keys(d.work).length>32||JSON.stringify(d).length>750000)throw new Error('谜题数据过大');
       var t=CampusTerminal.fresh(d.runSeed,d.attemptId);
       Object.keys(d.work).forEach(function(p){if(p.indexOf('/work/')!==0||p.includes('..')||p.length>160||typeof d.work[p]!=='string'||d.work[p].length>8192)throw new Error('非法工作文件');t.work[p]=d.work[p];});
       t.dirs=['/work'].concat((Array.isArray(d.dirs)?d.dirs:[]).filter(function(p){return typeof p==='string'&&p.indexOf('/work/')===0&&!p.includes('..')&&p.length<=160;}).slice(0,31));
@@ -76,7 +84,7 @@ GameModules.persistent('terminalPuzzle',{
       if(d.controllerId===a.controller&&Array.isArray(d.evidence)&&d.evidence.includes('/school/assets.tsv')){t.controllerId=d.controllerId;t.evidence.push('/school/assets.tsv');}
       if(t.controllerId&&d.chainId===a.tx&&d.evidence.includes('/school/runtime.log')){t.chainId=d.chainId;t.evidence.push('/school/runtime.log');}
       if(d.validated&&typeof d.validated.path==='string'&&CampusTerminal.validate(t,d.validated.path).ok)t.validated=d.validated;
-      if(typeof d.acceptedRequestId==='string')t.acceptedRequestId=d.acceptedRequestId;
+      if(Termination.state.status==='accepted'&&d.acceptedRequestId===Termination.state.requestId)t.acceptedRequestId=d.acceptedRequestId;
       TerminalUI.puzzle=t;
     }catch(e){TerminalUI.resetPuzzle();networkDiagnostic('terminalPuzzle',e.message+'；仅重置谜题');toast('谜题数据已修复，其他进度保留');}
   }
