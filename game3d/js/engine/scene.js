@@ -233,7 +233,6 @@ ThreeBackend.draw=function(dt){
   try{ handsTick(dt); }catch(e){}
   try{ if(!debugFrozen)hallucTick(dt); }catch(e){}
   try{ if(!debugFrozen)apparTick(dt); }catch(e){}
-  try{ if(!debugFrozen)dreamFigTick(dt); }catch(e){}        /* 异色空间里的人影：fx/dream-figures.js */
   GLR.cam.updateMatrixWorld();
   entFace();
   var u=GLR.postMat.uniforms;
@@ -247,12 +246,7 @@ ThreeBackend.draw=function(dt){
   var _fnOn=(S.fn&&S.fn.on&&S.fn.v<72)?1:0;
   GLR.fnNorm=GLR.fnNorm===undefined?0:GLR.fnNorm;
   GLR.fnNorm+= (_fnOn-GLR.fnNorm)*Math.min(1,dt*1.6);
-  /* 电梯的异常维度：普通的去饱和、冷色调不加（暗红要够红），暗角、颗粒和「呼吸」由 uDream 另加；离开就恢复。
-     关掉镜头晃动时不呼吸 */
-  var inDream=S.mode==='in'&&S.room==='lift_dream', dreamFx=inDream?0.85:0;
-  u.uFx.value=Math.max(GLR.fnNorm,(GLR.worldNorm||0),(GLRTEST.nofx?1:0),dreamFx);
-  u.uDream.value=inDream?1:0;
-  u.uBreath.value=(inDream&&SHAKE_ON)?0.5+0.5*Math.sin(GLR.time*1.25):0;
+  u.uFx.value=Math.max(GLR.fnNorm,(GLR.worldNorm||0),(GLRTEST.nofx?1:0));
   GLR.gaze=(GLR.gaze||0)+((GLR.gazeT||0)-(GLR.gaze||0))*Math.min(1,dt*2.4);
   u.uGaze.value=GLR.gaze;
   u.uHurt.value=GLR.hurt;

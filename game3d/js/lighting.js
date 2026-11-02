@@ -115,9 +115,7 @@ function lightState(){
     if(typeof AN!=='undefined'&&AN.active&&AN.id==='blackout'){
       st.amb*=0.16;st.hemi*=0.16;st.dir*=0.12;st.ptK=0;st.blackout=true;
     }
-    /* 异色空间：没有窗、没有月光，光只来自墙上的暗房安全灯和尽头那盏绿灯（ROOM_LIGHTS.dream）；
-       环境光留一点暗红的底，墙和地的轮廓认得出，远处交给雾 */
-    if(S.room==='lift_dream'){st.amb=0.30;st.hemi=0.16;st.dir=0;st.ptK=1;st.dream=true;}
+    if(S.room==='lift_dream'){st.amb=1.4;st.hemi=0.8;st.dir=0.35;st.ptK=1;}
   }else{
     st.amb = 0.075+0.12*day;
     st.hemi= 0.10+0.24*day;
@@ -145,9 +143,6 @@ function updateLighting(){
   GLR.hemi.color.setRGB(hs[0],hs[1],hs[2]); GLR.hemi.groundColor.setRGB(hg[0],hg[1],hg[2]);
   var ac=mixRGB([0.36,0.40,0.50],[0.46,0.48,0.50],s.day);
   GLR.amb.color.setRGB(ac[0],ac[1],ac[2]);
-  if(s.dream){                                  /* 异色空间：环境光和天光都是暗红的，地面那一侧几乎全黑 */
-    GLR.amb.color.setRGB(0.62,0.07,0.06); GLR.hemi.color.setRGB(0.42,0.05,0.04); GLR.hemi.groundColor.setRGB(0.05,0.0,0.0);
-  }
   if(s.day>0.02&&!s.indoor){
     GLR.moon.position.set(sun.dir[0]*16, sun.dir[1]*16, sun.dir[2]*16);
   }else{
@@ -171,7 +166,6 @@ function updateLighting(){
       var nw=s.blackout?0:clamp(GLR.worldNorm||0,0,1);
       fog.color.setRGB(lerp(0.032-0.02*fn,0.32,nw),lerp(0.040-0.024*fn,0.35,nw),lerp(0.042-0.024*fn,0.36,nw),THREE.SRGBColorSpace);
       fog.density=lerp((S.room==='garage1')?0.09:S.room==='portal_tunnel'?0.04:(0.072+0.03*fn),0.024,nw);
-      if(s.dream){ fog.color.setRGB(0.055,0.006,0.008,THREE.SRGBColorSpace); fog.density=0.055; }   /* 异色空间：十几米外沉进红黑色的雾里，尽头只剩那块绿牌子 */
     }
   }
   var tt=GLR.time||0;
@@ -199,9 +193,7 @@ function updateLighting(){
   /* 室外（含天台）按天色压曝光：正午乘 DAY_K，夜里不变；"正常世界"那一段不压 */
   var wn=GLR.worldNorm||0;
   GLR.dayExpo=s.indoor?1:1-(1-DAY_K)*sun.day*(1-wn);
-  GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz*(s.blackout?0.08:1)*(s.dream?0.55:1);
-  if(s.dream) GLR.camLight.color.setRGB(0.78,0.20,0.16);   /* 身边的补光也被染红：眼前一两米是暗红的，不是白的 */
-  else GLR.camLight.color.setHex(0xbfd0d8);
+  GLR.camLight.intensity=(LCFG.camI+LCFG.camIk*s.day)*gz*(s.blackout?0.08:1);
   try{ shadeTick(s); }catch(e){}
 }
 /* 灯一下子暗下去（接触不良那一跳）的瞬间：近处的灯管噼啪一声，按方位分左右 */

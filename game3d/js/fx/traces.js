@@ -127,8 +127,7 @@ function hallucTick(dt){
    只是吓人，不扣 SAN、不算异象；有异象、被巡察者盯着、打开界面时不出现。 */
 var APPAR={g:null,next:40,life:0,stare:0};
 function apparTick(dt){
-  var on=(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&!UI.anyOpen()&&!PAT.locked&&!HIDE.on&&!(typeof PHONE!=='undefined'&&PHONE.on)
-    &&!(S.mode==='in'&&S.room==='lift_dream'));                  /* 异色空间里有自己的一组人影（fx/dream-figures.js） */
+  var on=(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&!UI.anyOpen()&&!PAT.locked&&!HIDE.on&&!(typeof PHONE!=='undefined'&&PHONE.on));
   if(!APPAR.g){
     APPAR.g=new THREE.Group();
     anfxFigure(APPAR.g,new THREE.MeshBasicMaterial({color:0x030405,fog:true}),0,0,1.0,false,'person');

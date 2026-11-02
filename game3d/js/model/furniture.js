@@ -10,18 +10,12 @@
 var FURN={};
 var C_DESK=0x86653c, C_SEAT=0x785b34, C_FRAME=0x3a3f44, C_STEEL=0x9aa4a8, C_DARKP=0x2e3438;
 
-/* 电梯门、轿厢面板和异色空间出口共用交互格，实体碰撞由同一格登记。 */
+/* 电梯门、轿厢面板和白色空间出口共用交互格，实体碰撞由同一格登记。 */
 FURN.J=function(c,x,y,cx,cz){
   var K=c.K,isDream=c.R.host==='dream';
-  if(isDream){                                                /* 异色空间的出口：发黑的门框、一扇关着的旧门，门缝和门底下漏出冷白的光；
-                                                                  过梁上那块绿色「安全出口」灯牌和照着门的绿灯在 dreamDecor / ROOM_LIGHTS.dream */
-    K.box('plain',cx,1.15,cz,0.14,2.3,0.94,0x0e0405,1);
-    K.box(c.theme.wallMat||'plaster',cx,2.65,cz,1.0,0.70,1.0,c.theme.wall,0.94);   /* 门上方是和墙一样的过梁，灯牌钉在上面 */
-    K.box('plain',cx-0.09,1.1,cz,0.03,2.2,0.70,0x161b18,1);
-    K.g('emit').box(cx-0.106,1.1,cz-0.356,0.004,2.2,0.008,0xcff7de,1);
-    K.g('emit').box(cx-0.106,1.1,cz+0.356,0.004,2.2,0.008,0xcff7de,1);
-    K.g('emit').box(cx-0.106,2.204,cz,0.004,0.008,0.72,0xcff7de,1);
-    K.g('emit').box(cx-0.15,0.0135,cz,0.09,0.003,0.62,0x9fdcb8,1);     /* 门底下漏到地上的一线光 */
+  if(isDream){
+    K.box('plain',cx,1.35,cz,0.14,2.7,0.94,0xe9f7ff,1);
+    K.box('plain',cx-0.09,1.4,cz,0.03,2.2,0.70,0x8ec6d1,1);
   }else if(c.R.host==='lift'){ liftCabin(c,x,y,cx,cz); return; }   /* 轿厢：model/lift.js */
   else { liftLanding(c,x,y,cx,cz); return; }                         /* 走廊上的电梯门：model/lift.js */
   c.solid(cx,cz,c.tw,c.th);

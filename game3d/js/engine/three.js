@@ -63,7 +63,7 @@ ThreeBackend.boot=function(){
       tDiffuse:{value:rt.texture},tDepth:{value:rt.texture},tHands:{value:rt.texture},uHands:{value:0},uAO:{value:0},uNear:{value:cam.near},uFar:{value:cam.far},uAA:{value:0},
       uTime:{value:0}, uRes:{value:new THREE.Vector2(2,2)},
       uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0}, uBloom:{value:0}, uGrain:{value:1},
-      uFx:{value:GLRTEST.nofx?1.0:0.0}, uDream:{value:0}, uBreath:{value:0}
+      uFx:{value:GLRTEST.nofx?1.0:0.0}
     },
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
     fragmentShader:[
@@ -72,7 +72,6 @@ ThreeBackend.boot=function(){
 'uniform sampler2D tDepth;uniform float uAO;uniform float uNear;uniform float uFar;uniform float uAA;',
 'uniform sampler2D tHands;uniform float uHands;',
 'uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;uniform float uBloom;uniform float uGrain;',
-'uniform float uDream;uniform float uBreath;',
 'varying vec2 vUv;',
 'float hash(vec2 p){',
 '  p = fract(p * vec2(443.8975, 397.2973));',
@@ -133,9 +132,6 @@ ThreeBackend.boot=function(){
 '  col=max(col-0.009*(1.0-uFx),0.0)*(1.0+0.009*(1.0-uFx));',
 '  float vg=distance(uv,vec2(0.5,0.5));',
 '  col*=1.0-0.84*smoothstep(0.20,0.95,vg*1.28)*(1.0-uFx);',
-/* 异色空间：普通的去饱和、冷色调都关着（红要够红），另外四周沉进红黑里，整个画面很慢地一明一暗，像在呼吸 */
-'  col*=1.0-uDream*0.10*uBreath;',
-'  col=mix(col,vec3(0.010,0.0,0.001),uDream*0.88*smoothstep(0.16,0.92,vg*1.30));',
 '  col*=mix(vec3(1.0),vec3(1.0,0.32,0.27),uHurt*0.85);',
 '  col=mix(col,vec3(0.16,0.0,0.0),uHurt*0.55*smoothstep(0.28,0.95,vg*1.3));',
 '  col+=vec3(0.90,0.95,1.0)*uFlash*0.8;',
@@ -183,7 +179,6 @@ ThreeBackend.boot=function(){
 /* 以前满屏的颗粒顺带把纯黑抬亮了一点；颗粒减弱后补一个很浅的暗部抬升，暗处的轮廓仍看得出来 */
 '  outc+=vec3(0.011)*(1.0-smoothstep(0.0,0.3,gLum))*(1.0-uFx);',
 '  outc+=gn*(0.012+0.026*(1.0-smoothstep(0.03,0.45,gLum)))*(1.0+0.7*wob)*(1.0-uFx)*uGrain;',
-'  outc+=gn*0.034*uDream*uGrain;',
 '  gl_FragColor=vec4(outc,1.0);',
 '}',
     ].join('\n'),
