@@ -1,4 +1,4 @@
-/* 全校唯一巡察者。普通感知只记实际目击；永久策略是唯一读取全局实时目标的接口。 */
+/* 全校唯一巡察者。普通目击与无线快照分开保存；只有永久策略持续读取全局实时目标。 */
 'use strict';
 var PatrolWorld=(function(){
   var route=null,framePath=null,lastVisualRoom=null,approachCache=null;
@@ -10,7 +10,7 @@ var PatrolWorld=(function(){
     Object.keys(PAT).forEach(function(k){delete PAT[k];});
     Object.assign(PAT,{version:1,state:'walk',room:'admin1',x:0,y:0,fy:0,behavior:'patrol',permanent:false,
       routeVersion:2,routeIndex:1,rejoin:false,cycle:0,lockerMemory:{},memoryVisit:null,transition:null,lock:0,locked:false,cited:false,lost:0,lastSeen:null,search:0,
-      queue:[],investigation:null,regionSeq:0,lastRegion:null,respawn:0,safety:3.6,warning:0,near:false,
+      queue:[],investigation:null,wirelessSignal:null,regionSeq:0,lastRegion:null,respawn:0,safety:3.6,warning:0,near:false,
       blinkCD:1.1,afterBlink:.22,step:0,stuck:0,diagnostic:null,mazeGateway:null});
     framePath=null;lastVisualRoom=null;approachCache=null;
     if(INTERIORS.admin1&&typeof PATROL_ROUTE!=='undefined')put(spawn());
@@ -37,13 +37,16 @@ var PatrolWorld=(function(){
     var R=S.mode==='in'&&INTERIORS[S.room];return !!(R&&['teach','admin','lab'].includes(R.host)&&R.floor>=1&&R.floor<=5&&needWhere(S.tsec)==='教室');
   }
   function exempt(){return (S.seated&&atMySeat())||onLeave()||(SchoolDay.excused()&&!isNight()&&!region());}
+  function hunting(){return PAT.permanent||!!PAT.wirelessSignal||eligible()&&!exempt();}
   function sees(){return PAT.state==='walk'&&same()&&!HIDE.on&&distance()<=PAT_SEE&&PatrolNav.los(position(),playerPoint());}
   function localQuiet(){
     var st=RT.inspection,c=st&&st.current;
     return !!(same()&&distance()<190&&((c&&c.room===PAT.room)||(st&&st.calm>0&&st.calmRoom===PAT.room)));
   }
   function lockerTarget(){
-    if(!same()||!HIDE.on||!(PAT.permanent||HIDE.seen))return null;
+    var signal=PAT.wirelessSignal,l=signal&&signal.locker;
+    var known=!!(l&&l.scene===S.room&&l.c===HIDE.c&&l.r===HIDE.r);
+    if(!same()||!HIDE.on||!(PAT.permanent||HIDE.seen||known))return null;
     var f=lockerFront(INTERIORS[S.room],HIDE.c,HIDE.r);return PatrolNav.point(S.room,f.x,f.y,S.floorY);
   }
   function threat(){
@@ -52,10 +55,10 @@ var PatrolWorld=(function(){
     if(cabinet)return PatrolNav.los(position(),cabinet)&&(PAT.locked||PAT.permanent);
     return !HIDE.on&&(PAT.locked||PAT.permanent)&&PatrolNav.los(position(),playerPoint());
   }
-  function hideThreat(){return HIDE.on&&same()&&(PAT.permanent||eligible()&&!exempt())&&PAT.safety<=0&&!localQuiet()&&PAT.state==='walk'&&distance()<=PAT_SEE&&PatrolNav.los(position(),PatrolNav.point(S.room,lockerFront(INTERIORS[S.room],HIDE.c,HIDE.r).x,lockerFront(INTERIORS[S.room],HIDE.c,HIDE.r).y,S.floorY));}
+  function hideThreat(){return HIDE.on&&same()&&hunting()&&PAT.safety<=0&&!localQuiet()&&PAT.state==='walk'&&distance()<=PAT_SEE&&PatrolNav.los(position(),PatrolNav.point(S.room,lockerFront(INTERIORS[S.room],HIDE.c,HIDE.r).x,lockerFront(INTERIORS[S.room],HIDE.c,HIDE.r).y,S.floorY));}
   function clearChase(){var active=PAT.locked||PAT.lastSeen||PAT.search>0||PAT.cited;PAT.cited=false;PAT.lock=0;PAT.locked=false;PAT.lost=0;PAT.lastSeen=null;PAT.search=0;
     if(active){PAT.rejoin=true;PAT.behavior=PAT.investigation?'investigate':'return';framePath=null;}}
-  function rescued(){HIDE.seen=false;PAT.permanent=false;clearChase();PAT.rejoin=true;PAT.safety=3.6;VisualState.patrolRed=0;Mechanics.dirty=true;}
+  function rescued(){HIDE.seen=false;PAT.permanent=false;PAT.wirelessSignal=null;clearChase();PAT.rejoin=true;PAT.safety=3.6;VisualState.patrolRed=0;Mechanics.dirty=true;}
   function registeredAbsence(id){PAT.permanent=true;PAT.absence=id;PAT.behavior='chase';framePath=null;toast('外出登记后未归：持续追踪已生效，重新登记和假条不能解除。');}
   function banish(){
     PAT.state='idle';PAT.respawn=30;PAT.rejoin=true;PAT.locked=false;PAT.lock=0;PAT.lost=0;PAT.lastSeen=null;PAT.search=0;PAT.cited=false;HIDE.seen=false;PAT.transition=null;PAT.warning=0;PAT.near=false;framePath=null;patRemoveFig();
@@ -74,9 +77,18 @@ var PatrolWorld=(function(){
     }
     return lockerTarget()||playerPoint();
   }
+  function revealWireless(){
+    if(!PAT.version)reset();
+    var p=permanentTarget(),locker=null;
+    if(HIDE.on){var f=lockerFront(INTERIORS[S.room],HIDE.c,HIDE.r);p=PatrolNav.point(S.room,f.x,f.y,S.floorY);locker={scene:S.room,c:HIDE.c,r:HIDE.r};}
+    PAT.wirelessSignal={point:Object.assign({},p),remaining:3,locker:locker};
+    framePath=null;Mechanics.dirty=true;
+  }
   function target(){
     if(PAT.permanent){PAT.behavior='chase';return permanentTarget();}
     if(PAT.locked||PAT.search>0){PAT.behavior=PAT.locked?'chase':'search';return PAT.lastSeen;}
+    /* 保留原始快照；导航只把落脚点挪到邻近可行走处，避免搜查卡在椅子等碰撞内。 */
+    if(PAT.wirelessSignal){var p=PAT.wirelessSignal.point;PAT.behavior='investigate';return p.scene==='bell1'||p.scene==='lift_dream'?p:PatrolNav.snap(p.scene,p)||p;}
     if(!PAT.investigation&&PAT.queue.length){PAT.investigation=Object.assign({remaining:6},PAT.queue.shift());}
     if(PAT.investigation){PAT.behavior='investigate';return observation(PAT.investigation.regionId);}
     var mem=PAT.lockerMemory[PAT.room];
@@ -149,8 +161,8 @@ var PatrolWorld=(function(){
     var d=distance(),visible=sees(),cabinet=lockerTarget(),knownCabinet=!!(cabinet&&PatrolNav.los(position(),cabinet));
     /* 到达检查现场才等待，远处的永久追踪实体仍继续走。 */
     if(localQuiet()){PAT.lock=0;VisualState.patrolRed=0;return;}
-    if(!PAT.permanent&&(!eligible()||exempt()))clearChase();
-    var hostile=(PAT.permanent||eligible()&&!exempt())&&PAT.safety<=0;
+    if(!hunting())clearChase();
+    var hostile=hunting()&&PAT.safety<=0;
     if(hostile&&(visible||knownCabinet)){
       PAT.lastSeen=knownCabinet?cabinet:playerPoint();PAT.lost=0;
       if(PAT.warning<=0){PAT.lock+=dt*(d<60?2.2:1.1);
@@ -173,7 +185,11 @@ var PatrolWorld=(function(){
     var atGoal=goal&&PAT.room===goal.scene&&Math.hypot(PAT.x-goal.x,PAT.y-goal.y,((PAT.fy||0)-(goal.fy||0))/U2M)<6;
     if(PAT.search>0&&atGoal){PAT.search=Math.max(0,PAT.search-dt);if(!PAT.search){PAT.lastSeen=null;PAT.cited=false;PAT.rejoin=true;framePath=null;}}
     else if(atGoal&&!PAT.permanent&&!PAT.locked&&PAT.search<=0){
-      if(PAT.investigation)PAT.investigation.remaining-=dt;else if(PAT.memoryVisit)PAT.memoryVisit.remaining-=dt;
+      if(PAT.wirelessSignal){
+        if(PAT.warning<=0)PAT.wirelessSignal.remaining-=dt;
+        if(PAT.wirelessSignal.remaining<=1e-7){PAT.wirelessSignal=null;PAT.rejoin=true;framePath=null;Mechanics.dirty=true;}
+      }
+      else if(PAT.investigation)PAT.investigation.remaining-=dt;else if(PAT.memoryVisit)PAT.memoryVisit.remaining-=dt;
     }
     if(PAT.investigation&&PAT.investigation.remaining<=0){PAT.investigation=null;PAT.rejoin=true;framePath=null;}
     if(PAT.memoryVisit&&PAT.memoryVisit.remaining<=0){PAT.memoryVisit=null;PAT.rejoin=true;framePath=null;}
@@ -228,6 +244,11 @@ var PatrolWorld=(function(){
       PAT.memoryVisit=validLocker(d.memoryVisit,d.memoryVisit&&d.memoryVisit.scene)?{scene:d.memoryVisit.scene,c:d.memoryVisit.c,r:d.memoryVisit.r,remaining:Number.isFinite(d.memoryVisit.remaining)?clamp(d.memoryVisit.remaining,0,4):4}:null;
       function validPoint(p){return p&&navigable(p.scene)&&[p.x,p.y,p.fy===undefined?0:p.fy].every(Number.isFinite);}
       if(!validPoint(PAT.lastSeen))PAT.lastSeen=null;
+      var signal=d.wirelessSignal;
+      PAT.wirelessSignal=signal&&validPoint(signal.point)&&Number.isFinite(signal.remaining)&&signal.remaining>=0&&signal.remaining<=3?
+        {point:PatrolNav.point(signal.point.scene,signal.point.x,signal.point.y,signal.point.fy),remaining:signal.remaining,
+          locker:validLocker(signal.locker,signal.locker&&signal.locker.scene)&&signal.locker.scene===signal.point.scene?
+            {scene:signal.locker.scene,c:signal.locker.c,r:signal.locker.r}:null}:null;
       PAT.queue=Array.isArray(d.queue)?d.queue.filter(function(e){return e&&/^admin5:office[0-5]$/.test(e.regionId)&&Number.isFinite(e.sequence)&&Number.isFinite(e.enteredAt);}).slice(0,6):[];
       PAT.investigation=d.investigation&&/^admin5:office[0-5]$/.test(d.investigation.regionId)?d.investigation:null;
       if(PAT.investigation)PAT.investigation.remaining=Number.isFinite(PAT.investigation.remaining)?clamp(PAT.investigation.remaining,0,6):6;
@@ -248,7 +269,7 @@ var PatrolWorld=(function(){
       framePath=null;
     }
   });
-  return {reset:reset,tick:tick,position:position,eligible:eligible,exempt:exempt,sees:sees,same:same,region:region,
+  return {reset:reset,tick:tick,position:position,eligible:eligible,exempt:exempt,hunting:hunting,revealWireless:revealWireless,sees:sees,same:same,region:region,
     localChase:function(){return threat()&&PAT.locked;},localThreat:function(){return threat()||hideThreat();},pressure:function(){return threat()?.35:hideThreat()?.18:0;},
     rescued:rescued,registeredAbsence:registeredAbsence,observeLocker:function(c,r){var f=lockerFront(INTERIORS[S.room],c,r);PAT.lastSeen=PatrolNav.point(S.room,f.x,f.y,S.floorY);PAT.lockerMemory[S.room]={c:c,r:r,cycle:-1};framePath=null;},banish:banish,clearChase:clearChase,locationLabel:locationLabel,enqueue:enqueue,spawn:spawn};
 })();

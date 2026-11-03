@@ -1,6 +1,8 @@
-/* 纯规则：按有效模拟秒拆分电量、任务完成和自动开机边界。不读取游戏或平台。 */
+/* 纯规则：按有效模拟秒拆分电量、无线暴露、任务完成和自动开机边界。不读取游戏或平台。 */
 'use strict';
 var PhoneEnergy={
+  wirelessSignalSeconds:15,
+  nextSignalIn:function(w){var n=this.wirelessSignalSeconds;return n-(w.elapsed+1e-8)%n;},
   fresh:function(){return {initialized:false,battery:100,powered:true,warn20:false,warn5:false,
     network:false,wireless:{status:'idle',elapsed:0,target:0},download:{status:'idle',elapsed:0,target:60}};},
   rate:function(d,c){
@@ -14,12 +16,14 @@ var PhoneEnergy={
     while(left>eps){
       var tasks=c.held&&d.powered,task=tasks?(d.wireless.status==='running'?d.wireless:
         d.download.status==='running'?d.download:null):null;
-      var rate=this.rate(d,c),span=left;
+      var rate=this.rate(d,c),span=left,signalAt=null;
       if(task)span=Math.min(span,Math.max(0,task.target-task.elapsed));
+      if(task===d.wireless){signalAt=(Math.floor((task.elapsed+eps)/this.wirelessSignalSeconds)+1)*this.wirelessSignalSeconds;span=Math.min(span,signalAt-task.elapsed);}
       if(rate<0&&d.battery>0)span=Math.min(span,d.battery/-rate);
       if(rate>0&&!d.powered&&d.battery<5)span=Math.min(span,(5-d.battery)/rate);
       if(task)task.elapsed=Math.min(task.target,task.elapsed+span);
       d.battery=Math.max(0,Math.min(100,d.battery+rate*span));left-=span;
+      if(signalAt!==null&&task.elapsed>=signalAt-eps)events.push('wirelessSignal');
       if(task&&task.elapsed>=task.target-eps){
         task.elapsed=task.target;task.status='complete';
         if(task===d.wireless){d.network=true;d.download.status='running';events.push('connected');}

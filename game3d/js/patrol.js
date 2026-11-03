@@ -50,7 +50,7 @@ var HIDE={on:false,c:0,r:0,seen:false,t:0};
 function lockerFront(R,c,r){ return {x:R.ox+(c+0.5)*R.tw, y:R.oy+(r+1.5)*R.th}; }
 function hideIn(hit){
   var R=INTERIORS[S.room];
-  HIDE.seen=!!(PAT.state==='walk'&&patSees()&&(PAT.permanent||patEligible()&&!patIgnores()));   /* 当着它的面钻进去，等于没躲（要在 HIDE.on 之前算） */
+  HIDE.seen=!!(PAT.state==='walk'&&patSees()&&PatrolWorld.hunting());   /* 当着它的面钻进去，等于没躲（要在 HIDE.on 之前算） */
   if(HIDE.seen)PatrolWorld.observeLocker(hit.c,hit.r);
   HIDE.on=true; HIDE.c=hit.c; HIDE.r=hit.r; HIDE.t=0;
   S.x=R.ox+(hit.c+0.5)*R.tw; S.y=R.oy+(hit.r+0.62)*R.th; S.ang=PI/2; S.pitch=0;
@@ -78,12 +78,12 @@ function patReset(keepHiding){
   if(!keepHiding){HIDE.on=false;HIDE.seen=false;var el=document.getElementById('hideslits');if(el)el.style.display='none';}
 }
 function patEligible(){return PatrolWorld.eligible();}
-function patIgnores(){return !PAT.permanent&&PatrolWorld.exempt();}
+function patIgnores(){return !PAT.permanent&&!PAT.wirelessSignal&&PatrolWorld.exempt();}
 function patSees(){return PatrolWorld.sees();}
 function patLOS(){return PatrolNav.los(PatrolWorld.position(),PatrolNav.point(patRoomHere(),S.x,S.y,S.floorY));}
 function patTick(dt){PatrolWorld.tick(dt);}
 function patEnd(){if(!PAT.permanent)PatrolWorld.clearChase();}
-function patEndIfInvalid(){if(!PAT.permanent&&(!patEligible()||patIgnores()))PatrolWorld.clearChase();}
+function patEndIfInvalid(){if(!PatrolWorld.hunting())PatrolWorld.clearChase();}
 function patStart(){patReset(true);}
 function patAppear(){if(!PAT.version)PatrolWorld.reset();}
 function patPath(x,y){return PatrolNav.path(PatrolWorld.position(),PatrolNav.point(PAT.room,x,y,PAT.fy));}

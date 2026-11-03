@@ -134,9 +134,14 @@ PHONE.paintApps=function(){
   var copy='',w=d.wireless;
   if(app==='home')copy='工具查看时不能移动，世界仍在运行。收起手机后，后台任务继续。原教室无渗透时，从空电充满：普通约 5 分钟，科技党约 10 分钟。机房接线只抵普通基础耗电；科技党仍每分钟净掉 10 点。';
   if(app==='wireless'){
-    copy=w.status==='complete'?'无线接入完成。定位与门禁同步已解锁。':w.status==='idle'?'接入学校无线网络需要 180—600 运行秒，执行期间耗电翻倍。':
+    copy=w.status==='complete'?'无线接入完成。定位与门禁同步已解锁；不再暴露新位置，已发出的情报不会撤回。':w.status==='idle'?'接入学校无线网络需要 180—600 运行秒，执行期间耗电翻倍。':
       (w.status==='paused'?'已暂停':'正在接入')+' · '+Math.floor(w.elapsed/w.target*100)+'% · 剩余 '+Math.ceil(w.target-w.elapsed)+' 秒';
     var b=el.querySelector('[data-action="wireless"]');if(b){b.disabled=w.status==='complete';text(b,w.status==='running'?'暂停任务':w.status==='idle'?'开始接入':w.status==='complete'?'已连接':'继续任务');}
+    if(w.status!=='complete'){
+      copy+='\n\n破解每累计 15 运行秒暴露一次当时的位置，巡察者会来搜查；坐下、假条和外出登记不能豁免。';
+      if(w.status==='running')copy+='\n下次暴露：'+Math.ceil(PhoneEnergy.nextSignalIn(w))+' 秒；收起手机仍会继续。';
+      if(w.status==='paused')copy+='\n暴露计时已暂停，已发出的位置信息不会撤回。';
+    }
     if(Talent.has('tech')&&w.status!=='complete')copy+=' 科技党执行渗透时，即使在原教室也会净掉电。';
   }
   if(app==='location')copy=PhoneNetwork.location();

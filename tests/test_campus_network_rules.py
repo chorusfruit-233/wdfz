@@ -43,6 +43,37 @@ for(let i=0;i<40;i++){
  assert(Math.abs(d.battery-b.battery)<1e-6);assert.equal(d.powered,b.powered);assert.equal(d.wireless.status,b.wireless.status);assert(Math.abs(d.download.elapsed-b.download.elapsed)<1e-6);
 }
 """)
+    def test_wireless_signals_follow_active_progress_and_survive_segmentation(self):
+        self.js("""
+function device(){const d=PhoneEnergy.fresh();d.initialized=true;d.wireless={status:'running',target:180,elapsed:0};return d;}
+const context={held:true,classroom:true},d=device(),small=device();
+assert.equal(PhoneEnergy.advance(d,14.9,context).filter(e=>e==='wirelessSignal').length,0);
+assert.equal(PhoneEnergy.advance(d,.1,context).filter(e=>e==='wirelessSignal').length,1);
+assert(Math.abs(PhoneEnergy.nextSignalIn(d.wireless)-15)<1e-6);
+d.wireless.status='paused';assert(!PhoneEnergy.advance(d,30,context).includes('wirelessSignal'));
+d.wireless.status='running';assert(!PhoneEnergy.advance(d,30,{held:false}).includes('wirelessSignal'));
+d.powered=false;d.battery=0;assert(!PhoneEnergy.advance(d,30,{held:true}).includes('wirelessSignal'));
+const big=device();let one=PhoneEnergy.advance(big,240,context),many=[];
+for(let i=0;i<2400;i++)many.push(...PhoneEnergy.advance(small,.1,context));
+assert.equal(one.filter(e=>e==='wirelessSignal').length,12);
+assert.equal(many.filter(e=>e==='wirelessSignal').length,12);
+assert(one.lastIndexOf('wirelessSignal')<one.indexOf('connected'));
+assert(!PhoneEnergy.advance(big,60,context).includes('wirelessSignal'));
+""")
+
+    def test_wireless_signal_at_power_boundary_fires_once(self):
+        self.js("""
+const d=PhoneEnergy.fresh();d.initialized=true;d.battery=.1;d.wireless={status:'running',target:180,elapsed:14.7};
+const events=PhoneEnergy.advance(d,30,{held:true});
+assert.equal(events.filter(e=>e==='wirelessSignal').length,1);
+assert(events.indexOf('wirelessSignal')<events.indexOf('off'));
+assert(Math.abs(d.wireless.elapsed-15)<1e-7);assert(!d.powered);
+assert(!PhoneEnergy.advance(d,30,{held:true}).includes('wirelessSignal'));
+PhoneEnergy.advance(d,15,{held:true,classroom:true}); // 充到 5%，自动开机；没有运行破解的时间。
+assert(d.powered);assert(Math.abs(d.wireless.elapsed-15)<1e-7);
+assert(!PhoneEnergy.advance(d,14.9,{held:true,classroom:true}).includes('wirelessSignal'));
+assert.equal(PhoneEnergy.advance(d,.1,{held:true,classroom:true}).filter(e=>e==='wirelessSignal').length,1);
+""")
     def test_seeded_puzzles_have_unique_valid_chain_and_order(self):
         self.js("""
 for(let seed=0;seed<100;seed++){

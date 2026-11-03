@@ -1,6 +1,6 @@
 /* 手机设备、统一玩法时钟与服务端停机任务。所有持久域各有一份真值。 */
 'use strict';
-var Mechanics={schemaVersion:1,rulesVersion:2,activePlaySeconds:0,attemptId:1,runSeed:'',dirty:false,
+var Mechanics={schemaVersion:1,rulesVersion:3,activePlaySeconds:0,attemptId:1,runSeed:'',dirty:false,
   reset:function(){this.activePlaySeconds=0;this.attemptId=1;this.runSeed=Math.floor(Math.random()*0xffffffff).toString(36);this.dirty=false;},
   begin:function(dt){
     this.activePlaySeconds+=dt;
@@ -71,6 +71,9 @@ var PhoneNetwork={device:PhoneEnergy.fresh(),connection:null,page:'home',
   tick:function(dt){
     this.acquire();var held=hasItem('phone'),computer=this.connectedComputer();
     var events=PhoneEnergy.advance(this.device,dt,{held:held,tech:Talent.has('tech'),classroom:held&&this.originalClassroom(),computer:held&&computer});
+    if(events.includes('wirelessSignal')){
+      PatrolWorld.revealWireless();toast('无线破解暴露了当前位置 · 巡察者正在调查，尽快转移');
+    }
     events.forEach(function(e){
       if(e==='connected')toast('手机：无线接入成功，开始安装容器');
       if(e==='downloaded')toast('手机：容器已就绪，可连接机房电脑');
@@ -116,7 +119,7 @@ function networkDiagnostic(domain,message){saveReport(domain,message);}
 function networkNumber(v,lo,hi,fallback){return Number.isFinite(v)?clamp(v,lo,hi):fallback;}
 GameModules.persistent('mechanics',{
   reset:function(){Mechanics.reset();},
-  save:function(){return {schemaVersion:1,rulesVersion:2,activePlaySeconds:Mechanics.activePlaySeconds,attemptId:Mechanics.attemptId,runSeed:Mechanics.runSeed};},
+  save:function(){return {schemaVersion:1,rulesVersion:Mechanics.rulesVersion,activePlaySeconds:Mechanics.activePlaySeconds,attemptId:Mechanics.attemptId,runSeed:Mechanics.runSeed};},
   load:function(d){if(!d||typeof d!=='object'){networkDiagnostic('mechanics','损坏的运行时钟已修复');return;}
     Mechanics.activePlaySeconds=networkNumber(d.activePlaySeconds,0,1e9,0);Mechanics.attemptId=Math.floor(networkNumber(d.attemptId,1,1e6,1));
     if(typeof d.runSeed==='string'&&d.runSeed.length<=64)Mechanics.runSeed=d.runSeed;else networkDiagnostic('mechanics','缺失种子，采用新的保守状态');}
