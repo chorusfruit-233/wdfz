@@ -112,7 +112,7 @@
     exports:['PatrolNav','PatrolWorld','PATROL_ROUTE'],uses:['leaveRoom']},
   {id:'campus-network', name:'手机网络与服务器路线', desc:'有效运行秒、手机能源、模拟终端、停机仲裁与检查责任。',
     files:['game3d/js/modules/phone-network/network.js','game3d/js/modules/cyber-route/terminal-ui.js','game3d/js/modules/cyber-route/ending.js','game3d/js/modules/patrol-world/attendance.js'],
-    exports:['Mechanics','PhoneNetwork','WhitelistSync','Termination','TerminalUI','AttendanceDuty'], uses:['newGame','interact']},
+    exports:['Mechanics','PhoneNetwork','WhitelistSync','Termination','TerminalUI','AttendanceDuty'], uses:['newGame','interact','lightState']},
   {id:'session', name:'会话', desc:'新局、继续、暂停、恢复、回菜单；Lifecycle.boundary 清掉上一局的定时器和回调。freshState 末尾调 GameModules.resetAll（发 reset）。',
     files:['game3d/js/app/session.js'], exports:['Game','freshState','clearIntroTimers'], emits:['boundary','newGame']},
   {id:'main', name:'主循环与启动', desc:'主循环、HUD、启动（boot 末尾发 boot 钩子；每个模拟步发 tick）。必须最后加载。',

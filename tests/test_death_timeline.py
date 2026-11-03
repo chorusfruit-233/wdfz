@@ -257,7 +257,7 @@ class DeathTimelineTest(BrowserCase):
         page = self.page()
         result = page.evaluate("""() => {
           const out={};
-          for(const id of ['car','face','beast','portal']){
+          for(const id of ['car','face','beast','portal','cyber']){
             if(id==='car'){doEnterRoom('garage1');}else if(id==='beast'){doEnterRoom('teach1');}else if(id==='portal'){doEnterRoom('lab1');}
             CUT.enabled=true;let done=0;const bad=[];
             playCut(id,()=>{done++;S.screen='play';});

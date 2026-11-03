@@ -107,6 +107,41 @@ class CampusNetworkTest(BrowserCase):
         self.assert_js(p,"""(() => {addItem('elixir');PAT.permanent=true;Termination.state={status:'accepted',requestId:'x',remaining:0};kill('test','grip','patrol');Mechanics.finish(.1);
           return !S.dead&&!PAT.permanent&&RT.end==='cyber'&&S.screen==='end'&&ENDINGS.cyber.l.at(-1)==='您未能完全理解里世界'&&SPEEDRUN_PUBLIC.includes('cyber');})()""")
 
+    def test_cyber_ending_storyboard_hits_its_beats_and_cleans_up(self):
+        """《网安仙人》结局分镜：机房指示灯一架架灭完、日志打完；走廊的灯闪两轮后稳住、红色退掉、巡察者垂下去；
+        档案三处矛盾都圈出来、最后一行出现；天亮那段回到舞台、颜色恢复、天色只在演出里改。
+        不加实时灯光；三处布景的着色器在开头就编好，中途不再现编；跳过或播完后舞台时刻、红色、舞台都还原。"""
+        p=self.game()
+        r=p.evaluate("""()=>{
+          CUT.enabled=true;const tsec=S.tsec;let done=0;
+          playCut('cyber',()=>{done++;});const d=CUT.data;
+          function at(t){CUT.t=t-0.05;cutTick(0.05);render(0);}
+          function on(i){const m=new THREE.Matrix4(),q=new THREE.Vector3(),r=new THREE.Quaternion(),s=new THREE.Vector3();d.ledOn.getMatrixAt(i,m);m.decompose(q,r,s);return s.x;}
+          const out={lights:0};CUT.grp.traverse(o=>{if(o.isLight)out.lights++;});
+          at(0.3);out.a0={A:d.A.visible,B:d.B.visible,C:d.C.visible,stage:VisualState.stage.mesh.visible,lit:d.leds.filter((l,i)=>on(i)>0).length,hour:hourNow()};
+          const programs=GLR.renderer.info.programs.length;                // 第一帧之后（基础场景的着色器此时都已编好）
+          at(3.0);out.a1={lit:d.leds.filter((l,i)=>on(i)>0).length,log:d.log.key};
+          at(3.5);out.b0={B:d.B.visible,red:VisualState.patrolRed};
+          at(6.6);out.b1={red:VisualState.patrolRed,lamps:d.lamps.visible,slump:+d.fig.rotation.x.toFixed(2)};
+          at(10.8);out.c={C:d.C.visible,key:d.arch.key,map:!!d.arch.mesh.material.userData.disposeMap};
+          out.newPrograms=GLR.renderer.info.programs.length-programs;      // 切到走廊、档案时不现编：三处布景开头一起编好
+          at(14.5);out.d={stage:VisualState.stage.mesh.visible,wn:+GLR.worldNorm.toFixed(2),hour:+hourNow().toFixed(2),boost:d.boost>1,A:d.A.visible};
+          cutSkip();
+          out.after={done,on:CUT.on,stage:!!VisualState.stage,hour:VisualState.stageHour,red:VisualState.patrolRed,tsec:S.tsec===tsec,clock:hourNow()===(((S.tsec%1440)+1440)%1440)/60};
+          CUT.enabled=false;return out;}""")
+        self.assertEqual(r['lights'], 0)
+        self.assertEqual(r['a0'], {'A': True, 'B': False, 'C': False, 'stage': False, 'lit': 100, 'hour': 5.2})
+        self.assertEqual(r['a1'], {'lit': 0, 'log': 6})                    # 十架机柜全灭，六行日志打完
+        self.assertTrue(r['b0']['B'] and r['b0']['red'] > 0)               # 闪着的时候带红
+        self.assertEqual(r['b1'], {'red': 0, 'lamps': True, 'slump': 0.12})
+        self.assertTrue(r['c']['C'] and r['c']['map'])
+        self.assertTrue(r['c']['key'].startswith('9:'))                    # 标题、两栏、三行、三处圈、最后一行
+        self.assertEqual(r['newPrograms'], 0)
+        self.assertTrue(r['d']['stage'] and not r['d']['A'] and r['d']['boost'])
+        self.assertEqual(r['d']['wn'], 1)
+        self.assertTrue(6.0 < r['d']['hour'] < 7.2, r['d']['hour'])
+        self.assertEqual(r['after'], {'done': 1, 'on': False, 'stage': False, 'hour': None, 'red': 0, 'tsec': True, 'clock': True})
+
     def test_cyber_cutscene_uses_stage_and_preserves_player_position(self):
         p=self.game()
         self.assert_js(p,"""(() => {CUT.enabled=true;let old=[S.x,S.y,S.room,S.ang];playCut('cyber',function(){});for(let i=0;i<16;i++)cutTick(1);

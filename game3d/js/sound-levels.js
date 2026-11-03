@@ -94,6 +94,7 @@ var SOUND_LEVELS={
   'foley.wake':-10.2,
   'music.box':-29.4,
   'music.piano':-21.3,
+  'scene.cyberEnd':-10.6,
   'scene.engine':-8.4,
   'scene.hum':-18.8,
   'step.court':-17.3,

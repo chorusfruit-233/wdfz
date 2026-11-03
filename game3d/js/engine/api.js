@@ -1,6 +1,6 @@
 /* 游戏层的渲染入口。数值反馈不持有 Three.js 对象；模型与特效留在表现层。 */
 'use strict';
-var VisualState={time:0,hurt:0,flash:0,patrolFlick:0,patrolRed:0,worldNorm:0,gazeShake:0,deathAnim:null,camera:{walkPhase:0,eyeH:1.65,fov:72},stage:null};
+var VisualState={time:0,hurt:0,flash:0,patrolFlick:0,patrolRed:0,worldNorm:0,gazeShake:0,deathAnim:null,camera:{walkPhase:0,eyeH:1.65,fov:72},stage:null,stageHour:null};
 var QUALITY_LOAD_GENERATION=0;
 var Engine={
   boot:function(){

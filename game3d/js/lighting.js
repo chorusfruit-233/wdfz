@@ -6,7 +6,8 @@
    雾却一直是近黑色 —— 白天远处的楼全成了黑剪影。现在全部从 sunAt() 取值，
    日出 6:00，日落 18:36，前后各有一段霞光。 */
 var SUN_RISE=6.0, SUN_SET=18.6;
-function hourNow(){ return (((S.tsec%1440)+1440)%1440)/60; }
+/* 结局演出可以给舞台单独指定一个时刻（VisualState.stageHour，只影响天色、光照和环境声，不动 S.tsec）；平时为 null */
+function hourNow(){ var h=(typeof VisualState!=='undefined')?VisualState.stageHour:null; if(h!==null&&h!==undefined&&isFinite(h)) return h; return (((S.tsec%1440)+1440)%1440)/60; }
 function smooth01(a,b,x){ var t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); }
 function sunAt(h){
   var span=SUN_SET-SUN_RISE;

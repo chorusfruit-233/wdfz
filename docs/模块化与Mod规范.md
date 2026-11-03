@@ -124,6 +124,10 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 - 配套：死亡音写成声音库里的 `death.<类型>`（`SFX.deathFx` 会先放 `death.base`）；墓志铭 `DFX_EPI[类型]`、死因与复盘提示 `DEATH_SOURCES[来源] = {cause, hint}` 由模块的逻辑文件填；调试面板的预览列表 `DEV_DEATH.push([名字, 类型])`；死亡档案的条目登记在 `death-archive.js`（档案启动时就要认得全部 ID，所以写在那里；属于内部内容的标 `secret:1`，没死过不出现、不算总数）。
 - 性能与可读性约束由 `tests/test_death_timeline.py` 统一检查：每种演出在场景之外最多再加 30 次绘制、只用开局预热过的材质组合（不在死的那一刻现编着色器）、帧率无关、四个阶段画面不同、闪光不超过 0.5、关掉「镜头晃动」时不晃。
 
+### 4.3 结局演出（`cutscene.js` 的 `CUT_DEF`）
+
+模块可以往 `CUT_DEF` 加自己的结局演出（`modules/cyber-route/ending.js` 的《网安仙人》）：`{dur, setup(d), frame(k, d), clean(d)}`，`k` 是 0–1 的进度，一切位置只由 `k` 算；跳过和播完走同一个只执行一次的收尾。要在舞台上演就调 `Engine.beginOutsideStage()`（收尾自动 `endStage`）；临时对象用 `cutAdd` 挂进 `CUT.grp`，收尾统一释放（画布贴图在材质上标 `userData.disposeMap`）。需要别的天色时设 `VisualState.stageHour`（只影响天色、光照和环境声，`clean` 里置回 `null`）；室内布景的明暗用 `lightState` 钩子按 `CUT.id` 改，不要加实时点光源。几处布景开头一起 `GLR.renderer.compile(CUT.grp, GLR.cam, GLR.scene)`，中途切镜不现编着色器。
+
 ## 5. Mod
 
 ### 5.1 三种来源
