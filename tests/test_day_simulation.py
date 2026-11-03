@@ -16,6 +16,7 @@ class DaySimulationTest(BrowserCase):
           if(profile==='truant'){S.seated=false;S.mode='out';S.room=null;S.x=290*SC;S.y=430*SC;}
           while(wraps<days&&real<4000*days&&!S.dead){
             AN.active=false;AN.next=1e9;PAT.next=1e9;patReset();
+            S.pitch=-1.2; // Avoid the separate gaze punishment; this profile tests attendance and the daily clock.
             const night=S.tsec>=LIGHTS_OUT||S.tsec<440;
             if(profile==='good'&&night&&S.room!=='dorm1'){S.seated=false;S.mode='in';S.room='dorm1';
               let R=INTERIORS.dorm1;S.x=R.ox+R.cols*R.tw/2;S.y=R.oy+R.rows*R.th/2;}

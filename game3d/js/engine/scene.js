@@ -114,7 +114,12 @@ $imports.ThreeBackend.addRoomLights=function(R){
     $imports.GLR.roomLightBase.push(inten);
     ($imports.GLR.roomLightCol||($imports.GLR.roomLightCol=[])).push(new $imports.THREE.Color(col));
   }
-  var teach=R.host==='teach'&&R.floor>=1&&R.floor<=5;
+  if(R.stairwell){
+    var s=$imports.StairWorld.config(R.id),floor=Math.min(s.rooms.length-2,Math.floor(($imports.S.floorY||0)/s.rise));
+    [[1.8,2.35,-1.18],[1.8,s.rise/2+2.35,7.05],[1.8,s.rise+2.35,-1.18]].forEach(function(p){addLight(p[0],floor*s.rise+p[1],p[2],0xc4d5bc,$imports.LCFG.ptI*1.1,10,2);});
+    return;
+  }
+  var teach=!R.stairwell&&R.host==='teach'&&R.floor>=1&&R.floor<=5;
   var spec=$imports.ROOM_LIGHTS[R.id]||$imports.ROOM_LIGHTS[teach?'teach':R.host]||$imports.ROOM_LIGHTS.default;
   spec.forEach(function(v){
     var x=v[0],z=v[2];
@@ -287,12 +292,12 @@ $imports.ThreeBackend.draw=function(dt){
   $imports.GLR.gaze=($imports.GLR.gaze||0)+(($imports.GLR.gazeT||0)-($imports.GLR.gaze||0))*Math.min(1,dt*2.4);
   u.uGaze.value=$imports.GLR.gaze;
   u.uHurt.value=$imports.GLR.hurt;
-  u.uFlash.value=$imports.GLR.flash;
+  u.uFlash.value=$imports.SET.reduceFlash?Math.min(.08,$imports.GLR.flash):$imports.GLR.flash;
   u.uExpo.value=($imports.GLR.dayExpo===undefined)?1:$imports.GLR.dayExpo;
   u.uRed.value=$imports.GLR.patrolRed||0;
-  var targetSan=(0,$imports.clamp)($imports.S.san/100,0,1);
-  $imports.GLR.sanSense=$imports.GLR.sanSense===undefined?targetSan:$imports.GLR.sanSense+(targetSan-$imports.GLR.sanSense)*(1-Math.exp(-dt*2));
-  u.uSan.value=$imports.GLR.sanSense;
+  var sense=typeof $imports.Sensory!=='undefined'?$imports.Sensory.view():{warp:0,edge:0,focus:0};
+  u.uSan.value=(0,$imports.clamp)($imports.S.san/100,0,1);
+  u.uWarp.value=sense.warp;u.uEdge.value=sense.edge;u.uFocus.value=sense.focus;
   if($imports.GLRTEST.nopost){
     $imports.GLR.renderer.setRenderTarget(null);
     $imports.GLR.renderer.render($imports.GLR.scene,$imports.GLR.cam);

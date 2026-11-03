@@ -27,7 +27,7 @@ var DreadFx={
   /* 灯坏了：大部分时间只剩一点余光，偶尔抽一下亮起来 */
   lampMul:function(i,tt){
     if(i!==DREADFX.lamp) return 1;
-    var twitch=Math.sin(tt*7.3+1.1)>0.985||Math.sin(tt*2.9)>0.996;
+    var twitch=!$imports.SET.reduceFlash&&(Math.sin(tt*7.3+1.1)>0.985||Math.sin(tt*2.9)>0.996);
     return twitch?0.85:0.06;
   },
   note:function(text,seed){
@@ -64,7 +64,7 @@ var DreadFx={
     $imports.GLR.scene.add(grp); DREADFX.note=grp;
   }
 };
-function dreadLampMul(i,tt){ return DreadFx.lampMul(i,tt); }
+function dreadLampMul(i,tt){ return DreadFx.lampMul(i,tt)*(typeof $imports.SensoryScenes!=='undefined'?$imports.SensoryScenes.lampMul(i):1); }
 
 /* @module-exports */
 GameModules.publish("game3d/js/fx/dread-fx.js",{

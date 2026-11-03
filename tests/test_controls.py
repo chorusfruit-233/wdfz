@@ -36,11 +36,13 @@ class ControlsTest(BrowserCase):
                 page.wait_for_url('**/wiki/index.html')
                 self.assertTrue(page.get_by_role('heading', name='里世界游戏 Wiki').is_visible())
                 rows = page.locator('#items tbody tr')
-                self.assertIn('每秒回 2 SAN', rows.filter(has_text='药片').first.inner_text())
-                self.assertIn('30 秒内奔跑不耗体力', rows.filter(has_text='士力架').first.inner_text())
+                self.assertIn('30 个运行秒', rows.filter(has_text='药片').first.inner_text()); self.assertNotIn('SAN', rows.filter(has_text='药片').first.inner_text())
+                snack_text = rows.filter(has_text='士力架').first.inner_text()
+                for phrase in ('30 个运行秒','1.5 倍','奔跑不耗体力','暂停不计时'):
+                    self.assertIn(phrase, snack_text)
                 repo = page.locator('.topbar a.repo')
                 self.assertTrue(repo.is_visible())
-                self.assertEqual(repo.get_attribute('href'), 'https://github.com/chorusfruit-233/wdfz')
+                self.assertEqual(repo.get_attribute('href'), 'https://github.com/wd-fz/wd-fz.github.io')
                 spoiler = page.locator('#anomalies details')
                 self.assertIsNone(spoiler.get_attribute('open'))
                 self.assertFalse(spoiler.locator('table').is_visible())
@@ -208,7 +210,8 @@ class ControlsTest(BrowserCase):
         page = self.page(touch=True)
         self.touch(page, 'touchStart', [{'x':205,'y':290}])
         self.touch(page, 'touchCancel', [])
-        self.assert_js(page, '!LOOKDRAG.on&&INPUT.lookId===null')
+        # CDP acknowledges dispatch before Chromium necessarily delivers pointercancel.
+        page.wait_for_function('!LOOKDRAG.on&&INPUT.lookId===null')
         self.swipe(page)
         before = page.evaluate('S.ang')
         self.touch(page, 'touchStart', [{'x':205,'y':290}])
@@ -415,9 +418,9 @@ class ControlsTest(BrowserCase):
         self.assert_js(page, '!S.run&&S.tired')
         page.evaluate("S.stam=10;updatePlayer(.05)")
         self.assert_js(page, '!S.run')
-        page.evaluate("S.bag=['snack'];useItem('snack');S.stam=2;updatePlayer(.05)")
+        page.evaluate("S.bag=['snack'];useItem('snack');S.stam=2;ActiveEffects.begin(.05);updatePlayer(.05)")
         self.assert_js(page, 'S.run&&S.stam===2&&S.snackT>9')
-        page.evaluate("S.snackT=0;S.stam=STAM_BACK+1;updatePlayer(.05);KEY.w=false;KEY.shift=false")
+        page.evaluate("S.snackT=0;S.stam=STAM_BACK+1;ActiveEffects.begin(.05);updatePlayer(.05);KEY.w=false;KEY.shift=false")
         self.assert_js(page, 'S.run&&!S.tired')
 
     def test_snack_expires_while_hiding_but_not_while_game_is_paused(self):
@@ -434,7 +437,7 @@ class ControlsTest(BrowserCase):
         page.evaluate("UI.open('bag');for(var i=0;i<300;i++)update(1/60)")
         self.assert_js(page, 'Math.abs(S.snackT-20)<.02&&Math.abs(S.pillT-20)<.02')
         page.evaluate("UI.closePanelAll();for(var i=0;i<1201;i++)update(1/60);hideOut();"
-                      "S.stam=0;S.tired=true;KEY.w=true;KEY.shift=true;updatePlayer(1/60)")
+                      "S.stam=0;S.tired=true;KEY.w=true;KEY.shift=true;ActiveEffects.begin(1/60);updatePlayer(1/60)")
         self.assert_js(page, 'S.snackT===0&&!S.run&&S.tired')
 
     def test_snack_and_world_time_keep_pace_at_low_frame_rates(self):
@@ -1228,7 +1231,7 @@ class ControlsTest(BrowserCase):
 
     def test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them(self):
         page = self.page()
-        self.assert_js(page, "TAL_KEYS.length===7&&TAL_KEYS.includes('tech')&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd','thin'].every(x=>!TAL_KEYS.includes(x))")
+        self.assert_js(page, "TAL_KEYS.length===6&&TAL_KEYS.includes('tech')&&TAL_KEYS.includes('immune')&&['map','hand','cold','known','crowd','thin'].every(x=>!TAL_KEYS.includes(x))")
         page.evaluate("S.talent='map';saveGame();Game.continue_();running=false")
         self.assert_js(page, "S.talent==='map'&&TALENTS[S.talent].n==='过目不忘'")
 

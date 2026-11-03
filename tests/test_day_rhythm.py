@@ -63,19 +63,21 @@ class DayRhythmTest(BrowserCase):
         }""")
         self.assertEqual(result, dict(first=8, again=8, loaded=8, cited=True))
 
-    def test_inspection_cannot_be_bypassed_by_leave_and_only_compliance_renews(self):
+    def test_excused_inspection_is_neutral_and_only_attendance_renews(self):
         page = self.game()
         result = page.evaluate("""()=>{
           S.tsec=770;RT.leaveUntil=gameClock()+120;S.viol=30;S.moving=true;
           Inspection.start({day:2,slot:0});Inspection.tick(1);const motion=S.viol;
           S.moving=false;Inspection.finish(Inspection.state().current);
+          const neutral=!SchoolDay.permit();
+          RT.leaveUntil=0;S.day=3;S.pitch=-1;Inspection.start({day:3,slot:0});Inspection.tick(8);
           const renewed=SchoolDay.permit()&&RT.outing.until===1070;
           const saved=loadGame().rt.outing.until===1070;
           Inspection.clearFx();S.tsec=1070;S.mode='out';S.room=null;
           S.viol=30;Inspection.start({day:2,slot:1});Inspection.finish(Inspection.state().current);
-          return {motion,renewed,saved,missed:S.viol,expired:!SchoolDay.permit()};
+          return {motion,neutral,renewed,saved,missed:S.viol,expired:!SchoolDay.permit()};
         }""")
-        self.assertEqual(result, dict(motion=32, renewed=True, saved=True, missed=40, expired=True))
+        self.assertEqual(result, dict(motion=30, neutral=True, renewed=True, saved=True, missed=40, expired=True))
 
     def test_warning_reserves_a_minute_and_defers_new_threats_and_choices(self):
         page = self.game()

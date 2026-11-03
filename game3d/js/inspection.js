@@ -22,7 +22,7 @@ var Inspection={
       var key=day+':'+i, warn=INSPECT_WARN_TIMES[i];
       if(after>=warn&&after<time&&!st.warned[key]){
         st.warned[key]=true;
-        (0,$imports.os)('广播：「请各班同学注意，学生会将于'+(i?'五点五十':'十二点五十')+'到各班检查，请回到自己的教室。」',5.5,$imports.OS_FORCE);
+        (0,$imports.os)('广播：「请各班同学注意，学生会将于'+(i?'五点五十':'十二点五十')+'到各班检查，请坐回自己的座位。」',5.5,$imports.OS_FORCE);
         try{ $imports.SFX.click(); }catch(e){}
       }
       if(before<=time&&after>=time&&!st.seen[key]){
@@ -76,8 +76,10 @@ var Inspection={
   },
   start:function(item){
     var st=Inspection.state(),c={day:item.day,slot:item.slot,t:0,look:0,move:0,
-      compliant:(0,$imports.inClassroomHere)(),room:$imports.S.mode==='in'?$imports.S.room:'out',points:Inspection.points()};
-    st.current=c;$imports.PHONE.stop();$imports.TerminalUI.close();Inspection.buildFx(c);
+      result:(0,$imports.onLeave)()?'excused':(0,$imports.atMySeat)()?'present':'absent',excused:(0,$imports.onLeave)(),compliant:(0,$imports.atMySeat)(),room:$imports.S.mode==='in'?$imports.S.room:'out',points:Inspection.points()};
+    st.current=c;
+    if(c.excused){c.compliant=false;c.points=[];Inspection.clearFx();Inspection.finish(c);return;}
+    $imports.PHONE.stop();$imports.TerminalUI.close();Inspection.buildFx(c);
     (0,$imports.os)('我：走廊里的声音一下子停了。一圈黑影站在附近——别动，也别看它们。',4.5,$imports.OS_FORCE);
   },
   cancel:function(){
@@ -86,18 +88,21 @@ var Inspection={
   },
   scatterTick:function(){return $imports.InspectionView.scatterTick.apply($imports.InspectionView,arguments); },
   finish:function(c){
-    var st=Inspection.state();if(st.current!==c)return;
-    st.current=null;
-    (0,$imports.gameFact)('inspection',{day:c.day,slot:c.slot,compliant:!!c.compliant});
+    var st=Inspection.state();if(!c||st.current!==c)return;
+    st.settled=st.settled||{};var key=c.day+':'+c.slot;st.current=null;
+    if(st.settled[key])return;
+    c.result=c.excused?'excused':c.compliant?'present':'absent';st.settled[key]=c.result;
+    (0,$imports.gameFact)('inspection',{day:c.day,slot:c.slot,result:c.result,excused:!!c.excused,compliant:!!c.compliant&&!c.excused});
+    if(c.excused){$imports.AttendanceDuty.settle(c);(0,$imports.os)('请假有效，本次检查已免检。',3.5,$imports.OS_KEEP);(0,$imports.autoSave)();return;}
     st.calm=8;st.calmRoom=c.room;
     st.scatter={t:0,duration:.8,room:c.room};$imports.InspectionView.finish(st.scatter);
     $imports.PlayerStats.changeSan(-((c.compliant?INSPECT_CONFIG.goodSan:INSPECT_CONFIG.badSan)),'inspection',{min:0});
     (0,$imports.addViolation)(c.compliant?-INSPECT_CONFIG.goodViolation:INSPECT_CONFIG.badViolation,'inspection');
     $imports.PlayerStats.changeAssimilation(c.compliant?INSPECT_CONFIG.assimilation:-INSPECT_CONFIG.assimilation,'inspection',{min:0,max:100});
-    (0,$imports.os)(c.compliant?'我：黑影散开了。我还在教室里。':'我：黑影散开了。它们已经记下我不在教室。',3.8,$imports.OS_FORCE);
+    (0,$imports.os)(c.compliant?'我：黑影散开了。我一直坐在自己的座位上。':'我：黑影散开了。它们记下了那个空着的座位。',3.8,$imports.OS_FORCE);
     $imports.AttendanceDuty.settle(c);
     (0,$imports.settleSan)();if(!$imports.S.dead&&$imports.S.tt>=100)(0,$imports.resolveAssimilation)();
-    if(c.compliant&&(0,$imports.inClassroomHere)()&&!$imports.S.dead)$imports.SchoolDay.grant(true);
+    if(c.compliant&&(0,$imports.atMySeat)()&&!$imports.S.dead)$imports.SchoolDay.grant(true);
     (0,$imports.autoSave)();
   },
   discardStale:function(){var st=this.state();while(st.queue.length&&this.stale(st.queue[0]))$imports.AttendanceDuty.cancel(st.queue.shift());},
@@ -116,10 +121,12 @@ var Inspection={
       if(st.queue.length&&!$imports.AN.active&&!$imports.UI.chooseOpen&&!$imports.PatrolWorld.localChase()&&!$imports.LESSON.on){Inspection.start(st.queue.shift());}
       return;
     }
+    if(c.excused){Inspection.finish(c);return;}
     if($imports.S.dead||$imports.S.screen!=='play'){st.current=null;Inspection.clearFx();return;}
     var here=$imports.S.mode==='in'?$imports.S.room:'out';
     if(c.room!==here){c.room=here;c.points=Inspection.points();Inspection.buildFx(c);}
     else $imports.InspectionView.sync(c);
+    if(!(0,$imports.atMySeat)()){c.compliant=false;c.result='absent';}
     c.t+=dt;
     if($imports.S.moving){
       c.move+=dt;

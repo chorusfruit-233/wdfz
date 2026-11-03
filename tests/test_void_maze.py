@@ -114,7 +114,9 @@ class VoidMazeTest(BrowserCase):
           window.__san=S.san;const w=VoidMaze.toWorld(-1.4,-15);S.x=w.x;S.y=w.y;S.ang=Math.PI;
           for(let i=0;i<200&&!VoidMaze.MZ.respawning;i++){KEY.w=true;update(1/60);}KEY.w=false;""")
         self.assert_js(page, 'VoidMaze.MZ.respawning&&S.floorY<MAZE_CFG.voidY')
-        page.wait_for_function('!VoidMaze.MZ.respawning', timeout=5000)
+        # The fixture stops the render loop; the transition completes on its own timer.
+        # Poll that state independently of headless WebGL animation-frame scheduling.
+        page.wait_for_function('!VoidMaze.MZ.respawning', timeout=5000, polling=50)
         r = page.evaluate("""()=>{const p=VoidMaze.toScene(S.x,S.y), sp=MAZE_CFG.spawn;
           return {lost:window.__san-S.san, falls:VoidMaze.MZ.falls, fy:S.floorY, air:VoidMaze.MZ.air, dead:S.dead,
             inSpawn:p.x>=sp.x0&&p.x<=sp.x1&&p.z>=sp.z0&&p.z<=sp.z1, ground:VoidMaze.groundAt(p.x,p.z,0.4),

@@ -61,7 +61,7 @@ assert.throws(()=>p.run(.1),/not started/);
 const {context,load}=require('./tests/support/capsules.cjs');
 let draws=0;const c=context({console,Quality:{get:()=>({lod:1,lodLow:false,segments:1})},QUALITY:2,
   S:{mode:'in',room:'teach1'},RT:{runSeed:0},GameModules:{emit:()=>{},on:()=>{}}});
-const files=['domain/random','core','quality','domain/spatial-kit','domain/spatial-math','map',
+const files=['domain/random','domain/classroom-layout','domain/stairwell-geometry','content/stairwell-layout','modules/stairwell/stairwell','core','quality','domain/spatial-kit','domain/spatial-math','map',
  'content/collision-assets','content/palette','content/spiral-data','content/patrol-zones','content/scene-data',
  'content/props-recipe','content/furniture-recipe','content/room-recipe','content/outdoor-recipe',
  'content/sports-recipe','content/spiral-recipe','content/elevator-prefab-recipe','content/lift-recipe',

@@ -9,7 +9,7 @@ var S={
   ang:-$imports.PI/2, pitch:0,
   tsec:700, day:1, diff:'easy',
   san:100, viol:0, stam:100, tt:0,
-  seated:false, dead:false, death:null, deadT:0,
+  seated:false, seat:null, dead:false, death:null, deadT:0,
   talent:'code', bag:[], hot:[null,null], bagSel:0,
   moving:false, run:false, walkPhase:0, bob:0, enterCool:0,
   hiddenLatch:false, hiddenWindow:0,

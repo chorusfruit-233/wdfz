@@ -228,7 +228,7 @@ var SFX=(function(){
       vowel:vowel, loopNoise:loopNoise, setG:setG, now:function(){ return ac?ac.currentTime:0; },
       bus:bus, send:send, pan:function(p){ var a=ctx(); return a?panNode(a,p):null; }, noiseBuf:noiseBuf};
   }
-  function P(id,opt){ try{ return (typeof $imports.SoundPlayer!=='undefined')?$imports.SoundPlayer.play(id,opt):null; }catch(e){ return null; } }
+  function P(id,opt){ if(typeof $imports.SoundCaptions!=='undefined'){var e=$imports.SoundCaptions.publish(id,opt);if(e)opt=Object.assign({},opt,{event:e.dispatch});} try{ return (typeof $imports.SoundPlayer!=='undefined')?$imports.SoundPlayer.play(id,opt):null; }catch(e){ return null; } }
   function scapeTick(dt,on,duck){
     var sid=on?GameModules.first('soundscape'):undefined, sd=sid&&SCAPES[sid]?SCAPES[sid]:null, cut=(L&&L.t<scapeCutUntil)?0:1;
     Object.keys(SCAPES).forEach(function(k){
@@ -300,10 +300,10 @@ var SFX=(function(){
   }
   /* 一步：k 是响度（跑起来更响），pan 左右，behind 背后（发闷），at 延迟。左右脚轮流：音高差一点、声像偏一点 */
   var foot=0;
-  function stepSound(sf,k,pan,behind,wet,at){
+  function stepSound(sf,k,pan,behind,wet,at,extra){
     foot=1-foot;
     var o={k:k,pan:(0,$imports.clamp)((pan||0)+(foot?0.05:-0.05),-1,1),lp:behind?0.55:1,at:at||0,pitch:foot?0.97:1};
-    P('step.'+sf,o);
+    Object.assign(o,extra||{});P('step.'+sf,o);
     if(sf==='court'&&$imports.PresentationRandom.next()<0.12) P('step.squeak',{k:k,pan:o.pan,at:(at||0)+0.02});
     if(wet) P('step.wet',{k:k,pan:o.pan,lp:o.lp,at:o.at});
   }
@@ -326,6 +326,16 @@ var SFX=(function(){
     var id=STINGERS[Math.floor($imports.PresentationRandom.next()*STINGERS.length)];
     P(id,{pan:$imports.PresentationRandom.range(-0.9,0.9),k:$imports.PresentationRandom.range(0.75,1),lp:$imports.PresentationRandom.next()<0.4?0.4:1});
   }
+  var lastPeriod=null;
+  function tickSchoolBell(){
+    if($imports.S.screen!=='play'||$imports.S.dead||$imports.PRO.on||$imports.CUT.on){lastPeriod=null;return;}
+    var pp=(0,$imports.periodAt)($imports.S.tsec),sid=GameModules.first('soundscape');
+    var quiet=sid&&SCAPES[sid]&&SCAPES[sid].quiet!==false;
+    if(lastPeriod!==null&&pp[2]!==lastPeriod&&!quiet)schoolBell($imports.S.mode==='in'?1:.45,pp[3]==='教室'?'start':'end');
+    lastPeriod=pp[2];
+  }
+  GameModules.on('boundary',function(){lastPeriod=null;},{owner:'audio'});
+  GameModules.on('reset',function(){lastPeriod=null;},{owner:'audio'});
   function tick(dt){
     var a=ctx(); if(!a||!L) return;
     L.t+=dt;
@@ -395,26 +405,7 @@ var SFX=(function(){
       if($imports.PresentationRandom.next()<dt*(5+mk*40)) P('world.moth',{k:0.2+mk,pan:$imports.PresentationRandom.range(-1,1)});
       if(mk>0.6&&$imports.PresentationRandom.next()<dt*6) P('world.mothThump',{k:0.4+mk*0.6});   /* 贴脸时的一团闷响 */
     }
-    /* 被巡察者盯上：心跳顶上来 */
-    if($imports.PatrolWorld.localChase()){
-      L.nextPatBeat=(L.nextPatBeat||0)-dt;
-      if(L.nextPatBeat<=0){ L.nextPatBeat=60/124; P('threat.heartPat'); }
-    }
-    /* 低 SAN：心跳 */
-    if(san<38){
-      L.nextBeat-=dt;
-      if(L.nextBeat<=0){
-        var bpm=70+(38-san)*2.2; L.nextBeat=60/bpm;
-        P('threat.heartLow',{k:0.42+(38-san)/38*0.58});
-      }
-    }
-    /* 上下课铃：时段一变就响。进入「教室」时段是上课铃（急促的电铃），其余是下课铃（四音钟声）；
-       室外远一点、闷一点；整片环境声安静时（比如异空间）不响 */
-    try{
-      var pp=(0,$imports.periodAt)($imports.S.tsec), per=pp[2];
-      if(L.lastPeriod!==null&&per!==L.lastPeriod&&!quietScape) schoolBell($imports.S.mode==='in'?1:0.45,pp[3]==='教室'?'start':'end');
-      L.lastPeriod=per;
-    }catch(e){}
+    /* 身体节拍由 Sensory 统一调度，静音和环境关闭仍派发字幕。 */
     L.nextStinger-=dt*(1+tension*1.5);
     if(L.nextStinger<=0&&!quietScape){
       L.nextStinger=$imports.PresentationRandom.range(16,40);
@@ -441,6 +432,8 @@ var SFX=(function(){
   }
   return {
     moonlight: moonlight,
+    available:function(){return !!(ac&&ac.state==='running');},
+    bodySound:function(kind,k){return P(kind==='chase'?'threat.heartPat':kind==='muffled'?'distant.tinnitus':kind==='breath'?'threat.breath':'threat.heartLow',{k:k||.5});},
     resume:function(){ ctx(); },
     ambient:function(){ var a=ctx(); if(!a) return; try{ buildLayers(); }catch(e){} bgOn=true; },
     /* 模块扩展点：整片环境声与一次性合成音（见文件中段 SCAPES 的说明） */
@@ -450,7 +443,8 @@ var SFX=(function(){
     synth:function(){ return synthApi(); },
     stopAmbient:function(){ bgOn=false; },
     tick:function(dt){
-      try{ realRev(); }catch(e){}                       /* 空间混响不依赖背景音：关掉「音乐/环境」时脚步等音效也要跟着空间变 */
+      if($imports.S.screen==='play'&&!$imports.GamePolicy.simulationAllowed((0,$imports.gameInputContext)()))return;
+      try{ tickSchoolBell(); realRev(); }catch(e){}                       /* 空间混响不依赖背景音：关掉「音乐/环境」时脚步等音效也要跟着空间变 */
       try{ if(L) tick(dt); else if(bgOn) buildLayers(); }catch(e){}
     },
     setVol:function(v){ vol=Math.max(0,Math.min(1,v)); if(mg){ try{ mg.gain.value=vol; }catch(e){} } },
@@ -465,7 +459,7 @@ var SFX=(function(){
     /* 有方位、有远近、隔墙发闷的环境声（dread.js 的假威胁）：p={pan,k,muffled,behind} */
     dread:function(kind,p){
       p=p||{pan:0,k:0.5,muffled:false,behind:false};
-      return P('dread.'+kind,{pan:(0,$imports.clamp)(p.pan||0,-1,1),k:(0,$imports.clamp)(p.k||0.5,0.05,1),lp:(p.muffled?0.35:1)*(p.behind?0.7:1),wet:p.muffled?0.85:0.5});
+      return P('dread.'+kind,{pan:(0,$imports.clamp)(p.pan||0,-1,1),k:(0,$imports.clamp)(p.k||0.5,0.05,1),lp:(p.muffled?0.35:1)*(p.behind?0.7:1),wet:p.muffled?0.85:0.5,place:p});
     },
     /* 骤静 */
     duck:function(sec){ if(L) L.duckUntil=L.t+Math.max(0.5,sec||3); },
@@ -473,7 +467,7 @@ var SFX=(function(){
     /* 异象前兆：低频的压迫感上来，耳朵里一点压力 */
     precursor:function(k){ return P('threat.precursor',{k:(0,$imports.clamp)(k===undefined?1:k,0.2,1)}); },
     /* 巡察者的脚步：按方位分左右，越近越响，背后的发闷 */
-    patStep:function(pan,k,behind,locked){ stepSound(stepSurface(),(locked?1.5:1.1)*k,pan,behind,stepWet()); },
+    patStep:function(pan,k,behind,locked,place){ stepSound(stepSurface(),(locked?1.5:1.1)*k,pan,behind,stepWet(),0,{lp:(place&&place.muffled?.35:1)*(behind?.55:1),patrol:true,source:'nearby-steps',place:Object.assign({pan:pan,behind:behind},place||{})}); },
     /* 灯管接触不良：噼啪 + 一下 50Hz 的嗡 */
     crackle:function(k,pan){ k=(0,$imports.clamp)(k,0,1); if(k<0.05) return null; return P('world.crackle',{k:k,pan:pan||0}); },
     /* 拍肩的笑脸：回头时是身后一串很轻的、憋着的笑；突脸时是一声尖叫贴着耳朵 */

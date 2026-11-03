@@ -88,7 +88,7 @@ class CampusEventTest(BrowserCase):
           return {before,during,warnedOnce,after,queued:Inspection.state().queue.length};
         }""")
         self.assertNotIn('教室', result['before'])
-        self.assertIn('教室', result['during'])
+        self.assertIn('自己的座位', result['during'])
         self.assertEqual(result['warnedOnce'],1)
         self.assertFalse(result['after'])
         self.assertEqual(result['queued'],1)

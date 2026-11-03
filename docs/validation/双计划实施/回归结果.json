@@ -1,0 +1,3503 @@
+{
+  "date": "2026-11-03",
+  "base": "906dec0100f7b09a92baae8024003ec1b07d4587",
+  "documentationSync": "72cfa24bcf00912473174655e25938d4f2f69f97",
+  "sourceSHA256": "45b28f31d2d4fd47dfb5f1cf614b187a6005a83a204c2b1c9f83d28028d86a6a",
+  "method": "Complete two-shard suite, then final focused results override prior results by current test ID. Not a single uninterrupted green run. Logs retain initial failures, removed test names and environment skip.",
+  "discovered": 663,
+  "totals": {
+    "passed": 662,
+    "skipped": 1,
+    "failed": 0
+  },
+  "runs": [
+    {
+      "log": "logs/wdfz-plans-final0.log.gz",
+      "complete": true,
+      "tests": 263,
+      "seconds": 2671.843,
+      "observed": {
+        "passed": 258,
+        "failed": 5
+      },
+      "initialFailures": [
+        "test_playability.PlayabilityTest.test_only_own_classroom_podium_holds_the_handover_slip",
+        "test_run_record.RunRecordTest.test_explore_metric_and_handbook_line",
+        "test_pressure.PressureBrowserTest.test_san_is_readable_when_muted_without_a_numeric_bar",
+        "test_pressure.PressureBrowserTest.test_san_visual_resets_on_new_game_and_matches_loaded_save",
+        "test_void_maze.VoidMazeTest.test_falling_into_the_void_costs_a_little_san_and_respawns_in_the_spawn_area"
+      ]
+    },
+    {
+      "log": "logs/wdfz-plans-final1.log.gz",
+      "complete": true,
+      "tests": 396,
+      "seconds": 4036.087,
+      "observed": {
+        "passed": 382,
+        "failed": 13,
+        "skipped": 1
+      },
+      "initialFailures": [
+        "test_controls.ControlsTest.test_cancel_and_capture_loss_allow_next_gesture",
+        "test_controls.ControlsTest.test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them",
+        "test_controls.ControlsTest.test_snack_expires_while_hiding_but_not_while_game_is_paused",
+        "test_controls.ControlsTest.test_wiki_entry_spoilers_and_return_to_game",
+        "test_dev_panel.DebugPanelTest.test_event_tools_prevent_local_overlap_and_preserve_the_world_entity",
+        "test_engine.EngineTest.test_circle_collision_corners_sliding_and_large_steps",
+        "test_patrol_world.PatrolWorldTest.test_adjacent_stairs_warn_from_the_entrance_without_remote_damage",
+        "test_patrol_world.PatrolWorldTest.test_observed_exit_remembers_connector_and_ignores_unseen_motion",
+        "test_campus_network.CampusNetworkTest.test_seal_banishes_once_and_respawns_at_fixed_point",
+        "test_day_simulation.DaySimulationTest.test_truancy_does_not_drain_san_and_day_lasts_20_minutes",
+        "test_pilot_navigation.DoorwayNavigationTest.test_roster_cannot_be_mistaken_for_stair_direction",
+        "test_sensory.SensoryTest.test_old_settings_respect_reduced_motion_and_explicit_choice",
+        "test_threat_audit.ThreatAuditTest.test_sanity_feedback_does_not_depend_on_sound_quality_or_input"
+      ]
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks1.log.gz",
+      "complete": true,
+      "tests": 15,
+      "seconds": 161.536,
+      "observed": {
+        "passed": 15
+      },
+      "initialFailures": []
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks2.log.gz",
+      "complete": true,
+      "tests": 3,
+      "seconds": 75.396,
+      "observed": {
+        "failed": 1,
+        "passed": 2
+      },
+      "initialFailures": [
+        "test_sensory.SensoryTest.test_reopening_door_cancels_its_delayed_response"
+      ]
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks3.log.gz",
+      "complete": true,
+      "tests": 17,
+      "seconds": 201.505,
+      "observed": {
+        "passed": 16,
+        "failed": 1
+      },
+      "initialFailures": [
+        "test_patrol_world.PatrolWorldTest.test_adjacent_stairs_warn_from_the_entrance_without_remote_damage"
+      ]
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks4.log.gz",
+      "complete": true,
+      "tests": 11,
+      "seconds": 140.894,
+      "observed": {
+        "passed": 11
+      },
+      "initialFailures": []
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks5.log.gz",
+      "complete": true,
+      "tests": 12,
+      "seconds": 271.007,
+      "observed": {
+        "passed": 10,
+        "failed": 2
+      },
+      "initialFailures": [
+        "test_sensory.SensoryTest.test_caption_fits_small_mobile_landscape_and_large_text",
+        "test_pilot_navigation.DoorwayNavigationTest.test_cyber_route_crosses_bridge_and_uses_student_pc_without_key"
+      ]
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks6.log.gz",
+      "complete": true,
+      "tests": 3,
+      "seconds": 123.004,
+      "observed": {
+        "failed": 2,
+        "passed": 1
+      },
+      "initialFailures": [
+        "test_pilot_navigation.DoorwayNavigationTest.test_cyber_route_crosses_bridge_and_uses_student_pc_without_key",
+        "test_void_maze.VoidMazeTest.test_falling_into_the_void_costs_a_little_san_and_respawns_in_the_spawn_area"
+      ]
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks7.log.gz",
+      "complete": true,
+      "tests": 2,
+      "seconds": 126.793,
+      "observed": {
+        "failed": 1,
+        "passed": 1
+      },
+      "initialFailures": [
+        "test_pilot_navigation.DoorwayNavigationTest.test_cyber_route_crosses_bridge_and_uses_student_pc_without_key"
+      ]
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks8.log.gz",
+      "complete": true,
+      "tests": 1,
+      "seconds": 25.704,
+      "observed": {
+        "passed": 1
+      },
+      "initialFailures": []
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks9.log.gz",
+      "complete": true,
+      "tests": 8,
+      "seconds": 219.916,
+      "observed": {
+        "passed": 8
+      },
+      "initialFailures": []
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks10.log.gz",
+      "complete": true,
+      "tests": 2,
+      "seconds": 20.106,
+      "observed": {
+        "passed": 2
+      },
+      "initialFailures": []
+    },
+    {
+      "log": "logs/wdfz-plans-rechecks11.log.gz",
+      "complete": true,
+      "tests": 14,
+      "seconds": 134.727,
+      "observed": {
+        "passed": 14
+      },
+      "initialFailures": []
+    }
+  ],
+  "tests": [
+    {
+      "test": "test_achievements.AchievementTest.test_archive_unlock_all_and_legacy_backfill",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_achievements.AchievementTest.test_debug_panel_mod_and_console_endings_do_not_count",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_achievements.AchievementTest.test_facts_unlock_record_context_and_play_tier_sound_when_calm",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_achievements.AchievementTest.test_page_hides_methods_and_unseen_secret_entries",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_achievements.AchievementTest.test_rules_table_has_four_tiers_and_no_bonus_fields",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_achievements.AchievementTest.test_run_conditions_and_cross_sets",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_achievements.AchievementTest.test_run_tracker_survives_save_and_load",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_achievements.AchievementTest.test_static_markup_never_names_secret_entries",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_contracts.ArchitectureBrowserTest.test_all_room_collision_recipes_match_rendering_capture",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_architecture_contracts.ArchitectureBrowserTest.test_classmate_pressure_and_door_block_survive_missing_meshes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_architecture_contracts.ArchitectureBrowserTest.test_inspection_cooldown_and_save_do_not_require_figures",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_architecture_contracts.ArchitectureBrowserTest.test_legacy_state_facade_and_live_ports_share_one_authority",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_architecture_contracts.ArchitectureBrowserTest.test_render_and_audio_do_not_consume_gameplay_random",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_architecture_contracts.ArchitectureBrowserTest.test_rendering_every_scene_preserves_game_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_ast_guard_detects_an_aliased_presentation_write",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_driving_rules_work_without_ui_and_keep_failure_checkpoints",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_loader_links_live_ports_and_rejects_unauthorized_replacement",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_optional_ambient_sound_uses_only_presentation_random",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_pipeline_always_settles_started_steps_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_presentation_ports_reject_nested_state_writes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_separate_random_sources_are_reproducible_and_replaceable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_architecture_core.ArchitectureCoreTest.test_world_collision_is_available_without_dom_webgl_or_assets_loader",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_archive_fits_short_landscape_screens",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_dream_wake_death_still_unlocks_and_toast_waits_for_the_cg",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_endings_and_opening_are_archived_and_replay_in_isolation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_every_kill_call_maps_to_an_archive_entry",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_first_real_death_unlocks_once_and_repeats_only_count",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_legacy_log_migrates_only_sourced_records",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_menu_lists_locked_entries_without_spoilers_and_replays_in_isolation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_protection_debug_and_preview_do_not_unlock",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.DeathArchiveTest.test_unlock_all_needs_the_debug_password_and_does_not_fake_progress",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.SpeedrunTest.test_clock_is_rta_and_survives_a_stalled_monotonic_clock",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.SpeedrunTest.test_debug_death_quit_and_continue_never_make_a_pb",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.SpeedrunTest.test_debug_switches_left_on_in_a_normal_game_do_not_carry_into_a_run",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.SpeedrunTest.test_dream_wake_keeps_the_clock_running",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.SpeedrunTest.test_finish_on_real_route_records_pb_once_and_not_on_direct_call",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.SpeedrunTest.test_menu_flow_arms_a_run_and_starts_on_first_control",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.SpeedrunTest.test_secret_route_stays_hidden_until_reached",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.TouchFlowTest.test_speedrun_clock_does_not_cover_touch_buttons",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.TouchFlowTest.test_touch_ending_a_replay_does_not_restart_it",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_archive_speedrun.TouchFlowTest.test_touch_skip_of_the_opening_then_one_tap_fires_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_asset_batching.AssetBatchingTest.test_outdoor_low_and_balanced_keep_draw_calls_bounded",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_asset_batching.AssetBatchingTest.test_sparse_batch_preserves_transform_tint_uv_and_transparency",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_assets.AssetLoadingTest.test_failed_quality_load_can_retry_without_accumulating_callbacks",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_assets.AssetLoadingTest.test_held_items_follow_loaded_quality_and_release_old_geometry",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_assets.AssetLoadingTest.test_missing_boot_pack_stays_in_menu_and_retry_restores_collision",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_assets.AssetLoadingTest.test_rapid_quality_changes_apply_a_delayed_pack_only_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_assets.AssetLoadingTest.test_touch_can_retry_a_missing_boot_pack",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_assets.AssetLoadingTest.test_touch_settings_without_quality_boot_the_selected_model_pack",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_assets.PackedAssetsTest.test_all_packs_decode_like_zlib_and_truncated_streams_fail",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_blackout_reduces_light_and_san_then_restores",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_broadcast_warns_before_inspection_and_hud_asks_for_classroom",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_evening_inspection_is_an_explicit_violation_exception",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_inspection_finishes_once_then_figures_scatter",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_inspection_missed_inside_a_forced_flow_is_dropped_not_punished",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_inspection_only_quiets_a_patrol_that_has_arrived_locally",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_looking_and_motion_penalties_use_running_seconds",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_events.CampusEventTest.test_schedule_crossings_are_once_per_day_and_survive_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_charge_only_original_classroom_and_normal_empty_pc_stays_off",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_cyber_cutscene_uses_stage_and_preserves_player_position",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_cyber_ending_storyboard_hits_its_beats_and_cleans_up",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_day_one_no_permit_then_independent_duty_and_missing_penalty",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_dream_clears_new_route_but_preserves_legacy_whitelist_and_talent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_normal_load_keeps_tasks_and_disconnects_terminal",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_one_world_entity_survives_scene_changes_and_door_keys_use_explicit_room",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_pause_and_no_clock_space_separate_active_seconds",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_phone_background_device_identity_and_no_refill",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_phone_tools_work_in_danger_but_paperplane_does_not",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_region_queue_has_no_player_coordinates_and_ignores_corridor",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_remote_entity_does_not_block_inspection_or_drain_sanity",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_rescue_preserves_shutdown_then_public_ending_has_final_line",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_seal_banishes_once_and_respawns_at_fixed_point",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks10.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_shutdown_zero_waits_for_hazards_and_real_death_wins",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_stale_checks_roll_duties_without_punishment",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network.CampusNetworkTest.test_terminal_text_input_and_escape_restore_first_operation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_base_drain_and_charging_do_not_depend_on_phone_ui",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_energy_rates_and_complete_power_boundary",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_parser_cannot_escape_or_execute_host_code",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_postman_matches_exact_small_graph_bound",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_seeded_puzzles_have_unique_valid_chain_and_order",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_segmentation_matches_many_small_steps",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_wireless_signal_at_power_boundary_fires_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_campus_network_rules.CampusNetworkRules.test_wireless_signals_follow_active_progress_and_survive_segmentation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_full_distance_obstacles_and_forks_are_required",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_quit_and_continue_restore_the_driving_scene",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_route_is_read_from_signs_and_pursuit_shows_in_mirror",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_skipping_opening_does_not_skip_the_drive",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_touch_dashboard_stays_clear_of_controls_and_subtitles",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_touch_joystick_accelerates_and_pause_freezes_distance",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_unprotected_crash_cleans_up_the_driving_scene",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_car_chase.CarChaseTest.test_wrong_fork_uses_protection_and_resume_state_survives_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_chain_events.ColaChainTest.test_cola_can_be_dodged_and_a_hit_only_costs_san",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chain_events.ColaChainTest.test_cup_at_night_is_followed_by_cola_after_it_ends",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chain_events.ColaChainTest.test_daytime_and_indoors_keep_it_pending_until_a_safe_night_outdoors",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chain_events.ColaChainTest.test_forecast_survives_the_cola",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chain_events.ColaChainTest.test_only_a_real_cup_owes_one_cola_and_debug_does_not",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chain_events.ColaChainTest.test_pending_and_running_cola_survive_save_without_repeating",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chain_events.CupTimingTest.test_cup_wobble_is_shorter_and_keeps_the_difficulty_order",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chain_events.CupTimingTest.test_short_wobble_still_leaves_time_to_step_aside",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_chalk_marks.ChalkMarksTest.test_draw_on_wall_and_floor_then_erase",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_chalk_marks.ChalkMarksTest.test_in_the_void_maze_floor_wall_and_void",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_chalk_marks.ChalkMarksTest.test_limits_keep_saves_small",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_chalk_marks.ChalkMarksTest.test_marks_survive_save_load_and_room_changes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_chalk_marks.ChalkMarksTest.test_outdoors_and_nothing_to_draw_on",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_clip_audit.ClipAuditReportTest.test_empty_partial_scan_still_records_room_and_quality",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_clip_audit.ClipAuditReportTest.test_invalid_room_fails_without_replacing_existing_report",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_alt_frees_cursor_without_pausing_and_click_takes_it_back",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_ancestor_window_is_slowed_and_drop_requires_dialogue",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_anomaly_choice_uses_real_time_and_random_option",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_anomaly_does_not_repeat_and_prefers_new",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_assimilation_death_can_be_prevented_without_a_choice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_auto_save_death_and_ending_history",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_bag_detail_buttons_use_hotbar_and_drop",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_bag_drop_refreshes_open_panel_and_hotbar",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_bell_platform_opening_clearance_and_collision",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_bell_tower_saves_restore_stairs_and_top",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_bell_tower_spiral_stairs_and_exam_mode",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_brightness_setting_survives_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_cancel_and_capture_loss_allow_next_gesture",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_chalk_and_pendulum_only_announce_difficult_anomalies",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_choice_number_keys_pick_option",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_coin_buys_meal_and_vending_items",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_coin_lures_the_garage_follower_then_expires",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_computer_modal_releases_pointer_and_has_touch_exit",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_computer_touch_dpad_exit_and_no_time_skip",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_continuous_days_and_cooldowns_across_time_skips",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_coordinate_jump_rebases_without_ending_drag",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_day_budget_protects_continuous_exploration_between_inspections",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_debug_panel_requires_password",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_duplicate_search_result_is_retained_and_saved",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_elixir_saves_once_and_seal_wards_patroller",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_ending_cutscene_plays_and_can_be_skipped",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_exam_ignores_non_exam_previews",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_exercise_includes_all_courts_and_night_dorm_accumulates_violations",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_fine_quality_shadows_window_shafts_and_light_pools",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_fixed_items_remain_after_full_or_duplicate_bag",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_footstep_surfaces_and_light_crackle",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_full_bag_does_not_consume_searchable_key_or_usb",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_full_violation_no_longer_kills_but_blocks_leave",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_fullscreen_enters_exits_and_updates_button",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_fullscreen_prefixed_api_and_external_exit",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_fullscreen_rejection_can_retry",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_fullscreen_unavailable_explains_and_standalone_is_detected",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_goggles_make_lab_rolls_better",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_guard_flashlight_can_be_retried_after_full_bag",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_guard_flashlight_enables_garage_escape",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_held_items_show_in_hands",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_homepage_and_legacy_3d_link",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_immune_talent_ends_a_lethal_anomaly",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_immune_talent_saves_once_and_persists",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_indoor_quality_switch_updates_shafts_without_reentering",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_journal_hides_when_replaced_by_pause",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_journal_tabs_share_one_panel_and_keys_switch_or_close",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_keyboard_actions_do_not_leak_into_panels_or_pause",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_leave_slip_excuses_schedule_and_patroller_then_expires",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_lifting_movement_finger_preserves_view_finger",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_light_and_cooldown_restore_and_old_save_defaults",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_lights_out_hud_debug_minutes_and_podium_text",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_lights_share_priority_and_follow_removed_items",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_locker_position_and_patrol_end_stay_hidden_until_exit",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_long_frame_has_bounded_catchup",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_mobile_menu_panels_scroll_and_real_scene_renders",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_monologue_changes_with_san",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_moth_swarm_closes_in_but_keeps_off_the_lens",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_mouse_and_touch_can_switch_after_pointer_lock",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_mouse_drag_fallback_remains_available_after_rejection",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_mouse_lock_modal_return_and_escape_pause",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_mouse_on_touch_joystick_does_not_start_touch_input",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_narrow_portrait_hotbar_is_visible_and_tappable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_old_cooldown_timestamps_migrate_without_expiring_or_extending",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_older_save_without_new_state_loads_safely",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_only_hard_to_prevent_anomalies_are_forecast",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_outdoor_light_direction_survives_quality_downgrade",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_patroller_has_its_own_uniform",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_patroller_locks_on_hides_and_back_turn_is_not_an_escape",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_patroller_reaches_seen_locker_without_crossing_walls",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_phone_opens_from_inventory_on_mouse_and_touch",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_phone_paper_plane_app_restores_a_little_san",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_phone_reward_cooldown_survives_reload_and_old_saves",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_phone_yields_to_choice_anomaly_death_and_menu",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_pill_effect_survives_reload_and_old_saves_default_to_zero",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_pill_heals_over_time_snack_lasts_thirty_seconds_and_day_is_brighter",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_pointer_lock_error_does_not_cancel_touch_look",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_portal_delayed_prompt_does_not_interrupt_other_contexts",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_portal_materials_can_be_retried_after_full_bag_or_drop",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_portal_remains_accessible_after_assembly_and_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_portal_true_ending_from_lab_parts",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_portrait_subtitle_uses_full_width",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_principal_office_keys_and_guard_has_none",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_prologue_only_advances_on_space_or_enter",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_rain_streaks_splashes_lightning_and_cleanup",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_reload_keeps_follower_and_previews_and_discards_old_hidden_choice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_reload_restores_timed_anomaly_choice_and_indoor_effect",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_returned_menu_layout_on_short_and_touch_screens",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_roster_anomaly_choice_is_timed_and_restored",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_schedule_evening_until_ten_and_lights_out",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_search_job_is_cleared_when_quitting_or_starting_new_game",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_search_takes_time_and_dev_toggle",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_shoulder_smile_loss_uses_difficulty_and_can_be_fatal",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_shoulder_tap_smile_variant_small_loss_for_turning_round",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_skipped_time_fires_lights_out_and_first_day_story",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_skipping_a_cutscene_does_not_press_the_button_behind_it",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_slow_touch_action_still_fires_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_snack_and_world_time_keep_pace_at_low_frame_rates",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_snack_expires_while_hiding_but_not_while_game_is_paused",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_snack_sprint_and_exhausted_stamina_does_not_stutter",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_sprint_effect_and_exhaustion_survive_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_tap_does_not_click_what_appears_under_the_finger",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_touch_action_button_shows_current_action_and_book_opens_journal",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_touch_action_with_slow_follow_up_still_fires_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_touch_buttons_fire_once_and_stick_runs_without_button",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_touch_can_take_over_from_locked_mouse",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_touch_capable_desktop_uses_locked_mouse_and_rotates_view",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_touch_pause_resume_panels_and_fullscreen_recover_look",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_touch_tap_never_locks_mouse_or_enters_fullscreen",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_trap_ideas_only_work_on_the_spot",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_trash_is_a_death_and_respects_survival_item",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_tsinghua_cup_is_modeled_after_the_real_one",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_tsinghua_cup_only_falls_along_tall_outer_walls",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_tsinghua_cup_survives_save_and_leaves_trace_outdoors",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_two_finger_move_and_look_have_separate_owners",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_walking_running_analog_input_and_blur_reset",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_controls.ControlsTest.test_wiki_entry_spoilers_and_return_to_game",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks2.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_excused_inspection_is_neutral_and_only_attendance_renews",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_expired_pass_does_not_renew_on_reload_and_old_notice_migrates_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_ordinary_absence_is_not_a_timer_and_exams_still_matter",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_patrol_records_one_violation_per_encounter_even_after_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_podium_grants_a_stable_pass_across_bells_and_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_wait_is_explicit_and_cancellable_on_mouse_and_touch",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_wait_stops_at_a_bell_warning_danger_pause_or_death",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_wait_uses_normal_body_and_clock_accounting",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_rhythm.DayRhythmTest.test_warning_reserves_a_minute_and_defers_new_threats_and_choices",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_day_simulation.DaySimulationTest.test_full_compliance_survives_day_one_but_not_day_two",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_day_simulation.DaySimulationTest.test_truancy_does_not_drain_san_and_day_lasts_20_minutes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_all_death_models_have_finite_transforms_during_playback",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_bin_preview_closes_lid_without_mutating_player",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_board_deaths_stand_in_front_of_the_view",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_camera_target_follows_death_lift",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_cutscene_skip_releases_resources_and_restores_visual_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_death_cinematic_can_be_skipped_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_death_cinematics_stay_within_a_draw_call_budget",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_death_moths_are_black_like_the_in_game_swarm",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_every_ending_storyboard_plays_through_and_finishes_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_every_reachable_death_has_its_own_sound",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_motion_depends_on_elapsed_time_not_frame_count",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_reachable_effects_have_preview_and_timeline",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_real_death_resources_are_released_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_real_storyboard_death_turns_camera_and_releases_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_stall_hand_rises_then_reaches_player",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_storyboarded_deaths_cover_every_reachable_type",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_storyboards_are_frame_rate_independent_and_move_through_phases",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_storyboards_respect_reduced_shake_and_cap_flash",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_tapping_through_a_death_does_not_press_the_menu_button",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_death_timeline.DeathTimelineTest.test_warm_up_compiles_every_death_cinematic_shader_in_advance",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_actual_death_confirms_and_revive_cancels_delayed_death_screen",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_alt_frees_mouse_for_the_open_panel_without_pausing",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_ball_drag_does_not_expand_or_turn_camera_and_tap_still_works",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_ball_preserves_freeze_survives_orientation_and_closes_on_quit",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_cancelled_prologue_restart_keeps_current_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_compact_layout_does_not_jump_during_mouse_touch_switch",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_continue_does_not_dismiss_an_anomaly_choice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_debug_freeze_holds_ambient_events_but_allows_previews",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_diagnostic_export_does_not_modify_save_and_contains_current_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_editing_panel_does_not_move_player_or_trigger_game_shortcuts",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_effect_preview_does_not_leak_into_a_new_session",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_ending_or_replacing_anomaly_cancels_pending_choice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_event_tools_prevent_local_overlap_and_preserve_the_world_entity",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_every_death_preview_keeps_the_live_camera_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_exact_time_keeps_clock_rules_and_blocks_special_flows",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_filter_teleport_and_hiding_cleanup",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_freeze_is_explicit_and_closing_restores_game_input",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_inventory_editor_respects_capacity_and_cleans_hand_and_hotbar",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_keyboard_focus_stays_inside_and_quitting_cleans_up",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_keyboard_move_and_viewport_resize_keep_panel_reachable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_landscape_panel_fills_the_height_between_the_touch_controls",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_landscape_touch_controls_stay_reachable_while_panel_is_open",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_minimize_is_a_tiny_ball_and_restores_panel_without_a_password",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_mobile_panel_is_compact_and_every_tab_has_reachable_controls",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_mouse_drag_is_bounded_and_position_can_be_reset",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_open_window_allows_mouse_keyboard_interaction_and_inventory",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_panel_can_close_during_death_and_prologue",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_panel_clicks_do_not_skip_death_but_game_clicks_do",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_pause_menu_and_focused_input_close_without_losing_pause",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_preview_cleanup_does_not_remove_a_real_death",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_preview_does_not_consume_protection_or_save_and_animation_clears",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_preview_is_cleared_when_teleporting_or_quitting",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_preview_timeout_does_not_clear_a_new_anomaly",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_preview_timeout_restores_camera_without_losing_player_input",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_preview_uses_visual_camera_and_keeps_later_player_input",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_real_death_revive_restores_predeath_view",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_resume_from_pause_keeps_window_open_and_touch_controls_work",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_revive_prevents_an_old_death_epitaph_overwriting_a_new_one",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_second_touch_cannot_take_over_a_drag",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_state_editor_is_validated_and_respects_stamina_cap",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_stop_preview_leaves_anomalies_and_player_state_intact",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_teleport_clears_a_finished_shoulder_visual",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_teleport_ends_anomaly_and_cancels_its_pending_choice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_touch_drag_cancel_and_orientation_change_release_the_pointer",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_touch_drag_moves_window_without_interfering_with_scroll_or_buttons",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_touch_layout_scrolls_at_narrow_and_landscape_sizes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dev_panel.DebugPanelTest.test_visual_viewport_constrains_keyboard_and_restores_position",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_domain_rules.DomainRulesTest.test_calendar_matches_previous_boundary_and_cross_day_behavior",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_domain_rules.DomainRulesTest.test_inventory_capacity_hotbar_and_consumption_without_ui",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_domain_rules.DomainRulesTest.test_pressure_curve_is_continuous_and_capped",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_domain_rules.DomainRulesTest.test_pressure_query_does_not_write_persistent_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_domain_rules.DomainRulesTest.test_real_time_slices_preserve_special_window_and_remainder",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_domain_rules.DomainRulesTest.test_stats_preserve_frame_settlement_and_state_replacement",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_domain_rules.DomainRulesTest.test_violation_exemption_keeps_inspection_exception",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_continue_restores_the_saved_visit_without_another_entry",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_false_threats_have_direction_distance_and_walls",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_five_minute_slice_runs_its_beats_in_order",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_leaving_or_resetting_cancels_the_pending_entry_sound",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_no_ambient_scares_while_something_else_is_happening",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_replacing_and_clearing_notes_releases_their_gpu_textures",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_returning_to_a_room_changes_it_slightly_and_reproducibly",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_scare_budget_spacing_and_safe_start",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_dread.DreadTest.test_silence_drop_and_anomaly_precursor",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_elevator.ElevatorTest.test_dream_freezes_clock_but_allows_movement_and_return",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_elevator.ElevatorTest.test_every_landing_has_collision_free_space",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_elevator.ElevatorTest.test_wait_board_travel_and_restore_on_both_buildings",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_circle_collision_corners_sliding_and_large_steps",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks5.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_cup_quality_switch_updates_texture_without_restarting_effects",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_film_grain_is_subtle_in_dark_areas_and_can_be_turned_off",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_gameplay_modules_do_not_construct_renderer_objects",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_high_dpi_switch_resizes_targets_with_the_new_profile",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_local_file_start_with_network_disabled",
+      "outcome": "skipped",
+      "log": "logs/wdfz-plans-final1.log.gz",
+      "reason": "'此环境的 Chromium 管理策略禁止 file://；另有断网本地资源加载测试'"
+    },
+    {
+      "test": "test_engine.EngineTest.test_outdoor_collision_is_identical_at_all_four_qualities",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_packaged_assets_boot_with_network_offline",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_quality_switch_preserves_live_story_and_actor_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_realistic_tier_rounds_every_box_and_uses_physical_rendering",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_sustained_low_fps_hint_requires_active_play_and_user_choice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_ultra_real_render_and_resource_release",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_ultra_settings_persist_and_old_values_normalize",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_engine.EngineTest.test_ultrawide_camera_near_plane_stays_inside_body",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_face_challenge.FaceChallengeTest.test_gate_challenge_cannot_be_bypassed_and_survives_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_camera_near_plane_cannot_reach_walls",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_clip_audit_ultra_modeling_is_clean_too",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_clip_audit_whole_school_is_clean",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_every_room_has_the_same_collision_in_all_five_qualities",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_every_room_is_reachable_with_new_collision",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_furniture_collision_follows_the_model_and_seat_is_solid",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_garage_actor_cannot_tunnel_through_a_thin_obstacle",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_hands_are_drawn_in_their_own_pass",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_patroller_paths_keep_body_clearance",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_player_can_leave_the_solid_starting_seat",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_geometry.GeometryTest.test_ultra_exact_circle_collision_slides_along_walls",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_input_policy.InputPolicyBrowserTest.test_context_exposes_debug_freeze_without_freezing_unfocused_panel",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_input_policy.InputPolicyBrowserTest.test_cutscene_skip_owns_keyboard_when_legacy_prologue_flag_is_set",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_input_policy.InputPolicyBrowserTest.test_touch_skip_and_legacy_text_page_use_their_own_contexts",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_input_policy.InputPolicyUnitTest.test_pause_matrix_without_browser_or_renderer",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_lifecycle.ScopeRulesTest.test_scope_cancellation_disposes_resources_and_rejects_stale_callbacks",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_delayed_first_prologue_is_cancelled_when_leaving_new_game",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_direct_scene_change_cancels_old_fade_destination",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_late_dialogue_and_skip_card_do_not_leak_into_new_session",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_old_eyelid_callback_cannot_write_after_fresh_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_pending_room_transition_cannot_reenter_after_quit",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_quitting_cancels_computer_without_awarding_score",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_render_does_not_tick_computer_or_intro_but_application_step_does",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_rendering_forecast_does_not_mark_first_notice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_restart_cancels_death_flash_and_old_death_result",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_lifecycle.SessionLifecycleTest.test_wall_repair_runs_only_during_simulation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_model.ModelTest.test_curved_surfaces_are_smooth_and_new_primitives_build",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_model.ModelTest.test_far_figure_appears_down_the_corridor_and_vanishes_up_close",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_model.ModelTest.test_hidden_faces_on_floor_are_skipped_only_when_asked",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_model.ModelTest.test_kit_uses_compact_vertex_data",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_model.ModelTest.test_low_quality_keeps_a_vertex_budget",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_model.ModelTest.test_rooms_and_outdoor_are_reused_and_door_only_rebuilds_its_leaf",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_module_boundaries.ModuleBoundariesTest.test_runtime_modules_respect_declared_boundaries",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_module_persistence.ModulePersistenceTest.test_callback_failure_preserves_last_serializable_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_module_persistence.ModulePersistenceTest.test_failed_init_unregisters_declared_and_api_persistence",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_module_persistence.ModulePersistenceTest.test_new_game_discards_unloaded_previous_game_data",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_module_persistence.ModulePersistenceTest.test_temporarily_unloaded_data_survives_saving_and_reenable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_modules.ManifestStaticTest.test_declared_hooks_match_the_code",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ManifestStaticTest.test_every_script_is_registered_once_and_index_uses_the_loader",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ManifestStaticTest.test_feature_logic_files_do_not_touch_the_renderer",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_all_modules_load_and_verify_without_mods",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_broken_mod_and_hook_errors_are_isolated",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_builtin_switch_and_upload_persist_across_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_feature_modules_can_be_removed_from_the_manifest",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_mod_panel_imports_a_file_from_the_pause_menu",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_module_state_is_saved_under_mods_and_reset_on_new_game",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_room_no_clock_contract_also_applies_outside_elevator",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_modules.ModuleBrowserTest.test_url_mod_loads_and_safe_mode_skips_it",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_accepted_request_work_buffer_and_countdown_survive_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_all_pause_contexts_freeze_network_and_hidden_time_does_not_catch_up",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_cabin_car_and_calendar_jumps_use_one_active_tick",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_container_pause_button_preserves_elapsed_time",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_day_two_old_permit_retains_deadline_without_new_obligation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_late_registration_keeps_older_duty_and_new_day_target",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_legacy_migration_and_corrupt_new_device_do_not_refill",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_location_updates_floor_transit_and_banish_then_stops_without_power",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_mobile_terminal_buffer_soft_focus_and_immediate_exit",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_night_save_does_not_roll_tomorrows_duty_a_second_day",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_occupied_day_only_blocks_snake_and_not_maintenance",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_phone_and_admin_whitelist_are_the_same_idempotent_action",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_real_rescue_and_dream_cancel_at_same_shutdown_boundary",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_region_notifications_are_fifo_across_offices_and_network_center",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_tech_boundary_recharge_and_download_are_not_a_soft_lock",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_tech_is_a_selectable_start_and_gets_only_one_full_phone",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_terminal_fits_short_mobile_visual_viewport",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_terminal_forced_choice_retains_work_and_moving_away_disconnects",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_network_lifecycle.NetworkLifecycleTest.test_wireless_container_commands_disconnect_and_public_ending",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_opening.OpeningTest.test_continue_does_not_replay_the_opening",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_opening.OpeningTest.test_full_version_for_new_players_short_for_returning",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_opening.OpeningTest.test_skipping_at_any_shot_hands_over_the_same_start",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_opening.OpeningTest.test_speedrun_starts_only_after_the_handoff",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_opening.OpeningTest.test_world_is_frozen_and_input_blocked_during_the_opening",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_chase_speed_is_continuous_and_independent_of_tick_size",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_closed_network_door_is_crossed_gradually_without_unlocking",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_indoor_investigation_moves_every_frame_at_walk_speed",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_maze_and_bell_walk_on_supported_surfaces_at_bounded_speed",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_new_speedrun_rules_preserve_legacy_records_without_using_old_best",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_only_far_outdoor_patrol_can_blink_and_cooldown_survives_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_outdoor_blink_landing_keeps_clear_of_player",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_outdoor_chase_investigation_return_and_nearby_patrol_never_blink",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_replanning_connects_arbitrary_position_without_cutting_wall",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_save_mid_walk_resumes_without_snap_or_old_blink_pause",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_motion.PatrolMotionTest.test_walk_does_not_keep_refreshing_capture_protection",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_adjacent_stairs_warn_from_the_entrance_without_remote_damage",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_corrupt_new_domains_repair_without_erasing_inactive_mods",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_cross_scene_replanning_reuses_skeleton_shortest_paths",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_debug_invulnerability_is_not_a_rescue",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_graph_is_connected_and_route_covers_every_selected_edge",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_inspection_and_calm_hold_only_the_local_permanent_entity",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_locked_door_is_registered_and_counts_distance_without_opening_it",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_observed_exit_remembers_connector_and_ignores_unseen_motion",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_permanent_investigation_does_not_use_remote_pressure_or_consume_seal",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_permanent_local_lock_can_reset_without_clearing_tracking_or_bypassing_seal",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_saved_midflight_and_non_grid_position_are_restored_exactly",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_stair_portal_is_immediate_but_height_requires_walking",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_static_navigation_survives_cleared_renderer_caches",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_two_maze_exits_and_bell_spiral_are_reachable_on_walk_surfaces",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_world.PatrolWorldTest.test_unseen_motion_does_not_update_last_seen_and_back_turn_does_not_end_chase",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks3.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_all_region_observation_points_are_navigable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_corridor_student_computers_and_door_do_not_report",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_entry_reports_once_and_regions_keep_fifo_without_coordinates",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_leaving_then_entering_again_can_report_after_investigation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_mobile_and_desktop_show_same_entry_warning_and_world_sign",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_new_and_old_regions_survive_save_without_replaying_entry",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_patrol_investigates_fixed_region_after_player_leaves",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_registration_does_not_exempt_alarm_zone_and_night_keeps_indoor_rule",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_patrol_zones.PatrolZonesTest.test_save_repairs_unknown_regions_and_keeps_network_investigation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pilot_navigation.DoorwayNavigationTest.test_cyber_route_crosses_bridge_and_uses_student_pc_without_key",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_pilot_navigation.DoorwayNavigationTest.test_fake_normal_dialog_is_answered_without_changing_game_rules",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_pilot_navigation.DoorwayNavigationTest.test_portal_bench_tunnel_and_blueprint_use_real_interactions",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_pilot_navigation.DoorwayNavigationTest.test_recorded_classroom_corner_exits_under_slow_physics_frames",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_pilot_navigation.DoorwayNavigationTest.test_roster_cannot_be_mistaken_for_stair_direction",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_pilot_navigation.SteeringMathTest.test_oscillation_is_not_progress_but_shortcuts_are",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_pilot_navigation.SteeringMathTest.test_slow_and_variable_frames_brake_without_oscillating",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_car_key_record_vehicle_result_and_save_share_one_answer",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_concrete_lesson_memory_forgets_without_tools_but_progress_survives",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_custom_joystick_touch_does_not_consume_quick_items",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_custom_touch_controls_avoid_quick_slots_after_resize_and_restore",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_custom_touch_layout_does_not_cover_fullscreen",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_floor_map_save_is_compact_and_reads_the_earlier_format",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_floor_map_uses_seen_geometry_pending_loot_and_resets",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_local_playtest_record_is_bounded_and_separate_from_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_mobile_floor_map_can_scroll_sideways",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_note_search_escapes_content_and_remembers_only_current_run",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_notebook_focus_follows_discovered_routes_without_restoring_forgotten_text",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_old_save_does_not_invent_lesson_success",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_only_own_classroom_podium_holds_the_handover_slip",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks1.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_opening_clue_keyboard_touch_full_bag_and_restore",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_portal_local_challenge_wrong_retry_order_and_restored_step",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_redone_panels_show_state_without_losing_notes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_same_death_effect_has_source_specific_memory",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_scene_signs_are_lit_unique_and_released_with_the_room",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_settings_clamp_persist_and_reset",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_supply_choice_is_saved_optional_and_does_not_consume_when_full",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_touch_layout_resizes_and_keeps_controls_in_view",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playability.PlayabilityTest.test_touch_sensitivity_does_not_change_mouse_fallback",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_cyber_publication_requires_evidence_and_full_survival",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_cyber_solver_uses_printed_files_and_handles_shuffled_log_order",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_invalid_options_do_not_create_output",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_local_server_supports_video_seeking_ranges",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_mux_preserves_full_duration_and_has_audio_and_video",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_other_endings_require_their_actual_ordered_route",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_player_rejects_modified_movie",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_rejects_nonempty_or_linked_output_without_touching_it",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_playthrough_video.PlaythroughOutputTest.test_success_requires_real_ending_driving_and_disabled_debug",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_portal_exploration.PortalExplorationTest.test_full_exploration_and_existing_materials_reach_ending",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_portal_exploration.PortalExplorationTest.test_inspection_waits_until_player_leaves_tunnel",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_portal_exploration.PortalExplorationTest.test_old_sketch_and_opened_portal_remain_usable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_portal_exploration.PortalExplorationTest.test_tunnel_damage_uses_death_protection_and_survives_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_portal_model.PortalModelTest.test_device_follows_the_story_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_portal_model.PortalModelTest.test_device_stays_on_the_bench_and_adds_no_collision",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_portal_model.PortalModelTest.test_leaving_quality_switch_and_cutscene_reuse",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_camera_interpolation_is_owned_by_presentation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_car_stage_handoff_starts_the_real_driving_session_once",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_failed_stage_setup_is_reported_and_cleaned_before_handoff",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_outdoor_ending_stage_preserves_world_and_collision",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_real_and_preview_death_effects_do_not_write_player_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_replacing_preview_disposes_it_once_without_disposing_real_death",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_stage_draw_keeps_old_scene_enemies_hidden",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_isolation.PresentationIsolationTest.test_stage_quality_rebuild_preserves_player_and_returns_to_room",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_presentation_states.PresentationStatesTest.test_fake_normal_lighting_crosses_threshold_smoothly",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_presentation_states.PresentationStatesTest.test_fake_people_do_not_remain_in_old_room_after_scene_change",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_presentation_states.PresentationStatesTest.test_prologue_normal_world_and_wake_restore_visual_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_presentation_states.PresentationStatesTest.test_protected_fake_normal_death_does_not_leave_figures",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_presentation_states.PresentationStatesTest.test_restarting_and_quitting_remove_fake_people_and_old_visual_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_absence_is_not_san_loss_but_danger_is",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_assimilation_is_immediate_and_old_choices_do_not_return",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_dawn_ends_patrol_before_it_can_drain_san",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_evening_blocks_all_violation_sources_and_has_clear_edges",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_hiding_is_not_lost_when_restoring_a_patrol_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_lesson_interrupts_without_freezing_and_expires",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_lesson_keeps_time_and_survives_reload_without_duplicate_reward",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_lesson_physical_keys_work_with_non_latin_key_labels",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_low_san_cap_can_recover_enough_to_sprint_and_snack_still_works",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_office_key_probability_and_full_bag",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_patrol_chase_and_blink_timer_survive_save_reload",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_patrol_does_not_disappear_just_because_player_is_exempt",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_patrol_stops_ordinary_chase_but_remains_when_the_allowed_time_ends",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_patrol_walks_keep_distance_budget_and_night_is_outdoor_only",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_san_is_readable_when_muted_without_a_numeric_bar",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks5.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureBrowserTest.test_san_visual_resets_on_new_game_and_matches_loaded_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks5.log.gz"
+    },
+    {
+      "test": "test_pressure.PressureClockTest.test_real_time_budgets_and_boundaries_are_step_independent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_route_clock.RouteClockTest.test_clock_crossing_is_step_independent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_route_clock.RouteClockTest.test_clock_visibility_and_ordinary_skip_card",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_route_clock.RouteClockTest.test_game_text_never_hints_the_hidden_time",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_route_clock.RouteClockTest.test_hidden_window_boundaries_and_saved_dialogue",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_route_clock.RouteClockTest.test_hidden_window_survives_pause_and_next_day",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_route_clock.RouteClockTest.test_no_seconds_anywhere_on_screen_with_any_clock_source",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_death_shows_one_line_no_grade_no_record",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_debug_run_is_not_rated",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_debug_tab_previews_generates_and_archive_section",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_dialogs_fit_phone_screens",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_ending_rates_saves_record_and_shows_grade_screen",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_explore_metric_and_handbook_line",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks1.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_real_grade_lights_archive_card_and_unlock_all",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_records_caps_keep_best_and_replay_budget",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_replay_player_and_footprint",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_run_log_samples_persist_and_resume",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_score_rules",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_run_record.RunRecordTest.test_speedrun_ranking_and_best_grade",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_save_boundary.SaveBoundaryBrowserTest.test_apply_save_does_not_reuse_input_objects_or_change_presentation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_save_boundary.SaveBoundaryBrowserTest.test_bad_save_never_resets_current_game_or_overwrites_original_bytes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_save_boundary.SaveBoundaryBrowserTest.test_invalid_direct_restore_rejects_before_writing_game_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_save_boundary.SaveDataTest.test_current_event_and_elevator_save_retains_continuous_state",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_save_boundary.SaveDataTest.test_handwritten_legacy_midnight_migrates_once_without_mutating_source",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_save_boundary.SaveDataTest.test_invalid_required_fields_rejected_and_optional_collections_normalized",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_save_boundary.SaveDataTest.test_storage_failure_preserves_previous_bytes_and_reports_operation",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_all_stair_flights_walk_both_directions_and_restore_midflight",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_every_stair_portal_can_be_crossed_on_foot",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_inspection_needs_own_seat_for_entire_check",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_interaction_target_survives_multiple_complete_turns",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks9.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_leave_settles_neutrally_once_and_does_not_cancel_other_tracking",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_old_layout_moves_overlap_and_splits_door_without_extending_leave",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_patrol_midflight_and_wireless_snapshot_survive_loading",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_snack_speed_boundary_timer_and_legacy_talent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_stair_rail_and_floor_slabs_block_shortcuts",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_two_doors_independent_and_aimed_interaction",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_school_rebuild.SchoolRebuildTest.test_walk_into_stair_and_out_onto_next_floor_without_fade",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks4.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_bell_caption_runs_without_ambient_nodes_or_audio_output",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_caption_fits_small_mobile_landscape_and_large_text",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_muted_caption_is_same_dispatch_as_audio_and_has_no_secret_identity",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_off_distortion_keeps_shader_center_and_touch_aim_stable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_old_settings_respect_reduced_motion_and_explicit_choice",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_patrol_steps_keep_wet_layers_and_observed_direction",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_phone_at_full_health_does_not_claim_recovery_or_heat",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_priority_merging_expiry_and_pause_clear",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_real_hazard_and_scene_change_cancel_scheduled_scare",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_reopening_door_cancels_its_delayed_response",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_results_hide_precise_state_without_changing_legacy_score",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sensory.SensoryTest.test_smoothing_recovers_gradually_and_does_not_change_rules_or_random",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks11.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_dev_tools_page_auditions_every_sound",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_dread_and_thunder_map_to_direction_distance_and_muffling",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_each_play_is_slightly_different_but_equally_loud",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_layer_reverb_follows_calibration_volume_and_stop",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_levels_table_is_current_and_categories_are_even",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_mods_can_add_their_own_sound",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_old_audition_timer_cannot_reset_new_sequence_or_next_session",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_old_missing_calls_now_play_and_death_sounds_can_be_stopped",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_recipes_are_valid_and_every_call_site_has_a_sound",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_school_bells_tell_class_start_from_class_end",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_session_boundary_stops_scheduled_audio",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_step_surface_hook_and_feet_alternate",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_stopping_audition_preserves_game_audio",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_sound_bank.SoundBankTest.test_wiki_explains_the_two_bells_without_internal_names",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_special_days.SpecialDayTest.test_anniversary_halves_every_per_second_drain",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_special_days.SpecialDayTest.test_anniversary_is_announced_once_with_a_banner_outdoors",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_special_days.SpecialDayTest.test_days_are_rolled_once_from_the_run_seed",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_special_days.SpecialDayTest.test_inspection_gaze_is_halved_too",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_special_days.SpecialDayTest.test_occupied_changes_content_but_not_attendance",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_special_days.SpecialDayTest.test_old_saves_do_not_turn_special_mid_day",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_special_days.SpecialDayTest.test_one_off_losses_recovery_and_night_are_unchanged",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_code_remedy_spares_one_wrong_answer_only",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_drive_without_key_hotwires_slower_and_hints_match",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_immune_use_is_saved_at_once_and_pause_shows_it",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_journal_lists_the_talent_with_limit_and_recent_use",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_modifiers_apply_only_to_their_sources",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_old_saves_keep_old_rules_and_consumed_protection",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_picker_only_starts_on_confirm_and_back_keeps_the_save",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_unknown_or_missing_ids_load_as_no_talent_and_the_view_is_rebuilt",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_talents.TalentTest.test_watch_reminds_once_and_never_for_skipped_marks",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_anomalies_do_not_take_turns_forever",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_dying_the_same_way_twice_leaves_a_hint_next_time",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_lesson_pool_and_seated_assimilation_warning",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_patrol_searches_last_seen_but_does_not_know_an_unseen_locker",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_principal_office_key_has_a_pity_timer",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_sanity_drain_is_frame_rate_independent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_sanity_feedback_does_not_depend_on_sound_quality_or_input",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks5.log.gz"
+    },
+    {
+      "test": "test_threat_audit.ThreatAuditTest.test_unreachable_permanent_patrol_replans_without_giving_up",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_danger_grows_and_passive_recovery_shrinks_without_nerfing_pills_or_talent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_hud_explains_risk_on_desktop_and_touch",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_late_game_escape_and_registered_exploration_remain_possible",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_load_keeps_pending_anomaly_and_patrol_warning",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_notice_waits_for_safe_gap_and_survives_reload_without_spam",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_pause_journal_and_frozen_space_do_not_age_world",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_repeatable_minigame_rewards_follow_pressure",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_save_rewind_and_old_save_migration_preserve_progress_and_pressure",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_scheduled_intervals_shrink_but_warning_and_chase_windows_survive",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationBrowserTest.test_sleep_across_night_uses_arrival_pressure_and_keeps_cooldown",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_time_escalation.EscalationCurveTest.test_clock_curve_is_continuous_monotonic_capped_and_step_independent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_video.TrailerOutputTest.test_custom_output_does_not_delete_existing_files",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_video.TrailerOutputTest.test_invalid_preview_options_do_not_create_or_clear_output",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_video.TrailerOutputTest.test_new_renderer_rejects_bad_job_count",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_video.TrailerStoryboardTest.test_every_shot_has_a_script_and_clips_have_places",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_video.TrailerStoryboardTest.test_score_only_cues_existing_shots",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_video.TrailerStoryboardTest.test_trailer_keeps_hidden_content_out",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_both_exits_are_reachable_only_by_stairs_and_lead_to_their_floors",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_chalk_lies_in_the_spawn_area_and_old_marks_are_drawn",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_dying_in_the_maze_plays_its_own_cinematics_and_records_its_own_cause",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_falling_into_the_void_costs_a_little_san_and_respawns_in_the_spawn_area",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks8.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_layout_tables_are_consistent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_new_structures_pillar_hall_catwalk_and_loop_are_walkable",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_san_drains_faster_the_longer_you_stay_and_runs_out_in_about_twenty_minutes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_save_and_load_keep_height_and_time_inside",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_secret_archive_entries_appear_only_after_dying_here_and_replay_in_the_maze",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_stairs_tower_climbs_to_a_dead_end_and_walls_block",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_the_two_storyboards_move_through_their_beats",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze.VoidMazeTest.test_wrong_elevator_leads_into_the_dark_maze",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_void_maze_eggs.VoidMazeEggsTest.test_eggs_module_can_be_removed_without_breaking_the_maze",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_void_maze_eggs.VoidMazeEggsTest.test_new_structures_have_their_own_shadows",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_void_maze_eggs.VoidMazeEggsTest.test_staring_into_the_void_inverts_the_picture_once_and_shows_someone_below",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_void_maze_eggs.VoidMazeEggsTest.test_three_shadows_appear_where_you_look_and_vanish_when_watched",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_void_maze_eggs.VoidMazeEggsTest.test_void_has_its_own_quiet_soundscape",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_void_maze_eggs.VoidMazeEggsTest.test_wiki_keeps_the_eggs_secret",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wiki_secrets.WikiSecretTest.test_wiki_does_not_count_all_endings",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_wiki_secrets.WikiSecretTest.test_wiki_has_no_hidden_ending_names_times_or_clues",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_background_signals_replace_old_snapshot_without_live_tracking",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_banishment_retains_snapshot_but_rescue_clears_it",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-rechecks10.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_close_signal_keeps_full_warning_before_search_or_capture",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_completion_stops_new_signals_without_retracting_last_one",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_first_signal_is_at_fifteen_seconds_and_does_not_force_lock",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_game_pause_freezes_both_progress_and_received_intelligence",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_known_cabinet_can_be_found_and_seal_still_banishes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_legacy_and_malformed_signals_are_cleared_and_new_game_resets",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_patrol_navigates_toward_old_location_after_unseen_scene_change",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_pause_loss_of_device_and_empty_battery_do_not_advance_signals",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_phone_explains_exposure_and_countdown_on_mobile",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_save_load_keeps_snapshot_and_partial_interval_without_replaying_signal",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_search_ends_at_snapshot_then_region_investigation_resumes",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_signal_preserves_connector_travel_and_permanent_tracking",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_signal_reveals_only_the_cabinet_occupied_at_that_moment",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wireless_signals.WirelessSignalTest.test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final1.log.gz"
+    },
+    {
+      "test": "test_wuda_kid.WudaKidTest.test_menu_school_name_toggles_it_with_three_quick_clicks",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_wuda_kid.WudaKidTest.test_module_can_be_removed_and_wiki_keeps_the_secret",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_wuda_kid.WudaKidTest.test_new_game_brings_a_torch_and_stacks_with_the_chosen_talent",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_wuda_kid.WudaKidTest.test_off_by_default_never_in_speedrun_and_saves_follow_the_run",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    },
+    {
+      "test": "test_wuda_kid.WudaKidTest.test_three_percent_chance_on_a_new_game_without_the_menu_switch",
+      "outcome": "passed",
+      "log": "logs/wdfz-plans-final0.log.gz"
+    }
+  ]
+}

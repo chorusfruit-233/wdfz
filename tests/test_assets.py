@@ -48,7 +48,7 @@ class AssetLoadingTest(BrowserCase):
         page.wait_for_function("Assets.ready(2)&&document.getElementById('assetNotice').hidden", timeout=30000)
         self.start_from_menu(page)
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh&&GLR.roomMesh.userData.roomId==='teach1'", timeout=30000)
-        self.assert_js(page, "INTERIORS.teach1.foot['5,2']&&INTERIORS.teach1.foot['5,2'].length>0")
+        self.assert_js(page, "INTERIORS.teach1.foot['7,2']&&INTERIORS.teach1.foot['7,2'].length>0")
 
     def test_touch_can_retry_a_missing_boot_pack(self):
         context = self.browser.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True)

@@ -3,9 +3,11 @@
 /* 里世界 3D · 设置 */
 'use strict';
 
-var SET={vol:70,sub:1,q:1,shake:1,amb:1,bright:100,grain:1,mouseSense:100,touchSense:100,textSize:100,touchSize:100,touchLayout:null};
+var SET={distortion:2,reduceFlash:0,soundCaptions:1,vol:70,sub:1,q:1,shake:1,amb:1,bright:100,grain:1,mouseSense:100,touchSense:100,textSize:100,touchSize:100,touchLayout:null};
 var COMFORT_LIMITS={mouseSense:[25,250],touchSense:[25,250],textSize:[85,150],touchSize:[85,125]};
 function normalizeComfort(){
+  ['distortion','soundCaptions'].forEach(function(k){if(![0,1,2].includes(SET[k]))SET[k]=k==='distortion'?2:1;});
+  SET.reduceFlash=SET.reduceFlash===1?1:0;
   Object.keys(COMFORT_LIMITS).forEach(function(k){var v=Number(SET[k]),lim=COMFORT_LIMITS[k];SET[k]=Number.isFinite(v)?(0,$imports.clamp)(v,lim[0],lim[1]):100;});
   var layout=SET.touchLayout;
   if(!layout||typeof layout!=='object'||Array.isArray(layout)){SET.touchLayout=null;return;}
@@ -30,6 +32,10 @@ function loadSet(){
     if(s){ var o=JSON.parse(s); for(var k in o) if(SET.hasOwnProperty(k)) SET[k]=o[k]; }
     else if($imports.IS_TOUCH) SET.q=0;          /* 手机第一次打开：性能优先 */
   }catch(e){}
+  if(!s||!o||o.distortion===undefined)SET.distortion=!SET.shake?0:matchMedia('(prefers-reduced-motion: reduce)').matches?1:2;
+  if(!s||!o||o.reduceFlash===undefined)SET.reduceFlash=matchMedia('(prefers-reduced-motion: reduce)').matches?1:0;
+  if(!s||!o||o.soundCaptions===undefined)SET.soundCaptions=1;
+  normalizeComfort();
   SHAKE_ON=!!SET.shake; SUB_MULT=[0.6,1.0,1.6][SET.sub]||1.0; AMB_ON=!!SET.amb;
   try{ document.body.classList.toggle('noshake',!SHAKE_ON); }catch(e){}
   $imports.QUALITY=SET.q=$imports.Quality.normalize(SET.q);
@@ -45,13 +51,14 @@ function paintSet(){
   if(typeof $imports.TouchLayout!=='undefined')$imports.TouchLayout.paint();
   var v=document.getElementById('sVol'); if(v) v.value=SET.vol;
   var vv=document.getElementById('sVolV'); if(vv) vv.textContent=SET.vol;
-  [['sSub',SET.sub],['sQ',SET.q],['sShake',SET.shake?0:1],['sAmb',SET.amb?0:1],['sGrain',SET.grain?0:1]].forEach(function(p){
+  [['sDistortion',2-SET.distortion],['sReduceFlash',1-SET.reduceFlash],['sSoundCaptions',SET.soundCaptions],['sSub',SET.sub],['sQ',SET.q],['sShake',SET.shake?0:1],['sAmb',SET.amb?0:1],['sGrain',SET.grain?0:1]].forEach(function(p){
     var el=document.getElementById(p[0]); if(!el) return;
     var bs=el.querySelectorAll('button');
     for(var i=0;i<bs.length;i++) bs[i].className=(i===p[1])?'on':'';
   });
 }
 var Settings={
+  sensory:function(key,value){if(!['distortion','reduceFlash','soundCaptions'].includes(key))return;SET[key]=value;normalizeComfort();paintSet();saveSet();if(typeof $imports.SoundCaptions!=='undefined')$imports.SoundCaptions.paint();},
   comfort:function(key,value){if(!COMFORT_LIMITS[key])return;SET[key]=Number(value);applyComfort();paintSet();saveSet();},
   resetComfort:function(){Object.keys(COMFORT_LIMITS).forEach(function(k){SET[k]=100;});SET.touchLayout=null;applyComfort();paintSet();saveSet();(0,$imports.toast)('操作与文字设置已恢复默认');},
   vol:function(v){ SET.vol=+v; try{ $imports.SFX.setVol(SET.vol/100); }catch(e){}

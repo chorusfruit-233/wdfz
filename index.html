@@ -26,8 +26,6 @@
     <div class="hc-top"><div id="clock">11:40</div><div id="secclock" hidden></div></div>
     <div id="period" class="ok">早读 · 教室</div>
     <div id="place">武大附中 · 校园</div>
-    <div id="campuspressure" role="status" aria-live="polite" title="首日晚间开始升压，第二天起更危险；暂停不计时，休息不能消除压力。">第 1 天 · 尽早离校</div>
-    <div id="sanfeel" role="status" aria-live="polite">呼吸平稳</div>
     <button id="lessonOpen" type="button" onclick="LESSON.open()" hidden>看课桌 · R</button>
     <button id="investigateOpen" type="button" onclick="Investigation.openDesk()" hidden>看停车单 · R</button>
     <div class="hc-meter" id="stamrow" hidden><span>体力</span><div id="stamwrap"><div id="stambar"></div></div></div>
@@ -75,7 +73,8 @@
     </div>
   </div>
 </div>
-<div id="pause"><div class="pbox">
+<div id="soundcaptions" role="log" aria-live="polite" aria-label="声音字幕"></div>
+<div id="pause"><div class="pbox"><p id="stayDay"></p>
   <div class="ptitle">已暂停</div>
   <div id="ptalent"></div>
   <button class="primary" onclick="Game.resume()">继续</button>
@@ -99,6 +98,8 @@
     <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button><button onclick="Settings.q(3)">超精细</button><button onclick="Settings.q(4)">真实</button></div></div>
   <div class="srow"><span>镜头晃动</span><div class="seg" id="sShake">
     <button onclick="Settings.shake(0)">开</button><button onclick="Settings.shake(1)">关</button></div></div>
+  <div class="srow"><span>视野扭曲</span><div class="seg" id="sDistortion"><button onclick="Settings.sensory('distortion',2)">标准</button><button onclick="Settings.sensory('distortion',1)">减弱</button><button onclick="Settings.sensory('distortion',0)">关闭</button></div></div>
+  <div class="srow"><span>减少闪光</span><div class="seg" id="sReduceFlash"><button onclick="Settings.sensory('reduceFlash',1)">开</button><button onclick="Settings.sensory('reduceFlash',0)">关</button></div></div>
   <div class="srow"><span>画面颗粒</span><div class="seg" id="sGrain">
     <button onclick="Settings.grain(1)">开</button><button onclick="Settings.grain(0)">关</button></div></div>
   </section>
@@ -106,6 +107,8 @@
   <div class="srow"><span>音量</span><input type="range" id="sVol" min="0" max="100" value="70" oninput="Settings.vol(this.value)" aria-label="音量"><b id="sVolV">70</b></div>
   <div class="srow"><span>音乐/环境</span><div class="seg" id="sAmb">
     <button onclick="Settings.amb(1)">开</button><button onclick="Settings.amb(0)">关</button></div></div>
+  <div class="srow"><span>声音字幕</span><div class="seg" id="sSoundCaptions"><button onclick="Settings.sensory('soundCaptions',0)">自动</button><button onclick="Settings.sensory('soundCaptions',1)">常开</button><button onclick="Settings.sensory('soundCaptions',2)">关闭</button></div></div>
+  <p class="shint">自动：游戏静音、低音量或音频无法播放时显示。系统静音请手动选择常开。</p>
   <div class="srow"><span>字幕停留</span><div class="seg" id="sSub">
     <button onclick="Settings.sub(0)">短</button><button onclick="Settings.sub(1)">标准</button><button onclick="Settings.sub(2)">长</button></div></div>
   <div class="srow"><label for="textSize">字号</label><input type="range" id="textSize" min="85" max="150" step="5" oninput="Settings.comfort('textSize',this.value)"><b id="textSizeValue"></b></div>
@@ -196,7 +199,7 @@
   <div class="tpfoot"><button type="button" id="tpBack" onclick="TalentPick.close()">返回</button><button type="button" id="tpRandom" onclick="TalentPick.random()">随机一项</button><button type="button" class="primary" id="tpGo" onclick="TalentPick.confirm()" disabled>选好了，开始</button></div>
 </div></div>
 <div id="pcgame"><div class="pch">机房 · 贪吃蛇</div><canvas id="pccv" width="320" height="320"></canvas>
-  <div class="pcf" id="pcf">WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多</div><button type="button" id="pcexit" onclick="PCGAME.stop()">退出电脑</button>
+  <div class="pcf" id="pcf">WASD / 方向键转向 · Esc 退出 · 玩一会儿，缓口气</div><button type="button" id="pcexit" onclick="PCGAME.stop()">退出电脑</button>
   <button type="button" class="pcx" onclick="PCGAME.stop()" aria-label="退出电脑">✕ 退出</button>
   <div id="pcpad"><button type="button" data-d="0,-1" aria-label="上">▲</button><button type="button" data-d="-1,0" aria-label="左">◀</button><button type="button" data-d="1,0" aria-label="右">▶</button><button type="button" data-d="0,1" aria-label="下">▼</button></div></div>
 <div id="devbounds" aria-hidden="true"></div>

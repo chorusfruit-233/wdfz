@@ -10,7 +10,7 @@ function rnd(a,b){return a+$imports.GameRandom.next()*(b-a);}
 function ri(a,b){return Math.floor(rnd(a,b+1));}
 function pick(a){return a[Math.floor($imports.GameRandom.next()*a.length)];}
 function dist2(ax,ay,bx,by){var dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;}
-function angDiff(a,b){return Math.abs(((a-b+PI*3)%TAU)-PI);}
+function angDiff(a,b){var d=Math.abs((a-b)%TAU);return Math.min(d,TAU-d);}
 function fmtClockS(tsec){                  /* 带秒：手表 / 秒表天赋 */
   tsec=((tsec%1440)+1440)%1440;
   var s=Math.floor(tsec*60+1e-6)%60;
@@ -132,10 +132,10 @@ var ITEMS={
   torch:{n:'手电筒',d:'光很弱。但在地下车库里，它是唯一能定住东西的东西。'},
   brolly:{n:'雨伞',d:'伞骨断了一根，还能撑。'},
   coat:{n:'校服外套',d:'比我穿的那件大一号。'},
-  pill:{n:'药片',d:'名字被撕掉了。吃下去 30 秒内，每秒回 2 点 SAN。'},
+  pill:{n:'药片',d:'名字被撕掉了。吃下去后 30 秒内，视野和呼吸逐渐回稳。再吃一片会重新计时。'},
   notebook:{n:'笔记本',d:'没写过的本子。有它，想到的事就不会忘。'},
   pen:{n:'笔',d:'一支笔。还能写。'},
-  snack:{n:'士力架',d:'压在卷子底下的一条。吃下去，30 秒内怎么跑都不累。'},
+  snack:{n:'士力架',d:'压在卷子底下的一条。吃下去，30 个运行秒内，步行和奔跑速度变为 1.5 倍，疾跑不耗体力。'},
   battery:{n:'电池',d:'两节。外壳上写着日期，很旧了。'},
   compass:{n:'罗盘',d:'指针不指北——指向最近的那扇门。'},
   metronome:{n:'节拍器',d:'摆锤自己在动，可是没有声音。'},

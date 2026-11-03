@@ -50,7 +50,7 @@ var RunScore=(function(){
       case 'exam': if(f.phase==='paper') add('应对 · 选择',f.pass?'考试合格交卷':'考试没坐住',f.pass?P.examPass:P.examFail,'exam');
         else try{ $imports.RunLog.event('exam','撞响了钟楼的钟',0); }catch(e){}
         break;
-      case 'inspection': add('校规与巡察',f.compliant?'学生会检查 · 在教室':'学生会检查 · 缺席',f.compliant?P.inspectOk:P.inspectAbsent,'inspection'); break;
+      case 'inspection': if(f.excused||f.result==='excused')break;add('校规与巡察',f.compliant?'学生会检查 · 在教室':'学生会检查 · 缺席',f.compliant?P.inspectOk:P.inspectAbsent,'inspection'); break;
       case 'patrol':
         if(f.what==='permanent') add('校规与巡察','登记后缺席 · 持续追踪',P.permanent,'patrol');
         else if(f.what==='locked'){

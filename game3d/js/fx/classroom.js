@@ -138,7 +138,7 @@ function ncSeatFigure(mat,x,y,z,rotY){
 }
 function ncBuild(R){
   ncClear();
-  if(!R||R.host!=='teach'||R.floor<1||R.floor>5) return;
+  if(!R||R.stairwell||R.host!=='teach'||R.floor<1||R.floor>5) return;
   NC.room=R.id;
   NC.matN=new $imports.THREE.MeshBasicMaterial({color:0x39454f,fog:true});
   NC.matS=new $imports.THREE.MeshBasicMaterial({color:0x080b0d,fog:true});
@@ -147,19 +147,19 @@ function ncBuild(R){
   NC.grp=new $imports.THREE.Group();
   $imports.GLR.scene.add(NC.grp);
   $imports.Classmates.layout(R).seats.forEach(function(seat){
-    var wx=R.ox+(seat.c+.5)*R.tw,wy=R.oy+(seat.r+.82)*R.th,sp=(0,$imports.worldToScene)(wx,wy,R);
-    var fig=ncSeatFigure(NC.normal?NC.matN:NC.matS,sp.x,0,sp.z,0);
+    var wx=R.ox+(seat.c+.82)*R.tw,wy=R.oy+(seat.r+.5)*R.th,sp=(0,$imports.worldToScene)(wx,wy,R);
+    var fig=ncSeatFigure(NC.normal?NC.matN:NC.matS,sp.x,0,sp.z,$imports.PI/2);
     NC.grp.add(fig);NC.list.push(fig);
   });
   var tc=null,tr=null,cc,rr;
   for(rr=1;rr<R.rows&&!tc;rr++) for(cc=1;cc<R.cols&&!tc;cc++) if(R.grid[rr][cc]==='T'){ tc=cc; tr=rr; }
   if(tc!==null){
-    var tw=(0,$imports.worldToScene)(R.ox+(tc+0.5)*R.tw, R.oy+(tr+1.6)*R.th, R);
+    var tw=(0,$imports.worldToScene)(R.ox+(tc+1.1)*R.tw, R.oy+(tr+1.6)*R.th, R);
     var tg=new $imports.THREE.Group();
     tg.add((0,$imports.figMesh)('teacher',NC.matN,1));                         /* 讲台边的老师，面朝全班（+z） */
     tg.position.set(tw.x,0,tw.z);
-    tg.rotation.y=0;
-    tg.userData={hx:tw.x,hz:tw.z,ty:0,standing:1};
+    tg.rotation.y=$imports.PI/2;
+    tg.userData={hx:tw.x,hz:tw.z,ty:$imports.PI/2,standing:1};
     NC.grp.add(tg); NC.list.push(tg);
     NC.teacher=tg;
   }

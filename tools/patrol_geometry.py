@@ -21,7 +21,7 @@ BAKE = r'''() => {
  for(const [id,R] of Object.entries(INTERIORS)){
    if(R.build||R.host==='lift')continue;
    const group=buildRoomGeometry(R),rects=[];
-   for(let y=0;y<R.rows;y++)for(let x=0;x<R.cols;x++)if(isSolidCh(R.grid[y][x])||R.grid[y][x]==='O')rects.push([R.ox+x*R.tw,R.oy+y*R.th,R.ox+(x+1)*R.tw,R.oy+(y+1)*R.th]);
+   for(let y=0;y<R.rows;y++)for(let x=0;x<R.cols;x++)if((isSolidCh(R.grid[y][x])&&!(R.grid[y][x]==='S'&&STAIR_LAYOUT.some(s=>s.rooms.includes(id))))||R.grid[y][x]==='O')rects.push([R.ox+x*R.tw,R.oy+y*R.th,R.ox+(x+1)*R.tw,R.oy+(y+1)*R.th]);
    Object.values(R.foot||{}).flat().concat(R.stairExtra||[],R.propExtra||[]).forEach(b=>rects.push([R.cx+b.x0/U2M,R.cy+b.z0/U2M,R.cx+b.x1/U2M,R.cy+b.z1/U2M]));
    out[id]=bake(R.cols*4,R.rows*4,R.tw/4,R.ox,R.oy,rects);ThreeBackend.disposeGroup(group);
  }

@@ -30,9 +30,9 @@ var AttendanceDuty={state:{seq:0,duties:[],processed:{}},
     var matching=st.duties.filter(function(d){return d.status==='pending'&&d.targetCheckId===key;});
     if(!matching.length||st.processed[key])return;
     /* 先记处罚已落账，再发一次事件；保命的清理不会重放这次缺席。 */
-    st.processed[key]=c.compliant?'fulfilled':'absent';
-    matching.forEach(function(d){d.status=c.compliant?'fulfilled':'absent';d.settledAt=$imports.Mechanics.activePlaySeconds;});
-    if(!c.compliant){$imports.PatrolWorld.registeredAbsence(key);$imports.Playtest.event('登记后缺席',key);}
+    st.processed[key]=c.excused?'excused':c.compliant?'fulfilled':'absent';
+    matching.forEach(function(d){d.status=c.excused?'excused':c.compliant?'fulfilled':'absent';d.settledAt=$imports.Mechanics.activePlaySeconds;});
+    if(!c.compliant&&!c.excused){$imports.PatrolWorld.registeredAbsence(key);$imports.Playtest.event('登记后缺席',key);}
     $imports.Mechanics.dirty=true;this.prune();
   },
   cancel:function(c){
@@ -56,8 +56,8 @@ GameModules.persistent('attendanceDuty',{
   load:function(d){
     if(!d||!Array.isArray(d.duties)){(0,$imports.saveReport)('attendanceDuty','检查责任数据无效，未补造处罚');return;}
     var st=AttendanceDuty.state;st.seq=Math.floor((0,$imports.saveNum)(d.seq,0,1e9));
-    st.duties=d.duties.filter(function(x){return x&&typeof x.dutyId==='string'&&/^\d+:[01]$/.test(x.targetCheckId)&&['pending','fulfilled','absent'].includes(x.status);}).slice(-100);
-    Object.keys(d.processed||{}).forEach(function(k){if(/^\d+:[01]$/.test(k)&&['fulfilled','absent'].includes(d.processed[k]))st.processed[k]=d.processed[k];});
+    st.duties=d.duties.filter(function(x){return x&&typeof x.dutyId==='string'&&/^\d+:[01]$/.test(x.targetCheckId)&&['pending','fulfilled','absent','excused'].includes(x.status);}).slice(-100);
+    Object.keys(d.processed||{}).forEach(function(k){if(/^\d+:[01]$/.test(k)&&['fulfilled','absent','excused'].includes(d.processed[k]))st.processed[k]=d.processed[k];});
     AttendanceDuty.restore();
   }
 });

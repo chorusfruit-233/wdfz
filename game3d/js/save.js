@@ -16,7 +16,7 @@ var GameStorage=$imports.StorageAdapter.create(function(){return localStorage;},
 function prepareSave(d){return $imports.SaveData.prepare(d,{lightsOut:$imports.LIGHTS_OUT,rooms:$imports.INTERIORS,items:$imports.ITEMS});}
 var SAVE_SCHEMA=[
   { /* 位置和时钟 */
-    save:function(d){ d.mode=$imports.S.mode; d.room=$imports.S.room; d.x=$imports.S.x; d.y=$imports.S.y; d.ang=$imports.S.ang; d.pitch=$imports.S.pitch; d.tsec=$imports.S.tsec; d.day=$imports.S.day; d.diff=$imports.S.diff; },
+    save:function(d){ d.mode=$imports.S.mode; d.room=$imports.S.room; d.x=$imports.S.x; d.y=$imports.S.y; d.ang=$imports.S.ang; d.pitch=$imports.S.pitch; d.tsec=$imports.S.tsec; d.day=$imports.S.day; d.diff=$imports.S.diff;d.layoutVersion=$imports.ClassroomLayout.version;d.stairwell=$imports.StairWorld.here()?{id:$imports.S.room,height:$imports.S.floorY}:null; },
     load:function(d){
       $imports.S.mode=d.mode||'out'; $imports.S.room=d.room||null;
       $imports.S.x=d.x; $imports.S.y=d.y; $imports.S.ang=d.ang||0; $imports.S.pitch=d.pitch||0;
@@ -49,11 +49,15 @@ var SAVE_SCHEMA=[
     load:function(d){ $imports.S.exam=!!d.exam; $imports.S.examCur=(d.examCur===undefined)?null:d.examCur; $imports.S.examSeat=d.examSeat||0; $imports.S.examTot=d.examTot||0; }
   },
   { /* 背包、快捷栏、天赋、搜过的地方、线索、坐着没有 */
-    save:function(d){ d.bag=$imports.S.bag; d.hot=$imports.S.hot; d.talent=$imports.Talent.id(); d.talentState=$imports.Talent.serialize(); d.spots=$imports.S.spots; d.clues=$imports.S.clues; d.seated=$imports.S.seated; },
+    save:function(d){ d.bag=$imports.S.bag; d.hot=$imports.S.hot; d.talent=$imports.Talent.id(); d.talentState=$imports.Talent.serialize(); d.spots=$imports.S.spots; d.clues=$imports.S.clues; d.seated=$imports.S.seated;d.seat=$imports.S.seat; },
     load:function(d){
       $imports.S.bag=d.bag||[]; $imports.S.hot=d.hot||[null,null];
       $imports.Talent.normalizeSaved(d); $imports.S.spots=d.spots||{}; $imports.S.clues=d.clues||{};       /* 天赋 ID 校验与迁移：未知 / 缺失 → 没有天赋，不沿用读档前的值 */
-      $imports.S.seated=!!d.seated;
+      $imports.S.seated=!!d.seated;$imports.S.seat=null;
+      var R=$imports.INTERIORS[$imports.S.room],own=$imports.ClassroomLayout.ownSeat;
+      if($imports.S.seated&&$imports.ClassroomLayout.valid(d.seat,R)&&Math.hypot($imports.S.x-$imports.ClassroomLayout.anchor(R,d.seat).x,$imports.S.y-$imports.ClassroomLayout.anchor(R,d.seat).y)<=1.5)$imports.S.seat=$imports.ClassroomLayout.seat(R.id,d.seat.col,d.seat.row);
+      else if($imports.S.seated&&$imports.S.room===own.room&&R){var p=$imports.ClassroomLayout.anchor(R,own);if(Math.hypot($imports.S.x-p.x,$imports.S.y-p.y)<=1.5)$imports.S.seat=$imports.ClassroomLayout.seat(R.id,own.col,own.row);}
+      if(!$imports.S.seat)$imports.S.seated=false;
     }
   },
   { /* 老存档的同化选择已取消：保留同化值，首个有效更新按满值结果结算。 */
@@ -135,11 +139,14 @@ function applySave(d){
   $imports.SchoolDay.restore();
   $imports.Mechanics.migrate(d);
   $imports.CampusPressure.restore();
+  $imports.StairWorld.restore(d);
+  migrateSchoolLayout(d);
   try{ $imports.Elevator.fixCabinPosition(); }catch(e){}          /* 旧存档站在旧轿厢外围的：放回现在的轿厢正中 */
   return d;
 }
 /* 规则恢复之后由应用流程调用；applySave 本身不构建模型、操纵 DOM 或设置灯光。 */
 function restoreSavePresentation(){
+  if(typeof $imports.Sensory!=='undefined')$imports.Sensory.reset();
   var el=document.getElementById('hideslits');if(el)el.style.display=$imports.HIDE.on?'block':'none';
   $imports.VisualState.patrolRed=$imports.PatrolWorld.localChase()?1:0;
   $imports.Engine.torch($imports.USE.torch);
@@ -180,6 +187,31 @@ function paintMenuSave(){
   el.style.display='block';
 }
 
+function migrateSchoolLayout(d){
+  if((d.layoutVersion||0)>=$imports.ClassroomLayout.version)return;
+  for(var f=1;f<=5;f++)$imports.CLS_DOOR.forEach(function(c,i){
+    var R=$imports.INTERIORS['teach'+f],old=R.id+':'+c+':15',other=R.id+':'+(c+1)+':15';
+    if($imports.OPENDOORS[old]||$imports.OPENDOORS[other])$imports.ClassroomLayout.doors(i).forEach(function(p){$imports.OPENDOORS[(0,$imports.doorKeyAt)(R,p[0],p[1])]=1;});
+  });
+  var room=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room];
+  if(room&&!room.stairwell&&!$imports.S.seated&&!$imports.HIDE.on){
+    $imports.SpaceLayout.ensureRoom(room);
+    if($imports.Collision.depth($imports.S.x,$imports.S.y,$imports.PRAD)>1e-7){
+      var oldCol=Math.floor(($imports.S.x-room.ox)/room.tw),oldRow=Math.floor(($imports.S.y-room.oy)/room.th);
+      var cls=/^teach[1-5]$/.test(room.id)?$imports.ClassroomLayout.classAt(oldCol,oldRow):-1,spots=[];
+      for(var r=1;r<room.rows-1;r++)for(var c=1;c<room.cols-1;c++){
+        if(room.grid[r][c]!=='.'||(cls>=0&&$imports.ClassroomLayout.classAt(c,r)!==cls))continue;
+        var x=room.ox+(c+.5)*room.tw,y=room.oy+(r+.5)*room.th;
+        if($imports.Collision.depth(x,y,$imports.PRAD)<1e-7)spots.push({x:x,y:y,d:Math.hypot(x-$imports.S.x,y-$imports.S.y)});
+      }
+      spots.sort(function(a,b){return a.d-b.d||a.y-b.y||a.x-b.x;});
+      if(spots.length){$imports.S.x=spots[0].x;$imports.S.y=spots[0].y;saveReport('layout','旧场景落点已移到附近可站立区域');}
+    }
+  }
+  var current=$imports.RT.inspection&&$imports.RT.inspection.current;
+  if(current&&!current.result){current.excused=(0,$imports.onLeave)();current.compliant=!current.excused&&(0,$imports.atMySeat)();current.result=current.excused?'excused':current.compliant?'present':'absent';if(current.excused)current.points=[];}
+}
+
 /* @module-exports */
 GameModules.publish("game3d/js/save.js",{
 "saveNum":{get:function(){return saveNum;},set:function($value){saveNum=$value;}},
@@ -199,6 +231,7 @@ GameModules.publish("game3d/js/save.js",{
 "ENDS_KEY":{get:function(){return ENDS_KEY;},set:function($value){ENDS_KEY=$value;}},
 "endsSeen":{get:function(){return endsSeen;},set:function($value){endsSeen=$value;}},
 "endMark":{get:function(){return endMark;},set:function($value){endMark=$value;}},
-"paintMenuSave":{get:function(){return paintMenuSave;},set:function($value){paintMenuSave=$value;}}
+"paintMenuSave":{get:function(){return paintMenuSave;},set:function($value){paintMenuSave=$value;}},
+"migrateSchoolLayout":{get:function(){return migrateSchoolLayout;},set:function($value){migrateSchoolLayout=$value;}}
 });
 })(GameModules.imports("game3d/js/save.js"));

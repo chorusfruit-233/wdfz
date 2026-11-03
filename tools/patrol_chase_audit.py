@@ -1,6 +1,6 @@
 """条件布置的永久追踪审计：所有常规场景及特殊空间落点，不是自然通关。"""
 from pathlib import Path
-import json
+import json,os
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tests'))
 from browser_case import BrowserCase
@@ -11,6 +11,7 @@ TARGETS = """()=>{
  const targets=[];
  for(const [scene,R] of Object.entries(INTERIORS)){
    if(R.host==='lift'||scene==='lift_dream'||scene==='bell1')continue;
+   if(R.stairwell){const s=StairWorld.config(scene);targets.push(StairWorld.point(scene,{x:-1.25,z:3.2,h:s.rise*.25}));continue;}
    const p=PatrolNav.snap(scene,PatrolNav.tilePoint(scene,Math.min(R.cols-3,scene==='lab3'?41:5),Math.min(R.rows-3,5)));
    if(p)targets.push(p);else throw Error('目标未生成：'+scene);
  }
@@ -38,7 +39,7 @@ if __name__ == '__main__':
         for target in targets:
             result = p.evaluate(RUN, target); results.append(result)
             print(json.dumps({k: result[k] for k in ('goal', 'reached', 'seconds', 'diagnostic')}, ensure_ascii=False), flush=True)
-        dest=ROOT/'docs/validation/巡察步行与区域报警/永久追踪.json'
+        dest=Path(os.environ.get('PATROL_AUDIT_DIR',str(ROOT/'docs/validation/巡察步行与区域报警')))/'永久追踪.json'
         dest.parent.mkdir(parents=True,exist_ok=True)
         dest.write_text(json.dumps({
             'kind': 'conditioned simulation with debug invulnerability; not a natural playthrough',

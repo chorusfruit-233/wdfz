@@ -11,10 +11,9 @@ var CampusPressure={
     {clock:4230,anomaly:.32,danger:2.35,passive:.20,rest:.45},
     {clock:5670,anomaly:.28,danger:2.5,passive:.15,rest:.40}
   ],
-  labels:['尽早离校','危险渐近','高危','危险加剧','危机四伏','危机四伏'],
   messages:[null,
-    '我：天色暗下来后，怪事越来越密。休息也不太管用了，最好今天就找到出口。',
-    '我：又过了一天。校园更危险了，休息恢复得更慢。已经找到的东西还在，得尽快离开。',
+    '我：天色暗下来后，走廊里的灯一盏盏暗了下去。出口得趁早找。',
+    '我：又过了一天。歇过了，那阵嗡声还是没停。已经找到的东西还在。',
     '我：拖得越久，这里越不肯放人。药和已经查到的线索，得留给最后那段路。',
     '我：几乎没有喘息的空当了。要趁它们离开的间隙往出口走。',
     '我：校园已经彻底变了。但那些躲避它们的办法，应该还管用。'
@@ -53,12 +52,6 @@ var CampusPressure={
       $imports.AN.active||($imports.AN.pre&&$imports.AN.next<=8)||$imports.PatrolWorld.localChase()||$imports.HIDE.on||$imports.Inspection.quiet())return;
     $imports.RT.pressureSeen=stage;
     (0,$imports.os)(this.messages[stage],5);
-  },
-  paint:function(){
-    var el=document.getElementById('campuspressure');if(!el)return;
-    var stage=this.current().stage, label='第 '+$imports.S.day+' 天 · '+this.labels[stage];
-    if(el.textContent!==label)el.textContent=label;
-    if(el.dataset.stage!==String(stage))el.dataset.stage=String(stage);
   }
 };
 

@@ -36,7 +36,7 @@ def sample(browser, root, label, qualities, frames, pictures):
                 page.goto(f'http://127.0.0.1:{server.server_port}/', wait_until='load')
                 page.evaluate('PHOTO_TRIED=true')
                 page.locator('#menu .mcard').first.click()
-                page.wait_for_function("S.room==='teach1'&&S.screen==='play'&&!!GLR.roomMesh&&S.ang===-Math.PI/2")
+                page.wait_for_function("S.room==='teach1'&&S.screen==='play'&&!!GLR.roomMesh&&S.ang===ClassroomLayout.ownSeat.facing")
                 page.evaluate("""clearIntroTimers();running=false;S.intro=0;S.san=90;
                     S.tsec=760;PAUSE.on=false;UI.closeChoice();UI.closePanelAll();
                     AN.active=false;GLR.time=12;S.dead=false;USE.torch=false;

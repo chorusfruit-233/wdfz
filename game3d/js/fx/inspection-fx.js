@@ -13,12 +13,12 @@ clearFx:function(){
   },
 buildFx:function(c){
     InspectionView.clearFx();
-    if(!$imports.GLR.scene)return;
+    if(!$imports.GLR.scene||c.excused)return;
     var group=new $imports.THREE.Group(),room=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null,player=(0,$imports.worldToScene)($imports.S.x,$imports.S.y,room);
     c.points.forEach(function(point){
       var pos=(0,$imports.worldToScene)(point.x,point.y,room),figure=new $imports.THREE.Group();
       figure.add((0,$imports.figMesh)('person',new $imports.THREE.MeshBasicMaterial({color:0x030405,fog:true,transparent:true,opacity:1}),1));
-      figure.position.set(pos.x,0,pos.z);group.add(figure);
+      figure.position.set(pos.x,$imports.S.floorY||0,pos.z);group.add(figure);
       var dx=pos.x-player.x,dz=pos.z-player.z,len=Math.hypot(dx,dz)||1;
       figure.userData.scatterX=dx/len;figure.userData.scatterZ=dz/len;
     });

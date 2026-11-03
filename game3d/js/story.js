@@ -308,7 +308,7 @@ var FaceChallenge={
         $imports.Investigation.record('face:'+questionId,feedback,'验证','西小门 · 验证反馈');
         FaceChallenge.swap(q);(0,$imports.autoSave)();
         if($imports.S.dead)return;
-        $imports.UI.choice((remedy?'验证未通过。你对照门禁后台核了一遍，这次没有扣到你（编程社，只有一次）。':'验证未通过（SAN −'+loss+'）。')+feedback+' 已通过的题目仍然保留。',[
+        $imports.UI.choice((remedy?'验证未通过。你对照门禁后台核了一遍，这次没有扣到你（编程社，只有一次）。':'验证未通过。耳边猛地响了一下。')+feedback+' 已通过的题目仍然保留。',[
           {label:'继续验证',fn:function(){FaceChallenge.open();}},
           {label:'先离开',fn:function(){}}
         ]);
@@ -515,7 +515,7 @@ function dreamWake(){
     (0,$imports.examEnd)();
     $imports.Mechanics.dream();
     var R1=$imports.INTERIORS['teach1'];
-    (0,$imports.doEnterRoom)('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-$imports.PI/2, seated:true});
+    (0,$imports.doEnterRoom)('teach1',Object.assign($imports.ClassroomLayout.anchor(R1,$imports.ClassroomLayout.ownSeat),{seated:true}));
     try{ $imports.SFX.wake&&$imports.SFX.wake(); }catch(e){}
   },function(){
     (0,$imports.os)('……我猛地抬起头，后背全是汗。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,$imports.OS_FORCE);
@@ -576,7 +576,7 @@ function fakeWake(){
   $imports.S.screen='play'; $imports.S.dead=false; $imports.S.day=Math.max(2,$imports.S.day+1); $imports.S.tsec=441;
   $imports.VisualState.worldNorm=0;
   var R1=$imports.INTERIORS['teach1'];
-  (0,$imports.doEnterRoom)('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-$imports.PI/2, seated:true});
+  (0,$imports.doEnterRoom)('teach1',Object.assign($imports.ClassroomLayout.anchor(R1,$imports.ClassroomLayout.ownSeat),{seated:true}));
   $imports.S.seated=true;
   if($imports.running){ $imports.lastT=performance.now(); $imports.accum=0; }
   (0,$imports.os)('我：……我在座位上醒过来。早读。衣服上有一股垃圾房的味道。\n那个桶没有把我送出去——它把我送回来了。',6,$imports.OS_FORCE);

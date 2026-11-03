@@ -16,7 +16,7 @@ class TalentTest(BrowserCase):
         page.evaluate("S.screen='menu';document.getElementById('menu').style.display='block'")
         page.evaluate("localStorage.setItem('wdfz3d',JSON.stringify({keep:1}))")
         page.locator('#menu .mcard').first.click()
-        self.assert_js(page, "!document.getElementById('tpick').hidden&&document.querySelectorAll('#tpcards .tpcard').length===7&&document.getElementById('tpGo').disabled")
+        self.assert_js(page, "!document.getElementById('tpick').hidden&&document.querySelectorAll('#tpcards .tpcard').length===6&&document.getElementById('tpGo').disabled")
         self.assert_js(page, "S.screen==='menu'&&JSON.parse(localStorage.getItem('wdfz3d')).keep===1")
         self.assertIn('暗处适应', page.locator('#tpcards').inner_text())
         self.assertIn('限制', page.locator('#tpcards').inner_text())
@@ -27,7 +27,7 @@ class TalentTest(BrowserCase):
         self.assert_js(page, "!document.getElementById('tpGo').disabled&&S.screen==='menu'")
         page.locator('#tpGo').click()
         page.wait_for_function("S.screen==='play'&&S.room==='teach1'")
-        self.assert_js(page, "S.diff==='hard'&&S.talent==='watch'&&Talent.state().origin==='selected'&&Talent.rules()===2")
+        self.assert_js(page, "S.diff==='hard'&&S.talent==='watch'&&Talent.state().origin==='selected'&&Talent.rules()===3")
         page.evaluate("Game.quit&&Game.quit();S.screen='menu';document.getElementById('menu').style.display='block'")
         page.locator('#menu .mcard').first.click()
         page.locator('#tpRandom').click()
@@ -81,15 +81,14 @@ class TalentTest(BrowserCase):
         page = self.game('night')
         self.assert_js(page, "Talent.modifier('danger.garage')===0.55&&Talent.modifier('danger.night')===0.55&&Talent.modifier('danger.trash')===1")
         page.evaluate("S.talent='stomach'")
-        self.assert_js(page, "Talent.modifier('anomaly.feast')===17&&Talent.modifier('activity.eat')===24")
+        self.assert_js(page, "Talent.modifier('anomaly.feast')===9&&Talent.modifier('activity.eat')===18")
         page.evaluate("Talent.state().rulesVersion=1")
-        self.assert_js(page, "Talent.modifier('activity.eat')===18&&Talent.modifier('anomaly.feast')===17")
+        self.assert_js(page, "Talent.modifier('activity.eat')===18&&Talent.modifier('anomaly.feast')===9")
         page.evaluate("S.talent='code';Talent.state().rulesVersion=2")
         self.assert_js(page, "Talent.modifier('activity.eat')===18&&Talent.modifier('anomaly.feast')===9&&Talent.modifier('danger.garage')===1")
         page.evaluate("S.talent='stomach';S.san=50;S.actCool={};doSanAct('eat')")
-        # 夹具在第二天：留校压力让休息回复打折。铁胃的 24 仍是基数，和普通吃饭（18）按同一个倍率结算
-        self.assert_js(page, "CampusPressure.current().rest<1&&S.san===50+CampusPressure.restGain(24)"
-                             "&&CampusPressure.restGain(24)>CampusPressure.restGain(18)")
+        # 旧铁胃不再有隐含加成；第二天恢复仍按原压力倍率结算。
+        self.assert_js(page, "CampusPressure.current().rest<1&&S.san===50+CampusPressure.restGain(18)")
 
     def test_watch_reminds_once_and_never_for_skipped_marks(self):
         page = self.game('watch')

@@ -20,6 +20,7 @@ function freshState(diff){
   (0,$imports.buildRoomBounds)();
   $imports.S.screen='play';
   $imports.S.diff=diff||'easy';
+  $imports.S.seat=null;
   $imports.Talent.begin(FRESH_TALENT&&FRESH_TALENT.id,FRESH_TALENT&&FRESH_TALENT.origin); FRESH_TALENT=null;   /* 天赋：开局前选好的（talents.js） */
   $imports.S.tsec=700; $imports.S.day=1;
   $imports.S.san=100; $imports.S.viol=0; $imports.S.stam=100; $imports.S.tired=false; $imports.S.snackT=0; $imports.S.pillT=0; $imports.S.tt=0; $imports.S.ttTier=0;
@@ -74,8 +75,8 @@ var Game={
     $imports.Playtest.event('开始新局',diff);
     var R1=$imports.INTERIORS['teach1'];
     /* 淡入要等一会儿：这段时间里人还算站在北门，会被当成"去过北门"。先把人放到座位上。 */
-    $imports.S.mode='in'; $imports.S.room='teach1'; $imports.S.x=R1.ox+48.5*9; $imports.S.y=R1.oy+6.5*9; $imports.S.seated=true;
-    (0,$imports.enterRoom)('teach1',{x:$imports.S.x, y:$imports.S.y, ang:-$imports.PI/2, seated:true});
+    $imports.S.mode='in'; $imports.S.room='teach1'; var seat=$imports.ClassroomLayout.anchor(R1,$imports.ClassroomLayout.ownSeat);$imports.S.x=seat.x;$imports.S.y=seat.y;$imports.S.seated=true;$imports.S.seat=$imports.ClassroomLayout.seat('teach1',$imports.MY_COL,$imports.MY_ROW);
+    (0,$imports.enterRoom)('teach1',{x:$imports.S.x, y:$imports.S.y, ang:$imports.ClassroomLayout.ownSeat.facing, seated:true});
     (0,$imports.syncCamera)(0);
     clearIntroTimers();
     /* 开场 CG（opening.js）：第一次完整版、看过的短版，随时可跳过；演完或跳过都在同一个座位、同一个视角交还控制 */
@@ -104,7 +105,7 @@ var Game={
       }catch(e){}
       if($imports.AN.id==='roster'&&!$imports.AN.data.done&&Number.isFinite(d.anChoiceMs)) (0,$imports.useRoster)(d.anChoiceMs);
     }
-    if($imports.S.mode==='in'&&$imports.S.room) (0,$imports.enterRoom)($imports.S.room,{x:$imports.S.x,y:$imports.S.y,ang:$imports.S.ang,seated:$imports.S.seated,spiral:d.spiral,restoreVisit:true},restoreAnomalyFX);
+    if($imports.S.mode==='in'&&$imports.S.room) (0,$imports.enterRoom)($imports.S.room,{x:$imports.S.x,y:$imports.S.y,ang:$imports.S.ang,seated:$imports.S.seated,spiral:d.spiral,stairHeight:$imports.S.floorY,restoreVisit:true},restoreAnomalyFX);
     else { $imports.S.mode='out'; $imports.S.room=null; (0,$imports.enterWorldOut)(); (0,$imports.syncCamera)(0); restoreAnomalyFX(); }
     $imports.Lifecycle.scope('session').timeout(function(){ try{ $imports.DeathCG.warm(); }catch(e){} },700);
     $imports.Lifecycle.scope('session').timeout(function(){ try{ if($imports.running&&typeof $imports.cupMats==='function') (0,$imports.cupMats)(); }catch(e){} },12000);   /* 清华水杯的油画：游戏跑起来以后再画（约几十毫秒），第一次见到杯子时不用现画 */
@@ -113,6 +114,7 @@ var Game={
     $imports.SFX.resume();
   },
   pause:function(){
+    document.getElementById('stayDay').textContent='留校第 '+$imports.S.day+' 天';
     try{ (0,$imports.paintSet)(); }catch(e){}
     if($imports.S.screen!=='play'||$imports.S.dead||$imports.PAUSE.on)return;
     $imports.PAUSE.on=true;

@@ -14,7 +14,7 @@ var Classmates={
   enter:function(){Classmates.state={room:$imports.S.mode==='in'?$imports.S.room:null,blocking:false,door:null,said:false};Classmates.tick();},
   reset:function(){Classmates.cache={};Classmates.state={room:null,blocking:false,door:null,said:false};},
   setBlocking:function(value){Classmates.state.blocking=!!value;},
-  blocked:function(id){return Classmates.state.room===id&&Classmates.state.blocking;},
+  blocked:function(id,x,y){var st=Classmates.state;return st.room===id&&st.blocking&&(x===undefined||!!st.door&&Math.hypot(st.door.x-x,st.door.y-y)<6);},
   tick:function(){
     var st=Classmates.state,room=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null;
     if(st.room!==(room&&room.id)){st=Classmates.state={room:room?room.id:null,blocking:false,door:null,said:false};}

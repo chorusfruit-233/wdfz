@@ -425,10 +425,6 @@ body.cut #cutbars i:last-child::after{content:'点击或按空格跳过';positio
   background:rgba(20,30,38,.8);border:1px solid rgba(140,190,210,.45);border-radius:4px}
 
 /* 理智以身体反应呈现；体力条仍保留，低 SAN 时最大可用长度下降。 */
-#sanfeel{margin-top:9px;font:12px var(--ui-serif);letter-spacing:2px;color:var(--ui-dim)}
-#sanfeel[data-stage="1"]{color:#c9b37a}
-#sanfeel[data-stage="2"]{color:#d38f5f}
-#sanfeel[data-stage="3"]{color:#df6a5c}
 
 /* 状态条下面的小按钮（看课桌 / 看停车单）：同一个样子，黄铜边表示「现在能做」 */
 #lessonOpen,#investigateOpen{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 12px 6px 10px;min-height:36px;

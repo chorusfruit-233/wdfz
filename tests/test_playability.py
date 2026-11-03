@@ -250,7 +250,7 @@ class PlayabilityTest(BrowserCase):
     def test_only_own_classroom_podium_holds_the_handover_slip(self):
         page=self.game()
         page.evaluate("""const R=INTERIORS.teach1;window.ts=[];for(let r=0;r<R.rows;r++)for(let c=0;c<R.cols;c++)if(R.grid[r][c]==='T')ts.push([c,r]);""")
-        self.assert_js(page,"ts.length===6&&ts.filter(t=>Investigation.isPodium(INTERIORS.teach1,t[0],t[1])).length===1&&Investigation.podium()[0]===48")
+        self.assert_js(page,"ts.length===6&&ts.filter(t=>Investigation.isPodium(INTERIORS.teach1,t[0],t[1])).length===1&&JSON.stringify(Investigation.podium())===JSON.stringify(ClassroomLayout.podium(ClassroomLayout.ownSeat.classId))")
         page.evaluate("""const R=INTERIORS.teach1,t=ts[0];S.seated=false;S.bag=[];S.x=R.ox+(t[0]+.5)*R.tw;S.y=R.oy+(t[1]+1.5)*R.th;S.ang=-Math.PI/2;S.pitch=0;
           window.hint=interactHint();tryInteract();""")
         self.assert_js(page,"hint==='拿粉笔'&&hasItem('chalk')&&!Investigation.state().entries.notice&&!UI.chooseOpen")

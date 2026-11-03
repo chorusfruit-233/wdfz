@@ -428,7 +428,7 @@ class DebugPanelTest(BrowserCase):
         page.locator('#devpatrolStart').click()
         self.assert_js(page,"PAT.state==='walk'&&PAT.room==='admin1'")
         # Remote patrol presence must not suppress a school inspection.
-        page.evaluate('S.san=90;S.viol=30;S.tt=0;S.pitch=1.1;S.moving=false')
+        page.evaluate("doEnterRoom('teach1',Object.assign(ClassroomLayout.anchor(INTERIORS.teach1,ClassroomLayout.ownSeat),{seated:true}));S.san=90;S.viol=30;S.tt=0;S.pitch=1.1;S.moving=false")
         page.locator('#devinspectionStart').click()
         self.assert_js(page,'Inspection.active()')
         page.evaluate('Inspection.tick(8)')

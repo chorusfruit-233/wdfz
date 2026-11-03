@@ -62,12 +62,8 @@ window.Pilot = (() => {
   async function tap(k){key(k,true);await sleep(60);key(k,false);}
   async function leaveSeat(){
     if(!S.seated)return;
-    stop();const seat={x:S.x,y:S.y},deadline=performance.now()+5000;
-    // Normal forward input stands up and walks clear of the chair collider.
-    key('w',true);
-    try{while(distance(seat)<10&&performance.now()<deadline){alive();await sleep(50);}}
-    finally{stop();}
-    if(S.seated||distance(seat)<10)throw Error('未能通过正常移动离开座位');
+    stop();await tap('e');await sleep(80);
+    if(S.seated||Collision.depth(S.x,S.y,PRAD)>1e-7)throw Error('未能通过普通交互离开座位');
   }
   function look(yaw,pitch=0){
     if(!playerInputAllowed())return;
@@ -121,13 +117,19 @@ window.Pilot = (() => {
     // A grazing locker corner can fit between coarse samples even though the
     // game's 240 Hz movement hits it. Keep a small body margin in both planners.
     const cache=new Map(),free=i=>{if(!cache.has(i)){const p=point(i);cache.set(i,Collision.depth(p.x,p.y,PRAD+.2,copy)<1e-7);}return cache.get(i);};
+    const visible=p=>{
+      if(!R||!Number.isInteger(target.c)||!Number.isInteger(target.r))return true;
+      const dx=R.tw*.42*(p.x>target.x?1:-1),dy=R.th*.42*(p.y>target.y?1:-1);
+      return [[target.x,target.y],[target.x+dx,target.y],[target.x,target.y+dy]]
+        .some(([x,y])=>tileLOS(copy,p.x,p.y,x,y,target.c,target.r));
+    };
     const clear=(a,b)=>{const n=Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/.35);for(let j=1;j<=n;j++)if(Collision.depth(a.x+(b.x-a.x)*j/n,a.y+(b.y-a.y)*j/n,PRAD+.15,copy)>1e-7)return false;return true;};
     const start=index(S.x,S.y),heap=[],cost=new Map([[start,0]]),prev=new Map();
     function push(i,f){let n=heap.length;heap.push([i,f]);while(n){const p=(n-1)>>1;if(heap[p][1]<=f)break;heap[n]=heap[p];n=p;}heap[n]=[i,f];}
     function pop(){const first=heap[0],last=heap.pop();if(heap.length){let n=0;while(n*2+1<heap.length){let c=n*2+1;if(c+1<heap.length&&heap[c+1][1]<heap[c][1])c++;if(heap[c][1]>=last[1])break;heap[n]=heap[c];n=c;}heap[n]=last;}return first[0];}
     push(start,0);const closed=new Set();let goal=null;
     while(heap.length){const i=pop();if(closed.has(i))continue;closed.add(i);const p=point(i);
-      if(Math.hypot(p.x-target.x,p.y-target.y)<=radius&&free(i)&&(!covered||coveredPoint(p,6))){goal=i;break;}
+      if(Math.hypot(p.x-target.x,p.y-target.y)<=radius&&free(i)&&visible(p)&&(!covered||coveredPoint(p,6))){goal=i;break;}
       const x=i%cols,y=Math.floor(i/cols);
       for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
         if(!dx&&!dy||x+dx<0||x+dx>=cols||y+dy<0||y+dy>=rows)continue;
@@ -219,7 +221,7 @@ window.Pilot = (() => {
     return handled;
   }
   async function go(target,radius=11,covered=false){
-    stop();await defense();let route=plan(target,radius,covered),i=0,retries=0,deadline=performance.now()+120000;
+    stop();await leaveSeat();await defense();let route=plan(target,radius,covered),i=0,retries=0,deadline=performance.now()+120000;
     let progress=new PilotNavigation.Progress(performance.now(),PilotNavigation.remaining(S,route,i));
     const frames=new PilotNavigation.FrameWindow();
     const replan=()=>{stop();route=plan(target,radius,covered);i=0;progress=new PilotNavigation.Progress(performance.now(),PilotNavigation.remaining(S,route,i));};
@@ -267,11 +269,16 @@ window.Pilot = (() => {
   async function interact(target,radius=11){
     let interacted=false;
     for(let attempt=0;attempt<4;attempt++){
-      await go(target,radius);const roster=nearRoster();await tap('e');await sleep(1000);
+      await go(target,Math.max(4,radius-attempt*2));const roster=nearRoster();
+      if(!roster&&S.mode==='in'&&Number.isInteger(target.c)){
+        const hit=nearWorld(24);
+        if(!hit||hit.c!==target.c||hit.r!==target.r){event('interaction-retry',{target,hit});continue;}
+      }
+      await tap('e');await sleep(1000);
       if(roster||threatChoice()){await defense();continue;}
       interacted=true;break;
     }
-    if(!interacted)throw Error('交互持续被异象打断');
+    if(!interacted)throw Error('未能对准目标或交互持续被异象打断');
     const until=performance.now()+6000;
     while(SEARCH.job&&performance.now()<until){alive();await sleep(100);}
     if(SEARCH.job)throw Error('搜查未能完成');event('interact',target);
@@ -282,13 +289,31 @@ window.Pilot = (() => {
     await go(doorWorld(o),20);await tap('e');await sleep(1800);event('building',id);
   }
   async function stairs(up){
-    const before=S.room;await nearest('S',14);
-    if(UI.chooseOpen){
-      const options=[...document.querySelectorAll('#choices button')].map(b=>b.textContent);
-      const index=options.findIndex(text=>text.includes(up?'上楼':'下楼'));
-      if(index<0)throw Error('当前选项不是预期的楼梯方向');await choose(index+1);
+    const before=S.room;await leaveSeat();await defense();
+    const candidates=STAIR_LAYOUT.filter(s=>{const i=s.rooms.indexOf(S.room);return i>=0&&s.rooms[i+(up?1:-1)];});
+    candidates.sort((a,b)=>distance(StairWorld.insidePort(a,a.rooms.indexOf(S.room)))-distance(StairWorld.insidePort(b,b.rooms.indexOf(S.room))));
+    const shaft=candidates[0];if(!shaft)throw Error('没有通往目标层的实际楼梯');
+    const level=shaft.rooms.indexOf(before),next=level+(up?1:-1),port=StairWorld.port(shaft,level),expected=shaft.rooms[next];
+    async function segment(target,scene){
+      const frames=new PilotNavigation.FrameWindow(),end=performance.now()+30000;
+      try{
+        while(S.room===scene&&distance(target)>.6){
+          alive();if(performance.now()>end)throw Error('梯段行走超时');
+          await defense();if(S.room!==scene)break;
+          if(!playerInputAllowed()){stop();await sleep(80);continue;}
+          const d=distance(target),yaw=Math.atan2(target.y-S.y,target.x-S.x);look(yaw);
+          move(Math.abs(angle(yaw-S.ang))<.12?PilotNavigation.throttle(d,SPD_WALK,frames.update(performance.now(),dtG)):0);
+          await sleep(50);
+        }
+      }finally{stop();}
     }
-    await sleep(1000);if(S.room===before)throw Error('楼梯未切换楼层');
+    await go(StairWorld.insidePort(shaft,level,9),2);
+    await segment({x:port.x+port.n[0]*3,y:port.y+port.n[1]*3},before);
+    if(S.room!==shaft.id)throw Error('没有走入楼梯间');
+    const path=StairWorld.navPath({scene:S.room,x:S.x,y:S.y,fy:S.floorY},StairWorld.point(shaft.id,{x:0,z:-3.1,h:next*shaft.rise}));
+    for(const point of path){if(S.room!==shaft.id)break;await segment(point,shaft.id);}
+    if(S.room!==expected)throw Error('没有走出目标楼层门槛');
+    event('stairs',{from:before,to:expected,shaft:shaft.id,method:'walk'});
   }
   async function bagAction(id,label,close=true){
     stop();await tap('Tab');await sleep(500);
@@ -316,6 +341,8 @@ window.Pilot = (() => {
     const podium=cells('T').find(p=>Investigation.isPodium(INTERIORS.teach1,p.c,p.r));
     await interact(podium);await choose(1);
     if(!RT.investigation?.entries.notice)throw Error('未读到讲台移交单');
+    await go(ClassroomLayout.anchor(INTERIORS.teach1,ClassroomLayout.ownSeat),11);await tap('e');
+    if(!atMySeat())throw Error('检查前没有坐回本人座位');
     chapter('等待第一次集合检查');
     while(!RT.inspection?.seen?.[S.day+':0']||Inspection.pending()){alive();await defense();await sleep(200);}
   }

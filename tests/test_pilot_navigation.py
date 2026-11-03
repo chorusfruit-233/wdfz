@@ -57,9 +57,10 @@ class DoorwayNavigationTest(BrowserCase):
     def test_cyber_route_crosses_bridge_and_uses_student_pc_without_key(self):
         page = self.page()
         page.evaluate("""doEnterRoom('teach1');running=false;
-          const R=INTERIORS.teach1;S.x=R.ox+48.5*R.tw;S.y=R.oy+6.5*R.th;S.ang=-Math.PI/2;
+          const R=INTERIORS.teach1;doEnterRoom('teach1',Object.assign(ClassroomLayout.anchor(R,ClassroomLayout.ownSeat),{seated:true}));
           S.intro=0;S.seated=true;S.bag=['phone'];RT.inspection=null;PAT.locked=false;AN.active=false;
           PhoneNetwork.acquire();PhoneNetwork.device.network=true;PhoneNetwork.device.download.status='complete';
+          window.inputTargets=[];document.body.addEventListener('keydown',e=>{if(e.key==='e')inputTargets.push({room:S.room,target:nearWorld(24),hint:interactHint(),cool:S.enterCool});},true);
           window.pump=setInterval(()=>{dtG=.35;updatePlayer(.35);},80);""")
         for script in ('navigation.js', 'cyber.js', 'playthrough.js'):
             page.add_script_tag(path=str(ROOT / 'video' / script))
@@ -73,7 +74,7 @@ class DoorwayNavigationTest(BrowserCase):
         })().then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)});""")
         page.wait_for_function('window.result', timeout=180000)
         self.assertEqual(page.evaluate('window.result'), {'ok': True},
-                         page.evaluate("JSON.stringify({state:Pilot.snapshot(),events:Pilot.log.filter(e=>e.kind!=='input').slice(-8)})"))
+                         page.evaluate("JSON.stringify({state:Pilot.snapshot(),inputs:inputTargets.slice(-8),events:Pilot.log.filter(e=>e.kind!=='input').slice(-4)})"))
         self.assert_js(page, "S.room==='teach1' && S.seated && atMySeat() && !TerminalUI.on && !hasItem('roomkey')")
         self.assertEqual(page.evaluate("Pilot.log.filter(e=>e.kind==='bridge').map(e=>e.detail.to)"), ['lab', 'teach'])
         page.evaluate('clearInterval(pump)')
@@ -110,12 +111,13 @@ class DoorwayNavigationTest(BrowserCase):
         for script in ('navigation.js', 'playthrough.js'):
             page.add_script_tag(path=str(ROOT / 'video' / script))
         page.evaluate("Pilot.stairs(true).then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)})")
-        page.wait_for_function('window.result', timeout=30000)
+        page.wait_for_function('window.result', timeout=90000)
         self.assertEqual(page.evaluate('window.result'), {'ok': True})
         self.assert_js(page, "S.room==='admin3' && AN.data.done")
         decisions = page.evaluate("Pilot.log.filter(e=>e.kind==='decision').map(e=>e.detail.text)")
         self.assertIn('红线', decisions[0])
-        self.assertIn('上楼', decisions[1])
+        self.assertEqual(len(decisions),1)
+        self.assert_js(page,"Pilot.log.some(e=>e.kind==='stairs'&&e.detail.to==='admin3'&&e.detail.method==='walk')")
         page.evaluate('clearInterval(pump)')
 
     def test_recorded_classroom_corner_exits_under_slow_physics_frames(self):

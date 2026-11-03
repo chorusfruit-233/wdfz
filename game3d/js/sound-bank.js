@@ -353,6 +353,8 @@ var SOUND_BANK={
     {t:'noise',f:[360,420],type:'lowpass',q:1.5,dur:0.06,g:0.5,atk:0.001},
     {t:'tone',f:[160,190],to:120,dur:0.1,g:0.12},
     {t:'noise',f:[280,330],type:'lowpass',q:2,dur:0.4,g:0.15,at:0.08,atk:0.1,am:[[12,18],0.5]}]},
+  'dread.hum':{cat:'distant',name:'灯管留下的嗡声',lv:-10,layers:[{t:'tone',f:100,to:98,dur:3.4,g:.05,atk:.5},{t:'noise',f:240,type:'lowpass',dur:3.2,g:.015,atk:.5}]},
+  'threat.breath':{cat:'threat',name:'近处呼吸',lv:-12,layers:[{t:'noise',f:600,type:'bandpass',q:.6,dur:1.5,g:.045,atk:.55}]},
   'dread.radio':{cat:'distant',name:'收音机的杂音和人声',layers:[
     {t:'noise',f:1800,type:'bandpass',q:1.2,dur:1.8,g:0.25,atk:0.2,am:[[6,9],0.45]},
     {t:'vowel',f:150,f1:600,f2:1700,vib:[9,0.05],dur:1.6,g:0.12,at:0.2,lp:3200}]},

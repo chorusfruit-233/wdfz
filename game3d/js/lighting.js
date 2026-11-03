@@ -218,6 +218,7 @@ function lightCrackle(i,flick){
 /* 灯的闪烁：一直有一点点抖；每盏灯隔一阵会接触不良地连闪几下；夜里偶尔整盏暗一下 */
 function lhash(a,b){ var x=Math.sin(a*127.1+b*311.7)*43758.5453; return x-Math.floor(x); }
 function roomFlicker(i,tt,day){
+  if($imports.SET.reduceFlash)return .94;
   var ph=i*2.7;
   var f=0.93+0.07*Math.sin(tt*7.3+ph)+0.03*Math.sin(tt*23.1+ph*1.7);
   var seg=Math.floor((tt+ph*3)/7), r=lhash(seg,i);
@@ -232,11 +233,13 @@ function roomFlicker(i,tt,day){
 function lampHealth(i){
   var r=lhash(i*3.1,($imports.Engine.sceneView().room||'').length*7.7+($imports.Engine.sceneView().room?$imports.Engine.sceneView().room.charCodeAt($imports.Engine.sceneView().room.length-1):0));
   if(i===0) return 1;                                   /* 每间屋第一盏总是好的（教室讲台上方那盏），不至于全黑 */
+  if(r<0.3&&$imports.SET.reduceFlash)return .12;
   if(r<0.3) return 0.06+0.9*Math.max(0,Math.sin(($imports.GLR.time||0)*0.8+i*4.1)-0.97)*30;
   if(r<0.55) return 0.45;
   return 1;
 }
 function dyingTube(tt){
+  if($imports.SET.reduceFlash)return .3;
   var seg=Math.floor(tt/2.3), r=lhash(seg,91), u=tt-seg*2.3;
   if(r<0.45&&u<0.5) return (Math.sin(u*70+r*9)>0.2)?0.95:0.18;            /* 一阵抽搐 */
   if(r>0.9&&u<1.6) return 0.75+0.2*Math.sin(u*120);                        /* 偶尔亮一会儿，在嗡嗡地抖 */
@@ -244,6 +247,7 @@ function dyingTube(tt){
 }
 /* 巡察者出现前的节拍：两下短闪、一下长暗，像心跳 */
 function patrolBeat(tt){
+  if($imports.SET.reduceFlash)return .65+.15*Math.sin(tt*1.5);
   var u=(tt*0.9)%1;
   return (u<0.08||(u>0.16&&u<0.24))?0.1:(u>0.5&&u<0.7?0.25:1);
 }
@@ -283,7 +287,7 @@ function lampTick(s){
   var tt=$imports.GLR.time||0;
   for(i=0;i<L.length;i++){
     var fl=1;
-    if(i===1&&Math.sin(tt*1.7)>0.93) fl=0.25+0.5*Math.abs(Math.sin(tt*31));   /* 总有一盏接触不良 */
+    if(!$imports.SET.reduceFlash&&i===1&&Math.sin(tt*1.7)>0.93) fl=0.25+0.5*Math.abs(Math.sin(tt*31));   /* 总有一盏接触不良 */
     if(($imports.GLR.patrolFlick||0)>0) fl*=1-$imports.GLR.patrolFlick*(1-patrolBeat(tt));     /* 夜里巡察者在室外：路灯也按节拍闪 */
     L[i].intensity=L[i].userData.on?LCFG.lampI*smooth01(0.15,0.7,night)*fl:0;
   }

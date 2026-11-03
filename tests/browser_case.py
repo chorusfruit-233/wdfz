@@ -75,6 +75,9 @@ class BrowserCase(unittest.TestCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
+        # Gameplay fixtures need the asynchronously loaded selected pack before direct scene calls.
+        # Asset-failure tests use their own context and deliberately bypass this helper.
+        page.wait_for_function('Assets.ready()', timeout=60000)
         # Freeze simulation so hazards and clocks cannot interfere with input assertions.
         # The final smoke test also creates and renders a real room.
         page.evaluate("""

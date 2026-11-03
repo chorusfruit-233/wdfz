@@ -30,6 +30,7 @@ var PatrolNav=(function(){
   function cell(id,p){var g=grid(id);return [Math.floor((p.x-g.ox)/g.step),Math.floor((p.y-g.oy)/g.step)];}
   function world(id,i,j){var g=grid(id);return point(id,g.ox+(i+.5)*g.step,g.oy+(j+.5)*g.step);}
   function snap(id,p){
+    if($imports.StairWorld.config(id))return $imports.StairWorld.navSnap(id,p);
     var g=grid(id);if(!g)return null;var c=cell(id,p),best=null,bd=Infinity;
     for(var r=0;r<=12&&!best;r++)for(var y=-r;y<=r;y++)for(var x=-r;x<=r;x++){
       if(Math.max(Math.abs(x),Math.abs(y))!==r||!free(id,c[0]+x,c[1]+y))continue;
@@ -40,7 +41,7 @@ var PatrolNav=(function(){
      同时检查斜穿格点两侧的格子，与 A* 的禁止挤角规则一致。门洞本身可通行。 */
   function segment(a,b){
     if(!a||!b||a.scene!==b.scene)return false;
-    var id=a.scene,g=grid(id);if(!g||id==='bell1'||id==='lift_dream')return false;
+    var id=a.scene,g=grid(id);if(!g||id==='bell1'||id==='lift_dream'||$imports.StairWorld.config(id))return false;
     var s=cell(id,a),t=cell(id,b),x=s[0],y=s[1];
     if(!free(id,x,y)||!free(id,t[0],t[1]))return false;
     var dx=b.x-a.x,dy=b.y-a.y,sx=Math.sign(dx),sy=Math.sign(dy);
@@ -112,7 +113,7 @@ var PatrolNav=(function(){
     if(bb===0){var tail=planar(p(0),b);if(!tail)return null;out=out.concat(tail);}else if(bb===C.amax)out=out.concat(topArc(b,false));else out.push(b);
     return out;
   }
-  function path(a,b){if(!a||!b||a.scene!==b.scene)return null;if(a.scene==='lift_dream')return maze(a,b);if(a.scene==='bell1')return bell(a,b);return planar(a,b);}
+  function path(a,b){if(!a||!b||a.scene!==b.scene)return null;if($imports.StairWorld.config(a.scene))return $imports.StairWorld.navPath(a,b);if(a.scene==='lift_dream')return maze(a,b);if(a.scene==='bell1')return bell(a,b);return planar(a,b);}
   function length(p){if(!p)return Infinity;var n=0;for(var i=1;i<p.length;i++)n+=Math.hypot(p[i].x-p[i-1].x,p[i].y-p[i-1].y,((p[i].fy||0)-(p[i-1].fy||0))/$imports.U2M);return n;}
   function tilePoint(id,c,r){var R=$imports.INTERIORS[id];return point(id,R.ox+(c+.5)*R.tw,R.oy+(r+.5)*R.th);}
   function entry(id,ch){var R=$imports.INTERIORS[id];for(var r=0;r<R.rows;r++)for(var c=0;c<R.cols;c++)if(R.grid[r][c]===ch){
@@ -124,20 +125,30 @@ var PatrolNav=(function(){
     function node(id,p){if(!p)throw new Error('无合法连接落点：'+id);g.nodes[id]=p;return id;}
     function edge(a,b,kind,base){
       var pa=g.nodes[a],pb=g.nodes[b],route=null,weight;
-      if(kind==='stairs')weight=2;else if(pa.scene!==pb.scene)weight=kind==='bridge'?1:1.1;
+      if(kind==='stairs'){connectStairs(a,b,base);return;}
+      if(kind==='stair-portal')weight=0;else if(pa.scene!==pb.scene)weight=kind==='bridge'?1:1.1;
       else{route=path(pa,pb);weight=length(route)/$imports.PAT_SPEED;}
       if(!Number.isFinite(weight))throw new Error('连接不可达：'+a+' → '+b);
       var e={a:a,b:b,kind:kind||'walk',weight:weight,points:route};g.edges.push(e);if(base)g.patrolEdges.push(g.edges.length-1);
     }
+    function connectStairs(a,b,base){
+      var pa=g.nodes[a],pb=g.nodes[b],east=a.includes('east-stairs')||b.includes('east-stairs');
+      var s=$imports.STAIR_LAYOUT.find(function(s){return s.rooms.includes(pa.scene)&&s.rooms.includes(pb.scene)&&(s.host!=='teach'||(east?s.id==='stair_teach_e':s.id==='stair_teach_w'));});
+      if(!s)throw new Error('缺少实际楼梯连接：'+a+' → '+b);
+      var ia=s.rooms.indexOf(pa.scene),ib=s.rooms.indexOf(pb.scene),na=s.id+':'+ia,nb=s.id+':'+ib;
+      node(na,$imports.StairWorld.point(s.id,{x:0,z:-2.8,h:ia*s.rise}));node(nb,$imports.StairWorld.point(s.id,{x:0,z:-2.8,h:ib*s.rise}));
+      [[a,na],[b,nb]].forEach(function(pair){if(!g.edges.some(function(e){return e.a===pair[0]&&e.b===pair[1];}))edge(pair[0],pair[1],'stair-portal',base);});
+      edge(na,nb,'walk',base);
+    }
     ['admin','lab','teach','dormN','dormS'].forEach(function(host){var max=(0,$imports.topFloorOf)(host),last=null,lastEast=null;
-      for(var f=1;f<=max;f++){var id=(0,$imports.floorIdOf)(host,f),R=$imports.INTERIORS[id],st=node(id+':stairs',entry(id,'S'));
+      for(var f=1;f<=max;f++){var id=(0,$imports.floorIdOf)(host,f),R=$imports.INTERIORS[id],st=node(id+':stairs',$imports.StairWorld.insidePort($imports.STAIR_LAYOUT.find(function(s){return s.rooms.includes(id)&&s.id!=='stair_teach_e';}),f-1,0));
         if(last)edge(last,st,'stairs',f<=5&&['admin','lab','teach'].includes(host));last=st;
         if(['admin','lab','teach'].includes(host)&&f<=5){
           var row=host==='teach'?18.5:host==='admin'?19:17;
           var east=node(id+':east',snap(id,tilePoint(id,host==='teach'?54:R.cols-5,row)));edge(st,east,'walk',true);
           if(host==='teach'){
             var right=null;for(var sr=0;sr<R.rows;sr++)for(var sc=R.cols-1;sc>=0;sc--)if(!right&&R.grid[sr][sc]==='S')right=snap(id,tilePoint(id,sc,sr));
-            var eastStairs=node(id+':east-stairs',right);edge(east,eastStairs,'walk',true);
+            var eastStairs=node(id+':east-stairs',$imports.StairWorld.insidePort($imports.StairWorld.config('stair_teach_e'),f-1,0));edge(east,eastStairs,'walk',true);
             if(lastEast)edge(lastEast,eastStairs,'stairs',true);lastEast=eastStairs;
           }
         }
@@ -157,7 +168,8 @@ var PatrolNav=(function(){
     Object.keys(exterior).forEach(function(host){var id=exterior[host],pos=(0,$imports.doorWorld)((0,$imports.objById)(host));
       node('out:'+host,snap('out',point('out',pos.x,pos.y)));
       if(!g.nodes[id+':entry'])node(id+':entry',entry(id,'O'));
-      edge('out:'+host,id+':entry','entrance',false);
+      if(host==='garw'){var shaft=$imports.StairWorld.config('stair_garage');node('garage1:ped-stairs',$imports.StairWorld.insidePort(shaft,0,0));connectStairs('garage1:ped-stairs','out:'+host,false);edge('garage1:ped-stairs',id+':entry','walk',false);}
+      else edge('out:'+host,id+':entry','entrance',false);
     });
     [['garden',534,992],['southgate',386,1276],['eastroad',704,750],['northgate',514,112],['playground',410,380],['westgate',220,624]].forEach(function(v){node('out:'+v[0],snap('out',point('out',v[1]*$imports.SC,v[2]*$imports.SC)));});
     var tour=['admin','garw','westgate','teach','bell','garden','dormN','canteen','dormS','southgate','trash','eastroad','northgate','guard','garage','playground','gear','lab','admin'];
@@ -198,6 +210,7 @@ var PatrolNav=(function(){
   }
   function los(a,b){
     if(!a||!b||a.scene!==b.scene||Math.abs((a.fy||0)-(b.fy||0))>1.3)return false;
+    if($imports.StairWorld.config(a.scene)){var room=$imports.INTERIORS[a.scene];return $imports.StairGeometry.los(room.stairSurfaces,$imports.StairWorld.local(room,a.x,a.y,a.fy),$imports.StairWorld.local(room,b.x,b.y,b.fy));}
     var steps=Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/2),R=$imports.INTERIORS[a.scene];
     for(var i=1;i<steps;i++){
       var x=a.x+(b.x-a.x)*i/steps,y=a.y+(b.y-a.y)*i/steps;

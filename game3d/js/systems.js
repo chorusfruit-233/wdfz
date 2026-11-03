@@ -9,7 +9,7 @@ var GameTime={now:gameClock,advance:advanceGameTime,rewind:rewindGameTime,tick:c
 function inClassroomHere(){
   if($imports.S.mode!=='in') return false;
   var R=$imports.INTERIORS[$imports.S.room];
-  if(!R||R.host!=='teach') return false;
+  if(!R||R.stairwell||R.host!=='teach') return false;
   if(R.floor<1||R.floor>5) return false;
   var row=Math.floor(($imports.S.y-R.oy)/R.th);
   return row>=1&&row<=14;
@@ -32,11 +32,11 @@ function onField(){
 function currentPlaceName(){
   if($imports.S.mode==='out') return '武大附中 · 校园';
   var R=$imports.INTERIORS[$imports.S.room];
+  if(R&&R.stairwell)return '武大附中 · '+R.name+' · '+(Math.floor($imports.S.floorY/$imports.StairWorld.config(R.id).rise)+1)+'F 附近';
   return R?('武大附中 · '+R.name):'武大附中';
 }
 function atMySeat(){
-  if(!inClassroomHere()||$imports.S.room!=='teach1') return false;
-  return $imports.S.seated;
+  return $imports.S.mode==='in'&&!$imports.S.dead&&$imports.ClassroomLayout.atOwn($imports.S,$imports.INTERIORS[$imports.S.room]);
 }
 function nearestSeat(){
   if($imports.S.mode!=='in') return null;
@@ -71,7 +71,7 @@ function examTick(dt){
   if(cur!==$imports.S.examCur){
     if($imports.S.examCur!==null&&$imports.S.examTot>4){                 /* 上一场结束：交卷 */
       (0,$imports.gameFact)('exam',{phase:'paper',pass:$imports.S.examSeat/$imports.S.examTot>=0.7,day:$imports.S.day});
-      if($imports.S.examSeat/$imports.S.examTot>=0.7){ $imports.PlayerStats.changeSan(15,'systems',{max:100}); (0,$imports.os)('我：交卷了。监考的人从我桌上收走卷子，没有看我。……可我记得我写了什么。',4.4); (0,$imports.toast)('考完一场 · SAN +15'); }
+      if($imports.S.examSeat/$imports.S.examTot>=0.7){ $imports.PlayerStats.changeSan(15,'systems',{max:100}); (0,$imports.os)('我：交卷了。监考的人从我桌上收走卷子，没有看我。……可我记得我写了什么。',4.4); (0,$imports.toast)('这一场考完了'); }
       else (0,$imports.os)('我：这一场我没坐住。收上去的卷子里，我那一张只有名字，名字被人画了一个圈。',4.4);
     }
     $imports.S.examCur=cur; $imports.S.examSeat=0; $imports.S.examTot=0;
@@ -163,7 +163,7 @@ function clockTick(dt){
   }
 }
 function sanityStage(value){return $imports.StatRules.sanityStage(value===undefined?$imports.S.san:value);}
-var SAN_FEEL=['呼吸平稳','有些恍惚','心跳很乱','快撑不住了'];
+
 function staminaMax(){return $imports.PlayerStats.staminaMax();}
 function capStamina(){$imports.PlayerStats.capStamina();}
 function restoreStamina(amount){$imports.PlayerStats.restoreStamina(amount);}
@@ -261,7 +261,7 @@ function resolveAssimilation(){
 }
 
 /* 请假：两个小时（游戏时间）内不用待在规定的地方，巡察者也不管。RT.leaveUntil 用连续的游戏分钟 */
-var LEAVE_MIN=120;
+var LEAVE_MIN=180;
 function onLeave(){ return !!$imports.RT.leaveUntil&&gameClock()<$imports.RT.leaveUntil; }
 function leaveLeft(){ return onLeave()?Math.ceil($imports.RT.leaveUntil-gameClock()):0; }
 function leaveTick(){
@@ -419,7 +419,6 @@ GameModules.publish("game3d/js/systems.js",{
 "TT_SEAT":{get:function(){return TT_SEAT;},set:function($value){TT_SEAT=$value;}},
 "clockTick":{get:function(){return clockTick;},set:function($value){clockTick=$value;}},
 "sanityStage":{get:function(){return sanityStage;},set:function($value){sanityStage=$value;}},
-"SAN_FEEL":{get:function(){return SAN_FEEL;},set:function($value){SAN_FEEL=$value;}},
 "staminaMax":{get:function(){return staminaMax;},set:function($value){staminaMax=$value;}},
 "capStamina":{get:function(){return capStamina;},set:function($value){capStamina=$value;}},
 "restoreStamina":{get:function(){return restoreStamina;},set:function($value){restoreStamina=$value;}},

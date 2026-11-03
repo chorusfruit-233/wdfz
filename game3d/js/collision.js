@@ -14,13 +14,14 @@ var Collision={
     function rect(x0,y0,x1,y1){total+=Collision.rectDepth(x,y,r,x0,y0,x1,y1);}
     if(room||$imports.S.mode==='in'){
       var R=room||$imports.INTERIORS[$imports.S.room];if(!R)return Infinity;
+      if(R.stairwell)return $imports.StairWorld.depth(R.id,x,y,r,$imports.S.floorY);
       if(x-r<R.ox||y-r<R.oy||x+r>R.ox+R.w||y+r>R.oy+R.h)return Infinity;
       var c0=Math.max(0,Math.floor((x-r-R.ox)/R.tw)),c1=Math.min(R.cols-1,Math.floor((x+r-R.ox)/R.tw));
       var r0=Math.max(0,Math.floor((y-r-R.oy)/R.th)),r1=Math.min(R.rows-1,Math.floor((y+r-R.oy)/R.th));
       for(var rr=r0;rr<=r1;rr++)for(var cc=c0;cc<=c1;cc++){
         var t=R.grid[rr][cc],cx=R.ox+(cc+0.5)*R.tw,cy=R.oy+(rr+0.5)*R.th;
         var f=R.foot?undefined:$imports.FURN_SOLID[t];
-        if((0,$imports.isSolidCh)(t)||(t==='='&&(($imports.Classmates.blocked(R.id))||!(0,$imports.doorIsOpen)(R,cx,cy))))f=1;
+        if(((0,$imports.isSolidCh)(t)&&!(t==='S'&&$imports.StairWorld.doorwayFree(R,x,y,r)))||(t==='='&&(($imports.Classmates.blocked(R.id,cx,cy))||!(0,$imports.doorIsOpen)(R,cx,cy))))f=1;
         if(f!==undefined)rect(cx-R.tw*f/2,cy-R.th*f/2,cx+R.tw*f/2,cy+R.th*f/2);
       }
       if(R.foot){
