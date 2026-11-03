@@ -28,12 +28,11 @@ function teachFloor(f){
   g[21][6]='S'; g[21][7]='S';
   g[21][56]='S'; g[21][57]='S';
   if(f===1){ g[21][30]='O'; g[21][31]='O'; }
+  /* 教室：讲台、四组同桌（布局和每张桌子的位置见 domain/classroom-layout.js） */
   for(i=0;i<6;i++){
-    var c0=CLS_SPAN[i][0], c1=CLS_SPAN[i][1];
     var pod=$imports.ClassroomLayout.podium(i);g[pod[1]][pod[0]]='T';
-    for(y=2;y<=12;y+=2)for(x=c0+2;x<=c1;x+=2)g[y][x]='d';
+    $imports.ClassroomLayout.seatTiles(i).forEach(function(t){g[t[1]][t[0]]='d';});
   }
-  g[MY_ROW][MY_COL-1]='.';
   g[MY_ROW][MY_COL]='P';
   for(y=16;y<=20;y++) g[y][57]='#';
   g[19][57]='.';                                   /* 门洞 */

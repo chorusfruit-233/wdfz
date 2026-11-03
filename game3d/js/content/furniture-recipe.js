@@ -42,6 +42,26 @@ function chairModel(K,x,z,rot,seatY){
 /* 办公转椅：五星脚、气杆、软垫、靠背、扶手。正面朝 -z */
 function officeChair(K,x,z,rot){ K.asset('chair_office',x,0,z,rot||0); }
 
+/* 教学楼教室的课桌、椅子：位置由 ClassroomLayout 给（桌子朝西的黑板，同桌两张拼在一起）；别的房间在格子中心、朝北。
+   返回米（房间中心为原点）：桌子中心 dx/dz、椅子中心 chx/chz、转角 rot（模型的人朝 -z 坐） */
+function deskPlace(c,x,y,cx,cz){
+  if(c.R.host==='teach'&&$imports.ClassroomLayout.isDesk(x,y)){
+    var d=$imports.ClassroomLayout.deskAt(x,y), ch=$imports.ClassroomLayout.chairAt(x,y);
+    return {dx:cx+(d.x-x-0.5)*c.tw, dz:cz+(d.y-y-0.5)*c.th, chx:cx+(ch.x-x-0.5)*c.tw, chz:cz+(ch.y-y-0.5)*c.th, rot:Math.PI/2};
+  }
+  return {dx:cx, dz:cz-0.10, chx:cx, chz:cz+0.30, rot:0};
+}
+/* 桌面上的东西（在课桌的局部坐标里，人在 +z）：高中生的桌子——前沿一排书立着（书立夹着），一摞练习册、卷子、水杯、笔。
+   流畅档少摆一些（书立、水杯照旧，一摞书和卷子减半） */
+function deskTop(K,x,y){
+  var hh=(0,$imports.hash2)(x*3+7,y*5+11), h2=(0,$imports.hash2)(y*7+3,x*11+5), top=0.7575, low=(0,$imports.lodLow)();
+  if(hh>0.15) (0,$imports.propBooksUpright)(K,(h2-0.5)*0.1+0.04,top,-0.175,0.26+hh*0.2,x*7+y*3,0);
+  if(hh>0.42&&(!low||hh>0.71)) K.box('paper',(hh-0.7)*0.18,top+0.003,0.07,0.25,0.004,0.18,0xe6ece6,1.0);   /* 卷子 */
+  if(h2>0.55&&(!low||h2>0.78)) (0,$imports.propBookPile)(K,0.22,top,0.06,2+((h2*10)|0)%3,x*7+y);
+  if(h2<0.35) (0,$imports.propBottle)(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
+  if(hh<0.30&&!low) K.rod('plastic',-0.2,top+0.006,0.05,-0.05,top+0.006,0.08,0.006,0.006,6,0x2a4a8a);  /* 一支笔 */
+}
+
 /* ---- 课桌（教学楼）/ 办公工位（行政楼） ---- */
 FURN.d=function(c,x,y,cx,cz){
   var K=c.K;
@@ -54,25 +74,30 @@ FURN.d=function(c,x,y,cx,cz){
     return;
   }
   c.R.stats.desk++; c.R.stats.chair++;
-  var west=c.R.host==='teach',rot=west?Math.PI/2:0;
-  var dx=cx-(west?.10:0),dz=cz-(west?0:.10);
-  K.frame(dx,dz,rot);
+  var p=deskPlace(c,x,y,cx,cz);
+  K.frame(p.dx,p.dz,p.rot);
   K.asset('desk_student',0,0,0,0);                                               /* 木纹桌面、钢框、可调高的腿、铁皮桌斗、挂钩 */
-  /* 桌面：高中生的桌子——前沿一排书立着（书立夹着），一摞练习册、卷子、水杯、笔 */
-  var hh=(0,$imports.hash2)(x*3+7,y*5+11), h2=(0,$imports.hash2)(y*7+3,x*11+5), top=0.7575;
-  if(hh>0.15) (0,$imports.propBooksUpright)(K,(h2-0.5)*0.1+0.04,top,-0.175,0.26+hh*0.2,x*7+y*3,0);
-  if(hh>0.42) K.box('paper',(hh-0.7)*0.18,top+0.003,0.07,0.25,0.004,0.18,0xe6ece6,1.0);   /* 卷子 */
-  if(h2>0.55) (0,$imports.propBookPile)(K,0.22,top,0.06,2+((h2*10)|0)%3,x*7+y);
-  if(h2<0.35) (0,$imports.propBottle)(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
-  if(hh<0.30) K.rod('plastic',-0.2,top+0.006,0.05,-0.05,top+0.006,0.08,0.006,0.006,6,0x2a4a8a);  /* 一支笔 */
+  deskTop(K,x,y);
   K.unframe();
-  chairModel(K,cx+(west?.30:0),cz+(west?0:.30),rot,0.44);
-  c.ao(cx,cz,0.96,0.70,1.0);
+  chairModel(K,p.chx,p.chz,p.rot,0.44);
+  c.ao((p.dx+p.chx)/2,(p.dz+p.chz)/2,p.rot?0.92:0.96,p.rot?0.82:0.70,1.0);   /* 桌子加椅子的接触阴影 */
 };
+/* 座位（能坐下的那张）：教学楼教室里和别的课桌一样带一张桌子；本人座位的桌面只放一排书和一支笔，不挡看黑板的视线 */
 FURN.P=function(c,x,y,cx,cz){
   if(c.R.stats) c.R.stats.seat++;
-  chairModel(c.K,cx,cz,c.R.host==='teach'?Math.PI/2:0,0.46);
-  if(c.R.host==='teach')c.K.asset('desk_student',cx-.65,0,cz,Math.PI/2);
+  var K=c.K;
+  if(c.R.host==='teach'&&$imports.ClassroomLayout.isDesk(x,y)){
+    var p=deskPlace(c,x,y,cx,cz);
+    K.frame(p.dx,p.dz,p.rot);
+    K.asset('desk_student',0,0,0,0);
+    (0,$imports.propBooksUpright)(K,-0.22,0.7575,-0.175,0.30,x*7+y*3,0);
+    K.rod('plastic',0.08,0.7635,0.06,0.22,0.7635,0.09,0.006,0.006,6,0x2a4a8a);
+    K.unframe();
+    chairModel(K,p.chx,p.chz,p.rot,0.46);
+    c.ao((p.dx+p.chx)/2,(p.dz+p.chz)/2,0.92,0.82,1.0);
+    return;
+  }
+  chairModel(K,cx,cz,0,0.46);
   c.ao(cx,cz,0.5,0.5,0.7);
 };
 /* 讲台：木柜体（正面朝学生），老师那面开口；台上教案、粉笔盒、板擦 */
@@ -240,6 +265,8 @@ GameModules.publish("game3d/js/content/furniture-recipe.js",{
 "C_DARKP":{get:function(){return C_DARKP;},set:function($value){C_DARKP=$value;}},
 "chairModel":{get:function(){return chairModel;},set:function($value){chairModel=$value;}},
 "officeChair":{get:function(){return officeChair;},set:function($value){officeChair=$value;}},
+"deskPlace":{get:function(){return deskPlace;},set:function($value){deskPlace=$value;}},
+"deskTop":{get:function(){return deskTop;},set:function($value){deskTop=$value;}},
 "CAR_COLS":{get:function(){return CAR_COLS;},set:function($value){CAR_COLS=$value;}},
 "QUILT_COLS":{get:function(){return QUILT_COLS;},set:function($value){QUILT_COLS=$value;}},
 "FOODS":{get:function(){return FOODS;},set:function($value){FOODS=$value;}},
