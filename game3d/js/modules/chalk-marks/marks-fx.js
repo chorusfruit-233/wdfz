@@ -64,7 +64,7 @@ var ChalkFx={g:null, place:undefined, tex:{}, mats:{}, geo:null,
     var room=S.mode==='in'?S.room:null, R=room?INTERIORS[room]:null;
     if(room&&!R) return;
     if(!ChalkFx.geo) ChalkFx.geo=new THREE.PlaneGeometry(1,1);
-    var g=new THREE.Group(); g.name='chalk-marks';
+    var g=new THREE.Group(); g.name='chalk-marks'; g.userData.worldPart=true;   /* 属于场景：死亡演出藏场景时一起藏 */
     ChalkMarks.visible(room).forEach(function(m){
       var mat=ChalkFx.material(m.s,!!m.old); if(!mat) return;
       var mesh=new THREE.Mesh(ChalkFx.geo,mat), p=worldToScene(m.x,m.y,R), j=hash2(Math.abs(m.n)*3+1,m.s.length*7);

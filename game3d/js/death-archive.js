@@ -10,7 +10,8 @@
 'use strict';
 
 var DEATH_ARCHIVE_KEY='wdfz3d_death_archive_v1';
-/* 注册表：死因 ID → 演出 → 档案标题、一句记录 → 回放舞台。secret:1 的条目在解锁前完全不出现（目前没有）。 */
+/* 注册表：死因 ID → 演出 → 档案标题、一句记录 → 回放舞台。secret:1 的条目在解锁前完全不出现，也不算进「已记录 x / y」的总数
+   （目前是虚空迷宫里的两种死法；演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫）。 */
 var DEATH_ARCHIVE=[
   {id:'patrol',       fx:'grip',     n:'点名',         d:'灯按拍子闪的时候，它就在这一层。一只手从后面按住了我的头顶。', stage:'teach1'},
   {id:'garage',       fx:'grip',     n:'车道中间',     d:'车库里没有灯。它一直站在车道中间，等我自己走过去。', stage:'garage1'},
@@ -29,7 +30,9 @@ var DEATH_ARCHIVE=[
   {id:'laugh',        fx:'laugh',    n:'笑出了声',     d:'灯前看字字如旧。我笑得停不下来，笑了很久。', stage:'teach1'},
   {id:'trap_out',     fx:'slit',     n:'正门',         d:'我从门缝里挤了出去。路的尽头还是一扇校门。', stage:'out'},
   {id:'trap_wall',    fx:'squeeze',  n:'墙外的墙',     d:'墙外面还有一道墙。我一直翻，翻到手指不再是手指的形状。', stage:'out'},
-  {id:'trap_beg',     fx:'face',     n:'路过的人',     d:'他慢慢转过头——没有脸，只有一个很大的、在笑的洞。', stage:'out'}
+  {id:'trap_beg',     fx:'face',     n:'路过的人',     d:'他慢慢转过头——没有脸，只有一个很大的、在笑的洞。', stage:'out'},
+  {id:'void_lost',    fx:'void',     n:'哪一扇门',     d:'白墙上的门一扇扇裂开、亮起来，又一格一格暗下去。我想不起自己是从哪一扇进来的。', stage:'lift_dream', secret:1},
+  {id:'void_fall',    fx:'abyss',    n:'往下',         d:'我一直往下掉。下面那块画着斜线的白色方地上站着一个人，抬起手电照我。', stage:'lift_dream', secret:1}
 ];
 var DEATH_ARCHIVE_BY_ID={};
 DEATH_ARCHIVE.forEach(function(e,i){ e.no=i+1; DEATH_ARCHIVE_BY_ID[e.id]=e; });
@@ -109,9 +112,11 @@ var DeathArchive={
     var b=document.getElementById('btnarchive'); if(b) b.focus({preventScroll:true});
   },
   paint:function(){
-    var d=DeathArchive.state(), list=DeathArchive.visible(d), got=list.filter(function(e){ return d.unlocked[e.id]; }).length;
+    var d=DeathArchive.state(), list=DeathArchive.visible(d);
+    var pub=list.filter(function(e){ return !e.secret; }), got=pub.filter(function(e){ return d.unlocked[e.id]; }).length;
+    var hid=list.length-pub.length;                   /* 已经解锁的隐藏档案：单独记，不把公开的总数撑破 */
     var head=document.getElementById('arCount');
-    if(head) head.textContent='已记录 '+got+' / '+list.filter(function(e){ return !e.secret; }).length;
+    if(head) head.textContent='已记录 '+got+' / '+pub.length+(hid?' · 隐藏 '+hid:'');
     var note=document.getElementById('arNote');
     if(note) note.textContent=d.pending?('另有 '+d.pending+' 条旧版本的死亡记录来源不明，没有计入。'):'';
     var box=document.getElementById('arcards'); if(!box) return;

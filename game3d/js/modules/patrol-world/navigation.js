@@ -149,11 +149,15 @@ var PatrolNav=(function(){
     return g;
   }
   function localEdge(a,b){var k=a+'>'+b;if(localCache[k])return localCache[k];var g=build();return localCache[k]=path(g.nodes[a],g.nodes[b]);}
+  /* 骨架图建好以后不再变：两个节点之间的最短路只算一次。以前跨场景追踪每次重规划都对起点、终点两组节点逐对重算，
+     一次约 8 毫秒，其中三分之二花在这里，巡察者重新规划的那一帧会卡一下（手机上更明显）。结果和直接调用完全相同 */
+  var shortCache={};
+  function shortest(s,e){var k=s+'>'+e;if(!Object.prototype.hasOwnProperty.call(shortCache,k))shortCache[k]=RouteGraph.shortest(build(),s,e);return shortCache[k];}
   function nearestRoute(a,ids){
     var g=build(),best=null,targets=Array.from(new Set(ids)).sort();
     Object.keys(g.nodes).sort().forEach(function(s){if(g.nodes[s].scene!==a.scene)return;
       var lead=length(path(a,g.nodes[s]))/PAT_SPEED;if(!Number.isFinite(lead))return;
-      targets.forEach(function(t){var mid=RouteGraph.shortest(g,s,t);if(!mid)return;var cost=lead+mid.weight;
+      targets.forEach(function(t){var mid=shortest(s,t);if(!mid)return;var cost=lead+mid.weight;
         if(!best||cost<best.cost-1e-8||Math.abs(cost-best.cost)<1e-8&&t<best.id)best={id:t,cost:cost};});});
     return best&&best.id;
   }
@@ -162,7 +166,7 @@ var PatrolNav=(function(){
     Object.keys(g.nodes).forEach(function(k){if(g.nodes[k].scene===a.scene)starts.push(k);if(g.nodes[k].scene===b.scene)ends.push(k);});
     var best=null,tail={};ends.forEach(function(e){tail[e]=length(path(g.nodes[e],b))/PAT_CHASE;});
     starts.forEach(function(s){var approach=path(a,g.nodes[s]),lead=length(approach)/PAT_CHASE;if(!Number.isFinite(lead))return;
-      ends.forEach(function(e){if(!Number.isFinite(tail[e]))return;var mid=RouteGraph.shortest(g,s,e);if(!mid)return;var cost=lead+mid.weight+tail[e];
+      ends.forEach(function(e){if(!Number.isFinite(tail[e]))return;var mid=shortest(s,e);if(!mid)return;var cost=lead+mid.weight+tail[e];
         if(!best||cost<best.cost){best={cost:cost,points:approach,nodes:mid.nodes,edges:mid.edges};}});});
     if(!best)return null;
     if(best.points.length>1&&length(best.points)>3)return {points:best.points,transition:null};

@@ -115,7 +115,7 @@ class DeathTimelineTest(BrowserCase):
         result = page.evaluate("""() => {
           let kinds=new Set(SFX.deathKinds());
           let reachable=new Set(Object.values(DFX_MAP).filter(Boolean));
-          ['vignette','grip','names','slit','squeeze','face','laugh','trash'].forEach(id=>reachable.add(id));
+          ['vignette','grip','names','slit','squeeze','face','laugh','trash','void','abyss'].forEach(id=>reachable.add(id));
           let missing=[...reachable].filter(id=>!kinds.has(id)).sort();
           let errors=[];
           kinds.forEach(id=>{try{SFX.deathFx(id);}catch(e){errors.push(id+':'+e.message);}});
@@ -145,7 +145,7 @@ class DeathTimelineTest(BrowserCase):
         page = self.page()
         result = page.evaluate("""() => {
           let reach=new Set(Object.values(DFX_MAP).filter(Boolean));
-          ['vignette','grip','names','slit','squeeze','face','laugh','trash'].forEach(id=>reach.add(id));
+          ['vignette','grip','names','slit','squeeze','face','laugh','trash','void','abyss'].forEach(id=>reach.add(id));
           let earlier=new Set(['vignette','slit','squeeze','face','chalk','names','hand','trash']);
           let missing=[...reach].filter(id=>!earlier.has(id)&&!DeathCG.has(id)).sort();
           let short=DeathCG.types().filter(id=>DeathTimeline.duration(id)<3).sort();
@@ -257,7 +257,7 @@ class DeathTimelineTest(BrowserCase):
         page = self.page()
         result = page.evaluate("""() => {
           const out={};
-          for(const id of ['car','face','beast','portal']){
+          for(const id of ['car','face','beast','portal','cyber']){
             if(id==='car'){doEnterRoom('garage1');}else if(id==='beast'){doEnterRoom('teach1');}else if(id==='portal'){doEnterRoom('lab1');}
             CUT.enabled=true;let done=0;const bad=[];
             playCut(id,()=>{done++;S.screen='play';});
