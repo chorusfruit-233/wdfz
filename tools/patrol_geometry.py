@@ -26,7 +26,7 @@ BAKE = r'''() => {
    out[id]=bake(R.cols*4,R.rows*4,R.tw/4,R.ox,R.oy,rects);ThreeBackend.disposeGroup(group);
  }
  const group=buildOutdoorGeometry(),r=[];
- OBJ.filter(o=>o.k==='roof').forEach(o=>r.push([o.x*SC,o.y*SC,(o.x+o.w)*SC,(o.y+o.h)*SC]));
+ OBJ.filter(o=>o.k==='roof'&&!o.open).forEach(o=>r.push([o.x*SC,o.y*SC,(o.x+o.w)*SC,(o.y+o.h)*SC]));
  OUT_SOLID.forEach(b=>r.push([b.x0*SC,b.y0*SC,b.x1*SC,b.y1*SC]));
  const step=9,ox=(BOUND.x0+4)*SC,oy=(BOUND.y0+4)*SC,W=Math.floor(((BOUND.x1-4)*SC-ox)/step),H=Math.floor(((BOUND.y1-4)*SC-oy)/step);
  out.out=bake(W,H,step,ox,oy,r);out.out.occluders=r;ThreeBackend.disposeGroup(group);

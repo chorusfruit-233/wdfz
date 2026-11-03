@@ -94,7 +94,7 @@ function solidAtOutdoor(wx,wy){
   if(mx<$imports.BOUND.x0+4||my<$imports.BOUND.y0+4||mx>$imports.BOUND.x1-4||my>$imports.BOUND.y1-4) return true;
   for(i=0;i<$imports.OBJ.length;i++){
     var o=$imports.OBJ[i];
-    if(o.k!=='roof') continue;
+    if(o.k!=='roof'||o.open) continue;                       /* 开敞的棚子（车棚）按 OUT_SOLID 里的钢架和车挡人 */
     if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) return true;
   }
   for(i=0;i<$imports.OUT_SOLID.length;i++){

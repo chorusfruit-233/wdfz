@@ -28,7 +28,7 @@
     exports:['Engine','GLR','ThreeBackend','U2M'], emits:['clearWorld','sceneBuilt']},
   {id:'model', name:'建模', desc:'材质、Kit 建模工具、人物、房间/家具/楼/室外/传送门模型；房间可以带自己的 R.build。',
     files:['game3d/js/content/collision-assets.js','game3d/js/content/palette.js','game3d/js/content/spiral-data.js','game3d/js/content/patrol-zones.js','game3d/js/model/materials.js','game3d/js/model/kit.js','game3d/js/model/figure.js','game3d/js/content/scene-data.js',
-      'game3d/js/content/props-recipe.js','game3d/js/content/furniture-recipe.js','game3d/js/content/room-recipe.js','game3d/js/content/outdoor-recipe.js','game3d/js/content/sports-recipe.js','game3d/js/model/room.js','game3d/js/model/building.js',
+      'game3d/js/content/props-recipe.js','game3d/js/content/furniture-recipe.js','game3d/js/content/room-recipe.js','game3d/js/content/outdoor-recipe.js','game3d/js/content/structure-recipe.js','game3d/js/content/sports-recipe.js','game3d/js/model/room.js','game3d/js/model/building.js',
       'game3d/js/model/outdoor.js','game3d/js/model/portal.js'],
     exports:['Kit','FURN','buildRoomGeometry','ROOM_THEMES','ROOM_LIGHTS','MATS','PATROL_ZONES']},
   {id:'world', name:'世界与碰撞', desc:'进出房间、坐标换算、碰撞与移动；房间可以带 R.collide / R.solid / R.moved / R.onEnter。',

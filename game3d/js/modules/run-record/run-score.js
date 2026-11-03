@@ -80,7 +80,7 @@ var RunScore=(function(){
       rooms.push(id);
       for(var y=0;y<R.rows;y++) for(var x=0;x<R.cols;x++) if(R.grid[y][x]!=='#') cells++;
     });
-    try{ $imports.OBJ.forEach(function(o){ if(o.k&&o.k!=='roof') zones.push(o.id||(o.k+zones.length)); }); }catch(e){}
+    try{ $imports.OBJ.forEach(function(o){ if(o.k&&(o.k!=='roof'||o.open)) zones.push(o.id||(o.k+zones.length)); });   /* 开敞的车棚也算一块场地 */ }catch(e){}
     Object.keys(gates()).forEach(function(k){ zones.push('gate'+k); });
     totalsCache={rooms:rooms,zones:zones,cells:cells};
     return totalsCache;
@@ -105,7 +105,7 @@ var RunScore=(function(){
   function zoneTick(){
     if($imports.S.mode!=='out') return;
     var mx=$imports.S.x/$imports.SC, my=$imports.S.y/$imports.SC;
-    try{ $imports.OBJ.forEach(function(o,i){ if(!o.k||o.k==='roof') return; if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) st.zones[o.id||(o.k+i)]=1; }); }catch(e){}
+    try{ $imports.OBJ.forEach(function(o,i){ if(!o.k||(o.k==='roof'&&!o.open)) return; if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) st.zones[o.id||(o.k+i)]=1; }); }catch(e){}
     var gs=gates(); Object.keys(gs).forEach(function(k){ var g=gs[k]; if(Math.hypot(mx-g.x,my-g.y)<14) st.zones['gate'+k]=1; });
   }
 

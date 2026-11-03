@@ -342,7 +342,7 @@ function addGardenSign(grp){
 
 /* ---- 教学楼 / 行政楼 / 实验楼：一层架空柱廊 + 四层教室 ---- */
 function bldClassroom(K,grp,o,px,pz,sw,sd){
-  var total=16.0, g0=3.2, dep=2.6;
+  var total=16.0, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth;
   facadeDoor(o,px,pz,sw,sd,'colonnade');
   K.box('brick',px,total/2,pz,sw,total,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));                 /* 底层浅灰：0.9 米高，以前 1.5 米把一楼窗户截掉半截 */
@@ -356,15 +356,12 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
     var u0=px-sw/2+0.8, len=sw-1.6, nw=Math.max(1,Math.floor(len/3.2)), q;
     for(q=1;q<4;q++){ var kk=Math.round(nw*q/4); if(kk>0&&kk<nw) downpipe(K,'n',px,pz,sw,sd,u0+kk*len/nw,total+0.9); }
   })();
-  /* 柱廊：正中让出大门 */
-  var colN=Math.max(4,Math.round(sw/4.2)), cn2;
-  for(cn2=0;cn2<=colN;cn2++){
-    var pcx=px-sw/2+(sw/colN)*cn2;
-    if(Math.abs(pcx-px)<3.2) continue;
-    K.bevel('brick',pcx,g0/2,pz+sd/2+dep/2,0.46,g0,0.46,$imports.BRICK,1.02,0.03);
-    K.bevel('stone',pcx,0.16,pz+sd/2+dep/2,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
-    K.bevel('stone',pcx,g0-0.12,pz+sd/2+dep/2,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
-  }
+  /* 柱廊：正中让出大门。位置来自 content/structure-recipe.js，碰撞用同一份 */
+  (0,$imports.colonnadeColumns)(px,pz,sw,sd).forEach(function(c){
+    K.bevel('brick',c.x,g0/2,c.z,0.46,g0,0.46,$imports.BRICK,1.02,0.03);
+    K.bevel('stone',c.x,0.16,c.z,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
+    K.bevel('stone',c.x,g0-0.12,c.z,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
+  });
   if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',px,g0+0.14,pz+sd/2+dep/2,sw+0.4,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
   K.box('concrete',px,g0-0.30,pz+sd/2+dep/2,sw+0.2,0.26,dep+0.3,$imports.BRICK_D,0.96);
   /* 首层：柱廊后面的窗 */
@@ -545,35 +542,32 @@ function bldSmall(K,grp,o,px,pz,sw,sd){
 }
 /* ---- 电动车棚：钢柱、波纹顶、一排车 ---- */
 function bldShed(K,o,px,pz,sw,sd){
-  var hgt=OBLD_H.shed, sc, sn=Math.max(5,Math.round(sd/4));
+  /* 钢架和车位的位置来自 content/structure-recipe.js，碰撞用同一份（以前碰撞是整块屋顶，棚下走不进去） */
+  var hgt=OBLD_H.shed, L=(0,$imports.shedLayout)(px,pz,sw,sd);
   if(Math.abs(sw-8)<0.3&&$imports.Assets.has('shed_frame')){
     /* 门式钢架、一米一段的波纹板屋面（按棚长等分、略拉伸）、隔几根柱子一个充电箱；车棚宽 8 米（模型按这个尺寸建的） */
-    for(sc=0;sc<=sn;sc++){
-      var fz=pz-sd*0.46+sc*(sd*0.92/sn);
+    L.frames.forEach(function(fz,sc){
       K.asset('shed_frame',px,0,fz,0);
-      if(sc%3===1) K.asset('shed_charger',px+3.36,0,fz,-Math.PI/2);
-    }
+      if(sc%3===1) K.asset('shed_charger',L.colX[1],0,fz,-Math.PI/2);
+    });
     var nm=Math.max(1,Math.round(sd)), ml=sd/nm, mk;
     for(mk=0;mk<nm;mk++) K.asset('shed_roof_1m',px,0,pz-sd/2+(mk+0.5)*ml,Math.PI/2,{sx:ml});
   }else
-  for(sc=0;sc<=sn;sc++){
-    var szz=pz-sd*0.46+sc*(sd*0.92/sn);
-    K.cyl('metal',px-sw*0.42,0,szz,0.09,0.09,hgt,8,0x2b343b,1.06);
-    K.cyl('metal',px+sw*0.42,0,szz,0.09,0.09,hgt-0.4,8,0x2b343b,1.06);
-    K.rod('metal',px-sw*0.42,hgt,szz,px+sw*0.42,hgt-0.4,szz,0.06,0.06,6,0x2b343b);
-  }
+  L.frames.forEach(function(szz){
+    K.cyl('metal',L.colX[0],0,szz,0.09,0.09,hgt,8,0x2b343b,1.06);
+    K.cyl('metal',L.colX[1],0,szz,0.09,0.09,hgt-0.4,8,0x2b343b,1.06);
+    K.rod('metal',L.colX[0],hgt,szz,L.colX[1],hgt-0.4,szz,0.06,0.06,6,0x2b343b);
+  });
   var rb, rn=Math.round(sw/0.5);
   if(!(Math.abs(sw-8)<0.3&&$imports.Assets.has('shed_frame')))
   for(rb=0;rb<rn;rb++){                                                               /* 波纹板 */
     var rx=px-sw/2+(rb+0.5)*sw/rn, ry=hgt+0.06-(rb+0.5)/rn*0.4;
     K.box('metal',rx,ry+(rb%2?0.03:0),pz,sw/rn+0.01,0.03,sd,0x3a4a52,rb%2?1.05:0.95);
   }
-  var bk2, bkn=Math.floor(sd/1.1);
-  for(bk2=0;bk2<bkn;bk2++){
-    if((0,$imports.hash2)(bk2,57)<0.28) continue;
-    var bz5=pz-sd/2+0.8+bk2*1.1, bcol=[0x3a4a5a,0x6a2a2a,0xd8d4cc,0x2a2e33,0x4a6a4a][bk2%5], bx5=px-sw*0.10;
-    if(!K.asset('ebike',bx5,0,bz5,0,{tint:{body:bcol}})) ebikeModel(K,bx5,bz5,0,bcol,(0,$imports.lodLow)());
-  }
+  L.bikes.forEach(function(b){
+    var bcol=[0x3a4a5a,0x6a2a2a,0xd8d4cc,0x2a2e33,0x4a6a4a][b.i%5];
+    if(!K.asset('ebike',b.x,0,b.z,0,{tint:{body:bcol}})) ebikeModel(K,b.x,b.z,0,bcol,(0,$imports.lodLow)());
+  });
 }
 /* 电动车：后半截车身（座垫下面是电池仓）、前面的护板、踏板、两个小轮子、车把和后视镜。车头朝局部 +x */
 function ebikeModel(K,x,z,rot,col,low){
@@ -620,12 +614,8 @@ function bldLink(K,o,px,pz,sw,sd){
       K.box('glass',px+sw/2-0.06,ly+1.95,pz,0.02,1.4,sd*0.98,0x9fb0ba,1.1);
     }
   }
-  var cn=3, ck2;
-  for(ck2=0;ck2<=cn;ck2++){
-    var czx=px-sw/2+(sw/cn)*ck2;
-    K.bevel('brick',czx,8.0,pz-sd/2+0.4,0.42,16.0,0.42,$imports.BRICK,0.94,0.03);
-    K.bevel('brick',czx,8.0,pz+sd/2-0.4,0.42,16.0,0.42,$imports.BRICK,0.94,0.03);
-  }
+  /* 落地柱：位置来自 content/structure-recipe.js，碰撞用同一份 */
+  (0,$imports.linkPillars)(px,pz,sw,sd).forEach(function(c){ K.bevel('brick',c.x,8.0,c.z,0.42,16.0,0.42,$imports.BRICK,0.94,0.03); });
   K.bevel('concrete',px,16.20,pz,sw*1.02,0.30,sd*1.02,0x8b3a2e,1.0,0.04);
 }
 /* ---- 地下车库车道：两侧矮墙 + 一段往下斜的坡 + 门头 ---- */

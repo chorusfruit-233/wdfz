@@ -23,6 +23,7 @@ var SpaceLayout={
       if(o.id==='garw')(0,$imports.garagePed)(k,px,pz,sw,sd);
       else if(o.k==='field')(0,$imports.fieldModel)(k,o,px,pz,sw,sd);
       else if(['court','track','garden'].indexOf(o.k)>=0)(0,$imports.courtModel)(k,o,px,pz,sw,sd);
+      (0,$imports.addStructureSolids)(k,o,px,pz,sw,sd,scale);              /* 柱廊、连廊落地柱、车棚棚下的钢架和车 */
     });
     OUT_SOLID=k.solids;SpaceLayout.outsideReady=true;
   },

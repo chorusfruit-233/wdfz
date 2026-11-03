@@ -279,7 +279,7 @@ var OBJ=[
   {id:'courtB', n:'篮球场',         x:306,y:328,w:76, h:46, k:'court'},
   {id:'gear',   n:'体育器材室',     x:302,y:430,w:84, h:58, k:'roof'},
   {id:'court2', n:'篮球场',         x:435,y:220,w:130,h:160,k:'court'},
-  {id:'shed',   n:'电动车棚',       x:572,y:212,w:36, h:163,k:'roof'},
+  {id:'shed',   n:'电动车棚',       x:572,y:212,w:36, h:163,k:'roof', open:1},   /* 开敞的棚：碰撞不按整块屋顶，按棚下的钢架和车（content/structure-recipe.js） */
   {id:'bad3',   n:'三个羽毛球场',   x:425,y:405,w:183,h:95, k:'court'},
   {id:'garw',   n:'地下车库人行口', s:'人行口', x:300,y:527,w:32, h:24, k:'roof'},
   {id:'admin',  n:'行政楼',         x:400,y:515,w:270,h:90, k:'roof', open1f:1},

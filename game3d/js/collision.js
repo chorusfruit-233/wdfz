@@ -42,7 +42,7 @@ var Collision={
     }else{
       var bx0=($imports.BOUND.x0+4)*$imports.SC,by0=($imports.BOUND.y0+4)*$imports.SC,bx1=($imports.BOUND.x1-4)*$imports.SC,by1=($imports.BOUND.y1-4)*$imports.SC;
       if(x-r<bx0||y-r<by0||x+r>bx1||y+r>by1)return Infinity;
-      $imports.OBJ.forEach(function(o){if(o.k==='roof')rect(o.x*$imports.SC,o.y*$imports.SC,(o.x+o.w)*$imports.SC,(o.y+o.h)*$imports.SC);});
+      $imports.OBJ.forEach(function(o){if(o.k==='roof'&&!o.open)rect(o.x*$imports.SC,o.y*$imports.SC,(o.x+o.w)*$imports.SC,(o.y+o.h)*$imports.SC);});
       $imports.OUT_SOLID.forEach(function(b){rect(b.x0*$imports.SC,b.y0*$imports.SC,b.x1*$imports.SC,b.y1*$imports.SC);});
     }
     return total;
