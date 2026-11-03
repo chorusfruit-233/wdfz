@@ -20,7 +20,7 @@ function gameInputContext(target,editing){
     paused:!!PAUSE.on,panelOpen:!!UI.anyOpen(),choice:!!UI.chooseOpen,
     computer:!!(typeof PC!=='undefined'&&PC.on),phone:!!(typeof PHONE!=='undefined'&&PHONE.on),
     lesson:!!(typeof LESSON!=='undefined'&&LESSON.on),
-    debugFrozen:!!(typeof DEV!=='undefined'&&DEV.on&&DEV.freeze),
+    debugFrozen:!!(typeof DEV!=='undefined'&&((DEV.on&&DEV.freeze)||DEV.locking)),   /* 输调试密码时也冻结 */
     debugDragging:!!(typeof DEV!=='undefined'&&DEV.on&&DEV.drag),
     intro:S.intro>0,driving:!!(typeof CarChase!=='undefined'&&CarChase.active()),
     deathPending:!!(typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING),
@@ -210,6 +210,7 @@ function initInput(){
     if(typeof TerminalUI!=='undefined'&&TerminalUI.on){if(e.key==='Escape'){e.preventDefault();TerminalUI.close();}return;}
     var k=physicalKey(e);
     var editing=e.target.matches('input,select,textarea,[contenteditable="true"]');
+    if(typeof DevLock!=='undefined'&&DevLock.on){DevLock.key(e);return;}   /* 调试密码键盘打开时，按键只给它 */
     if(e.key==='F2'&&(!editing||DEV.on)){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
     if(freeCursorKey(e)&&!editing&&S.screen==='play'&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
       e.preventDefault();if(!e.repeat)toggleFreeCursor(e);return;

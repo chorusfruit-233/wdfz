@@ -14,6 +14,22 @@ class PatrolWorldTest(BrowserCase):
         self.assertTrue(result['closed']);self.assertEqual(result['missing'],[])
         for room in ['teach6','garage1','trash1','bell1','portal_tunnel','dorm6','link1','link2']:
             self.assertIn(room,result['rooms'])
+    def test_cross_scene_replanning_reuses_skeleton_shortest_paths(self):
+        """跨场景重规划：骨架图上两节点间的最短路只算一次（以前每次重规划逐对重算，一次 8 毫秒左右、会卡一帧）。
+        结果和直接调用 RouteGraph.shortest 完全相同。"""
+        p=self.game()
+        r=p.evaluate("""() => {const g=PatrolNav.graph(),real=RouteGraph.shortest;let calls=0;
+          RouteGraph.shortest=function(){calls++;return real.apply(this,arguments);};
+          try{
+            const a=PatrolNav.point('admin1',g.nodes['admin1:stairs'].x,g.nodes['admin1:stairs'].y),b=PatrolNav.tilePoint('teach3',30,18);
+            const first=JSON.stringify(PatrolNav.route(a,b)),c1=calls;
+            const second=JSON.stringify(PatrolNav.route(a,b)),c2=calls-c1;
+            const near=PatrolNav.nearestRoute(a,PATROL_ROUTE.nodes),c3=calls-c1-c2;
+            const same=JSON.stringify(real(g,'admin1:stairs','teach3:stairs'))===JSON.stringify(real(g,'admin1:stairs','teach3:stairs'));
+            return {first:c1>0,second:c2,same:first===second&&same,near:!!near,c3};
+          }finally{RouteGraph.shortest=real;}}""")
+        self.assertEqual(r['second'],0)
+        self.assertTrue(r['first'] and r['same'] and r['near'],r)
     def test_static_navigation_survives_cleared_renderer_caches(self):
         p=self.game()
         self.assert_js(p,"""(() => {let a=PatrolNav.entry('lab3','S'),b=PatrolNav.snap('lab3',PatrolNav.tilePoint('lab3',41,12));

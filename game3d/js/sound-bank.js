@@ -401,6 +401,29 @@ var SOUND_BANK={
     {t:'noise',f:900,to:2600,type:'bandpass',q:3,dur:6,g:0.12,atk:3},
     {t:'tone',f:55,to:110,dur:6,g:0.15,atk:2,am:[[4,9],0.3]}]},
 
+  /* 《网安仙人》结局演出（modules/cyber-route/ending.js）：16 秒，和分镜的时间点对齐 */
+  'scene.cyberEnd':{cat:'scene',name:'《网安仙人》结局：广播断在半句、机柜一架架停转、灯管不再闪、档案对照、天亮后的鸟叫和一遍下课铃',layers:[
+    {t:'bell',f:784,dur:1.3,g:0.08,partials:CHIME,at:0.05,wet:0.4},                      /* 广播提示音「叮——咚」 */
+    {t:'bell',f:622.25,dur:1.5,g:0.08,partials:CHIME,at:0.42,wet:0.4},
+    {t:'vowel',f:[175,205],f1:[450,750],f2:[1000,1700],f3:2600,vib:[5,0.02],breath:0.15,dur:0.16,g:0.16,n:7,every:[0.13,0.16],at:0.98,lp:3200},   /* 说到一半 */
+    {t:'noise',f:2500,type:'bandpass',q:0.8,dur:1.0,g:0.04,at:0.95,am:[[60,80],0.3]},   /* 喇叭底噪 */
+    {t:'noise',f:1800,type:'bandpass',q:3,dur:0.02,g:0.3,at:1.95},                      /* 「咔」，断了 */
+    {t:'noise',f:1600,to:220,glide:2.6,type:'bandpass',q:0.9,dur:3.0,g:0.12,atk:0.05},   /* 机柜风扇一架架停转 */
+    {t:'tone',f:100,to:35,glide:2.8,dur:3.0,g:0.08,atk:0.05},
+    {t:'noise',f:3200,type:'bandpass',q:4,dur:0.012,g:0.12,n:10,every:0.22,at:0.55,pan:-0.5,panTo:0.5},   /* 每架灭灯，继电器一声 */
+    {t:'noise',f:5200,type:'highpass',dur:0.05,g:0.14,n:6,every:function(o,i){ return [0.18,0.43,0.18,0.43,0.18,0.43][i]; },at:3.3},   /* 灯管「两短一长」 */
+    {t:'tone',f:100,dur:3.4,g:0.05,atk:0.1,at:3.25,am:[[3,4],0.5]},                     /* 灯管的嗡声，慢慢停 */
+    {t:'tone',f:52,dur:0.3,g:0.18,atk:0.01,n:4,every:function(o,i){ return 0.75+i*0.25; },decay:0.7,at:3.4},   /* 心跳越来越慢，停了 */
+    {t:'tone',f:880,dur:0.05,g:0.02,n:14,every:[0.1,0.16],at:7.35,lp:3000},             /* 档案一行行打出来 */
+    {t:'noise',f:300,type:'lowpass',dur:0.18,g:0.25,atk:0.004,n:3,every:0.7,at:8.25},    /* 三处矛盾各「笃」一声 */
+    {t:'tone',f:58,to:52,dur:2.6,g:0.07,atk:1.0,at:9.6},                                 /* 「签发节点：未知」 */
+    {t:'noise',f:700,type:'lowpass',dur:4.6,g:0.07,atk:1.6,at:11.3},                     /* 天亮：风 */
+    {t:'tone',f:[2600,3400],to:[3200,4200],dur:0.09,g:0.03,n:9,every:[0.25,0.6],at:11.9,pan:-0.4,panTo:0.5},   /* 鸟 */
+    {t:'bell',f:523.25,dur:2.4,g:0.05,partials:CHIME,at:12.6,wet:0.8},                   /* 远处一遍普通的下课铃 */
+    {t:'bell',f:659.26,dur:2.4,g:0.05,partials:CHIME,at:13.15,wet:0.8},
+    {t:'bell',f:587.33,dur:2.4,g:0.05,partials:CHIME,at:13.7,wet:0.8},
+    {t:'bell',f:392,dur:3.0,g:0.05,partials:CHIME,at:14.25,wet:0.8}]},
+
   /* ================= 死亡（先放 death.base，再按死因放各自的一段：先听见，再看见） ================= */
   'death.base':{cat:'death',name:'死亡：共同的下沉和尖鸣',lv:-3,layers:[
     {t:'tone',f:55,to:22,type:'sawtooth',lp:400,dur:2.2,g:0.35},
@@ -483,6 +506,30 @@ var SOUND_BANK={
     {t:'noise',f:900,to:2000,type:'bandpass',q:0.7,dur:1.8,g:0.25,atk:1.2},
     {t:'tone',f:160,to:40,dur:1.8,g:0.12},
     {t:'noise',f:120,type:'lowpass',dur:0.4,g:0.4,at:2.0}]},
+  /* 虚空迷宫里的两种死法（演出在 modules/void-maze/maze-death.js，时间点和画面对齐） */
+  'death.void':{cat:'death',name:'异空间·迷失：停下以后身后又响一步；门合上，「叮」，门缝的光一格格熄掉',layers:[
+    {t:'noise',f:[640,720],type:'bandpass',q:2.2,dur:0.06,g:function(o,i){ return i===2?0.5:0.4; },atk:0.0012,n:3,every:function(o,i){ return i?0.44:0.34; },at:0.08,pan:function(o,i){ return i===2?0.55:0; }},
+    {t:'tone',f:[214,232],to:180,dur:0.22,g:0.06,atk:0.002,n:3,every:function(o,i){ return i?0.44:0.34; },at:0.08,pan:function(o,i){ return i===2?0.55:0; },wet:0.5},
+    {t:'tone',f:82,to:46,dur:0.5,g:0.16,atk:0.03,at:1.05},                          /* 门合成一道缝 */
+    {t:'noise',f:320,type:'lowpass',dur:0.4,g:0.12,atk:0.12,at:1.0},
+    {t:'bell',f:1318.5,dur:1.8,g:0.045,partials:CHIME,at:1.08,pan:0.6,wet:0.7},       /* 身后很远：「叮」 */
+    {t:'bell',f:1318.5,dur:1.8,g:0.035,partials:CHIME,at:1.9,pan:-0.6,wet:0.8},       /* 另一边又一声 */
+    {t:'noise',f:2600,type:'bandpass',q:3,dur:0.012,g:0.16,n:6,every:0.15,at:2.2,pan:-0.5,panTo:0.5},   /* 门缝的光一格格熄掉 */
+    {t:'tone',f:150,to:90,dur:0.06,g:0.05,n:6,every:0.15,at:2.2},
+    {t:'noise',f:2200,type:'bandpass',q:3,dur:0.014,g:0.22,at:3.12},                 /* 最后一扇 */
+    {t:'tone',f:130,to:70,dur:0.1,g:0.07,at:3.12},
+    {t:'tone',f:49,to:41,dur:1.6,g:0.12,atk:0.9,at:1.9},
+    {t:'bell',f:1318.5,dur:2.6,g:0.018,partials:CHIME,at:3.3,wet:1}]},               /* 黑了以后，很远的地方又「叮」一声 */
+  'death.abyss':{cat:'death',name:'异空间·坠落：风声越来越大，方块擦身而过，手电一声咔哒，「咚」',layers:[
+    {t:'noise',f:420,to:2600,glide:2.9,type:'bandpass',q:0.7,dur:3.06,g:0.32,atk:1.6,hold:1.3},   /* 风，一直到落地那一下断掉 */
+    {t:'noise',f:140,type:'lowpass',dur:3.0,g:0.18,atk:1.0,hold:1.8,am:[[5,7],0.4]},
+    {t:'tone',f:150,to:38,dur:2.8,g:0.1,atk:0.4},
+    {t:'noise',f:1400,to:500,type:'bandpass',q:1.2,dur:0.3,g:0.18,atk:0.1,n:3,every:function(o,i){ return i?0.9:0.45; },at:1.0,pan:-0.2,panTo:-0.6},   /* 同一块方块，三次擦身而过（最后一次贴着左脸） */
+    {t:'noise',f:3200,type:'bandpass',q:4,dur:0.01,g:0.14,at:2.5},                   /* 下面那个人按亮手电 */
+    {t:'tone',f:2400,dur:0.015,g:0.03,at:2.5},
+    {t:'noise',f:[600,680],type:'bandpass',q:2,dur:0.09,g:0.55,atk:0.002,at:3.12,wet:0.9},   /* 空心的「咚」 */
+    {t:'tone',f:210,to:150,dur:0.4,g:0.12,atk:0.003,at:3.12,wet:0.9},
+    {t:'tone',f:52,to:30,dur:0.8,g:0.25,atk:0.004,at:3.12}]},
   'death.chalk':{cat:'death',name:'粉笔一下一下刮',layers:[
     {t:'noise',f:function(o,i){ return 3600+i*300; },type:'bandpass',q:8,dur:0.35,g:0.25,n:4,every:0.5,am:[[30,44],0.7,'square']},
     {t:'tone',f:function(o,i){ return 2600+i*180; },to:function(o,i){ return 2900+i*200; },type:'sawtooth',lp:4500,dur:0.3,g:0.012,n:4,every:0.5}]},

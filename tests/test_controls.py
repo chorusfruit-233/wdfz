@@ -1239,14 +1239,49 @@ class ControlsTest(BrowserCase):
         self.assert_js(page, 'RT.lure===null&&ROAM.y<__y')
 
     def test_debug_panel_requires_password(self):
+        """调试密码用页面里画的数字键盘点击输入（不弹浏览器 prompt）：输入时世界冻结；输错清空可以再输；
+        桌面也能直接按数字键和回车；Esc / 取消关掉，按键在键盘打开时不交给游戏。"""
         page = self.page()
-        answers = iter(['wrong', '114514'])
-        page.on('dialog', lambda dialog: dialog.accept(next(answers)))
+        dialogs = []
+        page.on('dialog', lambda dialog: (dialogs.append(dialog.message), dialog.dismiss()))
         page.evaluate('Dev.open()')
-        self.assert_js(page, '!DEV.on')
-        page.evaluate('Dev.open()')
-        self.assert_js(page, "DEV.on&&getComputedStyle(document.getElementById('dev')).display!=='none'")
+        self.assert_js(page, "!DEV.on&&DevLock.on&&!document.getElementById('devlock').hidden")
+        self.assert_js(page, '!GamePolicy.simulationAllowed(gameInputContext())')       # 输密码时世界不走
+        for d in '1234':
+            page.locator(f'#devlock [data-k="{d}"]').click()
+        self.assertEqual(page.locator('#devlockSlots i').count(), 4)                      # 只显示圆点，不显示数字
+        page.locator('#devlock [data-k="back"]').click()
+        self.assertEqual(page.locator('#devlockSlots i').count(), 3)
+        page.locator('#devlock [data-k="ok"]').click()
+        self.assert_js(page, '!DEV.on&&DevLock.on')
+        self.assertIn('密码不对', page.locator('#devlockMsg').inner_text())
+        self.assertEqual(page.locator('#devlockSlots i').count(), 0)
+        code = page.evaluate('DEV_CODE')
+        for d in code:
+            page.locator(f'#devlock [data-k="{d}"]').click()
+        page.locator('#devlock [data-k="ok"]').click()
+        self.assert_js(page, "DEV.on&&!DevLock.on&&document.getElementById('devlock').hidden&&getComputedStyle(document.getElementById('dev')).display!=='none'")
+        self.assert_js(page, 'GamePolicy.simulationAllowed(gameInputContext())')        # 面板本身默认不冻结
         page.evaluate('Dev.close()')
+        page.evaluate('Dev.open()')                                                    # 桌面：直接按数字键、回车
+        page.keyboard.type(code)
+        page.keyboard.press('Enter')
+        self.assert_js(page, 'DEV.on&&!DevLock.on')
+        page.evaluate('Dev.close()')
+        page.evaluate('Dev.open()')
+        page.keyboard.down('w')
+        self.assert_js(page, '!KEY.w')                                                 # 键盘打开时按键不交给游戏
+        page.keyboard.up('w')
+        page.keyboard.press('Shift+Tab')                                               # 焦点只在键盘里转圈
+        self.assert_js(page, "document.activeElement.dataset.k==='cancel'")
+        page.keyboard.press('Tab')
+        self.assert_js(page, "document.activeElement.dataset.k==='1'")
+        page.locator('#devlock [data-k="cancel"]').click()
+        self.assert_js(page, '!DEV.on&&!DevLock.on&&document.getElementById("devlock").hidden&&GamePolicy.simulationAllowed(gameInputContext())')
+        page.evaluate('Dev.open()')
+        page.keyboard.press('Escape')
+        self.assert_js(page, '!DEV.on&&!DevLock.on')
+        self.assertEqual(dialogs, [])                                                  # 全程没有浏览器对话框
 
     def test_anomaly_choice_uses_real_time_and_random_option(self):
         page = self.page()

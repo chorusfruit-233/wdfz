@@ -136,7 +136,7 @@ var VoidMaze=(function(){
     PlayerStats.changeSan(-C.fallSan,'void-maze-fall',{min:0});      /* 数值只经 PlayerStats 写（模块边界） */
     Playtest.event('坠入虚空',MZ.falls);
     if(S.san<=0){
-      kill('我一直往下掉，掉到忘了自己是从哪里开始掉的。','vignette','san');
+      kill('我一直往下掉，掉到忘了自己是从哪里开始掉的。','abyss','void_fall');
       if(S.dead){ MZ.respawning=false; return; }
       if(S.san<=0) PlayerStats.setSan(1,'death-prevented');   /* 药丸 / 天赋 / 调试无敌挡下了：照常回到出生区域 */
     }
@@ -149,7 +149,7 @@ var VoidMaze=(function(){
     MZ.t+=dt;
     PlayerStats.changeSan(-drainRate(MZ.t)*dt,'void-maze',{min:0});   /* 越久掉得越快：满 SAN 大约 20 分钟掉完 */
     if(S.san<=0){
-      kill('黑暗里，我已经想不起自己是从哪扇门进来的。','vignette','san');
+      kill('黑暗里，我已经想不起自己是从哪扇门进来的。','void','void_lost');
       if(S.dead) return;
       if(S.san<=0) PlayerStats.setSan(1,'death-prevented');   /* 被挡下了（与 settleSan 相同的处理） */
     }
@@ -214,6 +214,16 @@ var VoidMaze=(function(){
     doEnterRoom(C.room,s);
     os('我：门外不是走廊。很黑，四周是一块块方方正正的白色墙面。身后的电梯门合上了，然后就不见了。',4.5,OS_FORCE);
   }
+
+  /* ---------- 死在迷宫里：自己的死因（复盘提示、调查记录、死亡档案）和墓志铭；演出在 maze-death.js ----------
+     死亡档案的两条（void_lost / void_fall）登记在 death-archive.js，标了 secret：没在迷宫里死过就完全不出现 */
+  if(typeof DEATH_SOURCES!=='undefined'){
+    DEATH_SOURCES.void_lost={cause:'在白色的迷宫里待得太久，理智被一点点耗尽了：待得越久，掉得越快。',
+      hint:'迷宫里不能久留。出口是门缝漏着淡蓝色光的暗门，都不在出发的那一层，要走楼梯上下；用粉笔在拐角做记号，免得兜回原地。'};
+    DEATH_SOURCES.void_fall={cause:'理智所剩无几的时候又掉进了虚空。每掉下去一次，都会再扣一点理智。',
+      hint:'理智低的时候别走没有栏杆的窄梁和断口，宁可绕远路；走窄的地方先停下转好方向，再一步步往前走。'};
+  }
+  if(typeof DFX_EPI!=='undefined'){ DFX_EPI.void='你从那扇门前走过了很多次。'; DFX_EPI.abyss='下面站着的，是刚进来的你。'; }
 
   /* ---------- 存档：只在迷宫里时存高度和计时 ---------- */
   GameModules.persistent('void-maze',{

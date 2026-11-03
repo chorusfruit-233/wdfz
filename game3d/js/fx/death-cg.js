@@ -81,7 +81,15 @@ var DeathCG=(function(){
       return this.add(im,0,0,0);
     },
     /* 让一个东西的 +z 正面朝向镜头 */
-    face:function(o){ o.rotation.y=Math.atan2(-o.position.x,-o.position.z); }
+    face:function(o){ o.rotation.y=Math.atan2(-o.position.x,-o.position.z); },
+    /* 把场景本身（当前房间或室外）藏起来，只看演出自己搭的布景；场景里标了 userData.worldPart 的东西（地上的粉笔记号等）一起藏。
+       清场（anfxClear）时按原样还原 */
+    hideWorld:function(){
+      var list=[S.mode==='in'?GLR.roomMesh:GLR.outMesh];
+      if(GLR.scene) GLR.scene.children.forEach(function(o){ if(o.userData&&o.userData.worldPart) list.push(o); });
+      ANFX.hidden=ANFX.hidden||[];
+      list.forEach(function(o){ if(o&&o.visible!==undefined){ ANFX.hidden.push({obj:o,visible:o.visible}); o.visible=false; } });
+    }
   };
 
   var IDUM=null, WARM={done:false,keep:null};
@@ -97,8 +105,8 @@ var DeathCG=(function(){
   /* ---- trash：第三个桶。从桶里往上看，盖子合上，桶沿漏进一圈光；外面有人敲了两下 ---- */
   CG.trash={
     build:function(c){
-      var oldWorld=S.mode==='in'?GLR.roomMesh:GLR.outMesh, i;
-      if(oldWorld){ANFX.hiddenWorld={mesh:oldWorld,visible:oldWorld.visible};oldWorld.visible=false;}
+      var i;
+      c.hideWorld();
       var green=mat(0x2e4a36,undefined,{side:THREE.DoubleSide}), rib=mat(0x56684f);
       c.mesh(new THREE.CylinderGeometry(0.62,0.55,1.25,22,1,true),green,0,0.625,0);
       for(i=0;i<2;i++){ var t=c.mesh(new THREE.TorusGeometry(0.6-i*0.03,0.018,6,24),rib,0,0.3+i*0.7,0); t.rotation.x=Math.PI/2; }
@@ -758,6 +766,14 @@ var DeathCG=(function(){
       var c=new Ctx(type,grp,preview); CG[type].build(c); return c;
     },
     update:function(c,k,view){ CG[c.type].update(c,k,view); },
+    /* 模块扩展点：DeathCG.register(类型, {build(c), update(c,k,view)}) 加一种死亡演出，同名覆盖内置（虚空迷宫的两种死法就是这样接入的）。
+       c 是上面的 Ctx；常用的小工具在 DeathCG.kit 里。时长用 DeathTimeline.define 登记。
+       往 c 上挂自己的东西时别用它已有的名字：type F preview rand base shk flashed cued lift veilMesh（base 是死的那一刻的朝向） */
+    register:function(type,def){
+      if(!type||!def||typeof def.build!=='function'||typeof def.update!=='function') return false;
+      CG[type]=def; return true;
+    },
+    kit:{seg:seg,sm:sm,ss:ss,lerp3:lerp3,rng:rng,mat:mat,setI:setI},
     /* 预热：死亡演出、结局过场会用到的几类材质（透明、双面、顶点色、实例化、精灵……）开局时先编译好。
        以前第一次死、第一次看结局时要现编着色器，手机上会在最要紧的那一下卡住。
        编译时把渲染目标设成离屏的那张（真正画的时候也是画到那里），材质留着不释放，编好的程序才不会被回收 */

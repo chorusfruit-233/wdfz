@@ -304,6 +304,22 @@
   </div>
   <div class="devfooter"><span id="devmessage" role="status" aria-live="polite">调试操作会改变当前游戏状态。</span><span id="devscroll" hidden>↓ 可滚动</span></div>
 </div>
+<!-- 调试密码：页内数字键盘（不用浏览器的 prompt 对话框）；打开期间游戏冻结，和以前 prompt 卡住页面一样 -->
+<div id="devlock" role="dialog" aria-modal="true" aria-labelledby="devlockTitle" hidden>
+  <div class="dlbox" id="devlockBox">
+    <div class="dleye">DEVELOPER CONSOLE</div>
+    <h2 id="devlockTitle">输入调试密码</h2>
+    <div class="dlslots" id="devlockSlots" aria-live="polite"></div>
+    <p class="dlmsg" id="devlockMsg" role="status"></p>
+    <div class="dlkeys" role="group" aria-label="数字键盘">
+      <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+      <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+      <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+      <button type="button" class="dlback" data-k="back" aria-label="删除一位">删除</button><button type="button" data-k="0">0</button><button type="button" class="dlok" data-k="ok">确认</button>
+    </div>
+    <button type="button" class="dlcancel" data-k="cancel">取消</button>
+  </div>
+</div>
 <div id="touch">
   <div id="stick" role="group" aria-label="移动摇杆"><div id="knob"></div></div>
   <button type="button" class="tbtn" id="tAct" aria-label="交互"><span id="tActL">交互</span></button>

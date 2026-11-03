@@ -22,7 +22,7 @@ class DeathArchiveTest(BrowserCase):
         ids = set(page.evaluate("DEATH_ARCHIVE.map(e=>e.id)"))
         fx_of = page.evaluate("Object.fromEntries(DEATH_ARCHIVE.map(e=>[e.id,e.fx]))")
         found = set()
-        for path in (ROOT / 'game3d' / 'js').glob('*.js'):
+        for path in (ROOT / 'game3d' / 'js').rglob('*.js'):          # 连同 modules/ 里的功能模块（虚空迷宫）
             if path.name == 'dev.js':
                 continue
             text = path.read_text(encoding='utf-8')

@@ -1,7 +1,7 @@
 /* 里世界 3D · 调试面板 */
 'use strict';
 
-var DEV={on:false,fast:false,god:false,freeze:false,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0,panelPos:null,drag:null,dragReady:false,
+var DEV={on:false,locking:false,fast:false,god:false,freeze:false,tab:'status',refreshT:0,lists:null,returnFocus:null,previewFx:null,previewTimer:0,panelPos:null,drag:null,dragReady:false,
   minimized:false,ballPos:null,ballMoved:false,scrollTop:0,history:[]};
 var DEV_POI=[
   ['北门',514,115],['西小门',214,624],['南门',386,1276],
@@ -18,17 +18,81 @@ var DEV_DEATH=[
   ['对视','face'],['墙','wall'],['笑','laugh'],['镜子','mirror'],['隔间伸手','hand'],['垃圾桶','trash']];
 /* 调试面板的页签；模块可以往里加自己的页（mod-manager 加「Mod」） */
 var DEV_TABS=['status','scene','items','events','tools'];
-var Dev={
-  open:function(){
-    if(DEV.on)return;
-    DEV.returnFocus=document.activeElement;
-    resetInputState();releaseMouseLook();
-    var password=window.prompt('请输入调试密码');
-    if(password!=='114514'){
-      if(password!==null) toast('密码错误');
-      resumeMouseLook();
+var DEV_CODE='114514';
+/* 调试密码：页面里画的数字键盘（#devlock），点击 / 触屏输入，桌面也可以直接按数字键；不用浏览器的 prompt 对话框。
+   打开期间算作调试冻结（gameInputContext 的 debugFrozen）：和以前 prompt 卡住整个页面一样，输密码时世界不走。
+   输错不关键盘，清空后可以再输；取消、Esc、再按 F2 都会关掉并把鼠标视角还回去。 */
+var DevLock={on:false,buf:'',max:12,
+  el:function(id){ return document.getElementById(id); },
+  ask:function(){
+    var box=this.el('devlock'); if(!box) return false;
+    if(!box._wired){
+      box._wired=true;
+      box.addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('[data-k]'); if(b) DevLock.press(b.getAttribute('data-k')); });
+      this.el('devlockBox').addEventListener('animationend',function(){ this.classList.remove('shake'); });
+    }
+    this.on=true; DEV.locking=true; this.buf=''; this.msg('');
+    box.hidden=false; this.paint();
+    var first=box.querySelector('[data-k="1"]'); if(first) first.focus({preventScroll:true});
+    return true;
+  },
+  press:function(k){
+    if(!this.on) return;
+    if(/^[0-9]$/.test(k)){ if(this.buf.length<this.max) this.buf+=k; this.msg(''); }
+    else if(k==='back') this.buf=this.buf.slice(0,-1);
+    else if(k==='ok'){ this.submit(this.buf); return; }
+    else if(k==='cancel'){ this.cancel(); return; }
+    this.paint();
+  },
+  submit:function(code){
+    if(!this.on) return false;
+    if(String(code)===DEV_CODE){ this.close(); Dev.unlock(); return true; }
+    this.buf=''; this.paint();
+    this.msg(String(code).length?'密码不对，再试一次':'请先输入密码');
+    var b=this.el('devlockBox'); if(b){ b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+    return false;
+  },
+  cancel:function(){
+    if(!this.on) return;
+    this.close();
+    var f=DEV.returnFocus; DEV.returnFocus=null;
+    if(f&&f.focus&&document.contains(f)) try{ f.focus({preventScroll:true}); }catch(e){}
+    resumeMouseLook();
+  },
+  close:function(){ this.on=false; DEV.locking=false; this.buf=''; var box=this.el('devlock'); if(box) box.hidden=true; },
+  /* 键盘：数字、退格、回车确认、Esc / F2 取消；其余按键在键盘打开时都不交给游戏 */
+  key:function(e){
+    var k=e.key;
+    if(/^[0-9]$/.test(k)) this.press(k);
+    else if(k==='Backspace'||k==='Delete') this.press('back');
+    else if(k==='Enter') this.press('ok');
+    else if(k==='Escape'||k==='F2'){ if(!e.repeat) this.cancel(); }
+    else if(k===' ') return;                             /* 留给按钮自己的空格键 */
+    else if(k==='Tab'){                                  /* 焦点只在键盘里转圈，不跑到背后的页面 */
+      var all=[].slice.call(this.el('devlockBox').querySelectorAll('button')), i=all.indexOf(document.activeElement);
+      if(i<0||(e.shiftKey&&i===0)||(!e.shiftKey&&i===all.length-1)){ e.preventDefault(); all[e.shiftKey?all.length-1:0].focus({preventScroll:true}); }
       return;
     }
+    e.preventDefault();
+  },
+  paint:function(){
+    var s=this.el('devlockSlots'); if(!s) return;
+    var n=this.buf.length, html='';
+    for(var i=0;i<n;i++) html+='<i></i>';
+    s.innerHTML=n?html:'<em>点下面的数字</em>';
+    s.setAttribute('aria-label','已输入 '+n+' 位');
+  },
+  msg:function(t){ var m=this.el('devlockMsg'); if(m) m.textContent=t; }
+};
+var Dev={
+  open:function(){
+    if(DEV.on||DevLock.on)return;
+    DEV.returnFocus=document.activeElement;
+    resetInputState();releaseMouseLook();
+    DevLock.ask();                                              /* 密码对了才调 Dev.unlock() 真正打开 */
+  },
+  unlock:function(){
+    if(DEV.on)return;
     if(typeof LESSON!=='undefined'&&LESSON.on)LESSON.close(false);
     DEV.on=true;DEV.freeze=false;DEV.minimized=false;DEV.refreshT=0;document.body.classList.add('dev-open');
     try{ Speedrun.invalidate('debug'); }catch(e){}                /* 速通中打开调试面板：这次成绩无效 */
@@ -452,7 +516,7 @@ var Dev={
     }
     DEV.returnFocus=null;
   },
-  toggle:function(){ if(DEV.on) Dev.close(); else Dev.open(); },
+  toggle:function(){ if(DEV.on) Dev.close(); else if(DevLock.on) DevLock.cancel(); else Dev.open(); },
   paint:function(){
     var states={devfast:DEV.fast,devgod:DEV.god,devsearch:SEARCH.on,devfake:!!(S.fn&&S.fn.on)};
     ['canopy','sign','link','fence'].forEach(function(k){states['devhide-'+k]=!!DEV_HIDE[k];});
