@@ -111,6 +111,117 @@ class DeathArchiveTest(BrowserCase):
         self.assert_js(page, "document.getElementById('archive').hidden")
 
 
+    def archive_menu(self, page, ends='{}', archive=None):
+        """回到主菜单、打开档案室；ends 是「已见结局」记录，archive 是档案室存档。"""
+        page.evaluate(f"""localStorage.setItem('wdfz3d_ends','{ends}');
+          localStorage.setItem('wdfz3d_death_archive_v1',JSON.stringify({archive or "{version:1,unlocked:{},first:{},count:{},migrated:1}"}));
+          S.screen='menu';document.getElementById('menu').style.display='block';running=true""")
+        page.locator('#btnarchive').click()
+        self.assert_js(page, "!document.getElementById('archive').hidden")
+
+    def cut_cards(self, page):
+        return page.evaluate("[...document.querySelectorAll('#arcuts .arcard')].map(c=>c.dataset.id+(c.classList.contains('open')?'+':'-'))")
+
+    def test_endings_and_opening_are_archived_and_replay_in_isolation(self):
+        """档案室也收结局和开场的演出：达成过的结局（已见结局记录）、看过的开场可以重看；隐藏结局没达成就不出现。
+        回放用正式的过场，在隔离舞台上播，结束回档案室——不出结局卡、不记结局、不动存档和过场开关。"""
+        page = self.page()
+        page.evaluate("localStorage.setItem('wdfz3d',JSON.stringify({keep:1}))")
+        self.archive_menu(page, ends='{"car":1}')
+        self.assertEqual(self.cut_cards(page), ['cut:opening+', 'end:car+', 'end:face-', 'end:portal-', 'end:cyber-'])
+        self.assert_js(page, "document.getElementById('arCutCount').textContent==='已解锁 2 / 5'")
+        html = page.locator('#archive').inner_html()
+        self.assertNotIn('先辈', html)                       # 隐藏结局：没达成过就完全不出现
+        self.assertIn('尚未达成', page.locator('#arcuts').inner_text())
+        page.locator('#arcuts .arcard[data-id="end:car"] button').scroll_into_view_if_needed()
+        box = page.locator('#arcuts .arcard[data-id="cut:opening"] button').bounding_box()   # 回放结束、档案室回来以后，这里正好是另一张「重看」
+        page.locator('#arcuts .arcard[data-id="end:car"] button').click()
+        page.wait_for_function("ArchiveReplay.on&&CUT.on&&CUT.id==='car'", timeout=20000)
+        self.assert_js(page, "S.screen==='cut'&&document.getElementById('arReplay').textContent.includes('结局档案')")
+        page.wait_for_timeout(600)
+        # 鼠标点在档案室回来后正好是另一张「重看」的位置：按下结束回放，松开的那一下不能再开一段
+        page.mouse.click(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        page.wait_for_function("!ArchiveReplay.on")
+        page.wait_for_timeout(300)
+        self.assert_js(page, "!ArchiveReplay.on&&S.screen==='menu'&&!CUT.on&&CUT.enabled===false&&!document.getElementById('archive').hidden")
+        self.assert_js(page, "!document.getElementById('ends')&&!RT.end&&localStorage.getItem('wdfz3d_ends')==='{\"car\":1}'")
+        self.assert_js(page, "JSON.parse(localStorage.getItem('wdfz3d')).keep===1")
+        self.assert_js(page, "document.activeElement&&document.activeElement.closest('[data-id=\"end:car\"]')!==null")
+        # 回放里按下、拖开没产生 click：之后用回车按出来的 click 照常重看，不被误吞
+        page.evaluate("ArchiveReplay.eat=true")
+        page.keyboard.press('Enter')
+        page.wait_for_function("ArchiveReplay.on&&CUT.on&&CUT.id==='car'", timeout=20000)
+        page.wait_for_timeout(500)
+        page.keyboard.press('Escape')
+        page.wait_for_function("!ArchiveReplay.on&&S.screen==='menu'")
+        # 开场：档案里看完整版，按键也能结束
+        page.locator('#arcuts .arcard[data-id="cut:opening"] button').click()
+        page.wait_for_function("ArchiveReplay.on&&CUT.on&&CUT.id==='opening'&&CUT.dur===OPENING_DUR.full", timeout=20000)
+        page.wait_for_timeout(600)
+        page.keyboard.press('Escape')
+        page.wait_for_function("!ArchiveReplay.on")
+        self.assert_js(page, "S.screen==='menu'&&!CUT.on&&Opening.short===false&&document.getElementById('opcap').textContent===''")
+
+    def test_unlock_all_needs_the_debug_password_and_does_not_fake_progress(self):
+        """「全部解锁」：在页面里的数字键盘上输调试密码，死亡和演出（包括隐藏的）全部打开，只记成「直接解锁」：
+        不写死亡次数、不写已见结局；之后真的死一次照样算新记录。Esc 只关键盘，不关档案室。"""
+        page = self.page()
+        self.archive_menu(page)
+        page.locator('#arAll').click()
+        page.locator('#devlock').wait_for(state='visible')
+        self.assert_js(page, "document.getElementById('devlockTitle').textContent.includes('解锁全部')")
+        page.keyboard.press('Escape')
+        self.assert_js(page, "!DevLock.on&&!document.getElementById('archive').hidden&&document.activeElement.id==='arAll'")
+        page.locator('#arAll').click()
+        for d in '0000':
+            page.locator(f'#devlock [data-k="{d}"]').click()
+        page.locator('#devlock [data-k="ok"]').click()
+        self.assert_js(page, "DevLock.on&&document.getElementById('arCount').textContent==='已记录 0 / 18'")
+        for d in page.evaluate('DEV_CODE'):
+            page.locator(f'#devlock [data-k="{d}"]').click()
+        page.locator('#devlock [data-k="ok"]').click()
+        self.assert_js(page, "!DevLock.on&&!DEV.on")                   # 只解锁档案，不会顺带打开调试面板
+        r = page.evaluate("""()=>({deaths:document.getElementById('arCount').textContent,cuts:document.getElementById('arCutCount').textContent,
+          open:document.querySelectorAll('#archive .arcard.open').length,btn:document.getElementById('arAll').disabled,
+          beast:document.querySelector('#arcuts .arcard[data-id="end:beast"] small').textContent,
+          maze:!!document.querySelector('#arcards .arcard.open[data-id="void_lost"]'),
+          ends:localStorage.getItem('wdfz3d_ends'),state:DeathArchive.state()})""")
+        self.assertEqual(r['deaths'], '已记录 18 / 18 · 隐藏 2')
+        self.assertEqual(r['cuts'], '已解锁 5 / 5 · 隐藏 1')
+        self.assertEqual(r['open'], 26)
+        self.assertTrue(r['btn'] and r['maze'])
+        self.assertEqual(r['beast'], '直接解锁 · 没有亲历')
+        self.assertEqual(r['ends'], '{}')
+        self.assertEqual((r['state']['unlocked'], r['state']['count']), ({}, {}))
+        self.assertEqual(len(r['state']['granted']), 25)                   # 开场在测试环境里已经看过，本来就开着
+        # 之后真的死一次：照样是新记录、计次数
+        r = page.evaluate("()=>{const e=DeathArchive.record('patrol','grip');DeathArchive.paint();return {fresh:!!e,meta:document.querySelector('#arcards .arcard[data-id=\"patrol\"] small').textContent};}")
+        self.assertEqual(r, {'fresh': True, 'meta': '经历 1 次 · 最近'})
+        # 隐藏结局也能重看
+        page.locator('#arcuts .arcard[data-id="end:beast"] button').click()
+        page.wait_for_function("ArchiveReplay.on&&CUT.on&&CUT.id==='beast'", timeout=20000)
+        page.evaluate("cutSkip()")
+        page.wait_for_function("!ArchiveReplay.on&&S.screen==='menu'")
+
+    def test_archive_fits_short_landscape_screens(self):
+        """手机横屏矮屏：档案室整块在屏幕里，底部「全部解锁 / 返回」不用滚外层就点得到，卡片区自己滚。"""
+        page = self.page(touch=True)
+        self.archive_menu(page)
+        for w, h in ((844, 390), (740, 360), (390, 844)):
+            page.set_viewport_size({'width': w, 'height': h})
+            page.wait_for_timeout(150)
+            r = page.evaluate("""()=>{const a=document.getElementById('archive'),f=document.querySelector('#archive .tpfoot').getBoundingClientRect(),
+              s=document.querySelector('#archive .arscroll');
+              return {outer:a.scrollHeight>a.clientHeight,foot:f.bottom<=innerHeight,inner:s.scrollHeight>s.clientHeight,h:s.clientHeight}}""")
+            self.assertFalse(r['outer'], (w, h, r))
+            self.assertTrue(r['foot'], (w, h, r))
+            self.assertTrue(r['inner'] and r['h'] >= 96, (w, h, r))
+        page.locator('#arAll').tap()
+        page.locator('#devlock').wait_for(state='visible')
+        page.locator('#devlock [data-k="cancel"]').tap()
+        self.assert_js(page, "!DevLock.on&&!document.getElementById('archive').hidden")
+
+
 class SpeedrunTest(BrowserCase):
     def menu(self, page):
         page.evaluate("S.screen='menu';document.getElementById('menu').style.display='block';localStorage.removeItem('wdfz3d_speedrun_v1')")

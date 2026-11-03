@@ -199,6 +199,13 @@ class ModuleBrowserTest(BrowserCase):
         self.assertEqual(result['back'], 'lab1')
         self.assertFalse(result['panel'])
         self.assertIn('粉笔', result['sub'])                      # 没有记号模块：粉笔回到「看一眼说明」
+        # 死亡档案室：迷宫两种死法的演出不在了，「全部解锁」也不会把它们打开、列出来
+        arc = page.evaluate("()=>{S.screen='menu';DeathArchive.unlockAll();const d=DeathArchive.state();"
+                            "return {ids:DeathArchive.visible(d).map(e=>e.id),granted:Object.keys(d.granted),"
+                            "replay:ArchiveReplay.play('void_lost'),cuts:DeathArchive.visibleCuts(d).length}}")
+        self.assertFalse({'void_lost', 'void_fall'} & set(arc['ids'] + arc['granted']))
+        self.assertFalse(arc['replay'])
+        self.assertEqual(arc['cuts'], 6)                           # 结局与开场都还在（包括全部解锁后的隐藏结局）
 
     def test_room_no_clock_contract_also_applies_outside_elevator(self):
         page = self.page()
