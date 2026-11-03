@@ -1,0 +1,70 @@
+test_adjacent_stairs_warn_from_the_entrance_without_remote_damage (test_patrol_world.PatrolWorldTest.test_adjacent_stairs_warn_from_the_entrance_without_remote_damage) ... ok
+test_corrupt_new_domains_repair_without_erasing_inactive_mods (test_patrol_world.PatrolWorldTest.test_corrupt_new_domains_repair_without_erasing_inactive_mods) ... ok
+test_cross_scene_replanning_reuses_skeleton_shortest_paths (test_patrol_world.PatrolWorldTest.test_cross_scene_replanning_reuses_skeleton_shortest_paths)
+跨场景重规划：骨架图上两节点间的最短路只算一次（以前每次重规划逐对重算，一次 8 毫秒左右、会卡一帧）。 ... ok
+test_debug_invulnerability_is_not_a_rescue (test_patrol_world.PatrolWorldTest.test_debug_invulnerability_is_not_a_rescue) ... ok
+test_graph_is_connected_and_route_covers_every_selected_edge (test_patrol_world.PatrolWorldTest.test_graph_is_connected_and_route_covers_every_selected_edge) ... ok
+test_inspection_and_calm_hold_only_the_local_permanent_entity (test_patrol_world.PatrolWorldTest.test_inspection_and_calm_hold_only_the_local_permanent_entity) ... ok
+test_locked_door_is_registered_and_counts_distance_without_opening_it (test_patrol_world.PatrolWorldTest.test_locked_door_is_registered_and_counts_distance_without_opening_it) ... ok
+test_observed_exit_remembers_connector_and_ignores_unseen_motion (test_patrol_world.PatrolWorldTest.test_observed_exit_remembers_connector_and_ignores_unseen_motion) ... ok
+test_permanent_investigation_does_not_use_remote_pressure_or_consume_seal (test_patrol_world.PatrolWorldTest.test_permanent_investigation_does_not_use_remote_pressure_or_consume_seal) ... ok
+test_permanent_local_lock_can_reset_without_clearing_tracking_or_bypassing_seal (test_patrol_world.PatrolWorldTest.test_permanent_local_lock_can_reset_without_clearing_tracking_or_bypassing_seal) ... ok
+test_plain_stair_transition_takes_two_active_seconds (test_patrol_world.PatrolWorldTest.test_plain_stair_transition_takes_two_active_seconds) ... ok
+test_saved_mid_connector_and_non_grid_position_are_restored_exactly (test_patrol_world.PatrolWorldTest.test_saved_mid_connector_and_non_grid_position_are_restored_exactly) ... ok
+test_static_navigation_survives_cleared_renderer_caches (test_patrol_world.PatrolWorldTest.test_static_navigation_survives_cleared_renderer_caches) ... ok
+test_two_maze_exits_and_bell_spiral_are_reachable_on_walk_surfaces (test_patrol_world.PatrolWorldTest.test_two_maze_exits_and_bell_spiral_are_reachable_on_walk_surfaces) ... ok
+test_unseen_motion_does_not_update_last_seen_and_back_turn_does_not_end_chase (test_patrol_world.PatrolWorldTest.test_unseen_motion_does_not_update_last_seen_and_back_turn_does_not_end_chase) ... ok
+test_background_signals_replace_old_snapshot_without_live_tracking (test_wireless_signals.WirelessSignalTest.test_background_signals_replace_old_snapshot_without_live_tracking) ... ok
+test_banishment_retains_snapshot_but_rescue_clears_it (test_wireless_signals.WirelessSignalTest.test_banishment_retains_snapshot_but_rescue_clears_it) ... ok
+test_close_signal_keeps_full_warning_before_search_or_capture (test_wireless_signals.WirelessSignalTest.test_close_signal_keeps_full_warning_before_search_or_capture) ... ok
+test_completion_stops_new_signals_without_retracting_last_one (test_wireless_signals.WirelessSignalTest.test_completion_stops_new_signals_without_retracting_last_one) ... ok
+test_first_signal_is_at_fifteen_seconds_and_does_not_force_lock (test_wireless_signals.WirelessSignalTest.test_first_signal_is_at_fifteen_seconds_and_does_not_force_lock) ... ok
+test_game_pause_freezes_both_progress_and_received_intelligence (test_wireless_signals.WirelessSignalTest.test_game_pause_freezes_both_progress_and_received_intelligence) ... ok
+test_known_cabinet_can_be_found_and_seal_still_banishes (test_wireless_signals.WirelessSignalTest.test_known_cabinet_can_be_found_and_seal_still_banishes) ... ok
+test_legacy_and_malformed_signals_are_cleared_and_new_game_resets (test_wireless_signals.WirelessSignalTest.test_legacy_and_malformed_signals_are_cleared_and_new_game_resets) ... ok
+test_patrol_navigates_toward_old_location_after_unseen_scene_change (test_wireless_signals.WirelessSignalTest.test_patrol_navigates_toward_old_location_after_unseen_scene_change) ... ok
+test_pause_loss_of_device_and_empty_battery_do_not_advance_signals (test_wireless_signals.WirelessSignalTest.test_pause_loss_of_device_and_empty_battery_do_not_advance_signals) ... ok
+test_phone_explains_exposure_and_countdown_on_mobile (test_wireless_signals.WirelessSignalTest.test_phone_explains_exposure_and_countdown_on_mobile) ... ok
+test_save_load_keeps_snapshot_and_partial_interval_without_replaying_signal (test_wireless_signals.WirelessSignalTest.test_save_load_keeps_snapshot_and_partial_interval_without_replaying_signal) ... ok
+test_search_ends_at_snapshot_then_region_investigation_resumes (test_wireless_signals.WirelessSignalTest.test_search_ends_at_snapshot_then_region_investigation_resumes) ... ok
+test_signal_preserves_connector_travel_and_permanent_tracking (test_wireless_signals.WirelessSignalTest.test_signal_preserves_connector_travel_and_permanent_tracking) ... ok
+test_signal_reveals_only_the_cabinet_occupied_at_that_moment (test_wireless_signals.WirelessSignalTest.test_signal_reveals_only_the_cabinet_occupied_at_that_moment) ... ok
+test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning (test_wireless_signals.WirelessSignalTest.test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning) ... FAIL
+test_charge_only_original_classroom_and_normal_empty_pc_stays_off (test_campus_network.CampusNetworkTest.test_charge_only_original_classroom_and_normal_empty_pc_stays_off) ... ok
+test_cyber_cutscene_uses_stage_and_preserves_player_position (test_campus_network.CampusNetworkTest.test_cyber_cutscene_uses_stage_and_preserves_player_position) ... ok
+test_cyber_ending_storyboard_hits_its_beats_and_cleans_up (test_campus_network.CampusNetworkTest.test_cyber_ending_storyboard_hits_its_beats_and_cleans_up)
+《网安仙人》结局分镜：机房指示灯一架架灭完、日志打完；走廊的灯闪两轮后稳住、红色退掉、巡察者垂下去； ... ok
+test_day_one_no_permit_then_independent_duty_and_missing_penalty (test_campus_network.CampusNetworkTest.test_day_one_no_permit_then_independent_duty_and_missing_penalty) ... ok
+test_dream_clears_new_route_but_preserves_legacy_whitelist_and_talent (test_campus_network.CampusNetworkTest.test_dream_clears_new_route_but_preserves_legacy_whitelist_and_talent) ... ok
+test_normal_load_keeps_tasks_and_disconnects_terminal (test_campus_network.CampusNetworkTest.test_normal_load_keeps_tasks_and_disconnects_terminal) ... ok
+test_one_world_entity_survives_scene_changes_and_door_keys_use_explicit_room (test_campus_network.CampusNetworkTest.test_one_world_entity_survives_scene_changes_and_door_keys_use_explicit_room) ... ok
+test_pause_and_no_clock_space_separate_active_seconds (test_campus_network.CampusNetworkTest.test_pause_and_no_clock_space_separate_active_seconds) ... ok
+test_phone_background_device_identity_and_no_refill (test_campus_network.CampusNetworkTest.test_phone_background_device_identity_and_no_refill) ... ok
+test_phone_tools_work_in_danger_but_paperplane_does_not (test_campus_network.CampusNetworkTest.test_phone_tools_work_in_danger_but_paperplane_does_not) ... ok
+test_region_queue_has_no_player_coordinates_and_ignores_corridor (test_campus_network.CampusNetworkTest.test_region_queue_has_no_player_coordinates_and_ignores_corridor) ... ok
+test_remote_entity_does_not_block_inspection_or_drain_sanity (test_campus_network.CampusNetworkTest.test_remote_entity_does_not_block_inspection_or_drain_sanity) ... ok
+test_rescue_preserves_shutdown_then_public_ending_has_final_line (test_campus_network.CampusNetworkTest.test_rescue_preserves_shutdown_then_public_ending_has_final_line) ... ok
+test_seal_banishes_once_and_respawns_at_fixed_point (test_campus_network.CampusNetworkTest.test_seal_banishes_once_and_respawns_at_fixed_point) ... ok
+test_shutdown_zero_waits_for_hazards_and_real_death_wins (test_campus_network.CampusNetworkTest.test_shutdown_zero_waits_for_hazards_and_real_death_wins) ... ok
+test_stale_checks_roll_duties_without_punishment (test_campus_network.CampusNetworkTest.test_stale_checks_roll_duties_without_punishment) ... ok
+test_terminal_text_input_and_escape_restore_first_operation (test_campus_network.CampusNetworkTest.test_terminal_text_input_and_escape_restore_first_operation) ... ok
+
+======================================================================
+FAIL: test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning (test_wireless_signals.WirelessSignalTest.test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/wdfz-patrol-walking/tests/test_wireless_signals.py", line 75, in test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning
+    self.assert_js(p, """(()=>{const R=INTERIORS.teach1;S.x=R.ox+48.5*9;S.y=R.oy+6.5*9;
+  File "/workspace/wdfz-patrol-walking/tests/browser_case.py", line 95, in assert_js
+    self.assertTrue(page.evaluate(expression), message or expression)
+AssertionError: False is not true : (()=>{const R=INTERIORS.teach1;S.x=R.ox+48.5*9;S.y=R.oy+6.5*9;
+          S.seated=true;S.tsec=1400;RT.leaveUntil=gameClock()+120;
+          const immune=PatrolWorld.exempt()&&!PatrolWorld.eligible()&&!PatrolWorld.hunting();PhoneNetwork.tick(15);
+          Object.assign(PAT,{room:S.room,x:S.x,y:S.y+45,fy:0,transition:null,safety:0,near:false,blinkCD:100});
+          PatrolWorld.tick(.1);const warning=PAT.warning>3&&!PAT.locked&&PatrolWorld.hunting();
+          PatrolWorld.tick(4.5);return immune&&warning&&PAT.locked&&!S.dead&&!PAT.permanent;})()
+
+----------------------------------------------------------------------
+Ran 48 tests in 156.940s
+
+FAILED (failures=1)

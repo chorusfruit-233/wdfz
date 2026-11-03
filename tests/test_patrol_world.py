@@ -106,6 +106,6 @@ class PatrolWorldTest(BrowserCase):
           let held=PAT.x===x&&PAT.y===y&&!PAT.locked&&PAT.permanent;
           Inspection.finish(c);for(let i=0;i<70;i++){Inspection.tick(.1);PatrolWorld.tick(.1);}
           let calm=PAT.x===x&&PAT.y===y&&!PAT.locked&&PAT.permanent;
-          // 缓冲结束后还须等既有 1.1 秒瞬移冷却，不能在仅 1 秒时断言已迈步。
+          // 缓冲结束后恢复连续步行，远端永久追踪策略不被这次等待清除。
           for(let i=0;i<25;i++){Inspection.tick(.1);PatrolWorld.tick(.1);}
           return held&&calm&&PAT.permanent&&(PAT.x!==x||PAT.y!==y);})()""")

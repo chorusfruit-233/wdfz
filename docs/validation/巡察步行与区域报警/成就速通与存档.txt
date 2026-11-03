@@ -1,0 +1,54 @@
+test_archive_fits_short_landscape_screens (test_archive_speedrun.DeathArchiveTest.test_archive_fits_short_landscape_screens)
+手机横屏矮屏：档案室整块在屏幕里，底部「全部解锁 / 返回」不用滚外层就点得到，卡片区自己滚。 ... ok
+test_dream_wake_death_still_unlocks_and_toast_waits_for_the_cg (test_archive_speedrun.DeathArchiveTest.test_dream_wake_death_still_unlocks_and_toast_waits_for_the_cg) ... ok
+test_endings_and_opening_are_archived_and_replay_in_isolation (test_archive_speedrun.DeathArchiveTest.test_endings_and_opening_are_archived_and_replay_in_isolation)
+档案室也收结局和开场的演出：达成过的结局（已见结局记录）、看过的开场可以重看；隐藏结局没达成就不出现。 ... ok
+test_every_kill_call_maps_to_an_archive_entry (test_archive_speedrun.DeathArchiveTest.test_every_kill_call_maps_to_an_archive_entry)
+静态审计：所有真实 kill() / anKill() 调用的死因都在注册表里（调试面板的除外）。 ... ok
+test_first_real_death_unlocks_once_and_repeats_only_count (test_archive_speedrun.DeathArchiveTest.test_first_real_death_unlocks_once_and_repeats_only_count) ... ok
+test_legacy_log_migrates_only_sourced_records (test_archive_speedrun.DeathArchiveTest.test_legacy_log_migrates_only_sourced_records) ... ok
+test_menu_lists_locked_entries_without_spoilers_and_replays_in_isolation (test_archive_speedrun.DeathArchiveTest.test_menu_lists_locked_entries_without_spoilers_and_replays_in_isolation) ... ok
+test_protection_debug_and_preview_do_not_unlock (test_archive_speedrun.DeathArchiveTest.test_protection_debug_and_preview_do_not_unlock) ... ok
+test_unlock_all_needs_the_debug_password_and_does_not_fake_progress (test_archive_speedrun.DeathArchiveTest.test_unlock_all_needs_the_debug_password_and_does_not_fake_progress)
+「全部解锁」：在页面里的数字键盘上输调试密码，死亡、演出（包括隐藏的）和结算画面全部打开，只记成「直接解锁」： ... ok
+test_clock_is_rta_and_survives_a_stalled_monotonic_clock (test_archive_speedrun.SpeedrunTest.test_clock_is_rta_and_survives_a_stalled_monotonic_clock) ... ok
+test_debug_death_quit_and_continue_never_make_a_pb (test_archive_speedrun.SpeedrunTest.test_debug_death_quit_and_continue_never_make_a_pb) ... ok
+test_debug_switches_left_on_in_a_normal_game_do_not_carry_into_a_run (test_archive_speedrun.SpeedrunTest.test_debug_switches_left_on_in_a_normal_game_do_not_carry_into_a_run)
+普通局里开的快跑 / 无敌 / 关读条，关面板、开新局都不复位：开速通时要清掉，带着它们不能记成绩。 ... ok
+test_dream_wake_keeps_the_clock_running (test_archive_speedrun.SpeedrunTest.test_dream_wake_keeps_the_clock_running) ... ok
+test_finish_on_real_route_records_pb_once_and_not_on_direct_call (test_archive_speedrun.SpeedrunTest.test_finish_on_real_route_records_pb_once_and_not_on_direct_call) ... ok
+test_menu_flow_arms_a_run_and_starts_on_first_control (test_archive_speedrun.SpeedrunTest.test_menu_flow_arms_a_run_and_starts_on_first_control) ... ok
+test_secret_route_stays_hidden_until_reached (test_archive_speedrun.SpeedrunTest.test_secret_route_stays_hidden_until_reached) ... ok
+test_speedrun_clock_does_not_cover_touch_buttons (test_archive_speedrun.TouchFlowTest.test_speedrun_clock_does_not_cover_touch_buttons) ... ok
+test_touch_ending_a_replay_does_not_restart_it (test_archive_speedrun.TouchFlowTest.test_touch_ending_a_replay_does_not_restart_it) ... ok
+test_touch_skip_of_the_opening_then_one_tap_fires_once (test_archive_speedrun.TouchFlowTest.test_touch_skip_of_the_opening_then_one_tap_fires_once) ... ok
+test_death_shows_one_line_no_grade_no_record (test_run_record.RunRecordTest.test_death_shows_one_line_no_grade_no_record) ... ok
+test_debug_run_is_not_rated (test_run_record.RunRecordTest.test_debug_run_is_not_rated) ... ok
+test_debug_tab_previews_generates_and_archive_section (test_run_record.RunRecordTest.test_debug_tab_previews_generates_and_archive_section) ... ok
+test_dialogs_fit_phone_screens (test_run_record.RunRecordTest.test_dialogs_fit_phone_screens) ... ok
+test_ending_rates_saves_record_and_shows_grade_screen (test_run_record.RunRecordTest.test_ending_rates_saves_record_and_shows_grade_screen) ... ok
+test_explore_metric_and_handbook_line (test_run_record.RunRecordTest.test_explore_metric_and_handbook_line) ... ok
+test_real_grade_lights_archive_card_and_unlock_all (test_run_record.RunRecordTest.test_real_grade_lights_archive_card_and_unlock_all) ... ok
+test_records_caps_keep_best_and_replay_budget (test_run_record.RunRecordTest.test_records_caps_keep_best_and_replay_budget) ... ok
+test_replay_player_and_footprint (test_run_record.RunRecordTest.test_replay_player_and_footprint) ... ok
+test_run_log_samples_persist_and_resume (test_run_record.RunRecordTest.test_run_log_samples_persist_and_resume) ... ok
+test_score_rules (test_run_record.RunRecordTest.test_score_rules) ... ok
+test_speedrun_ranking_and_best_grade (test_run_record.RunRecordTest.test_speedrun_ranking_and_best_grade) ... ok
+test_archive_unlock_all_and_legacy_backfill (test_achievements.AchievementTest.test_archive_unlock_all_and_legacy_backfill) ... ok
+test_debug_panel_mod_and_console_endings_do_not_count (test_achievements.AchievementTest.test_debug_panel_mod_and_console_endings_do_not_count) ... ok
+test_facts_unlock_record_context_and_play_tier_sound_when_calm (test_achievements.AchievementTest.test_facts_unlock_record_context_and_play_tier_sound_when_calm) ... ok
+test_page_hides_methods_and_unseen_secret_entries (test_achievements.AchievementTest.test_page_hides_methods_and_unseen_secret_entries) ... ok
+test_rules_table_has_four_tiers_and_no_bonus_fields (test_achievements.AchievementTest.test_rules_table_has_four_tiers_and_no_bonus_fields) ... ok
+test_run_conditions_and_cross_sets (test_achievements.AchievementTest.test_run_conditions_and_cross_sets) ... ok
+test_run_tracker_survives_save_and_load (test_achievements.AchievementTest.test_run_tracker_survives_save_and_load) ... ok
+test_static_markup_never_names_secret_entries (test_achievements.AchievementTest.test_static_markup_never_names_secret_entries) ... ok
+test_callback_failure_preserves_last_serializable_state (test_module_persistence.ModulePersistenceTest.test_callback_failure_preserves_last_serializable_state) ... ok
+test_failed_init_unregisters_declared_and_api_persistence (test_module_persistence.ModulePersistenceTest.test_failed_init_unregisters_declared_and_api_persistence) ... ok
+test_new_game_discards_unloaded_previous_game_data (test_module_persistence.ModulePersistenceTest.test_new_game_discards_unloaded_previous_game_data) ... ok
+test_temporarily_unloaded_data_survives_saving_and_reenable (test_module_persistence.ModulePersistenceTest.test_temporarily_unloaded_data_survives_saving_and_reenable) ... ok
+test_clip_audit_whole_school_is_clean (test_geometry.GeometryTest.test_clip_audit_whole_school_is_clean) ... ok
+
+----------------------------------------------------------------------
+Ran 44 tests in 420.761s
+
+OK

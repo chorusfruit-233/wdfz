@@ -251,6 +251,16 @@ function roomSigns(c,G,isWall){
     mesh.position.set(px,py,pz); mesh.rotation.y=rot; mesh.userData.wayfinding=text; c.meshes.push(mesh);
     if(hw) K.g('metal').proxy({t:'box',c:[px,py,pz],h:[hw,hh,hd],tc:Math.cos(rot),ts:Math.sin(rot)});   /* 给穿模审查看 */
   }
+  if(R.id==='lab3'){
+    var alarmTex=signTex(768,288,'network-zone-warning',function(g,w,h){
+      g.fillStyle='#252a2e';g.fillRect(0,0,w,h);g.strokeStyle='#d6ad49';g.lineWidth=12;g.strokeRect(6,6,w-12,h-12);
+      g.textAlign='center';g.textBaseline='middle';g.fillStyle='#ebc463';g.font='700 62px '+SIGN_FONT;g.fillText('门禁报警区',w/2,70);
+      g.fillStyle='#eee8db';g.font='500 38px '+SIGN_FONT;g.fillText('跨入黄线即上报区域',w/2,155);
+      g.fillText('核心机房 · 终端操作区',w/2,220);
+    });
+    /* 网络中心入口旁，面向普通走廊；告示与灯光不承担碰撞或报警逻辑。 */
+    put(signPlate(alarmTex,1.12,.42,.012,false),CX(40),1.7,CZ(15)+th/2+.009,0,0,0,0,'门禁报警区 · 跨入黄线即上报区域');
+  }
   /* 楼梯口、电梯旁的墙上：找离入口最近、正对走道的一面墙，铭牌整块落在这一格墙面里 */
   function plaque(sx,sy,gw,gd,cn,en,arrows){
     var best=null, D=[[0,-1],[0,1],[-1,0],[1,0]], mx=sx+(gw-1)/2, my=sy+(gd-1)/2, wx, wy, i;
@@ -298,6 +308,7 @@ function roomSigns(c,G,isWall){
     }
   }
 }
+
 /* @module-exports */
 GameModules.publish("game3d/js/model/room.js",{
 "buildRoomGeometry":{get:function(){return buildRoomGeometry;},set:function($value){buildRoomGeometry=$value;}},

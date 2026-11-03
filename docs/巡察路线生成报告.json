@@ -1,7 +1,7 @@
 {
   "routeVersion": 2,
   "scope": "仅选定带权校园骨架；不声明连续空间全局最优",
-  "weightDefinition": "静态合法路径长度/16 加显式连接时间；瞬移节拍、端点停顿及预警会使实跑耗时更长，totalSeconds 不是实跑计时",
+  "weightDefinition": "静态合法路径长度/16 加显式连接时间；是全程步行的规划权重，不含端点容差、运行调度或室外长瞬移，totalSeconds 不是实跑计时，也不声明当前赶路规则下的最快路线",
   "nodes": [
     "admin1:stairs",
     "admin2:stairs",

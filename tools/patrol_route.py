@@ -53,7 +53,7 @@ def generate(data):
     for a,b in sorted(g.edges()):
         if tuple(sorted((a,b))) not in seen:
             walk('admin1:stairs',a);original+=g[a][b]['weight'];seen.add(tuple(sorted((a,b))));walk(b,'admin1:stairs')
-    report={'routeVersion':2,'scope':'仅选定带权校园骨架；不声明连续空间全局最优','weightDefinition':'静态合法路径长度/16 加显式连接时间；瞬移节拍、端点停顿及预警会使实跑耗时更长，totalSeconds 不是实跑计时','nodes':nodes,
+    report={'routeVersion':2,'scope':'仅选定带权校园骨架；不声明连续空间全局最优','weightDefinition':'静态合法路径长度/16 加显式连接时间；是全程步行的规划权重，不含端点容差、运行调度或室外长瞬移，totalSeconds 不是实跑计时，也不声明当前赶路规则下的最快路线','nodes':nodes,
         'baseWeightSeconds':base,'matchingExtraSeconds':extra,'totalSeconds':base+extra,'initialCandidateSeconds':original,
         'coverage':{'requiredEdges':len(g.edges()),'coveredEdges':len(covered),'closed':True},'oddNodes':odd,'matching':matching,
         'edges':[{'a':a,'b':b,'seconds':e['weight'],'kind':data['edges'][e['index']]['kind']} for a,b,e in sorted(g.edges(data=True))]}

@@ -36,6 +36,26 @@ var PatrolNav=(function(){
       var q=world(id,c[0]+x,c[1]+y),d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){best=q;bd=d;}}
     return best;
   }
+  /* 连接非栅格位置与新路径时逐格检查整条线段，不能省略起点后切过墙角。
+     同时检查斜穿格点两侧的格子，与 A* 的禁止挤角规则一致。门洞本身可通行。 */
+  function segment(a,b){
+    if(!a||!b||a.scene!==b.scene)return false;
+    var id=a.scene,g=grid(id);if(!g||id==='bell1'||id==='lift_dream')return false;
+    var s=cell(id,a),t=cell(id,b),x=s[0],y=s[1];
+    if(!free(id,x,y)||!free(id,t[0],t[1]))return false;
+    var dx=b.x-a.x,dy=b.y-a.y,sx=Math.sign(dx),sy=Math.sign(dy);
+    var tx=sx?((g.ox+(x+(sx>0?1:0))*g.step)-a.x)/dx:Infinity;
+    var ty=sy?((g.oy+(y+(sy>0?1:0))*g.step)-a.y)/dy:Infinity;
+    var stepx=sx?g.step/Math.abs(dx):Infinity,stepy=sy?g.step/Math.abs(dy):Infinity;
+    while(x!==t[0]||y!==t[1]){
+      if(Math.abs(tx-ty)<1e-10){
+        if(!free(id,x+sx,y)||!free(id,x,y+sy))return false;
+        x+=sx;y+=sy;tx+=stepx;ty+=stepy;
+      }else if(tx<ty){x+=sx;tx+=stepx;}else{y+=sy;ty+=stepy;}
+      if(!free(id,x,y))return false;
+    }
+    return true;
+  }
   function heap(){var a=[];return {push:function(v){a.push(v);var i=a.length-1;while(i){var p=(i-1)>>1;if(a[p].f<=v.f)break;a[i]=a[p];i=p;}a[i]=v;},pop:function(){if(!a.length)return null;var first=a[0],v=a.pop();if(a.length){var i=0;while(i*2+1<a.length){var c=i*2+1;if(c+1<a.length&&a[c+1].f<a[c].f)c++;if(a[c].f>=v.f)break;a[i]=a[c];i=c;}a[i]=v;}return first;},size:function(){return a.length;}};}
   var dirs=[[0,-1],[-1,0],[1,0],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
   function planar(a,b){
@@ -205,7 +225,7 @@ var PatrolNav=(function(){
     });});return best;
   }
   function doorAt(p){var R=$imports.INTERIORS[p.scene];if(!R)return null;var c=Math.floor((p.x-R.ox)/R.tw),r=Math.floor((p.y-R.oy)/R.th);return R.grid[r]&&R.grid[r][c]==='='?R.id+':'+c+':'+r:null;}
-  return {doorAt:doorAt,point:point,grid:grid,free:free,snap:snap,path:path,length:length,entry:entry,tilePoint:tilePoint,graph:build,route:route,los:los,localEdge:localEdge,nearestRoute:nearestRoute,observedExit:observedExit,approach:approach};
+  return {doorAt:doorAt,point:point,grid:grid,free:free,snap:snap,segment:segment,path:path,length:length,entry:entry,tilePoint:tilePoint,graph:build,route:route,los:los,localEdge:localEdge,nearestRoute:nearestRoute,observedExit:observedExit,approach:approach};
 })();
 
 /* @module-exports */

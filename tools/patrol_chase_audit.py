@@ -4,6 +4,7 @@ import json
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tests'))
 from browser_case import BrowserCase
+from patrol_runtime_audit import source_digest
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = """()=>{
@@ -37,8 +38,11 @@ if __name__ == '__main__':
         for target in targets:
             result = p.evaluate(RUN, target); results.append(result)
             print(json.dumps({k: result[k] for k in ('goal', 'reached', 'seconds', 'diagnostic')}, ensure_ascii=False), flush=True)
-        (ROOT / 'docs/validation/永久追踪运行验证.json').write_text(json.dumps({
+        dest=ROOT/'docs/validation/巡察步行与区域报警/永久追踪.json'
+        dest.parent.mkdir(parents=True,exist_ok=True)
+        dest.write_text(json.dumps({
             'kind': 'conditioned simulation with debug invulnerability; not a natural playthrough',
+            'sourceSHA256': source_digest(),
             'fixedStepSeconds': .5, 'results': results,
         }, ensure_ascii=False, indent=2) + '\n')
         assert all(r['reached'] and r['tracking'] and not r['errors'] for r in results)

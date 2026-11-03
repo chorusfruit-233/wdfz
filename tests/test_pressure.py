@@ -96,19 +96,22 @@ class PressureBrowserTest(BrowserCase):
             if protection=='elixir':self.assert_js(page,"!hasItem('elixir')")
             if protection=='immune':self.assert_js(page,'S.immuneUsed')
 
-    def test_patrol_blinks_keep_distance_budget_and_night_is_outdoor_only(self):
+    def test_patrol_walks_keep_distance_budget_and_night_is_outdoor_only(self):
         page=self.classroom()
         self.assert_js(page,"(S.room='admin5',S.tsec=1345,!patEligible())")
         self.assert_js(page,"(S.mode='out',patEligible())")
         result=page.evaluate("""()=>{
-          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',30,18));S.tsec=700;S.seated=false;
+          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',30,18));S.tsec=860;S.seated=false;
           patReset();PAT.safety=0;PAT.near=true;PAT.warning=0;PAT.room='teach1';PAT.x=S.x+80;PAT.y=S.y;
           PAT.locked=true;PAT.lastSeen=PatrolNav.point(S.room,S.x,S.y);PAT.blinkCD=.8;
-          let before=[PAT.x,PAT.y];patTick(.1);let still=PAT.x===before[0]&&PAT.y===before[1];
-          patTick(.71);return {still,distance:Math.hypot(PAT.x-before[0],PAT.y-before[1]),grace:PAT.afterBlink>0};
+          let before=[PAT.x,PAT.y];patTick(.1);let first=Math.hypot(PAT.x-before[0],PAT.y-before[1]);
+          patTick(.71);return {first,distance:Math.hypot(PAT.x-before[0],PAT.y-before[1]),grace:PAT.afterBlink};
         }""")
-        self.assertTrue(result['still']);self.assertGreater(result['distance'],0)
-        self.assertLessEqual(result['distance'],31*.75+.001);self.assertTrue(result['grace'])
+        self.assertGreater(result['first'], 0)
+        self.assertLessEqual(result['first'], 31*.1+.001)
+        self.assertGreater(result['distance'], result['first'])
+        self.assertLessEqual(result['distance'], 31*.81+.001)
+        self.assertEqual(result['grace'], 0)
 
     def test_patrol_stops_ordinary_chase_but_remains_when_the_allowed_time_ends(self):
         page=self.classroom()

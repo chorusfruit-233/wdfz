@@ -75,9 +75,10 @@ class WirelessSignalTest(BrowserCase):
         self.assert_js(p, """(()=>{const R=INTERIORS.teach1;S.x=R.ox+48.5*9;S.y=R.oy+6.5*9;
           S.seated=true;S.tsec=1400;RT.leaveUntil=gameClock()+120;
           const immune=PatrolWorld.exempt()&&!PatrolWorld.eligible()&&!PatrolWorld.hunting();PhoneNetwork.tick(15);
-          Object.assign(PAT,{room:S.room,x:S.x,y:S.y+45,fy:0,transition:null,safety:0,near:false,blinkCD:100});
+          Object.assign(PAT,{room:S.room,x:S.x,y:S.y+45,fy:0,transition:null,safety:0,near:false});
           PatrolWorld.tick(.1);const warning=PAT.warning>3&&!PAT.locked&&PatrolWorld.hunting();
-          PatrolWorld.tick(4.5);return immune&&warning&&PAT.locked&&!S.dead&&!PAT.permanent;})()""")
+          PatrolWorld.tick(3.4);const protectedByWarning=PAT.warning>0&&!S.dead&&!PAT.locked;
+          PatrolWorld.tick(.8);return immune&&warning&&protectedByWarning&&PAT.locked&&S.dead&&!PAT.permanent;})()""")
 
     def test_signal_reveals_only_the_cabinet_occupied_at_that_moment(self):
         p = self.game()

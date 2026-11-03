@@ -2,7 +2,7 @@
 (function($imports){
 /* 手机设备、统一玩法时钟与服务端停机任务。所有持久域各有一份真值。 */
 'use strict';
-var Mechanics={schemaVersion:1,rulesVersion:3,activePlaySeconds:0,attemptId:1,runSeed:'',dirty:false,
+var Mechanics={schemaVersion:1,rulesVersion:4,activePlaySeconds:0,attemptId:1,runSeed:'',dirty:false,
   reset:function(){this.activePlaySeconds=0;this.attemptId=1;this.runSeed=Math.floor($imports.GameRandom.next()*0xffffffff).toString(36);this.dirty=false;},
   begin:function(dt){
     this.activePlaySeconds+=dt;

@@ -63,6 +63,15 @@ function buildRoomRecipe(R,K,view){
     var qx0=-halfW+fx*tw, qz0=-halfH+fy*th;
     K.g(fm).quad(qx0,qz0+th, qx0+tw,qz0+th, qx0+tw,qz0, qx0,qz0, 0, (0,$imports.shadeHex)(fcol,shf));
   }
+  /* 只画贴地的警戒线，不产生碰撞。范围直接取报警表，避免画面与判定分离。 */
+  $imports.PATROL_ZONES.forEach(function(z){
+    if(z.scene!==R.id||!z.marked)return;
+    var x0=z.c0*tw-halfW,x1=z.c1*tw-halfW,z0=z.r0*th-halfH,z1=z.r1*th-halfH;
+    var band=K.g('decal'),width=.045,col=0xc7a34b;
+    function stripe(a,b,d,e){band.quad(a,e,d,e,d,b,a,b,.008,col);}
+    stripe(x0,z0,x1,z0+width);stripe(x0,z1-width,x1,z1);
+    stripe(x0,z0,x0+width,z1);stripe(x1-width,z0,x1,z1);
+  });
   /* ---- 吊顶 ---- */
   if(!isRoof){
     K.g(TH.ceilMat).quadN([-halfW,RWH,-halfH],[halfW,RWH,-halfH],[halfW,RWH,halfH],[-halfW,RWH,halfH],0,-1,0,TH.ceil);

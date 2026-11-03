@@ -1,0 +1,6 @@
+test_maze_and_bell_walk_on_supported_surfaces_at_bounded_speed (test_patrol_motion.PatrolMotionTest.test_maze_and_bell_walk_on_supported_surfaces_at_bounded_speed) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 4.183s
+
+OK

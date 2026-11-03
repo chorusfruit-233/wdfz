@@ -140,13 +140,14 @@ class NetworkLifecycleTest(BrowserCase):
         p.evaluate('UI.closeChoice();TerminalUI.open(pc);S.x=pc.x+27;TerminalUI.interrupt()')
         self.assert_js(p,"!TerminalUI.on&&!PhoneNetwork.connection&&TerminalUI.puzzle.buffer==='cat /school/site.txt'")
 
-    def test_region_notifications_are_fifo_and_network_center_is_not_an_office(self):
+    def test_region_notifications_are_fifo_across_offices_and_network_center(self):
         p=self.game()
         self.assert_js(p,"""(()=>{doEnterRoom('admin5',PatrolNav.tilePoint('admin5',5,14));PatrolWorld.tick(.1);
           doEnterRoom('admin5',PatrolNav.tilePoint('admin5',13,14));PatrolWorld.tick(.1);
-          let first=PAT.investigation.regionId,next=PAT.queue.map(x=>x.regionId),before=JSON.stringify(PAT.queue);
+          let first=PAT.investigation.regionId,next=PAT.queue.map(x=>x.regionId);
           doEnterRoom('lab3',PatrolNav.tilePoint('lab3',41,10));PatrolWorld.tick(.1);
-          return first==='admin5:office0'&&next.join(',')==='admin5:office1'&&JSON.stringify(PAT.queue)===before&&PatrolWorld.region()===null&&!PAT.permanent;})()""")
+          return first==='admin5:office0'&&next.join(',')==='admin5:office1'&&
+            PAT.queue.map(x=>x.regionId).join(',')==='admin5:office1,lab3:control'&&PatrolWorld.region()==='lab3:control'&&!PAT.permanent;})()""")
 
     def test_night_save_does_not_roll_tomorrows_duty_a_second_day(self):
         p=self.game()
