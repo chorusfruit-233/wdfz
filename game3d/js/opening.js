@@ -28,7 +28,7 @@ var OPENING_LINES=[
 /* 开局的座位：和 Game.start 一样 */
 function openingSeat(){
   var R=$imports.INTERIORS.teach1;
-  return {x:R.ox+48.5*9, y:R.oy+6.5*9, ang:-$imports.PI/2};
+  return $imports.ClassroomLayout.anchor(R,$imports.ClassroomLayout.ownSeat);
 }
 function openingCap(text){
   var el=document.getElementById('opcap'); if(!el) return;
@@ -40,15 +40,15 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
   setup:function(d){
     var R=$imports.INTERIORS.teach1;
     d.short=!!Opening.short;
-    d.seat=(0,$imports.cutCell)('teach1',48,6);
-    d.board=(0,$imports.cutCell)('teach1',48,0.6);
+    d.seat=(0,$imports.cutCell)('teach1',$imports.MY_COL,$imports.MY_ROW);
+    d.board=(0,$imports.cutCell)('teach1',44.55,7);
     /* 讲台边的老师（面朝全班），和「你」——第三人称镜头里趴在座位上的那个人 */
     var mat=(0,$imports.cutBasic)(0x4a5560);
-    var t=(0,$imports.cutCell)('teach1',49.5,1.25);                           /* 讲台右手边的空地：前排课桌在第 2 行，不会站到桌子上 */
+    var t=(0,$imports.cutCell)('teach1',45.6,8.6);                           /* 讲台右手边的空地：前排课桌在第 2 行，不会站到桌子上 */
     d.teacher=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.teacher.add((0,$imports.figMesh)('teacher',mat,1)); d.teacher.position.set(t.x,0,t.z);
     d.me=(0,$imports.cutAdd)(new $imports.THREE.Group());
     var me=(0,$imports.figMesh)('sit',(0,$imports.cutBasic)(0x55606a),1); me.rotation.y=Math.PI; d.me.add(me);
-    var mp=(0,$imports.worldToScene)(R.ox+48.5*R.tw,R.oy+(6.5+0.32)*R.th,R); d.me.position.set(mp.x,0,mp.z);
+    var mp=(0,$imports.worldToScene)(R.ox+($imports.MY_COL+.5)*R.tw,R.oy+($imports.MY_ROW+.5)*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
     /* 阳光里的粉笔灰：讲台前一片小光点，正常时慢慢飘，第 3 段停住 */
     var n=Math.max(60,Math.round(160*($imports.Quality.get().segments||1))), pos=new Float32Array(n*3), i;
     var a=(0,$imports.cutCell)('teach1',45.6,0.8), b=(0,$imports.cutCell)('teach1',51.4,3.6);
@@ -90,7 +90,7 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
       var t2=(0,$imports.cutEase)((K-0.24)/0.18), s0=(0,$imports.cutCell)('teach1',45.8,3.6), s1=(0,$imports.cutCell)('teach1',46.3,3.0);
       var nod=Math.sin(K*90)*0.04;
       if(K>0.34&&K<0.36) nod=0;                                       /* 顿住 */
-      d.teacher.rotation.x=nod; d.teacher.rotation.y=(K>0.36?-0.18:0.18)*(1-t2*0.4);
+      d.teacher.rotation.x=nod; d.teacher.rotation.y=$imports.PI/2+(K>0.36?-0.18:0.18)*(1-t2*0.4);
       (0,$imports.cutLook)((0,$imports.cutLerp)(s0.x,s1.x,t2),1.5,(0,$imports.cutLerp)(s0.z,s1.z,t2), d.teacher.position.x,1.45,d.teacher.position.z);
       if(K>0.37&&!d.hum){ d.hum=1; try{ $imports.SFX.crackle(0.6,0.5); }catch(e){} }
     }else if(K<0.58){                                                /* 3 时间停住，镜头转向「你」 */
@@ -108,7 +108,7 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
       if(K>=0.72&&!d.flip){ d.flip=1; try{ (0,$imports.ncFlip)(); }catch(e){} try{ $imports.SFX.blink(); }catch(e){} }
       if(d.short&&k<0.04) (0,$imports.cutFade)(1-k/0.04);
     }else{                                                           /* 5、6 第一人称醒来，停在开局的视角 */
-      var t5=(0,$imports.cutEase)((K-0.78)/0.14), y=(0,$imports.cutLerp)(0.84,1.12,t5), pitch=(0,$imports.cutLerp)(-0.95,0,t5), ang=-$imports.PI/2;
+      var t5=(0,$imports.cutEase)((K-0.78)/0.14), y=(0,$imports.cutLerp)(0.84,1.12,t5), pitch=(0,$imports.cutLerp)(-0.95,0,t5), ang=$imports.ClassroomLayout.ownSeat.facing;
       d.me.visible=false; d.teacher.visible=false; $imports.VisualState.worldNorm=0;
       if(!d.flip){ d.flip=1; try{ (0,$imports.ncFlip)(); }catch(e){} }
       (0,$imports.cutLook)(d.seat.x,y,d.seat.z, d.seat.x+Math.cos(ang)*Math.cos(pitch),y+Math.sin(pitch),d.seat.z+Math.sin(ang)*Math.cos(pitch));
@@ -142,7 +142,7 @@ var Opening={on:false,short:false,handed:true,waitT:0,
     if(Opening.handed) return;
     Opening.handed=true; Opening.on=false; clearInterval(Opening.waitT); Opening.waitT=0;
     var seat=openingSeat();
-    $imports.S.mode='in'; $imports.S.room='teach1'; $imports.S.x=seat.x; $imports.S.y=seat.y; $imports.S.ang=seat.ang; $imports.S.pitch=0; $imports.S.seated=true; $imports.S.eyeLift=0;
+    $imports.S.mode='in'; $imports.S.room='teach1'; $imports.S.x=seat.x; $imports.S.y=seat.y; $imports.S.ang=seat.ang; $imports.S.pitch=0; $imports.S.seated=true;$imports.S.seat=$imports.ClassroomLayout.seat('teach1',$imports.MY_COL,$imports.MY_ROW); $imports.S.eyeLift=0;
     $imports.S.screen='play'; $imports.PRO.on=false;
     $imports.VisualState.worldNorm=0; $imports.GLR.flash=0; (0,$imports.cutFade)(0); openingCap('');
     try{ if($imports.NC.normal) (0,$imports.ncFlip)(); }catch(e){}

@@ -214,12 +214,15 @@ class EscalationBrowserTest(BrowserCase):
             with self.subTest(touch=touch):
                 page = self.page(touch=touch)
                 page.evaluate("S.day=2;S.tsec=1350;updateHUD()")
-                self.assertIn('第 2 天 · 高危', page.locator('#campuspressure').inner_text())
-                box = page.locator('#campuspressure').bounding_box()
+                self.assertEqual(page.locator('#campuspressure').count(),0)
+                self.assertEqual(page.locator('#sanfeel').count(),0)
+                page.evaluate('Game.pause()')
+                self.assertIn('留校第 2 天',page.locator('#stayDay').inner_text())
+                box = page.locator('#stayDay').bounding_box()
                 self.assertIsNotNone(box)
                 self.assertGreaterEqual(box['x'], 0)
                 self.assertLessEqual(box['x'] + box['width'], page.viewport_size['width'])
-                page.evaluate('Investigation.notice()')
+                page.evaluate('Game.resume();Investigation.notice()')
                 self.assertIn('第二天起校园更危险', page.locator('#choices').inner_text())
                 self.assert_js(page, "!!Investigation.state().entries.timePressure")
 

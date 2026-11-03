@@ -5,7 +5,7 @@
 var AppSimulation=(function(){
   var stop=$imports.StepPipeline.STOP;
   function optional(name,fn){try{return fn();}catch(e){$imports.Lifecycle.report('simulation:'+name,e);}}
-  var world=$imports.StepPipeline.create({begin:function(dt){$imports.Mechanics.begin(dt);},finish:function(dt){$imports.Mechanics.finish(dt);}});
+  var world=$imports.StepPipeline.create({begin:function(dt){$imports.Mechanics.begin(dt);ActiveEffects.begin(dt);},finish:function(dt){$imports.Mechanics.finish(dt);}});
   world.use('clock',function(dt){(0,$imports.clockTick)(dt);});
   world.use('patrol',function(dt){$imports.PatrolWorld.tick(dt);if($imports.S.dead)return stop;});
   world.use('placement',function(dt){(0,$imports.repairPlayerPlacement)(dt);$imports.Playtest.simulation(dt);});
@@ -39,8 +39,11 @@ var AppSimulation=(function(){
   });
 })();
 
+var ActiveEffects={snackSeconds:0,begin:function(dt){this.snackSeconds=Math.min(dt,Math.max(0,$imports.S.snackT||0));$imports.S.snackT=Math.max(0,($imports.S.snackT||0)-dt);}};
+
 /* @module-exports */
 GameModules.publish("game3d/js/app/simulation.js",{
-"AppSimulation":{get:function(){return AppSimulation;},set:function($value){AppSimulation=$value;}}
+"AppSimulation":{get:function(){return AppSimulation;},set:function($value){AppSimulation=$value;}},
+"ActiveEffects":{get:function(){return ActiveEffects;},set:function($value){ActiveEffects=$value;}}
 });
 })(GameModules.imports("game3d/js/app/simulation.js"));

@@ -13,10 +13,10 @@ function border(g,w,h,c){
   for(x=0;x<w;x++){ g[0][x]=c; g[h-1][x]=c; }
   for(y=0;y<h;y++){ g[y][0]=c; g[y][w-1]=c; }
 }
-var CLS_SPAN=[[5,11],[13,19],[21,27],[29,35],[37,43],[45,51]];
+var CLS_SPAN=$imports.ClassroomLayout.spans;
 var CLS_NAME=['高三1班','高三2班','高一3班','高二3班','高二1班','高二2班'];
 var CLS_DOOR=[8,16,24,32,40,48];
-var MY_ROOM=5, MY_COL=48, MY_ROW=6;
+var MY_ROOM=$imports.ClassroomLayout.ownSeat.classId, MY_COL=$imports.ClassroomLayout.ownSeat.col, MY_ROW=$imports.ClassroomLayout.ownSeat.row;
 
 function teachFloor(f){
   var W=$imports.TCOLS, H=22, g=blank(W,H,'.'), x, y, i;
@@ -24,21 +24,16 @@ function teachFloor(f){
   var sep=[4,12,20,28,36,44,52];
   for(i=0;i<sep.length;i++) for(y=1;y<16;y++) g[y][sep[i]]='#';
   for(x=1;x<W-1;x++) g[15][x]='#';
-  for(i=0;i<CLS_DOOR.length;i++){ g[15][CLS_DOOR[i]]='='; g[15][CLS_DOOR[i]+1]='='; }
+  for(i=0;i<CLS_DOOR.length;i++)$imports.ClassroomLayout.doors(i).forEach(function(d){g[d[1]][d[0]]='=';});
   g[21][6]='S'; g[21][7]='S';
   g[21][56]='S'; g[21][57]='S';
   if(f===1){ g[21][30]='O'; g[21][31]='O'; }
   for(i=0;i<6;i++){
     var c0=CLS_SPAN[i][0], c1=CLS_SPAN[i][1];
-    var mid=Math.floor((c0+c1)/2);
-    g[1][mid]='T';
-    for(y=2;y<=13;y+=2){
-      for(x=c0;x<=c1;x+=2){
-        if(y===6&&x===MY_COL&&i===MY_ROOM){ g[y][x]='P'; continue; }
-        g[y][x]='d';
-      }
-    }
+    var pod=$imports.ClassroomLayout.podium(i);g[pod[1]][pod[0]]='T';
+    for(y=2;y<=12;y+=2)for(x=c0+2;x<=c1;x+=2)g[y][x]='d';
   }
+  g[MY_ROW][MY_COL-1]='.';
   g[MY_ROW][MY_COL]='P';
   for(y=16;y<=20;y++) g[y][57]='#';
   g[19][57]='.';                                   /* 门洞 */

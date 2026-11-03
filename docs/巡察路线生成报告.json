@@ -1,38 +1,64 @@
 {
-  "routeVersion": 2,
+  "routeVersion": 3,
   "scope": "仅选定带权校园骨架；不声明连续空间全局最优",
   "weightDefinition": "静态合法路径长度/16 加显式连接时间；是全程步行的规划权重，不含端点容差、运行调度或室外长瞬移，totalSeconds 不是实跑计时，也不声明当前赶路规则下的最快路线",
   "nodes": [
     "admin1:stairs",
-    "admin2:stairs",
-    "admin3:stairs",
-    "admin4:stairs",
+    "stair_admin:0",
+    "stair_admin:1",
+    "stair_admin:2",
+    "stair_admin:3",
+    "stair_admin:4",
     "admin5:stairs",
     "admin5:east",
     "admin5:stairs",
+    "stair_admin:4",
+    "stair_admin:3",
     "admin4:stairs",
     "admin4:east",
     "admin4:stairs",
+    "stair_admin:3",
+    "stair_admin:2",
     "admin3:stairs",
     "admin3:east",
     "admin3:stairs",
+    "stair_admin:2",
+    "stair_admin:1",
+    "admin2:stairs",
+    "stair_admin:1",
     "admin2:stairs",
     "admin2:link1",
     "link1:north",
     "link1:south",
     "lab2:link1",
     "lab2:stairs",
-    "lab3:stairs",
-    "lab4:stairs",
+    "stair_lab:1",
+    "stair_lab:2",
+    "stair_lab:3",
+    "stair_lab:4",
     "lab5:stairs",
     "lab5:east",
     "lab5:stairs",
+    "stair_lab:4",
+    "stair_lab:3",
     "lab4:stairs",
     "lab4:east",
     "lab4:stairs",
+    "stair_lab:3",
+    "stair_lab:2",
     "lab3:stairs",
     "lab3:east",
     "lab3:stairs",
+    "stair_lab:2",
+    "stair_lab:1",
+    "lab2:stairs",
+    "stair_lab:1",
+    "stair_lab:0",
+    "lab1:stairs",
+    "lab1:east",
+    "lab1:stairs",
+    "stair_lab:0",
+    "stair_lab:1",
     "lab2:stairs",
     "lab2:link2",
     "link2:north",
@@ -40,23 +66,33 @@
     "teach2:link2",
     "teach2:stairs",
     "teach2:east",
+    "teach2:east-stairs",
+    "stair_teach_e:1",
+    "teach2:east-stairs",
+    "teach2:east",
     "teach2:stairs",
-    "teach3:stairs",
+    "stair_teach_w:1",
+    "stair_teach_w:2",
+    "stair_teach_w:3",
     "teach4:stairs",
-    "teach5:stairs",
-    "teach5:east",
-    "teach5:east-stairs",
-    "teach4:east-stairs",
-    "teach3:east-stairs",
-    "teach4:east-stairs",
     "teach4:east",
-    "teach4:stairs",
+    "teach4:east-stairs",
+    "stair_teach_e:3",
+    "stair_teach_e:4",
+    "teach5:east-stairs",
+    "teach5:east",
+    "teach5:stairs",
+    "stair_teach_w:4",
+    "stair_teach_w:3",
+    "stair_teach_w:2",
     "teach3:stairs",
     "teach3:east",
     "teach3:east-stairs",
-    "teach2:east-stairs",
-    "teach2:east",
-    "teach2:east-stairs",
+    "stair_teach_e:2",
+    "stair_teach_e:3",
+    "stair_teach_e:2",
+    "stair_teach_e:1",
+    "stair_teach_e:0",
     "teach1:east-stairs",
     "teach1:east",
     "teach1:stairs",
@@ -82,6 +118,8 @@
     "out:teach",
     "teach1:entry",
     "teach1:stairs",
+    "stair_teach_w:0",
+    "stair_teach_w:1",
     "teach2:stairs",
     "teach2:link2",
     "link2:south",
@@ -90,10 +128,6 @@
     "lab2:stairs",
     "lab2:east",
     "lab2:stairs",
-    "lab1:stairs",
-    "lab1:east",
-    "lab1:stairs",
-    "lab2:stairs",
     "lab2:link1",
     "link1:south",
     "link1:north",
@@ -101,6 +135,8 @@
     "admin2:stairs",
     "admin2:east",
     "admin2:stairs",
+    "stair_admin:1",
+    "stair_admin:0",
     "admin1:stairs",
     "admin1:east",
     "admin1:stairs",
@@ -109,89 +145,101 @@
     "admin1:entry",
     "admin1:stairs"
   ],
-  "baseWeightSeconds": 1177.3859067762144,
-  "matchingExtraSeconds": 406.8012073773051,
-  "totalSeconds": 1584.1871141535194,
-  "initialCandidateSeconds": 3421.4178566873343,
+  "baseWeightSeconds": 1352.078757673055,
+  "matchingExtraSeconds": 517.0361618680486,
+  "totalSeconds": 1869.1149195411035,
+  "initialCandidateSeconds": 4115.103998241601,
   "coverage": {
-    "requiredEdges": 68,
-    "coveredEdges": 68,
+    "requiredEdges": 88,
+    "coveredEdges": 88,
     "closed": true
   },
   "oddNodes": [
     "admin1:east",
     "admin1:stairs",
     "admin2:east",
+    "admin2:stairs",
     "admin3:east",
-    "admin3:stairs",
     "admin4:east",
-    "admin4:stairs",
     "admin5:east",
     "lab1:east",
     "lab2:east",
-    "lab2:stairs",
     "lab3:east",
-    "lab3:stairs",
     "lab4:east",
-    "lab4:stairs",
     "lab5:east",
     "out:admin",
     "out:teach",
+    "stair_admin:1",
+    "stair_admin:2",
+    "stair_admin:3",
+    "stair_lab:1",
+    "stair_lab:2",
+    "stair_lab:3",
+    "stair_teach_e:1",
+    "stair_teach_e:2",
+    "stair_teach_e:3",
+    "stair_teach_w:1",
+    "stair_teach_w:2",
+    "stair_teach_w:3",
     "teach1:stairs",
-    "teach2:east-stairs",
-    "teach3:east-stairs",
-    "teach3:stairs",
-    "teach4:east-stairs",
-    "teach4:stairs"
+    "teach2:stairs"
   ],
   "matching": [
     [
       "admin1:east",
-      "admin2:east"
-    ],
-    [
-      "admin1:stairs",
       "out:admin"
     ],
     [
+      "admin1:stairs",
+      "admin2:east"
+    ],
+    [
+      "admin2:stairs",
+      "stair_admin:1"
+    ],
+    [
       "admin3:east",
-      "admin3:stairs"
+      "stair_admin:2"
     ],
     [
       "admin4:east",
-      "lab1:east"
-    ],
-    [
-      "admin4:stairs",
       "admin5:east"
     ],
     [
+      "lab1:east",
+      "stair_teach_e:1"
+    ],
+    [
       "lab2:east",
-      "lab2:stairs"
+      "stair_lab:1"
     ],
     [
       "lab3:east",
-      "teach2:east-stairs"
-    ],
-    [
-      "lab3:stairs",
-      "lab5:east"
+      "stair_lab:2"
     ],
     [
       "lab4:east",
-      "lab4:stairs"
+      "lab5:east"
     ],
     [
       "out:teach",
       "teach1:stairs"
     ],
     [
-      "teach3:east-stairs",
-      "teach4:east-stairs"
+      "stair_admin:3",
+      "stair_lab:3"
     ],
     [
-      "teach3:stairs",
-      "teach4:stairs"
+      "stair_teach_e:2",
+      "stair_teach_e:3"
+    ],
+    [
+      "stair_teach_w:1",
+      "teach2:stairs"
+    ],
+    [
+      "stair_teach_w:2",
+      "stair_teach_w:3"
     ]
   ],
   "edges": [
@@ -204,134 +252,146 @@
     {
       "a": "admin1:stairs",
       "b": "admin1:east",
-      "seconds": 25.453125,
+      "seconds": 25.661992693252305,
       "kind": "walk"
     },
     {
       "a": "admin1:stairs",
       "b": "admin1:entry",
-      "seconds": 13.170495128834865,
+      "seconds": 12.913372564417433,
       "kind": "walk"
     },
     {
       "a": "admin1:stairs",
-      "b": "admin2:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_admin:0",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "admin2:stairs",
       "b": "admin2:east",
-      "seconds": 25.453125,
+      "seconds": 25.661992693252305,
       "kind": "walk"
     },
     {
       "a": "admin2:stairs",
       "b": "admin2:link1",
-      "seconds": 26.811120128834872,
+      "seconds": 27.019987822087177,
       "kind": "walk"
     },
     {
       "a": "admin2:stairs",
-      "b": "admin3:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_admin:1",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "admin3:stairs",
       "b": "admin3:east",
-      "seconds": 25.453125,
+      "seconds": 25.661992693252298,
       "kind": "walk"
     },
     {
       "a": "admin3:stairs",
-      "b": "admin4:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_admin:2",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "admin4:stairs",
       "b": "admin4:east",
-      "seconds": 25.453125,
+      "seconds": 25.661992693252305,
       "kind": "walk"
     },
     {
       "a": "admin4:stairs",
-      "b": "admin5:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_admin:3",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "admin5:stairs",
       "b": "admin5:east",
-      "seconds": 25.453125,
+      "seconds": 25.661992693252305,
       "kind": "walk"
+    },
+    {
+      "a": "admin5:stairs",
+      "b": "stair_admin:4",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "lab1:stairs",
       "b": "lab1:east",
-      "seconds": 23.765625,
+      "seconds": 23.974492693252305,
       "kind": "walk"
     },
     {
       "a": "lab1:stairs",
-      "b": "lab2:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_lab:0",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "lab2:stairs",
       "b": "lab2:east",
-      "seconds": 23.765625,
+      "seconds": 23.974492693252305,
       "kind": "walk"
     },
     {
       "a": "lab2:stairs",
       "b": "lab2:link1",
-      "seconds": 25.123620128834872,
+      "seconds": 25.332487822087177,
       "kind": "walk"
     },
     {
       "a": "lab2:stairs",
       "b": "lab2:link2",
-      "seconds": 0.7372463466261496,
+      "seconds": 2.0369926932522993,
       "kind": "walk"
     },
     {
       "a": "lab2:stairs",
-      "b": "lab3:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_lab:1",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "lab3:stairs",
       "b": "lab3:east",
-      "seconds": 23.765625,
+      "seconds": 23.974492693252305,
       "kind": "walk"
     },
     {
       "a": "lab3:stairs",
-      "b": "lab4:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_lab:2",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "lab4:stairs",
       "b": "lab4:east",
-      "seconds": 23.765625,
+      "seconds": 23.974492693252305,
       "kind": "walk"
     },
     {
       "a": "lab4:stairs",
-      "b": "lab5:stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_lab:3",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "lab5:stairs",
       "b": "lab5:east",
-      "seconds": 23.765625,
+      "seconds": 23.974492693252305,
       "kind": "walk"
+    },
+    {
+      "a": "lab5:stairs",
+      "b": "stair_lab:4",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "link1:north",
@@ -478,16 +538,112 @@
       "kind": "walk"
     },
     {
+      "a": "stair_admin:0",
+      "b": "stair_admin:1",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_admin:1",
+      "b": "stair_admin:2",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_admin:2",
+      "b": "stair_admin:3",
+      "seconds": 12.571567691404596,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_admin:3",
+      "b": "stair_admin:4",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_lab:0",
+      "b": "stair_lab:1",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_lab:1",
+      "b": "stair_lab:2",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_lab:2",
+      "b": "stair_lab:3",
+      "seconds": 12.571567691404596,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_lab:3",
+      "b": "stair_lab:4",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_e:0",
+      "b": "stair_teach_e:1",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_e:1",
+      "b": "stair_teach_e:2",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_e:2",
+      "b": "stair_teach_e:3",
+      "seconds": 12.571567691404596,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_e:3",
+      "b": "stair_teach_e:4",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_w:0",
+      "b": "stair_teach_w:1",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_w:1",
+      "b": "stair_teach_w:2",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_w:2",
+      "b": "stair_teach_w:3",
+      "seconds": 12.571567691404596,
+      "kind": "walk"
+    },
+    {
+      "a": "stair_teach_w:3",
+      "b": "stair_teach_w:4",
+      "seconds": 12.571567691404594,
+      "kind": "walk"
+    },
+    {
       "a": "teach1:east",
       "b": "teach1:east-stairs",
-      "seconds": 1.474492693252299,
+      "seconds": 1.7557426932522993,
       "kind": "walk"
     },
     {
       "a": "teach1:east-stairs",
-      "b": "teach2:east-stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_teach_e:0",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "teach1:entry",
@@ -497,110 +653,122 @@
     },
     {
       "a": "teach1:stairs",
+      "b": "stair_teach_w:0",
+      "seconds": 0,
+      "kind": "stair-portal"
+    },
+    {
+      "a": "teach1:stairs",
       "b": "teach1:east",
-      "seconds": 27.49011769325231,
+      "seconds": 27.46599025766974,
       "kind": "walk"
     },
     {
       "a": "teach1:stairs",
       "b": "teach1:entry",
-      "seconds": 13.5,
+      "seconds": 13.475872564417433,
       "kind": "walk"
-    },
-    {
-      "a": "teach1:stairs",
-      "b": "teach2:stairs",
-      "seconds": 2,
-      "kind": "stairs"
     },
     {
       "a": "teach2:east",
       "b": "teach2:east-stairs",
-      "seconds": 1.474492693252299,
+      "seconds": 1.7557426932522993,
       "kind": "walk"
     },
     {
       "a": "teach2:east-stairs",
-      "b": "teach3:east-stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_teach_e:1",
+      "seconds": 0,
+      "kind": "stair-portal"
+    },
+    {
+      "a": "teach2:stairs",
+      "b": "stair_teach_w:1",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "teach2:stairs",
       "b": "teach2:east",
-      "seconds": 27.49011769325231,
+      "seconds": 27.46599025766974,
       "kind": "walk"
     },
     {
       "a": "teach2:stairs",
       "b": "teach2:link2",
-      "seconds": 2.575365257669732,
+      "seconds": 3.312611604295881,
       "kind": "walk"
-    },
-    {
-      "a": "teach2:stairs",
-      "b": "teach3:stairs",
-      "seconds": 2,
-      "kind": "stairs"
     },
     {
       "a": "teach3:east",
       "b": "teach3:east-stairs",
-      "seconds": 1.474492693252299,
+      "seconds": 1.7557426932522993,
       "kind": "walk"
     },
     {
       "a": "teach3:east-stairs",
-      "b": "teach4:east-stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_teach_e:2",
+      "seconds": 0,
+      "kind": "stair-portal"
+    },
+    {
+      "a": "teach3:stairs",
+      "b": "stair_teach_w:2",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "teach3:stairs",
       "b": "teach3:east",
-      "seconds": 27.49011769325231,
+      "seconds": 27.46599025766974,
       "kind": "walk"
-    },
-    {
-      "a": "teach3:stairs",
-      "b": "teach4:stairs",
-      "seconds": 2,
-      "kind": "stairs"
     },
     {
       "a": "teach4:east",
       "b": "teach4:east-stairs",
-      "seconds": 1.474492693252299,
+      "seconds": 1.7557426932522993,
       "kind": "walk"
     },
     {
       "a": "teach4:east-stairs",
-      "b": "teach5:east-stairs",
-      "seconds": 2,
-      "kind": "stairs"
+      "b": "stair_teach_e:3",
+      "seconds": 0,
+      "kind": "stair-portal"
+    },
+    {
+      "a": "teach4:stairs",
+      "b": "stair_teach_w:3",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "teach4:stairs",
       "b": "teach4:east",
-      "seconds": 27.49011769325231,
+      "seconds": 27.46599025766974,
       "kind": "walk"
-    },
-    {
-      "a": "teach4:stairs",
-      "b": "teach5:stairs",
-      "seconds": 2,
-      "kind": "stairs"
     },
     {
       "a": "teach5:east",
       "b": "teach5:east-stairs",
-      "seconds": 1.474492693252299,
+      "seconds": 1.7557426932522993,
       "kind": "walk"
+    },
+    {
+      "a": "teach5:east-stairs",
+      "b": "stair_teach_e:4",
+      "seconds": 0,
+      "kind": "stair-portal"
+    },
+    {
+      "a": "teach5:stairs",
+      "b": "stair_teach_w:4",
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "teach5:stairs",
       "b": "teach5:east",
-      "seconds": 27.49011769325231,
+      "seconds": 27.46599025766974,
       "kind": "walk"
     }
   ]

@@ -162,7 +162,7 @@ class PatrolMotionTest(BrowserCase):
           Object.assign(PAT,{room:a.scene,x:a.x,y:a.y,fy:0,safety:0,warning:0,near:true,blinkCD:1.05,
             wirelessSignal:{point:b,remaining:3,locker:null}});
           PatrolWorld.tick(.137);const before={x:PAT.x,y:PAT.y};saveGame();const old=loadGame();old.mods.mechanics.rulesVersion=3;applySave(old);
-          const exact=PAT.x===before.x&&PAT.y===before.y&&Mechanics.rulesVersion===4;PatrolWorld.tick(1/60);
+          const exact=PAT.x===before.x&&PAT.y===before.y&&Mechanics.rulesVersion===5;PatrolWorld.tick(1/60);
           return {exact,d:Math.hypot(PAT.x-before.x,PAT.y-before.y)};}""")
         self.assertTrue(r['exact'])
         self.assertAlmostEqual(r['d'], 16 / 60, places=6)
@@ -171,7 +171,7 @@ class PatrolMotionTest(BrowserCase):
         p = self.game()
         self.assert_js(p, """(()=>{const old={version:1,recent:[{runId:'old',rules:2,ms:60000,status:'finished'}],best:{}};
           old.best[Speedrun.key(2,'hard','car')]={ms:60000,runId:'old'};localStorage.setItem(SPEEDRUN_KEY,JSON.stringify(old));
-          const isolated=SPEEDRUN_RULES===3&&Speedrun.best('hard','car')===null;
+          const isolated=SPEEDRUN_RULES===4&&Speedrun.best('hard','car')===null;
           Speedrun.save({id:'new',rules:SPEEDRUN_RULES,diff:'hard',route:'car',ms:90000,status:'finished',game:SPEEDRUN_GAME});
           const d=Speedrun.read();return isolated&&Speedrun.best('hard','car')===90000&&d.recent.length===2&&
             d.best[Speedrun.key(2,'hard','car')].ms===60000;})()""")

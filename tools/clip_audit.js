@@ -336,11 +336,11 @@ var ClipAudit=(function(){
     try{ figGeo('sit'); }finally{ var fl=REC.list; REC=null; OWN=[]; }
     for(k in FIG_GEO) if(/^(sit|A\|fig_sit)\|/.test(k)) delete FIG_GEO[k];
     for(k in saved) FIG_GEO[k]=saved[k];
-    var x0=(cell[0]+0.5)*tw-halfW, z0=(cell[1]+0.82)*tw-halfH;
-    function tp(q){ return [x0-q[0],q[1],z0-q[2]]; }
+    var x0=(cell[0]+0.82)*tw-halfW, z0=(cell[1]+0.5)*tw-halfH;
+    function tp(q){ return [x0-q[2],q[1],z0+q[0]]; }
     fl.forEach(function(p){
       if(p.c) p.c=tp(p.c); if(p.a) p.a=tp(p.a); if(p.b) p.b=tp(p.b);
-      if(p.tc!==undefined){ p.tc=-p.tc; p.ts=-p.ts; }
+      if(p.tc!==undefined){ var oldCos=p.tc; p.tc=p.ts; p.ts=-oldCos; }
       desk.forEach(function(d){
         var hit=collide(p,d,false);
         if(hit) out.push({type:'npc',room:R.id,a:'npc',b:d.o,pa:desc(p),pb:desc(d),at:hit.map(function(v){ return +v.toFixed(2); })});

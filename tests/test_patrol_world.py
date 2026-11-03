@@ -57,17 +57,22 @@ class PatrolWorldTest(BrowserCase):
         p=self.game()
         self.assert_js(p,"""(() => {addItem('seal');PAT.permanent=true;PAT.locked=true;let before=S.san;PatrolWorld.tick(1);Mechanics.finish(.1);
           return hasItem('seal')&&S.san===before&&PAT.permanent&&PAT.state==='walk';})()""")
-    def test_saved_mid_connector_and_non_grid_position_are_restored_exactly(self):
+    def test_saved_midflight_and_non_grid_position_are_restored_exactly(self):
         p=self.game()
-        r=p.evaluate("""() => {let g=PatrolNav.graph(),a=g.nodes['admin1:stairs'],b=g.nodes['admin2:stairs'];PAT.room=a.scene;PAT.x=a.x+.07;PAT.y=a.y+.03;
-          PAT.routeIndex=0;PAT.transition={from:a,to:b,kind:'stairs',remaining:1.125,total:2};saveGame();let before=structuredClone(PAT);applySave(loadGame());
+        r=p.evaluate("""() => {let a=StairWorld.point('stair_admin',{x:-1.25,z:3.2,h:.8});PAT.room=a.scene;PAT.x=a.x+.07;PAT.y=a.y;PAT.fy=a.fy;
+          PAT.routeIndex=0;PAT.transition=null;saveGame();let before=structuredClone(PAT);applySave(loadGame());
           return {before,after:structuredClone(PAT)};}""")
-        for k in ['x','y','room','transition','permanent','routeIndex']:self.assertEqual(r['before'][k],r['after'][k])
-    def test_plain_stair_transition_takes_two_active_seconds(self):
+        for k in ['x','y','fy','room','transition','permanent','routeIndex']:self.assertEqual(r['before'][k],r['after'][k])
+    def test_stair_portal_is_immediate_but_height_requires_walking(self):
         p=self.game()
-        self.assert_js(p,"""(() => {let g=PatrolNav.graph(),a=g.nodes['admin1:stairs'],b=g.nodes['admin2:stairs'];PAT.room=a.scene;PAT.x=a.x;PAT.y=a.y;
-          PAT.transition={from:a,to:b,kind:'stairs',remaining:2,total:2};PatrolWorld.tick(1.9);let first=PAT.room==='admin1'&&PAT.transition.remaining>0;
-          PatrolWorld.tick(.1);return first&&PAT.room==='admin2'&&!PAT.transition&&PAT.afterBlink>0;})()""")
+        r=p.evaluate("""(() => {let g=PatrolNav.graph(),a=g.nodes['admin1:stairs'],b=g.nodes['admin2:stairs'];
+          doEnterRoom('admin2',b);Object.assign(PAT,{room:a.scene,x:a.x,y:a.y,fy:0,permanent:true,locked:false,transition:null,safety:0});DEV.god=true;
+          for(let i=0;i<20;i++)PatrolWorld.tick(.1);const middle={room:PAT.room,fy:PAT.fy};
+          for(let i=0;i<200&&PAT.room!=='admin2';i++)PatrolWorld.tick(.1);
+          return {middle,room:PAT.room,zeroPortals:g.edges.filter(e=>e.kind==='stair-portal').every(e=>e.weight===0),
+            physical:g.edges.some(e=>e.a==='stair_admin:0'&&e.b==='stair_admin:1'&&e.kind==='walk'&&e.weight>2)};})()""")
+        self.assertEqual(r['middle']['room'],'stair_admin');self.assertGreater(r['middle']['fy'],0)
+        self.assertLess(r['middle']['fy'],3.2);self.assertEqual(r['room'],'admin2');self.assertTrue(r['zeroPortals'] and r['physical'])
     def test_corrupt_new_domains_repair_without_erasing_inactive_mods(self):
         p=self.game()
         self.assert_js(p,"""(() => {addItem('phone');saveGame();let d=loadGame();d.mods['mod:sleeping']={keep:42};d.mods.phoneDevice.battery='bad';d.mods.terminalPuzzle.work={'/etc/passwd':'fake'};
@@ -82,8 +87,8 @@ class PatrolWorldTest(BrowserCase):
         self.assert_js(p,"""(() => {PAT.permanent=true;DEV.god=true;kill('x','grip','patrol');DEV.god=false;return PAT.permanent&&!S.dead;})()""")
     def test_adjacent_stairs_warn_from_the_entrance_without_remote_damage(self):
         p=self.game()
-        self.assert_js(p,"""(()=>{let g=PatrolNav.graph(),a=g.nodes['admin1:stairs'],b=g.nodes['admin2:stairs'];
-          doEnterRoom('admin2',b);PAT.room=a.scene;PAT.x=a.x;PAT.y=a.y;PAT.safety=0;PAT.near=false;PAT.permanent=true;
+        self.assert_js(p,"""(()=>{let g=PatrolNav.graph(),a=StairWorld.point('stair_admin',{x:1.25,z:6.3,h:1.6}),b=g.nodes['admin2:stairs'];
+          doEnterRoom('admin2',b);PAT.room=a.scene;PAT.x=a.x;PAT.y=a.y;PAT.fy=a.fy;PAT.safety=0;PAT.near=false;PAT.permanent=true;
           PatrolWorld.tick(.1);return PAT.warning>3&&!PatrolWorld.localThreat()&&PatrolWorld.pressure()===0;})()""")
     def test_permanent_local_lock_can_reset_without_clearing_tracking_or_bypassing_seal(self):
         p=self.game()
@@ -93,11 +98,11 @@ class PatrolWorldTest(BrowserCase):
           return lost&&PAT.state==='idle'&&PAT.permanent&&!hasItem('seal')&&PAT.respawn>29;})()""")
     def test_observed_exit_remembers_connector_and_ignores_unseen_motion(self):
         p=self.game()
-        self.assert_js(p,"""(()=>{let g=PatrolNav.graph(),a=g.nodes['teach1:stairs'];S.x=a.x;S.y=a.y;PAT.room=S.room;PAT.x=S.x+25;PAT.y=S.y;
+        self.assert_js(p,"""(()=>{let g=PatrolNav.graph(),a=g.nodes['teach1:stairs'];S.x=a.x;S.y=a.y;PAT.room=S.room;PAT.x=S.x;PAT.y=S.y-25;
           PAT.locked=true;PAT.lastSeen=PatrolNav.point(S.room,S.x,S.y);let seen=PatrolWorld.sees();
-          GameModules.emit('leaveRoom','teach1','teach2');let target=PAT.lastSeen;
-          doEnterRoom('teach2',PatrolNav.tilePoint('teach2',42,18));PatrolWorld.tick(.1);
-          return seen&&target.scene==='teach2'&&target.x===g.nodes['teach2:stairs'].x&&JSON.stringify(PAT.lastSeen)===JSON.stringify(target);})()""")
+          doEnterRoom('stair_teach_w',Object.assign({},g.nodes['stair_teach_w:0'],{stairHeight:0}));let target=PAT.lastSeen;
+          S.x+=6;S.y+=4;PatrolWorld.tick(.1);
+          return seen&&target.scene==='stair_teach_w'&&target.x===g.nodes['stair_teach_w:0'].x&&JSON.stringify(PAT.lastSeen)===JSON.stringify(target);})()""")
 
     def test_inspection_and_calm_hold_only_the_local_permanent_entity(self):
         p=self.game()

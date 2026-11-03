@@ -80,8 +80,8 @@ var ITEM_USE={
   phone:function(){ $imports.PHONE.start(); },
   leave:function(){ (0,$imports.useLeave)(); },
   brolly:function(){ USE.brollyShield=!USE.brollyShield; (0,$imports.toast)(USE.brollyShield?'撑开伞':'收起伞'); },
-  pill:function(){ $imports.S.pillT=PILL_SEC; removeItem('pill'); (0,$imports.os)('我：药片很苦。手慢慢不抖了。',3); (0,$imports.toast)('药片 · '+PILL_SEC+' 秒内每秒 SAN +'+PILL_RATE); },
-  snack:function(){ $imports.S.snackT=$imports.SNACK_SEC; removeItem('snack'); (0,$imports.os)('我：甜的。腿一下子轻了。',2.4); (0,$imports.toast)('士力架 · '+$imports.SNACK_SEC+' 秒内疾跑不耗体力'); },
+  pill:function(){ $imports.S.pillT=PILL_SEC; removeItem('pill'); (0,$imports.os)('我：药片很苦。手慢慢不抖了。',3); (0,$imports.toast)('药片咽下去了 · 作用持续 '+PILL_SEC+' 秒'); },
+  snack:function(){ $imports.S.snackT=$imports.SNACK_SEC; removeItem('snack'); (0,$imports.os)('我：甜的。腿一下子轻了。',2.4); (0,$imports.toast)('士力架 · '+$imports.SNACK_SEC+' 秒内移速 ×1.5，疾跑不耗体力'); },
   coin:function(){ throwCoin(); },
   atlas:function(){
     for(var i=0;i<$imports.SPOTS.length;i++) if($imports.SPOTS[i].id!=='stall') $imports.S.spots[$imports.SPOTS[i].id]=1;
@@ -209,11 +209,11 @@ function mealNow(){ return $imports.MEALS.some(function(m){ return $imports.S.ts
 function canteenWindow(){
   if(!hasItem('coin')){ (0,$imports.os)('我：窗口里的人头也不抬：「饭点过了。要吃，拿钱来。」',3.2); return; }
   $imports.UI.choice('窗口里还剩一点饭菜。「一个硬币一份。」',[
-    {label:'投一枚硬币买饭（SAN +24，游戏时间 10 分钟）',fn:function(){
+    {label:'投一枚硬币买饭（游戏时间 10 分钟）',fn:function(){
       $imports.UI.closeChoice(); removeItem('coin');
       $imports.PlayerStats.changeSan(24,'items',{max:100}); (0,$imports.restoreStamina)(30);
       (0,$imports.advanceGameTime)(10);
-      (0,$imports.os)('我：硬币落进铁盒子里，响了很久。饭是热的——这里第一次有热的东西。',3.8); (0,$imports.toast)('买饭 · SAN +24');
+      (0,$imports.os)('我：硬币落进铁盒子里，响了很久。饭是热的——这里第一次有热的东西。',3.8); (0,$imports.toast)('吃过热饭了');
       try{ $imports.SFX.click(); }catch(e){}
     }},
     {label:'算了',fn:function(){ $imports.UI.closeChoice(); }}

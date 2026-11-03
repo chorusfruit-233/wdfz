@@ -60,14 +60,14 @@ PHONE.flap=function(){
 };
 PHONE.end=function(){
   PHONE.st='over';
-  var g=0;
+  var g=0,before=$imports.S.san,hot=PHONE.cool>0;
   if(PHONE.cool<=0&&PHONE.score>0){
     g=$imports.CampusPressure.restGain(Math.min(PH_MAXGAIN,PHONE.score));
     $imports.PlayerStats.changeSan(g,'phone',{max:100}); PHONE.cool=PH_COOL;
-    (0,$imports.toast)('纸飞机 · 得分 '+PHONE.score+' · SAN +'+g);
+    (0,$imports.toast)('纸飞机 · 得分 '+PHONE.score);
   }
   PHONE.gain=g;
-  PHONE.msg=g?'SAN +'+g:(PHONE.score>0?'手机发烫了，静不下心':'');
+  PHONE.msg=$imports.S.san>before?'手指放松下来，远处声音又清楚了':(hot&&PHONE.score>0?'手机发烫了，静不下心':PHONE.score>0?'这一局结束了。':'');
   try{ $imports.SFX.click(); }catch(e){}
 };
 /* 每帧（只在游戏进行时，世界照常更新） */
@@ -114,7 +114,7 @@ PHONE.draw=function(){
     c.fillStyle='#e8f4ec'; c.font='14px sans-serif';
     c.fillText(PHONE.st==='ready'?'点一下开始':'结束 · 得分 '+PHONE.score,PH_W/2,PH_H/2-10);
     c.font='11px sans-serif'; c.fillStyle='#9fe3c2';
-    c.fillText(PHONE.st==='over'?(PHONE.msg||'再点一下重来'):(PHONE.cool>0?'手机还烫着：这局不回 SAN':'一局最多回 '+$imports.CampusPressure.restGain(PH_MAXGAIN)+' 点 SAN'),PH_W/2,PH_H/2+16);
+    c.fillText(PHONE.st==='over'?(PHONE.msg||'再点一下重来'):(PHONE.cool>0?'手机还烫着，静不下心':'玩一会儿，缓口气'),PH_W/2,PH_H/2+16);
   }
 };
 

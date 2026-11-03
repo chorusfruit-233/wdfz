@@ -48,12 +48,12 @@ class GeometryTest(BrowserCase):
         page = self.page()
         page.evaluate("doEnterRoom('teach1');running=false")
         # 课桌的椅背伸出格子 0.02 米：以前的方块碰撞挡不住，现在挡得住
-        self.assert_js(page, """(()=>{var R=INTERIORS.teach1,c=5,r=2,F=R.foot[c+','+r];
+        self.assert_js(page, """(()=>{var R=INTERIORS.teach1,c=7,r=2,F=R.foot[c+','+r];
             if(!F) return false;
-            var q=F.slice().sort(function(a,b){return b.z1-a.z1;})[0];         /* 伸得最远的那一块（椅背立杆） */
-            var wx=R.ox+((q.x0+q.x1)/2+R.cols*0.5)/U2M, wy=R.oy+(q.z1-0.005+R.rows*0.5)/U2M;
-            var cy=R.oy+(r+0.5)*R.th, f=FURN_SOLID.d;
-            return solidAtInterior(R,wx,wy)&&Math.abs(wy-cy)>R.th*f/2;})()""")
+            var q=F.slice().sort(function(a,b){return b.x1-a.x1;})[0];         /* 伸得最远的那一块（椅背立杆） */
+            var wx=R.ox+(q.x1-0.005+R.cols*0.5)/U2M, wy=R.oy+((q.z0+q.z1)/2+R.rows*0.5)/U2M;
+            var cx=R.ox+(c+0.5)*R.tw, f=FURN_SOLID.d;
+            return solidAtInterior(R,wx,wy)&&Math.abs(wx-cx)>R.tw*f/2;})()""")
         # 自己的座位（P）现在有碰撞；坐下会坐到椅子上，坐着时不会被「卡住自救」挪开
         page.evaluate("""var R=INTERIORS.teach1;S.mode='in';S.room='teach1';S.seated=false;
             S.x=R.ox+(MY_COL+0.5)*R.tw;S.y=R.oy+(MY_ROW+1.5)*R.th;sitDown();unstick();""")
@@ -78,7 +78,7 @@ class GeometryTest(BrowserCase):
         self.assertGreaterEqual(r['wallGap'], 2.99)
         # 课桌角：四个探测点之间斜着戳进来的角，以前会少算，现在圆形检测算得到
         page.evaluate("doEnterRoom('teach1');running=false")
-        self.assert_js(page, """(()=>{var R=INTERIORS.teach1;S.room='teach1';var F=R.foot['5,2'],q=F[0];
+        self.assert_js(page, """(()=>{var R=INTERIORS.teach1;S.room='teach1';var F=R.foot['7,2'],q=F[0];
             var cx=q.x1+0.2, cz=q.z1+0.2, wx=(cx+R.cols*0.5)*9+R.ox, wy=(cz+R.rows*0.5)*9+R.oy;
             return (Collision.depth(wx,wy,PRAD)>0)&&!solidAt(wx,wy)&&!solidAt(wx+PRAD,wy)&&!solidAt(wx,wy+PRAD);})()""")
 
@@ -117,11 +117,13 @@ class GeometryTest(BrowserCase):
     def test_player_can_leave_the_solid_starting_seat(self):
         page = self.page()
         page.evaluate("Game.start('easy');clearIntroTimers();running=false")
-        page.wait_for_function("S.mode==='in'&&S.room==='teach1'&&!!GLR.roomMesh&&S.ang===-Math.PI/2")
+        page.wait_for_function("S.mode==='in'&&S.room==='teach1'&&!!GLR.roomMesh&&S.ang===ClassroomLayout.ownSeat.facing")
         page.evaluate("""running=false;S.intro=0;PRO.on=false;PAUSE.on=false;UI.closePanelAll();UI.closeChoice();
             window.seatPosition=[S.x,S.y];unstick();window.stillSeated=S.seated&&S.x===seatPosition[0]&&S.y===seatPosition[1];
-            KEY.w=true;for(let i=0;i<120;i++)updatePlayer(1/60);KEY.w=false;""")
-        self.assert_js(page, 'stillSeated&&!S.seated&&canStand(S.x,S.y)&&Math.hypot(S.x-seatPosition[0],S.y-seatPosition[1])>10')
+            KEY.w=true;for(let i=0;i<120;i++)updatePlayer(1/60);KEY.w=false;
+            window.stoodInAisle=canStand(S.x,S.y);
+            KEY.d=true;for(let i=0;i<120;i++)updatePlayer(1/60);KEY.d=false;""")
+        self.assert_js(page, 'stillSeated&&stoodInAisle&&!S.seated&&canStand(S.x,S.y)&&Math.hypot(S.x-seatPosition[0],S.y-seatPosition[1])>10')
 
     def test_garage_actor_cannot_tunnel_through_a_thin_obstacle(self):
         page = self.page()

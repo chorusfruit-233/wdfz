@@ -151,7 +151,7 @@ var Achievements=(function(){
       case 'wake': run.wakes++; break;
       case 'fakeNormal': if(f.laugh===true) run.laughs++; break;
       case 'face': if(f.correct===false) run.faceWrong++; break;
-      case 'inspection': { var d=run.insp[f.day]||(run.insp[f.day]={}); d[f.slot]=f.compliant?1:-1; break; }
+      case 'inspection': { if(f.excused||f.result==='excused')break;var d=run.insp[f.day]||(run.insp[f.day]={}); d[f.slot]=f.compliant?1:-1; break; }
       case 'exam': if(f.phase==='paper'){ var x=run.exams[f.day]||(run.exams[f.day]={pass:0,fail:0}); if(f.pass) x.pass++; else x.fail++; } break;
     }
     if(!trusted()) return;

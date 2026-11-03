@@ -1,0 +1,286 @@
+[
+  {
+    "file": "本人座位面向黑板.png",
+    "scene": "teach1",
+    "x": 1275,
+    "y": 1809.5,
+    "fy": 0,
+    "ang": 3.141592653589793,
+    "pitch": 0,
+    "san": 100,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0,
+      "focus": 0,
+      "bpm": 0,
+      "breath": 0
+    },
+    "resources": {
+      "geometries": 86,
+      "textures": 25
+    },
+    "errors": []
+  },
+  {
+    "file": "感官-100.png",
+    "scene": "teach1",
+    "x": 1275,
+    "y": 1809.5,
+    "fy": 0,
+    "ang": 3.141592653589793,
+    "pitch": 0,
+    "san": 100,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0,
+      "focus": 0,
+      "bpm": 0,
+      "breath": 0
+    },
+    "resources": {
+      "geometries": 86,
+      "textures": 25
+    },
+    "errors": []
+  },
+  {
+    "file": "感官-45.png",
+    "scene": "teach1",
+    "x": 1275,
+    "y": 1809.5,
+    "fy": 0,
+    "ang": 3.141592653589793,
+    "pitch": 0,
+    "san": 45,
+    "quality": 0,
+    "view": {
+      "warp": 0.0625,
+      "edge": 0.045,
+      "focus": 0.05963183953257619,
+      "bpm": 0,
+      "breath": 0.25
+    },
+    "resources": {
+      "geometries": 86,
+      "textures": 25
+    },
+    "errors": []
+  },
+  {
+    "file": "感官-22.png",
+    "scene": "teach1",
+    "x": 1275,
+    "y": 1809.5,
+    "fy": 0,
+    "ang": 3.141592653589793,
+    "pitch": 0,
+    "san": 22,
+    "quality": 0,
+    "view": {
+      "warp": 0.4011111111111111,
+      "edge": 0.11399999999999999,
+      "focus": 0.38270389460017784,
+      "bpm": 111.16666666666666,
+      "breath": 0.6333333333333333
+    },
+    "resources": {
+      "geometries": 86,
+      "textures": 25
+    },
+    "errors": []
+  },
+  {
+    "file": "感官-8.png",
+    "scene": "teach1",
+    "x": 1275,
+    "y": 1809.5,
+    "fy": 0,
+    "ang": 3.141592653589793,
+    "pitch": 0,
+    "san": 8,
+    "quality": 0,
+    "view": {
+      "warp": 0.7511111111111112,
+      "edge": 0.156,
+      "focus": 0.7166421959826046,
+      "bpm": 126.33333333333334,
+      "breath": 0.8666666666666667
+    },
+    "resources": {
+      "geometries": 86,
+      "textures": 25
+    },
+    "errors": []
+  },
+  {
+    "file": "关闭扭曲.png",
+    "scene": "teach1",
+    "x": 1275,
+    "y": 1809.5,
+    "fy": 0,
+    "ang": 3.141592653589793,
+    "pitch": 0,
+    "san": 8,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0.156,
+      "focus": 0,
+      "bpm": 126.33333333333334,
+      "breath": 0.8666666666666667
+    },
+    "resources": {
+      "geometries": 86,
+      "textures": 25
+    },
+    "errors": []
+  },
+  {
+    "file": "真实楼梯下跑.png",
+    "scene": "stair_teach_w",
+    "x": 1110.75,
+    "y": 1850,
+    "fy": 0,
+    "ang": 1.5707963267948966,
+    "pitch": 0.15,
+    "san": 100,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0,
+      "focus": 0,
+      "bpm": 0,
+      "breath": 0
+    },
+    "resources": {
+      "geometries": 89,
+      "textures": 25
+    },
+    "errors": []
+  },
+  {
+    "file": "真实楼梯半层平台.png",
+    "scene": "stair_teach_w",
+    "x": 1110.75,
+    "y": 1906.7,
+    "fy": 1.6,
+    "ang": 0,
+    "pitch": 0,
+    "san": 100,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0,
+      "focus": 0,
+      "bpm": 0,
+      "breath": 0
+    },
+    "resources": {
+      "geometries": 118,
+      "textures": 32
+    },
+    "errors": []
+  },
+  {
+    "file": "二楼出口连续视野.png",
+    "scene": "stair_teach_w",
+    "x": 1122,
+    "y": 1847.3,
+    "fy": 3.2,
+    "ang": -1.5707963267948966,
+    "pitch": 0,
+    "san": 100,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0,
+      "focus": 0,
+      "bpm": 0,
+      "breath": 0
+    },
+    "resources": {
+      "geometries": 108,
+      "textures": 32
+    },
+    "errors": []
+  },
+  {
+    "file": "车库楼梯校园出口.png",
+    "scene": "stair_garage",
+    "x": 632,
+    "y": 1075.3,
+    "fy": 3.2,
+    "ang": -1.5707963267948966,
+    "pitch": 0,
+    "san": 100,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0,
+      "focus": 0,
+      "bpm": 0,
+      "breath": 0
+    },
+    "resources": {
+      "geometries": 148,
+      "textures": 50
+    },
+    "errors": []
+  },
+  {
+    "file": "教室前后门.png",
+    "scene": "teach1",
+    "x": 1275,
+    "y": 1929.2,
+    "fy": 0,
+    "ang": -1.5707963267948966,
+    "pitch": 0,
+    "san": 100,
+    "quality": 0,
+    "view": {
+      "warp": 0,
+      "edge": 0,
+      "focus": 0,
+      "bpm": 0,
+      "breath": 0
+    },
+    "torch": true,
+    "resources": {
+      "geometries": 63,
+      "textures": 20
+    },
+    "errors": []
+  },
+  {
+    "file": "触屏字幕-844x390.png",
+    "viewport": [
+      844,
+      390
+    ],
+    "textSize": 150,
+    "volume": 0,
+    "touchContext": true
+  },
+  {
+    "file": "触屏字幕-320x640.png",
+    "viewport": [
+      320,
+      640
+    ],
+    "textSize": 150,
+    "volume": 0,
+    "touchContext": true
+  },
+  {
+    "file": "触屏字幕-390x844.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "textSize": 150,
+    "volume": 0,
+    "touchContext": true
+  }
+]

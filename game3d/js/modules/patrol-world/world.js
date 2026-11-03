@@ -12,7 +12,7 @@ var PatrolWorld=(function(){
   function reset(){
     Object.keys($imports.PAT).forEach(function(k){delete $imports.PAT[k];});
     Object.assign($imports.PAT,{version:1,state:'walk',room:'admin1',x:0,y:0,fy:0,behavior:'patrol',permanent:false,
-      routeVersion:2,routeIndex:1,rejoin:false,cycle:0,lockerMemory:{},memoryVisit:null,transition:null,lock:0,locked:false,cited:false,lost:0,lastSeen:null,search:0,
+      routeVersion:3,routeIndex:1,rejoin:false,cycle:0,lockerMemory:{},memoryVisit:null,transition:null,lock:0,locked:false,cited:false,lost:0,lastSeen:null,search:0,
       queue:[],investigation:null,wirelessSignal:null,regionSeq:0,lastRegion:null,respawn:0,safety:3.6,warning:0,near:false,
       blinkCD:TRAVEL_CD,afterBlink:.22,step:0,stuck:0,diagnostic:null,mazeGateway:null});
     framePath=null;lastVisualRoom=null;approachCache=null;
@@ -97,7 +97,7 @@ var PatrolWorld=(function(){
     if($imports.PAT.permanent){$imports.PAT.behavior='chase';return permanentTarget();}
     if($imports.PAT.locked||$imports.PAT.search>0){$imports.PAT.behavior=$imports.PAT.locked?'chase':'search';return $imports.PAT.lastSeen;}
     /* 保留原始快照；导航只把落脚点挪到邻近可行走处，避免搜查卡在椅子等碰撞内。 */
-    if($imports.PAT.wirelessSignal){var p=$imports.PAT.wirelessSignal.point;$imports.PAT.behavior='investigate';return p.scene==='bell1'||p.scene==='lift_dream'?p:$imports.PatrolNav.snap(p.scene,p)||p;}
+    if($imports.PAT.wirelessSignal){var p=$imports.PAT.wirelessSignal.point;$imports.PAT.behavior='investigate';return p.scene==='bell1'||p.scene==='lift_dream'||$imports.StairWorld.config(p.scene)?p:$imports.PatrolNav.snap(p.scene,p)||p;}
     if(!$imports.PAT.investigation&&$imports.PAT.queue.length){$imports.PAT.investigation=Object.assign({remaining:6},$imports.PAT.queue.shift());}
     if($imports.PAT.investigation){$imports.PAT.behavior='investigate';return observation($imports.PAT.investigation.regionId);}
     var mem=$imports.PAT.lockerMemory[$imports.PAT.room];
@@ -136,6 +136,7 @@ var PatrolWorld=(function(){
     if(framePath&&framePath.key===key&&framePath.points&&framePath.points.length)return true;
     var nav=$imports.PAT.behavior==='patrol'?patrolRoute(a,goal):mazeRoute(a,goal);
     if(!nav||!nav.points&&!nav.transition){$imports.PAT.stuck++;if($imports.PAT.stuck%4===1)$imports.PAT.diagnostic='暂不可达，重规划：'+a.scene+' → '+goal.scene;framePath=null;return false;}
+    if(nav.transition&&nav.transition.kind==='stair-portal'){put(nav.transition.to);framePath=null;return false;}
     if(nav.transition){$imports.PAT.transition=nav.transition;$imports.PAT.behavior='transit';framePath=null;return false;}
     /* 保留安全的起点连接；能直达第二个节点才省去栅格中心，避免追逐重规划时反复退步。 */
     var points=nav.points.slice();
@@ -180,7 +181,7 @@ var PatrolWorld=(function(){
       $imports.PAT.respawn=Math.max(0,$imports.PAT.respawn-dt);
       if($imports.PAT.respawn<=3.6&&spawn().scene===(0,$imports.patRoomHere)())$imports.VisualState.patrolFlick=Math.sin($imports.PAT.respawn*10)>.4?.7:0;
       if($imports.PAT.respawn<=1e-7){put(spawn());$imports.PAT.state='walk';$imports.PAT.behavior='return';$imports.PAT.afterBlink=.22;$imports.PAT.blinkCD=TRAVEL_CD;$imports.PAT.near=false;$imports.Mechanics.dirty=true;}
-      else return;
+      return; // This slice was spent respawning; movement starts with the next slice.
     }
     var approaching=approach();
     if(approaching&&approaching.distance<190&&!$imports.PAT.near){$imports.PAT.near=true;$imports.PAT.warning=3.6;}
@@ -239,7 +240,7 @@ var PatrolWorld=(function(){
     $imports.VisualState.patrolRed=threat()?1:0;
     var t=3.6-$imports.PAT.warning,p=t%1.8;
     $imports.VisualState.patrolFlick=near&&$imports.PAT.warning>0&&(p<.15||p>.3&&p<.45||p>.75&&p<1.25)?.7:0;
-    if(near){$imports.PAT.step-=dt;if($imports.PAT.step<=0){$imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;$imports.SFX.patStep(Math.sin(rel)*.9,Math.pow(1-metric.distance/200,1.4),Math.cos(rel)<-.2,$imports.PAT.locked);}}
+    if(near){$imports.PAT.step-=dt;if($imports.PAT.step<=0){$imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;$imports.SFX.patStep(Math.sin(rel)*.9,Math.pow(1-metric.distance/200,1.4),Math.cos(rel)<-.2,$imports.PAT.locked,{m:metric.distance*$imports.U2M,muffled:!same()||!$imports.PatrolNav.los(position(),playerPoint())});}}
   }
   function tick(dt){if(!(dt>0)||$imports.S.dead||$imports.S.screen!=='play')return;if(!$imports.PAT.version)reset();
     var left=dt;while(left>1e-8&&!$imports.S.dead){var n=Math.min(left,.1,$imports.PAT.state==='idle'&&$imports.PAT.respawn>0?$imports.PAT.respawn:Infinity);step(n);left-=n;}
@@ -260,14 +261,14 @@ var PatrolWorld=(function(){
   GameModules.persistent('patrolWorld',{
     reset:reset,save:function(){return $imports.PAT;},
     load:function(d){
-      if(!d||d.version!==1||d.routeVersion!==2){if(d&&d.permanent===true)$imports.PAT.permanent=true;(0,$imports.saveReport)('patrolWorld','旧或非法巡察状态改为固定安全出生');$imports.HIDE.seen=false;return;}
+      if(!d||d.version!==1||![2,3].includes(d.routeVersion)){if(d&&d.permanent===true)$imports.PAT.permanent=true;(0,$imports.saveReport)('patrolWorld','旧或非法巡察状态改为固定安全出生');$imports.HIDE.seen=false;return;}
       var base=Object.assign({},$imports.PAT);Object.keys(base).forEach(function(k){if(d[k]!==undefined)$imports.PAT[k]=d[k];});
       ['x','y','fy','lock','lost','search','respawn','safety','warning','blinkCD','afterBlink','step','stuck'].forEach(function(k){if(!Number.isFinite($imports.PAT[k])){$imports.PAT[k]=base[k];(0,$imports.saveReport)('patrolWorld','非法巡察计时已修复：'+k);}});
       $imports.PAT.permanent=d.permanent===true;$imports.PAT.locked=d.locked===true;$imports.PAT.cited=d.cited===true;$imports.PAT.respawn=(0,$imports.clamp)($imports.PAT.respawn,0,30);$imports.PAT.safety=(0,$imports.clamp)($imports.PAT.safety,0,3.6);$imports.PAT.warning=(0,$imports.clamp)($imports.PAT.warning,0,3.6);$imports.PAT.search=(0,$imports.clamp)($imports.PAT.search,0,3);$imports.PAT.blinkCD=(0,$imports.clamp)($imports.PAT.blinkCD,0,TRAVEL_CD);$imports.PAT.afterBlink=(0,$imports.clamp)($imports.PAT.afterBlink,0,.22);
       if(!['walk','idle'].includes($imports.PAT.state))$imports.PAT.state='walk';
-      function navigable(scene){return scene==='lift_dream'||Object.prototype.hasOwnProperty.call($imports.PATROL_GEOMETRY,scene);}
+      function navigable(scene){return scene==='lift_dream'||!!$imports.StairWorld.config(scene)||Object.prototype.hasOwnProperty.call($imports.PATROL_GEOMETRY,scene);}
       if(!navigable($imports.PAT.room)){put(spawn());$imports.PAT.transition=null;$imports.PAT.safety=3.6;(0,$imports.saveReport)('patrolWorld','非法场景已恢复到固定出生点，追踪策略保留');}
-      if($imports.PAT.room!=='bell1'&&($imports.PAT.room!=='lift_dream'||typeof $imports.VoidMaze==='undefined'))$imports.PAT.fy=0;
+      if(!$imports.StairWorld.config($imports.PAT.room)&&$imports.PAT.room!=='bell1'&&($imports.PAT.room!=='lift_dream'||typeof $imports.VoidMaze==='undefined'))$imports.PAT.fy=0;
       if($imports.PAT.room==='bell1')$imports.PAT.fy=(0,$imports.clamp)($imports.PAT.fy,0,$imports.SPIRAL.topH);
       if(!['patrol','investigate','chase','search','return','transit'].includes($imports.PAT.behavior))$imports.PAT.behavior='patrol';
       $imports.PAT.near=d.near===true;$imports.PAT.lock=(0,$imports.clamp)($imports.PAT.lock,0,1);$imports.PAT.lost=(0,$imports.clamp)($imports.PAT.lost,0,1e6);$imports.PAT.regionSeq=Math.floor((0,$imports.saveNum)(d.regionSeq,0,1e9));
@@ -300,7 +301,10 @@ var PatrolWorld=(function(){
           bp.r>=$imports.SPIRAL.rIn+.29&&bp.r<=$imports.SPIRAL.rOut-.29&&($imports.PAT.fy===$imports.SPIRAL.topH?((0,$imports.spTopOffset)(bp.th)<-$imports.SPIRAL.hole||(0,$imports.spTopOffset)(bp.th)>=-$imports.SPIRAL.arrive):Math.abs((0,$imports.spWrap)(bp.th-$imports.SPIRAL.th0-$imports.PAT.fy/$imports.SPIRAL.turnH*$imports.TAU))<.12);
         if(!bellValid){put(spawn());$imports.PAT.safety=3.6;(0,$imports.saveReport)('patrolWorld','非法旋梯落点已恢复，追踪策略保留');}
       }
-      if(($imports.PAT.room!=='lift_dream'||typeof $imports.VoidMaze==='undefined')&&$imports.PAT.room!=='bell1'&&!$imports.PAT.transition){var p=$imports.PatrolNav.snap($imports.PAT.room,position());if(p&&Math.hypot(p.x-$imports.PAT.x,p.y-$imports.PAT.y)<30){var n=$imports.PatrolNav.grid($imports.PAT.room);if(!$imports.PatrolNav.free($imports.PAT.room,Math.floor(($imports.PAT.x-n.ox)/n.step),Math.floor(($imports.PAT.y-n.oy)/n.step))){put(p);(0,$imports.saveReport)('patrolWorld','巡察嵌入碰撞，恢复到邻近安全点');}}else{put(spawn());$imports.PAT.safety=3.6;(0,$imports.saveReport)('patrolWorld','巡察碰撞落点已修复');}}
+      if(!$imports.StairWorld.config($imports.PAT.room)&&($imports.PAT.room!=='lift_dream'||typeof $imports.VoidMaze==='undefined')&&$imports.PAT.room!=='bell1'&&!$imports.PAT.transition){var p=$imports.PatrolNav.snap($imports.PAT.room,position());if(p&&Math.hypot(p.x-$imports.PAT.x,p.y-$imports.PAT.y)<30){var n=$imports.PatrolNav.grid($imports.PAT.room);if(!$imports.PatrolNav.free($imports.PAT.room,Math.floor(($imports.PAT.x-n.ox)/n.step),Math.floor(($imports.PAT.y-n.oy)/n.step))){put(p);(0,$imports.saveReport)('patrolWorld','巡察嵌入碰撞，恢复到邻近安全点');}}else{put(spawn());$imports.PAT.safety=3.6;(0,$imports.saveReport)('patrolWorld','巡察碰撞落点已修复');}}
+      if(!$imports.PAT.transition&&$imports.StairWorld.config($imports.PAT.room)&&$imports.StairWorld.depth($imports.PAT.room,$imports.PAT.x,$imports.PAT.y,2.7,$imports.PAT.fy)>1e-7){put(spawn());$imports.PAT.safety=3.6;(0,$imports.saveReport)('patrolWorld','无支撑的楼梯落点已恢复，追踪策略保留');}
+      if(d.routeVersion===2){$imports.PAT.routeIndex=1;$imports.PAT.rejoin=true;$imports.PAT.transition=null;}
+      $imports.PAT.routeVersion=3;
       framePath=null;
     }
   });

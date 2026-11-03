@@ -3,26 +3,22 @@
 /* 天赋：唯一的定义源和有限的能力接口（《天赋系统重构》M1）。
    名称、效果、限制、可选资格和试验数值都在这里；各模块只问「能不能 / 用什么方式 / 倍率多少」，不再各写一份 S.talent==='…'。
    S.talent 是当前 ID 的唯一来源；S.talentState 记规则版本、一次性消耗、计数和提醒去重，随存档保存。
-   规则版本：1 = 重构前的效果（旧档沿用）；2 = 本轮试验效果（只给明确开始的新局）。 */
+   规则版本：1 = 重构前效果；2 = 试验效果；3 = 移除铁胃。其余旧天赋保留原规则。 */
 'use strict';
 
-var TALENT_RULES=2;
+var TALENT_RULES=3;
 var TALENT_DEF={
   tech:{n:'科技党',pick:true,role:'随身带着一部旧手机。',does:'开局拥有满电手机。',v2:'',limit:'所有手机耗电永久翻倍；接入网络与服务器谜题仍需完成。',tags:['手机','服务器路线']},
   code:{n:'编程社',pick:true,role:'在电脑社团泡过三年。',
     does:'不带 U 盘也能直接操作网络中心的门禁终端。',
-    v2:'西小门第一次答错时会对照后台核一遍，那一次不扣 SAN（仍然换题）。',
+    v2:'西小门第一次答错时会对照后台核一遍，那一次不会受惊（仍然换题）。',
     limit:'不开机房的门锁，仍须通过实体终端或联网手机完成数据同步；闸机三道题还是要自己答对。',tags:['白名单路线','电子设备']},
   drive:{n:'车感好',pick:true,role:'家里人教过开车，也偷偷学过搭线。',
     does:'没有车钥匙也能在车库试着搭线启动。',
     v2:'搭线要蹲在车门边 4.8 秒（用钥匙 1.6 秒）；有钥匙时优先用钥匙。',
     limit:'车库的黑影照样会靠近，错车照样打不着，之后还要自己把车开出去。',tags:['车辆路线']},
-  stomach:{n:'铁胃',pick:true,role:'吃什么都不闹肚子。',
-    does:'食堂盛宴能多撑一阵（17 秒，普通人 9 秒）。',
-    v2:'正常吃一顿饭多回一些 SAN（+24，普通 +18）。',
-    limit:'只管吃饭和盛宴；药片、士力架不受影响。',tags:['生存','食堂']},
   night:{n:'暗处适应',pick:true,old:'夜视',role:'从小怕黑，后来习惯了。',
-    does:'在车库和熄灯后的室外，环境额外消耗的 SAN 少 45%。',
+    does:'在车库和熄灯后的室外，更能坚持。',
     v2:'',
     limit:'不会让暗处变亮——看不清的还是看不清，手电还是要带；黑影贴近、异象伤害照常。',tags:['车库','夜间']},
   watch:{n:'守时',pick:true,old:'秒表',role:'手腕上一直戴着一块旧表。',
@@ -30,7 +26,7 @@ var TALENT_DEF={
     v2:'开饭、饭点结束和熄灯前会看一眼表，提醒一次。',
     limit:'只显示到分钟；不预告异象，也不替你请假。',tags:['时间']},
   immune:{n:'天生免疫',pick:true,role:'运气一直好得过分。',
-    does:'每局一次：要命的事被绕开，SAN 回到至少 45，违规降到 40 以下。',
+    does:'每局一次：要命的事被绕开，能缓过气来，暂时摆脱过分的注意。',
     v2:'',
     limit:'只有一次，用掉不会再回来；身上有不知名药丸时先用药丸。',tags:['生存']},
   /* 旧档里的六项：名字保留，目前没有额外作用，新局不会出现 */
@@ -46,7 +42,7 @@ Object.keys(TALENT_DEF).forEach(function(id){
   if(d.pick) TAL_KEYS.push(id);
 });
 /* 试验数值（规则版本 2 起生效） */
-var TALENT_CFG={hotwireSec:4.8,keySec:1.6,eatSan:24,feastNormal:9,feastStomach:17,darkMul:0.55,watchLead:20};
+var TALENT_CFG={hotwireSec:4.8,keySec:1.6,feastNormal:9,darkMul:0.55,watchLead:20};
 
 var Talent={
   def:function(id){ return TALENT_DEF[id]||TALENT_DEF.none; },
@@ -57,7 +53,7 @@ var Talent={
     var t=$imports.S.talentState;
     if(!t||typeof t!=='object'||Array.isArray(t)) t=$imports.S.talentState={};
     t.schemaVersion=1;
-    t.rulesVersion=(t.rulesVersion===1||t.rulesVersion===2)?t.rulesVersion:1;
+    t.rulesVersion=([1,2,3].includes(t.rulesVersion))?t.rulesVersion:1;
     t.origin=['selected','random','legacy','repair'].indexOf(t.origin)>=0?t.origin:'legacy';
     if(!t.consumed||typeof t.consumed!=='object'||Array.isArray(t.consumed)) t.consumed={};
     t.consumed={fatalProtection:!!t.consumed.fatalProtection,faceRemedy:!!t.consumed.faceRemedy};
@@ -77,6 +73,7 @@ var Talent={
   normalizeSaved:function(d){
     var id=(d&&typeof d.talent==='string'&&TALENT_DEF[d.talent]&&!TALENT_DEF[d.talent].internal)?d.talent:'none';
     $imports.S.talent=id;
+    if(d&&d.talent==='stomach')(0,$imports.saveReport)('talent','铁胃已移除，旧档按无天赋继续');
     var t=d&&d.talentState;
     if(t&&typeof t==='object'&&!Array.isArray(t)){
       $imports.S.talentState=JSON.parse(JSON.stringify(t));
@@ -106,8 +103,8 @@ var Talent={
   /* 来源级修正量：无匹配返回中性值 */
   modifier:function(source){
     if(source==='danger.garage'||source==='danger.night') return this.has('night')?TALENT_CFG.darkMul:1;
-    if(source==='anomaly.feast') return this.has('stomach')?TALENT_CFG.feastStomach:TALENT_CFG.feastNormal;
-    if(source==='activity.eat') return this.has('stomach')&&this.rules()>=2?TALENT_CFG.eatSan:$imports.SAN_ACTS.eat.san;
+    if(source==='anomaly.feast') return TALENT_CFG.feastNormal;
+    if(source==='activity.eat') return $imports.SAN_ACTS.eat.san;
     return 1;
   },
   /* 一次性保命：只决定能不能挡、消耗了什么；场景恢复和保存由外层结算 */
@@ -122,7 +119,7 @@ var Talent={
   faceRemedy:function(){
     var t=this.state();
     if(!this.has('code')||this.rules()<2||t.consumed.faceRemedy) return false;
-    t.consumed.faceRemedy=true; this.note('编程社：核对后台，免掉了一次答错的 SAN 损失');
+    t.consumed.faceRemedy=true; this.note('编程社：核对后台，挡下了一次答错时的惊吓');
     return true;
   },
   /* 守时（规则 2）：开饭、饭点结束、熄灯前提醒一次。按公开课表的平均流速估提前量，只说「快到了」 */

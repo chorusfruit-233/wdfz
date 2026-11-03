@@ -25,7 +25,7 @@ var Investigation={
   idle:function(){return $imports.S.screen==='play'&&!$imports.S.dead&&!$imports.PRO.on&&!$imports.PAUSE.on&&!$imports.UI.anyOpen()&&!$imports.PC.on&&!$imports.PHONE.on&&!$imports.LESSON.on&&!$imports.HIDE.on&&!$imports.AN.active&&!$imports.PatrolWorld.localChase()&&!$imports.Inspection.pending()&&!($imports.S.intro>0);},
   deskAvailable:function(){
     var R=$imports.INTERIORS.teach1;
-    return this.idle()&&$imports.S.mode==='in'&&$imports.S.room==='teach1'&&Math.hypot($imports.S.x-(R.ox+48.5*9),$imports.S.y-(R.oy+6.5*9))<24&&!this.visible('desk');
+    return this.idle()&&$imports.S.mode==='in'&&$imports.S.room==='teach1'&&Math.hypot($imports.S.x-$imports.ClassroomLayout.anchor(R,$imports.ClassroomLayout.ownSeat).x,$imports.S.y-$imports.ClassroomLayout.anchor(R,$imports.ClassroomLayout.ownSeat).y)<24&&!this.visible('desk');
   },
   openDesk:function(){
     if(!this.deskAvailable())return false;
@@ -70,13 +70,7 @@ var Investigation={
   /* 鄂A·字母 + 四位数：格子坐标决定，同一局、读档前后都一样 */
   carName:function(c,r){return '鄂A·'+'DFHKM'.charAt((c+r)%5)+String(3100+c*31+r);},
   /* 自己教室的讲台（座位所在那一间）：只有它上面压着移交单 */
-  podium:function(){
-    if(this._podium!==undefined)return this._podium;
-    var R=$imports.INTERIORS.teach1,seat=null,best=null,r,c;
-    for(r=0;r<R.rows;r++)for(c=0;c<R.cols;c++)if(R.grid[r][c]==='P')seat=[c,r];
-    if(seat)for(r=0;r<R.rows;r++)for(c=0;c<R.cols;c++)if(R.grid[r][c]==='T'&&r<seat[1]&&(!best||Math.abs(c-seat[0])<Math.abs(best[0]-seat[0])))best=[c,r];
-    return this._podium=best;
-  },
+  podium:function(){return $imports.ClassroomLayout.podium($imports.ClassroomLayout.ownSeat.classId);},
   isPodium:function(R,c,r){var p=this.podium();return !!(p&&R&&R.id==='teach1'&&p[0]===c&&p[1]===r);},
   carKey:function(){
     var cell=(0,$imports.carRightCell)().split(':').map(Number),label=this.carName(cell[0],cell[1]);

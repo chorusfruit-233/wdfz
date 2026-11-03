@@ -795,7 +795,11 @@ var DeathCG=(function(){
       if(typeof $imports.fxVCMat==='function') g.add(new $imports.THREE.Mesh(box,(0,$imports.fxVCMat)()));
       if(typeof $imports.gazeEye==='function'){ var eye=(0,$imports.gazeEye)(0.01,'red'); eye.material.opacity=0.01; g.add(eye); }
       /* 清华水杯的油画材质（水杯死亡、异象都用）：只编着色器，画本身开局十几秒后再画 */
-      if(typeof $imports.cupWarmMat==='function') g.add(new $imports.THREE.Mesh(box,(0,$imports.cupWarmMat)()));
+      if(typeof $imports.cupWarmMat==='function'){
+        var mapped=(0,$imports.cupWarmMat)();g.add(new $imports.THREE.Mesh(box,mapped));
+        /* Turning toward the classroom board during a cinematic can reveal this scene material for the first time. */
+        g.add(new $imports.THREE.Mesh(box,new $imports.THREE.MeshLambertMaterial({map:mapped.map,fog:true})));
+      }
       g.position.copy($imports.GLR.cam.position); g.updateMatrixWorld(true);
       /* 只编这一小组（灯光、雾取当前场景的），不用把整个校园再走一遍 */
       var prev=$imports.GLR.renderer.getRenderTarget();

@@ -50,12 +50,13 @@ var FURN_SOLID={'d':0.78,'T':0.86,'t':0.76,'k':0.82,'f':0.78,'b':0.34,
                 /* 以前这些都能直接穿过去：垃圾桶、终端、洗手台、隔间、服务器、货架 */
                 'X':0.86,'D':0.72,'w':0.80,'B':0.94,'G':0.94,'Q':0.82,'v':0.72,'A':0.80};
 function solidAtInterior(R,wx,wy){
+  if(R.stairwell)return $imports.StairWorld.depth(R.id,wx,wy,0,$imports.S.floorY)>0;
   var t=tileAt(R,wx,wy);
   if(t==='='){
-    if($imports.Classmates.blocked(R.id)) return true;   /* 他们堵在门口 */
+    if($imports.Classmates.blocked(R.id,wx,wy)) return true;   /* 他们堵在门口 */
     return !(0,$imports.doorIsOpen)(R,wx,wy);
   }
-  if((0,$imports.isSolidCh)(t)) return true;
+  if((0,$imports.isSolidCh)(t)&&!(t==='S'&&$imports.StairWorld.doorwayFree(R,wx,wy))) return true;
   /* stairExtra / propExtra 是米；这里以前直接拿世界单位去比（差 9 倍），楼梯井的挡墙等于没有 */
   var lx=(wx-R.ox-R.w*0.5)*$imports.U2M, lz=(wy-R.oy-R.h*0.5)*$imports.U2M, si, sb;
   if(R&&R.stairExtra){
@@ -124,7 +125,10 @@ function moveBy(dx,dy,dt){
     if(ax<1e-7||ax<before-1e-7){$imports.S.x=nx;before=ax;}
     var ay=$imports.Collision.depth($imports.S.x,ny,PRAD);
     if(ay<1e-7||ay<before-1e-7)$imports.S.y=ny;
+    var beforeAngle=$imports.S.ang;$imports.StairWorld.moved();
+    var da=$imports.S.ang-beforeAngle;if(da){var ndx=dx*Math.cos(da)-dy*Math.sin(da);dy=dx*Math.sin(da)+dy*Math.cos(da);dx=ndx;}
     (0,$imports.spiralUpdate)();
+    MR=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null;
     if(MR&&MR.moved)MR.moved();                               /* 房间自己的高度（台阶、坠落）：每一小步之后更新 */
   }
 }
@@ -177,6 +181,25 @@ function entryNear(R,chs){
   }
   return best;
 }
+/* A seated body overlaps its chair. Stand into the adjacent aisle, never through the desk in front. */
+function leaveSeat(){
+  if(!$imports.S.seated)return false;
+  var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null,seat=$imports.S.seat,facing=seat?seat.facing:$imports.S.ang;
+  $imports.S.seated=false;$imports.S.seat=null;
+  if(!R||canStand($imports.S.x,$imports.S.y))return true;
+  var dirs=[facing+Math.PI/2,facing-Math.PI/2,facing+Math.PI];
+  for(var radius=6;radius<=10.5;radius+=.5)for(var k=0;k<dirs.length;k++){
+    var x=$imports.S.x+Math.cos(dirs[k])*radius,y=$imports.S.y+Math.sin(dirs[k])*radius;
+    if(!canStand(x,y))continue;
+    var clear=true;
+    for(var j=1;j<=8;j++){
+      var px=$imports.S.x+(x-$imports.S.x)*j/8,py=$imports.S.y+(y-$imports.S.y)*j/8,ch=tileAt(R,px,py);
+      if(ch==='#'||ch==='S'||ch==='='&&!(0,$imports.doorIsOpen)(R,px,py)){clear=false;break;}
+    }
+    if(clear){$imports.S.x=x;$imports.S.y=y;return true;}
+  }
+  return true;
+}
 function unstick(){
   try{
     if($imports.S.mode!=='in'||$imports.S.seated||$imports.HIDE.on) return;
@@ -214,17 +237,17 @@ function doEnterRoom(id,spawn){
   $imports.S.mode='in'; $imports.S.room=id;
   if(spawn){                                  /* 显式指定落点（开局坐座位） */
     $imports.S.x=spawn.x; $imports.S.y=spawn.y; if(spawn.ang!==undefined) $imports.S.ang=spawn.ang;
-    $imports.S.enterCool=0.9;
+    $imports.S.enterCool=spawn&&spawn.seamless?0:0.9;
   }else if(id==='garage1'){
     $imports.S.x=R.ox+R.w-5*R.tw; $imports.S.y=R.oy+13*R.th;
     $imports.ROAM.on=false; $imports.ROAM.litAcc=0; $imports.S.ang=-$imports.PI/2;
     $imports.S.enterCool=1.4;
   }else{
     $imports.S.x=R.ox+R.w/2; $imports.S.y=R.oy+R.h-2*R.th;
-    $imports.S.enterCool=0.9;
+    $imports.S.enterCool=spawn&&spawn.seamless?0:0.9;
   }
-  if(!(spawn&&spawn.seated)) $imports.S.seated=false;
-  else $imports.S.seated=true;
+  if(!(spawn&&spawn.seated)){$imports.S.seated=false;$imports.S.seat=null;}
+  else{$imports.S.seated=true;var sc=Math.floor(($imports.S.x-R.ox)/R.tw),sr=Math.floor(($imports.S.y-R.oy)/R.th);$imports.S.seat=$imports.ClassroomLayout.seat(R.id,sc,sr);if(!$imports.ClassroomLayout.valid($imports.S.seat,R)){$imports.S.seat=null;$imports.S.seated=false;}}
   if(R.spiral&&spawn&&spawn.spiral) (0,$imports.spiralRestore)(spawn.spiral);
   if(R.onEnter) R.onEnter(spawn||null);                      /* 房间自己的落点和高度：要在防卡位之前定下来 */
   var via=ENTER_VIA; ENTER_VIA=null;
@@ -237,7 +260,7 @@ function doEnterRoom(id,spawn){
   }
   try{ unstick(); }catch(e){}
   $imports.VisualState.hurt=0;
-  showBanner($imports.INTERIORS[id].name);
+  if(!(spawn&&spawn.seamless))showBanner($imports.INTERIORS[id].name);
   (0,$imports.onEnterRoom)(id,!!(spawn&&spawn.restoreVisit));
   (0,$imports.autoSave)();
 }
@@ -251,7 +274,7 @@ function doExitRoom(){
   try{ (0,$imports.anfxClear)(); }catch(e){}
   var o=(0,$imports.objById)(R.host);
   try{ $imports.Dread.enter(null); }catch(e){}
-  $imports.S.mode='out'; $imports.S.room=null; $imports.S.seated=false;
+  $imports.S.mode='out'; $imports.S.room=null; $imports.S.seated=false;$imports.S.seat=null;
   $imports.Classmates.enter();
   try{ (0,$imports.spiralReset)(); }catch(e){}
   showBanner('武大附中 · 校园');
@@ -291,6 +314,7 @@ GameModules.publish("game3d/js/world.js",{
 "ENTER_VIA":{get:function(){return ENTER_VIA;},set:function($value){ENTER_VIA=$value;}},
 "enterRoom":{get:function(){return enterRoom;},set:function($value){enterRoom=$value;}},
 "entryNear":{get:function(){return entryNear;},set:function($value){entryNear=$value;}},
+"leaveSeat":{get:function(){return leaveSeat;},set:function($value){leaveSeat=$value;}},
 "unstick":{get:function(){return unstick;},set:function($value){unstick=$value;}},
 "repairPlayerPlacement":{get:function(){return repairPlayerPlacement;},set:function($value){repairPlayerPlacement=$value;}},
 "doEnterRoom":{get:function(){return doEnterRoom;},set:function($value){doEnterRoom=$value;}},

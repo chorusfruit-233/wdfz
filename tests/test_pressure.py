@@ -64,7 +64,7 @@ class PressureBrowserTest(BrowserCase):
         page.evaluate("""S.san=1;S.stam=100;S.snackT=0;capStamina();window.maxLow=staminaMax();
           S.stam=0;S.tired=true;KEY={};for(let i=0;i<240;i++)updatePlayer(1/60);""")
         self.assert_js(page,'S.stam===maxLow&&S.stam>STAM_BACK&&!S.tired&&S.stam<50')
-        page.evaluate("S.snackT=5;S.stam=2;KEY={w:true,shift:true};updatePlayer(.1)")
+        page.evaluate("S.snackT=5;S.stam=2;KEY={w:true,shift:true};ActiveEffects.begin(.1);updatePlayer(.1)")
         self.assert_js(page,'S.run&&S.stam===2&&S.snackT>0')
         page.evaluate("KEY={};S.san=100;capStamina()")
         self.assert_js(page,'S.stam===2&&staminaMax()===100')
@@ -230,21 +230,25 @@ class PressureBrowserTest(BrowserCase):
     def test_san_is_readable_when_muted_without_a_numeric_bar(self):
         page=self.page(touch=True)
         self.assertEqual(page.locator('#sanbar').count(),0)
-        for value,text in ((100,'呼吸平稳'),(50,'有些恍惚'),(20,'心跳很乱'),(5,'快撑不住了')):
-            page.evaluate('v=>{S.san=v;updateHUD();render(.2)}',value)
-            self.assertEqual(page.locator('#sanfeel').inner_text(),text)
+        self.assertEqual(page.locator('#sanfeel').count(),0)
+        strengths=[]
+        for value in (100,50,20,5):
+            strengths.append(page.evaluate('v=>{S.san=v;SET.vol=0;SET.soundCaptions=0;Sensory.reset();updateHUD();render(.2);return Sensory.view().warp;}',value))
+        self.assertEqual(strengths,sorted(strengths));self.assertGreater(strengths[-1],strengths[0])
+        self.assertTrue(page.locator('#soundcaptions').inner_text())
+        self.assertNotRegex(page.locator('#soundcaptions').inner_text(),r'SAN|[0-9]')
         self.assert_js(page,'Number.isFinite(GLR.postMat.uniforms.uSan.value)')
 
     def test_san_visual_resets_on_new_game_and_matches_loaded_save(self):
         page=self.classroom()
         page.evaluate('S.san=10;render(1)')
-        self.assert_js(page,'GLR.sanSense<.5')
+        self.assert_js(page,'Sensory.state().body>.5')
         page.evaluate("Game.start('hard');running=false;clearIntroTimers();render(0)")
-        self.assert_js(page,'S.san===100&&GLR.sanSense===1&&GLR.postMat.uniforms.uSan.value===1')
+        self.assert_js(page,'S.san===100&&Sensory.state().body===0&&GLR.postMat.uniforms.uWarp.value===0')
         page.evaluate('S.san=25;saveGame();S.san=100;render(10);Game.continue_();running=false;render(0)')
-        self.assert_js(page,'S.san===25&&GLR.sanSense===.25&&GLR.postMat.uniforms.uSan.value===.25')
+        self.assert_js(page,'S.san===25&&Math.abs(Sensory.state().body-35/60)<1e-9')
         page.evaluate('S.san=75;render(.1)')
-        self.assert_js(page,'GLR.sanSense>.25&&GLR.sanSense<.75')
+        self.assert_js(page,'Sensory.state().body>0&&Sensory.state().body<35/60')
 
     def test_lesson_physical_keys_work_with_non_latin_key_labels(self):
         page=self.classroom()

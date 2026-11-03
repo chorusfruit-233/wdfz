@@ -2,7 +2,7 @@
 (function($imports){
 /* 里世界 3D · 结算页（只在通关后）、死亡界面的一行积分、手册地图页的本局探索度
    结局卡上加主按钮「结算」；调试局 / Mod 局只写「不评级」。结算页顶部是该评级的结算画面（grade-screen.js），
-   下面是用时、积分明细（按类别展开到逐条）、SAN（先显示状态档，精确值在展开的明细里）、探索度、本局成就。
+   下面是用时、积分明细（按类别展开到逐条）、生存经历（含身体状态的合并小计，不展示底层数值）、探索度、本局成就。
    通关记录详情、CG 档案馆重看也用这一页（返回按钮不同）。 */
 'use strict';
 var ResultsUI=(function(){
@@ -39,16 +39,16 @@ var ResultsUI=(function(){
   function section(title,html){ return '<section class="rssec"><h4>'+title+'</h4>'+html+'</section>'; }
   function body(m){
     var out=[], cats={};
-    m.score.items.forEach(function(it){ (cats[it.cat]||(cats[it.cat]=[])).push(it); });
-    var rows=$imports.SCORE_CATS.filter(function(c){ return cats[c]; }).map(function(c){
+    var survival=0;
+    m.score.items.forEach(function(it){if(['SAN','应对 · 异象','应对 · 选择','校规与巡察','保命与惊醒'].includes(it.cat)){survival+=it.pts*(it.n||1);return;}(cats[it.cat]||(cats[it.cat]=[])).push(it);});
+    cats['生存经历']=[{text:'这一局的应对与经历',pts:survival,n:1}];
+    var rows=$imports.SCORE_CATS.concat(['生存经历']).filter(function(c){ return cats[c]; }).map(function(c){
       var sum=0; cats[c].forEach(function(it){ sum+=it.pts*it.n; });
       var lis=cats[c].map(function(it){ return '<li><span>'+esc(it.text)+(it.n>1?' ×'+it.n:'')+'</span><b>'+(it.pts*it.n>0?'+':'')+(it.pts*it.n)+'</b></li>'; }).join('');
       return '<details><summary><span>'+c+'</span><b>'+(sum>0?'+':'')+sum+'</b></summary><ul>'+lis+'</ul></details>';
     }).join('');
     var mult=m.score.mult>1?'<p class="rsnote">梦魇难度：合计 '+m.score.sum+' × '+m.score.mult+' = '+m.score.total+'</p>':'';
     out.push(section('积分 '+m.score.total,rows+mult));
-    out.push(section('SAN','<p>通关时：'+$imports.ScoreRules.sanBand(m.san.final)+' · 本局最低：'+$imports.ScoreRules.sanBand(m.san.min)+'</p>'+
-      '<details><summary><span>精确数值</span></summary><p>通关时 '+m.san.final+' · 最低 '+m.san.min+'</p></details>'));
     out.push(section('探索度 '+m.explore.pct+'%','<p>到过的地点 '+m.explore.place+'% · 楼层草图 '+m.explore.sketch+'% · 线索 '+m.explore.clue+'%</p>'));
     var ach=(m.ach&&m.ach.run||[]).map(function(id){ var a=$imports.AchievementRules.get(id); if(!a) return '';
       var fresh=(m.ach.newly||[]).indexOf(id)>=0; return '<span class="t-'+a.t+(fresh?' new':'')+'">'+$imports.ACH_TIERS[a.t].name+' · '+esc(a.n)+(fresh?' · 新':'')+'</span>'; }).join('');

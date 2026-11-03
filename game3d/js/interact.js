@@ -45,7 +45,8 @@ function nearWorld(radius){
       /* 以前只取最近的格子、不看朝向：终端被课桌围着时，按 E 永远在翻课桌。
          现在面前的东西优先，侧面、背后的要近得多才会被选中。 */
       var off=d<4?0:(0,$imports.angDiff)(Math.atan2(wy-$imports.S.y,wx-$imports.S.x),$imports.S.ang);
-      hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d+off*10});
+      if(off>.62&&d>3)continue;
+      hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:off*32+d});
     }
     hits.sort(function(a,b){return a.score-b.score;});
     for(var k=0;k<hits.length;k++) if(tileVisible(R,hits[k])) return hits[k];   /* 隔着墙 / 关着的门的不算 */
@@ -110,9 +111,9 @@ function useFacility(ch,R){
       if(!(0,$imports.addItem)('vial')) return true;
       $imports.RT.vialTaken=1; (0,$imports.os)('我：转子转起来，液体分成两层。最底下沉着一线发光的东西，我把它倒进一支空管里。',4.2);
     }
-    else if(v2<46){ $imports.PlayerStats.changeSan(7,'interact',{max:100}); (0,$imports.os)('我：转子转起来，液体分成两层。白的在上。',3.6); (0,$imports.toast)('离心机 · SAN +7'); }
-    else if(v2<72){ $imports.PlayerStats.changeSan(2,'interact',{max:100}); (0,$imports.os)('我：离心机停了。管子里的东西还在转。',3.6); (0,$imports.toast)('离心机 · SAN +2'); }
-    else { $imports.PlayerStats.changeSan(-(5),'interact',{min:0}); (0,$imports.os)('我：配平没配好，整台机器在桌上跳。',3.6); (0,$imports.toast)('离心机 · SAN −5'); }
+    else if(v2<46){ $imports.PlayerStats.changeSan(7,'interact',{max:100}); (0,$imports.os)('我：转子转起来，液体分成两层。白的在上。',3.6); (0,$imports.toast)('转子停稳了'); }
+    else if(v2<72){ $imports.PlayerStats.changeSan(2,'interact',{max:100}); (0,$imports.os)('我：离心机停了。管子里的东西还在转。',3.6); (0,$imports.toast)('液面平静下来'); }
+    else { $imports.PlayerStats.changeSan(-(5),'interact',{min:0}); (0,$imports.os)('我：配平没配好，整台机器在桌上跳。',3.6); (0,$imports.toast)('机器猛烈震动'); }
     (0,$imports.advanceGameTime)(5);
   }else if(ch==='N'){
     rolled=true;
@@ -125,8 +126,8 @@ function useFacility(ch,R){
       return true;
     }
     var v3=facRoll(100);
-    if(v3<58){ $imports.PlayerStats.changeSan(4,'interact',{max:100}); (0,$imports.os)('我：调焦旋钮是热的。视野里有东西在慢慢游。',3.6); (0,$imports.toast)('显微镜 · SAN +4'); }
-    else { $imports.PlayerStats.changeSan(-(4),'interact',{min:0}); (0,$imports.os)('我：镜片里有一只眼睛。它先眨了一下。',3.8); (0,$imports.toast)('显微镜 · SAN −4'); }
+    if(v3<58){ $imports.PlayerStats.changeSan(4,'interact',{max:100}); (0,$imports.os)('我：调焦旋钮是热的。视野里有东西在慢慢游。',3.6); (0,$imports.toast)('重新看清了'); }
+    else { $imports.PlayerStats.changeSan(-(4),'interact',{min:0}); (0,$imports.os)('我：镜片里有一只眼睛。它先眨了一下。',3.8); (0,$imports.toast)('镜片里有只眼睛'); }
   }else if(ch==='Y'){
     rolled=true;
     (0,$imports.addClue)('geo');
@@ -204,7 +205,7 @@ function doSanAct(key){
     try{ timeSkipCard(a.min, a.n, $imports.S.tsec); }catch(e){}
   }
   (0,$imports.os)(a.msg,3.6);
-  (0,$imports.toast)('SAN +'+gain+($imports.CampusPressure.current().stage>0?' · 校园压力使休息效果减弱':''));
+  (0,$imports.toast)(a.n+' · 休息结束');
   try{ $imports.SFX.click(); }catch(e){}
 }
 var SKIP_T=null;
@@ -247,7 +248,7 @@ function useRoster(timeoutMs){
 /* 准星下面那行「E 做什么」。判断顺序和下面的 tryInteract 一致：改了其中一个，另一个要对照着改。 */
 function canteenHint(h,R){ return (R.host==='canteen'&&!(0,$imports.mealNow)())?((0,$imports.hasItem)('coin')?'投币买饭':'打饭窗口'):'翻找'; }
 var TILE_HINT={
-  '=':function(h,R){ var need=(0,$imports.doorLockNeed)(R,h.c,h.r); return (need&&!(0,$imports.hasItem)(need))?'开门（锁着）':'开门'; },
+  '=':function(h,R){ var need=(0,$imports.doorLockNeed)(R,h.c,h.r); return (need&&!(0,$imports.hasItem)(need))?'开门（锁着）':$imports.OPENDOORS[(0,$imports.doorKeyAt)(R,h.c,h.r)]?'关门':'开门'; },
   O:'出去', H:'躲进柜子',
   M:function(){
     var j=$imports.Investigation.state(),sup=j.supply;
@@ -255,7 +256,7 @@ var TILE_HINT={
     return (0,$imports.hasItem)('coin')?'投币（售货机）':'售货机';
   },
   k:function(h,R){ return R.host==='guard'?'查看值班台':canteenHint(h,R); }, t:canteenHint,
-  L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return $imports.S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return $imports.Investigation.carHint(h);},
+  L:'走连廊', Q:'看服务器终端', S:'沿楼梯行走', J:function(){return $imports.S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return $imports.Investigation.carHint(h);},
   T:function(h,R){
     if($imports.Investigation.isPodium(R,h.c,h.r)) return $imports.Investigation.visible('notice')?'再看移交单':'看移交单';
     return $imports.S.room==='teach1'?'拿粉笔':'看讲台';
@@ -269,6 +270,7 @@ var TILE_HINT={
   n:'用电脑'
 };
 var GATE_HINT=[[$imports.GATE_N,'校门'],[$imports.GATE_W,'西小门'],[$imports.GATE_S,'南门']];
+var InteractionQuery={pick:function(){return nearWorld(24);}};
 function interactHint(){
   if($imports.S.dead||$imports.S.screen!=='play'||$imports.UI.anyOpen()||$imports.PAUSE.on) return '';
   var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null, h=R?nearWorld(24):null;
@@ -278,17 +280,17 @@ function interactHint(){
   if(nearRoster()) return '那张名单';
   if($imports.S.seated) return '站起来';
   var _mh=GameModules.first('hint'); if(_mh) return String(_mh);
-  if(R&&!first&&hit2_seatNear(R)) return '坐下';
+  if(h&&h.ch==='P')return $imports.S.room===$imports.ClassroomLayout.ownSeat.room&&h.c===$imports.MY_COL&&h.r===$imports.MY_ROW?'坐到自己的座位':'坐下（非本人座位）';
   if($imports.S.mode==='in'){
     if(!h) return '';
-    var recovery=sanActFor(R,h);if(recovery)return SAN_ACTS[recovery].n+'（SAN +'+SAN_ACTS[recovery].san+'，'+SAN_ACTS[recovery].min+' 分钟）';
+    var recovery=sanActFor(R,h);if(recovery)return SAN_ACTS[recovery].n+'（'+SAN_ACTS[recovery].min+' 分钟）';
     var th=TILE_HINT[h.ch];
     if(th===undefined) return '翻找';
     return (typeof th==='function')?th(h,R):th;
   }
   var nb=nearWorld(0), act=nb?null:sanActFor(null,null), i;
-  if(nb) return '进入 '+nb.obj.n;
-  if(act) return SAN_ACTS[act].n+'（SAN +'+SAN_ACTS[act].san+'，'+SAN_ACTS[act].min+' 分钟）';
+  if(nb) return nb.obj.id==='garw'?'沿楼梯下到车库':'进入 '+nb.obj.n;
+  if(act) return SAN_ACTS[act].n+'（'+SAN_ACTS[act].min+' 分钟）';
   for(i=0;i<GATE_HINT.length;i++){
     var g=GATE_HINT[i][0];
     if(Math.sqrt((0,$imports.dist2)(g.x*$imports.SC,g.y*$imports.SC,$imports.S.x,$imports.S.y))<70) return GATE_HINT[i][1];
@@ -298,7 +300,7 @@ function interactHint(){
 function tryInteract(){
   if($imports.S.screen!=='play'||$imports.S.dead||$imports.PAUSE.on||$imports.UI.anyOpen()) return;
   if(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active())return;
-  if($imports.S.seated){ $imports.S.seated=false; (0,$imports.os)('我站了起来。',1.6); $imports.S.enterCool=0.4; return; }
+  if($imports.S.seated){ (0,$imports.leaveSeat)(); (0,$imports.os)('我站了起来。',1.6); $imports.S.enterCool=0.4; return; }
   if($imports.HIDE.on){ (0,$imports.hideOut)(); return; }
   if(nearRoster()){ useRoster(); return; }
   if(GameModules.first('interact')) return;          /* 模块的交互（虚空迷宫的出口、地上的粉笔）先于默认 */
@@ -307,6 +309,7 @@ function tryInteract(){
     var nb=nearWorld(0);
     if(nb){
       var id=nb.obj.id;
+      if(id==='garw'){(0,$imports.os)('我：入口就在前面，沿台阶走下去。',2);return;}
       var map={teach:'teach1',admin:'admin1',lab:'lab1',canteen:'canteen1',
         dormN:'dorm1',dormS:'dorm4',garage:'garage1',garw:'garage1',trash:'trash1',
         guard:'guard1',gear:'gear1',bell:'bell1'};
@@ -331,7 +334,7 @@ function tryInteract(){
   var _sa=sanActFor(R,null), _hit0=nearWorld(24);
   if(_hit0&&FAC_CD[_hit0.ch]!==undefined){ if(useFacility(_hit0.ch,R)) return; }
   if(_hit0){ var _k=sanActFor(R,_hit0); if(_k){ doSanAct(_k); return; } }
-  if(hit2_seatNear(R)){ sitDown(); return; }
+  if(_hit0&&_hit0.ch==='P'){ sitDown(_hit0); return; }
   var hit=nearWorld(24);
   if(!hit){ (0,$imports.os)('我：这里什么都没有。',1.8); return; }
   var ch=hit.ch;
@@ -347,8 +350,11 @@ function tryInteract(){
       $imports.OPENDOORS[(0,$imports.doorKeyAt)(R,hit.c,hit.r)]=1;
       $imports.SFX.door(); (0,$imports.os)((0,$imports.pick)(['我：门开了。','我：门开了。合页的声音拖得很长。','我：门开了。里面比外面冷。']),1.8); $imports.S.enterCool=0.35;
       (0,$imports.roomDoorRefresh)(R,hit.c,hit.r);                   /* 只重建这一扇门（以前整层楼重建，同学还会重新随机坐） */
+      GameModules.emit('doorAction',{room:R.id,c:hit.c,r:hit.r,x:hit.x,y:hit.y,open:true});
     }else{
-      (0,$imports.os)('我：门开着。',1.4);
+      if(Math.abs($imports.S.x-hit.x)<R.tw/2+$imports.PRAD&&Math.abs($imports.S.y-hit.y)<R.th/2+$imports.PRAD){(0,$imports.os)('我：先让开门口。',1.4);return;}
+      delete $imports.OPENDOORS[(0,$imports.doorKeyAt)(R,hit.c,hit.r)];$imports.SFX.door();(0,$imports.roomDoorRefresh)(R,hit.c,hit.r);
+      GameModules.emit('doorAction',{room:R.id,c:hit.c,r:hit.r,x:hit.x,y:hit.y,open:false});
     }
     return;
   }
@@ -469,40 +475,14 @@ function useAltar(){
   $imports.PlayerStats.changeSan(-(2),'interact',{min:0});
   (0,$imports.os)('我：照片里那个人的手，好像比刚才抬高了一点。',3.2);
 }
-function hit2_seatNear(R){
-  if(!R) return false;
-  var c=Math.floor(($imports.S.x-R.ox)/R.tw), r=Math.floor(($imports.S.y-R.oy)/R.th);
-  var dc, dr;
-  for(dr=-1;dr<=1;dr++){
-    for(dc=-1;dc<=1;dc++){
-      var rr=r+dr, cc=c+dc;
-      if(rr<0||cc<0||rr>=R.rows||cc>=R.cols) continue;
-      if(R.grid[rr][cc]==='P') return true;
-    }
-  }
-  return false;
-}
-function sitDown(){
-  var R=$imports.INTERIORS[$imports.S.room];
-  if(!R) return;
-  var myCol=$imports.MY_COL, myRow=$imports.MY_ROW;
-  var col=Math.floor(($imports.S.x-R.ox)/R.tw), row=Math.floor(($imports.S.y-R.oy)/R.th);
-  var isMine=($imports.S.room==='teach1'&&Math.abs(col-myCol)<=1&&Math.abs(row-myRow)<=1);
-  /* 坐到旁边那把椅子上（椅子现在有碰撞，人站不到椅子格里去了） */
-  var best=null, bd=1e9, dr, dc;
-  for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++){
-    var rr=row+dr, cc=col+dc;
-    if(rr<0||cc<0||rr>=R.rows||cc>=R.cols||R.grid[rr][cc]!=='P') continue;
-    var px=R.ox+(cc+0.5)*R.tw, py=R.oy+(rr+0.5)*R.th, d=Math.hypot(px-$imports.S.x,py-$imports.S.y);
-    if(d<bd){ bd=d; best=[px,py]; }
-  }
-  if(best){ $imports.S.x=best[0]; $imports.S.y=best[1]; $imports.S.ang=-$imports.PI/2; }
-  else{ $imports.S.x=R.ox+(col+0.5)*R.tw; $imports.S.y=R.oy+(row+0.5)*R.th; }
-  $imports.S.seated=true; $imports.S.enterCool=0.5;
+function hit2_seatNear(R){var h=InteractionQuery.pick();return !!(R&&h&&h.ch==='P');}
+function sitDown(hit){
+  var R=$imports.INTERIORS[$imports.S.room],h=hit||InteractionQuery.pick();
+  if(!R||!h||h.ch!=='P'||!tileVisible(R,h))return false;
+  var seat=$imports.ClassroomLayout.seat(R.id,h.c,h.r),p=$imports.ClassroomLayout.anchor(R,seat);
+  $imports.S.x=p.x;$imports.S.y=p.y;$imports.S.ang=p.ang;$imports.S.seated=true;$imports.S.seat=seat;$imports.S.enterCool=.5;
   $imports.VisualState.camera.eyeH=$imports.EYE;
-  if(isMine) (0,$imports.os)('我坐下了。这是我自己的位子。',2.4);
-  else (0,$imports.os)('我坐下了。这个位子不是我的。',2.4);
-  $imports.SFX.click();
+  (0,$imports.os)(seat.seatId===$imports.ClassroomLayout.ownSeat.seatId?'我坐下了。这是我自己的位子。':'我坐下了。这个位子不是我的。',2.4);$imports.SFX.click();return true;
 }
 function spawnAtTile(id,r2,c2){
   var R=$imports.INTERIORS[id];
@@ -556,6 +536,8 @@ function floorIdOf(host,f){
 }
 function topFloorOf(host){ return host==='teach'?6:(host==='admin'||host==='lab')?5:(host==='dormN'||host==='dormS')?3:1; }
 function stairGo(){
+  if($imports.STAIR_LAYOUT.some(function(s){return s.rooms.includes($imports.S.room);})||$imports.StairWorld.here()){(0,$imports.os)('沿台阶走到下一层，门外就是走廊。',2);return;}
+
   var R=$imports.INTERIORS[$imports.S.room];
   if(!R){ (0,$imports.exitRoom)(); return; }
   var f=R.floor, host=R.host, top=topFloorOf(host);
@@ -734,6 +716,7 @@ GameModules.publish("game3d/js/interact.js",{
 "canteenHint":{get:function(){return canteenHint;},set:function($value){canteenHint=$value;}},
 "TILE_HINT":{get:function(){return TILE_HINT;},set:function($value){TILE_HINT=$value;}},
 "GATE_HINT":{get:function(){return GATE_HINT;},set:function($value){GATE_HINT=$value;}},
+"InteractionQuery":{get:function(){return InteractionQuery;},set:function($value){InteractionQuery=$value;}},
 "interactHint":{get:function(){return interactHint;},set:function($value){interactHint=$value;}},
 "tryInteract":{get:function(){return tryInteract;},set:function($value){tryInteract=$value;}},
 "guardSupplies":{get:function(){return guardSupplies;},set:function($value){guardSupplies=$value;}},

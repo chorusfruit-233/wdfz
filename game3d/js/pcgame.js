@@ -11,7 +11,7 @@ var PCGAME={
     PC.body=[{x:8,y:8}]; PC.dir={x:1,y:0}; PC.want=null; PC.food=this.rf();
     var el=document.getElementById('pcgame'); if(el) el.style.display='flex';
     var f=document.getElementById('pcf');
-    if(f) f.textContent=$imports.IS_TOUCH?'方向键或在画面上滑动转向 · 右上角退出 · 得分越高 SAN 越多':'WASD / 方向键转向 · Esc 退出 · 得分越高 SAN 越多';
+    if(f) f.textContent=$imports.IS_TOUCH?'方向键或在画面上滑动转向 · 右上角退出 · 玩一会儿，缓口气':'WASD / 方向键转向 · Esc 退出 · 玩一会儿，缓口气';
     this.draw();
     try{ $imports.SFX.click(); }catch(e){}
   },
@@ -25,7 +25,7 @@ var PCGAME={
   stop:function(){
     (0,$imports.gameFact)('snake',{score:PC.score});
     var gain=$imports.CampusPressure.restGain(Math.min(20, 6+PC.score*2));
-    if(PC.score>0){ $imports.PlayerStats.changeSan(gain,'pcgame',{max:100}); (0,$imports.toast)('SAN +'+gain+'（得分 '+PC.score+'）'); }
+    if(PC.score>0){ $imports.PlayerStats.changeSan(gain,'pcgame',{max:100}); (0,$imports.toast)('游戏结束 · 得分 '+PC.score); }
     PC.on=false;
     var el=document.getElementById('pcgame'); if(el) el.style.display='none';
     /* 以前这里再加 10*60 游戏分钟（整整 10 小时）。开电脑时已经按活动扣过时间，退出不再跳 */

@@ -54,8 +54,9 @@ FURN.d=function(c,x,y,cx,cz){
     return;
   }
   c.R.stats.desk++; c.R.stats.chair++;
-  var dz=cz-0.10;
-  K.frame(cx,dz,0);
+  var west=c.R.host==='teach',rot=west?Math.PI/2:0;
+  var dx=cx-(west?.10:0),dz=cz-(west?0:.10);
+  K.frame(dx,dz,rot);
   K.asset('desk_student',0,0,0,0);                                               /* 木纹桌面、钢框、可调高的腿、铁皮桌斗、挂钩 */
   /* 桌面：高中生的桌子——前沿一排书立着（书立夹着），一摞练习册、卷子、水杯、笔 */
   var hh=(0,$imports.hash2)(x*3+7,y*5+11), h2=(0,$imports.hash2)(y*7+3,x*11+5), top=0.7575;
@@ -65,18 +66,19 @@ FURN.d=function(c,x,y,cx,cz){
   if(h2<0.35) (0,$imports.propBottle)(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
   if(hh<0.30) K.rod('plastic',-0.2,top+0.006,0.05,-0.05,top+0.006,0.08,0.006,0.006,6,0x2a4a8a);  /* 一支笔 */
   K.unframe();
-  chairModel(K,cx,cz+0.30,0,0.44);
+  chairModel(K,cx+(west?.30:0),cz+(west?0:.30),rot,0.44);
   c.ao(cx,cz,0.96,0.70,1.0);
 };
 FURN.P=function(c,x,y,cx,cz){
   if(c.R.stats) c.R.stats.seat++;
-  chairModel(c.K,cx,cz,0,0.46);
+  chairModel(c.K,cx,cz,c.R.host==='teach'?Math.PI/2:0,0.46);
+  if(c.R.host==='teach')c.K.asset('desk_student',cx-.65,0,cz,Math.PI/2);
   c.ao(cx,cz,0.5,0.5,0.7);
 };
 /* 讲台：木柜体（正面朝学生），老师那面开口；台上教案、粉笔盒、板擦 */
 FURN.T=function(c,x,y,cx,cz){
   c.ao(cx,cz,0.9,0.8,0.9);
-  c.K.asset('podium',cx,0,cz,0);
+  c.K.asset('podium',cx,0,cz,c.R.host==='teach'?Math.PI/2:0);
 };
 /* ---- 车库里的车（三厢轿车，车头朝 +x），车尾两块挡车器 ---- */
 var CAR_COLS=[0x39424a,0x4a3a36,0x2e3a44,0x5a5e62,0x30343a];

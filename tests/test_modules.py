@@ -163,13 +163,13 @@ class ModuleBrowserTest(BrowserCase):
         self.assertTrue(result['chalk'])
 
     def test_feature_modules_can_be_removed_from_the_manifest(self):
-        """从清单里拿掉虚空迷宫（连同它的彩蛋）、粉笔记号、Mod 管理、隐藏天赋五个功能模块，游戏照常启动；电梯退回原来的白色空间。"""
+        """从清单里拿掉虚空迷宫（连同它的彩蛋）、粉笔记号、Mod 管理、隐藏天赋六个功能模块（含感官模块），游戏照常启动；电梯退回原来的白色空间。"""
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)
         context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));")
         src = (ROOT / 'game3d/manifest.js').read_text(encoding='utf-8')
         src = src.replace("].forEach(function(m){ GameModules.define(m); });",
-                          "].filter(function(m){ return ['void-maze','void-maze-eggs','chalk-marks','mod-manager','wuda-kid'].indexOf(m.id)<0; }).forEach(function(m){ GameModules.define(m); });")
+                          "].filter(function(m){ return ['void-maze','void-maze-eggs','chalk-marks','mod-manager','wuda-kid','sensory'].indexOf(m.id)<0; }).forEach(function(m){ GameModules.define(m); });")
         context.route('**/game3d/manifest.js', lambda route: route.fulfill(status=200, content_type='text/javascript', body=src))
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
@@ -188,7 +188,7 @@ class ModuleBrowserTest(BrowserCase):
           S.bag.push('chalk');useItem('chalk');
           return {n,bad,maze:typeof VoidMaze,chalk:typeof ChalkMarks,inside,old,frozen,patrol,patrolReload,back:S.room,panel:!!document.getElementById('modTools'),
             sub:document.getElementById('sub').innerText}}""")
-        self.assertEqual(result['n'], len(manifest()) - 5)          # 清单里的模块数减去拿掉的五个
+        self.assertEqual(result['n'], len(manifest()) - 6)          # 清单里的模块数减去拿掉的五个
         self.assertEqual(result['bad'], 0)
         self.assertEqual((result['maze'], result['chalk']), ('undefined', 'undefined'))
         self.assertEqual(result['inside'], 'lift_dream')

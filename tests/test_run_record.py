@@ -205,7 +205,7 @@ class RunRecordTest(BrowserCase):
           S.clues={bell:1,stall:1,beast:1};gameFact('chalk',{});RunScore.state().zones.field=1;
           const b=RunScore.explore();
           return {rooms:t.rooms.length,hidden:t.rooms.indexOf('lift_dream'),zones:t.zones.length,a,b}}""")
-        self.assertEqual(r['rooms'], 33)
+        self.assertEqual(r['rooms'], 40)  # 33 existing explorable rooms plus seven stairwells
         self.assertEqual(r['hidden'], -1)                                 # 隐藏场景不进分母
         self.assertGreaterEqual(r['zones'], 10)
         self.assertGreater(r['b']['place'], r['a']['place'])

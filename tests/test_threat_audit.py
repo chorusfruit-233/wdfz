@@ -39,17 +39,16 @@ class ThreatAuditTest(BrowserCase):
                   Settings.vol(0);Settings.q(0);
                   const out=[];
                   for(const san of [90,50,20,5]){
-                    S.san=san;updateHUD();render(0.05);
-                    out.push({text:document.getElementById('sanfeel').textContent,body:document.body.dataset.san,
-                      sense:+GLR.postMat.uniforms.uSan.value.toFixed(2),stam:staminaMax()});
+                    S.san=san;Sensory.reset();updateHUD();render(0.05);
+                    out.push({labels:!!document.getElementById('sanfeel')||!!document.body.dataset.san,
+                      sense:+GLR.postMat.uniforms.uWarp.value.toFixed(2),stam:staminaMax()});
                   }
                   return out;
                 }""")
-                texts = [r['text'] for r in result]
-                self.assertEqual(len(set(texts)), 4)
-                self.assertEqual([r['body'] for r in result], ['0', '1', '2', '3'])
+                self.assertFalse(any(r['labels'] for r in result))
+                self.assertEqual(len(set(r['sense'] for r in result)),4)
                 self.assertTrue(all(r['stam'] >= 40 for r in result))      # 最低上限也高于喘匀的门槛 35
-                self.assertGreaterEqual(result[0]['sense'], result[-1]['sense'])
+                self.assertLess(result[0]['sense'], result[-1]['sense'])
 
     def test_sanity_drain_is_frame_rate_independent(self):
         page = self.page()

@@ -58,11 +58,7 @@ function hudEl(id){
 }
 
 function updateHUD(){
-  $imports.CampusPressure.paint();
-  var feel=hudEl('sanfeel'),stage=(0,$imports.sanityStage)();
-  if(feel&&feel.dataset.stage!==String(stage)){feel.dataset.stage=stage;feel.textContent=$imports.SAN_FEEL[stage];}
-  /* 界面也跟着身体状态变（状态条的红线跳得越来越急）；样式里关掉镜头晃动时不动 */
-  if(document.body.dataset.san!==String(stage))document.body.dataset.san=stage;
+
   var _ct=GameModules.first('clockText');                     /* 模块可以接管时间显示（虚空迷宫里是「???」） */
   hudEl('clock').textContent=_ct!==undefined?String(_ct):((0,$imports.hasClock)()?(0,$imports.fmtClock)($imports.S.tsec):'时间不明');
   var sc=hudEl('secclock');
@@ -75,11 +71,11 @@ function updateHUD(){
   if(hudEl('place').textContent!==_pl) hudEl('place').textContent=_pl;
   var p=(0,$imports.periodAt)($imports.S.tsec), pe=hudEl('period'), leave=(0,$imports.onLeave)(), examing=$imports.S.exam&&p[3]==='教室';
   var outing=$imports.SchoolDay.excused();
-  pe.textContent=leave?('请假中 · 还剩 '+(0,$imports.leaveLeft)()+' 分钟'):(examing?('考试 · '+p[2]):
+  pe.textContent=leave?('请假中 · 剩余 '+(0,$imports.leaveLeft)()+' 游戏分钟'):(examing?('考试 · '+p[2]):
     outing?('外出登记 · '+$imports.SchoolDay.returnLabel()):(p[2]+' · '+(p[3]==='教室'||p[3]==='操场'?'可探索，留意巡察':(0,$imports.needWhere)($imports.S.tsec))));
   if($imports.CarChase.active())pe.textContent='驾驶逃脱';
-  if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.active())pe.textContent='学生会检查 · 教室';
-  else if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.upcoming())pe.textContent='集合将至 · 请回教室';
+  if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.active())pe.textContent='学生会检查 · 坐稳自己的座位';
+  else if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.upcoming())pe.textContent=leave?'请假中 · 本次免检':'集合将至 · 请坐回自己的座位';
   if($imports.PAT.permanent)pe.textContent+=' · 持续追踪';
   var frozen=(0,$imports.roomClockFrozen)();
   if(frozen)pe.textContent='???';                             /* 时钟冻结的地方（虚空迷宫）：课表也没有意义 */

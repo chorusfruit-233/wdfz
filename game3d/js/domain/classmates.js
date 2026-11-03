@@ -1,7 +1,7 @@
 /* 教室占座与堵门的空间规则。网格/坐标输入，普通数据输出，无模型依赖。 */
 'use strict';
 var ClassmateRules=(function(){
-  function eligible(room){return !!(room&&room.host==='teach'&&room.floor>=1&&room.floor<=5);}
+  function eligible(room){return !!(room&&!room.stairwell&&room.host==='teach'&&room.floor>=1&&room.floor<=5);}
   function layout(room,seed){
     var seats=[],occupied={},h=2166136261,source=String(seed)+'|'+room.id;
     for(var i=0;i<source.length;i++){h^=source.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}

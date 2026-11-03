@@ -47,7 +47,7 @@ var PilotCyber=(function(){
   }
   async function run(p){
     const {sleep,chapter,event,stop,tap,alive,defense,go,nearest,floor,choose,bagAction,finishEnding}=p;
-    const chair=()=>{const R=INTERIORS.teach1;return {x:R.ox+48.5*R.tw,y:R.oy+6.5*R.th};};
+    const chair=()=>ClassroomLayout.anchor(INTERIORS.teach1,ClassroomLayout.ownSeat);
     function closePhone(){if(PHONE.on){document.querySelector('#phone .phx').click();event('input',{phone:'close'});}}
     async function phone(app){
       if(!PHONE.on)await bagAction('phone','使用',false);

@@ -39,7 +39,7 @@ function buildRoomRecipe(R,K,view){
   (function(){
     var cx2,cy2;
     for(cy2=0;cy2<H;cy2++) for(cx2=0;cx2<W;cx2++){
-      if(R.grid[cy2][cx2]!=='S') continue;
+      if(R.grid[cy2][cx2]!=='S'||$imports.STAIR_LAYOUT.some(function(s){return s.rooms.includes(R.id);})) continue;
       if((cx2>0&&R.grid[cy2][cx2-1]==='S')||(cy2>0&&R.grid[cy2-1][cx2]==='S')) continue;
       var si=(0,$imports.stairInfo)(R,cx2,cy2);
       if(si.block!==-1) continue;
@@ -201,6 +201,7 @@ function footMerge(L){
   return out;
 }
 function roomStairs(c,x,y,cx,cz){
+  if($imports.STAIR_LAYOUT.some(function(s){return s.rooms.includes(c.R.id);}))return;
   var K=c.K, R=c.R, tw=c.tw, th=c.th;
   if((x>0&&R.grid[y][x-1]==='S')||(y>0&&R.grid[y-1][x]==='S')) return;   /* 一组只建一次 */
   var sInfo=(0,$imports.stairInfo)(R,x,y);
@@ -385,16 +386,8 @@ function roomDecor(c,isRoof){
     /* 教室：黑板、高窗、后墙的钟和黑板报、讲台上方的广播 */
     for(i=0;i<$imports.CLS_SPAN.length;i++){
       var c0=$imports.CLS_SPAN[i][0], c1b=$imports.CLS_SPAN[i][1];
-      var bcx=(CX(c0)+CX(c1b))/2, bwid=(c1b-c0+1)*tw*0.72, wz=-halfH+tw;
-      K.asset('blackboard',bcx,1.70,wz,0);                                                          /* 黑板：铝框、板面、粉笔槽、粉笔、板擦 */
-      var hwid=(c1b-c0+1)*tw*0.82;
-      K.asset('window_high',bcx,2.63,wz,0);                                                         /* 高窗 */
-      K.noteShaft(bcx,wz,0,1,hwid,2.40,2.86);
-      K.asset('speaker_box',bcx+bwid/2+0.35,2.55,wz+0.01,0);                                        /* 广播喇叭 */
-      var zS=zWallS-0.04;                                                                           /* 后墙内表面 */
-      K.asset('clock_wall',bcx,2.58,zS+0.02,Math.PI);                                               /* 钟 */
-      K.asset('board_news',CX(c0)+1.25,1.55,zWallS,Math.PI);                                        /* 黑板报，让开门 */
-      classroomExtras(c,i,c0,c1b,bcx,wz,zWallS);
+      classroomWest(c,i,c0,c1b);
+
     }
     corridorExtras(c,zWallS,zWallN);
   }
@@ -582,6 +575,24 @@ function officePlants(c){
 
 function viewDetail(c){return !!c.view.decay;}
 
+function classroomWest(c,i,c0,c1){
+  var K=c.K,CX=c.CX,CZ=c.CZ,xw=CX(c0)-.5,xe=CX(c1)+.5,zc=CZ(7),mid=(xw+xe)/2;
+  K.asset('blackboard',xw,1.70,zc,Math.PI/2);
+  K.asset('speaker_box',xw+.02,2.55,CZ(11),Math.PI/2);
+  if(c.view.board){var b=c.view.board(xw+.082,1.70,zc,4.8,.98,(c.R.floor||1)*7+i);b.rotation.y=Math.PI/2;c.meshes.push(b);}
+  K.asset('window_high',mid,2.63,CZ(0)+.5,0);K.noteShaft(mid,CZ(0)+.5,0,1,5.7,2.4,2.86);
+  K.asset('clock_wall',xe-.02,2.58,zc,-Math.PI/2);
+  K.asset('board_news',xe,1.55,CZ(3),-Math.PI/2);
+  (0,$imports.propCeilFan)(K,mid,CZ(4),$imports.WALLH,i*3+1);(0,$imports.propCeilFan)(K,mid,CZ(10),$imports.WALLH,i*3+2);
+  (0,$imports.propProjector)(K,mid,CZ(7),$imports.WALLH,Math.PI/2);(0,$imports.propSmoke)(K,mid+.8,CZ(8),$imports.WALLH);
+  (0,$imports.propACCabinet)(K,xw+.2,CZ(1),Math.PI/2);c.solid(xw+.35,CZ(1),.32,.52);
+  (0,$imports.propCleaning)(K,xe-.22,CZ(13.5),-Math.PI/2);c.solid(xe-.22,CZ(13.5),.44,1);
+  K.asset('bin_classroom',xe-.3,0,CZ(1),0);c.solid(xe-.3,CZ(1),.42,.42);
+  (0,$imports.propSwitch)(K,CX(c0+2),1.35,CZ(15)-.5,Math.PI,3);
+  (0,$imports.propSocket)(K,xw+.02,.30,CZ(3),Math.PI/2);
+  (0,$imports.propFrame)(K,mid,1.75,CZ(15)-.5,Math.PI,.62,.82,0xe8d8a8,0x3a3028,i);
+}
+
 /* @module-exports */
 GameModules.publish("game3d/js/content/room-recipe.js",{
 "roomTheme":{get:function(){return roomTheme;},set:function($value){roomTheme=$value;}},
@@ -598,6 +609,7 @@ GameModules.publish("game3d/js/content/room-recipe.js",{
 "corridorExtras":{get:function(){return corridorExtras;},set:function($value){corridorExtras=$value;}},
 "toiletTiles":{get:function(){return toiletTiles;},set:function($value){toiletTiles=$value;}},
 "officePlants":{get:function(){return officePlants;},set:function($value){officePlants=$value;}},
-"viewDetail":{get:function(){return viewDetail;},set:function($value){viewDetail=$value;}}
+"viewDetail":{get:function(){return viewDetail;},set:function($value){viewDetail=$value;}},
+"classroomWest":{get:function(){return classroomWest;},set:function($value){classroomWest=$value;}}
 });
 })(GameModules.imports("game3d/js/content/room-recipe.js"));

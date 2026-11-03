@@ -394,8 +394,8 @@ function initInput(){
 
 function updatePlayer(dt){
   if($imports.S.dead||$imports.S.screen!=='play'||($imports.S.intro||0)>0)return;
-  var snack=($imports.S.snackT||0)>0;
-  if(snack) $imports.S.snackT=Math.max(0,$imports.S.snackT-dt);
+  var snack=$imports.ActiveEffects.snackSeconds>0;
+  var boosted=Math.min(dt,$imports.ActiveEffects.snackSeconds);
   (0,$imports.capStamina)();
   if($imports.HIDE.on){ $imports.S.moving=false; $imports.S.run=false; (0,$imports.restoreStamina)(11*dt); (0,$imports.syncCamera)(dt); return; }   /* 躲在柜子里：不能动 */
   var locked=!playerInputAllowed(),fw=0,sd=0;
@@ -415,10 +415,12 @@ function updatePlayer(dt){
   else if($imports.S.stam>=STAM_BACK)$imports.S.tired=false;
   $imports.S.run=wantRun&&(!$imports.S.tired||snack)&&(fw!==0||sd!==0);
   var mag=Math.hypot(fw,sd);
-  if($imports.S.seated&&mag>.08)$imports.S.seated=false;
+  if($imports.S.seated&&mag>.08)(0,$imports.leaveSeat)();
   $imports.S.moving=mag>.08&&!$imports.S.seated;
   if($imports.S.moving){
     var spd=$imports.S.run?SPD_RUN:SPD_WALK;
+    var runAfter=wantRun&&!$imports.S.tired;
+    if(snack&&dt>0)spd=((wantRun?SPD_RUN:SPD_WALK)*boosted*1.5+(runAfter?SPD_RUN:SPD_WALK)*(dt-boosted))/dt;
     if(typeof $imports.DEV!=='undefined'&&$imports.DEV.fast)spd*=2.6;
     if(mag>1){fw/=mag;sd/=mag;}
     var ca=Math.cos($imports.S.ang),sa=Math.sin($imports.S.ang),x=$imports.S.x,y=$imports.S.y;
@@ -427,9 +429,12 @@ function updatePlayer(dt){
   }
   if($imports.S.moving&&!$imports.S.seated){
     $imports.S.stepT=($imports.S.stepT||0)-dt;
-    if($imports.S.stepT<=0){$imports.S.stepT=$imports.S.run?.30:.46;$imports.SFX.step();}
+    if($imports.S.stepT<=0){$imports.S.stepT=($imports.S.run?.30:.46)/(snack?1.5:1);$imports.SFX.step();}
   }else $imports.S.stepT=0;
-  if($imports.S.run&&$imports.S.moving){if(!snack)$imports.PlayerStats.changeStamina(-17*dt,'running',{min:0});}
+  if($imports.S.run&&$imports.S.moving){
+    if(!$imports.S.tired)$imports.PlayerStats.changeStamina(-17*Math.max(0,dt-boosted),'running',{min:0});
+    else (0,$imports.restoreStamina)(11*Math.max(0,dt-boosted));
+  }
   else (0,$imports.restoreStamina)(11*dt);
   if($imports.S.enterCool>0)$imports.S.enterCool-=dt;
   (0,$imports.syncCamera)(dt);
