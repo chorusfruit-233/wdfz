@@ -1,6 +1,6 @@
 /* @module-capsule */
 (function($imports){
-/* 里世界 3D · 死亡档案室
+/* 里世界 3D · 死亡档案室（2026-11-03 起界面上叫「CG 档案馆」：死亡、结局与开场、结算画面三节；代码里的名字不变）
    每一种真实死因第一次发生时，永久解锁一份档案；同一种再死只记次数，不再多解锁。
    - 稳定 ID 按真实死因（kill 的 source）定，不按演出：同样用「伸手」演出的巡察者、车库黑影、车门、驾驶是四份不同的档案；
      没有 source 的（假正常里笑出声、三条看着像出口的「主意」）在 story.js 里补了明确的 source。
@@ -57,6 +57,10 @@ ARCHIVE_CUTS.forEach(function(e,i){ e.no=i+1; });
 /* 档案室里全部条目（死亡 + 演出），按 ID 查 */
 var ARCHIVE_BY_ID={};
 DEATH_ARCHIVE.concat(ARCHIVE_CUTS).forEach(function(e){ ARCHIVE_BY_ID[e.id]=e; });
+/* 模块登记进来的节（2026-11-03，例如通关记录模块的「结算画面」）：
+   {id, title, ids(), isOpen(id,d), count(d), cards(d), replay(id)}；条目 ID 用 x. 开头，「全部解锁」同样写 granted。
+   模块拿掉时这一节不出现，档案馆其余部分照常 */
+var ARCHIVE_SECTIONS=[];
 /* 回放舞台：户外用操场边一块空地，室内用各房间的默认入口 */
 var DEATH_STAGE_OUT={x:1580,y:1800,ang:-$imports.PI/2};
 /* 当前这次 kill 的来源：调试面板的「实际死亡」把它设成 debug */
@@ -74,7 +78,7 @@ var DeathArchive={
       var src=d[k]; if(!src||typeof src!=='object') return;
       Object.keys(src).forEach(function(id){ if(DEATH_ARCHIVE_BY_ID[id]) out[k][id]=src[id]; });   /* 未知 ID 丢掉，不改成别的死法 */
     });
-    if(d.granted&&typeof d.granted==='object') Object.keys(d.granted).forEach(function(id){ if(ARCHIVE_BY_ID[id]&&d.granted[id]) out.granted[id]=1; });
+    if(d.granted&&typeof d.granted==='object') Object.keys(d.granted).forEach(function(id){ if((ARCHIVE_BY_ID[id]||/^x\.[A-Za-z0-9_.-]{1,40}$/.test(id))&&d.granted[id]) out.granted[id]=1; });
     out.pending=Number.isFinite(d.pending)?Math.max(0,d.pending|0):0;
     out.migrated=d.migrated?1:0;
     return out;
@@ -131,7 +135,15 @@ var DeathArchive={
   visible:function(d){ d=d||DeathArchive.state(); return DEATH_ARCHIVE.filter(function(e){ return DeathArchive.avail(e)&&(DeathArchive.isOpen(e,d)||!e.secret); }); },
   visibleCuts:function(d){ d=d||DeathArchive.state(); return ARCHIVE_CUTS.filter(function(e){ return DeathArchive.avail(e)&&(DeathArchive.isOpen(e,d)||!e.secret); }); },
   /* 「全部解锁」能打开的：演出在、还没打开的 */
-  locked:function(d){ return DEATH_ARCHIVE.concat(ARCHIVE_CUTS).filter(function(e){ return DeathArchive.avail(e)&&!DeathArchive.isOpen(e,d); }); },
+  locked:function(d){
+    var out=DEATH_ARCHIVE.concat(ARCHIVE_CUTS).filter(function(e){ return DeathArchive.avail(e)&&!DeathArchive.isOpen(e,d); });
+    ARCHIVE_SECTIONS.forEach(function(sec){ sec.ids().forEach(function(id){ if(!sec.isOpen(id,d)) out.push({id:id}); }); });
+    return out;
+  },
+  addSection:function(def){
+    if(!def||!def.id||typeof def.cards!=='function'||typeof def.ids!=='function'||typeof def.isOpen!=='function') return false;
+    ARCHIVE_SECTIONS=ARCHIVE_SECTIONS.filter(function(s){ return s.id!==def.id; }); ARCHIVE_SECTIONS.push(def); return true;
+  },
   /* 「全部解锁」：死亡和演出（包括隐藏的）全部打开，只记在 granted 里。
      要先在页面里画的数字键盘上输调试密码（和调试面板同一个），普通游玩里不会被随手点开，隐藏内容不会因此泄露 */
   askUnlockAll:function(){
@@ -152,7 +164,7 @@ var DeathArchive={
   /* 死亡演出放完以后提示一次（不在致死那一刻打断） */
   notify:function(entry){
     if(!entry) return;
-    try{ (0,$imports.toast)('死亡档案室 · 新记录：'+entry.n); }catch(e){}
+    try{ (0,$imports.toast)('CG 档案馆 · 新的死亡档案：'+entry.n); }catch(e){}
   },
 
   /* ---------- 菜单里的档案室 ---------- */
@@ -168,7 +180,7 @@ var DeathArchive={
     var b=document.getElementById('btnarchive'); if(b) b.focus({preventScroll:true});
   },
   /* 一张卡：打开的有标题、一句记录、说明和「重看」；没打开的只显示封存 */
-  card:function(e,open,meta,latest,locked){
+  card:function(e,open,meta,latest,locked,onReplay){
     var card=document.createElement('div');
     card.className='arcard'+(open?' open':'')+(latest?' latest':'');
     card.dataset.id=e.id;
@@ -179,7 +191,7 @@ var DeathArchive={
       var m=document.createElement('small'); m.textContent=meta;
       body.appendChild(t); body.appendChild(p); body.appendChild(m); card.appendChild(body);
       var btn=document.createElement('button'); btn.type='button'; btn.textContent='重看';
-      btn.addEventListener('click',function(){ ArchiveReplay.play(e.id); });
+      btn.addEventListener('click',function(){ if(onReplay) onReplay(e.id); else ArchiveReplay.play(e.id); });
       card.appendChild(btn);
     }else{
       t.textContent=locked[0]; p.textContent=locked[1]; body.appendChild(t); body.appendChild(p); card.appendChild(body);
@@ -217,6 +229,15 @@ var DeathArchive={
       var real=DeathArchive.real(e,d), open=real||!!d.granted[e.id];
       var meta=real?(e.end?'已达成':'已看过'):'直接解锁 · 没有亲历';
       cb.appendChild(DeathArchive.card(e,open,meta,false,e.end?['尚未达成','封存的结局。']:['尚未观看','封存的演出。']));
+    });
+    var ex=document.getElementById('arextra'); if(!ex) return;
+    ex.textContent='';
+    ARCHIVE_SECTIONS.forEach(function(sec){
+      var h=document.createElement('div'); h.className='arsec'; h.dataset.sec=sec.id;
+      var hb=document.createElement('b'), hi=document.createElement('i'); hb.textContent=sec.title; hi.textContent=sec.count(d); h.appendChild(hb); h.appendChild(hi);
+      var box=document.createElement('div'); box.className='arcards'; box.id='arsec-'+sec.id;
+      sec.cards(d).forEach(function(c){ box.appendChild(DeathArchive.card(c,c.open,c.meta,false,c.locked||['尚未取得','封存的画面。'],sec.replay)); });
+      ex.appendChild(h); ex.appendChild(box);
     });
   }
 };
@@ -352,6 +373,7 @@ GameModules.publish("game3d/js/death-archive.js",{
 "DEATH_ARCHIVE_BY_ID":{get:function(){return DEATH_ARCHIVE_BY_ID;},set:function($value){DEATH_ARCHIVE_BY_ID=$value;}},
 "ARCHIVE_CUTS":{get:function(){return ARCHIVE_CUTS;},set:function($value){ARCHIVE_CUTS=$value;}},
 "ARCHIVE_BY_ID":{get:function(){return ARCHIVE_BY_ID;},set:function($value){ARCHIVE_BY_ID=$value;}},
+"ARCHIVE_SECTIONS":{get:function(){return ARCHIVE_SECTIONS;},set:function($value){ARCHIVE_SECTIONS=$value;}},
 "DEATH_STAGE_OUT":{get:function(){return DEATH_STAGE_OUT;},set:function($value){DEATH_STAGE_OUT=$value;}},
 "KILL_CTX":{get:function(){return KILL_CTX;},set:function($value){KILL_CTX=$value;}},
 "DeathArchive":{get:function(){return DeathArchive;},set:function($value){DeathArchive=$value;}},

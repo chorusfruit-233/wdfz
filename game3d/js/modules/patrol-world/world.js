@@ -61,8 +61,9 @@ var PatrolWorld=(function(){
   function clearChase(){var active=$imports.PAT.locked||$imports.PAT.lastSeen||$imports.PAT.search>0||$imports.PAT.cited;$imports.PAT.cited=false;$imports.PAT.lock=0;$imports.PAT.locked=false;$imports.PAT.lost=0;$imports.PAT.lastSeen=null;$imports.PAT.search=0;
     if(active){$imports.PAT.rejoin=true;$imports.PAT.behavior=$imports.PAT.investigation?'investigate':'return';framePath=null;}}
   function rescued(){$imports.HIDE.seen=false;$imports.PAT.permanent=false;$imports.PAT.wirelessSignal=null;clearChase();$imports.PAT.rejoin=true;$imports.PAT.safety=3.6;$imports.VisualState.patrolRed=0;$imports.Mechanics.dirty=true;}
-  function registeredAbsence(id){$imports.PAT.permanent=true;$imports.PAT.absence=id;$imports.PAT.behavior='chase';framePath=null;(0,$imports.toast)('外出登记后未归：持续追踪已生效，重新登记和假条不能解除。');}
+  function registeredAbsence(id){$imports.PAT.permanent=true;$imports.PAT.absence=id;$imports.PAT.behavior='chase';framePath=null;(0,$imports.toast)('外出登记后未归：持续追踪已生效，重新登记和假条不能解除。');(0,$imports.gameFact)('patrol',{what:'permanent'});}
   function banish(){
+    (0,$imports.gameFact)('patrol',{what:'banish'});
     $imports.PAT.state='idle';$imports.PAT.respawn=30;$imports.PAT.rejoin=true;$imports.PAT.locked=false;$imports.PAT.lock=0;$imports.PAT.lost=0;$imports.PAT.lastSeen=null;$imports.PAT.search=0;$imports.PAT.cited=false;$imports.HIDE.seen=false;$imports.PAT.transition=null;$imports.PAT.warning=0;$imports.PAT.near=false;framePath=null;(0,$imports.patRemoveFig)();
     $imports.VisualState.patrolFlick=0;$imports.VisualState.patrolRed=0;
     (0,$imports.os)('我：符纸烧成了灰。高个子的身影随之散开。',3.2,$imports.OS_KEEP);$imports.Mechanics.dirty=true;
@@ -155,9 +156,10 @@ var PatrolWorld=(function(){
     var approaching=approach();
     if(approaching&&approaching.distance<190&&!$imports.PAT.near){$imports.PAT.near=true;$imports.PAT.warning=3.6;}
     if(!approaching||approaching.distance>220)$imports.PAT.near=false;
+    if($imports.HIDE.on&&$imports.PAT.near)$imports.HIDE.near=true;                       /* 躲柜期间它来过附近：出柜时记一次「躲过」 */
     $imports.PAT.warning=Math.max(0,$imports.PAT.warning-dt);
     if($imports.PAT.transition){
-      if($imports.PAT.locked){$imports.PAT.lost+=dt;if($imports.PAT.lost>2.5){$imports.PAT.locked=false;$imports.PAT.lock=0;if(!$imports.PAT.permanent)$imports.PAT.search=3;}}
+      if($imports.PAT.locked){$imports.PAT.lost+=dt;if($imports.PAT.lost>2.5){$imports.PAT.locked=false;$imports.PAT.lock=0;if(!$imports.PAT.permanent){$imports.PAT.search=3;(0,$imports.gameFact)('patrol',{what:'lost'});}}}
       var tr=$imports.PAT.transition;tr.remaining=Math.max(0,tr.remaining-dt);if(tr.remaining<=1e-8){put(tr.to);$imports.PAT.transition=null;$imports.PAT.afterBlink=.22;framePath=null;}return;
     }
     var d=distance(),visible=sees(),cabinet=lockerTarget(),knownCabinet=!!(cabinet&&$imports.PatrolNav.los(position(),cabinet));
@@ -171,9 +173,10 @@ var PatrolWorld=(function(){
         if(!$imports.PAT.locked&&$imports.PAT.lock>=1){
           if((0,$imports.hasItem)('seal')){(0,$imports.removeItem)('seal');banish();return;}
           $imports.PAT.locked=true;$imports.PAT.behavior='chase';if(!$imports.PAT.permanent&&!$imports.PAT.cited){$imports.PAT.cited=true;(0,$imports.addViolation)(8,'patrol');}
+          (0,$imports.gameFact)('patrol',{what:'locked',permanent:!!$imports.PAT.permanent});
         }}
     }else if($imports.PAT.locked){
-      $imports.PAT.lost+=dt;if($imports.PAT.lost>2.5){$imports.PAT.locked=false;$imports.PAT.lock=0;if(!$imports.PAT.permanent)$imports.PAT.search=3;framePath=null;}
+      $imports.PAT.lost+=dt;if($imports.PAT.lost>2.5){$imports.PAT.locked=false;$imports.PAT.lock=0;if(!$imports.PAT.permanent){$imports.PAT.search=3;(0,$imports.gameFact)('patrol',{what:'lost'});}framePath=null;}
     }else if(!$imports.PAT.locked)$imports.PAT.lock=Math.max(0,$imports.PAT.lock-dt);
     var goal=target();$imports.PAT.blinkCD=$imports.PAT.safety>0?Math.max(0,$imports.PAT.blinkCD-dt):$imports.PAT.blinkCD-dt;
     if($imports.PAT.blinkCD<=0&&$imports.PAT.safety<=0){

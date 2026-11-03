@@ -14,7 +14,7 @@ class PressureClockTest(unittest.TestCase):
         if not node:self.skipTest('需要 Node.js')
         script=r"""
 const fs=require('fs'),vm=require('vm'),a=require('assert/strict');
-const c={console,Math,Number,os:()=>{},setTimeout:()=>{},S:{tsec:440,day:1,mode:'out'}};
+const c={console,Math,Number,os:()=>{},gameFact:()=>{},setTimeout:()=>{},S:{tsec:440,day:1,mode:'out'}};
 require('./tests/support/capsules.cjs').context(c);
 for(const f of ['domain/random','core','domain/player-stats','domain/game-time','systems'])vm.runInContext(fs.readFileSync('game3d/js/'+f+'.js','utf8'),c);
 for(const [from,to,seconds] of [[440,770,360],[770,1070,360],[1070,1340,360],[1340,1500,120]]){

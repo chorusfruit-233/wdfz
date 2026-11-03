@@ -606,3 +606,115 @@ body.cut #srclock{opacity:.7}
   #srclock{top:calc(54px + var(--st));padding:3px 8px}
   #srclock b{font-size:13px}
 }
+/* ---------- 成就（2026-11-03）：成就页沿用档案室的版式约束；四档用颜色区分 ---------- */
+:root{--t-n:#a59d8e;--t-e:#e0857a;--t-p:#d9b46a;--t-h:#a99bc9}
+#achieve .mdbox{display:flex;flex-direction:column;max-height:100%}
+#achieve .arscroll{flex:0 1 auto;min-height:96px}
+.actabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.actabs button{min-height:36px;padding:4px 14px;font:13px var(--ui-font);letter-spacing:3px;color:var(--ui-dim);cursor:pointer;background:transparent;border:1px solid var(--ui-line);border-radius:2px}
+.actabs button[aria-selected="true"]{color:#f1eadc;border-color:rgba(181,51,47,.75);background:rgba(181,51,47,.1)}
+.accards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.accard{display:flex;align-items:flex-start;gap:12px;min-height:44px;padding:12px 14px;background:rgba(221,213,196,.02);border:1px dashed var(--ui-line);border-radius:2px;color:var(--ui-faint)}
+.accard em{flex:none;font-style:normal;font:11px var(--ui-mono);letter-spacing:2px;padding:2px 6px;border:1px solid currentColor;border-radius:2px;opacity:.75}
+.accard.t-n em{color:var(--t-n)}.accard.t-e em{color:var(--t-e)}.accard.t-p em{color:var(--t-p)}.accard.t-h em{color:var(--t-h)}
+.accard span{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.accard b{font:400 15px var(--ui-serif);letter-spacing:3px;color:var(--ui-dim)}
+.accard i{font-style:normal;font-size:12px;line-height:1.7}
+.accard small{font-size:11px;letter-spacing:1px;color:var(--ui-faint)}
+.accard u{display:block;height:3px;margin-top:2px;background:linear-gradient(90deg,var(--ui-acc) var(--p,0%),rgba(221,213,196,.08) var(--p,0%));text-decoration:none}
+.accard.got{border-style:solid;background:rgba(221,213,196,.04);color:var(--ui-text)}
+.accard.got b{color:#f1eadc}.accard.got em{opacity:1}
+.accard.got.t-n{border-left:2px solid var(--t-n)}.accard.got.t-e{border-left:2px solid var(--t-e)}
+.accard.got.t-p{border-left:2px solid var(--t-p)}.accard.got.t-h{border-left:2px solid var(--t-h)}
+#achtoast{position:fixed;left:50%;top:calc(70px + var(--st));z-index:74;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:200px;
+  padding:8px 18px;transform:translate(-50%,-6px);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;
+  background:rgba(10,8,8,.82);border:1px solid var(--ui-line);border-top:2px solid var(--t-n);border-radius:2px;font-family:var(--ui-font)}
+#achtoast.on{opacity:1;transform:translate(-50%,0)}
+#achtoast[hidden]{display:none}
+#achtoast i{font-style:normal;font-size:11px;letter-spacing:3px;color:var(--ui-faint)}
+#achtoast b{font:400 16px var(--ui-serif);letter-spacing:4px;color:#f1eadc}
+#achtoast.t-e{border-top-color:var(--t-e)}#achtoast.t-p{border-top-color:var(--t-p)}#achtoast.t-h{border-top-color:var(--t-h)}
+@media (prefers-reduced-motion:reduce){#achtoast{transition:none;transform:translate(-50%,0)}}
+/* 结局卡、死亡界面：本局新达成 */
+.eachv{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px;max-width:620px;font-size:12px;letter-spacing:1px}
+.eachv i{flex-basis:100%;text-align:center;font-style:normal;font:11px var(--ui-mono);letter-spacing:3px;color:var(--ui-faint)}
+.eachv span{padding:2px 8px;border:1px solid var(--ui-line);border-radius:2px;color:#d8cfbf}
+.eachv span.t-n{border-color:var(--t-n)}.eachv span.t-e{border-color:var(--t-e)}.eachv span.t-p{border-color:var(--t-p)}.eachv span.t-h{border-color:var(--t-h)}
+#dieach{margin:6px 0 10px}
+@media (max-height:520px) and (orientation:landscape){
+  #achieve .mdbox{padding:14px 18px 12px}
+  #achieve .tplead{margin:6px 0 8px}
+  #achieve .tpfoot{margin-top:8px}
+}
+/* ---------- 积分、评级与通关记录（2026-11-03） ---------- */
+:root{--g-low:#8f8a80;--g-mid:#d8cfbf;--g-high:#e0857a;--g-top:#f0c27a}
+.g-F,.g-E,.g-D{color:var(--g-low)}.g-C,.g-B{color:var(--g-mid)}.g-A,.g-S{color:var(--g-high)}.g-SS,.g-SSS{color:var(--g-top)}
+#results .mdbox,#records .mdbox,#replayv .mdbox,#footv .mdbox{display:flex;flex-direction:column;max-height:100%}
+#results .arscroll,#records .arscroll{flex:0 1 auto;min-height:96px}
+.rshero{position:relative;flex:none;height:min(34vh,230px);min-height:120px;border:1px solid var(--ui-line);border-radius:2px;overflow:hidden;background:#0b0a09}
+.rshero canvas{display:block;width:100%;height:100%}
+.rsgrade{position:absolute;left:14px;bottom:10px;display:flex;flex-direction:column;gap:2px;padding:6px 12px;background:rgba(10,8,8,.72);border-left:2px solid var(--seal);pointer-events:none}
+.rsgrade b{font:400 30px/1 var(--ui-serif);letter-spacing:4px}
+.rsgrade i{font-style:normal;font:13px var(--ui-serif);letter-spacing:4px;color:#f1eadc}
+.rsgrade p{margin:0;font-size:12px;color:var(--ui-dim);max-width:46ch}
+.rsline{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;margin:10px 0 8px;font-size:12px;color:var(--ui-dim)}
+.rsline b{font:400 16px var(--ui-serif);letter-spacing:3px;color:#f1eadc}
+.rssec{margin:0 0 12px}
+.rssec h4{margin:0 0 6px;font:400 13px var(--ui-serif);letter-spacing:4px;color:var(--ui-dim)}
+.rssec p{margin:4px 0;font-size:12px;line-height:1.7}
+.rssec details{border-bottom:1px solid var(--ui-line)}
+.rssec summary{display:flex;justify-content:space-between;gap:12px;min-height:36px;align-items:center;cursor:pointer;font-size:13px;letter-spacing:1px}
+.rssec summary b,.rssec li b{font:12px var(--ui-mono)}
+.rssec ul{list-style:none;margin:0 0 8px;padding:0 0 0 10px}
+.rssec li{display:flex;justify-content:space-between;gap:12px;font-size:12px;line-height:1.9;color:var(--ui-dim)}
+.rsnote{font-size:11px;color:var(--ui-faint)}
+.eachv span.new{box-shadow:inset 0 0 0 1px rgba(240,194,122,.5)}
+#ends .eres{border-color:rgba(181,51,47,.8);background:var(--seal-bg);color:#f3e2d8}
+#ends .enote{font-size:12px;letter-spacing:2px;color:var(--ui-faint)}
+#diescore{margin:4px 0 10px;font:12px var(--ui-mono);letter-spacing:2px;color:var(--ui-dim)}
+#mapExplore{color:var(--ui-dim)}   /* 手册地图页顶部：本局探索度（样式随 .mapcount） */
+.rcbar{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 10px;font-size:12px;color:var(--ui-dim)}
+.rcbar label{display:flex;align-items:center;gap:6px}
+.rcbar select{min-height:36px;padding:2px 8px;font:13px var(--ui-font);color:var(--ui-text);background:rgba(10,8,8,.9);border:1px solid var(--ui-line);border-radius:2px}
+.rclist{display:flex;flex-direction:column;gap:8px}
+.rcrow{display:flex;align-items:center;gap:14px;width:100%;min-height:52px;padding:8px 14px;text-align:left;cursor:pointer;font-family:var(--ui-font);color:var(--ui-text);background:rgba(221,213,196,.03);border:1px solid var(--ui-line);border-left:2px solid var(--ui-line2);border-radius:2px}
+.rcrow:hover,.rcrow:focus-visible{border-color:var(--seal);background:rgba(181,51,47,.08)}
+.rcrow em{flex:none;min-width:3.2em;font:400 22px var(--ui-serif);font-style:normal;text-align:center}
+.rcrow span{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.rcrow b{font:400 14px var(--ui-serif);letter-spacing:2px}
+.rcrow i{font-style:normal;font-size:11px;color:var(--ui-faint)}
+.rcrow small{flex:none;font-size:11px;letter-spacing:1px;color:var(--ui-dim)}
+.rcempty{font-size:12px;color:var(--ui-faint)}
+.rpbox{width:min(1100px,100%)}
+.rpmain{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:10px;flex:1 1 auto;min-height:0}
+#rpcv,#fpcv{display:block;width:100%;height:min(56vh,520px);min-height:160px;background:#0b0a09;border:1px solid var(--ui-line);border-radius:2px}
+.rpevents{margin:0;padding:0;list-style:none;overflow-y:auto;max-height:min(56vh,520px);font-size:12px}
+.rpevents li{display:flex;gap:8px;align-items:baseline;padding:4px 6px;cursor:pointer;color:var(--ui-faint);border-left:2px solid transparent}
+.rpevents li.past{color:var(--ui-dim)}
+.rpevents li.cur{color:#f1eadc;border-left-color:var(--seal);background:rgba(181,51,47,.08)}
+.rpevents li i{font-style:normal;font:11px var(--ui-mono);flex:none}
+.rpevents li span{flex:1;border-left:3px solid var(--c,#888);padding-left:6px}
+.rpevents li b{font:11px var(--ui-mono)}
+.rpctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.rpctl button,.rpctl select{min-height:40px;min-width:44px;padding:4px 12px;font:13px var(--ui-font);color:var(--ui-text);background:rgba(221,213,196,.04);border:1px solid var(--ui-line);border-radius:2px;cursor:pointer}
+.rpctl input[type=range]{flex:1 1 180px;min-height:40px}
+.rpctl span{font:12px var(--ui-mono);color:var(--ui-dim)}
+.fptabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.fptabs button{min-height:36px;padding:4px 10px;font:12px var(--ui-font);color:var(--ui-dim);background:transparent;border:1px solid var(--ui-line);border-radius:2px;cursor:pointer}
+.fptabs button[aria-selected="true"]{color:#f1eadc;border-color:rgba(181,51,47,.75);background:rgba(181,51,47,.1)}
+.srrank ol{margin:0;padding:0;list-style:none}
+.srrank li{display:flex;gap:12px;align-items:baseline;padding:6px 4px;border-bottom:1px solid var(--ui-line);cursor:pointer;font-size:12px}
+.srrank li b{font:13px var(--ui-mono);color:#efe7d6}
+.srrank li em{font-style:normal;font:400 15px var(--ui-serif);min-width:2.6em}
+.srrank li span{color:var(--ui-faint)}
+.dvarun p{margin:2px 0;font-size:12px;line-height:1.6}
+.dvachk{display:flex;align-items:center;gap:6px;font-size:12px}
+.dvahow{margin:6px 0;font-size:11px}
+.dvahow ol{max-height:180px;overflow-y:auto;padding-left:18px;color:var(--ui-dim)}
+@media (max-width:720px){.rpmain{grid-template-columns:1fr}.rpevents{max-height:22vh}#rpcv,#fpcv{height:40vh}}
+@media (max-height:520px) and (orientation:landscape){
+  #results .mdbox,#records .mdbox,#replayv .mdbox,#footv .mdbox{padding:12px 16px 10px}
+  .rshero{height:30vh;min-height:96px}
+  #results .tpfoot,#records .tpfoot,#replayv .tpfoot,#footv .tpfoot{margin-top:6px}
+  #rpcv,#fpcv,.rpevents{height:46vh;max-height:46vh}
+}

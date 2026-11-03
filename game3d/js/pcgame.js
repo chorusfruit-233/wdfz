@@ -23,6 +23,7 @@ var PCGAME={
     (0,$imports.resetInputState)();
   },
   stop:function(){
+    (0,$imports.gameFact)('snake',{score:PC.score});
     var gain=$imports.CampusPressure.restGain(Math.min(20, 6+PC.score*2));
     if(PC.score>0){ $imports.PlayerStats.changeSan(gain,'pcgame',{max:100}); (0,$imports.toast)('SAN +'+gain+'（得分 '+PC.score+'）'); }
     PC.on=false;

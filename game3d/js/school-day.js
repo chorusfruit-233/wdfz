@@ -16,6 +16,7 @@ var SchoolDay={
     if($imports.S.day===1){if(!quiet)(0,$imports.toast)('第一天暂不开放外出登记 · 假条仍可使用');return false;}
     if((0,$imports.isNight)()){if(!quiet)(0,$imports.toast)('熄灯后不能登记外出 · 请回宿舍');return false;}
     $imports.RT.outing={day:$imports.S.day,from:$imports.S.tsec,until:this.deadline()};
+    if(!quiet)(0,$imports.gameFact)('register');
     $imports.AttendanceDuty.grant(quiet?'inspection':'manual');
     if(!quiet)(0,$imports.toast)('外出登记已记下 · '+this.returnLabel()+'；到场责任：'+$imports.AttendanceDuty.summary());
     return true;

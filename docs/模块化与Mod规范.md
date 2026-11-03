@@ -31,7 +31,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `emits` | 这个模块在代码里发出的钩子（`GameModules.emit/first`） |
 | `uses` | 这个模块监听的钩子 |
 
-当前 46 个功能模块（2026-11-03 完成文件级依赖收口）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
+当前 49 个功能模块（2026-11-03 完成文件级依赖收口时为 46 个，之后成就与积分评级新增 3 个）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，游戏事实 `facts`、成就 `achievements`、积分评级与通关记录 `run-record`，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
 
 **改功能的做法**：先在清单里找到模块 → 只读它登记的文件和它 `uses` / `emits` 的钩子 → 改完跑这个模块对应的测试（见第 6 节）。跨模块改动先看对方的 `exports` 是否需要变；导出名字改了，同时改清单。
 
@@ -72,6 +72,9 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `soundscape` | `audio.js` 每帧 | first | 返回要用的整片环境声 ID（见第 4.1 节） |
 | `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |
 | `mazeEvent` | `modules/void-maze-eggs/eggs.js`（内部彩蛋） | emit | `{kind, …}`：`invert / invertEnd / shadowShow / shadowHide` |
+| `gameFact` | `app/facts.js` 的 `gameFact(kind, data)`；各系统在事实成立的那一刻调一次（2026-11-03） | emit | `{kind, …}`：`opening`、`day`、`anomaly`（`phase` 为 `start / hurt / end`）、`patrol`（`what` 为 `locked / lost / locker / banish / permanent`）、`inspection`、`register`、`exam`、`lesson`、`rest`、`snake`、`fakeNormal`、`garage`、`face`、`protect`、`wake`、`death`、`ending`（带 `legit`）、`speedrun`、`chalk`、`specialDay`、`maze`，以及调试面板打开时的 `debug`。只读：成就、本局积分、回放都只听它，不改玩法；可信与否（调试局、回放）由监听方判断 |
+| `endingCard` | `story.js` 的 `showEndingCard`，结局卡加进页面以后（2026-11-03） | emit | `{el, id}`：往结局卡上加内容（成就的「本局新达成」、通关记录的「结算」按钮），插在「回到主菜单」之前 |
+| `deathScreen` | `story.js` 的 `kill()`，死亡界面显示出来时（预知梦惊醒不发，2026-11-03） | emit | `{el, source}`：往死亡界面加一行（本局新达成、本局积分与探索度） |
 
 | `tracesChanged` | `app/traces.js` 痕迹记录完成 | emit | 通知表现重建痕迹；记录本身不需要场景 |
 | `dayAppearance` | `day-events.js` 日状态更新完成 | emit | 校庆装饰刷新；每帧也可重建，不修改日状态 |
@@ -131,7 +134,9 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 
 模块可以往 `CUT_DEF` 加自己的结局演出（`modules/cyber-route/ending.js` 的《网安仙人》）：`{dur, setup(d), frame(k, d), clean(d)}`，`k` 是 0–1 的进度，一切位置只由 `k` 算；跳过和播完走同一个只执行一次的收尾。要在舞台上演就调 `Engine.beginOutsideStage()`（收尾自动 `endStage`）；临时对象用 `cutAdd` 挂进 `CUT.grp`，收尾统一释放（画布贴图在材质上标 `userData.disposeMap`）。需要别的天色时设 `VisualState.stageHour`（只影响天色、光照和环境声，`clean` 里置回 `null`）；室内布景的明暗用 `lightState` 钩子按 `CUT.id` 改，不要加实时点光源。几处布景开头一起 `GLR.renderer.compile(CUT.grp, GLR.cam, GLR.scene)`，中途切镜不现编着色器。
 
-结局演出要在死亡档案室「结局与开场」里能重看（2026-11-03），在 `death-archive.js` 的 `ARCHIVE_CUTS` 登记一条：`{id:'end:<结局ID>', cut:'<CUT_DEF 键>', end:'<结局ID>', n:标题, d:一句记录, stage:回放前先进的场景, at:可选的站位{c,r,ang}}`，隐藏结局加 `secret:1`。解锁看「已见结局」；回放用同一份 `CUT_DEF`、完成回调只回档案室，所以 `setup / frame / clean` 不能假定之后一定会出结局卡或改存档。`CUT_DEF` 里没有这个键（模块拿掉了）时，这条档案自动不列出。
+结局演出要在 CG 档案馆（原死亡档案室）「结局与开场」里能重看（2026-11-03），在 `death-archive.js` 的 `ARCHIVE_CUTS` 登记一条：`{id:'end:<结局ID>', cut:'<CUT_DEF 键>', end:'<结局ID>', n:标题, d:一句记录, stage:回放前先进的场景, at:可选的站位{c,r,ang}}`，隐藏结局加 `secret:1`。解锁看「已见结局」；回放用同一份 `CUT_DEF`、完成回调只回档案室，所以 `setup / frame / clean` 不能假定之后一定会出结局卡或改存档。`CUT_DEF` 里没有这个键（模块拿掉了）时，这条档案自动不列出。
+
+CG 档案馆还可以由模块加整节（2026-11-03）：`DeathArchive.addSection({id, title, ids(), isOpen(id, d), count(d), cards(d), replay(id)})`。条目 ID 用 `x.` 开头，「全部解锁」同样只写 `granted`；模块拿掉时这一节不出现。现有用法是 `run-record` 的「结算画面」（F–SSS 九张，取得过该评级才点亮，重看打开结算页）。
 
 ## 5. Mod
 

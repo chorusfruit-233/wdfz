@@ -66,10 +66,10 @@ class DeathArchiveTest(BrowserCase):
         page = self.game(diff='easy', talent='code')
         page.evaluate("S.day=1;RT.wakes=0;window.toasts=[];toast=function(m){toasts.push(m)};kill('x','drown','an:rain')")
         self.assert_js(page, "S.dead&&DeathArchive.state().unlocked['an:rain']")
-        self.assert_js(page, "!toasts.some(t=>t.indexOf('死亡档案室')>=0)")       # 致死那一刻不弹
+        self.assert_js(page, "!toasts.some(t=>t.indexOf('CG 档案馆')>=0)")       # 致死那一刻不弹
         page.wait_for_timeout(700)
         page.evaluate("deathSkip()")
-        page.wait_for_function("toasts.some(t=>t.indexOf('死亡档案室')>=0)")
+        page.wait_for_function("toasts.some(t=>t.indexOf('CG 档案馆')>=0)")
 
     def test_legacy_log_migrates_only_sourced_records(self):
         page = self.page()
@@ -168,7 +168,7 @@ class DeathArchiveTest(BrowserCase):
         self.assert_js(page, "VisualState.stageHour===null&&S.tsec===1380")
 
     def test_unlock_all_needs_the_debug_password_and_does_not_fake_progress(self):
-        """「全部解锁」：在页面里的数字键盘上输调试密码，死亡和演出（包括隐藏的）全部打开，只记成「直接解锁」：
+        """「全部解锁」：在页面里的数字键盘上输调试密码，死亡、演出（包括隐藏的）和结算画面全部打开，只记成「直接解锁」：
         不写死亡次数、不写已见结局；之后真的死一次照样算新记录。Esc 只关键盘，不关档案室。"""
         page = self.page()
         self.archive_menu(page)
@@ -190,15 +190,20 @@ class DeathArchiveTest(BrowserCase):
           open:document.querySelectorAll('#archive .arcard.open').length,btn:document.getElementById('arAll').disabled,
           beast:document.querySelector('#arcuts .arcard[data-id="end:beast"] small').textContent,
           maze:!!document.querySelector('#arcards .arcard.open[data-id="void_lost"]'),
-          ends:localStorage.getItem('wdfz3d_ends'),state:DeathArchive.state()})""")
+          ends:localStorage.getItem('wdfz3d_ends'),state:DeathArchive.state(),
+          grades:document.querySelectorAll('#arsec-grades .arcard.open').length,
+          gradeMeta:document.querySelector('#arsec-grades .arcard[data-id="x.grade.SSS"] small').textContent,
+          clears:localStorage.getItem('wdfz3d_clears_v1')})""")
         self.assertEqual(r['deaths'], '已记录 18 / 18 · 隐藏 2')
         self.assertEqual(r['cuts'], '已解锁 5 / 5 · 隐藏 1')
-        self.assertEqual(r['open'], 26)
+        self.assertEqual(r['open'], 35)                                    # 26 张死亡 / 演出 + 9 张结算画面
+        self.assertEqual((r['grades'], r['gradeMeta']), (9, '直接解锁 · 没有亲历'))
+        self.assertIsNone(r['clears'])                                    # 结算画面只是点亮，不伪造通关记录
         self.assertTrue(r['btn'] and r['maze'])
         self.assertEqual(r['beast'], '直接解锁 · 没有亲历')
         self.assertEqual(r['ends'], '{}')
         self.assertEqual((r['state']['unlocked'], r['state']['count']), ({}, {}))
-        self.assertEqual(len(r['state']['granted']), 25)                   # 开场在测试环境里已经看过，本来就开着
+        self.assertEqual(len(r['state']['granted']), 34)                   # 开场在测试环境里已经看过，本来就开着；含 9 张结算画面
         # 之后真的死一次：照样是新记录、计次数
         r = page.evaluate("()=>{const e=DeathArchive.record('patrol','grip');DeathArchive.paint();return {fresh:!!e,meta:document.querySelector('#arcards .arcard[data-id=\"patrol\"] small').textContent};}")
         self.assertEqual(r, {'fresh': True, 'meta': '经历 1 次 · 最近'})

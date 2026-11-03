@@ -59,6 +59,7 @@ var VIO_ON=0;
 function examStart(){
   if((0,$imports.isNight)()){ (0,$imports.os)('我：钟声荡出去，很快就被夜吞掉了。整座学校都睡着，没有人回应。',4); return; }
   $imports.S.exam=true; $imports.S.examCur=null; $imports.S.examSeat=0; $imports.S.examTot=0;
+  (0,$imports.gameFact)('exam',{phase:'start'});
   (0,$imports.os)('我：钟声一圈一圈荡开。过了很久，广播里有人慢慢地念：「今天剩下的课，全部改为考试。请回到自己的座位。」',6,$imports.OS_KEEP);
   (0,$imports.toast)('考试模式 · 今天剩下的课都是考试，熄灯后结束');
 }
@@ -69,6 +70,7 @@ function examTick(dt){
   var p=(0,$imports.periodAt)($imports.S.tsec), cur=(p[3]==='教室')?p[0]:null;
   if(cur!==$imports.S.examCur){
     if($imports.S.examCur!==null&&$imports.S.examTot>4){                 /* 上一场结束：交卷 */
+      (0,$imports.gameFact)('exam',{phase:'paper',pass:$imports.S.examSeat/$imports.S.examTot>=0.7,day:$imports.S.day});
       if($imports.S.examSeat/$imports.S.examTot>=0.7){ $imports.PlayerStats.changeSan(15,'systems',{max:100}); (0,$imports.os)('我：交卷了。监考的人从我桌上收走卷子，没有看我。……可我记得我写了什么。',4.4); (0,$imports.toast)('考完一场 · SAN +15'); }
       else (0,$imports.os)('我：这一场我没坐住。收上去的卷子里，我那一张只有名字，名字被人画了一个圈。',4.4);
     }
@@ -95,6 +97,7 @@ function advanceGameTime(minutes){
     if($imports.S.exam&&before<$imports.LIGHTS_OUT&&$imports.S.tsec>=$imports.LIGHTS_OUT){ examEnd(); (0,$imports.os)('我：熄灯了。今天的考试结束了。',3.4); }
     if(slice.day!==$imports.S.day){
       $imports.S.day=slice.day;
+      (0,$imports.gameFact)('day',{day:$imports.S.day});
       if($imports.S.day===2){
         (0,$imports.os)('我：……今天几号来着？我想不起来了。',4);
         if($imports.S.fn&&$imports.S.fn.note&&!$imports.S.fn.on&&$imports.S.fn.n===0){
@@ -325,6 +328,7 @@ function roamTick(dt){
   if(lit) ROAM.litAcc+=dt; else ROAM.litAcc=Math.max(0,ROAM.litAcc-dt*0.35);
 
   if(ROAM.litAcc>=ROAM_LIT_NEED){
+    (0,$imports.gameFact)('garage',{what:'torch'});
     ROAM.litAcc=0; ROAM.stage='wait'; ROAM.waitT=(0,$imports.rnd)(4.5,8);
     ROAM.x=-1e6; ROAM.y=-1e6;
     if(!ROAM.goneTold){ ROAM.goneTold=1; (0,$imports.os)('我：光扫过去，它就没了。',3.6); }

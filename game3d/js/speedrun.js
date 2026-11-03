@@ -104,7 +104,16 @@ var Speedrun={run:null, proofId:null, hudOn:true,
       if(!old||rec.ms<old.ms){ d.best[k]={ms:rec.ms,runId:rec.runId,at:rec.at,game:rec.game}; pb=true; }
     }
     try{ localStorage.setItem(SPEEDRUN_KEY,JSON.stringify(d)); }catch(e){}
+    (0,$imports.gameFact)('speedrun',{runId:rec.runId,status:rec.status,route:rec.route,diff:rec.diff,ms:rec.ms,rules:rec.rules,pb:pb});
     return {rec:rec,pb:pb,best:Speedrun.best(r.diff,r.route,d)};
+  },
+  /* 积分与评级（积分、评级与通关记录计划）：结算算出来以后补进这一局的速通记录 */
+  attachScore:function(runId,info){
+    var d=Speedrun.read(), hit=false;
+    d.recent.forEach(function(x){ if(x.runId===runId){ x.score=info.score; x.grade=info.grade; x.scoreRules=info.rules; hit=true; } });
+    Object.keys(d.best).forEach(function(k){ if(d.best[k].runId===runId){ d.best[k].score=info.score; d.best[k].grade=info.grade; hit=true; } });
+    if(hit){ try{ localStorage.setItem(SPEEDRUN_KEY,JSON.stringify(d)); }catch(e){} }
+    return hit;
   },
   best:function(diff,route,d){
     d=d||Speedrun.read(); var b=d.best[Speedrun.key(SPEEDRUN_RULES,diff,route)];
@@ -173,15 +182,17 @@ var Speedrun={run:null, proofId:null, hudOn:true,
       SPEEDRUN_PUBLIC.concat(['beast']).forEach(function(route){
         var ms=Speedrun.best(diff,route,d);
         if(SPEEDRUN_ROUTES[route].secret&&(ms===null||!seen[route])) return;        /* 隐藏路线：没打通过就不出现 */
-        rows.push('<tr><td>'+DIFF_NAME[diff]+'</td><td>'+(SPEEDRUN_ROUTES[route].secret?($imports.ENDINGS[route]?$imports.ENDINGS[route].t:'隐藏路线'):Speedrun.routeName(route))+'</td><td>'+(ms===null?'—':fmtRun(ms))+'</td></tr>');
+        var bg=(typeof $imports.RunRecords!=='undefined')?$imports.RunRecords.bestGrade(diff,route,'speedrun'):null;
+        rows.push('<tr><td>'+DIFF_NAME[diff]+'</td><td>'+(SPEEDRUN_ROUTES[route].secret?($imports.ENDINGS[route]?$imports.ENDINGS[route].t:'隐藏路线'):Speedrun.routeName(route))+'</td><td>'+(ms===null?'—':fmtRun(ms))+'</td><td>'+(bg||'—')+'</td></tr>');
       });
     });
     var recent=d.recent.slice(0,5).map(function(x){
       var rn=(x.route&&SPEEDRUN_ROUTES[x.route]&&SPEEDRUN_ROUTES[x.route].secret)?($imports.ENDINGS[x.route]?$imports.ENDINGS[x.route].t:''):Speedrun.routeName(x.route);
-      return '<li><span>'+DIFF_NAME[x.diff]+(x.route?' · '+rn:'')+'</span><b>'+fmtRun(x.ms)+'</b><i>'+Speedrun.statusText(x)+'</i></li>';
+      return '<li><span>'+DIFF_NAME[x.diff]+(x.route?' · '+rn:'')+'</span><b>'+fmtRun(x.ms)+'</b><i>'+Speedrun.statusText(x)+(x.grade?' · '+x.grade:'')+'</i></li>';
     }).join('');
-    box.innerHTML='<table><thead><tr><th>难度</th><th>路线</th><th>个人最佳</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
+    box.innerHTML='<table><thead><tr><th>难度</th><th>路线</th><th>个人最佳</th><th>最佳评级</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
       (recent?'<p class="srsub">最近</p><ul>'+recent+'</ul>':'<p class="srsub">还没有成绩。</p>');
+    if(typeof $imports.RecordsUI!=='undefined') $imports.RecordsUI.paintRanking(box);          /* 排行：按用时或按评级 */
   }
 };
 document.addEventListener('keydown',function(ev){

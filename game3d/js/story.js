@@ -103,6 +103,7 @@ function fnTick(dt){
   if(f.left===undefined) f.left=4;
   if(f.left<=0){
     f.on=false;
+    (0,$imports.gameFact)('fakeNormal',{done:true});
     try{ (0,$imports.fnPeopleClear)(); }catch(e){}
     try{ (0,$imports.os)('我：……天黑了。刚才那些都很正常，正常得不对。',4.6); }catch(e){}
     try{ $imports.VisualState.flash=Math.max($imports.VisualState.flash||0,0.35); }catch(e){}
@@ -133,12 +134,12 @@ function fnTick(dt){
   try{ $imports.SFX.click(); }catch(err){}
   $imports.UI.choice('看起来是——\n'+e.seen,[
     {label:'笑一下', fn:function(){
-      $imports.UI.closeChoice(); f.v+=14;
+      $imports.UI.closeChoice(); f.v+=14; (0,$imports.gameFact)('fakeNormal',{laugh:true});
       (0,$imports.os)('其实——'+e.real,4.6);
       try{ (0,$imports.toast)('（你笑出了声）'); }catch(err){}
     }},
     {label:'不笑，装作没这回事', fn:function(){
-      $imports.UI.closeChoice(); f.v+=5;
+      $imports.UI.closeChoice(); f.v+=5; (0,$imports.gameFact)('fakeNormal',{laugh:false});
       (0,$imports.os)('其实——'+e.real,4.6);
       try{ (0,$imports.toast)('（你忍住了）'); }catch(err){}
     }}
@@ -230,6 +231,7 @@ function useCar(cx,cy){
 function carDrive(){
   if($imports.AN.active||$imports.Inspection.pending()){(0,$imports.os)('我：现在走不开，先解决眼前的事。',2.5);return;}
   (0,$imports.autoSave)();
+  (0,$imports.gameFact)('garage',{what:'drive',tried:$imports.RT.carTried?Object.keys($imports.RT.carTried).length:0});
   (0,$imports.os)('我：引擎着了。车往前冲了出去。',4);
   (0,$imports.playCut)('car',function(){$imports.CarChase.start();});
 }
@@ -298,7 +300,8 @@ var FaceChallenge={
     }
     var questionId=q.order[q.done],question=FACE_QUESTIONS[questionId],opts=question.choices.map(function(label,i){
       return {label:label,fn:function(){
-        if(i===question.answer){q.done++;(0,$imports.autoSave)();FaceChallenge.open();return;}
+        if(i===question.answer){(0,$imports.gameFact)('face',{correct:true});q.done++;(0,$imports.autoSave)();FaceChallenge.open();return;}
+        (0,$imports.gameFact)('face',{correct:false});
         var remedy=$imports.Talent.faceRemedy(), loss=remedy?0:FACE_WRONG_SAN*(0,$imports.dif)().san;   /* 编程社（规则 2）：第一次答错核对后台，不扣这一次 */
         $imports.PlayerStats.changeSan(-loss,'face-answer',{min:0});(0,$imports.settleSan)();
         var feedback=FACE_EXPLANATIONS[questionId];
@@ -430,6 +433,7 @@ function kill(msg,fx,source){
   var _hold=$imports.DeathTimeline.duration($imports.S.death)*1000;
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
   var wake=($imports.S.diff==='easy'&&$imports.S.day===1&&($imports.RT.wakes||0)<3);
+  (0,$imports.gameFact)('death',{source:source||null,fx:$imports.S.death,archiveNew:!!_arc,wake:wake});
   if(!wake) (0,$imports.clearSave)();                 /* 没有下一次了：不能再读档回来 */
   var _sr=null; if(!wake){ try{ _sr=$imports.Speedrun.fail('failed',source||$imports.S.death); }catch(e){} }   /* 速通：死透了就停表、记未通关 */
   var _deadId=$imports.S.deadId=($imports.S.deadId||0)+1, finished=false;
@@ -445,6 +449,7 @@ function kill(msg,fx,source){
     document.getElementById('diecause').textContent=cause?cause.cause:'';
     var _dsr=document.getElementById('diesr'); if(_dsr){ _dsr.textContent=$imports.Speedrun.dieText(_sr); _dsr.hidden=!_sr; }
     el.style.display='flex';
+    try{ GameModules.emit('deathScreen',{el:el,source:source||null}); }catch(e){}   /* 成就、本局积分往死亡界面加一行 */
     try{ var rv=document.getElementById('dieRevive'); if(rv) rv.style.display=(typeof $imports.DEV!=='undefined'&&$imports.DEV.on)?'block':'none'; }catch(e){}
   }
   DEATH_PENDING={id:_deadId,finish:finish,at:performance.now()};
@@ -460,6 +465,7 @@ function deathSkip(){
 }
 
 function elixirSave(){
+  (0,$imports.gameFact)('protect',{by:'elixir'});
   (0,$imports.removeItem)('elixir');
   survivalReset();
   (0,$imports.os)('我：……那粒药丸自己在舌根底下化开了。苦得发麻。我还站着——刚才那一下，像是有人替我挨了。',5.2,$imports.OS_FORCE);
@@ -478,6 +484,7 @@ function protectCommit(){
   });
 }
 function immuneSave(){
+  (0,$imports.gameFact)('protect',{by:'immune'});
   $imports.Playtest.event('天赋生效','immune');
   survivalReset();
   (0,$imports.os)('我：刚才那一下本该要了我的命。可它擦身而过，像是没有认出我。',5.2,$imports.OS_FORCE);
@@ -494,6 +501,7 @@ function survivalReset(){
 function dreamWake(){
   $imports.RT.wakes=($imports.RT.wakes||0)+1;
   var left=3-$imports.RT.wakes;
+  (0,$imports.gameFact)('wake',{left:left});
   (0,$imports.eyelid)(700,function(){
     try{ (0,$imports.anfxClear)(); }catch(e){}
     $imports.AN.active=false; $imports.AN.id=null; $imports.AN.data={}; $imports.AN.t=0; $imports.AN.acc=0; $imports.AN.pre=null; $imports.AN.preNext=0; $imports.AN.locked=false;
@@ -532,10 +540,11 @@ function triggerEnding(id,skipCut){
   if(id==='trash'){tryTrashRoute();return;}
   $imports.RT.end=id;
   $imports.Playtest.event('结局',id);
-  var e=ENDINGS[id];
+  var e=ENDINGS[id], legit=$imports.Speedrun.proofId===id;          /* 正常路线在 triggerEnding 前登记过；Speedrun.finish 会清掉，先取 */
   (0,$imports.endMark)(id);
   if(!e.fake) (0,$imports.clearSave)();                    /* 假结局之后还能接着玩 */
   $imports.Speedrun.lastResult=e.fake?null:$imports.Speedrun.finish(id);   /* 速通在通关确认的这一刻停表，不等结局演出 */
+  (0,$imports.gameFact)('ending',{id:id,legit:legit,fake:!!e.fake,trueEnd:!!e.true});
   if(skipCut)showEndingCard(id);else (0,$imports.playCut)(id,function(){ showEndingCard(id); });
 }
 function showEndingCard(id){
@@ -558,6 +567,7 @@ function showEndingCard(id){
   d.innerHTML=html;
   document.body.appendChild(d);
   $imports.S.screen='end';
+  try{ GameModules.emit('endingCard',{el:d.firstChild,id:id}); }catch(e){}   /* 成就、结算往卡上加内容 */
 }
 /* 假结局之后：在第二天的早读醒来，东西都还在；垃圾桶这条路走不通了 */
 function fakeWake(){

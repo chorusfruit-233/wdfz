@@ -69,6 +69,7 @@ var DayEvents={
     $imports.RT.daySaid=$imports.RT.daySaid||{};
     if(id!=='none'&&!$imports.RT.daySaid[$imports.S.day]&&!($imports.S.intro>0)&&!(typeof $imports.PRO!=='undefined'&&$imports.PRO.on)){
       $imports.RT.daySaid[$imports.S.day]=1;
+      (0,$imports.gameFact)('specialDay',{id:id});
       (0,$imports.os)(DAY_EVENT_DEF[id].say,6);
       try{ $imports.Playtest.event('特殊日',id); }catch(e){}
     }

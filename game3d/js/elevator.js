@@ -101,6 +101,7 @@ var Elevator={
     var ride=$imports.RT.elevatorRide;if(!ride||ride.phase!=='cabin'||!ride.rare)return;
     ride.button=button;ride.phase='dream';$imports.PlayerStats.changeSan(-(ELEVATOR_CONFIG.dreamSan),'elevator',{min:0});(0,$imports.settleSan)();
     if($imports.S.dead)return;
+    (0,$imports.gameFact)('maze',{what:'enter',button:button});
     if(typeof $imports.VoidMaze!=='undefined'){$imports.VoidMaze.enter(button);return;}   /* 门外是虚空迷宫（模块 void-maze） */
     (0,$imports.doEnterRoom)('lift_dream',Elevator.spawn('lift_dream',2,5,0));        /* 没装这个模块时：原来的白色空间 */
     (0,$imports.os)('我：门外是一片白色。远处有一道淡蓝色的门。',4,$imports.OS_FORCE);

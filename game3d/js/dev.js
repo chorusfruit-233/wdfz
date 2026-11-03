@@ -103,6 +103,7 @@ var Dev={
     if(typeof $imports.LESSON!=='undefined'&&$imports.LESSON.on)$imports.LESSON.close(false);
     DEV.on=true;DEV.freeze=false;DEV.minimized=false;DEV.refreshT=0;document.body.classList.add('dev-open');
     try{ $imports.Speedrun.invalidate('debug'); }catch(e){}                /* 速通中打开调试面板：这次成绩无效 */
+    (0,$imports.gameFact)('debug');                                               /* 成就、积分与通关记录：这一局标成调试局 */
     var el=document.getElementById('dev'); if(el) el.style.display='flex';
     el.classList.remove('dev-minimized');el.setAttribute('role','dialog');document.getElementById('devball').hidden=true;
     DEV.lists={

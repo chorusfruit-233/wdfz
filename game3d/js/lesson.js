@@ -51,6 +51,7 @@ LESSON.answer=function(index){
   var r=LESSON.record();if(!r||r.done||r.left<=0)return;
   var task=LESSON_TASKS[r.task];if(index<0||index>=task.choices.length)return;
   r.done=true;
+  (0,$imports.gameFact)('lesson',{task:r.task,correct:index===task.answer});
   if(index===task.answer){r.correct=true;$imports.PlayerStats.changeSan(2+$imports.DayEvents.lessonBonus(),'lesson',{max:100});(0,$imports.addClue)('lesson');$imports.Investigation.record('lesson:'+r.task,task.note,'事实','课堂提醒');(0,$imports.os)('我：'+task.note,4.4,$imports.OS_KEEP);}
   else (0,$imports.os)('我：老师没有说对不对，只让我把纸翻过去。',3.4);
   LESSON.close(false);(0,$imports.autoSave)();

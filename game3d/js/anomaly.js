@@ -605,10 +605,12 @@ function anStart(){
   (0,$imports.os)(AN_MSG[id]||'我：……',4.6);
   try{ $imports.SFX.anomaly&&$imports.SFX.anomaly(id); }catch(e){}
   anOn(id);
+  (0,$imports.gameFact)('anomaly',{id:id,phase:'start',lethal:!!AN_LETHAL[id]});
 }
 function anEnd(){
   if(!AN.active&&AN.id===null) return;
   var id=AN.id;
+  (0,$imports.gameFact)('anomaly',{id:id,phase:'end',survived:!$imports.S.dead,lethal:!!AN_LETHAL[id]});
   anOff(id);
   if(id==='roster'&&!AN.data.done){
     (0,$imports.addViolation)(18);
@@ -665,6 +667,7 @@ function colaStart(){
   (0,$imports.os)(AN_MSG.cola,4.2);
   try{ $imports.Playtest.event('异象','cola'); }catch(e){}
   anOn('cola');
+  (0,$imports.gameFact)('anomaly',{id:'cola',phase:'start',lethal:false});
   return true;
 }
 function colaResume(r){
@@ -698,6 +701,7 @@ function anOff(id){ (0,$imports.entClear)(); try{ (0,$imports.anfxClear)(); }cat
 /* 非致命异象的"惩罚"：吓一下、扣 SAN，然后结束 */
 function anHurt(msg,loss,opt){
   opt=opt||{};
+  (0,$imports.gameFact)('anomaly',{id:AN.id,phase:'hurt',loss:loss});
   var k=($imports.S.diff==='hard')?1.25:0.9;
   $imports.PlayerStats.changeSan(-(loss*k),'anomaly',{min:0});
   $imports.VisualState.hurt=Math.max($imports.VisualState.hurt||0,0.65);

@@ -88,6 +88,7 @@ var Inspection={
   finish:function(c){
     var st=Inspection.state();if(st.current!==c)return;
     st.current=null;
+    (0,$imports.gameFact)('inspection',{day:c.day,slot:c.slot,compliant:!!c.compliant});
     st.calm=8;st.calmRoom=c.room;
     st.scatter={t:0,duration:.8,room:c.room};$imports.InspectionView.finish(st.scatter);
     $imports.PlayerStats.changeSan(-((c.compliant?INSPECT_CONFIG.goodSan:INSPECT_CONFIG.badSan)),'inspection',{min:0});

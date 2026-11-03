@@ -147,6 +147,7 @@ var Opening={on:false,short:false,handed:true,waitT:0,
     $imports.VisualState.worldNorm=0; $imports.GLR.flash=0; (0,$imports.cutFade)(0); openingCap('');
     try{ if($imports.NC.normal) (0,$imports.ncFlip)(); }catch(e){}
     (0,$imports.proMark)();
+    (0,$imports.gameFact)('opening');
     (0,$imports.resetInputState)();
     try{ (0,$imports.syncCamera)(0); }catch(e){}
     if($imports.running){ $imports.lastT=performance.now(); $imports.accum=0; }
