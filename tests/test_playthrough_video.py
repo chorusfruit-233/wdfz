@@ -148,6 +148,57 @@ class PlaythroughOutputTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, '材料'):
                     playthrough.validate_success(wrong)
 
+    def test_cyber_publication_requires_evidence_and_full_survival(self):
+        names = ['wirelessStarted', 'wirelessConnected', 'containerReady', 'controllerSelected',
+                 'transactionTraced', 'shutdownValidated', 'shutdownAccepted', 'serverCompleted']
+        events = [{'kind': 'milestone', 'detail': name, 'activeSeconds': 100 + i * 20}
+                  for i, name in enumerate(names)]
+        events[-1]['activeSeconds'] = events[-2]['activeSeconds'] + 600
+        events.extend({'kind': 'terminal-file', 'detail': {'file': '/school/' + file}}
+                      for file in ['site.txt', 'assets.tsv', 'runtime.log', 'services.txt'])
+        result = {'settings': {'route': 'cyber'}, 'state': {'finished': True, 'screen': 'end', 'ending': 'cyber',
+                  'attempt': 1, 'server': {'status': 'completed', 'remaining': 0},
+                  'network': {'connected': True, 'download': {'status': 'complete'}}}, 'events': events,
+                  'runtime_checks': {'devOpen': False, 'godMode': False, 'fastMovement': False,
+                                     'searchEnabled': True, 'cutscenesEnabled': True, 'studySkipped': 0}}
+        playthrough.validate_success(result)
+        changes = [lambda r: r['events'].pop(),
+                   lambda r: r['events'][7].update(activeSeconds=300),
+                   lambda r: r['events'].reverse(),
+                   lambda r: r['state'].update(attempt=2),
+                   lambda r: r['runtime_checks'].update(studySkipped=100),
+                   lambda r: r['state']['network']['download'].update(status='running'),
+                   lambda r: r['state']['server'].update(status='cancelled')]
+        for change in changes:
+            wrong = deepcopy(result)
+            change(wrong)
+            with self.assertRaises(ValueError):
+                playthrough.validate_success(wrong)
+
+    @unittest.skipUnless(shutil.which('node'), 'requires Node.js')
+    def test_cyber_solver_uses_printed_files_and_handles_shuffled_log_order(self):
+        script = r"""
+          const fs=require('fs'),vm=require('vm'),assert=require('assert');
+          const ctx={};vm.createContext(ctx);
+          vm.runInContext(fs.readFileSync('game3d/js/domain/campus-terminal.js','utf8'),ctx);
+          const solver=require('./video/cyber.js');
+          for(let i=0;i<100;i++){
+            const p=ctx.CampusTerminal.fresh('recording-'+i,1),files={};
+            for(const path of ['/school/site.txt','/school/assets.tsv','/school/runtime.log','/school/services.txt'])
+              files[path]=ctx.CampusTerminal.run(p,'cat '+path).text;
+            files['/school/runtime.log']=files['/school/runtime.log'].split('\n').reverse().join('\n');
+            const s=solver.solve(files);
+            for(const line of ['campusctl select '+s.controller+' /school/assets.tsv',
+              'campusctl trace '+s.transaction+' /school/runtime.log',
+              'edit /work/shutdown "'+s.body+'"','campusctl validate /work/shutdown'])
+              assert(!ctx.CampusTerminal.run(p,line).error);
+            assert.equal(ctx.CampusTerminal.run(p,'campusctl shutdown --confirm').request,'shutdown');
+            const wrong={...files,'/school/runtime.log':files['/school/runtime.log'].replace(/event=authorize/g,'event=unrelated')};
+            assert.throws(()=>solver.solve(wrong),/事务链/);
+          }
+        """
+        subprocess.run(['node', '-e', script], cwd=ROOT, check=True)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

@@ -46,7 +46,7 @@
   const video=document.getElementById('movie');
   function stamp(seconds){return Math.floor(seconds/60)+':'+String(Math.floor(seconds%60)).padStart(2,'0');}
   fetch('playthrough-summary.json').then(r=>{if(!r.ok)throw Error('metadata');return r.json();}).then(run=>{
-    const title={car:'《闸门》 · 汽车逃脱',face:'《白名单》 · 身份验证',portal:'《门》 · 收集与装配'}[run.ending]||run.ending;
+    const title={car:'《闸门》 · 汽车逃脱',face:'《白名单》 · 身份验证',portal:'《门》 · 收集与装配',cyber:'《网安仙人》 · 联网、解谜与停机'}[run.ending]||run.ending;
     document.getElementById('route').textContent='完整通关示例 · '+title;
     document.title=title+' · 武大附中里世界';
     const controls=run.controls==='touch_joystick_and_look_with_keyboard_actions'?'摇杆与按键脚本操作':'键鼠脚本操作';

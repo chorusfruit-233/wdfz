@@ -43,6 +43,41 @@ class SteeringMathTest(unittest.TestCase):
 
 
 class DoorwayNavigationTest(BrowserCase):
+    def test_fake_normal_dialog_is_answered_without_changing_game_rules(self):
+        page = self.page()
+        page.evaluate("""running=false;S.intro=0;AN.active=false;PAT.locked=false;RT.inspection=null;
+          S.fn={on:true,v:0,left:4,used:{},next:0,n:0};fnTick(.1);""")
+        page.add_script_tag(path=str(ROOT / 'video/playthrough.js'))
+        self.assert_js(page, "UI.chooseOpen && document.getElementById('choices').innerText.includes('看起来是——')")
+        page.evaluate("Pilot.defense().then(()=>window.handled=true)")
+        page.wait_for_function('window.handled')
+        self.assert_js(page, "!UI.chooseOpen && S.fn.v===5 && !S.dead")
+        self.assertEqual(page.evaluate("Pilot.log.find(e=>e.kind==='decision').detail.option"), 2)
+
+    def test_cyber_route_crosses_bridge_and_uses_student_pc_without_key(self):
+        page = self.page()
+        page.evaluate("""doEnterRoom('teach1');running=false;
+          const R=INTERIORS.teach1;S.x=R.ox+48.5*R.tw;S.y=R.oy+6.5*R.th;S.ang=-Math.PI/2;
+          S.intro=0;S.seated=true;S.bag=['phone'];RT.inspection=null;PAT.locked=false;AN.active=false;
+          PhoneNetwork.acquire();PhoneNetwork.device.network=true;PhoneNetwork.device.download.status='complete';
+          window.pump=setInterval(()=>{dtG=.35;updatePlayer(.35);},80);""")
+        for script in ('navigation.js', 'cyber.js', 'playthrough.js'):
+            page.add_script_tag(path=str(ROOT / 'video' / script))
+        page.evaluate("""(async()=>{
+          await PilotCyber.bridge(Pilot,'lab');await Pilot.floor(3);
+          await Pilot.nearest('nK',10);await Pilot.choose(3);
+          if(!TerminalUI.on||hasItem('roomkey'))throw Error('普通学生机没有正常打开终端');
+          document.querySelector('#campus-terminal [data-exit]').click();
+          await PilotCyber.bridge(Pilot,'teach');await Pilot.floor(1);
+          const R=INTERIORS.teach1;await Pilot.go({x:R.ox+48.5*R.tw,y:R.oy+6.5*R.th},11);await Pilot.tap('e');
+        })().then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)});""")
+        page.wait_for_function('window.result', timeout=180000)
+        self.assertEqual(page.evaluate('window.result'), {'ok': True},
+                         page.evaluate("JSON.stringify({state:Pilot.snapshot(),events:Pilot.log.filter(e=>e.kind!=='input').slice(-8)})"))
+        self.assert_js(page, "S.room==='teach1' && S.seated && atMySeat() && !TerminalUI.on && !hasItem('roomkey')")
+        self.assertEqual(page.evaluate("Pilot.log.filter(e=>e.kind==='bridge').map(e=>e.detail.to)"), ['lab', 'teach'])
+        page.evaluate('clearInterval(pump)')
+
     def test_portal_bench_tunnel_and_blueprint_use_real_interactions(self):
         page = self.page()
         page.evaluate("""ENTER_VIA='stair';doEnterRoom('lab1');running=false;

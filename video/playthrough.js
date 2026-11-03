@@ -17,6 +17,10 @@ window.Pilot = (() => {
       san:S.san,viol:S.viol,bag:S.bag.slice(),talent:S.talent,dead:S.dead,frameSeconds:dtG,
       anomaly:AN.active?AN.id:null,patrol:PAT.state,ending:RT.end||null,
       paused:PAUSE.on,choice:UI.chooseOpen,inputsAllowed:playerInputAllowed(),
+      activeSeconds:Mechanics.activePlaySeconds,attempt:Mechanics.attemptId,assimilation:S.tt,seated:S.seated,
+      network:{battery:PhoneNetwork.device.battery,powered:PhoneNetwork.device.powered,connected:PhoneNetwork.device.network,
+        wireless:{...PhoneNetwork.device.wireless},download:{...PhoneNetwork.device.download}},
+      server:{...Termination.state},
       chase:RT.carChase?{...RT.carChase}:null,
       route:selectedRoute,progress:{hacked:!!RT.hacked,data:!!RT.data,quiz:RT.faceQuiz?.done||0,
         diary:!!RT.portalDiary,blueprints:Object.keys(RT.portalBlueprints||{}).filter(k=>RT.portalBlueprints[k]),
@@ -56,6 +60,15 @@ window.Pilot = (() => {
   }
   function stop(){move(0);for(const k of [...held])key(k,false);}
   async function tap(k){key(k,true);await sleep(60);key(k,false);}
+  async function leaveSeat(){
+    if(!S.seated)return;
+    stop();const seat={x:S.x,y:S.y},deadline=performance.now()+5000;
+    // Normal forward input stands up and walks clear of the chair collider.
+    key('w',true);
+    try{while(distance(seat)<10&&performance.now()<deadline){alive();await sleep(50);}}
+    finally{stop();}
+    if(S.seated||distance(seat)<10)throw Error('未能通过正常移动离开座位');
+  }
   function look(yaw,pitch=0){
     if(!playerInputAllowed())return;
     const sense=lookSensitivity(true), dx=Math.max(-35,Math.min(35,angle(yaw-S.ang)/(.0042*sense))),
@@ -80,8 +93,8 @@ window.Pilot = (() => {
   }
   function distance(p){return Math.hypot(p.x-S.x,p.y-S.y);}
   function walkLineClear(target){
-    const d=distance(target),n=Math.ceil(d/1.2);
-    for(let i=1;i<=n;i++)if(Collision.depth(S.x+(target.x-S.x)*i/n,S.y+(target.y-S.y)*i/n,PRAD+.03)>1e-7)return false;
+    const d=distance(target),n=Math.ceil(d/.35);
+    for(let i=1;i<=n;i++)if(Collision.depth(S.x+(target.x-S.x)*i/n,S.y+(target.y-S.y)*i/n,PRAD+.15)>1e-7)return false;
     return true;
   }
   function coverRects(){
@@ -105,8 +118,10 @@ window.Pilot = (() => {
     const cols=Math.ceil((R?R.w:(BOUND.x1-BOUND.x0-8)*SC)/step),rows=Math.ceil((R?R.h:(BOUND.y1-BOUND.y0-8)*SC)/step);
     const point=i=>({x:ox+(i%cols+.5)*step,y:oy+(Math.floor(i/cols)+.5)*step});
     const index=(x,y)=>Math.max(0,Math.min(rows-1,Math.floor((y-oy)/step)))*cols+Math.max(0,Math.min(cols-1,Math.floor((x-ox)/step)));
-    const cache=new Map(),free=i=>{if(!cache.has(i)){const p=point(i);cache.set(i,Collision.depth(p.x,p.y,PRAD+.08,copy)<1e-7);}return cache.get(i);};
-    const clear=(a,b)=>{const n=Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/1.4);for(let j=1;j<=n;j++)if(Collision.depth(a.x+(b.x-a.x)*j/n,a.y+(b.y-a.y)*j/n,PRAD+.04,copy)>1e-7)return false;return true;};
+    // A grazing locker corner can fit between coarse samples even though the
+    // game's 240 Hz movement hits it. Keep a small body margin in both planners.
+    const cache=new Map(),free=i=>{if(!cache.has(i)){const p=point(i);cache.set(i,Collision.depth(p.x,p.y,PRAD+.2,copy)<1e-7);}return cache.get(i);};
+    const clear=(a,b)=>{const n=Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/.35);for(let j=1;j<=n;j++)if(Collision.depth(a.x+(b.x-a.x)*j/n,a.y+(b.y-a.y)*j/n,PRAD+.15,copy)>1e-7)return false;return true;};
     const start=index(S.x,S.y),heap=[],cost=new Map([[start,0]]),prev=new Map();
     function push(i,f){let n=heap.length;heap.push([i,f]);while(n){const p=(n-1)>>1;if(heap[p][1]<=f)break;heap[n]=heap[p];n=p;}heap[n]=[i,f];}
     function pop(){const first=heap[0],last=heap.pop();if(heap.length){let n=0;while(n*2+1<heap.length){let c=n*2+1;if(c+1<heap.length&&heap[c+1][1]<heap[c][1])c++;if(heap[c][1]>=last[1])break;heap[n]=heap[c];n=c;}heap[n]=last;}return first[0];}
@@ -131,7 +146,7 @@ window.Pilot = (() => {
   }
 
   function threatChoice(){
-    return UI.chooseOpen&&/脚步声停在我身后|背后有只手|隔间底下伸来一只手|你作业交了吗|最东边那扇门后面|名字被一道红线划掉/.test(document.getElementById('choices').innerText);
+    return UI.chooseOpen&&/脚步声停在我身后|背后有只手|隔间底下伸来一只手|你作业交了吗|最东边那扇门后面|名字被一道红线划掉|看起来是——/.test(document.getElementById('choices').innerText);
   }
   async function defense(){
     alive();let handled=false;
@@ -162,7 +177,8 @@ window.Pilot = (() => {
       event('choice',text);
       // These options are selected from the text shown to the player.
       const labels=[...document.querySelectorAll('#choices button')].map(b=>b.textContent);
-      const wanted=text.includes('脚步声停在我身后')?'回头看':
+      const wanted=text.includes('看起来是——')?'不笑，装作没这回事':
+        text.includes('脚步声停在我身后')?'回头看':
         labels.some(t=>t.includes('把作业本递过去'))?'把作业本递过去':
         labels.some(t=>t.includes('不出声'))?'不出声':
         labels.some(t=>t.includes('不回头'))?'不回头':labels[0];
@@ -213,8 +229,14 @@ window.Pilot = (() => {
       if(await defense()){replan();continue;}
       if(!playerInputAllowed()){stop();progress.since=performance.now();await sleep(100);continue;}
       if(S.mode==='in'){
-        const R=INTERIORS[S.room],door=cells('=').find(p=>distance(p)<17&&!doorIsOpen(R,p.x,p.y)&&(!doorLockNeed(R,p.c,p.r)||hasItem(doorLockNeed(R,p.c,p.r))));
-        if(door){await face(door.x,door.y);await tap('e');await sleep(420);}
+        const R=INTERIORS[S.room],door=nearWorld(24);
+        if(door?.ch==='='&&!doorIsOpen(R,door.x,door.y)&&(!doorLockNeed(R,door.c,door.r)||hasItem(doorLockNeed(R,door.c,door.r)))){
+          await face(door.x,door.y);
+          // Adjacent doors share an interaction cone. Never close the open leaf
+          // when the game's actual E target differs from the intended leaf.
+          const hit=nearWorld(24);
+          if(hit?.ch==='='&&!doorIsOpen(R,hit.x,hit.y)){await tap('e');await sleep(420);}
+        }
       }
       // Skip a corner only when the player's full collision radius fits the next
       // segment. Never round through a wall merely because we are near a waypoint.
@@ -268,17 +290,17 @@ window.Pilot = (() => {
     }
     await sleep(1000);if(S.room===before)throw Error('楼梯未切换楼层');
   }
-  async function bagAction(id,label){
+  async function bagAction(id,label,close=true){
     stop();await tap('Tab');await sleep(500);
     const slot=document.querySelectorAll('#bags .s')[S.bag.indexOf(id)];
     if(!slot)throw Error('背包中没有 '+id);slot.click();await sleep(500);
     const button=[...document.querySelectorAll('#bagacts button')].find(b=>b.textContent===label);
     if(!button)throw Error('背包操作不存在 '+label);button.click();event('input',{bag:id,action:label});
-    await sleep(700);await tap('Escape');await sleep(300);
+    await sleep(700);if(close){await tap('Escape');await sleep(300);}
   }
   async function roomForItem(){
     if(S.bag.length<7)return;
-    const needed=selectedRoute==='car'?['key','torch']:selectedRoute==='face'?['roomkey','usb']:['roomkey','coil','lens','vial','battery','goggles'];
+    const needed=selectedRoute==='car'?['key','torch']:selectedRoute==='face'?['roomkey','usb']:selectedRoute==='cyber'?['roomkey','phone','elixir','seal','hw']:['roomkey','coil','lens','vial','battery','goggles'];
     const expendable=S.bag.find(id=>![...needed,'pill'].includes(id));
     if(expendable)await bagAction(expendable,'丢弃');
     else if(hasItem('pill'))await bagAction('pill','使用');
@@ -290,12 +312,7 @@ window.Pilot = (() => {
     while(PRO.on){await sleep(2800);await tap('Enter');}
     await sleep(2500);chapter('自己的课桌与讲台移交单');
     await tap('r');await sleep(5000);
-    // Movement itself stands up. A separate E press leaves a slow frame for the
-    // game's chair-unsticking logic before the first walking input can be consumed.
-    const seat={x:S.x,y:S.y},standDeadline=performance.now()+5000;
-    key('w',true);
-    while(distance(seat)<10&&performance.now()<standDeadline)await sleep(50);
-    stop();
+    await leaveSeat();
     const podium=cells('T').find(p=>Investigation.isPodium(INTERIORS.teach1,p.c,p.r));
     await interact(podium);await choose(1);
     if(!RT.investigation?.entries.notice)throw Error('未读到讲台移交单');
@@ -451,13 +468,14 @@ window.Pilot = (() => {
     await finishEnding('car');
   }
   function start(route='car'){
-    if(!['car','face','portal'].includes(route))throw Error('不支持的真结局路线');
+    if(!['car','face','portal','cyber'].includes(route))throw Error('不支持的真结局路线');
     selectedRoute=route;
     started=performance.now();const label=document.createElement('div');label.id='pilot-label';
     label.style.cssText='position:fixed;right:12px;top:76px;z-index:50000;background:#101718dd;color:#d9e2da;padding:6px 10px;border-radius:3px;font:12px sans-serif;pointer-events:none;max-width:48%';
     document.body.appendChild(label);
-    (async()=>{await opening();await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
+    (async()=>{await opening();if(route==='cyber')await PilotCyber.run({sleep,chapter,event,stop,tap,look,alive,defense,go,cells,interact,nearest,building,floor,officeKey,choose,bagAction,finishEnding,leaveSeat});
+      else await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
       .catch(e=>{stop();failed=e.stack||String(e);event('failure',failed);});
   }
-  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,face,tap,choose,stop,garageExit};
+  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event,defense,leaveSeat};
 })();

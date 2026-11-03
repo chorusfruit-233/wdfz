@@ -1,0 +1,127 @@
+{
+  "recording": "cyber-attempt-05",
+  "source_commit": "998a1f0802b97a5fe5137cd470ee101573a5a9cc",
+  "source_dirty": false,
+  "game_baseline": "ce8d10756b0e7d92522c415b5dcf5e57e0f33b42",
+  "game_diff_from_baseline": [],
+  "generator_hashes_verified": [
+    "capture.py",
+    "cyber.js",
+    "example.py",
+    "game-audio.js",
+    "navigation.js",
+    "playthrough.html",
+    "playthrough.js",
+    "playthrough.py"
+  ],
+  "video_sha256": "ae55741886bd2ea313893a4b5e259cbf71f1b6889444185f6d6fb1a36f9ffd39",
+  "duration_seconds": 1567.72,
+  "video_bytes": 61959513,
+  "video_mib": 59.09,
+  "raw_duration_seconds": 1567.72,
+  "codecs": {
+    "video": "h264",
+    "audio": "aac"
+  },
+  "audio_delay_seconds": 5.901814987182661,
+  "milestones": [
+    {
+      "detail": "wirelessStarted",
+      "seconds": 110.99,
+      "activeSeconds": 100.11666666666227
+    },
+    {
+      "detail": "wirelessConnected",
+      "seconds": 508.26,
+      "activeSeconds": 494.18333333321254
+    },
+    {
+      "detail": "containerReady",
+      "seconds": 568.98,
+      "activeSeconds": 553.799999999825
+    },
+    {
+      "detail": "controllerSelected",
+      "seconds": 873.9,
+      "activeSeconds": 844.7499999995604
+    },
+    {
+      "detail": "transactionTraced",
+      "seconds": 877.86,
+      "activeSeconds": 848.3666666662238
+    },
+    {
+      "detail": "shutdownValidated",
+      "seconds": 907.47,
+      "activeSeconds": 873.8666666662006
+    },
+    {
+      "detail": "shutdownAccepted",
+      "seconds": 908.69,
+      "activeSeconds": 875.183333332866
+    },
+    {
+      "detail": "serverCompleted",
+      "seconds": 1520.99,
+      "activeSeconds": 1474.7499999989875
+    }
+  ],
+  "post_submit_active_seconds": 599.5666666661215,
+  "post_submit_wall_seconds": 612.3,
+  "wireless_target_seconds": 393.62026790708256,
+  "ending": "cyber",
+  "ending_day": 2,
+  "ending_card": "真 结 局\n《网安仙人》\n服务器接受了最后一条指令。名单、门禁和巡察停止运行。\nAnthroPrank AI（安抄派智能）的校园试点终止了。更早的纸质档案和断链后的回执，仍没有答案。\n您未能完全理解里世界\n第 2 天\n回到主菜单",
+  "page_errors": [],
+  "attempt": 1,
+  "runtime_checks": {
+    "devOpen": false,
+    "godMode": false,
+    "fastMovement": false,
+    "searchEnabled": true,
+    "cutscenesEnabled": true,
+    "timeScale": null,
+    "studySkipped": 0,
+    "finalEnding": "cyber",
+    "carDistance": null,
+    "actualSettings": {
+      "quality": 0,
+      "volume": 65
+    },
+    "endingCard": "真 结 局\n《网安仙人》\n服务器接受了最后一条指令。名单、门禁和巡察停止运行。\nAnthroPrank AI（安抄派智能）的校园试点终止了。更早的纸质档案和断链后的回执，仍没有答案。\n您未能完全理解里世界\n第 2 天\n回到主菜单"
+  },
+  "min_san": 80.29271050002392,
+  "max_violation": 100,
+  "max_assimilation": 52.06066666670105,
+  "final_san": 94.08357331109971,
+  "final_violation": 0,
+  "median_frame_seconds": 0.26679999999993015,
+  "bridges": [
+    {
+      "from": "teach",
+      "to": "lab",
+      "via": "link2"
+    },
+    {
+      "from": "lab",
+      "to": "teach",
+      "via": "link2"
+    }
+  ],
+  "replans": 0,
+  "interruptions": [
+    "退出终端处理眼前的危险",
+    "退出终端处理眼前的危险"
+  ],
+  "terminal_files": [
+    "/school/site.txt",
+    "/school/assets.tsv",
+    "/school/runtime.log",
+    "/school/services.txt"
+  ],
+  "limits": [
+    "脚本预知路线，并读取地图与状态；不是人类盲测。",
+    "单次科技党随机无线耗时样本；不替代全部 M7 组合或真人、真机验收。",
+    "软件 WebGL 实际帧率较低，编码帧率包含重复画面。"
+  ]
+}

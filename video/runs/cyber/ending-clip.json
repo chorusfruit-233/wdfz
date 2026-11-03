@@ -1,0 +1,11 @@
+{
+  "source_video": "playthrough.mp4",
+  "source_sha256": "ae55741886bd2ea313893a4b5e259cbf71f1b6889444185f6d6fb1a36f9ffd39",
+  "source_commit": "998a1f0802b97a5fe5137cd470ee101573a5a9cc",
+  "start_seconds": 1523.0198149871826,
+  "end_seconds": 1554.4998149871826,
+  "duration_seconds": 31.48,
+  "sha256": "5818ea88bd4b881afe8973f25dca0a3cfae854b4328c86d9960014df9be1f945",
+  "bytes": 952637,
+  "extractor_sha256": "2ef68b847659ddeaa6ff8e0cd6e57655f59103a255a8d392765039a93db3a40a"
+}
