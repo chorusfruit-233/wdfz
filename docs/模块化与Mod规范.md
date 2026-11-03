@@ -121,12 +121,14 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 
 - `DeathCG.register(类型, {build(c), update(c, k, view)})`：登记一种演出，同名覆盖内置。`build` 搭模型，`update` 按经过的秒数 `k` 摆模型和镜头——所有位置只由 `k` 算，帧率高低结果一样。`c` 是演出上下文：`add / mesh / box / fig / fx / merged / inst`（建在「视线坐标系」里：原点在脚下，+z 是死的那一刻的视线方向，本地 +x 在画面左边）、`veil`（收束用的黑幕）、`cam(view, k, 偏航, 俯仰, 下沉)`（镜头；偏航为正往右转）、`shade`、`flash`（只闪一次，亮度封顶 0.5）、`cue`（声音到点只响一次）、`face`、`hideWorld()`（藏起当前房间或室外，场景里标了 `userData.worldPart` 的东西——例如粉笔记号——一起藏，清场时还原）。往 `c` 上挂自己的东西时别用它已有的字段名（`type F preview rand base shk flashed cued lift veilMesh`）。常用小工具在 `DeathCG.kit`：`seg / sm / ss / lerp3 / rng / mat / setI`。
 - `DeathTimeline.define(类型, 秒)`：登记时长（四段式至少 3 秒；死亡界面在演出放完后出现）。
-- 配套：死亡音写成声音库里的 `death.<类型>`（`SFX.deathFx` 会先放 `death.base`）；墓志铭 `DFX_EPI[类型]`、死因与复盘提示 `DEATH_SOURCES[来源] = {cause, hint}` 由模块的逻辑文件填；调试面板的预览列表 `DEV_DEATH.push([名字, 类型])`；死亡档案的条目登记在 `death-archive.js`（档案启动时就要认得全部 ID，所以写在那里；属于内部内容的标 `secret:1`，没死过不出现、不算总数）。
+- 配套：死亡音写成声音库里的 `death.<类型>`（`SFX.deathFx` 会先放 `death.base`）；墓志铭 `DFX_EPI[类型]`、死因与复盘提示 `DEATH_SOURCES[来源] = {cause, hint}` 由模块的逻辑文件填；调试面板的预览列表 `DEV_DEATH.push([名字, 类型])`；死亡档案的条目登记在 `death-archive.js`（档案启动时就要认得全部 ID，所以写在那里；属于内部内容的标 `secret:1`，没死过不出现、不算总数；演出由模块注册的再标 `ext:1`，模块拿掉时这份档案不列出、「全部解锁」也不打开）。
 - 性能与可读性约束由 `tests/test_death_timeline.py` 统一检查：每种演出在场景之外最多再加 30 次绘制、只用开局预热过的材质组合（不在死的那一刻现编着色器）、帧率无关、四个阶段画面不同、闪光不超过 0.5、关掉「镜头晃动」时不晃。
 
 ### 4.3 结局演出（`cutscene.js` 的 `CUT_DEF`）
 
 模块可以往 `CUT_DEF` 加自己的结局演出（`modules/cyber-route/ending.js` 的《网安仙人》）：`{dur, setup(d), frame(k, d), clean(d)}`，`k` 是 0–1 的进度，一切位置只由 `k` 算；跳过和播完走同一个只执行一次的收尾。要在舞台上演就调 `Engine.beginOutsideStage()`（收尾自动 `endStage`）；临时对象用 `cutAdd` 挂进 `CUT.grp`，收尾统一释放（画布贴图在材质上标 `userData.disposeMap`）。需要别的天色时设 `VisualState.stageHour`（只影响天色、光照和环境声，`clean` 里置回 `null`）；室内布景的明暗用 `lightState` 钩子按 `CUT.id` 改，不要加实时点光源。几处布景开头一起 `GLR.renderer.compile(CUT.grp, GLR.cam, GLR.scene)`，中途切镜不现编着色器。
+
+结局演出要在死亡档案室「结局与开场」里能重看（2026-11-03），在 `death-archive.js` 的 `ARCHIVE_CUTS` 登记一条：`{id:'end:<结局ID>', cut:'<CUT_DEF 键>', end:'<结局ID>', n:标题, d:一句记录, stage:回放前先进的场景, at:可选的站位{c,r,ang}}`，隐藏结局加 `secret:1`。解锁看「已见结局」；回放用同一份 `CUT_DEF`、完成回调只回档案室，所以 `setup / frame / clean` 不能假定之后一定会出结局卡或改存档。`CUT_DEF` 里没有这个键（模块拿掉了）时，这条档案自动不列出。
 
 ## 5. Mod
 

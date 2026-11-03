@@ -41,9 +41,10 @@ DEATH_ARCHIVE.forEach(function(e,i){ e.no=i+1; DEATH_ARCHIVE_BY_ID[e.id]=e; });
    cut 是过场 ID（CUT_DEF 的键）；解锁看真实记录——结局看 endsSeen()（「已见结局」那份），开场看 proSeen()——
    或者「全部解锁」。《先辈》是隐藏结局，标 secret：没达成过（也没全部解锁）就完全不出现。
    stage：回放前先进的场景（演出自己切室外舞台的，用教学楼一楼当底）；at：站在场景的哪一格、朝哪（《闸门》站在两排车之间的车道上朝西，
-   车灯顺着车道照出去——真实结局里是玩家站在车旁的位置和朝向） */
+   车灯顺着车道照出去——真实结局里是玩家站在车旁的位置和朝向）；hour：回放时的天色（VisualState.stageHour，只影响画面，不改 S.tsec），
+   开场固定在新局开始的 11:40（第四节），不跟着菜单里残留的上一局时刻变成夜里 */
 var ARCHIVE_CUTS=[
-  {id:'cut:opening', cut:'opening',            n:'开场 · 第四节', d:'粉笔灰停在半空，你趴到桌上。再睁开眼，教室里坐满了人，没有一个人在呼吸。', stage:'teach1'},
+  {id:'cut:opening', cut:'opening',            n:'开场 · 第四节', d:'粉笔灰停在半空，你趴到桌上。再睁开眼，教室里坐满了人，没有一个人在呼吸。', stage:'teach1', hour:700/60},
   {id:'end:car',     cut:'car',     end:'car',    n:'《闸门》',     d:'车灯闪了两下，光里站着它。冲出北门回头，黑影从门里追了出来。', stage:'garage1', at:{c:44.5,r:6.5,ang:Math.PI}},
   {id:'end:face',    cut:'face',    end:'face',   n:'《白名单》',   d:'闸机的红灯「嘀」地变白。走出门回头，门里一个接一个站满了目送的人。', stage:'teach1'},
   {id:'end:portal',  cut:'portal',  end:'portal', n:'《门》',       d:'导轨一段段闭合，光圈撑开。退了半步，然后走了进去。', stage:'lab1'},
@@ -234,6 +235,7 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
     var cap=document.getElementById('arReplay');
     if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; cap.querySelector('i').textContent=e.cut?(e.end?'结局档案 · 回放':'开场 · 回放'):'死亡档案 · 回放'; }
     S.screen='replay'; S.dead=false; S.death=null; S.seated=false; S.pitch=0; S.eyeLift=0;
+    if(e.hour!==undefined) VisualState.stageHour=e.hour;          /* 先定天色再搭场景：窗光、灯这些按搭建时的时刻 */
     try{
       if(e.stage==='out'){
         S.x=DEATH_STAGE_OUT.x; S.y=DEATH_STAGE_OUT.y; S.ang=DEATH_STAGE_OUT.ang;
@@ -270,7 +272,10 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
     if(typeof CUT_DEF==='undefined'||!CUT_DEF[e.cut]){ ArchiveReplay.stop(); return; }
     ArchiveReplay.cut={enabled:CUT.enabled,dur:CUT_DEF.opening?CUT_DEF.opening.dur:null,short:typeof Opening!=='undefined'?Opening.short:false};
     CUT.enabled=true;
-    if(e.cut==='opening'&&typeof Opening!=='undefined'){ Opening.short=false; CUT_DEF.opening.dur=OPENING_DUR.full; }   /* 档案里看完整版 */
+    if(e.cut==='opening'&&typeof Opening!=='undefined'){                /* 档案里看完整版；同学先换回正常的样子，演到第四段再褪成里世界 */
+      Opening.short=false; CUT_DEF.opening.dur=OPENING_DUR.full;
+      try{ ncRestore(); }catch(err){}
+    }
     try{ SFX.resume(); }catch(err){}
     try{ syncCamera(0); }catch(err){}
     playCut(e.cut,function(){ ArchiveReplay.stop(); });
@@ -286,6 +291,8 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
     ArchiveReplay.on=false;
     if(typeof CUT!=='undefined'&&CUT.on){ CUT.done=null; cutFinish(); }    /* 结局 / 开场回放中途结束：先收掉过场（完成回调已摘掉，不会再进来） */
     var c=ArchiveReplay.cut; ArchiveReplay.cut=null;
+    var ent=ARCHIVE_BY_ID[ArchiveReplay.id];
+    if(ent&&ent.hour!==undefined) VisualState.stageHour=null;         /* 回放指定的天色收回（场景没搭好就结束时也收） */
     if(c){
       CUT.enabled=c.enabled;
       if(c.dur!==null&&CUT_DEF.opening) CUT_DEF.opening.dur=c.dur;

@@ -154,13 +154,18 @@ class DeathArchiveTest(BrowserCase):
         page.wait_for_timeout(500)
         page.keyboard.press('Escape')
         page.wait_for_function("!ArchiveReplay.on&&S.screen==='menu'")
-        # 开场：档案里看完整版，按键也能结束
+        # 开场：档案里看完整版，按键也能结束。菜单里残留的是上一局的深夜，开场仍按 11:40 的天色演；
+        # 开场看过以后教室一搭好同学就是里世界的样子，完整版前三段要换回正常的同学
+        page.evaluate("S.tsec=1380")
         page.locator('#arcuts .arcard[data-id="cut:opening"] button').click()
         page.wait_for_function("ArchiveReplay.on&&CUT.on&&CUT.id==='opening'&&CUT.dur===OPENING_DUR.full", timeout=20000)
+        self.assert_js(page, "Math.abs(hourNow()-700/60)<1e-6&&S.tsec===1380")
+        self.assert_js(page, "NC.normal===true&&NC.list.length>0&&NC.list.every(f=>[...f.children].every(c=>c.material===NC.matN))")
         page.wait_for_timeout(600)
         page.keyboard.press('Escape')
         page.wait_for_function("!ArchiveReplay.on")
         self.assert_js(page, "S.screen==='menu'&&!CUT.on&&Opening.short===false&&document.getElementById('opcap').textContent===''")
+        self.assert_js(page, "VisualState.stageHour===null&&S.tsec===1380")
 
     def test_unlock_all_needs_the_debug_password_and_does_not_fake_progress(self):
         """「全部解锁」：在页面里的数字键盘上输调试密码，死亡和演出（包括隐藏的）全部打开，只记成「直接解锁」：

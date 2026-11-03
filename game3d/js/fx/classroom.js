@@ -187,6 +187,19 @@ function ncFlip(){
   NC.normal=false; NC.done=true;
   try{ GLR.flash=Math.min(0.55,(GLR.flash||0)+0.4); }catch(e){}
 }
+/* ncFlip 的反向：同学（和讲台边的老师）换回正常的样子。死亡档案室重看完整版开场时用——
+   开场看过以后，教室一搭好同学就是里世界的样子，而完整版前三段演的是正常的第四节。不闪白，不改 NC.done */
+function ncRestore(){
+  if(!NC.list||!NC.list.length||!NC.matN) return false;
+  var i,k,f;
+  for(i=0;i<NC.list.length;i++){
+    f=NC.list[i];
+    if(!f.children) continue;
+    for(k=0;k<f.children.length;k++) f.children[k].material=NC.matN;
+  }
+  NC.normal=true;
+  return true;
+}
 /* 同班表现是否存在：数值压力由规则层按模拟时间结算。 */
 function ncPressureState(){return !!(NC.grp&&NC.room&&S.mode==='in'&&S.room===NC.room);}
 function ncUpdate(dt){
