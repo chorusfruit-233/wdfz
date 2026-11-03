@@ -1,0 +1,240 @@
+{
+  "baseline": "ccc2c3f79ea64bb1c9bec68abd4432bd8db2930e",
+  "date": "2026-11-03",
+  "renderer": "headless Chromium / SwiftShader",
+  "browser": "155.0.8059.79",
+  "screenshots": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "quality": "均衡",
+      "settings": {
+        "bright": 100,
+        "shake": 1,
+        "grain": 1,
+        "volume": 0
+      },
+      "scene": {
+        "room": "teach1",
+        "x": 1113,
+        "y": 1917.5,
+        "angle": 0,
+        "pitch": 0,
+        "day": 2,
+        "clock": 700,
+        "pressureClock": 2140,
+        "san": 100,
+        "stamina": 100
+      },
+      "labels": {
+        "pressure": "第 2 天 · 高危",
+        "feeling": "呼吸平稳"
+      },
+      "shaderSan": 1,
+      "file": "01-桌面-SAN100.png",
+      "sha256": "ac0d435dd2f461538aa1e9ac1d7baa9fa79f3ec98cb5fe245bbd6cffe60e171d"
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "quality": "均衡",
+      "settings": {
+        "bright": 100,
+        "shake": 1,
+        "grain": 1,
+        "volume": 0
+      },
+      "scene": {
+        "room": "teach1",
+        "x": 1113,
+        "y": 1917.5,
+        "angle": 0,
+        "pitch": 0,
+        "day": 2,
+        "clock": 700,
+        "pressureClock": 2140,
+        "san": 45,
+        "stamina": 67
+      },
+      "labels": {
+        "pressure": "第 2 天 · 高危",
+        "feeling": "有些恍惚"
+      },
+      "shaderSan": 0.45,
+      "file": "01-桌面-SAN45.png",
+      "sha256": "f2f6237b036ff3035c06178dc06691a9d4e902c416a694a431768e11a7519700"
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "quality": "均衡",
+      "settings": {
+        "bright": 100,
+        "shake": 1,
+        "grain": 1,
+        "volume": 0
+      },
+      "scene": {
+        "room": "teach1",
+        "x": 1113,
+        "y": 1917.5,
+        "angle": 0,
+        "pitch": 0,
+        "day": 2,
+        "clock": 700,
+        "pressureClock": 2140,
+        "san": 22,
+        "stamina": 53.2
+      },
+      "labels": {
+        "pressure": "第 2 天 · 高危",
+        "feeling": "心跳很乱"
+      },
+      "shaderSan": 0.22,
+      "file": "01-桌面-SAN22.png",
+      "sha256": "13cc55c1ba9b7417d90366894e8cf4991d521d77258d348f99470a65c789d425"
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "quality": "均衡",
+      "settings": {
+        "bright": 100,
+        "shake": 1,
+        "grain": 1,
+        "volume": 0
+      },
+      "scene": {
+        "room": "teach1",
+        "x": 1113,
+        "y": 1917.5,
+        "angle": 0,
+        "pitch": 0,
+        "day": 2,
+        "clock": 700,
+        "pressureClock": 2140,
+        "san": 8,
+        "stamina": 44.8
+      },
+      "labels": {
+        "pressure": "第 2 天 · 高危",
+        "feeling": "快撑不住了"
+      },
+      "shaderSan": 0.08,
+      "file": "01-桌面-SAN8.png",
+      "sha256": "d7e0a72c2ce55efacefc23bc2b04f2e1483abe490b295a766ce1214a1d11896b"
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "quality": "流畅",
+      "settings": {
+        "bright": 100,
+        "shake": 0,
+        "grain": 0,
+        "volume": 0
+      },
+      "scene": {
+        "room": "teach1",
+        "x": 1113,
+        "y": 1917.5,
+        "angle": 0,
+        "pitch": 0,
+        "day": 2,
+        "clock": 700,
+        "pressureClock": 2140,
+        "san": 8,
+        "stamina": 44.8
+      },
+      "labels": {
+        "pressure": "第 2 天 · 高危",
+        "feeling": "快撑不住了"
+      },
+      "shaderSan": 0.08,
+      "file": "02-流畅-关闭晃动与颗粒-SAN8.png",
+      "sha256": "b81120a582bc03a4c043c64d44b01af9dab2daf22a7260ca3ab684e0949e4dde"
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "quality": "流畅",
+      "settings": {
+        "bright": 100,
+        "shake": 0,
+        "grain": 0,
+        "volume": 0
+      },
+      "scene": {
+        "room": "teach1",
+        "x": 1113,
+        "y": 1917.5,
+        "angle": 0,
+        "pitch": 0,
+        "day": 2,
+        "clock": 700,
+        "pressureClock": 2140,
+        "san": 8,
+        "stamina": 44.8
+      },
+      "labels": {
+        "pressure": "第 2 天 · 高危",
+        "feeling": "快撑不住了"
+      },
+      "shaderSan": 0.08,
+      "file": "03-触屏竖屏-SAN8.png",
+      "sha256": "d57d012a8381b5201df84607448f2eb74cd1220ccb6d2b8cd2f9ecded3125487"
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "quality": "流畅",
+      "settings": {
+        "bright": 100,
+        "shake": 0,
+        "grain": 0,
+        "volume": 0
+      },
+      "scene": {
+        "room": "teach1",
+        "x": 1113,
+        "y": 1917.5,
+        "angle": 0,
+        "pitch": 0,
+        "day": 2,
+        "clock": 700,
+        "pressureClock": 2140,
+        "san": 8,
+        "stamina": 44.8
+      },
+      "labels": {
+        "pressure": "第 2 天 · 高危",
+        "feeling": "快撑不住了"
+      },
+      "shaderSan": 0.08,
+      "file": "03-触屏横屏-SAN8.png",
+      "sha256": "3e7f2ae2c53891d2fd118a6ec964ae8d84ad80a5ae237a6a8ba6067867ca233a"
+    }
+  ],
+  "limitations": "固定状态截图，非自然游玩；静音，未测听感、真实 GPU 性能或实体手机。未改运行时代码。",
+  "recovery": {
+    "file": "04-恢复活动-SAN数值提示.png",
+    "toast": "SAN +11.1 · 校园压力使休息效果减弱",
+    "subtitle": "我：饭是凉的。但我还是吃完了。",
+    "sha256": "35b66c939121370cf517f0166286fff917d165f044a1b592bc743d959d0374d1"
+  },
+  "page_errors": []
+}
