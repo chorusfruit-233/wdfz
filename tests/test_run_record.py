@@ -60,7 +60,8 @@ class RunRecordTest(BrowserCase):
             self.assertTrue(any(i.startswith(want.split(':')[0]) and i.endswith(':' + want.split(':')[1]) for i in r['items']), (want, r['items']))
         page.locator('#ends .eres').click()
         page.wait_for_function("!document.getElementById('results').hidden")
-        page.wait_for_timeout(1300)
+        # 动画按真实时间播 1.1 秒、35% 处放音效；满载时帧会变慢，等音效放过、动画播完再看（不用固定等待）
+        page.wait_for_function("grades.length>0&&!document.getElementById('rscv')._raf", timeout=20000)
         r = page.evaluate("""()=>{const cv=document.getElementById('rscv'),c=cv.getContext('2d'),d=c.getImageData(0,0,cv.width,cv.height).data;let lit=0;
           for(let i=0;i<d.length;i+=400) if(d[i]+d[i+1]+d[i+2]>60) lit++;
           return {lit,letter:document.getElementById('rsLetter').textContent,grades:grades.slice(),body:document.getElementById('rsBody').textContent,
