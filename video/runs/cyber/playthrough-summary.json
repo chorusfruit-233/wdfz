@@ -1,0 +1,55 @@
+{
+  "duration": 1567.72,
+  "source_commit": "998a1f0802b97a5fe5137cd470ee101573a5a9cc",
+  "sha256": "ae55741886bd2ea313893a4b5e259cbf71f1b6889444185f6d6fb1a36f9ffd39",
+  "bytes": 61959513,
+  "ending": "cyber",
+  "talent": "tech",
+  "controls": "touch_joystick_and_look_with_keyboard_actions",
+  "chapters": [
+    {
+      "seconds": 0,
+      "title": "主菜单 · 全新开局"
+    },
+    {
+      "seconds": 7,
+      "title": "醒来，阅读开场"
+    },
+    {
+      "seconds": 16,
+      "title": "自己的课桌与讲台移交单"
+    },
+    {
+      "seconds": 28,
+      "title": "等待第一次集合检查"
+    },
+    {
+      "seconds": 110,
+      "title": "科技党：在原教室充电并接入校园无线网"
+    },
+    {
+      "seconds": 515,
+      "title": "完成容器下载，留足外出电量"
+    },
+    {
+      "seconds": 768,
+      "title": "走二楼连廊，前往实验楼三楼学生机房"
+    },
+    {
+      "seconds": 819,
+      "title": "维护终端：阅读实际档案，关联控制器与事务"
+    },
+    {
+      "seconds": 885,
+      "title": "阅读公司的解释与矛盾档案，提交有序停机清单"
+    },
+    {
+      "seconds": 916,
+      "title": "停机请求已提交：返回教室，实际存活十分钟"
+    },
+    {
+      "seconds": 1546,
+      "title": "真结局：《网安仙人》"
+    }
+  ]
+}
