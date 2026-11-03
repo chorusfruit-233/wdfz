@@ -134,7 +134,9 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 
 模块可以往 `CUT_DEF` 加自己的结局演出（`modules/cyber-route/ending.js` 的《网安仙人》）：`{dur, setup(d), frame(k, d), clean(d)}`，`k` 是 0–1 的进度，一切位置只由 `k` 算；跳过和播完走同一个只执行一次的收尾。要在舞台上演就调 `Engine.beginOutsideStage()`（收尾自动 `endStage`）；临时对象用 `cutAdd` 挂进 `CUT.grp`，收尾统一释放（画布贴图在材质上标 `userData.disposeMap`）。需要别的天色时设 `VisualState.stageHour`（只影响天色、光照和环境声，`clean` 里置回 `null`）；室内布景的明暗用 `lightState` 钩子按 `CUT.id` 改，不要加实时点光源。几处布景开头一起 `GLR.renderer.compile(CUT.grp, GLR.cam, GLR.scene)`，中途切镜不现编着色器。
 
-结局演出要在死亡档案室「结局与开场」里能重看（2026-11-03），在 `death-archive.js` 的 `ARCHIVE_CUTS` 登记一条：`{id:'end:<结局ID>', cut:'<CUT_DEF 键>', end:'<结局ID>', n:标题, d:一句记录, stage:回放前先进的场景, at:可选的站位{c,r,ang}}`，隐藏结局加 `secret:1`。解锁看「已见结局」；回放用同一份 `CUT_DEF`、完成回调只回档案室，所以 `setup / frame / clean` 不能假定之后一定会出结局卡或改存档。`CUT_DEF` 里没有这个键（模块拿掉了）时，这条档案自动不列出。
+结局演出要在 CG 档案馆（原死亡档案室）「结局与开场」里能重看（2026-11-03），在 `death-archive.js` 的 `ARCHIVE_CUTS` 登记一条：`{id:'end:<结局ID>', cut:'<CUT_DEF 键>', end:'<结局ID>', n:标题, d:一句记录, stage:回放前先进的场景, at:可选的站位{c,r,ang}}`，隐藏结局加 `secret:1`。解锁看「已见结局」；回放用同一份 `CUT_DEF`、完成回调只回档案室，所以 `setup / frame / clean` 不能假定之后一定会出结局卡或改存档。`CUT_DEF` 里没有这个键（模块拿掉了）时，这条档案自动不列出。
+
+CG 档案馆还可以由模块加整节（2026-11-03）：`DeathArchive.addSection({id, title, ids(), isOpen(id, d), count(d), cards(d), replay(id)})`。条目 ID 用 `x.` 开头，「全部解锁」同样只写 `granted`；模块拿掉时这一节不出现。现有用法是 `run-record` 的「结算画面」（F–SSS 九张，取得过该评级才点亮，重看打开结算页）。
 
 ## 5. Mod
 
