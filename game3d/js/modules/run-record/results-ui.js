@@ -24,15 +24,16 @@ var ResultsUI=(function(){
     el('rsBack').addEventListener('click',function(){ var f=back; close(); if(f) f(); });
     el('rsFoot').addEventListener('click',function(){ if(cur&&cur.id&&typeof $imports.RecordsUI!=='undefined') $imports.RecordsUI.footprint(cur.id); });
     el('rsReplay').addEventListener('click',function(){ if(cur&&cur.id&&typeof $imports.RecordsUI!=='undefined') $imports.RecordsUI.replay(cur.id); });
-    /* 手册地图页：图例旁写本局探索度 */
-    var legend=document.querySelector('#mapv .maplegend');
-    if(legend){ var sp=document.createElement('span'); sp.id='mapExplore'; legend.appendChild(sp); }
+    /* 手册地图页：顶部工具行（「走过 N 处室内」旁边）写本局探索度。
+       工具行每次重绘地图都会重建，所以每次画完再补上；图例 .maplegend 只在校园总图时显示，不放在那里 */
     if(typeof $imports.UI!=='undefined'&&$imports.UI.renderMap&&!$imports.UI.renderMap._explore){
       var orig=$imports.UI.renderMap; $imports.UI.renderMap=function(){ var r=orig.apply(this,arguments); paintExplore(); return r; }; $imports.UI.renderMap._explore=1;
     }
   }
   function paintExplore(){
-    var s=el('mapExplore'); if(!s||typeof $imports.S==='undefined'||$imports.S.screen==='menu') return;
+    var tools=el('maptools'); if(!tools||typeof $imports.S==='undefined'||$imports.S.screen==='menu') return;
+    var s=el('mapExplore');
+    if(!s||s.parentNode!==tools){ if(s) s.remove(); s=document.createElement('span'); s.id='mapExplore'; s.className='mapcount'; tools.appendChild(s); }
     try{ s.textContent='本局探索度 '+$imports.RunScore.explore().pct+'%'; }catch(e){ s.textContent=''; }
   }
   function section(title,html){ return '<section class="rssec"><h4>'+title+'</h4>'+html+'</section>'; }

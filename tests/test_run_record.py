@@ -212,6 +212,10 @@ class RunRecordTest(BrowserCase):
         self.assertEqual(r['b']['clue'], round(100 / 21))                 # 隐藏路线的线索不算
         page.evaluate("UI.open('mapv')")
         self.assert_js(page, "document.getElementById('mapExplore').textContent.startsWith('本局探索度 ')")
+        # 室内看的是楼层草图（校园总图的图例这时是隐藏的）：这一行在顶部工具行里、看得见；换楼层重绘后还在
+        self.assert_js(page, "!!document.querySelector('#maptools #mapExplore')&&document.getElementById('mapExplore').getBoundingClientRect().width>0")
+        page.evaluate("ExplorationMap.selected='campus';UI.renderMap()")
+        self.assert_js(page, "!!document.querySelector('#maptools #mapExplore')&&document.getElementById('mapExplore').getBoundingClientRect().width>0")
 
     def test_run_log_samples_persist_and_resume(self):
         page = self.game()

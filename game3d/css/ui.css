@@ -672,7 +672,7 @@ body.cut #srclock{opacity:.7}
 #ends .eres{border-color:rgba(181,51,47,.8);background:var(--seal-bg);color:#f3e2d8}
 #ends .enote{font-size:12px;letter-spacing:2px;color:var(--ui-faint)}
 #diescore{margin:4px 0 10px;font:12px var(--ui-mono);letter-spacing:2px;color:var(--ui-dim)}
-#mapExplore{margin-left:12px;font:11px var(--ui-mono);letter-spacing:2px;color:var(--ui-dim)}
+#mapExplore{color:var(--ui-dim)}   /* 手册地图页顶部：本局探索度（样式随 .mapcount） */
 .rcbar{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 10px;font-size:12px;color:var(--ui-dim)}
 .rcbar label{display:flex;align-items:center;gap:6px}
 .rcbar select{min-height:36px;padding:2px 8px;font:13px var(--ui-font);color:var(--ui-text);background:rgba(10,8,8,.9);border:1px solid var(--ui-line);border-radius:2px}
