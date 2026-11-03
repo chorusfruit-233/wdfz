@@ -43,6 +43,17 @@ class SteeringMathTest(unittest.TestCase):
 
 
 class DoorwayNavigationTest(BrowserCase):
+    def test_fake_normal_dialog_is_answered_without_changing_game_rules(self):
+        page = self.page()
+        page.evaluate("""running=false;S.intro=0;AN.active=false;PAT.locked=false;RT.inspection=null;
+          S.fn={on:true,v:0,left:4,used:{},next:0,n:0};fnTick(.1);""")
+        page.add_script_tag(path=str(ROOT / 'video/playthrough.js'))
+        self.assert_js(page, "UI.chooseOpen && document.getElementById('choices').innerText.includes('看起来是——')")
+        page.evaluate("Pilot.defense().then(()=>window.handled=true)")
+        page.wait_for_function('window.handled')
+        self.assert_js(page, "!UI.chooseOpen && S.fn.v===5 && !S.dead")
+        self.assertEqual(page.evaluate("Pilot.log.find(e=>e.kind==='decision').detail.option"), 2)
+
     def test_cyber_route_crosses_bridge_and_uses_student_pc_without_key(self):
         page = self.page()
         page.evaluate("""ENTER_VIA='stair';doEnterRoom('teach2');running=false;

@@ -169,8 +169,8 @@ def main():
                     break
             else:
                 raise TimeoutError('游玩超时')
-        except Exception as error:
-            result['error'] = str(error)
+        except (Exception, KeyboardInterrupt) as error:
+            result['error'] = str(error) or type(error).__name__
         finally:
             if page.evaluate('typeof Pilot!=="undefined"'):
                 page.evaluate('Pilot.stop()')

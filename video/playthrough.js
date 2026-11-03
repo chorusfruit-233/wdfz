@@ -137,7 +137,7 @@ window.Pilot = (() => {
   }
 
   function threatChoice(){
-    return UI.chooseOpen&&/脚步声停在我身后|背后有只手|隔间底下伸来一只手|你作业交了吗|最东边那扇门后面|名字被一道红线划掉/.test(document.getElementById('choices').innerText);
+    return UI.chooseOpen&&/脚步声停在我身后|背后有只手|隔间底下伸来一只手|你作业交了吗|最东边那扇门后面|名字被一道红线划掉|看起来是——/.test(document.getElementById('choices').innerText);
   }
   async function defense(){
     alive();let handled=false;
@@ -168,7 +168,8 @@ window.Pilot = (() => {
       event('choice',text);
       // These options are selected from the text shown to the player.
       const labels=[...document.querySelectorAll('#choices button')].map(b=>b.textContent);
-      const wanted=text.includes('脚步声停在我身后')?'回头看':
+      const wanted=text.includes('看起来是——')?'不笑，装作没这回事':
+        text.includes('脚步声停在我身后')?'回头看':
         labels.some(t=>t.includes('把作业本递过去'))?'把作业本递过去':
         labels.some(t=>t.includes('不出声'))?'不出声':
         labels.some(t=>t.includes('不回头'))?'不回头':labels[0];
@@ -472,5 +473,5 @@ window.Pilot = (() => {
       else await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
       .catch(e=>{stop();failed=e.stack||String(e);event('failure',failed);});
   }
-  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event};
+  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event,defense};
 })();

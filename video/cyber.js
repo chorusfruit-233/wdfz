@@ -70,6 +70,7 @@ var PilotCyber=(function(){
           else if(!S.seated&&(S.tt<12||PatrolWorld.localChase()||AN.id==='bell13')){await seat();standing=false;event('rest','坐回原位');}
         }
         await defense();
+        if(UI.chooseOpen)throw Error('等待期间出现未识别的对话：'+document.getElementById('choices').innerText);
         if(S.san<48&&hasItem('pill')){closePhone();await bagAction('pill','使用');}
         if(!PHONE.on&&PhoneNetwork.available()&&!UI.anyOpen()&&!Inspection.active()&&performance.now()>showAt){
           await phone(app);showAt=performance.now()+30000;
@@ -86,7 +87,7 @@ var PilotCyber=(function(){
     await classWait(()=>PhoneNetwork.device.network,'wireless');event('milestone','wirelessConnected');
     chapter('完成容器下载，留足外出电量');
     await classWait(()=>PhoneNetwork.device.download.status==='complete','container');event('milestone','containerReady');
-    await classWait(()=>PhoneNetwork.device.battery>=97,'home');
+    await classWait(()=>PhoneNetwork.device.battery>=75,'home');
     await phone('location');await sleep(4000);closePhone();
     chapter('走二楼连廊，前往实验楼三楼学生机房');
     await bridge(p,'lab');await floor(3);
