@@ -1,5 +1,7 @@
 # Claude 测试攻略
 
+> 当前基线说明（2026-11-03）：主线为 `0bf55f1`；清单 46 个模块、七项公开可选天赋、四条公开真结局。常驻巡察与手机网络应选择 `test_patrol_world`、`test_campus_network_rules`、`test_campus_network`、`test_network_lifecycle`、`test_wireless_signals`；回放选择 `test_archive_speedrun`。旧测试总数和旧版录像不证明当前规则通过。本说明仍仅适用于 Claude。
+
 本文仅适用于 Claude，不对其他 AI 协作者设定要求。它帮助 Claude 快速定位代码、复现问题并选择回归检查，适用于当前 3D 游戏；项目约定不检查 2D 版。详细覆盖清单见[测试说明](测试说明.md)，产品规则和验收场景见[产品对齐文档](产品对齐文档.md)。以下命令均在仓库根目录执行。
 
 ## 1. 先确认环境和改动范围
