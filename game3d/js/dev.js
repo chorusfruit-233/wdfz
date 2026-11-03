@@ -22,10 +22,13 @@ var DEV_CODE='114514';
 /* 调试密码：页面里画的数字键盘（#devlock），点击 / 触屏输入，桌面也可以直接按数字键；不用浏览器的 prompt 对话框。
    打开期间算作调试冻结（gameInputContext 的 debugFrozen）：和以前 prompt 卡住整个页面一样，输密码时世界不走。
    输错不关键盘，清空后可以再输；取消、Esc、再按 F2 都会关掉并把鼠标视角还回去。 */
-var DevLock={on:false,buf:'',max:12,
+var DevLock={on:false,buf:'',max:12,opts:null,
   el:function(id){ return document.getElementById(id); },
-  ask:function(){
+  /* opts（可选）：{title, onOk, onCancel}。不给就是打开调试面板；死亡档案室的「全部解锁」也用这同一个键盘、同一个密码 */
+  ask:function(opts){
     var box=this.el('devlock'); if(!box) return false;
+    this.opts=opts||null;
+    var title=this.el('devlockTitle'); if(title) title.textContent=(opts&&opts.title)||'输入调试密码';
     if(!box._wired){
       box._wired=true;
       box.addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('[data-k]'); if(b) DevLock.press(b.getAttribute('data-k')); });
@@ -46,7 +49,7 @@ var DevLock={on:false,buf:'',max:12,
   },
   submit:function(code){
     if(!this.on) return false;
-    if(String(code)===DEV_CODE){ this.close(); Dev.unlock(); return true; }
+    if(String(code)===DEV_CODE){ var o=this.opts; this.close(); if(o&&o.onOk) o.onOk(); else Dev.unlock(); return true; }
     this.buf=''; this.paint();
     this.msg(String(code).length?'密码不对，再试一次':'请先输入密码');
     var b=this.el('devlockBox'); if(b){ b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
@@ -54,12 +57,14 @@ var DevLock={on:false,buf:'',max:12,
   },
   cancel:function(){
     if(!this.on) return;
+    var o=this.opts;
     this.close();
+    if(o){ if(o.onCancel) o.onCancel(); return; }
     var f=DEV.returnFocus; DEV.returnFocus=null;
     if(f&&f.focus&&document.contains(f)) try{ f.focus({preventScroll:true}); }catch(e){}
     resumeMouseLook();
   },
-  close:function(){ this.on=false; DEV.locking=false; this.buf=''; var box=this.el('devlock'); if(box) box.hidden=true; },
+  close:function(){ this.on=false; DEV.locking=false; this.buf=''; this.opts=null; var box=this.el('devlock'); if(box) box.hidden=true; },
   /* 键盘：数字、退格、回车确认、Esc / F2 取消；其余按键在键盘打开时都不交给游戏 */
   key:function(e){
     var k=e.key;

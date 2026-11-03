@@ -554,6 +554,22 @@ body.phone-open #sub{bottom:calc(14px + var(--sb));max-width:min(760px,calc(100v
 #srrecords li b{font:400 12px var(--ui-mono);color:#efe7d6}
 #srrecords li i{font-style:normal;min-width:5em;text-align:right;color:var(--ui-dim)}
 .arcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;max-height:min(58vh,560px);overflow-y:auto;padding-right:4px}
+/* 死亡、结局与开场两组放在同一个滚动区里（2026-11-03） */
+.arscroll{max-height:min(60vh,600px);overflow-y:auto;padding-right:4px}
+.arscroll .arcards{max-height:none;overflow:visible;padding-right:0}
+.arsec{display:flex;align-items:baseline;gap:12px;margin:4px 0 8px;padding-top:6px}
+.arsec+.arcards+.arsec{margin-top:16px;border-top:1px solid var(--ui-line);padding-top:12px}
+.arsec b{font:400 14px var(--ui-serif);letter-spacing:4px;color:var(--ui-dim)}
+.arsec i{font-style:normal;font-size:12px;letter-spacing:2px;color:#e0857a;border:1px solid rgba(214,93,82,.6);padding:0 6px;border-radius:2px}
+/* 档案室整块不超过屏幕高，卡片区在中间伸缩：手机横屏（390、360 高）上底部「全部解锁 / 返回」也不会被挤出屏幕 */
+#archive .mdbox{display:flex;flex-direction:column;max-height:100%}
+#archive .arscroll{flex:0 1 auto;min-height:96px}
+#archive .arnote:empty{display:none}
+@media (max-height:520px) and (orientation:landscape){
+  #archive .mdbox{padding:14px 18px 12px}
+  #archive .tplead{margin:6px 0 8px}
+  #archive .tpfoot{margin-top:8px}
+}
 .arcard{display:flex;align-items:flex-start;gap:12px;min-height:44px;padding:12px 14px;background:rgba(221,213,196,.02);border:1px dashed var(--ui-line);border-radius:2px;color:var(--ui-faint)}
 .arcard em{font-style:normal;font:11px var(--ui-mono);letter-spacing:2px;color:var(--ui-faint);padding-top:3px}
 .arcard span{display:flex;flex-direction:column;gap:4px;flex:1}

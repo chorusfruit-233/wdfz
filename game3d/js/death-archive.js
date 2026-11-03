@@ -11,7 +11,8 @@
 
 var DEATH_ARCHIVE_KEY='wdfz3d_death_archive_v1';
 /* 注册表：死因 ID → 演出 → 档案标题、一句记录 → 回放舞台。secret:1 的条目在解锁前完全不出现，也不算进「已记录 x / y」的总数
-   （目前是虚空迷宫里的两种死法；演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫）。 */
+   （目前是虚空迷宫里的两种死法；演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫）。
+   ext:1 表示演出由模块注册：模块拿掉了，这一份就不列出（见 DeathArchive.avail）。 */
 var DEATH_ARCHIVE=[
   {id:'patrol',       fx:'grip',     n:'点名',         d:'灯按拍子闪的时候，它就在这一层。一只手从后面按住了我的头顶。', stage:'teach1'},
   {id:'garage',       fx:'grip',     n:'车道中间',     d:'车库里没有灯。它一直站在车道中间，等我自己走过去。', stage:'garage1'},
@@ -31,18 +32,37 @@ var DEATH_ARCHIVE=[
   {id:'trap_out',     fx:'slit',     n:'正门',         d:'我从门缝里挤了出去。路的尽头还是一扇校门。', stage:'out'},
   {id:'trap_wall',    fx:'squeeze',  n:'墙外的墙',     d:'墙外面还有一道墙。我一直翻，翻到手指不再是手指的形状。', stage:'out'},
   {id:'trap_beg',     fx:'face',     n:'路过的人',     d:'他慢慢转过头——没有脸，只有一个很大的、在笑的洞。', stage:'out'},
-  {id:'void_lost',    fx:'void',     n:'哪一扇门',     d:'白墙上的门一扇扇裂开、亮起来，又一格一格暗下去。我想不起自己是从哪一扇进来的。', stage:'lift_dream', secret:1},
-  {id:'void_fall',    fx:'abyss',    n:'往下',         d:'我一直往下掉。下面那块画着斜线的白色方地上站着一个人，抬起手电照我。', stage:'lift_dream', secret:1}
+  {id:'void_lost',    fx:'void',     n:'哪一扇门',     d:'白墙上的门一扇扇裂开、亮起来，又一格一格暗下去。我想不起自己是从哪一扇进来的。', stage:'lift_dream', secret:1, ext:1},
+  {id:'void_fall',    fx:'abyss',    n:'往下',         d:'我一直往下掉。下面那块画着斜线的白色方地上站着一个人，抬起手电照我。', stage:'lift_dream', secret:1, ext:1}
 ];
 var DEATH_ARCHIVE_BY_ID={};
 DEATH_ARCHIVE.forEach(function(e,i){ e.no=i+1; DEATH_ARCHIVE_BY_ID[e.id]=e; });
+/* 结局与开场的演出（2026-11-03）：达成过的结局、看过的开场也收在档案室里，可以重看。
+   cut 是过场 ID（CUT_DEF 的键）；解锁看真实记录——结局看 endsSeen()（「已见结局」那份），开场看 proSeen()——
+   或者「全部解锁」。《先辈》是隐藏结局，标 secret：没达成过（也没全部解锁）就完全不出现。
+   stage：回放前先进的场景（演出自己切室外舞台的，用教学楼一楼当底）；at：站在场景的哪一格、朝哪（《闸门》站在两排车之间的车道上朝西，
+   车灯顺着车道照出去——真实结局里是玩家站在车旁的位置和朝向）；hour：回放时的天色（VisualState.stageHour，只影响画面，不改 S.tsec），
+   开场固定在新局开始的 11:40（第四节），不跟着菜单里残留的上一局时刻变成夜里 */
+var ARCHIVE_CUTS=[
+  {id:'cut:opening', cut:'opening',            n:'开场 · 第四节', d:'粉笔灰停在半空，你趴到桌上。再睁开眼，教室里坐满了人，没有一个人在呼吸。', stage:'teach1', hour:700/60},
+  {id:'end:car',     cut:'car',     end:'car',    n:'《闸门》',     d:'车灯闪了两下，光里站着它。冲出北门回头，黑影从门里追了出来。', stage:'garage1', at:{c:44.5,r:6.5,ang:Math.PI}},
+  {id:'end:face',    cut:'face',    end:'face',   n:'《白名单》',   d:'闸机的红灯「嘀」地变白。走出门回头，门里一个接一个站满了目送的人。', stage:'teach1'},
+  {id:'end:portal',  cut:'portal',  end:'portal', n:'《门》',       d:'导轨一段段闭合，光圈撑开。退了半步，然后走了进去。', stage:'lab1'},
+  {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
+  {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1}
+];
+ARCHIVE_CUTS.forEach(function(e,i){ e.no=i+1; });
+/* 档案室里全部条目（死亡 + 演出），按 ID 查 */
+var ARCHIVE_BY_ID={};
+DEATH_ARCHIVE.concat(ARCHIVE_CUTS).forEach(function(e){ ARCHIVE_BY_ID[e.id]=e; });
 /* 回放舞台：户外用操场边一块空地，室内用各房间的默认入口 */
 var DEATH_STAGE_OUT={x:1580,y:1800,ang:-PI/2};
 /* 当前这次 kill 的来源：调试面板的「实际死亡」把它设成 debug */
 var KILL_CTX=null;
 
 var DeathArchive={
-  blank:function(){ return {version:1,unlocked:{},first:{},count:{},legacy:{},pending:0,migrated:0}; },
+  /* granted：「全部解锁」直接打开的条目（死亡和演出都记在这里），和真的经历过分开：不计次数、不算「新记录」、不写结局记录 */
+  blank:function(){ return {version:1,unlocked:{},first:{},count:{},legacy:{},granted:{},pending:0,migrated:0}; },
   read:function(){
     var d=null;
     try{ d=JSON.parse(localStorage.getItem(DEATH_ARCHIVE_KEY)||'null'); }catch(e){ d=null; }
@@ -52,6 +72,7 @@ var DeathArchive={
       var src=d[k]; if(!src||typeof src!=='object') return;
       Object.keys(src).forEach(function(id){ if(DEATH_ARCHIVE_BY_ID[id]) out[k][id]=src[id]; });   /* 未知 ID 丢掉，不改成别的死法 */
     });
+    if(d.granted&&typeof d.granted==='object') Object.keys(d.granted).forEach(function(id){ if(ARCHIVE_BY_ID[id]&&d.granted[id]) out.granted[id]=1; });
     out.pending=Number.isFinite(d.pending)?Math.max(0,d.pending|0):0;
     out.migrated=d.migrated?1:0;
     return out;
@@ -91,8 +112,41 @@ var DeathArchive={
     return d;
   },
   state:function(){ var d=DeathArchive.migrate(DeathArchive.read()); DeathArchive.write(d); return d; },
-  /* 玩家能看到的条目：已解锁的全部，加上未解锁的公开条目（只显示「尚未记录」） */
-  visible:function(d){ d=d||DeathArchive.state(); return DEATH_ARCHIVE.filter(function(e){ return d.unlocked[e.id]||!e.secret; }); },
+  /* 这一份档案打开了没有：真的经历过（死亡记录、达成的结局、看过的开场），或者「全部解锁」过 */
+  real:function(e,d){
+    if(e.cut) return e.end?!!endsSeen()[e.end]:proSeen();
+    return !!d.unlocked[e.id];
+  },
+  isOpen:function(e,d){ d=d||DeathArchive.state(); return !!d.granted[e.id]||DeathArchive.real(e,d); },
+  /* 这一份的演出现在有没有：结局 / 开场看过场在不在（《网安仙人》由 campus-network 模块登记），
+     ext 的死法看 DeathCG 里注册了没有（迷宫两种死法由 void-maze 模块注册）。模块拿掉了，这一份就不列出、不计数、「全部解锁」也不开 */
+  avail:function(e){
+    if(e.cut) return typeof CUT_DEF!=='undefined'&&!!CUT_DEF[e.cut];
+    if(e.ext) return typeof DeathCG!=='undefined'&&DeathCG.has(e.fx);
+    return true;
+  },
+  /* 玩家能看到的条目：打开了的全部，加上没打开的公开条目（只显示「尚未记录」）；演出不在的不列 */
+  visible:function(d){ d=d||DeathArchive.state(); return DEATH_ARCHIVE.filter(function(e){ return DeathArchive.avail(e)&&(DeathArchive.isOpen(e,d)||!e.secret); }); },
+  visibleCuts:function(d){ d=d||DeathArchive.state(); return ARCHIVE_CUTS.filter(function(e){ return DeathArchive.avail(e)&&(DeathArchive.isOpen(e,d)||!e.secret); }); },
+  /* 「全部解锁」能打开的：演出在、还没打开的 */
+  locked:function(d){ return DEATH_ARCHIVE.concat(ARCHIVE_CUTS).filter(function(e){ return DeathArchive.avail(e)&&!DeathArchive.isOpen(e,d); }); },
+  /* 「全部解锁」：死亡和演出（包括隐藏的）全部打开，只记在 granted 里。
+     要先在页面里画的数字键盘上输调试密码（和调试面板同一个），普通游玩里不会被随手点开，隐藏内容不会因此泄露 */
+  askUnlockAll:function(){
+    if(typeof DevLock==='undefined') return false;
+    var btn=document.getElementById('arAll');
+    return DevLock.ask({title:'输入调试密码 · 解锁全部 CG',onOk:DeathArchive.unlockAll,
+      onCancel:function(){ if(btn) btn.focus({preventScroll:true}); }});
+  },
+  unlockAll:function(){
+    var d=DeathArchive.state(), left=DeathArchive.locked(d), n=left.length;
+    left.forEach(function(e){ d.granted[e.id]=1; });
+    DeathArchive.write(d); DeathArchive.paint();
+    try{ toast(n?'已解锁全部 CG（直接解锁 '+n+' 份，不计经历次数）':'全部 CG 都已经解锁了'); }catch(e){}
+    var first=document.querySelector('#arcuts .arcard.open button')||document.getElementById('arBack');
+    if(first) first.focus({preventScroll:true});
+    return n;
+  },
   /* 死亡演出放完以后提示一次（不在致死那一刻打断） */
   notify:function(entry){
     if(!entry) return;
@@ -111,38 +165,56 @@ var DeathArchive={
     var el=document.getElementById('archive'); if(el) el.hidden=true;
     var b=document.getElementById('btnarchive'); if(b) b.focus({preventScroll:true});
   },
+  /* 一张卡：打开的有标题、一句记录、说明和「重看」；没打开的只显示封存 */
+  card:function(e,open,meta,latest,locked){
+    var card=document.createElement('div');
+    card.className='arcard'+(open?' open':'')+(latest?' latest':'');
+    card.dataset.id=e.id;
+    var no=document.createElement('em'); no.textContent=('0'+e.no).slice(-2); card.appendChild(no);
+    var body=document.createElement('span'), t=document.createElement('b'), p=document.createElement('i');
+    if(open){
+      t.textContent=e.n; p.textContent=e.d;
+      var m=document.createElement('small'); m.textContent=meta;
+      body.appendChild(t); body.appendChild(p); body.appendChild(m); card.appendChild(body);
+      var btn=document.createElement('button'); btn.type='button'; btn.textContent='重看';
+      btn.addEventListener('click',function(){ ArchiveReplay.play(e.id); });
+      card.appendChild(btn);
+    }else{
+      t.textContent=locked[0]; p.textContent=locked[1]; body.appendChild(t); body.appendChild(p); card.appendChild(body);
+    }
+    return card;
+  },
+  /* 「已记录 x / 公开总数」，打开过的隐藏条目另记「隐藏 n」，不把公开的总数撑破 */
+  countText:function(list,d,word){
+    var pub=list.filter(function(e){ return !e.secret; }), got=pub.filter(function(e){ return DeathArchive.isOpen(e,d); }).length;
+    var hid=list.length-pub.length;
+    return word+' '+got+' / '+pub.length+(hid?' · 隐藏 '+hid:'');
+  },
   paint:function(){
-    var d=DeathArchive.state(), list=DeathArchive.visible(d);
-    var pub=list.filter(function(e){ return !e.secret; }), got=pub.filter(function(e){ return d.unlocked[e.id]; }).length;
-    var hid=list.length-pub.length;                   /* 已经解锁的隐藏档案：单独记，不把公开的总数撑破 */
+    var d=DeathArchive.state(), list=DeathArchive.visible(d), cuts=DeathArchive.visibleCuts(d);
     var head=document.getElementById('arCount');
-    if(head) head.textContent='已记录 '+got+' / '+pub.length+(hid?' · 隐藏 '+hid:'');
+    if(head) head.textContent=DeathArchive.countText(list,d,'已记录');
+    var ch=document.getElementById('arCutCount');
+    if(ch) ch.textContent=DeathArchive.countText(cuts,d,'已解锁');
     var note=document.getElementById('arNote');
     if(note) note.textContent=d.pending?('另有 '+d.pending+' 条旧版本的死亡记录来源不明，没有计入。'):'';
+    var all=document.getElementById('arAll');
+    if(all){ var left=DeathArchive.locked(d).length>0; all.disabled=!left; all.textContent=left?'全部解锁':'已全部解锁'; }
     var box=document.getElementById('arcards'); if(!box) return;
     box.textContent='';
     var latest=null;
     Object.keys(d.first).forEach(function(id){ if(!latest||d.first[id]>d.first[latest]) latest=id; });
     list.forEach(function(e){
-      var open=!!d.unlocked[e.id], card=document.createElement('div');
-      card.className='arcard'+(open?' open':'')+(open&&e.id===latest?' latest':'');
-      card.dataset.id=e.id;
-      var no=document.createElement('em'); no.textContent=('0'+e.no).slice(-2); card.appendChild(no);
-      var body=document.createElement('span');
-      var t=document.createElement('b'), p=document.createElement('i');
-      if(open){
-        t.textContent=e.n; p.textContent=e.d;
-        var meta=document.createElement('small');
-        meta.textContent=(d.legacy[e.id]?'旧版本记录':'经历 '+(d.count[e.id]||1)+' 次')+(e.id===latest?' · 最近':'');
-        body.appendChild(t); body.appendChild(p); body.appendChild(meta);
-        card.appendChild(body);
-        var btn=document.createElement('button'); btn.type='button'; btn.textContent='重看';
-        btn.addEventListener('click',function(){ ArchiveReplay.play(e.id); });
-        card.appendChild(btn);
-      }else{
-        t.textContent='尚未记录'; p.textContent='封存的档案。'; body.appendChild(t); body.appendChild(p); card.appendChild(body);
-      }
-      box.appendChild(card);
+      var real=DeathArchive.real(e,d), open=real||!!d.granted[e.id];
+      var meta=real?(d.legacy[e.id]?'旧版本记录':'经历 '+(d.count[e.id]||1)+' 次')+(e.id===latest?' · 最近':''):'直接解锁 · 没有亲历';
+      box.appendChild(DeathArchive.card(e,open,meta,real&&e.id===latest,['尚未记录','封存的档案。']));
+    });
+    var cb=document.getElementById('arcuts'); if(!cb) return;
+    cb.textContent='';
+    cuts.forEach(function(e){
+      var real=DeathArchive.real(e,d), open=real||!!d.granted[e.id];
+      var meta=real?(e.end?'已达成':'已看过'):'直接解锁 · 没有亲历';
+      cb.appendChild(DeathArchive.card(e,open,meta,false,e.end?['尚未达成','封存的结局。']:['尚未观看','封存的演出。']));
     });
   }
 };
@@ -150,23 +222,26 @@ var DeathArchive={
 /* ---------- 回放：隔离的演出舞台 ----------
    只在主菜单里播。把人放到示范位置、搭好场景，然后用预览模式播放同一份死亡演出（镜头由演出接管），
    世界不更新（S.screen='replay'），不调用 kill / 存档 / 死亡日志；结束、跳过、出错都回到菜单。 */
-var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,
+var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
   play:function(id){
-    var e=DEATH_ARCHIVE_BY_ID[id], d=DeathArchive.state();
-    if(!e||!d.unlocked[id]||ArchiveReplay.on) return false;
+    var e=ARCHIVE_BY_ID[id], d=DeathArchive.state();
+    if(!e||!DeathArchive.avail(e)||!DeathArchive.isOpen(e,d)||ArchiveReplay.on) return false;
     if(S.screen!=='menu') return false;
     ArchiveReplay.on=true; ArchiveReplay.id=id; ArchiveReplay.t0=performance.now();
     ArchiveReplay.snap={mode:S.mode,room:S.room,x:S.x,y:S.y,ang:S.ang,pitch:S.pitch,seated:S.seated,tsec:S.tsec,day:S.day};
     document.getElementById('archive').hidden=true;
     document.getElementById('menu').style.display='none';
     document.body.classList.add('cut','replaying');
-    var cap=document.getElementById('arReplay'); if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; }
+    var cap=document.getElementById('arReplay');
+    if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; cap.querySelector('i').textContent=e.cut?(e.end?'结局档案 · 回放':'开场 · 回放'):'死亡档案 · 回放'; }
     S.screen='replay'; S.dead=false; S.death=null; S.seated=false; S.pitch=0; S.eyeLift=0;
+    if(e.hour!==undefined) VisualState.stageHour=e.hour;          /* 先定天色再搭场景：窗光、灯这些按搭建时的时刻 */
     try{
       if(e.stage==='out'){
         S.x=DEATH_STAGE_OUT.x; S.y=DEATH_STAGE_OUT.y; S.ang=DEATH_STAGE_OUT.ang;
         if(S.mode!=='out'||!GLR.outMesh){ S.mode='out'; S.room=null; enterWorldOut(); }
-      }else doEnterRoom(e.stage);
+      }else if(e.at){ var R=INTERIORS[e.stage]; doEnterRoom(e.stage,{x:R.ox+e.at.c*R.tw,y:R.oy+e.at.r*R.th,ang:e.at.ang}); }
+      else doEnterRoom(e.stage);
     }catch(err){ ArchiveReplay.stop(); return false; }
     running=true;
     ArchiveReplay.wait=setInterval(function(){
@@ -180,6 +255,7 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,
     return true;
   },
   start:function(e){
+    if(e.cut) return ArchiveReplay.startCut(e);
     S.screen='replay'; S.seated=false; S.pitch=0;
     try{ syncCamera(0); }catch(err){}
     try{ deathFX(e.fx,{preview:true}); }catch(err){}
@@ -190,6 +266,20 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,
       if(ANFX.kind!=='death'||ANFX.t>=sec||performance.now()-w0>sec*4000) ArchiveReplay.stop();
     },100);
   },
+  /* 结局和开场：用正式的过场（同一份 CUT_DEF）在这个舞台上播，完成回调只回档案室——不出结局卡、不记结局、不清存档、不停速通表。
+     过场期间 S.screen 是 'cut'，点击 / 空格 / 回车 / Esc 走过场自己的跳过 */
+  startCut:function(e){
+    if(typeof CUT_DEF==='undefined'||!CUT_DEF[e.cut]){ ArchiveReplay.stop(); return; }
+    ArchiveReplay.cut={enabled:CUT.enabled,dur:CUT_DEF.opening?CUT_DEF.opening.dur:null,short:typeof Opening!=='undefined'?Opening.short:false};
+    CUT.enabled=true;
+    if(e.cut==='opening'&&typeof Opening!=='undefined'){                /* 档案里看完整版；同学先换回正常的样子，演到第四段再褪成里世界 */
+      Opening.short=false; CUT_DEF.opening.dur=OPENING_DUR.full;
+      try{ ncRestore(); }catch(err){}
+    }
+    try{ SFX.resume(); }catch(err){}
+    try{ syncCamera(0); }catch(err){}
+    playCut(e.cut,function(){ ArchiveReplay.stop(); });
+  },
   skip:function(){
     if(!ArchiveReplay.on) return false;
     if(performance.now()-ArchiveReplay.t0<400) return true;      /* 刚点开的那一下不算跳过 */
@@ -199,6 +289,17 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,
     if(!ArchiveReplay.on) return;
     clearInterval(ArchiveReplay.timer); clearInterval(ArchiveReplay.wait); ArchiveReplay.timer=0; ArchiveReplay.wait=0;
     ArchiveReplay.on=false;
+    if(typeof CUT!=='undefined'&&CUT.on){ CUT.done=null; cutFinish(); }    /* 结局 / 开场回放中途结束：先收掉过场（完成回调已摘掉，不会再进来） */
+    var c=ArchiveReplay.cut; ArchiveReplay.cut=null;
+    var ent=ARCHIVE_BY_ID[ArchiveReplay.id];
+    if(ent&&ent.hour!==undefined) VisualState.stageHour=null;         /* 回放指定的天色收回（场景没搭好就结束时也收） */
+    if(c){
+      CUT.enabled=c.enabled;
+      if(c.dur!==null&&CUT_DEF.opening) CUT_DEF.opening.dur=c.dur;
+      if(typeof Opening!=='undefined') Opening.short=c.short;
+      try{ openingCap(''); }catch(e){}
+      try{ SoundPlayer.stop('scene'); }catch(e){}                     /* 点火、充能这些演出声音跟着收掉，不带回档案室 */
+    }
     try{ if(ANFX.kind==='death') anfxClear(); }catch(e){}
     try{ SFX.stopDeath&&SFX.stopDeath(); }catch(e){}
     GLR.flash=0; GLR.hurt=0; VisualState.flash=0; VisualState.hurt=0;
@@ -210,12 +311,18 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,
     var cap=document.getElementById('arReplay'); if(cap) cap.hidden=true;
     document.getElementById('menu').style.display='block';
     var el=document.getElementById('archive'); if(el){ DeathArchive.paint(); el.hidden=false; }
-    var again=document.querySelector('#arcards .arcard[data-id="'+(ArchiveReplay.id||'')+'"] button');
-    if(again) again.focus({preventScroll:true});
+    ArchiveReplay.refocus();
     try{ syncCamera(0); }catch(e){}
+  },
+  /* 焦点回到刚重看的那张卡的「重看」上 */
+  refocus:function(){
+    var again=document.querySelector('#archive .arcard[data-id="'+(ArchiveReplay.id||'')+'"] button');
+    if(again) again.focus({preventScroll:true});
   }
 };
 document.addEventListener('keydown',function(ev){
+  if(typeof DevLock!=='undefined'&&DevLock.on) return;            /* 「全部解锁」的密码键盘开着：按键给键盘（Esc 只关键盘，不关档案室） */
+  if(ArchiveReplay.on&&ArchiveReplay.cut) return;                  /* 结局 / 开场回放：按键走过场自己的跳过 */
   if(ArchiveReplay.on){
     if(ev.key===' '||ev.key==='Enter'||ev.key==='Escape'){ ev.preventDefault(); ev.stopPropagation(); ArchiveReplay.skip(); }
     return;
@@ -223,6 +330,15 @@ document.addEventListener('keydown',function(ev){
   var el=document.getElementById('archive');
   if(el&&!el.hidden&&ev.key==='Escape'){ ev.preventDefault(); ev.stopPropagation(); DeathArchive.close(); }
 },true);
-/* 点击 / 触摸结束回放由 input.js 处理（和跳过结局演出一样，吞掉松指后补发的 click，免得点到随后出现的「重看」） */
+/* 点击 / 触摸结束回放由 input.js 处理（和跳过结局演出一样，吞掉松指后补发的 click，免得点到随后出现的「重看」）。
+   那边只管触屏：鼠标按下的那一刻回放就结束、档案室回来了，松开时的 click 会落在档案室的卡片上（正好是另一张「重看」就又开一段）。
+   这里在 input.js 之前（脚本加载时就注册）记下「这次按下发生在回放里」，随后那一下 click 吞掉 */
+window.addEventListener('pointerdown',function(){ ArchiveReplay.eat=ArchiveReplay.on; },{capture:true,passive:true});
+window.addEventListener('keydown',function(){ ArchiveReplay.eat=false; },{capture:true,passive:true});   /* 拖动没产生 click 时，之后用回车 / 空格按出来的 click 不能被误吞 */
+document.addEventListener('click',function(ev){
+  if(!ArchiveReplay.eat||!ev.isTrusted) return;
+  ArchiveReplay.eat=false;
+  if(!ArchiveReplay.on){ ev.preventDefault(); ev.stopImmediatePropagation(); ArchiveReplay.refocus(); }   /* 按下那一刻焦点可能跟着落到下面的卡上，放回来 */
+},true);
 /* 启动时先把旧死亡日志迁一次：之后新写进旧日志的死亡不会被当成「旧版本记录」 */
 try{ DeathArchive.state(); }catch(e){}
