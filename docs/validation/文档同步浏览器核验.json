@@ -1,0 +1,190 @@
+{
+  "baseline": "0bf55f1",
+  "facts": {
+    "modules": 46,
+    "rooms": 34,
+    "talents": 7,
+    "anomalies": 25,
+    "mechanicsRules": 3,
+    "speedrunRules": 2,
+    "sounds": 131,
+    "categories": 11
+  },
+  "checks": [
+    {
+      "page": "overview",
+      "viewport": [
+        1280,
+        800
+      ],
+      "shape": {
+        "sections": 14,
+        "toc": 14,
+        "select": 15,
+        "uniqueIds": true,
+        "overflow": false
+      },
+      "search": [
+        "02 · 先看两次集合，再看每一节课",
+        "03 · 四个状态，各自回答不同的问题",
+        "04 · 把校园当成功能网络来读",
+        "06 · 八格背包，装的是不同类型的能力",
+        "07 · 危险要分类型，不能只靠“别动”",
+        "08 · 出口不是一个按钮，而是一条证据链",
+        "09 · 失败之后，哪些东西真的会丢？",
+        "12 · 手机、运行秒与服务器路线"
+      ],
+      "demos": "passed",
+      "filter": "passed"
+    },
+    {
+      "page": "video-routes",
+      "viewport": [
+        1280,
+        800
+      ],
+      "routes": 4,
+      "overflow": false
+    },
+    {
+      "page": "overview",
+      "viewport": [
+        390,
+        844
+      ],
+      "shape": {
+        "sections": 14,
+        "toc": 14,
+        "select": 15,
+        "uniqueIds": true,
+        "overflow": false
+      },
+      "search": [
+        "02 · 先看两次集合，再看每一节课",
+        "03 · 四个状态，各自回答不同的问题",
+        "04 · 把校园当成功能网络来读",
+        "06 · 八格背包，装的是不同类型的能力",
+        "07 · 危险要分类型，不能只靠“别动”",
+        "08 · 出口不是一个按钮，而是一条证据链",
+        "09 · 失败之后，哪些东西真的会丢？",
+        "12 · 手机、运行秒与服务器路线"
+      ],
+      "demos": "passed",
+      "filter": "passed"
+    },
+    {
+      "page": "video-routes",
+      "viewport": [
+        390,
+        844
+      ],
+      "routes": 4,
+      "overflow": false
+    },
+    {
+      "page": "overview",
+      "viewport": [
+        844,
+        390
+      ],
+      "shape": {
+        "sections": 14,
+        "toc": 14,
+        "select": 15,
+        "uniqueIds": true,
+        "overflow": false
+      },
+      "search": [
+        "02 · 先看两次集合，再看每一节课",
+        "03 · 四个状态，各自回答不同的问题",
+        "04 · 把校园当成功能网络来读",
+        "06 · 八格背包，装的是不同类型的能力",
+        "07 · 危险要分类型，不能只靠“别动”",
+        "08 · 出口不是一个按钮，而是一条证据链",
+        "09 · 失败之后，哪些东西真的会丢？",
+        "12 · 手机、运行秒与服务器路线"
+      ],
+      "demos": "passed",
+      "filter": "passed"
+    },
+    {
+      "page": "video-routes",
+      "viewport": [
+        844,
+        390
+      ],
+      "routes": 4,
+      "overflow": false
+    },
+    {
+      "page": "video/playthrough.html",
+      "viewport": [
+        844,
+        390
+      ],
+      "chapters": 11,
+      "seek": 426,
+      "overflow": false
+    },
+    {
+      "page": "video/runs/face/",
+      "viewport": [
+        844,
+        390
+      ],
+      "chapters": 10,
+      "seek": 625,
+      "overflow": false
+    },
+    {
+      "page": "video/runs/portal/",
+      "viewport": [
+        844,
+        390
+      ],
+      "chapters": 13,
+      "seek": 799,
+      "overflow": false
+    },
+    {
+      "page": "video/runs/cyber/",
+      "viewport": [
+        844,
+        390
+      ],
+      "chapters": 11,
+      "seek": 1546,
+      "overflow": false
+    }
+  ],
+  "page_errors": [],
+  "navigation_captures": [
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "chapter": "#network",
+      "active": "network",
+      "overflow": false
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "chapter": "#network",
+      "active": "network",
+      "overflow": false
+    },
+    {
+      "viewport": [
+        844,
+        390
+      ],
+      "chapter": "#network",
+      "active": "network",
+      "overflow": false
+    }
+  ]
+}
