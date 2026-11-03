@@ -16,7 +16,7 @@ class EscalationCurveTest(unittest.TestCase):
             self.skipTest('需要 Node.js')
         script = r"""
 const fs=require('fs'),vm=require('vm'),a=require('assert/strict');
-const c={console,Math,Number,os:()=>{},setTimeout:()=>{},RT:{},
+const c={console,Math,Number,os:()=>{},gameFact:()=>{},setTimeout:()=>{},RT:{},
   S:{screen:'play',tsec:700,day:1,mode:'out'}};
 require('./tests/support/capsules.cjs').context(c);
 for(const f of ['domain/random','core','domain/player-stats','domain/game-time','systems','campus-pressure'])
