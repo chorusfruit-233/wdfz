@@ -35,7 +35,7 @@ var PilotCyber=(function(){
   async function bridge(p,to){
     const from=INTERIORS[S.room]?.host;
     if(!['teach','lab'].includes(from)||!['teach','lab'].includes(to)||from===to)throw Error('连廊路线起终点不正确');
-    await p.floor(2);
+    await p.leaveSeat();await p.floor(2);
     const port=p.cells('L').find(point=>from==='teach'||point.c<INTERIORS[S.room].cols/2);
     if(!port)throw Error('没有找到二号连廊入口');
     await p.interact(port,11);await p.sleep(1400);

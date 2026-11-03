@@ -60,6 +60,15 @@ window.Pilot = (() => {
   }
   function stop(){move(0);for(const k of [...held])key(k,false);}
   async function tap(k){key(k,true);await sleep(60);key(k,false);}
+  async function leaveSeat(){
+    if(!S.seated)return;
+    stop();const seat={x:S.x,y:S.y},deadline=performance.now()+5000;
+    // Normal forward input stands up and walks clear of the chair collider.
+    key('w',true);
+    try{while(distance(seat)<10&&performance.now()<deadline){alive();await sleep(50);}}
+    finally{stop();}
+    if(S.seated||distance(seat)<10)throw Error('未能通过正常移动离开座位');
+  }
   function look(yaw,pitch=0){
     if(!playerInputAllowed())return;
     const sense=lookSensitivity(true), dx=Math.max(-35,Math.min(35,angle(yaw-S.ang)/(.0042*sense))),
@@ -303,12 +312,7 @@ window.Pilot = (() => {
     while(PRO.on){await sleep(2800);await tap('Enter');}
     await sleep(2500);chapter('自己的课桌与讲台移交单');
     await tap('r');await sleep(5000);
-    // Movement itself stands up. A separate E press leaves a slow frame for the
-    // game's chair-unsticking logic before the first walking input can be consumed.
-    const seat={x:S.x,y:S.y},standDeadline=performance.now()+5000;
-    key('w',true);
-    while(distance(seat)<10&&performance.now()<standDeadline)await sleep(50);
-    stop();
+    await leaveSeat();
     const podium=cells('T').find(p=>Investigation.isPodium(INTERIORS.teach1,p.c,p.r));
     await interact(podium);await choose(1);
     if(!RT.investigation?.entries.notice)throw Error('未读到讲台移交单');
@@ -469,9 +473,9 @@ window.Pilot = (() => {
     started=performance.now();const label=document.createElement('div');label.id='pilot-label';
     label.style.cssText='position:fixed;right:12px;top:76px;z-index:50000;background:#101718dd;color:#d9e2da;padding:6px 10px;border-radius:3px;font:12px sans-serif;pointer-events:none;max-width:48%';
     document.body.appendChild(label);
-    (async()=>{await opening();if(route==='cyber')await PilotCyber.run({sleep,chapter,event,stop,tap,look,alive,defense,go,cells,interact,nearest,building,floor,officeKey,choose,bagAction,finishEnding});
+    (async()=>{await opening();if(route==='cyber')await PilotCyber.run({sleep,chapter,event,stop,tap,look,alive,defense,go,cells,interact,nearest,building,floor,officeKey,choose,bagAction,finishEnding,leaveSeat});
       else await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
       .catch(e=>{stop();failed=e.stack||String(e);event('failure',failed);});
   }
-  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event,defense};
+  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event,defense,leaveSeat};
 })();

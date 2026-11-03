@@ -56,8 +56,9 @@ class DoorwayNavigationTest(BrowserCase):
 
     def test_cyber_route_crosses_bridge_and_uses_student_pc_without_key(self):
         page = self.page()
-        page.evaluate("""ENTER_VIA='stair';doEnterRoom('teach2');running=false;
-          S.intro=0;S.seated=false;S.bag=['phone'];RT.inspection=null;PAT.locked=false;AN.active=false;
+        page.evaluate("""doEnterRoom('teach1');running=false;
+          const R=INTERIORS.teach1;S.x=R.ox+48.5*R.tw;S.y=R.oy+6.5*R.th;S.ang=-Math.PI/2;
+          S.intro=0;S.seated=true;S.bag=['phone'];RT.inspection=null;PAT.locked=false;AN.active=false;
           PhoneNetwork.acquire();PhoneNetwork.device.network=true;PhoneNetwork.device.download.status='complete';
           window.pump=setInterval(()=>{dtG=.35;updatePlayer(.35);},80);""")
         for script in ('navigation.js', 'cyber.js', 'playthrough.js'):
@@ -67,12 +68,13 @@ class DoorwayNavigationTest(BrowserCase):
           await Pilot.nearest('nK',10);await Pilot.choose(3);
           if(!TerminalUI.on||hasItem('roomkey'))throw Error('普通学生机没有正常打开终端');
           document.querySelector('#campus-terminal [data-exit]').click();
-          await PilotCyber.bridge(Pilot,'teach');
+          await PilotCyber.bridge(Pilot,'teach');await Pilot.floor(1);
+          const R=INTERIORS.teach1;await Pilot.go({x:R.ox+48.5*R.tw,y:R.oy+6.5*R.th},11);await Pilot.tap('e');
         })().then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)});""")
         page.wait_for_function('window.result', timeout=180000)
         self.assertEqual(page.evaluate('window.result'), {'ok': True},
                          page.evaluate("JSON.stringify({state:Pilot.snapshot(),events:Pilot.log.filter(e=>e.kind!=='input').slice(-8)})"))
-        self.assert_js(page, "S.room==='teach2' && !TerminalUI.on && !hasItem('roomkey')")
+        self.assert_js(page, "S.room==='teach1' && S.seated && atMySeat() && !TerminalUI.on && !hasItem('roomkey')")
         self.assertEqual(page.evaluate("Pilot.log.filter(e=>e.kind==='bridge').map(e=>e.detail.to)"), ['lab', 'teach'])
         page.evaluate('clearInterval(pump)')
 
