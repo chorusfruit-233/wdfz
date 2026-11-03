@@ -32,8 +32,21 @@ var PilotCyber=(function(){
     const body=['controller='+controller,'transaction='+commit.tx,'token='+commit.token,'clock=active',...order.map(x=>'stop '+x)].join('\\n');
     return {controller,transaction:commit.tx,body};
   }
+  async function bridge(p,to){
+    const from=INTERIORS[S.room]?.host;
+    if(!['teach','lab'].includes(from)||!['teach','lab'].includes(to)||from===to)throw Error('连廊路线起终点不正确');
+    await p.floor(2);
+    const port=p.cells('L').find(point=>from==='teach'||point.c<INTERIORS[S.room].cols/2);
+    if(!port)throw Error('没有找到二号连廊入口');
+    await p.interact(port,11);await p.sleep(1400);
+    if(S.room!=='link2')throw Error('未正常进入二号连廊');
+    const exits=p.cells('L').sort((a,b)=>a.r-b.r),exit=to==='lab'?exits[0]:exits.at(-1);
+    await p.interact(exit,11);await p.sleep(1400);
+    if(INTERIORS[S.room]?.host!==to)throw Error('连廊没有到达目标教学楼');
+    p.event('bridge',{from,to,via:'link2'});
+  }
   async function run(p){
-    const {sleep,chapter,event,stop,tap,look,alive,defense,go,cells,interact,nearest,building,floor,officeKey,choose,bagAction,finishEnding}=p;
+    const {sleep,chapter,event,stop,tap,alive,defense,go,nearest,floor,choose,bagAction,finishEnding}=p;
     const chair=()=>{const R=INTERIORS.teach1;return {x:R.ox+48.5*R.tw,y:R.oy+6.5*R.th};};
     function closePhone(){if(PHONE.on){document.querySelector('#phone .phx').click();event('input',{phone:'close'});}}
     async function phone(app){
@@ -75,10 +88,13 @@ var PilotCyber=(function(){
     await classWait(()=>PhoneNetwork.device.download.status==='complete','container');event('milestone','containerReady');
     await classWait(()=>PhoneNetwork.device.battery>=97,'home');
     await phone('location');await sleep(4000);closePhone();
-    await officeKey('roomkey');
-    chapter('携带手机与钥匙，进入实验楼三楼机房');
-    await floor(1);await nearest('O',16);await building('lab');await floor(3);
+    chapter('走二楼连廊，前往实验楼三楼学生机房');
+    await bridge(p,'lab');await floor(3);
     async function openTerminal(){
+      if(UI.chooseOpen||PatrolWorld.localChase()){
+        if(TerminalUI.on)document.querySelector('#campus-terminal [data-exit]').click();
+        await defense();
+      }
       if(TerminalUI.on)return;
       closePhone();await nearest('nK',10);
       const options=[...document.querySelectorAll('#choices button')];
@@ -86,17 +102,34 @@ var PilotCyber=(function(){
       if(n<0)throw Error('没有机房电脑的终端选项');await choose(n+1);
       if(!TerminalUI.on)throw Error('终端没有打开（电量、容器或接线条件不足）');
     }
+    async function terminalWait(ms){
+      const until=performance.now()+ms;
+      while(performance.now()<until){
+        alive();
+        if(UI.chooseOpen||PatrolWorld.localChase()){
+          if(TerminalUI.on)document.querySelector('#campus-terminal [data-exit]').click();
+          event('interruption','退出终端处理眼前的危险');await defense();return false;
+        }
+        await sleep(100);
+      }
+      return true;
+    }
     async function command(line,pause=2600){
-      await openTerminal();
-      const input=document.getElementById('campus-command');input.focus();input.value=line;
-      input.dispatchEvent(new Event('input',{bubbles:true}));event('input',{terminal:line});
-      await sleep(1000);input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',bubbles:true,cancelable:true}));
-      await sleep(200);
-      const output=document.querySelector('#campus-terminal pre').textContent,marker='$ '+line+'\n';
-      const at=output.lastIndexOf(marker);if(at<0)throw Error('命令未经过终端输入处理：'+line);
-      const printed=output.slice(at+marker.length);
-      if(printed.startsWith('错误：'))throw Error(printed);
-      event('terminal-output',{command:line,text:printed});await sleep(pause);alive();return printed;
+      for(let attempt=0;attempt<4;attempt++){
+        await openTerminal();
+        const input=document.getElementById('campus-command');input.focus();input.value=line;
+        input.dispatchEvent(new Event('input',{bubbles:true}));event('input',{terminal:line});
+        await terminalWait(1000);
+        if(!TerminalUI.on){event('interruption','终端输入被危险打断，处理后重新输入');continue;}
+        input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',bubbles:true,cancelable:true}));
+        await sleep(200);
+        const output=document.querySelector('#campus-terminal pre').textContent,marker='$ '+line+'\n';
+        const at=output.lastIndexOf(marker);if(at<0)continue;
+        const printed=output.slice(at+marker.length);
+        if(printed.startsWith('错误：'))throw Error(printed);
+        event('terminal-output',{command:line,text:printed});await terminalWait(pause);alive();return printed;
+      }
+      throw Error('命令连续被打断，未完成输入：'+line);
     }
     chapter('维护终端：阅读实际档案，关联控制器与事务');
     await openTerminal();await command('help');await command('cat /school/README');await command('man campusctl');
@@ -115,11 +148,11 @@ var PilotCyber=(function(){
     if(Termination.state.status!=='accepted')throw Error('服务器没有接受请求');
     document.querySelector('#campus-terminal [data-exit]').click();event('input',{terminal:'exit'});
     chapter('停机请求已提交：返回教室，实际存活十分钟');
-    await floor(1);await nearest('O',16);await building('teach');await seat();
+    await bridge(p,'teach');await floor(1);await seat();
     await classWait(()=>Termination.state.status!=='accepted','container');
     if(Termination.state.status!=='completed')throw Error('停机请求在等待中失效');
     event('milestone','serverCompleted');await finishEnding('cyber');
   }
-  return {solve,run};
+  return {solve,bridge,run};
 })();
 if(typeof module!=='undefined')module.exports=PilotCyber;

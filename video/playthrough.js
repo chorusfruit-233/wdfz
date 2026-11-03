@@ -84,8 +84,8 @@ window.Pilot = (() => {
   }
   function distance(p){return Math.hypot(p.x-S.x,p.y-S.y);}
   function walkLineClear(target){
-    const d=distance(target),n=Math.ceil(d/1.2);
-    for(let i=1;i<=n;i++)if(Collision.depth(S.x+(target.x-S.x)*i/n,S.y+(target.y-S.y)*i/n,PRAD+.03)>1e-7)return false;
+    const d=distance(target),n=Math.ceil(d/.35);
+    for(let i=1;i<=n;i++)if(Collision.depth(S.x+(target.x-S.x)*i/n,S.y+(target.y-S.y)*i/n,PRAD+.15)>1e-7)return false;
     return true;
   }
   function coverRects(){
@@ -109,8 +109,10 @@ window.Pilot = (() => {
     const cols=Math.ceil((R?R.w:(BOUND.x1-BOUND.x0-8)*SC)/step),rows=Math.ceil((R?R.h:(BOUND.y1-BOUND.y0-8)*SC)/step);
     const point=i=>({x:ox+(i%cols+.5)*step,y:oy+(Math.floor(i/cols)+.5)*step});
     const index=(x,y)=>Math.max(0,Math.min(rows-1,Math.floor((y-oy)/step)))*cols+Math.max(0,Math.min(cols-1,Math.floor((x-ox)/step)));
-    const cache=new Map(),free=i=>{if(!cache.has(i)){const p=point(i);cache.set(i,Collision.depth(p.x,p.y,PRAD+.08,copy)<1e-7);}return cache.get(i);};
-    const clear=(a,b)=>{const n=Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/1.4);for(let j=1;j<=n;j++)if(Collision.depth(a.x+(b.x-a.x)*j/n,a.y+(b.y-a.y)*j/n,PRAD+.04,copy)>1e-7)return false;return true;};
+    // A grazing locker corner can fit between coarse samples even though the
+    // game's 240 Hz movement hits it. Keep a small body margin in both planners.
+    const cache=new Map(),free=i=>{if(!cache.has(i)){const p=point(i);cache.set(i,Collision.depth(p.x,p.y,PRAD+.2,copy)<1e-7);}return cache.get(i);};
+    const clear=(a,b)=>{const n=Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/.35);for(let j=1;j<=n;j++)if(Collision.depth(a.x+(b.x-a.x)*j/n,a.y+(b.y-a.y)*j/n,PRAD+.15,copy)>1e-7)return false;return true;};
     const start=index(S.x,S.y),heap=[],cost=new Map([[start,0]]),prev=new Map();
     function push(i,f){let n=heap.length;heap.push([i,f]);while(n){const p=(n-1)>>1;if(heap[p][1]<=f)break;heap[n]=heap[p];n=p;}heap[n]=[i,f];}
     function pop(){const first=heap[0],last=heap.pop();if(heap.length){let n=0;while(n*2+1<heap.length){let c=n*2+1;if(c+1<heap.length&&heap[c+1][1]<heap[c][1])c++;if(heap[c][1]>=last[1])break;heap[n]=heap[c];n=c;}heap[n]=last;}return first[0];}
@@ -217,8 +219,14 @@ window.Pilot = (() => {
       if(await defense()){replan();continue;}
       if(!playerInputAllowed()){stop();progress.since=performance.now();await sleep(100);continue;}
       if(S.mode==='in'){
-        const R=INTERIORS[S.room],door=cells('=').find(p=>distance(p)<17&&!doorIsOpen(R,p.x,p.y)&&(!doorLockNeed(R,p.c,p.r)||hasItem(doorLockNeed(R,p.c,p.r))));
-        if(door){await face(door.x,door.y);await tap('e');await sleep(420);}
+        const R=INTERIORS[S.room],door=nearWorld(24);
+        if(door?.ch==='='&&!doorIsOpen(R,door.x,door.y)&&(!doorLockNeed(R,door.c,door.r)||hasItem(doorLockNeed(R,door.c,door.r)))){
+          await face(door.x,door.y);
+          // Adjacent doors share an interaction cone. Never close the open leaf
+          // when the game's actual E target differs from the intended leaf.
+          const hit=nearWorld(24);
+          if(hit?.ch==='='&&!doorIsOpen(R,hit.x,hit.y)){await tap('e');await sleep(420);}
+        }
       }
       // Skip a corner only when the player's full collision radius fits the next
       // segment. Never round through a wall merely because we are near a waypoint.
@@ -464,5 +472,5 @@ window.Pilot = (() => {
       else await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
       .catch(e=>{stop();failed=e.stack||String(e);event('failure',failed);});
   }
-  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,face,tap,choose,stop,garageExit};
+  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event};
 })();
