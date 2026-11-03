@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 储物柜、角色外观和旧巡察 API；世界权威在 modules/patrol-world。 */
 'use strict';
 /* ---------- 储物柜 ---------- */
@@ -8,8 +10,8 @@ var LOCKER_CELLS={
 };
 function placeLockers(){
   var id, R, cells, i;
-  for(id in INTERIORS){
-    R=INTERIORS[id];
+  for(id in $imports.INTERIORS){
+    R=$imports.INTERIORS[id];
     if(R.host==='teach'&&R.floor>5) continue;
     cells=LOCKER_CELLS[R.host]; if(!cells) continue;
     for(i=0;i<cells.length;i++){
@@ -17,15 +19,15 @@ function placeLockers(){
       if(R.grid[r]&&R.grid[r][c]==='.'&&R.grid[r+1]&&R.grid[r+1][c]==='.') R.grid[r][c]='H';
     }
   }
-  var P=INTERIORS.admin5;
+  var P=$imports.INTERIORS.admin5;
   if(P){
     P.name='行政楼 5F · 校长办公室'; P.principal=true;
     [[8,1],[24,1],[40,1]].forEach(function(q){ if(P.grid[q[1]][q[0]]==='.'&&P.grid[q[1]+1][q[0]]==='.') P.grid[q[1]][q[0]]='H'; });
   }
 }
-FURN_SOLID.H=0.82;
+$imports.FURN_SOLID.H=0.82;
 /* 一人高的铁皮储物柜，门朝南（+z），门上有一排百叶缝 */
-FURN.H=function(c,x,y,cx,cz){
+$imports.FURN.H=function(c,x,y,cx,cz){
   var K=c.K;
   c.ao(cx,cz,0.9,0.8,0.85);
   K.bevel('metal',cx,1.0,cz-0.05,0.82,2.0,0.62,0x45525a,1.0,0.02);
@@ -35,8 +37,8 @@ FURN.H=function(c,x,y,cx,cz){
 };
 
 /* 售货机：玻璃门、一格格货架、亮着的灯条，背靠东墙、面朝西（-x） */
-FURN_SOLID.M=0.86;
-FURN.M=function(c,x,y,cx,cz){
+$imports.FURN_SOLID.M=0.86;
+$imports.FURN.M=function(c,x,y,cx,cz){
   var K=c.K;
   c.ao(cx,cz,0.95,0.95,0.85);
   K.bevel('metal',cx+0.05,0.95,cz,0.8,1.9,0.86,0xb03a2a,1.0,0.02);
@@ -49,46 +51,82 @@ FURN.M=function(c,x,y,cx,cz){
 var HIDE={on:false,c:0,r:0,seen:false,t:0};
 function lockerFront(R,c,r){ return {x:R.ox+(c+0.5)*R.tw, y:R.oy+(r+1.5)*R.th}; }
 function hideIn(hit){
-  var R=INTERIORS[S.room];
-  HIDE.seen=!!(PAT.state==='walk'&&patSees()&&PatrolWorld.hunting());   /* 当着它的面钻进去，等于没躲（要在 HIDE.on 之前算） */
-  if(HIDE.seen)PatrolWorld.observeLocker(hit.c,hit.r);
+  var R=$imports.INTERIORS[$imports.S.room];
+  HIDE.seen=!!(PAT.state==='walk'&&patSees()&&$imports.PatrolWorld.hunting());   /* 当着它的面钻进去，等于没躲（要在 HIDE.on 之前算） */
+  if(HIDE.seen)$imports.PatrolWorld.observeLocker(hit.c,hit.r);
   HIDE.on=true; HIDE.c=hit.c; HIDE.r=hit.r; HIDE.t=0;
-  S.x=R.ox+(hit.c+0.5)*R.tw; S.y=R.oy+(hit.r+0.62)*R.th; S.ang=PI/2; S.pitch=0;
-  resetInputState();
+  $imports.S.x=R.ox+(hit.c+0.5)*R.tw; $imports.S.y=R.oy+(hit.r+0.62)*R.th; $imports.S.ang=$imports.PI/2; $imports.S.pitch=0;
+  (0,$imports.resetInputState)();
   var el=document.getElementById('hideslits'); if(el) el.style.display='block';
-  try{ SFX.door(); }catch(e){}
-  os(HIDE.seen?'我：我钻进了柜子。……它看见了。脚步声没有停，正朝这边来。':'我：我钻进储物柜，把门带上。铁皮上一排缝，外面的光一条一条的。',3.4);
+  try{ $imports.SFX.door(); }catch(e){}
+  (0,$imports.os)(HIDE.seen?'我：我钻进了柜子。……它看见了。脚步声没有停，正朝这边来。':'我：我钻进储物柜，把门带上。铁皮上一排缝，外面的光一条一条的。',3.4);
 }
 function hideOut(){
-  var R=INTERIORS[S.room];
+  var R=$imports.INTERIORS[$imports.S.room];
   HIDE.on=false;
   var el=document.getElementById('hideslits'); if(el) el.style.display='none';
-  if(R){ var f=lockerFront(R,HIDE.c,HIDE.r); S.x=f.x; S.y=f.y; }
-  try{ SFX.door(); }catch(e){}
-  os('我：我推开柜门出来。',1.6);
+  if(R){ var f=lockerFront(R,HIDE.c,HIDE.r); $imports.S.x=f.x; $imports.S.y=f.y; }
+  try{ $imports.SFX.door(); }catch(e){}
+  (0,$imports.os)('我：我推开柜门出来。',1.6);
 }
 
 /* 兼容名称；不会在换场景时重生或清除永久策略。 */
 var PAT={},PAT_SPEED=16,PAT_CHASE=31,PAT_SEE=135,PAT_CATCH=19,PAT_BODY=.30,PAT_NAV_N=4;
 var PAT_CFG={lostSearch:true,lostLinger:3,lockerMemory:true,memLinger:4,noise:false};
-function patRoomHere(){return S.mode==='in'?S.room:'out';}
+function patRoomHere(){return $imports.S.mode==='in'?$imports.S.room:'out';}
 function patReset(keepHiding){
-  patRemoveFig();VisualState.patrolFlick=0;VisualState.patrolRed=0;
-  if(typeof PatrolWorld!=='undefined')PatrolWorld.reset();else patRemoveFig();
+  (0,$imports.patRemoveFig)();$imports.VisualState.patrolFlick=0;$imports.VisualState.patrolRed=0;
+  if(typeof $imports.PatrolWorld!=='undefined')$imports.PatrolWorld.reset();else (0,$imports.patRemoveFig)();
   if(!keepHiding){HIDE.on=false;HIDE.seen=false;var el=document.getElementById('hideslits');if(el)el.style.display='none';}
 }
-function patEligible(){return PatrolWorld.eligible();}
-function patIgnores(){return !PAT.permanent&&!PAT.wirelessSignal&&PatrolWorld.exempt();}
-function patSees(){return PatrolWorld.sees();}
-function patLOS(){return PatrolNav.los(PatrolWorld.position(),PatrolNav.point(patRoomHere(),S.x,S.y,S.floorY));}
-function patTick(dt){PatrolWorld.tick(dt);}
-function patEnd(){if(!PAT.permanent)PatrolWorld.clearChase();}
-function patEndIfInvalid(){if(!PatrolWorld.hunting())PatrolWorld.clearChase();}
+function patEligible(){return $imports.PatrolWorld.eligible();}
+function patIgnores(){return !PAT.permanent&&!PAT.wirelessSignal&&$imports.PatrolWorld.exempt();}
+function patSees(){return $imports.PatrolWorld.sees();}
+function patLOS(){return $imports.PatrolNav.los($imports.PatrolWorld.position(),$imports.PatrolNav.point(patRoomHere(),$imports.S.x,$imports.S.y,$imports.S.floorY));}
+function patTick(dt){$imports.PatrolWorld.tick(dt);}
+function patEnd(){if(!PAT.permanent)$imports.PatrolWorld.clearChase();}
+function patEndIfInvalid(){if(!$imports.PatrolWorld.hunting())$imports.PatrolWorld.clearChase();}
 function patStart(){patReset(true);}
-function patAppear(){if(!PAT.version)PatrolWorld.reset();}
-function patPath(x,y){return PatrolNav.path(PatrolWorld.position(),PatrolNav.point(PAT.room,x,y,PAT.fy));}
-function patNav(R){return PatrolNav.grid(R.id);}
-function patNodeOf(R,x,y){var n=PatrolNav.grid(R.id);return [Math.floor((x-n.ox)/n.step),Math.floor((y-n.oy)/n.step)];}
-function patNodeW(R,i,j){var n=PatrolNav.grid(R.id);return {x:n.ox+(i+.5)*n.step,y:n.oy+(j+.5)*n.step};}
-function patFree(R,n,i,j){return PatrolNav.free(R.id,i,j);}
-function patNavFree(R,x,y){var n=patNodeOf(R,x,y);return PatrolNav.free(R.id,n[0],n[1]);}
+function patAppear(){if(!PAT.version)$imports.PatrolWorld.reset();}
+function patPath(x,y){return $imports.PatrolNav.path($imports.PatrolWorld.position(),$imports.PatrolNav.point(PAT.room,x,y,PAT.fy));}
+function patNav(R){return $imports.PatrolNav.grid(R.id);}
+function patNodeOf(R,x,y){var n=$imports.PatrolNav.grid(R.id);return [Math.floor((x-n.ox)/n.step),Math.floor((y-n.oy)/n.step)];}
+function patNodeW(R,i,j){var n=$imports.PatrolNav.grid(R.id);return {x:n.ox+(i+.5)*n.step,y:n.oy+(j+.5)*n.step};}
+function patFree(R,n,i,j){return $imports.PatrolNav.free(R.id,i,j);}
+function patNavFree(R,x,y){var n=patNodeOf(R,x,y);return $imports.PatrolNav.free(R.id,n[0],n[1]);}
+
+/* @module-exports */
+GameModules.publish("game3d/js/patrol.js",{
+"LOCKER_CELLS":{get:function(){return LOCKER_CELLS;},set:function($value){LOCKER_CELLS=$value;}},
+"placeLockers":{get:function(){return placeLockers;},set:function($value){placeLockers=$value;}},
+"HIDE":{get:function(){return HIDE;},set:function($value){HIDE=$value;}},
+"lockerFront":{get:function(){return lockerFront;},set:function($value){lockerFront=$value;}},
+"hideIn":{get:function(){return hideIn;},set:function($value){hideIn=$value;}},
+"hideOut":{get:function(){return hideOut;},set:function($value){hideOut=$value;}},
+"PAT":{get:function(){return PAT;},set:function($value){PAT=$value;}},
+"PAT_SPEED":{get:function(){return PAT_SPEED;},set:function($value){PAT_SPEED=$value;}},
+"PAT_CHASE":{get:function(){return PAT_CHASE;},set:function($value){PAT_CHASE=$value;}},
+"PAT_SEE":{get:function(){return PAT_SEE;},set:function($value){PAT_SEE=$value;}},
+"PAT_CATCH":{get:function(){return PAT_CATCH;},set:function($value){PAT_CATCH=$value;}},
+"PAT_BODY":{get:function(){return PAT_BODY;},set:function($value){PAT_BODY=$value;}},
+"PAT_NAV_N":{get:function(){return PAT_NAV_N;},set:function($value){PAT_NAV_N=$value;}},
+"PAT_CFG":{get:function(){return PAT_CFG;},set:function($value){PAT_CFG=$value;}},
+"patRoomHere":{get:function(){return patRoomHere;},set:function($value){patRoomHere=$value;}},
+"patReset":{get:function(){return patReset;},set:function($value){patReset=$value;}},
+"patEligible":{get:function(){return patEligible;},set:function($value){patEligible=$value;}},
+"patIgnores":{get:function(){return patIgnores;},set:function($value){patIgnores=$value;}},
+"patSees":{get:function(){return patSees;},set:function($value){patSees=$value;}},
+"patLOS":{get:function(){return patLOS;},set:function($value){patLOS=$value;}},
+"patTick":{get:function(){return patTick;},set:function($value){patTick=$value;}},
+"patEnd":{get:function(){return patEnd;},set:function($value){patEnd=$value;}},
+"patEndIfInvalid":{get:function(){return patEndIfInvalid;},set:function($value){patEndIfInvalid=$value;}},
+"patStart":{get:function(){return patStart;},set:function($value){patStart=$value;}},
+"patAppear":{get:function(){return patAppear;},set:function($value){patAppear=$value;}},
+"patPath":{get:function(){return patPath;},set:function($value){patPath=$value;}},
+"patNav":{get:function(){return patNav;},set:function($value){patNav=$value;}},
+"patNodeOf":{get:function(){return patNodeOf;},set:function($value){patNodeOf=$value;}},
+"patNodeW":{get:function(){return patNodeW;},set:function($value){patNodeW=$value;}},
+"patFree":{get:function(){return patFree;},set:function($value){patFree=$value;}},
+"patNavFree":{get:function(){return patNavFree;},set:function($value){patNavFree=$value;}}
+});
+})(GameModules.imports("game3d/js/patrol.js"));

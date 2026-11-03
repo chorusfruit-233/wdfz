@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 交互：设施、楼梯、搜东西、终端 */
 'use strict';
 
@@ -17,32 +19,32 @@ function tileLOS(R,x0,y0,x1,y1,tc,tr){
     if(r<0||c<0||r>=R.rows||c>=R.cols) return false;
     if(c===tc&&r===tr) continue;
     var ch=R.grid[r][c];
-    if(ch==='#'||isSolidCh(ch)) return false;
-    if(ch==='='&&!doorIsOpen(R,px,py)) return false;
+    if(ch==='#'||(0,$imports.isSolidCh)(ch)) return false;
+    if(ch==='='&&!(0,$imports.doorIsOpen)(R,px,py)) return false;
   }
   return true;
 }
 function tileVisible(R,hit){
-  if(tileLOS(R,S.x,S.y,hit.x,hit.y,hit.c,hit.r)) return true;
-  var ox=R.tw*0.42*(S.x>hit.x?1:-1), oy=R.th*0.42*(S.y>hit.y?1:-1);
-  return tileLOS(R,S.x,S.y,hit.x+ox,hit.y,hit.c,hit.r)||tileLOS(R,S.x,S.y,hit.x,hit.y+oy,hit.c,hit.r);
+  if(tileLOS(R,$imports.S.x,$imports.S.y,hit.x,hit.y,hit.c,hit.r)) return true;
+  var ox=R.tw*0.42*($imports.S.x>hit.x?1:-1), oy=R.th*0.42*($imports.S.y>hit.y?1:-1);
+  return tileLOS(R,$imports.S.x,$imports.S.y,hit.x+ox,hit.y,hit.c,hit.r)||tileLOS(R,$imports.S.x,$imports.S.y,hit.x,hit.y+oy,hit.c,hit.r);
 }
 
 function nearWorld(radius){
-  if(S.mode==='in'){
-    var R=INTERIORS[S.room];
+  if($imports.S.mode==='in'){
+    var R=$imports.INTERIORS[$imports.S.room];
     if(!R) return null;
-    if(R.spiral&&SP.state!=='ground') return null;   /* 在钟楼楼梯上，够不着地上的东西 */
+    if(R.spiral&&$imports.SP.state!=='ground') return null;   /* 在钟楼楼梯上，够不着地上的东西 */
     var hits=[];
     for(var r=0;r<R.rows;r++) for(var c=0;c<R.cols;c++){
       var ch=R.grid[r][c];
       if(ch==='#'||ch==='.') continue;
       var wx=R.ox+(c+0.5)*R.tw, wy=R.oy+(r+0.5)*R.th;
-      var d=Math.sqrt(dist2(wx,wy,S.x,S.y));
+      var d=Math.sqrt((0,$imports.dist2)(wx,wy,$imports.S.x,$imports.S.y));
       if(d>=radius) continue;
       /* 以前只取最近的格子、不看朝向：终端被课桌围着时，按 E 永远在翻课桌。
          现在面前的东西优先，侧面、背后的要近得多才会被选中。 */
-      var off=d<4?0:angDiff(Math.atan2(wy-S.y,wx-S.x),S.ang);
+      var off=d<4?0:(0,$imports.angDiff)(Math.atan2(wy-$imports.S.y,wx-$imports.S.x),$imports.S.ang);
       hits.push({ch:ch,c:c,r:r,x:wx,y:wy,d:d,score:d+off*10});
     }
     hits.sort(function(a,b){return a.score-b.score;});
@@ -50,11 +52,11 @@ function nearWorld(radius){
     return null;
   }
   var best=null,bd=1e9;
-  for(var i=0;i<OBJ.length;i++){
-    var o=OBJ[i];
+  for(var i=0;i<$imports.OBJ.length;i++){
+    var o=$imports.OBJ[i];
     if(o.k!=='roof') continue;
-    var dw=doorWorld(o);
-    var d2=Math.sqrt(dist2(dw.x,dw.y,S.x,S.y));
+    var dw=(0,$imports.doorWorld)(o);
+    var d2=Math.sqrt((0,$imports.dist2)(dw.x,dw.y,$imports.S.x,$imports.S.y));
     if(d2<70&&d2<bd){ bd=d2; best={obj:o,door:dw,d:d2}; }
   }
   return best;
@@ -71,106 +73,106 @@ var SAN_ACTS={
   view:  {n:'看看远处',     san:6,  min:6,  cd:40,  msg:'我：从这里能看见半个校园。都在雾里。雾的边上，一直是同一栋楼。'}
 };
 var FAC_CD={Z:70,C:90,N:45,Y:200,K:0};
-function facClock(){ return gameClock(); }
+function facClock(){ return (0,$imports.gameClock)(); }
 function facRoll(n){
-  var r=Math.random(), r2=Math.random();
-  if(hasItem('goggles')) r=Math.min(r,r2);              /* 护目镜：两次里取好的那次（离心机、显微镜都是数字小的好） */
+  var r=$imports.GameRandom.next(), r2=$imports.GameRandom.next();
+  if((0,$imports.hasItem)('goggles')) r=Math.min(r,r2);              /* 护目镜：两次里取好的那次（离心机、显微镜都是数字小的好） */
   return Math.floor(r*n);
 }
 function useFacility(ch,R){
-  if(ch==='K'&&PortalExploration.collect(R))return true;
-  var cool=S.actCool||(S.actCool={});
+  if(ch==='K'&&$imports.PortalExploration.collect(R))return true;
+  var cool=$imports.S.actCool||($imports.S.actCool={});
   var key='fac'+ch;
   var cd=FAC_CD[ch]||60;
-  if(cool[key]&&facClock()<cool[key]){ os('我：刚弄过。等一会儿。',2.0); return true; }
+  if(cool[key]&&facClock()<cool[key]){ (0,$imports.os)('我：刚弄过。等一会儿。',2.0); return true; }
   var rolled=false;
   if(ch==='Z'){
     /* 物理实验室：单摆会"预报"下一次异象 —— 说出来的那个就是真的会来的那个 */
     rolled=true;
-    if(!AN.active&&AN.pre&&AN_WARN[AN.pre]&&anAllowed(AN.pre)){
-      AN.locked=true;
-      var mins=Math.max(1,Math.round(AN.next*rateAt(S.tsec)/60));
-      os('我：我把摆拉开、松手。它没有来回摆，而是慢慢停在一个方向上，像被什么吸住了。\n秤盘上的砝码排成了几个字——「'+(AN_CN[AN.pre]||AN.pre)+'」。还有大约 '+mins+' 分钟。',6.5);
-      toast('预报：'+(AN_CN[AN.pre]||AN.pre));
-      addClue('pendulum');
-    }else if(AN.active){
-      PlayerStats.changeSan(-(4),'interact',{min:0});
-      os('我：摆在乱转，转得越来越快。它在说：已经来了。',3.6);
+    if(!$imports.AN.active&&$imports.AN.pre&&$imports.AN_WARN[$imports.AN.pre]&&(0,$imports.anAllowed)($imports.AN.pre)){
+      $imports.AN.locked=true;
+      var mins=Math.max(1,Math.round($imports.AN.next*(0,$imports.rateAt)($imports.S.tsec)/60));
+      (0,$imports.os)('我：我把摆拉开、松手。它没有来回摆，而是慢慢停在一个方向上，像被什么吸住了。\n秤盘上的砝码排成了几个字——「'+($imports.AN_CN[$imports.AN.pre]||$imports.AN.pre)+'」。还有大约 '+mins+' 分钟。',6.5);
+      (0,$imports.toast)('预报：'+($imports.AN_CN[$imports.AN.pre]||$imports.AN.pre));
+      (0,$imports.addClue)('pendulum');
+    }else if($imports.AN.active){
+      $imports.PlayerStats.changeSan(-(4),'interact',{min:0});
+      (0,$imports.os)('我：摆在乱转，转得越来越快。它在说：已经来了。',3.6);
     }else{
-      PlayerStats.changeSan(5,'interact',{max:100});
-      os('我：摆停在正中，一动不动。它没有给出危险预警。',3.4);
+      $imports.PlayerStats.changeSan(5,'interact',{max:100});
+      (0,$imports.os)('我：摆停在正中，一动不动。它没有给出危险预警。',3.4);
     }
-    advanceGameTime(3);
+    (0,$imports.advanceGameTime)(3);
   }else if(ch==='C'){
     rolled=true;
     var v2=facRoll(100);
-    if(v2<46&&!RT.vialTaken){
-      if(!addItem('vial')) return true;
-      RT.vialTaken=1; os('我：转子转起来，液体分成两层。最底下沉着一线发光的东西，我把它倒进一支空管里。',4.2);
+    if(v2<46&&!$imports.RT.vialTaken){
+      if(!(0,$imports.addItem)('vial')) return true;
+      $imports.RT.vialTaken=1; (0,$imports.os)('我：转子转起来，液体分成两层。最底下沉着一线发光的东西，我把它倒进一支空管里。',4.2);
     }
-    else if(v2<46){ PlayerStats.changeSan(7,'interact',{max:100}); os('我：转子转起来，液体分成两层。白的在上。',3.6); toast('离心机 · SAN +7'); }
-    else if(v2<72){ PlayerStats.changeSan(2,'interact',{max:100}); os('我：离心机停了。管子里的东西还在转。',3.6); toast('离心机 · SAN +2'); }
-    else { PlayerStats.changeSan(-(5),'interact',{min:0}); os('我：配平没配好，整台机器在桌上跳。',3.6); toast('离心机 · SAN −5'); }
-    advanceGameTime(5);
+    else if(v2<46){ $imports.PlayerStats.changeSan(7,'interact',{max:100}); (0,$imports.os)('我：转子转起来，液体分成两层。白的在上。',3.6); (0,$imports.toast)('离心机 · SAN +7'); }
+    else if(v2<72){ $imports.PlayerStats.changeSan(2,'interact',{max:100}); (0,$imports.os)('我：离心机停了。管子里的东西还在转。',3.6); (0,$imports.toast)('离心机 · SAN +2'); }
+    else { $imports.PlayerStats.changeSan(-(5),'interact',{min:0}); (0,$imports.os)('我：配平没配好，整台机器在桌上跳。',3.6); (0,$imports.toast)('离心机 · SAN −5'); }
+    (0,$imports.advanceGameTime)(5);
   }else if(ch==='N'){
     rolled=true;
-    if(!RT.lensTaken){                       /* 传送门材料：透镜 */
-      if(addItem('lens')){
-        RT.lensTaken=1;
-        os('我：镜片里有一只眼睛，它眨了一下，物镜就松了。我把它拧了下来，攥在手里是凉的。',4.4);
+    if(!$imports.RT.lensTaken){                       /* 传送门材料：透镜 */
+      if((0,$imports.addItem)('lens')){
+        $imports.RT.lensTaken=1;
+        (0,$imports.os)('我：镜片里有一只眼睛，它眨了一下，物镜就松了。我把它拧了下来，攥在手里是凉的。',4.4);
         cool[key]=facClock()+cd;
       }
       return true;
     }
     var v3=facRoll(100);
-    if(v3<58){ PlayerStats.changeSan(4,'interact',{max:100}); os('我：调焦旋钮是热的。视野里有东西在慢慢游。',3.6); toast('显微镜 · SAN +4'); }
-    else { PlayerStats.changeSan(-(4),'interact',{min:0}); os('我：镜片里有一只眼睛。它先眨了一下。',3.8); toast('显微镜 · SAN −4'); }
+    if(v3<58){ $imports.PlayerStats.changeSan(4,'interact',{max:100}); (0,$imports.os)('我：调焦旋钮是热的。视野里有东西在慢慢游。',3.6); (0,$imports.toast)('显微镜 · SAN +4'); }
+    else { $imports.PlayerStats.changeSan(-(4),'interact',{min:0}); (0,$imports.os)('我：镜片里有一只眼睛。它先眨了一下。',3.8); (0,$imports.toast)('显微镜 · SAN −4'); }
   }else if(ch==='Y'){
     rolled=true;
-    addClue('geo');
-    if(!hasItem('compass')&&!RT.geoCompass){
-      if(!addItem('compass')) return true;
-      RT.geoCompass=1;
-      os('我：地球仪上，学校的位置被铅笔描了很多遍，纸都描破了。底座的抽屉里有个罗盘。',4.6);
+    (0,$imports.addClue)('geo');
+    if(!(0,$imports.hasItem)('compass')&&!$imports.RT.geoCompass){
+      if(!(0,$imports.addItem)('compass')) return true;
+      $imports.RT.geoCompass=1;
+      (0,$imports.os)('我：地球仪上，学校的位置被铅笔描了很多遍，纸都描破了。底座的抽屉里有个罗盘。',4.6);
     }else{
-      os('我：我转了一下地球仪。它转回来，停在原来那一面。',3.2);
+      (0,$imports.os)('我：我转了一下地球仪。它转回来，停在原来那一面。',3.2);
     }
-    PlayerStats.changeSan(2,'interact',{max:100});
+    $imports.PlayerStats.changeSan(2,'interact',{max:100});
   }else if(ch==='K'){
     if(R.host==='admin'){
-      os('我：办公桌上摊着一叠表格。最上面那张的名字被涂掉了。',3.6);
-      if(!RT.adminDesk){ RT.adminDesk=1; addClue('office'); toast('办公室 · 线索 +1'); }
+      (0,$imports.os)('我：办公桌上摊着一叠表格。最上面那张的名字被涂掉了。',3.6);
+      if(!$imports.RT.adminDesk){ $imports.RT.adminDesk=1; (0,$imports.addClue)('office'); (0,$imports.toast)('办公室 · 线索 +1'); }
     }else if(R.floor===1){
-      portalBench(); return true;            /* 物理实验室的实验台：造传送门（portal.js） */
+      (0,$imports.portalBench)(); return true;            /* 物理实验室的实验台：造传送门（portal.js） */
     }else{
-      if(R.floor===5){ os('我：讲台上摊着谱子。第三乐章那一页被折了角。',3.4); }
-      else if(R.floor===3){ os('我：教师台上摊着一本「机房钥匙借用登记」。最后一页是空的。',3.6); }
-      else { os('我：教师台上还留着上一节课的东西。烧杯里的水是温的。',3.4); }
-      if(R.floor===2&&!RT.labReagent){
-        if(hasItem('goggles')) os('我：台上还有一副护目镜，我已经带了一副。',3.2);
-        else if(addItem('goggles')) RT.labReagent=1;
+      if(R.floor===5){ (0,$imports.os)('我：讲台上摊着谱子。第三乐章那一页被折了角。',3.4); }
+      else if(R.floor===3){ (0,$imports.os)('我：教师台上摊着一本「机房钥匙借用登记」。最后一页是空的。',3.6); }
+      else { (0,$imports.os)('我：教师台上还留着上一节课的东西。烧杯里的水是温的。',3.4); }
+      if(R.floor===2&&!$imports.RT.labReagent){
+        if((0,$imports.hasItem)('goggles')) (0,$imports.os)('我：台上还有一副护目镜，我已经带了一副。',3.2);
+        else if((0,$imports.addItem)('goggles')) $imports.RT.labReagent=1;
       }
     }
   }
   if(rolled) cool[key]=facClock()+cd;
-  try{ SFX.click(); }catch(e){}
+  try{ $imports.SFX.click(); }catch(e){}
   return true;
 }
 function sanActFor(R,hit){
-  if(S.mode==='in'){
+  if($imports.S.mode==='in'){
     if(!hit||!R) return null;
     /* 饭点免费吃；饭点以外得投币（见 canteenWindow） */
-    if(R.host==='canteen'&&(hit.ch==='k'||hit.ch==='t')&&mealNow()) return 'eat';
+    if(R.host==='canteen'&&(hit.ch==='k'||hit.ch==='t')&&(0,$imports.mealNow)()) return 'eat';
     if((R.host==='dormN'||R.host==='dormS')&&hit.ch==='b') return 'sleep';
     if(R.host==='lab'&&hit.ch==='p') return 'piano';
     if(R.host==='lab'&&hit.ch==='n') return 'pc';
     if(R.host==='teach'&&hit.ch==='w') return 'wash';
     return null;
   }
-  if(S.mode==='out'){
-    var mx=S.x/SC, my=S.y/SC, i, o;
-    for(i=0;i<OBJ.length;i++){
-      o=OBJ[i];
+  if($imports.S.mode==='out'){
+    var mx=$imports.S.x/$imports.SC, my=$imports.S.y/$imports.SC, i, o;
+    for(i=0;i<$imports.OBJ.length;i++){
+      o=$imports.OBJ[i];
       if(!(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h)) continue;
       if(o.k==='field') return 'run';
       if(o.k==='court') return 'shoot';
@@ -182,27 +184,27 @@ function sanActFor(R,hit){
 }
 function doSanAct(key){
   var a=SAN_ACTS[key]; if(!a) return;
-  if(DayEvents.closed(key)){ os(DayEvents.closedMsg(key),3.6); return; }   /* 占课：琴房、机房当天不开 */
-  S.actCool=S.actCool||{};
-  var clockNow=gameClock();
-  if(S.actCool[key]&&clockNow<S.actCool[key]){
-    os('我：刚做过。现在没那个心情。',2.4); return;
+  if($imports.DayEvents.closed(key)){ (0,$imports.os)($imports.DayEvents.closedMsg(key),3.6); return; }   /* 占课：琴房、机房当天不开 */
+  $imports.S.actCool=$imports.S.actCool||{};
+  var clockNow=(0,$imports.gameClock)();
+  if($imports.S.actCool[key]&&clockNow<$imports.S.actCool[key]){
+    (0,$imports.os)('我：刚做过。现在没那个心情。',2.4); return;
   }
-  var _before=S.tsec;
-  advanceGameTime(a.min);
-  var base=key==='eat'?Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */
-  var gain=CampusPressure.restGain(base);  /* 按休息结束时的压力结算，跨夜休息不能绕过衰减。 */
-  PlayerStats.changeSan(gain,'interact',{max:100});
-  S.actCool[key]=gameClock()+a.cd;
-  restoreStamina(25);
-  if(key==='piano'){ try{ SFX.resume(); SFX.moonlight(); }catch(e){} }
-  else if(key==='pc'){ try{ PCGAME.start(); }catch(e){} }
+  var _before=$imports.S.tsec;
+  (0,$imports.advanceGameTime)(a.min);
+  var base=key==='eat'?$imports.Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */
+  var gain=$imports.CampusPressure.restGain(base);  /* 按休息结束时的压力结算，跨夜休息不能绕过衰减。 */
+  $imports.PlayerStats.changeSan(gain,'interact',{max:100});
+  $imports.S.actCool[key]=(0,$imports.gameClock)()+a.cd;
+  (0,$imports.restoreStamina)(25);
+  if(key==='piano'){ try{ $imports.SFX.resume(); $imports.SFX.moonlight(); }catch(e){} }
+  else if(key==='pc'){ try{ $imports.PCGAME.start(); }catch(e){} }
   if(a.min>=4){
-    try{ timeSkipCard(a.min, a.n, S.tsec); }catch(e){}
+    try{ timeSkipCard(a.min, a.n, $imports.S.tsec); }catch(e){}
   }
-  os(a.msg,3.6);
-  toast('SAN +'+gain+(CampusPressure.current().stage>0?' · 校园压力使休息效果减弱':''));
-  try{ SFX.click(); }catch(e){}
+  (0,$imports.os)(a.msg,3.6);
+  (0,$imports.toast)('SAN +'+gain+($imports.CampusPressure.current().stage>0?' · 校园压力使休息效果减弱':''));
+  try{ $imports.SFX.click(); }catch(e){}
 }
 var SKIP_T=null;
 function timeSkipCard(mins,actName,tsec){
@@ -212,52 +214,52 @@ function timeSkipCard(mins,actName,tsec){
   var i=el.querySelector?el.querySelector('i'):null;
   var em=el.querySelector?el.querySelector('em'):null;
   if(b) b.textContent='…'+mins+' 分钟过去了';
-  if(i) i.textContent=hasClock()?fmtClock(tsec):periodAt(tsec)[2];
+  if(i) i.textContent=(0,$imports.hasClock)()?(0,$imports.fmtClock)(tsec):(0,$imports.periodAt)(tsec)[2];
   if(em) em.textContent=actName||'';
   el.classList.add('on');
   if(SKIP_T) clearTimeout(SKIP_T);
-  var skipScope=Lifecycle.renew('time-skip');
+  var skipScope=$imports.Lifecycle.renew('time-skip');
   skipScope.own(function(){el.classList.remove('on');});
   SKIP_T=skipScope.timeout(function(){
     if(el) el.classList.remove('on');
   }, 760);
 }
-function nearRoster(){ return AN.active&&AN.id==='roster'&&AN.data&&!AN.data.done&&AN.data.rx!==undefined&&dist2(S.x,S.y,AN.data.rx,AN.data.ry)<80*80; }
+function nearRoster(){ return $imports.AN.active&&$imports.AN.id==='roster'&&$imports.AN.data&&!$imports.AN.data.done&&$imports.AN.data.rx!==undefined&&(0,$imports.dist2)($imports.S.x,$imports.S.y,$imports.AN.data.rx,$imports.AN.data.ry)<80*80; }
 /* 被划掉的名单：以前没有任何办法"处理"它，16 秒后必扣 30 违规 */
 function useRoster(timeoutMs){
-  var d=AN.data;
-  if(hasItem('pen')||hasItem('chalk')){
+  var d=$imports.AN.data;
+  if((0,$imports.hasItem)('pen')||(0,$imports.hasItem)('chalk')){
     d.done=true;
-    PlayerStats.changeSan(6,'interact',{max:100});
-    os('我：我在那道红线旁边，把自己的名字一笔一画重新写了一遍。写完以后，红线淡了。',4.4);
-    addClue('roster');
+    $imports.PlayerStats.changeSan(6,'interact',{max:100});
+    (0,$imports.os)('我：我在那道红线旁边，把自己的名字一笔一画重新写了一遍。写完以后，红线淡了。',4.4);
+    (0,$imports.addClue)('roster');
     return;
   }
-  UI.choice('名单上，我的名字被一道红线划掉了。手边没有笔。',[
-    {label:'把它撕下来',fn:function(){ UI.closeChoice(); d.done=true; addViolation(8); PlayerStats.changeSan(-(5),'interact',{min:0});
-      os('我：纸撕下来的时候，下面还贴着一张。一模一样，连那道红线都是新的。……至少我把它撕了。',4.6); }},
-    {label:'用指甲把名字刻回去',fn:function(){ UI.closeChoice(); d.done=true; PlayerStats.changeSan(-(10),'interact',{min:0});
-      os('我：指甲劈了。名字刻上去了，歪歪扭扭的，渗着一点红。',4.0); }},
-    {label:'不管它',fn:function(){ UI.closeChoice(); }}
+  $imports.UI.choice('名单上，我的名字被一道红线划掉了。手边没有笔。',[
+    {label:'把它撕下来',fn:function(){ $imports.UI.closeChoice(); d.done=true; (0,$imports.addViolation)(8); $imports.PlayerStats.changeSan(-(5),'interact',{min:0});
+      (0,$imports.os)('我：纸撕下来的时候，下面还贴着一张。一模一样，连那道红线都是新的。……至少我把它撕了。',4.6); }},
+    {label:'用指甲把名字刻回去',fn:function(){ $imports.UI.closeChoice(); d.done=true; $imports.PlayerStats.changeSan(-(10),'interact',{min:0});
+      (0,$imports.os)('我：指甲劈了。名字刻上去了，歪歪扭扭的，渗着一点红。',4.0); }},
+    {label:'不管它',fn:function(){ $imports.UI.closeChoice(); }}
   ],{timeoutMs:Number.isFinite(timeoutMs)?Math.max(1,timeoutMs):5000});
 }
 /* 准星下面那行「E 做什么」。判断顺序和下面的 tryInteract 一致：改了其中一个，另一个要对照着改。 */
-function canteenHint(h,R){ return (R.host==='canteen'&&!mealNow())?(hasItem('coin')?'投币买饭':'打饭窗口'):'翻找'; }
+function canteenHint(h,R){ return (R.host==='canteen'&&!(0,$imports.mealNow)())?((0,$imports.hasItem)('coin')?'投币买饭':'打饭窗口'):'翻找'; }
 var TILE_HINT={
-  '=':function(h,R){ var need=doorLockNeed(R,h.c,h.r); return (need&&!hasItem(need))?'开门（锁着）':'开门'; },
+  '=':function(h,R){ var need=(0,$imports.doorLockNeed)(R,h.c,h.r); return (need&&!(0,$imports.hasItem)(need))?'开门（锁着）':'开门'; },
   O:'出去', H:'躲进柜子',
   M:function(){
-    var j=Investigation.state(),sup=j.supply;
-    if(j.entries.notice&&sup&&sup.site===S.room&&!sup.taken) return '看补给箱 / 售货机';   /* 只有补给箱真在这儿才这么写 */
-    return hasItem('coin')?'投币（售货机）':'售货机';
+    var j=$imports.Investigation.state(),sup=j.supply;
+    if(j.entries.notice&&sup&&sup.site===$imports.S.room&&!sup.taken) return '看补给箱 / 售货机';   /* 只有补给箱真在这儿才这么写 */
+    return (0,$imports.hasItem)('coin')?'投币（售货机）':'售货机';
   },
   k:function(h,R){ return R.host==='guard'?'查看值班台':canteenHint(h,R); }, t:canteenHint,
-  L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return Investigation.carHint(h);},
+  L:'走连廊', Q:'看服务器终端', S:'上下楼', J:function(){return $imports.S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return $imports.Investigation.carHint(h);},
   T:function(h,R){
-    if(Investigation.isPodium(R,h.c,h.r)) return Investigation.visible('notice')?'再看移交单':'看移交单';
-    return S.room==='teach1'?'拿粉笔':'看讲台';
+    if($imports.Investigation.isPodium(R,h.c,h.r)) return $imports.Investigation.visible('notice')?'再看移交单':'看移交单';
+    return $imports.S.room==='teach1'?'拿粉笔':'看讲台';
   },
-  D:function(){ return (S.room==='lab3')?'门禁管理终端':'使用终端'; },
+  D:function(){ return ($imports.S.room==='lab3')?'门禁管理终端':'使用终端'; },
   X:'钻进去',
   K:function(h,R){ return (R&&R.host==='admin')?'看办公桌':'看实验台'; },
   Z:'放开单摆', C:'开离心机', N:'看显微镜', Y:'转地球仪', p:'弹琴', U:'撞钟', A:'看供桌', x:'看挂图',
@@ -265,18 +267,18 @@ var TILE_HINT={
   b:function(h,R){ return sanActFor(R,h)?'躺一会儿':'床'; },
   n:'用电脑'
 };
-var GATE_HINT=[[GATE_N,'校门'],[GATE_W,'西小门'],[GATE_S,'南门']];
+var GATE_HINT=[[$imports.GATE_N,'校门'],[$imports.GATE_W,'西小门'],[$imports.GATE_S,'南门']];
 function interactHint(){
-  if(S.dead||S.screen!=='play'||UI.anyOpen()||PAUSE.on) return '';
-  var R=S.mode==='in'?INTERIORS[S.room]:null, h=R?nearWorld(24):null;
+  if($imports.S.dead||$imports.S.screen!=='play'||$imports.UI.anyOpen()||$imports.PAUSE.on) return '';
+  var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null, h=R?nearWorld(24):null;
   var first=h&&(FAC_CD[h.ch]!==undefined||sanActFor(R,h));   /* 设施、恢复 SAN 的动作排在"坐下"前面 */
-  if(HIDE.on) return '出来';
-  if(bellReach()) return '撞钟';
+  if($imports.HIDE.on) return '出来';
+  if((0,$imports.bellReach)()) return '撞钟';
   if(nearRoster()) return '那张名单';
-  if(S.seated) return '站起来';
+  if($imports.S.seated) return '站起来';
   var _mh=GameModules.first('hint'); if(_mh) return String(_mh);
   if(R&&!first&&hit2_seatNear(R)) return '坐下';
-  if(S.mode==='in'){
+  if($imports.S.mode==='in'){
     if(!h) return '';
     var recovery=sanActFor(R,h);if(recovery)return SAN_ACTS[recovery].n+'（SAN +'+SAN_ACTS[recovery].san+'，'+SAN_ACTS[recovery].min+' 分钟）';
     var th=TILE_HINT[h.ch];
@@ -288,19 +290,19 @@ function interactHint(){
   if(act) return SAN_ACTS[act].n+'（SAN +'+SAN_ACTS[act].san+'，'+SAN_ACTS[act].min+' 分钟）';
   for(i=0;i<GATE_HINT.length;i++){
     var g=GATE_HINT[i][0];
-    if(Math.sqrt(dist2(g.x*SC,g.y*SC,S.x,S.y))<70) return GATE_HINT[i][1];
+    if(Math.sqrt((0,$imports.dist2)(g.x*$imports.SC,g.y*$imports.SC,$imports.S.x,$imports.S.y))<70) return GATE_HINT[i][1];
   }
   return '';
 }
 function tryInteract(){
-  if(S.screen!=='play'||S.dead||PAUSE.on||UI.anyOpen()) return;
-  if(typeof CarChase!=='undefined'&&CarChase.active())return;
-  if(S.seated){ S.seated=false; os('我站了起来。',1.6); S.enterCool=0.4; return; }
-  if(HIDE.on){ hideOut(); return; }
+  if($imports.S.screen!=='play'||$imports.S.dead||$imports.PAUSE.on||$imports.UI.anyOpen()) return;
+  if(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active())return;
+  if($imports.S.seated){ $imports.S.seated=false; (0,$imports.os)('我站了起来。',1.6); $imports.S.enterCool=0.4; return; }
+  if($imports.HIDE.on){ (0,$imports.hideOut)(); return; }
   if(nearRoster()){ useRoster(); return; }
   if(GameModules.first('interact')) return;          /* 模块的交互（虚空迷宫的出口、地上的粉笔）先于默认 */
 
-  if(S.mode==='out'){
+  if($imports.S.mode==='out'){
     var nb=nearWorld(0);
     if(nb){
       var id=nb.obj.id;
@@ -308,67 +310,67 @@ function tryInteract(){
         dormN:'dorm1',dormS:'dorm4',garage:'garage1',garw:'garage1',trash:'trash1',
         guard:'guard1',gear:'gear1',bell:'bell1'};
 
-      if(map[id]){ ENTER_VIA='out'; try{ SFX.door(); }catch(e){} enterRoom(map[id]); return; }
+      if(map[id]){ $imports.ENTER_VIA='out'; try{ $imports.SFX.door(); }catch(e){} (0,$imports.enterRoom)(map[id]); return; }
       return;
     }
     var act=sanActFor(null,null);
     if(act){ doSanAct(act); return; }
-    var gn=Math.sqrt(dist2(GATE_N.x*SC,GATE_N.y*SC,S.x,S.y));
-    if(gn<70){ os('我：北门的闸机屏幕上显示：「查无此人」。门外的路上没有车，也没有声音，一直延伸到雾里。',4.2); addClue('gaten'); return; }
-    var gw=Math.sqrt(dist2(GATE_W.x*SC,GATE_W.y*SC,S.x,S.y));
+    var gn=Math.sqrt((0,$imports.dist2)($imports.GATE_N.x*$imports.SC,$imports.GATE_N.y*$imports.SC,$imports.S.x,$imports.S.y));
+    if(gn<70){ (0,$imports.os)('我：北门的闸机屏幕上显示：「查无此人」。门外的路上没有车，也没有声音，一直延伸到雾里。',4.2); (0,$imports.addClue)('gaten'); return; }
+    var gw=Math.sqrt((0,$imports.dist2)($imports.GATE_W.x*$imports.SC,$imports.GATE_W.y*$imports.SC,$imports.S.x,$imports.S.y));
     if(gw<70){ tryGateWest(); return; }
-    var gs=Math.sqrt(dist2(GATE_S.x*SC,GATE_S.y*SC,S.x,S.y));
-    if(gs<70){ os('我：南门锁着，锁上全是锈。门缝外面——是另一个南门。',3.4); return; }
-    os(pick(['我：这里摸不到什么。','我：……什么都没有。可我总觉得刚刚有东西在这儿。','我：地上很凉。']),1.8);
+    var gs=Math.sqrt((0,$imports.dist2)($imports.GATE_S.x*$imports.SC,$imports.GATE_S.y*$imports.SC,$imports.S.x,$imports.S.y));
+    if(gs<70){ (0,$imports.os)('我：南门锁着，锁上全是锈。门缝外面——是另一个南门。',3.4); return; }
+    (0,$imports.os)((0,$imports.pick)(['我：这里摸不到什么。','我：……什么都没有。可我总觉得刚刚有东西在这儿。','我：地上很凉。']),1.8);
     return;
   }
 
-  var R=INTERIORS[S.room];
-  if(bellReach()){ useBell(); return; }
+  var R=$imports.INTERIORS[$imports.S.room];
+  if((0,$imports.bellReach)()){ useBell(); return; }
   var _sa=sanActFor(R,null), _hit0=nearWorld(24);
   if(_hit0&&FAC_CD[_hit0.ch]!==undefined){ if(useFacility(_hit0.ch,R)) return; }
   if(_hit0){ var _k=sanActFor(R,_hit0); if(_k){ doSanAct(_k); return; } }
   if(hit2_seatNear(R)){ sitDown(); return; }
   var hit=nearWorld(24);
-  if(!hit){ os('我：这里什么都没有。',1.8); return; }
+  if(!hit){ (0,$imports.os)('我：这里什么都没有。',1.8); return; }
   var ch=hit.ch;
   if(ch==='='){
-    var _need=doorLockNeed(R,hit.c,hit.r);
-    if(_need&&!hasItem(_need)){
-      os('我：门锁着。锁孔是圆的，很新。',2.8);
-      toast('需要「'+ITEMS[_need].n+'」· 校长办公室可能有');
-      addClue('roomkey');
+    var _need=(0,$imports.doorLockNeed)(R,hit.c,hit.r);
+    if(_need&&!(0,$imports.hasItem)(_need)){
+      (0,$imports.os)('我：门锁着。锁孔是圆的，很新。',2.8);
+      (0,$imports.toast)('需要「'+$imports.ITEMS[_need].n+'」· 校长办公室可能有');
+      (0,$imports.addClue)('roomkey');
       return;
     }
-    if(!OPENDOORS[doorKeyAt(R,hit.c,hit.r)]){
-      OPENDOORS[doorKeyAt(R,hit.c,hit.r)]=1;
-      SFX.door(); os(pick(['我：门开了。','我：门开了。合页的声音拖得很长。','我：门开了。里面比外面冷。']),1.8); S.enterCool=0.35;
-      roomDoorRefresh(R,hit.c,hit.r);                   /* 只重建这一扇门（以前整层楼重建，同学还会重新随机坐） */
+    if(!$imports.OPENDOORS[(0,$imports.doorKeyAt)(R,hit.c,hit.r)]){
+      $imports.OPENDOORS[(0,$imports.doorKeyAt)(R,hit.c,hit.r)]=1;
+      $imports.SFX.door(); (0,$imports.os)((0,$imports.pick)(['我：门开了。','我：门开了。合页的声音拖得很长。','我：门开了。里面比外面冷。']),1.8); $imports.S.enterCool=0.35;
+      (0,$imports.roomDoorRefresh)(R,hit.c,hit.r);                   /* 只重建这一扇门（以前整层楼重建，同学还会重新随机坐） */
     }else{
-      os('我：门开着。',1.4);
+      (0,$imports.os)('我：门开着。',1.4);
     }
     return;
   }
   if(ch==='O'){
-    if(R.floor>1){ os('我：这是'+R.floor+'楼。这边的窗子封死了。',3.0); return; }
-    exitRoom(); return;
+    if(R.floor>1){ (0,$imports.os)('我：这是'+R.floor+'楼。这边的窗子封死了。',3.0); return; }
+    (0,$imports.exitRoom)(); return;
   }
   if(ch==='S'){ stairGo(); return; }
-  if(ch==='J'){ Elevator.interact(); return; }
-  if(ch==='j'){ PortalExploration.leave(hit); return; }
-  if(ch==='u'){ PortalExploration.readDiary(); return; }
-  if(ch==='H'){ hideIn(hit); return; }
+  if(ch==='J'){ $imports.Elevator.interact(); return; }
+  if(ch==='j'){ $imports.PortalExploration.leave(hit); return; }
+  if(ch==='u'){ $imports.PortalExploration.readDiary(); return; }
+  if(ch==='H'){ (0,$imports.hideIn)(hit); return; }
   if(ch==='L'){ useLink(R,hit.c,hit.r); return; }
   if(ch==='Q'){
-    addClue('server');
-    if(!RT.coilTaken){                       /* 传送门材料：铜线圈 */
-      if(addItem('coil')){
-        RT.coilTaken=1;
-        os('我：服务器在响，像很多人一起压着嗓子呼气。机柜背板松了，里面一卷铜线圈烫得发红——我把它抽了出来，机柜一下子安静了。',5.2);
+    (0,$imports.addClue)('server');
+    if(!$imports.RT.coilTaken){                       /* 传送门材料：铜线圈 */
+      if((0,$imports.addItem)('coil')){
+        $imports.RT.coilTaken=1;
+        (0,$imports.os)('我：服务器在响，像很多人一起压着嗓子呼气。机柜背板松了，里面一卷铜线圈烫得发红——我把它抽了出来，机柜一下子安静了。',5.2);
       }
       return;
     }
-    os('我：服务器在响，像很多人一起压着嗓子呼气。屏幕上滚着门禁记录——每一行的时间都是 11:40。',4.6);
+    (0,$imports.os)('我：服务器在响，像很多人一起压着嗓子呼气。屏幕上滚着门禁记录——每一行的时间都是 11:40。',4.6);
     return;
   }
   if(ch==='q'){ searchContainer(hit.c,hit.r); return; }
@@ -378,97 +380,97 @@ function tryInteract(){
   if(ch==='P'){ sitDown(); return; }
   if(ch==='d'||ch==='f'||ch==='R'){ searchContainer(hit.c,hit.r); return; }
   if(ch==='T'){
-    if(Investigation.isPodium(R,hit.c,hit.r)) Investigation.notice();          /* 自己教室的讲台：压着移交单 */
-    else if(S.room==='teach1'){
-      if(hasItem('chalk')) os('我：讲台上有一支粉笔，我已经带了一支。',2.8);
-      else if(addItem('chalk')) os('我：讲台上有一支粉笔。',2.8);
+    if($imports.Investigation.isPodium(R,hit.c,hit.r)) $imports.Investigation.notice();          /* 自己教室的讲台：压着移交单 */
+    else if($imports.S.room==='teach1'){
+      if((0,$imports.hasItem)('chalk')) (0,$imports.os)('我：讲台上有一支粉笔，我已经带了一支。',2.8);
+      else if((0,$imports.addItem)('chalk')) (0,$imports.os)('我：讲台上有一支粉笔。',2.8);
     }
-    else os('我：讲台是空的。',2.2);
+    else (0,$imports.os)('我：讲台是空的。',2.2);
     return;
   }
-  if(ch==='c'){ useCar(hit.c,hit.r); return; }
-  if(ch==='V'){ Investigation.inspectCar(hit.c,hit.r); return; }
+  if(ch==='c'){ (0,$imports.useCar)(hit.c,hit.r); return; }
+  if(ch==='V'){ $imports.Investigation.inspectCar(hit.c,hit.r); return; }
   if(ch==='D'){
-    if(S.room==='admin3') useData(); else useTerminal();
+    if($imports.S.room==='admin3') useData(); else useTerminal();
     return;
   }
   if(ch==='X'){ useTrash(); return; }
   if(ch==='p'){
-    if(S.tsec<EVENING) os('我：现在弹琴，走廊里的人都听得见。',3.0);
-    SFX.moonlight();
-    os('我：是《月光》。第一乐章。可是钢琴没有人在弹。',5.5);
+    if($imports.S.tsec<$imports.EVENING) (0,$imports.os)('我：现在弹琴，走廊里的人都听得见。',3.0);
+    $imports.SFX.moonlight();
+    (0,$imports.os)('我：是《月光》。第一乐章。可是钢琴没有人在弹。',5.5);
     return;
   }
-  if(ch==='b'){ os('我：床。可是现在不能睡。',2.4); return; }
+  if(ch==='b'){ (0,$imports.os)('我：床。可是现在不能睡。',2.4); return; }
   if(ch==='k'&&R.host==='guard'){
     guardSupplies();
-    if(Investigation.state().entries.notice)Investigation.supplyOffer(function(){});
+    if($imports.Investigation.state().entries.notice)$imports.Investigation.supplyOffer(function(){});
     return;
   }
-  if(R.host==='canteen'&&(ch==='t'||ch==='k')){ canteenWindow(); return; }
-  if(ch==='M'){if(Investigation.state().entries.notice)Investigation.supplyOffer(useVending);else useVending();return;}
-  if(ch==='t'||ch==='k'){ os('我：没有能吃的。',2.0); return; }
-  if(ch==='B'||ch==='G'){ useStall(); return; }
-  if(ch==='w'){ PlayerStats.changeSan(4,'interact',{max:100}); os('我：洗了把脸。',2.2); return; }
-  os('我：用不上。',1.8);
+  if(R.host==='canteen'&&(ch==='t'||ch==='k')){ (0,$imports.canteenWindow)(); return; }
+  if(ch==='M'){if($imports.Investigation.state().entries.notice)$imports.Investigation.supplyOffer($imports.useVending);else (0,$imports.useVending)();return;}
+  if(ch==='t'||ch==='k'){ (0,$imports.os)('我：没有能吃的。',2.0); return; }
+  if(ch==='B'||ch==='G'){ (0,$imports.useStall)(); return; }
+  if(ch==='w'){ $imports.PlayerStats.changeSan(4,'interact',{max:100}); (0,$imports.os)('我：洗了把脸。',2.2); return; }
+  (0,$imports.os)('我：用不上。',1.8);
 }
 function guardSupplies(){
     /* 钥匙以前就挂在这儿，太容易了；现在收到了校长办公室 */
-    if(!RT.guardKeysTold){
-      RT.guardKeysTold=1; addClue('keys'); Investigation.parking(true);
-      var light=hasItem('torch')||addItem('torch');
-      os('我：钥匙已上交行政楼五楼校长办公室。停车记录和避险便签记在手册里了。'+(light?'抽屉里的手电带好了，去车库前记得打开。':'手电还在抽屉里，装不下了，腾出一格再来拿。'),6,OS_KEEP);
-      autoSave();
+    if(!$imports.RT.guardKeysTold){
+      $imports.RT.guardKeysTold=1; (0,$imports.addClue)('keys'); $imports.Investigation.parking(true);
+      var light=(0,$imports.hasItem)('torch')||(0,$imports.addItem)('torch');
+      (0,$imports.os)('我：钥匙已上交行政楼五楼校长办公室。停车记录和避险便签记在手册里了。'+(light?'抽屉里的手电带好了，去车库前记得打开。':'手电还在抽屉里，装不下了，腾出一格再来拿。'),6,$imports.OS_KEEP);
+      (0,$imports.autoSave)();
       return;
     }
-    if(!hasItem('torch')){
-      Investigation.parking(true);
-      if(addItem('torch')) os('我：柜台下面还有一把手电筒。去车库之前，把它带上。',4.2);
+    if(!(0,$imports.hasItem)('torch')){
+      $imports.Investigation.parking(true);
+      if((0,$imports.addItem)('torch')) (0,$imports.os)('我：柜台下面还有一把手电筒。去车库之前，把它带上。',4.2);
       return;
     }
-    Investigation.parking();return;          /* 再来一次：重读登记（记忆按笔记本规则刷新） */
+    $imports.Investigation.parking();return;          /* 再来一次：重读登记（记忆按笔记本规则刷新） */
 }
 
 /* 地理实验室的挂图：每张会圈出一个你还没去过的地方 */
 function useGeoMap(){
-  RT.geoMaps=RT.geoMaps||0;
+  $imports.RT.geoMaps=$imports.RT.geoMaps||0;
   var left=[], i;
-  for(i=0;i<SPOTS.length;i++) if(!S.spots[SPOTS[i].id]) left.push(SPOTS[i]);
-  if(!left.length||RT.geoMaps>=4){ os('我：挂图上的路我都走过了。有一条是我没见过的——它通到围墙外面，然后被撕掉了。',4.2); return; }
-  var sp=left[Math.floor(Math.random()*left.length)];
-  RT.geoMaps++;
-  S.spots[sp.id]=1; UI.spotsDirty=true;
-  os('我：挂图是很多年前的校园平面图。有一处被红笔圈了好几圈，旁边写着「'+sp.n+'」。',4.6);
-  toast('记下了：'+sp.n);
+  for(i=0;i<$imports.SPOTS.length;i++) if(!$imports.S.spots[$imports.SPOTS[i].id]) left.push($imports.SPOTS[i]);
+  if(!left.length||$imports.RT.geoMaps>=4){ (0,$imports.os)('我：挂图上的路我都走过了。有一条是我没见过的——它通到围墙外面，然后被撕掉了。',4.2); return; }
+  var sp=left[Math.floor($imports.GameRandom.next()*left.length)];
+  $imports.RT.geoMaps++;
+  $imports.S.spots[sp.id]=1; $imports.UI.spotsDirty=true;
+  (0,$imports.os)('我：挂图是很多年前的校园平面图。有一处被红笔圈了好几圈，旁边写着「'+sp.n+'」。',4.6);
+  (0,$imports.toast)('记下了：'+sp.n);
 }
 function useBell(){
-  if(AN.active&&AN.id==='bell13'){
-    os('我：我抱住撞木，用力撞了一下。钟声和那第十三下撞在一起——两边都没了。',4.6);
-    PlayerStats.changeSan(8,'interact',{max:100});
-    try{ SFX.bigBell&&SFX.bigBell(); }catch(e){}
-    anEnd(); return;
+  if($imports.AN.active&&$imports.AN.id==='bell13'){
+    (0,$imports.os)('我：我抱住撞木，用力撞了一下。钟声和那第十三下撞在一起——两边都没了。',4.6);
+    $imports.PlayerStats.changeSan(8,'interact',{max:100});
+    try{ $imports.SFX.bigBell&&$imports.SFX.bigBell(); }catch(e){}
+    (0,$imports.anEnd)(); return;
   }
-  addClue('bell');
-  if(S.exam){ try{ SFX.bigBell&&SFX.bigBell(0.3); }catch(e){} os('我：钟还在嗡嗡地响。今天剩下的课，都是考试了。',3.4); return; }
+  (0,$imports.addClue)('bell');
+  if($imports.S.exam){ try{ $imports.SFX.bigBell&&$imports.SFX.bigBell(0.3); }catch(e){} (0,$imports.os)('我：钟还在嗡嗡地响。今天剩下的课，都是考试了。',3.4); return; }
   /* 钟楼顶上撞响这口钟：当天剩下的课全部改成考试（examStart 在 systems.js） */
-  try{ SFX.bigBell&&SFX.bigBell(1); }catch(e){}
-  examStart();
+  try{ $imports.SFX.bigBell&&$imports.SFX.bigBell(1); }catch(e){}
+  (0,$imports.examStart)();
 }
 function useAltar(){
-  addClue('altar');
-  if(!RT.altarCoin){
-    if(hasItem('coin')){ os('我：香炉底下压着一枚硬币。我已经带了一枚。',3.6); return; }
-    if(!addItem('coin')) return;
-    RT.altarCoin=1;
-    os('我：供桌上的饭还冒着气，筷子竖插在正中。照片上那张脸被剪掉了，校服是我们学校的。香炉底下压着一枚硬币。',5.6);
+  (0,$imports.addClue)('altar');
+  if(!$imports.RT.altarCoin){
+    if((0,$imports.hasItem)('coin')){ (0,$imports.os)('我：香炉底下压着一枚硬币。我已经带了一枚。',3.6); return; }
+    if(!(0,$imports.addItem)('coin')) return;
+    $imports.RT.altarCoin=1;
+    (0,$imports.os)('我：供桌上的饭还冒着气，筷子竖插在正中。照片上那张脸被剪掉了，校服是我们学校的。香炉底下压着一枚硬币。',5.6);
     return;
   }
-  PlayerStats.changeSan(-(2),'interact',{min:0});
-  os('我：照片里那个人的手，好像比刚才抬高了一点。',3.2);
+  $imports.PlayerStats.changeSan(-(2),'interact',{min:0});
+  (0,$imports.os)('我：照片里那个人的手，好像比刚才抬高了一点。',3.2);
 }
 function hit2_seatNear(R){
   if(!R) return false;
-  var c=Math.floor((S.x-R.ox)/R.tw), r=Math.floor((S.y-R.oy)/R.th);
+  var c=Math.floor(($imports.S.x-R.ox)/R.tw), r=Math.floor(($imports.S.y-R.oy)/R.th);
   var dc, dr;
   for(dr=-1;dr<=1;dr++){
     for(dc=-1;dc<=1;dc++){
@@ -480,29 +482,29 @@ function hit2_seatNear(R){
   return false;
 }
 function sitDown(){
-  var R=INTERIORS[S.room];
+  var R=$imports.INTERIORS[$imports.S.room];
   if(!R) return;
-  var myCol=MY_COL, myRow=MY_ROW;
-  var col=Math.floor((S.x-R.ox)/R.tw), row=Math.floor((S.y-R.oy)/R.th);
-  var isMine=(S.room==='teach1'&&Math.abs(col-myCol)<=1&&Math.abs(row-myRow)<=1);
+  var myCol=$imports.MY_COL, myRow=$imports.MY_ROW;
+  var col=Math.floor(($imports.S.x-R.ox)/R.tw), row=Math.floor(($imports.S.y-R.oy)/R.th);
+  var isMine=($imports.S.room==='teach1'&&Math.abs(col-myCol)<=1&&Math.abs(row-myRow)<=1);
   /* 坐到旁边那把椅子上（椅子现在有碰撞，人站不到椅子格里去了） */
   var best=null, bd=1e9, dr, dc;
   for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++){
     var rr=row+dr, cc=col+dc;
     if(rr<0||cc<0||rr>=R.rows||cc>=R.cols||R.grid[rr][cc]!=='P') continue;
-    var px=R.ox+(cc+0.5)*R.tw, py=R.oy+(rr+0.5)*R.th, d=Math.hypot(px-S.x,py-S.y);
+    var px=R.ox+(cc+0.5)*R.tw, py=R.oy+(rr+0.5)*R.th, d=Math.hypot(px-$imports.S.x,py-$imports.S.y);
     if(d<bd){ bd=d; best=[px,py]; }
   }
-  if(best){ S.x=best[0]; S.y=best[1]; S.ang=-PI/2; }
-  else{ S.x=R.ox+(col+0.5)*R.tw; S.y=R.oy+(row+0.5)*R.th; }
-  S.seated=true; S.enterCool=0.5;
-  VisualState.camera.eyeH=EYE;
-  if(isMine) os('我坐下了。这是我自己的位子。',2.4);
-  else os('我坐下了。这个位子不是我的。',2.4);
-  SFX.click();
+  if(best){ $imports.S.x=best[0]; $imports.S.y=best[1]; $imports.S.ang=-$imports.PI/2; }
+  else{ $imports.S.x=R.ox+(col+0.5)*R.tw; $imports.S.y=R.oy+(row+0.5)*R.th; }
+  $imports.S.seated=true; $imports.S.enterCool=0.5;
+  $imports.VisualState.camera.eyeH=$imports.EYE;
+  if(isMine) (0,$imports.os)('我坐下了。这是我自己的位子。',2.4);
+  else (0,$imports.os)('我坐下了。这个位子不是我的。',2.4);
+  $imports.SFX.click();
 }
 function spawnAtTile(id,r2,c2){
-  var R=INTERIORS[id];
+  var R=$imports.INTERIORS[id];
   return {x:R.ox+(c2+0.5)*R.tw, y:R.oy+(r2+0.5)*R.th};
 }
 function useLink(R,c,r){
@@ -510,33 +512,33 @@ function useLink(R,c,r){
   if(R.host==='c1'||R.host==='c2'){
     var to=linksOf(R.host);
     var dest=(r<=Math.floor(R.rows/2))?to.north:to.south;
-    if(!dest){ os('我：那头封着。',2.0); return; }
-    var DR=INTERIORS[dest.id];
+    if(!dest){ (0,$imports.os)('我：那头封着。',2.0); return; }
+    var DR=$imports.INTERIORS[dest.id];
     var sp=DR?{x:DR.ox+(dest.c+0.5)*DR.tw, y:DR.oy+(dest.r+0.5)*DR.th}:null;
-    SFX.door();
-    enterRoom(dest.id, sp);
+    $imports.SFX.door();
+    (0,$imports.enterRoom)(dest.id, sp);
     return;
   }
-  if(f!==2){ os('我：连廊在二楼。',2.2); return; }
+  if(f!==2){ (0,$imports.os)('我：连廊在二楼。',2.2); return; }
   var tgt=null;
   if(host==='admin') tgt={id:'link1', end:'north'};
   else if(host==='lab') tgt=(c>=R.cols*0.5)?{id:'link1', end:'south'}:{id:'link2', end:'north'};
   else if(host==='teach') tgt={id:'link2', end:'south'};
-  if(!tgt){ os('我：这层没有连廊。',2.0); return; }
-  var LR=INTERIORS[tgt.id];
+  if(!tgt){ (0,$imports.os)('我：这层没有连廊。',2.0); return; }
+  var LR=$imports.INTERIORS[tgt.id];
   var sl=(tgt.end==='north')?1:LR.rows-2;
-  SFX.door();
-  enterRoom(tgt.id, spawnAtTile(tgt.id, sl, 2));
+  $imports.SFX.door();
+  (0,$imports.enterRoom)(tgt.id, spawnAtTile(tgt.id, sl, 2));
 }
 function linksOf(host){
   if(host==='c1'){
-    var A=INTERIORS['admin2'], L=INTERIORS['lab2'];
+    var A=$imports.INTERIORS['admin2'], L=$imports.INTERIORS['lab2'];
     return {
       north:{id:'admin2', c:A?A.cols-3:0, r:18},
       south:{id:'lab2',  c:L?L.cols-3:0, r:16}
     };
   }
-  var L2=INTERIORS['lab2'], T=INTERIORS['teach2'];
+  var L2=$imports.INTERIORS['lab2'], T=$imports.INTERIORS['teach2'];
   return {
     north:{id:'lab2',  c:2, r:16},
     south:{id:'teach2',c:2, r:18}
@@ -553,24 +555,24 @@ function floorIdOf(host,f){
 }
 function topFloorOf(host){ return host==='teach'?6:(host==='admin'||host==='lab')?5:(host==='dormN'||host==='dormS')?3:1; }
 function stairGo(){
-  var R=INTERIORS[S.room];
-  if(!R){ exitRoom(); return; }
+  var R=$imports.INTERIORS[$imports.S.room];
+  if(!R){ (0,$imports.exitRoom)(); return; }
   var f=R.floor, host=R.host, top=topFloorOf(host);
-  if(top<=1){ exitRoom(); return; }
+  if(top<=1){ (0,$imports.exitRoom)(); return; }
   var up=(f<top)?floorIdOf(host,f+1):null, dn=(f>1)?floorIdOf(host,f-1):null;
   function upLabel(){ return (host==='teach'&&f+1===6)?'上天台':'上楼（'+(f+1)+'F）'; }
   if(up&&dn){
-    UI.choice('楼梯间里很安静。扶手是凉的。',[
-      {label:upLabel(),fn:function(){ UI.closeChoice(); SFX.stairs&&SFX.stairs(); ENTER_VIA='stair'; enterRoom(up); }},
-      {label:'下楼（'+(f-1)+'F）',fn:function(){ UI.closeChoice(); SFX.stairs&&SFX.stairs(); ENTER_VIA='stair'; enterRoom(dn); }},
-      {label:'算了',fn:function(){ UI.closeChoice(); }}
+    $imports.UI.choice('楼梯间里很安静。扶手是凉的。',[
+      {label:upLabel(),fn:function(){ $imports.UI.closeChoice(); $imports.SFX.stairs&&$imports.SFX.stairs(); $imports.ENTER_VIA='stair'; (0,$imports.enterRoom)(up); }},
+      {label:'下楼（'+(f-1)+'F）',fn:function(){ $imports.UI.closeChoice(); $imports.SFX.stairs&&$imports.SFX.stairs(); $imports.ENTER_VIA='stair'; (0,$imports.enterRoom)(dn); }},
+      {label:'算了',fn:function(){ $imports.UI.closeChoice(); }}
     ]);
     return;
   }
-  try{ SFX.stairs&&SFX.stairs(); }catch(e){}
-  if(up){ ENTER_VIA='stair'; enterRoom(up); return; }
-  if(dn){ ENTER_VIA='stair'; enterRoom(dn); return; }
-  exitRoom();
+  try{ $imports.SFX.stairs&&$imports.SFX.stairs(); }catch(e){}
+  if(up){ $imports.ENTER_VIA='stair'; (0,$imports.enterRoom)(up); return; }
+  if(dn){ $imports.ENTER_VIA='stair'; (0,$imports.enterRoom)(dn); return; }
+  (0,$imports.exitRoom)();
 }
 /* 实验楼各层抽屉里的东西（累计概率） */
 var LAB_LOOT={
@@ -581,7 +583,7 @@ var LAB_LOOT={
   5:[[0.22,'metronome'],[0.36,'snack']]
 };
 function labLoot(floor){
-  var r=Math.random(), t=LAB_LOOT[floor];
+  var r=$imports.GameRandom.next(), t=LAB_LOOT[floor];
   return t?rollLoot(t,r):null;
 }
 /* 翻找要花 0.8 秒：站着别动，准星外面那一圈走满才算翻完；走开就断了。DEV 里可以关掉 */
@@ -591,22 +593,22 @@ function clearSearch(){
   var el=document.getElementById('searchring'); if(el) el.style.display='none';
 }
 function searchContainer(c,r){
-  var key=S.room+':'+c+':'+r;
-  if(ncOccupied(c,r)){
-    os('我：他坐在这儿。我不能翻他的抽屉。',3.0);
+  var key=$imports.S.room+':'+c+':'+r;
+  if((0,$imports.ncOccupied)(c,r)){
+    (0,$imports.os)('我：他坐在这儿。我不能翻他的抽屉。',3.0);
     return;
   }
-  if(RT.deskUsed[key]){ os('我：翻过了。',1.6); return; }
+  if($imports.RT.deskUsed[key]){ (0,$imports.os)('我：翻过了。',1.6); return; }
   if(SEARCH.on){
-    if(!SEARCH.job){ SEARCH.job={c:c,r:r,room:S.room,x:S.x,y:S.y,t:0}; try{ SFX.click(); }catch(e){} }
+    if(!SEARCH.job){ SEARCH.job={c:c,r:r,room:$imports.S.room,x:$imports.S.x,y:$imports.S.y,t:0}; try{ $imports.SFX.click(); }catch(e){} }
     return;
   }
   doSearch(c,r);
 }
 function searchTick(dt){
   var j=SEARCH.job, el=document.getElementById('searchring');
-  if(j&&(S.dead||S.mode!=='in'||S.room!==j.room||Math.hypot(S.x-j.x,S.y-j.y)>5)){
-    SEARCH.job=null; os(j.done?'我：手一松，钥匙从锁孔里滑了出来。':'我：手一松，没翻完。',1.4); j=null;
+  if(j&&($imports.S.dead||$imports.S.mode!=='in'||$imports.S.room!==j.room||Math.hypot($imports.S.x-j.x,$imports.S.y-j.y)>5)){
+    SEARCH.job=null; (0,$imports.os)(j.done?'我：手一松，钥匙从锁孔里滑了出来。':'我：手一松，没翻完。',1.4); j=null;
   }
   if(el){ el.style.display=j?'block':'none'; if(j) el.style.setProperty('--p',Math.min(1,j.t/(j.dur||SEARCH.dur))); }
   if(!j) return;
@@ -616,21 +618,21 @@ function searchTick(dt){
 /* 别的"站着别动、等读条走满"的操作（比如在车库里一辆辆试钥匙）也用这一圈 */
 function holdJob(dur,done){
   if(SEARCH.job) return false;
-  SEARCH.job={room:S.room,x:S.x,y:S.y,t:0,dur:dur,done:done};
+  SEARCH.job={room:$imports.S.room,x:$imports.S.x,y:$imports.S.y,t:0,dur:dur,done:done};
   return true;
 }
 /* 重复物品先留在原容器，保存首次抽到的结果，不能通过重试来重抽。 */
 function searchLoot(key,id){
-  if(hasItem(id)){
-    if(!RT.pendingLoot) RT.pendingLoot={};
-    RT.pendingLoot[key]=id;
-    delete RT.deskUsed[key];
-    os('我：这里有「'+ITEMS[id].n+'」。我已经带着一份，先把它留在这里。',3.2);
+  if((0,$imports.hasItem)(id)){
+    if(!$imports.RT.pendingLoot) $imports.RT.pendingLoot={};
+    $imports.RT.pendingLoot[key]=id;
+    delete $imports.RT.deskUsed[key];
+    (0,$imports.os)('我：这里有「'+$imports.ITEMS[id].n+'」。我已经带着一份，先把它留在这里。',3.2);
     return;
   }
-  if(addItem(id)){
-    RT.deskUsed[key]=1;
-    if(RT.pendingLoot) delete RT.pendingLoot[key];
+  if((0,$imports.addItem)(id)){
+    $imports.RT.deskUsed[key]=1;
+    if($imports.RT.pendingLoot) delete $imports.RT.pendingLoot[key];
   }
 }
 /* 普通抽屉、柜子、货架翻出来的东西：累计概率，没落在表里就是空的 */
@@ -641,73 +643,125 @@ function rollLoot(table,roll){
   return null;
 }
 function doSearch(c,r){
-  var key=S.room+':'+c+':'+r;
-  if(RT.deskUsed[key]) return;
+  var key=$imports.S.room+':'+c+':'+r;
+  if($imports.RT.deskUsed[key]) return;
   /* 满包不能占用容器，否则钥匙或固定的 U 盘会消失。 */
-  if(S.bag.length>=8){ os('我：装不下了。先腾出一个空位再翻。',2.4); return; }
-  if(RT.pendingLoot&&RT.pendingLoot[key]){ searchLoot(key,RT.pendingLoot[key]); return; }
-  RT.deskUsed[key]=1;
-  var _R=INTERIORS[S.room];
+  if($imports.S.bag.length>=8){ (0,$imports.os)('我：装不下了。先腾出一个空位再翻。',2.4); return; }
+  if($imports.RT.pendingLoot&&$imports.RT.pendingLoot[key]){ searchLoot(key,$imports.RT.pendingLoot[key]); return; }
+  $imports.RT.deskUsed[key]=1;
+  var _R=$imports.INTERIORS[$imports.S.room];
   /* 车钥匙和机房钥匙：校长办公室的容器 45%，别的老师办公室 1%（以前直接挂在保安岗） */
   if(_R&&_R.host==='admin'){
-    var miss=['key','roomkey'].filter(function(k){ return !hasItem(k); });
-    var pity=_R.principal&&(RT.keyMiss||0)>=3;              /* 保底：连着三次没翻到，这一次一定有 */
-    if(miss.length&&(pity||Math.random()<(_R.principal?0.45:0.01))){
-      RT.keyMiss=0;
-      var kk=miss[Math.floor(Math.random()*miss.length)];
-      os(kk==='key'?'我：抽屉最里面压着一串车钥匙，牌号刻在环上。':'我：抽屉里有一把铜钥匙，塑料标签上写着「机房」。',3.6);
-      addItem(kk); return;
+    var miss=['key','roomkey'].filter(function(k){ return !(0,$imports.hasItem)(k); });
+    var pity=_R.principal&&($imports.RT.keyMiss||0)>=3;              /* 保底：连着三次没翻到，这一次一定有 */
+    if(miss.length&&(pity||$imports.GameRandom.next()<(_R.principal?0.45:0.01))){
+      $imports.RT.keyMiss=0;
+      var kk=miss[Math.floor($imports.GameRandom.next()*miss.length)];
+      (0,$imports.os)(kk==='key'?'我：抽屉最里面压着一串车钥匙，牌号刻在环上。':'我：抽屉里有一把铜钥匙，塑料标签上写着「机房」。',3.6);
+      (0,$imports.addItem)(kk); return;
     }
-    if(miss.length&&_R.principal) RT.keyMiss=(RT.keyMiss||0)+1;
+    if(miss.length&&_R.principal) $imports.RT.keyMiss=($imports.RT.keyMiss||0)+1;
     if(_R.principal){
-      var pr=Math.random();
-      if(pr<0.12&&!hasItem('atlas')){ os('我：抽屉里卷着一大张图纸，是整个学校每一层的平面图。',3.4); addItem('atlas'); return; }
-      if(pr<0.18&&!hasItem('elixir')){ os('我：一个空药盒里只剩一粒药丸，盒子上的字被刮掉了。',3.4); addItem('elixir'); return; }
+      var pr=$imports.GameRandom.next();
+      if(pr<0.12&&!(0,$imports.hasItem)('atlas')){ (0,$imports.os)('我：抽屉里卷着一大张图纸，是整个学校每一层的平面图。',3.4); (0,$imports.addItem)('atlas'); return; }
+      if(pr<0.18&&!(0,$imports.hasItem)('elixir')){ (0,$imports.os)('我：一个空药盒里只剩一粒药丸，盒子上的字被刮掉了。',3.4); (0,$imports.addItem)('elixir'); return; }
     }
   }
-  if(S.room==='lab3'&&_R&&_R.grid[r]&&_R.grid[r][c]==='R'&&!hasItem('usb')){
-    os('我：货架最上层有个文件盒，里面躺着一个 U 盘。标签上写着「门禁」。',3.6);
-    addItem('usb'); return;
+  if($imports.S.room==='lab3'&&_R&&_R.grid[r]&&_R.grid[r][c]==='R'&&!(0,$imports.hasItem)('usb')){
+    (0,$imports.os)('我：货架最上层有个文件盒，里面躺着一个 U 盘。标签上写着「门禁」。',3.6);
+    (0,$imports.addItem)('usb'); return;
   }
   if(_R&&_R.host==='lab'){
     var lv=labLoot(_R.floor);
-    if(lv) searchLoot(key,lv); else os('我：空的。抽屉里只有一层灰。',2.0);
+    if(lv) searchLoot(key,lv); else (0,$imports.os)('我：空的。抽屉里只有一层灰。',2.0);
     return;
   }
-  var give=rollLoot(DESK_LOOT,Math.random());
-  if(S.room==='teach1'&&!RT.hwTaken&&r>1&&r<14){
-    RT.hwTaken=true; give='hw';
+  var give=rollLoot(DESK_LOOT,$imports.GameRandom.next());
+  if($imports.S.room==='teach1'&&!$imports.RT.hwTaken&&r>1&&r<14){
+    $imports.RT.hwTaken=true; give='hw';
   }
   if(give) searchLoot(key,give);
-  else os(pick(['我：空的。只有一层灰。','我：空的。抽屉底下用圆珠笔写着一个名字，被涂黑了。','我：空的。最里面有一小撮头发。']),2.4);
+  else (0,$imports.os)((0,$imports.pick)(['我：空的。只有一层灰。','我：空的。抽屉底下用圆珠笔写着一个名字，被涂黑了。','我：空的。最里面有一小撮头发。']),2.4);
 }
 function useTerminal(){
-  if(S.room!=='lab3'){ os('我：这台终端连不上。',2.2); return; }
-  if(RT.hacked){ os('我：白名单里已经有我那一行了。光标还在闪，像在等我再写点什么。',3.2); return; }
+  if($imports.S.room!=='lab3'){ (0,$imports.os)('我：这台终端连不上。',2.2); return; }
+  if($imports.RT.hacked){ (0,$imports.os)('我：白名单里已经有我那一行了。光标还在闪，像在等我再写点什么。',3.2); return; }
   /* 以前只有随机到「编程社」天赋才走得通；现在网络中心货架上的 U 盘也能做到 */
-  var cap=Talent.capability('terminal');
+  var cap=$imports.Talent.capability('terminal');
   if(!cap.ok){
-    os('我：屏幕上是一串我看不懂的东西。旁边贴着一张便签：「门禁 U 盘插这里」。',4.0);
-    addClue('usb');
+    (0,$imports.os)('我：屏幕上是一串我看不懂的东西。旁边贴着一张便签：「门禁 U 盘插这里」。',4.0);
+    (0,$imports.addClue)('usb');
     return;
   }
-  RT.hacked=true;
-  addClue('comp');
-  Investigation.record('whitelistWritten','网络中心已经写入我的学号。后台记录里，同一个名字对应着不同时期的照片。下一步要到行政楼三楼同步数据。','验证','实验楼三楼 · 网络中心');
-  if(cap.via==='talent') os('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,OS_KEEP);
-  else os('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,OS_KEEP);
+  $imports.RT.hacked=true;
+  (0,$imports.addClue)('comp');
+  $imports.Investigation.record('whitelistWritten','网络中心已经写入我的学号。后台记录里，同一个名字对应着不同时期的照片。下一步要到行政楼三楼同步数据。','验证','实验楼三楼 · 网络中心');
+  if(cap.via==='talent') (0,$imports.os)('我：我打开门禁后台，在白名单最后加了一行——我自己的学号。回车的时候，整排机柜同时闪了一下。',5,$imports.OS_KEEP);
+  else (0,$imports.os)('我：U 盘插进去，屏幕自己跳出一个窗口，光标在最后一行闪。我输了自己的学号。机柜同时闪了一下。',5,$imports.OS_KEEP);
   os2later('我：还得去行政楼三楼，把数据同步过去。',5200);
 }
-function os2later(msg,ms){ Lifecycle.scope('session').timeout(function(){ if(!S.dead&&S.screen==='play') os(msg,3.6,OS_KEEP); },ms); }
+function os2later(msg,ms){ $imports.Lifecycle.scope('session').timeout(function(){ if(!$imports.S.dead&&$imports.S.screen==='play') (0,$imports.os)(msg,3.6,$imports.OS_KEEP); },ms); }
 function useTrash(){
-  if(S.room!=='trash1'){ os('我：这个桶太小了。',2.2); return; }
-  tryTrashRoute();
+  if($imports.S.room!=='trash1'){ (0,$imports.os)('我：这个桶太小了。',2.2); return; }
+  (0,$imports.tryTrashRoute)();
 }
 function useData(){
-  if(S.room!=='admin3'){ os('我：这台机器不归我管。',2.2); return; }
-  WhitelistSync.commit('terminal');
+  if($imports.S.room!=='admin3'){ (0,$imports.os)('我：这台机器不归我管。',2.2); return; }
+  $imports.WhitelistSync.commit('terminal');
 }
 function tryGateWest(){
-  if(!RT.hacked||!RT.data){ os('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); addClue('gatew'); return; }
-  FaceChallenge.open();
+  if(!$imports.RT.hacked||!$imports.RT.data){ (0,$imports.os)('我：小门上挂着锁，旁边那台闸机的屏幕亮着：「未登记」。',3.0); (0,$imports.addClue)('gatew'); return; }
+  $imports.FaceChallenge.open();
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/interact.js",{
+"tileLOS":{get:function(){return tileLOS;},set:function($value){tileLOS=$value;}},
+"tileVisible":{get:function(){return tileVisible;},set:function($value){tileVisible=$value;}},
+"nearWorld":{get:function(){return nearWorld;},set:function($value){nearWorld=$value;}},
+"SAN_ACTS":{get:function(){return SAN_ACTS;},set:function($value){SAN_ACTS=$value;}},
+"FAC_CD":{get:function(){return FAC_CD;},set:function($value){FAC_CD=$value;}},
+"facClock":{get:function(){return facClock;},set:function($value){facClock=$value;}},
+"facRoll":{get:function(){return facRoll;},set:function($value){facRoll=$value;}},
+"useFacility":{get:function(){return useFacility;},set:function($value){useFacility=$value;}},
+"sanActFor":{get:function(){return sanActFor;},set:function($value){sanActFor=$value;}},
+"doSanAct":{get:function(){return doSanAct;},set:function($value){doSanAct=$value;}},
+"SKIP_T":{get:function(){return SKIP_T;},set:function($value){SKIP_T=$value;}},
+"timeSkipCard":{get:function(){return timeSkipCard;},set:function($value){timeSkipCard=$value;}},
+"nearRoster":{get:function(){return nearRoster;},set:function($value){nearRoster=$value;}},
+"useRoster":{get:function(){return useRoster;},set:function($value){useRoster=$value;}},
+"canteenHint":{get:function(){return canteenHint;},set:function($value){canteenHint=$value;}},
+"TILE_HINT":{get:function(){return TILE_HINT;},set:function($value){TILE_HINT=$value;}},
+"GATE_HINT":{get:function(){return GATE_HINT;},set:function($value){GATE_HINT=$value;}},
+"interactHint":{get:function(){return interactHint;},set:function($value){interactHint=$value;}},
+"tryInteract":{get:function(){return tryInteract;},set:function($value){tryInteract=$value;}},
+"guardSupplies":{get:function(){return guardSupplies;},set:function($value){guardSupplies=$value;}},
+"useGeoMap":{get:function(){return useGeoMap;},set:function($value){useGeoMap=$value;}},
+"useBell":{get:function(){return useBell;},set:function($value){useBell=$value;}},
+"useAltar":{get:function(){return useAltar;},set:function($value){useAltar=$value;}},
+"hit2_seatNear":{get:function(){return hit2_seatNear;},set:function($value){hit2_seatNear=$value;}},
+"sitDown":{get:function(){return sitDown;},set:function($value){sitDown=$value;}},
+"spawnAtTile":{get:function(){return spawnAtTile;},set:function($value){spawnAtTile=$value;}},
+"useLink":{get:function(){return useLink;},set:function($value){useLink=$value;}},
+"linksOf":{get:function(){return linksOf;},set:function($value){linksOf=$value;}},
+"floorIdOf":{get:function(){return floorIdOf;},set:function($value){floorIdOf=$value;}},
+"topFloorOf":{get:function(){return topFloorOf;},set:function($value){topFloorOf=$value;}},
+"stairGo":{get:function(){return stairGo;},set:function($value){stairGo=$value;}},
+"LAB_LOOT":{get:function(){return LAB_LOOT;},set:function($value){LAB_LOOT=$value;}},
+"labLoot":{get:function(){return labLoot;},set:function($value){labLoot=$value;}},
+"SEARCH":{get:function(){return SEARCH;},set:function($value){SEARCH=$value;}},
+"clearSearch":{get:function(){return clearSearch;},set:function($value){clearSearch=$value;}},
+"searchContainer":{get:function(){return searchContainer;},set:function($value){searchContainer=$value;}},
+"searchTick":{get:function(){return searchTick;},set:function($value){searchTick=$value;}},
+"holdJob":{get:function(){return holdJob;},set:function($value){holdJob=$value;}},
+"searchLoot":{get:function(){return searchLoot;},set:function($value){searchLoot=$value;}},
+"DESK_LOOT":{get:function(){return DESK_LOOT;},set:function($value){DESK_LOOT=$value;}},
+"rollLoot":{get:function(){return rollLoot;},set:function($value){rollLoot=$value;}},
+"doSearch":{get:function(){return doSearch;},set:function($value){doSearch=$value;}},
+"useTerminal":{get:function(){return useTerminal;},set:function($value){useTerminal=$value;}},
+"os2later":{get:function(){return os2later;},set:function($value){os2later=$value;}},
+"useTrash":{get:function(){return useTrash;},set:function($value){useTrash=$value;}},
+"useData":{get:function(){return useData;},set:function($value){useData=$value;}},
+"tryGateWest":{get:function(){return tryGateWest;},set:function($value){tryGateWest=$value;}}
+});
+})(GameModules.imports("game3d/js/interact.js"));

@@ -58,7 +58,7 @@ class SpecialDayTest(BrowserCase):
             r[ev]=80-S.san;});return r;})()""")
         self.assertEqual(got['anniversary'] * 2, got['none'])
         src = page.evaluate("Inspection.tick.toString()")
-        self.assertIn('c.look+=dt*DayEvents.drainMul()', src)
+        self.assertRegex(src, r'c\.look\s*\+=\s*dt\*(?:\$imports\.)?DayEvents\.drainMul\(\)')
 
     def test_one_off_losses_recovery_and_night_are_unchanged(self):
         page = self.page()

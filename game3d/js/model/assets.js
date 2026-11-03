@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 模型资源包
    家具、道具、楼体构件、树、人物、手都在 Blender 里建模（tools/blender，建模脚本见 tools/blender/assets），
    按四个细节档位导出成 game3d/assets/models_l<档>.js：0 真实、1 超精细、2 精细 / 均衡、3 流畅。
@@ -25,8 +27,8 @@ function assetLoadFailed(lod){
   delete ASSETS.loading[lod];ASSETS.errors[lod]=true;
   var callbacks=ASSETS.waiters[lod]||[];delete ASSETS.waiters[lod];
   if(!Object.keys(ASSETS.packs).length)assetNotice('模型加载失败，请检查连接后重试。',false);
-  else if(typeof Assets!=='undefined'&&Assets.want()===lod&&typeof S!=='undefined'&&S.screen==='play'&&typeof toast==='function')
-    toast('模型加载失败，继续使用已有画质');
+  else if(typeof Assets!=='undefined'&&Assets.want()===lod&&typeof $imports.S!=='undefined'&&$imports.S.screen==='play'&&typeof $imports.toast==='function')
+    (0,$imports.toast)('模型加载失败，继续使用已有画质');
   callbacks.forEach(function(f){try{f(null);}catch(e){setTimeout(function(){throw e;});}});
 }
 function assetLoadFinished(lod){if(!ASSETS.packs[lod])assetLoadFailed(lod);}
@@ -137,7 +139,7 @@ function ASSET_PACK(lod,meta,b64){
 
 var Assets=(function(){
   var GEO={}, TINT={};
-  function want(){ return Quality.get().lod; }
+  function want(){ return $imports.Quality.get().lod; }
   function packFor(name,lod){
     var P=ASSETS.packs, best=null, bd=99, k;
     if(P[lod]&&P[lod].assets[name]) return P[lod];
@@ -170,9 +172,9 @@ var Assets=(function(){
       assetNotice('正在加载模型……',true);
       load(want(),function(lod){
         if(lod===null)return;
-        if(typeof Engine!=='undefined'&&Engine.ready())Engine.applyQuality();
-        if(typeof S!=='undefined'&&S.screen==='menu'&&typeof captureMenuPhoto==='function'){
-          PHOTO_TRIED=false;setTimeout(captureMenuPhoto,0);
+        if(typeof $imports.Engine!=='undefined'&&$imports.Engine.ready())$imports.Engine.applyQuality();
+        if(typeof $imports.S!=='undefined'&&$imports.S.screen==='menu'&&typeof $imports.captureMenuPhoto==='function'){
+          $imports.PHOTO_TRIED=false;setTimeout($imports.captureMenuPhoto,0);
         }
       });
     },
@@ -189,7 +191,7 @@ var Assets=(function(){
       opt=opt||{};
       var key=name+'|'+a.pk.lod+'|'+(opt.key||'');
       if(GEO[key]) return GEO[key];
-      var K=new Kit(); K.asset(name,0,0,0,0,opt);
+      var K=new $imports.Kit(); K.asset(name,0,0,0,0,opt);
       var g=K.groupedGeometry();
       g.userData={shared:true,asset:name,assetLod:a.pk.lod,assetOpt:opt};
       GEO[key]=g;
@@ -197,7 +199,7 @@ var Assets=(function(){
     },
     /* 单独一件，按材质分成几个网格（用游戏的共享材质） */
     mesh:function(name,opt){
-      var K=new Kit(); if(!K.asset(name,0,0,0,0,opt)) return null;
+      var K=new $imports.Kit(); if(!K.asset(name,0,0,0,0,opt)) return null;
       var grp=K.build(); grp.userData.asset=name;
       return grp;
     },
@@ -208,7 +210,7 @@ var Assets=(function(){
       if(GEO[key]) return GEO[key];
       var m=pk.assets[name], g=m.g[gi], b=m.b, nv=g[3], ni=g[5], v0=g[2], i0=g[4], k;
       var P=new Float32Array(nv*3), N=new Int8Array(nv*3), C=new Uint8Array(nv*3), U=new Float32Array(nv*2), I=new Uint16Array(ni);
-      var ex=(b[3]-b[0])/65535, ey=(b[4]-b[1])/65535, ez=(b[5]-b[2])/65535, inv=1/(1024*matUV(mk));
+      var ex=(b[3]-b[0])/65535, ey=(b[4]-b[1])/65535, ez=(b[5]-b[2])/65535, inv=1/(1024*(0,$imports.matUV)(mk));
       for(k=0;k<nv;k++){
         var s3=(v0+k)*3, s2=(v0+k)*2;
         P[k*3]=b[0]+pk.pos[s3]*ex; P[k*3+1]=b[1]+pk.pos[s3+1]*ey; P[k*3+2]=b[2]+pk.pos[s3+2]*ez;
@@ -217,12 +219,12 @@ var Assets=(function(){
         U[k*2]=pk.uv[s2]*inv; U[k*2+1]=pk.uv[s2+1]*inv;
       }
       for(k=0;k<ni;k++) I[k]=pk.idx[i0+k];
-      var geo=new THREE.BufferGeometry();
-      geo.setAttribute('position',new THREE.BufferAttribute(P,3));
-      geo.setAttribute('normal',new THREE.BufferAttribute(N,3,true));
-      geo.setAttribute('color',new THREE.BufferAttribute(C,3,true));
-      geo.setAttribute('uv',new THREE.BufferAttribute(U,2));
-      geo.setIndex(new THREE.BufferAttribute(I,1));
+      var geo=new $imports.THREE.BufferGeometry();
+      geo.setAttribute('position',new $imports.THREE.BufferAttribute(P,3));
+      geo.setAttribute('normal',new $imports.THREE.BufferAttribute(N,3,true));
+      geo.setAttribute('color',new $imports.THREE.BufferAttribute(C,3,true));
+      geo.setAttribute('uv',new $imports.THREE.BufferAttribute(U,2));
+      geo.setIndex(new $imports.THREE.BufferAttribute(I,1));
       geo.computeBoundingSphere();
       geo.userData={shared:true,asset:name};
       GEO[key]=geo;
@@ -251,12 +253,27 @@ function bootQuality(){
       if(touch)q=0;
     }
   }catch(e){}
-  return Quality.normalize(q);
+  return $imports.Quality.normalize(q);
 }
 /* 开局要的那一档模型包：解析到这里就同步插进页面 */
 (function(){
   if(typeof document==='undefined'||!document.write) return;
-  var lod=Quality.get(bootQuality()).lod;
+  var lod=$imports.Quality.get(bootQuality()).lod;
   ASSETS.loading[lod]=1;
   document.write('<script src="'+ASSETS_BASE+'models_l'+lod+'.js" onerror="assetLoadFailed('+lod+')" onload="assetLoadFinished('+lod+')"><\/script>');
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/model/assets.js",{
+"ASSETS":{get:function(){return ASSETS;},set:function($value){ASSETS=$value;}},
+"assetNotice":{get:function(){return assetNotice;},set:function($value){assetNotice=$value;}},
+"assetLoadFailed":{get:function(){return assetLoadFailed;},set:function($value){assetLoadFailed=$value;}},
+"assetLoadFinished":{get:function(){return assetLoadFinished;},set:function($value){assetLoadFinished=$value;}},
+"INFL":{get:function(){return INFL;},set:function($value){INFL=$value;}},
+"assetUnpack":{get:function(){return assetUnpack;},set:function($value){assetUnpack=$value;}},
+"ASSET_PACK":{get:function(){return ASSET_PACK;},set:function($value){ASSET_PACK=$value;}},
+"Assets":{get:function(){return Assets;},set:function($value){Assets=$value;}},
+"ASSETS_BASE":{get:function(){return ASSETS_BASE;},set:function($value){ASSETS_BASE=$value;}},
+"bootQuality":{get:function(){return bootQuality;},set:function($value){bootQuality=$value;}}
+});
+})(GameModules.imports("game3d/js/model/assets.js"));

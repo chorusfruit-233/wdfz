@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · Mod 管理（模块 mod-manager）
    两个入口画同一份内容：暂停菜单里的「Mod 与模块」折叠栏（不用调试密码），调试面板的「Mod」页签。
    能做的事：看模块清单和核对结果、导入 .js Mod（存在本机浏览器）、开关 / 删除、打开 game3d/mods 里自带的 Mod、
@@ -47,8 +49,8 @@ var ModManager={
       if(k==='toggle'){ var cur=GameModules.uploaded().filter(function(m){ return m.id===id; })[0]; GameModules.setUploaded(id,!(cur&&cur.enabled)); ModManager.say('已'+(cur&&cur.enabled?'停用':'启用')+'，刷新页面后生效'); }
       else if(k==='remove'){ GameModules.removeUploaded(id); ModManager.say('已删除，刷新页面后生效'); }
       else if(k==='builtin'){ var on=b.getAttribute('aria-pressed')!=='true'; GameModules.setBuiltin(id,on); ModManager.say((on?'已打开':'已关闭')+'，刷新页面后生效'); }
-      else if(k==='reload'){ try{ autoSave(); }catch(e){} location.reload(); return; }
-      else if(k==='safe'){ try{ autoSave(); }catch(e){} var u=location.pathname+'?nomod'; location.href=u; return; }
+      else if(k==='reload'){ try{ (0,$imports.autoSave)(); }catch(e){} location.reload(); return; }
+      else if(k==='safe'){ try{ (0,$imports.autoSave)(); }catch(e){} var u=location.pathname+'?nomod'; location.href=u; return; }
       ModManager.renderAll();
     };
     var file=box.querySelector('[data-mm="file"]');
@@ -62,7 +64,7 @@ var ModManager={
   },
   say:function(msg){
     ModManager.hosts.forEach(function(box){ var m=box.querySelector('[data-mm="msg"]'); if(m) m.textContent=msg; });
-    try{ toast(msg); }catch(e){}
+    try{ (0,$imports.toast)(msg); }catch(e){}
   },
   renderAll:function(){ ModManager.hosts.forEach(function(box){ ModManager.render(box); }); },
   /* 启动时把两个入口装进页面（index.html 不用改） */
@@ -88,10 +90,10 @@ var ModManager={
       var st=document.getElementById('modToolsState'); if(st) st.textContent=GameModules.safeMode()?'安全模式':(GameModules.mods().length?GameModules.mods().length+' 个 Mod':'');
     }
     var tabs=document.querySelector('.devtabs'), body=document.getElementById('devbody');
-    if(tabs&&body&&typeof DEV_TABS!=='undefined'){
-      DEV_TABS.push('mods');
+    if(tabs&&body&&typeof $imports.DEV_TABS!=='undefined'){
+      $imports.DEV_TABS.push('mods');
       var btn=document.createElement('button'); btn.type='button'; btn.setAttribute('data-dev-tab','mods'); btn.setAttribute('aria-controls','dev-page-mods');
-      btn.setAttribute('aria-pressed','false'); btn.textContent='Mod'; btn.onclick=function(){ Dev.tab('mods'); };
+      btn.setAttribute('aria-pressed','false'); btn.textContent='Mod'; btn.onclick=function(){ $imports.Dev.tab('mods'); };
       tabs.appendChild(btn);
       var page=document.createElement('section'); page.className='devpage mod-tools'; page.id='dev-page-mods'; page.hidden=true;
       page.innerHTML='<div class="devsection"><div><h3>Mod 与模块</h3><p>导入、开关后刷新页面生效；?nomod 是安全模式</p></div></div><div id="devModsBody"></div>';
@@ -103,3 +105,9 @@ var ModManager={
 };
 GameModules.on('boot',function(){ ModManager.mount(); },{owner:'mod-manager'});
 GameModules.on('devTab',function(id){ if(id==='mods') ModManager.render(document.getElementById('devModsBody')); },{owner:'mod-manager'});
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/mod-manager/mod-manager.js",{
+"ModManager":{get:function(){return ModManager;},set:function($value){ModManager=$value;}}
+});
+})(GameModules.imports("game3d/js/modules/mod-manager/mod-manager.js"));

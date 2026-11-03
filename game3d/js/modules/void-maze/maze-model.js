@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 虚空迷宫：建模（模块 void-maze）
    体素的实心与空气交界处出面：同一平面上相邻的面合并成最大 4 × 4 米的板，每块板的白有一点点差别，
    看起来是一块块方正的白色板材拼起来的。世界的边界不出面；虚空往下没有底，远处是一块全黑的面，雾把它吃掉。
@@ -11,11 +13,11 @@ var MAZE_LOOK={
 };
 
 function buildVoidMaze(R){
-  var C=MAZE_CFG, L=MAZE_LOOK, NX=C.cols, NY=C.ny, NZ=C.rows, X0=C.x0, Y0=C.y0, Z0=C.z0;
-  VoidMaze.build();
-  var K=new Kit({chunk:16});
+  var C=$imports.MAZE_CFG, L=MAZE_LOOK, NX=C.cols, NY=C.ny, NZ=C.rows, X0=C.x0, Y0=C.y0, Z0=C.z0;
+  $imports.VoidMaze.build();
+  var K=new $imports.Kit({chunk:16});
   var dims=[NX,NY,NZ], org=[X0,Y0,Z0], p=[0,0,0], d, u, v, k, i, j;
-  var cell=VoidMaze.cell;
+  var cell=$imports.VoidMaze.cell;
   /* ---- 体素面：按三个轴、每个切面做贪心合并 ---- */
   for(d=0;d<3;d++){
     u=(d+1)%3; v=(d+2)%3;
@@ -47,9 +49,9 @@ function buildVoidMaze(R){
     }
   }
   /* ---- 楼梯与平台 ---- */
-  MAZE_WALK.forEach(function(w,wi){
+  $imports.MAZE_WALK.forEach(function(w,wi){
     var sx=w.x1-w.x0, sz=w.z1-w.z0;
-    if(w.t==='plat'){ K.box('plaster',(w.x0+w.x1)/2,w.h-0.15,(w.z0+w.z1)/2,sx,0.3,sz,L.plat,0.97+0.03*hash2(wi,3)); return; }
+    if(w.t==='plat'){ K.box('plaster',(w.x0+w.x1)/2,w.h-0.15,(w.z0+w.z1)/2,sx,0.3,sz,L.plat,0.97+0.03*(0,$imports.hash2)(wi,3)); return; }
     var len=Math.abs(w.a1-w.a0), n=Math.max(2,Math.round(Math.abs(w.h1-w.h0)/0.18)), run=len/n, dir=w.a1>w.a0?1:-1;
     for(var s=0;s<n;s++){
       var a=w.a0+dir*run*(s+0.5), top=w.h0+(w.h1-w.h0)*(s+0.5)/n, sh=(s&1)?1:0.95;
@@ -95,8 +97,16 @@ function mazeQuad(K,d,u,v,k,u0,u1,v0,v1,m,org,L){
   function P(a,b){ var q=[0,0,0]; q[d]=k; q[u]=a; q[v]=b; return [q[0]+org[0],q[1]+org[1],q[2]+org[2]]; }
   var nrm=[0,0,0]; nrm[d]=m;
   var sh=d===1?(m>0?L.up:L.down):(d===0?L.sideX:L.sideZ);
-  sh*=1-L.jitter+2*L.jitter*hash2(u0*7+v0*13+k*3,d*31+(m>0?5:11));
+  sh*=1-L.jitter+2*L.jitter*(0,$imports.hash2)(u0*7+v0*13+k*3,d*31+(m>0?5:11));
   var rgb=K.g('plaster')._rgb(L.white,sh);
   var pts=m>0?[P(u0,v0),P(u1,v0),P(u1,v1),P(u0,v1)]:[P(u0,v0),P(u0,v1),P(u1,v1),P(u1,v0)];
   K.g('plaster').face(pts,nrm,rgb,true);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/void-maze/maze-model.js",{
+"MAZE_LOOK":{get:function(){return MAZE_LOOK;},set:function($value){MAZE_LOOK=$value;}},
+"buildVoidMaze":{get:function(){return buildVoidMaze;},set:function($value){buildVoidMaze=$value;}},
+"mazeQuad":{get:function(){return mazeQuad;},set:function($value){mazeQuad=$value;}}
+});
+})(GameModules.imports("game3d/js/modules/void-maze/maze-model.js"));

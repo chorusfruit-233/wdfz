@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 死亡演出共用时钟；各效果仍负责自己的模型和动作。 */
 'use strict';
 
@@ -18,3 +20,9 @@ var DeathTimeline=(function(){
   }
   return {durations:durations,duration:duration,sample:sample,define:define};
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/fx/death-timeline.js",{
+"DeathTimeline":{get:function(){return DeathTimeline;},set:function($value){DeathTimeline=$value;}}
+});
+})(GameModules.imports("game3d/js/fx/death-timeline.js"));

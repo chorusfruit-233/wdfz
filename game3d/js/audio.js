@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 声音（Web Audio 合成） */
 'use strict';
 
@@ -27,7 +29,7 @@ var SFX=(function(){
         /* 混响：2.8 秒衰减的噪声做冲激 */
         rev=a.createConvolver();
         var len=Math.floor(a.sampleRate*2.8), ib=a.createBuffer(2,len,a.sampleRate), ch, i;
-        for(ch=0;ch<2;ch++){ var dd=ib.getChannelData(ch); for(i=0;i<len;i++) dd[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6); }
+        for(ch=0;ch<2;ch++){ var dd=ib.getChannelData(ch); for(i=0;i<len;i++) dd[i]=($imports.PresentationRandom.next()*2-1)*Math.pow(1-i/len,2.6); }
         rev.buffer=ib;
         revIn=a.createGain(); revIn.gain.value=0.9;
         revG=a.createGain(); revG.gain.value=1;
@@ -60,7 +62,7 @@ var SFX=(function(){
       var d=b.getChannelData(ch), y=0, pre=Math.floor(sp.pre*sr);
       for(i=pre;i<len;i++){                      /* 尾巴：越往后高频衰减得越多 */
         var t=(i-pre)/(len-pre), k=0.85+(sp.damp-0.85)*t;
-        y+=k*((Math.random()*2-1)-y);
+        y+=k*(($imports.PresentationRandom.next()*2-1)-y);
         d[i]=y*Math.pow(1-t,sp.pw)*0.6;
       }
       sp.er.forEach(function(e,j){                /* 早期反射：左右耳错开一点 */
@@ -71,17 +73,17 @@ var SFX=(function(){
     return b;
   }
   function spaceKind(){
-    if(S.screen!=='play'||S.mode==='out'||S.room==='teach6') return 'out';
-    if(S.room==='garage1') return 'garage';
-    if(S.room==='bell1') return 'bell';
-    var R=INTERIORS[S.room];
+    if($imports.S.screen!=='play'||$imports.S.mode==='out'||$imports.S.room==='teach6') return 'out';
+    if($imports.S.room==='garage1') return 'garage';
+    if($imports.S.room==='bell1') return 'bell';
+    var R=$imports.INTERIORS[$imports.S.room];
     if(R&&/^dorm/.test(R.host)) return 'dorm';
-    if(corridorHere()) return 'hall';
+    if((0,$imports.corridorHere)()) return 'hall';
     return 'room';
   }
   function realRev(){
     var a=ac; if(!a||!revIn) return;
-    var want=Quality.get().realAudio?spaceKind():null;
+    var want=$imports.Quality.get().realAudio?spaceKind():null;
     if(want===spCur) return;
     spCur=want;
     if(!want){                                   /* 回到通用混响 */
@@ -100,9 +102,9 @@ var SFX=(function(){
   }
   /* 有方位的声音：真实档用 HRTF（戴耳机能听出前后左右），其它档位是左右声像 */
   function panNode(a,pan){
-    var p=clamp(pan||0,-1,1);
-    if(Quality.get().realAudio&&a.createPanner){
-      var pz=a.createPanner(), az=p*PI/2;
+    var p=(0,$imports.clamp)(pan||0,-1,1);
+    if($imports.Quality.get().realAudio&&a.createPanner){
+      var pz=a.createPanner(), az=p*$imports.PI/2;
       pz.panningModel='HRTF'; pz.distanceModel='inverse'; pz.refDistance=1; pz.rolloffFactor=0.6;
       var px=Math.sin(az)*1.6, py=0, pzz=-Math.cos(az)*1.6;
       if(pz.positionX){ pz.positionX.value=px; pz.positionY.value=py; pz.positionZ.value=pzz; } else pz.setPosition(px,py,pzz);
@@ -115,7 +117,7 @@ var SFX=(function(){
     var a=ctx(); if(!a) return null;
     if(!NB){
       var n=a.sampleRate*2; NB=a.createBuffer(1,n,a.sampleRate);
-      var d=NB.getChannelData(0); for(var i=0;i<n;i++) d[i]=Math.random()*2-1;
+      var d=NB.getChannelData(0); for(var i=0;i<n;i++) d[i]=$imports.PresentationRandom.next()*2-1;
     }
     return NB;
   }
@@ -142,7 +144,7 @@ var SFX=(function(){
     g.gain.exponentialRampToValueAtTime(gain||0.05,t0+(attack||0.008));
     g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
     s.connect(f); f.connect(g); var _d=out(wet||0); if(_d) g.connect(_d);
-    s.start(t0,Math.random()*1.5); s.stop(t0+dur+0.05);
+    s.start(t0,$imports.PresentationRandom.next()*1.5); s.stop(t0+dur+0.05);
   }
   /* 带左右声道的噪声：pan -1 左 ~ 1 右 */
   function noiseP(dur,gain,filterFreq,at,type,q,pan,wet,attack){
@@ -159,7 +161,7 @@ var SFX=(function(){
     var last=g;
     var pn=panNode(a,pan); if(pn){ g.connect(pn); last=pn; }
     var _d=out(wet||0); if(_d) last.connect(_d);
-    s.start(t0,Math.random()*1.5); s.stop(t0+dur+0.05);
+    s.start(t0,$imports.PresentationRandom.next()*1.5); s.stop(t0+dur+0.05);
   }
   /* 像人声的元音：锯齿过两个带通 */
   function vowel(f0,dur,gain,at,fm1,fm2,vib){
@@ -198,7 +200,7 @@ var SFX=(function(){
     var a=ctx(), s=a.createBufferSource(); s.buffer=noiseBuf(); s.loop=true;
     var f=a.createBiquadFilter(); f.type=type; f.frequency.value=freq; if(q) f.Q.value=q;
     var g=a.createGain(); g.gain.value=0;
-    s.connect(f); f.connect(g); s.start(0,Math.random());
+    s.connect(f); f.connect(g); s.start(0,$imports.PresentationRandom.next());
     return {s:s,f:f,g:g};
   }
   /* ---- 整片环境声（soundscape）：模块用 SFX.scape(id, def) 登记，当前要哪一片由 soundscape 钩子决定 ----
@@ -208,7 +210,7 @@ var SFX=(function(){
   var SCAPES={}, SC_NODES={}, scapeCutUntil=0;
   /* 分类总线：每类声音一条（干声一条、混响一条），增益来自 SOUND_CATS[类].gain（默认 1） */
   var BUS={}, BUSW={};
-  function catGain(c){ var C=(typeof SOUND_CATS!=='undefined')?SOUND_CATS[c]:null; return C&&typeof C.gain==='number'?C.gain:1; }
+  function catGain(c){ var C=(typeof $imports.SOUND_CATS!=='undefined')?$imports.SOUND_CATS[c]:null; return C&&typeof C.gain==='number'?C.gain:1; }
   function bus(c){
     var a=ctx(); if(!a) return null;
     var m=master(); if(!m) return null;
@@ -226,7 +228,7 @@ var SFX=(function(){
       vowel:vowel, loopNoise:loopNoise, setG:setG, now:function(){ return ac?ac.currentTime:0; },
       bus:bus, send:send, pan:function(p){ var a=ctx(); return a?panNode(a,p):null; }, noiseBuf:noiseBuf};
   }
-  function P(id,opt){ try{ return (typeof SoundPlayer!=='undefined')?SoundPlayer.play(id,opt):null; }catch(e){ return null; } }
+  function P(id,opt){ try{ return (typeof $imports.SoundPlayer!=='undefined')?$imports.SoundPlayer.play(id,opt):null; }catch(e){ return null; } }
   function scapeTick(dt,on,duck){
     var sid=on?GameModules.first('soundscape'):undefined, sd=sid&&SCAPES[sid]?SCAPES[sid]:null, cut=(L&&L.t<scapeCutUntil)?0:1;
     Object.keys(SCAPES).forEach(function(k){
@@ -276,17 +278,17 @@ var SFX=(function(){
   /* 脚下是什么：瓷砖、水磨石楼梯、车库水泥、天台碎石、草、塑胶跑道、球场、水泥路；模块可以用 stepSurface 钩子换（例如异空间的白色结构） */
   function stepSurface(){
     var hook; try{ hook=GameModules.first('stepSurface'); }catch(e){}
-    if(hook&&typeof SOUND_BANK!=='undefined'&&SOUND_BANK['step.'+hook]) return hook;
-    if(S.mode==='in'){
-      if(S.room==='garage1') return 'garage';
-      if(S.room==='teach6') return 'roof';
-      var R=INTERIORS[S.room];
-      if(R&&R.spiral&&SP.state==='stair') return 'stair';
+    if(hook&&typeof $imports.SOUND_BANK!=='undefined'&&$imports.SOUND_BANK['step.'+hook]) return hook;
+    if($imports.S.mode==='in'){
+      if($imports.S.room==='garage1') return 'garage';
+      if($imports.S.room==='teach6') return 'roof';
+      var R=$imports.INTERIORS[$imports.S.room];
+      if(R&&R.spiral&&$imports.SP.state==='stair') return 'stair';
       return 'tile';
     }
-    var mx=S.x/SC, my=S.y/SC, i, o, hit='road';
-    for(i=0;i<OBJ.length;i++){
-      o=OBJ[i]; if(!(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h)) continue;
+    var mx=$imports.S.x/$imports.SC, my=$imports.S.y/$imports.SC, i, o, hit='road';
+    for(i=0;i<$imports.OBJ.length;i++){
+      o=$imports.OBJ[i]; if(!(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h)) continue;
       if(o.k==='court') return 'court';
       if(o.k==='track') hit='track';
       else if((o.k==='field'||o.k==='garden')&&hit==='road') hit='grass';
@@ -294,25 +296,25 @@ var SFX=(function(){
     return hit;
   }
   function stepWet(){
-    return AN.active&&(AN.id==='rain'||AN.id==='raindots')&&S.mode==='out'&&!underCover();
+    return $imports.AN.active&&($imports.AN.id==='rain'||$imports.AN.id==='raindots')&&$imports.S.mode==='out'&&!(0,$imports.underCover)();
   }
   /* 一步：k 是响度（跑起来更响），pan 左右，behind 背后（发闷），at 延迟。左右脚轮流：音高差一点、声像偏一点 */
   var foot=0;
   function stepSound(sf,k,pan,behind,wet,at){
     foot=1-foot;
-    var o={k:k,pan:clamp((pan||0)+(foot?0.05:-0.05),-1,1),lp:behind?0.55:1,at:at||0,pitch:foot?0.97:1};
+    var o={k:k,pan:(0,$imports.clamp)((pan||0)+(foot?0.05:-0.05),-1,1),lp:behind?0.55:1,at:at||0,pitch:foot?0.97:1};
     P('step.'+sf,o);
-    if(sf==='court'&&Math.random()<0.12) P('step.squeak',{k:k,pan:o.pan,at:(at||0)+0.02});
+    if(sf==='court'&&$imports.PresentationRandom.next()<0.12) P('step.squeak',{k:k,pan:o.pan,at:(at||0)+0.02});
     if(wet) P('step.wet',{k:k,pan:o.pan,lp:o.lp,at:o.at});
   }
   /* 混响量：按场景 */
   function spaceWet(){
-    if(S.screen!=='play') return 0.9;
-    if(S.mode==='out') return 0.35;
-    if(S.room==='garage1') return 1.7;
-    if(S.room==='bell1') return 1.9;
-    if(S.room==='teach6') return 0.4;
-    var R=INTERIORS[S.room];
+    if($imports.S.screen!=='play') return 0.9;
+    if($imports.S.mode==='out') return 0.35;
+    if($imports.S.room==='garage1') return 1.7;
+    if($imports.S.room==='bell1') return 1.9;
+    if($imports.S.room==='teach6') return 0.4;
+    var R=$imports.INTERIORS[$imports.S.room];
     return R&&R.cols*R.rows>900?1.15:0.9;              /* 大的楼层（走廊长）回声多一点 */
   }
   function setG(param,v,tc){ try{ param.setTargetAtTime(v,ac.currentTime,tc||0.6); }catch(e){} }
@@ -321,23 +323,23 @@ var SFX=(function(){
   var STINGERS=['dread.knock','dread.whisper','dread.steps','distant.slam','distant.tinnitus','distant.aah',
     'dread.chair','distant.ball','distant.giggle','dread.door','dread.run'];
   function stinger(){
-    var id=STINGERS[Math.floor(Math.random()*STINGERS.length)];
-    P(id,{pan:rnd(-0.9,0.9),k:rnd(0.75,1),lp:Math.random()<0.4?0.4:1});
+    var id=STINGERS[Math.floor($imports.PresentationRandom.next()*STINGERS.length)];
+    P(id,{pan:$imports.PresentationRandom.range(-0.9,0.9),k:$imports.PresentationRandom.range(0.75,1),lp:$imports.PresentationRandom.next()<0.4?0.4:1});
   }
   function tick(dt){
     var a=ctx(); if(!a||!L) return;
     L.t+=dt;
     /* 骤静：环境声忽然全没了几秒，再慢慢回来 */
     var duck=(L.duckUntil&&L.t<L.duckUntil)?0.05:1, dtc=duck<1?0.18:null;
-    var play=(S.screen==='play');
-    var on=play&&(typeof AMB_ON==='undefined'||AMB_ON)&&!S.dead;
-    var out_=play&&S.mode==='out', night=1;
-    try{ night=1-sunAt(hourNow()).day; }catch(e){}
-    var anomaly=AN.active, id=anomaly?AN.id:null;
-    var san=play?clamp(S.san,0,100):100;
-    var sanityStress=clamp((75-san)/75,0,1);
-    var tension=clamp((anomaly?0.55:0)+(100-san)/160+(S.viol||0)/220,0,1);
-    var garage=play&&S.mode==='in'&&S.room==='garage1';
+    var play=($imports.S.screen==='play');
+    var on=play&&(typeof $imports.AMB_ON==='undefined'||$imports.AMB_ON)&&!$imports.S.dead;
+    var out_=play&&$imports.S.mode==='out', night=1;
+    try{ night=1-(0,$imports.sunAt)((0,$imports.hourNow)()).day; }catch(e){}
+    var anomaly=$imports.AN.active, id=anomaly?$imports.AN.id:null;
+    var san=play?(0,$imports.clamp)($imports.S.san,0,100):100;
+    var sanityStress=(0,$imports.clamp)((75-san)/75,0,1);
+    var tension=(0,$imports.clamp)((anomaly?0.55:0)+(100-san)/160+($imports.S.viol||0)/220,0,1);
+    var garage=play&&$imports.S.mode==='in'&&$imports.S.room==='garage1';
     var scape=scapeTick(dt,on,duck), bedK=scape?(scape.bed||0):1, quietScape=!!scape&&scape.quiet!==false;
     var bd=duck*bedK, btc=bedK<1?0.8:null;            /* 整片环境声接管时：原来的铺底按 bed 缩放（默认全停） */
     /* 混响跟着空间走：车库、钟楼里很空，教室一般，室外几乎没有 */
@@ -353,48 +355,48 @@ var SFX=(function(){
     setG(L.tenG.gain,(on?Math.max(0,tension-0.45)*0.05:0)*bd,btc||dtc||0.8);
     /* 环境 */
     var rainOn=on&&anomaly&&(id==='rain'||id==='raindots');
-    var cover=rainOn&&S.mode==='in';
-    setG(L.wind.g.gain,(on&&out_?0.020+0.012*night+(rainOn?0.02:0):(on&&S.room==='teach6'?0.03:0))*bd,btc||dtc||1.0);
+    var cover=rainOn&&$imports.S.mode==='in';
+    setG(L.wind.g.gain,(on&&out_?0.020+0.012*night+(rainOn?0.02:0):(on&&$imports.S.room==='teach6'?0.03:0))*bd,btc||dtc||1.0);
     setG(L.rain.g.gain,rainOn?(cover?0.03:0.11):0,0.6);
     setG(L.rain2.g.gain,rainOn?(cover?0.005:0.035):0,0.6);
-    setG(L.humG.gain,(on&&S.mode==='in'&&!garage&&S.room!=='bell1'&&S.room!=='teach6'?0.010+0.006*Math.abs(Math.sin(L.t*0.7)):0)*bd,btc||dtc||0.5);
+    setG(L.humG.gain,(on&&$imports.S.mode==='in'&&!garage&&$imports.S.room!=='bell1'&&$imports.S.room!=='teach6'?0.010+0.006*Math.abs(Math.sin(L.t*0.7)):0)*bd,btc||dtc||0.5);
     setG(L.rumble.g.gain,(on&&garage?0.09:(on&&id==='shifting'?0.12:0))*bd,btc||dtc||0.8);
     if(!on||duck<1) return;
     /* 八音盒一样的旋律：稀疏、不成调 */
     L.nextMel-=dt;
     if(L.nextMel<=0&&!quietScape){
-      L.nextMel=rnd(5,11)*(1-tension*0.4);
-      var sc=MEL[tension>0.5?1:0], n=1+Math.floor(Math.random()*3), j;
-      for(j=0;j<n;j++){ var f=sc[Math.floor(Math.random()*sc.length)]*(Math.random()<0.3?2:1); P('music.box',{pitch:f/440,at:j*rnd(0.35,0.7)}); }
+      L.nextMel=$imports.PresentationRandom.range(5,11)*(1-tension*0.4);
+      var sc=MEL[tension>0.5?1:0], n=1+Math.floor($imports.PresentationRandom.next()*3), j;
+      for(j=0;j<n;j++){ var f=sc[Math.floor($imports.PresentationRandom.next()*sc.length)]*($imports.PresentationRandom.next()<0.3?2:1); P('music.box',{pitch:f/440,at:j*$imports.PresentationRandom.range(0.35,0.7)}); }
     }
     /* 夜里室外：虫鸣，偶尔整片同时停下 */
     if(out_&&night>0.6&&!rainOn&&!quietScape){
       L.nextCricket-=dt;
       if(L.nextCricket<=0){
-        L.nextCricket=rnd(0.25,1.1);
-        if(Math.sin(L.t*0.05)>-0.7) P('world.cricket',{pitch:rnd(0.9,1.1),pan:rnd(-0.8,0.8)});
+        L.nextCricket=$imports.PresentationRandom.range(0.25,1.1);
+        if(Math.sin(L.t*0.05)>-0.7) P('world.cricket',{pitch:$imports.PresentationRandom.range(0.9,1.1),pan:$imports.PresentationRandom.range(-0.8,0.8)});
       }
     }
-    if(garage){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.8,3.0); P('world.drip',{pan:rnd(-0.7,0.7),wet:0.9}); } }
-    if(id==='leak'){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.3,0.8); P('world.drip',{k:1.3,pan:rnd(-0.4,0.4)}); } }
+    if(garage){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=$imports.PresentationRandom.range(0.8,3.0); P('world.drip',{pan:$imports.PresentationRandom.range(-0.7,0.7),wet:0.9}); } }
+    if(id==='leak'){ L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=$imports.PresentationRandom.range(0.3,0.8); P('world.drip',{k:1.3,pan:$imports.PresentationRandom.range(-0.4,0.4)}); } }
     /* 雷声由 fx/weather.js 跟着闪电一起放（SFX.thunder）。打着伞：雨点敲在伞面上；檐下：水往下滴 */
-    if(rainOn&&!cover&&USE.brollyShield){
-      var nPat=Math.floor(dt*28+Math.random());
-      for(var pi_=0;pi_<nPat;pi_++) P('world.patter',{at:Math.random()*dt,pan:rnd(-0.6,0.6)});
-    }else if(rainOn&&!cover&&underCover()){
-      L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=rnd(0.15,0.6); P('world.drip',{k:0.7,pitch:1.2,pan:rnd(-0.6,0.6),wet:0.2}); }
+    if(rainOn&&!cover&&$imports.USE.brollyShield){
+      var nPat=Math.floor(dt*28+$imports.PresentationRandom.next());
+      for(var pi_=0;pi_<nPat;pi_++) P('world.patter',{at:$imports.PresentationRandom.next()*dt,pan:$imports.PresentationRandom.range(-0.6,0.6)});
+    }else if(rainOn&&!cover&&(0,$imports.underCover)()){
+      L.nextDrip-=dt; if(L.nextDrip<=0){ L.nextDrip=$imports.PresentationRandom.range(0.15,0.6); P('world.drip',{k:0.7,pitch:1.2,pan:$imports.PresentationRandom.range(-0.6,0.6),wet:0.2}); }
     }
-    if(id==='chalk'&&Math.random()<dt*3) P('world.chalkScratch');
-    if(id==='lamps'&&Math.random()<dt*1.2) P('world.lampFlicker',{pan:rnd(-0.8,0.8)});
-    if(id==='rite'&&Math.random()<dt*0.4) P('world.chant');
+    if(id==='chalk'&&$imports.PresentationRandom.next()<dt*3) P('world.chalkScratch');
+    if(id==='lamps'&&$imports.PresentationRandom.next()<dt*1.2) P('world.lampFlicker',{pan:$imports.PresentationRandom.range(-0.8,0.8)});
+    if(id==='rite'&&$imports.PresentationRandom.next()<dt*0.4) P('world.chant');
     /* 蛾群：离得越近扑翅声越密、越响，左右乱飞 */
     if(id==='moth'){
-      var md=wxMothDist(), mk=clamp(1-md/12,0,1);
-      if(Math.random()<dt*(5+mk*40)) P('world.moth',{k:0.2+mk,pan:rnd(-1,1)});
-      if(mk>0.6&&Math.random()<dt*6) P('world.mothThump',{k:0.4+mk*0.6});   /* 贴脸时的一团闷响 */
+      var md=(0,$imports.wxMothDist)(), mk=(0,$imports.clamp)(1-md/12,0,1);
+      if($imports.PresentationRandom.next()<dt*(5+mk*40)) P('world.moth',{k:0.2+mk,pan:$imports.PresentationRandom.range(-1,1)});
+      if(mk>0.6&&$imports.PresentationRandom.next()<dt*6) P('world.mothThump',{k:0.4+mk*0.6});   /* 贴脸时的一团闷响 */
     }
     /* 被巡察者盯上：心跳顶上来 */
-    if(PatrolWorld.localChase()){
+    if($imports.PatrolWorld.localChase()){
       L.nextPatBeat=(L.nextPatBeat||0)-dt;
       if(L.nextPatBeat<=0){ L.nextPatBeat=60/124; P('threat.heartPat'); }
     }
@@ -409,22 +411,22 @@ var SFX=(function(){
     /* 上下课铃：时段一变就响。进入「教室」时段是上课铃（急促的电铃），其余是下课铃（四音钟声）；
        室外远一点、闷一点；整片环境声安静时（比如异空间）不响 */
     try{
-      var pp=periodAt(S.tsec), per=pp[2];
-      if(L.lastPeriod!==null&&per!==L.lastPeriod&&!quietScape) schoolBell(S.mode==='in'?1:0.45,pp[3]==='教室'?'start':'end');
+      var pp=(0,$imports.periodAt)($imports.S.tsec), per=pp[2];
+      if(L.lastPeriod!==null&&per!==L.lastPeriod&&!quietScape) schoolBell($imports.S.mode==='in'?1:0.45,pp[3]==='教室'?'start':'end');
       L.lastPeriod=per;
     }catch(e){}
     L.nextStinger-=dt*(1+tension*1.5);
     if(L.nextStinger<=0&&!quietScape){
-      L.nextStinger=rnd(16,40);
+      L.nextStinger=$imports.PresentationRandom.range(16,40);
       /* 和 dread.js 的假威胁共用一份惊吓预算：同一片地方不连着响 */
-      var okS=true; try{ if(typeof Dread!=='undefined') okS=!dreadBusy()&&Dread.allow(1); }catch(e){}
-      if(okS){ stinger(); try{ if(typeof Dread!=='undefined') Dread.note('stinger',1); }catch(e){} }
+      var okS=true; try{ if(typeof $imports.Dread!=='undefined') okS=!(0,$imports.dreadBusy)()&&$imports.Dread.allow(1); }catch(e){}
+      if(okS){ stinger(); try{ if(typeof $imports.Dread!=='undefined') $imports.Dread.note('stinger',1); }catch(e){} }
     }
     /* 屋里夜里：不知道哪儿在滴水；偶尔一声暖气片 / 墙里的「咔」 */
     if(!out_&&!garage&&night>0.5&&!quietScape){
       L.nextIndoorDrip=(L.nextIndoorDrip||2)-dt;
-      if(L.nextIndoorDrip<=0){ L.nextIndoorDrip=rnd(2.5,7); P('world.drip',{k:0.35,pitch:1.3,pan:rnd(-0.9,0.9),wet:1}); }
-      if(Math.random()<dt*0.03) P('world.creak',{pan:rnd(-1,1)});
+      if(L.nextIndoorDrip<=0){ L.nextIndoorDrip=$imports.PresentationRandom.range(2.5,7); P('world.drip',{k:0.35,pitch:1.3,pan:$imports.PresentationRandom.range(-0.9,0.9),wet:1}); }
+      if($imports.PresentationRandom.next()<dt*0.03) P('world.creak',{pan:$imports.PresentationRandom.range(-1,1)});
     }
   }
   /* kind：'start' 上课铃、'end' 下课铃（默认）；v 响度，室外给 0.45 时同时发闷 */
@@ -433,8 +435,8 @@ var SFX=(function(){
     return P(kind==='start'?'event.bellStart':'event.bellEnd',{k:v,lp:v<0.7?0.6:1});
   }
   function deathKinds(){
-    var out=[]; if(typeof SoundPlayer==='undefined') return out;
-    SoundPlayer.ids().forEach(function(id){ if(id.indexOf('death.')===0&&id!=='death.base'&&id!=='death.generic') out.push(id.slice(6)); });
+    var out=[]; if(typeof $imports.SoundPlayer==='undefined') return out;
+    $imports.SoundPlayer.ids().forEach(function(id){ if(id.indexOf('death.')===0&&id!=='death.base'&&id!=='death.generic') out.push(id.slice(6)); });
     return out;
   }
   return {
@@ -456,36 +458,36 @@ var SFX=(function(){
     surface:function(){ return stepSurface(); },
     space:function(){ return spCur; },                /* 真实档当前用的混响空间（测试用） */
     step:function(){
-      stepSound(stepSurface(),S.run?1.35:1,0,0,stepWet());
+      stepSound(stepSurface(),$imports.S.run?1.35:1,0,0,stepWet());
       /* 回访变化：这间屋子今天多了一层回声，像有人跟着你走，慢半拍 */
-      try{ if(typeof DREAD!=='undefined'&&DREAD.echo) stepSound(stepSurface(),0.32,0.25,true,false,0.19); }catch(e){}
+      try{ if(typeof $imports.DREAD!=='undefined'&&$imports.DREAD.echo) stepSound(stepSurface(),0.32,0.25,true,false,0.19); }catch(e){}
     },
     /* 有方位、有远近、隔墙发闷的环境声（dread.js 的假威胁）：p={pan,k,muffled,behind} */
     dread:function(kind,p){
       p=p||{pan:0,k:0.5,muffled:false,behind:false};
-      return P('dread.'+kind,{pan:clamp(p.pan||0,-1,1),k:clamp(p.k||0.5,0.05,1),lp:(p.muffled?0.35:1)*(p.behind?0.7:1),wet:p.muffled?0.85:0.5});
+      return P('dread.'+kind,{pan:(0,$imports.clamp)(p.pan||0,-1,1),k:(0,$imports.clamp)(p.k||0.5,0.05,1),lp:(p.muffled?0.35:1)*(p.behind?0.7:1),wet:p.muffled?0.85:0.5});
     },
     /* 骤静 */
     duck:function(sec){ if(L) L.duckUntil=L.t+Math.max(0.5,sec||3); },
     ducking:function(){ return !!(L&&L.duckUntil&&L.t<L.duckUntil); },
     /* 异象前兆：低频的压迫感上来，耳朵里一点压力 */
-    precursor:function(k){ return P('threat.precursor',{k:clamp(k===undefined?1:k,0.2,1)}); },
+    precursor:function(k){ return P('threat.precursor',{k:(0,$imports.clamp)(k===undefined?1:k,0.2,1)}); },
     /* 巡察者的脚步：按方位分左右，越近越响，背后的发闷 */
     patStep:function(pan,k,behind,locked){ stepSound(stepSurface(),(locked?1.5:1.1)*k,pan,behind,stepWet()); },
     /* 灯管接触不良：噼啪 + 一下 50Hz 的嗡 */
-    crackle:function(k,pan){ k=clamp(k,0,1); if(k<0.05) return null; return P('world.crackle',{k:k,pan:pan||0}); },
+    crackle:function(k,pan){ k=(0,$imports.clamp)(k,0,1); if(k<0.05) return null; return P('world.crackle',{k:k,pan:pan||0}); },
     /* 拍肩的笑脸：回头时是身后一串很轻的、憋着的笑；突脸时是一声尖叫贴着耳朵 */
     smile:function(mode){ return P(mode==='jump'?'threat.smileJump':'threat.smileBack',mode==='jump'?{}:{pan:0.3,lp:0.8}); },
     /* 清华水杯：往下掉的风声和哨音；落地按离你多远决定多响 */
     cupFall:function(dur){ return P('foley.cupFall',{len:Math.max(0.2,dur||1.2)}); },
-    cupHit:function(missM){ return P('foley.cupHit',{k:clamp(1-missM/14,0.15,1)}); },
+    cupHit:function(missM){ return P('foley.cupHit',{k:(0,$imports.clamp)(1-missM/14,0.15,1)}); },
     /* 天降可乐：高处磕一下再滚（pan 一侧）；往下掉；落地「嘭」一声、长长的「嘶——」 */
     colaRattle:function(pan,dur){ return P('foley.colaRattle',{pan:pan||0,len:dur||1.6}); },
     colaFall:function(dur){ return P('foley.colaFall',{len:Math.max(0.2,dur||1.2)}); },
-    colaHit:function(missM){ return P('foley.colaHit',{k:clamp(1-missM/14,0.15,1)}); },
+    colaHit:function(missM){ return P('foley.colaHit',{k:(0,$imports.clamp)(1-missM/14,0.15,1)}); },
     /* 雷：近的先一声炸裂再滚，远的只有闷闷的滚 */
     thunder:function(delay,str,muffled){
-      str=clamp(str===undefined?1:str,0.2,1);
+      str=(0,$imports.clamp)(str===undefined?1:str,0.2,1);
       return P(str>0.7?'event.thunder':'event.thunderFar',{at:delay||0,k:str,lp:muffled?0.45:1});
     },
     click:function(){ return P('ui.click'); },
@@ -495,11 +497,11 @@ var SFX=(function(){
     pickup:function(){ return P('ui.pickup'); },
     chalk:function(){ return P('foley.chalk'); },                     /* 用粉笔画记号 */
     deep:function(){ return P('void.fall'); },                        /* 掉进异空间的虚空 */
-    anim:function(mode){ var dur=mode===2?3.0:(mode===3?2.6:2.4); VisualState.deathAnim={mode:mode,t:0,dur:dur}; },
+    anim:function(mode){ var dur=mode===2?3.0:(mode===3?2.6:2.4); $imports.VisualState.deathAnim={mode:mode,t:0,dur:dur}; },
     death:function(){ return P('death.generic'); },
     deathKinds:deathKinds,
     deathFx:function(type){ P('death.base'); return P('death.'+type); },
-    stopDeath:function(){ return (typeof SoundPlayer!=='undefined')?SoundPlayer.stop('death'):0; },
+    stopDeath:function(){ return (typeof $imports.SoundPlayer!=='undefined')?$imports.SoundPlayer.stop('death'):0; },
     sting:function(){ return P('threat.sting'); },
     wake:function(){ return P('foley.wake'); },
     bell:function(){ return P('event.bell'); },
@@ -513,9 +515,15 @@ var SFX=(function(){
     anomaly:function(id){
       P('anomaly.base');                                              /* 每次异象开头：一声很低的下沉 */
       var o={};
-      if(id==='cup'){ try{ o.len=(typeof cupWobble==='function')?cupWobble():0.9; }catch(e){ o.len=0.9; } }   /* 叮当响在晃的那一段里，掉下来之前停 */
+      if(id==='cup'){ try{ o.len=(typeof $imports.cupWobble==='function')?(0,$imports.cupWobble)():0.9; }catch(e){ o.len=0.9; } }   /* 叮当响在晃的那一段里，掉下来之前停 */
       return P('anomaly.'+id,o);
     },
     anomalyEnd:function(id){ return P('anomaly.end'); }
   };
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/audio.js",{
+"SFX":{get:function(){return SFX;},set:function($value){SFX=$value;}}
+});
+})(GameModules.imports("game3d/js/audio.js"));

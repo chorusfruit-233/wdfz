@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 速通模式
    状态机：idle → ready（选好难度、天赋，正在开局）→ running（第一次真正能操作时起表）→ finished / failed / abandoned / invalid。
    计时口径（首版本地 RTA，规则版本 SPEEDRUN_RULES）：
@@ -31,7 +33,7 @@ var Speedrun={run:null, proofId:null, hudOn:true,
   active:function(){ return !!Speedrun.run&&(Speedrun.run.status==='ready'||Speedrun.run.status==='running'); },
   arm:function(diff){
     RUN_MODE='speedrun';
-    Speedrun.run={id:Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36), diff:diff==='hard'?'hard':'easy',
+    Speedrun.run={id:Date.now().toString(36)+Math.floor($imports.GameRandom.next()*1e6).toString(36), diff:diff==='hard'?'hard':'easy',
       status:'ready', route:null, ms:0, reason:null, rules:SPEEDRUN_RULES, game:SPEEDRUN_GAME, p0:0, w0:0};
     try{ localStorage.removeItem('wdfz3d_speedrun_slot'); }catch(e){}
     Speedrun.paintHud(true);
@@ -46,9 +48,9 @@ var Speedrun={run:null, proofId:null, hudOn:true,
   /* 每个更新步调用：第一次能操作时起表 */
   tick:function(){
     var r=Speedrun.run; if(!r||r.status!=='ready') return;
-    if(S.screen==='play'&&!S.dead&&playerInputAllowed()&&!(typeof CUT!=='undefined'&&CUT.on)){
+    if($imports.S.screen==='play'&&!$imports.S.dead&&(0,$imports.playerInputAllowed)()&&!(typeof $imports.CUT!=='undefined'&&$imports.CUT.on)){
       r.status='running'; r.p0=performance.now(); r.w0=Date.now();
-      try{ Playtest.event('速通起跑',r.diff); }catch(e){}
+      try{ $imports.Playtest.event('速通起跑',r.diff); }catch(e){}
     }
   },
   invalidate:function(reason){
@@ -63,7 +65,7 @@ var Speedrun={run:null, proofId:null, hudOn:true,
     if(!SPEEDRUN_ROUTES[id]) return null;
     r.ms=Math.round(Speedrun.elapsed()); r.route=id;            /* 记录按整毫秒存，和个人最佳一致 */
     if(Speedrun.proofId!==id&&!r.reason) r.reason='ending_direct';
-    if(!r.reason&&typeof Dev!=='undefined'&&Dev.modifiersActive()) r.reason='debug';   /* 没开面板、从控制台打开的调试开关：照样无效 */
+    if(!r.reason&&typeof $imports.Dev!=='undefined'&&$imports.Dev.modifiersActive()) r.reason='debug';   /* 没开面板、从控制台打开的调试开关：照样无效 */
     Speedrun.proofId=null;
     r.status=r.reason?'invalid':'finished';
     var res=Speedrun.save(r);
@@ -123,11 +125,11 @@ var Speedrun={run:null, proofId:null, hudOn:true,
   /* ---------- 画面 ---------- */
   paintHud:function(force){
     var el=document.getElementById('srclock'); if(!el) return;
-    var r=Speedrun.run, show=!!r&&RUN_MODE==='speedrun'&&S.screen!=='menu'&&Speedrun.hudOn;
+    var r=Speedrun.run, show=!!r&&RUN_MODE==='speedrun'&&$imports.S.screen!=='menu'&&Speedrun.hudOn;
     if(el.hidden===show) el.hidden=!show;
     if(!show) return;
     /* 触屏：右上角是手册 / 暂停 / 全屏和小地图，计时放到小地图下面，不压住按键 */
-    if(IS_TOUCH){
+    if($imports.IS_TOUCH){
       var mini=document.getElementById('mini'), mr=mini&&mini.getBoundingClientRect();
       var top=(mr&&mr.height>0)?Math.round(mr.bottom+8)+'px':'';
       if(el.style.top!==top) el.style.top=top;
@@ -153,7 +155,7 @@ var Speedrun={run:null, proofId:null, hudOn:true,
   open:function(){
     var el=document.getElementById('srpick'); if(!el) return;
     Speedrun.paintRecords(); el.hidden=false;
-    try{ resetInputState(); releaseMouseLook(); }catch(e){}
+    try{ (0,$imports.resetInputState)(); (0,$imports.releaseMouseLook)(); }catch(e){}
     var b=el.querySelector('[data-diff="easy"]'); if(b) b.focus({preventScroll:true});
   },
   close:function(){
@@ -162,20 +164,20 @@ var Speedrun={run:null, proofId:null, hudOn:true,
   },
   choose:function(diff){
     Speedrun.close();
-    if(typeof TalentPick!=='undefined') TalentPick.open(diff,'speedrun');
+    if(typeof $imports.TalentPick!=='undefined') $imports.TalentPick.open(diff,'speedrun');
   },
   paintRecords:function(){
     var d=Speedrun.read(), box=document.getElementById('srrecords'); if(!box) return;
-    var rows=[], seen=endsSeen();
+    var rows=[], seen=(0,$imports.endsSeen)();
     ['easy','hard'].forEach(function(diff){
       SPEEDRUN_PUBLIC.concat(['beast']).forEach(function(route){
         var ms=Speedrun.best(diff,route,d);
         if(SPEEDRUN_ROUTES[route].secret&&(ms===null||!seen[route])) return;        /* 隐藏路线：没打通过就不出现 */
-        rows.push('<tr><td>'+DIFF_NAME[diff]+'</td><td>'+(SPEEDRUN_ROUTES[route].secret?(ENDINGS[route]?ENDINGS[route].t:'隐藏路线'):Speedrun.routeName(route))+'</td><td>'+(ms===null?'—':fmtRun(ms))+'</td></tr>');
+        rows.push('<tr><td>'+DIFF_NAME[diff]+'</td><td>'+(SPEEDRUN_ROUTES[route].secret?($imports.ENDINGS[route]?$imports.ENDINGS[route].t:'隐藏路线'):Speedrun.routeName(route))+'</td><td>'+(ms===null?'—':fmtRun(ms))+'</td></tr>');
       });
     });
     var recent=d.recent.slice(0,5).map(function(x){
-      var rn=(x.route&&SPEEDRUN_ROUTES[x.route]&&SPEEDRUN_ROUTES[x.route].secret)?(ENDINGS[x.route]?ENDINGS[x.route].t:''):Speedrun.routeName(x.route);
+      var rn=(x.route&&SPEEDRUN_ROUTES[x.route]&&SPEEDRUN_ROUTES[x.route].secret)?($imports.ENDINGS[x.route]?$imports.ENDINGS[x.route].t:''):Speedrun.routeName(x.route);
       return '<li><span>'+DIFF_NAME[x.diff]+(x.route?' · '+rn:'')+'</span><b>'+fmtRun(x.ms)+'</b><i>'+Speedrun.statusText(x)+'</i></li>';
     }).join('');
     box.innerHTML='<table><thead><tr><th>难度</th><th>路线</th><th>个人最佳</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
@@ -188,3 +190,17 @@ document.addEventListener('keydown',function(ev){
 },true);
 /* 切回前台时补一次显示（后台期间计时照常） */
 document.addEventListener('visibilitychange',function(){ try{ Speedrun.paintHud(true); }catch(e){} });
+
+/* @module-exports */
+GameModules.publish("game3d/js/speedrun.js",{
+"SPEEDRUN_KEY":{get:function(){return SPEEDRUN_KEY;},set:function($value){SPEEDRUN_KEY=$value;}},
+"SPEEDRUN_RULES":{get:function(){return SPEEDRUN_RULES;},set:function($value){SPEEDRUN_RULES=$value;}},
+"SPEEDRUN_GAME":{get:function(){return SPEEDRUN_GAME;},set:function($value){SPEEDRUN_GAME=$value;}},
+"RUN_MODE":{get:function(){return RUN_MODE;},set:function($value){RUN_MODE=$value;}},
+"SPEEDRUN_ROUTES":{get:function(){return SPEEDRUN_ROUTES;},set:function($value){SPEEDRUN_ROUTES=$value;}},
+"SPEEDRUN_PUBLIC":{get:function(){return SPEEDRUN_PUBLIC;},set:function($value){SPEEDRUN_PUBLIC=$value;}},
+"DIFF_NAME":{get:function(){return DIFF_NAME;},set:function($value){DIFF_NAME=$value;}},
+"fmtRun":{get:function(){return fmtRun;},set:function($value){fmtRun=$value;}},
+"Speedrun":{get:function(){return Speedrun;},set:function($value){Speedrun=$value;}}
+});
+})(GameModules.imports("game3d/js/speedrun.js"));

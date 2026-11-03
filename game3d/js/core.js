@@ -1,12 +1,14 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 基础：数学工具、常量、课表、物品与天赋 */
 'use strict';
 
 var TAU=Math.PI*2, PI=Math.PI, DEG=PI/180;
 function clamp(v,a,b){return v<a?a:v>b?b:v;}
 function lerp(a,b,t){return a+(b-a)*t;}
-function rnd(a,b){return a+Math.random()*(b-a);}
+function rnd(a,b){return a+$imports.GameRandom.next()*(b-a);}
 function ri(a,b){return Math.floor(rnd(a,b+1));}
-function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function pick(a){return a[Math.floor($imports.GameRandom.next()*a.length)];}
 function dist2(ax,ay,bx,by){var dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;}
 function angDiff(a,b){return Math.abs(((a-b+PI*3)%TAU)-PI);}
 function fmtClockS(tsec){                  /* 带秒：手表 / 秒表天赋 */
@@ -114,12 +116,12 @@ function clockTimeBefore(time,seconds){
   }
   return (lo+hi)/2;
 }
-function isNight(){ return S.tsec>=LIGHTS_OUT||S.tsec<440; }
+function isNight(){ return $imports.S.tsec>=LIGHTS_OUT||$imports.S.tsec<440; }
 
 /* 预知梦：中等（第一天死了能醒三次，异象 40–64 秒一次，提前一点告诉你下一个是什么）
    梦魇：中上（不会醒，异象 24–40 秒一次，致死阈值更低，二选一的代价更重） */
 var DIFV={ easy:{iv:1.0,san:0.82}, hard:{iv:1.0,san:1.15} };
-function dif(){ return DIFV[S.diff]||DIFV.easy; }
+function dif(){ return DIFV[$imports.S.diff]||DIFV.easy; }
 
 var ITEMS={
   card:{n:'学生证',d:'照片上的人我不认识，班号是我们班。'},
@@ -170,3 +172,57 @@ function itemGlyph(id){ return ITEM_GLYPH[id]||'▫'; }
 function itemColor(id){ return ITEM_COL[id]||'#9fb8ab'; }
 
 /* 天赋的名称、效果和可选池见 game3d/js/talents.js（唯一定义源） */
+
+var U2M=1/9;
+/* @module-exports */
+GameModules.publish("game3d/js/core.js",{
+"TAU":{get:function(){return TAU;},set:function($value){TAU=$value;}},
+"PI":{get:function(){return PI;},set:function($value){PI=$value;}},
+"DEG":{get:function(){return DEG;},set:function($value){DEG=$value;}},
+"clamp":{get:function(){return clamp;},set:function($value){clamp=$value;}},
+"lerp":{get:function(){return lerp;},set:function($value){lerp=$value;}},
+"rnd":{get:function(){return rnd;},set:function($value){rnd=$value;}},
+"ri":{get:function(){return ri;},set:function($value){ri=$value;}},
+"pick":{get:function(){return pick;},set:function($value){pick=$value;}},
+"dist2":{get:function(){return dist2;},set:function($value){dist2=$value;}},
+"angDiff":{get:function(){return angDiff;},set:function($value){angDiff=$value;}},
+"fmtClockS":{get:function(){return fmtClockS;},set:function($value){fmtClockS=$value;}},
+"fmtClock":{get:function(){return fmtClock;},set:function($value){fmtClock=$value;}},
+"TTILE":{get:function(){return TTILE;},set:function($value){TTILE=$value;}},
+"SC":{get:function(){return SC;},set:function($value){SC=$value;}},
+"TCOLS":{get:function(){return TCOLS;},set:function($value){TCOLS=$value;}},
+"TROWS":{get:function(){return TROWS;},set:function($value){TROWS=$value;}},
+"EYE":{get:function(){return EYE;},set:function($value){EYE=$value;}},
+"WALLH":{get:function(){return WALLH;},set:function($value){WALLH=$value;}},
+"TILEM":{get:function(){return TILEM;},set:function($value){TILEM=$value;}},
+"KEEP":{get:function(){return KEEP;},set:function($value){KEEP=$value;}},
+"isSolidCh":{get:function(){return isSolidCh;},set:function($value){isSolidCh=$value;}},
+"BEAST_SLOW_T0":{get:function(){return BEAST_SLOW_T0;},set:function($value){BEAST_SLOW_T0=$value;}},
+"BEAST_SLOW_T1":{get:function(){return BEAST_SLOW_T1;},set:function($value){BEAST_SLOW_T1=$value;}},
+"BEAST_T0":{get:function(){return BEAST_T0;},set:function($value){BEAST_T0=$value;}},
+"BEAST_T1":{get:function(){return BEAST_T1;},set:function($value){BEAST_T1=$value;}},
+"BEAST_RATE":{get:function(){return BEAST_RATE;},set:function($value){BEAST_RATE=$value;}},
+"DAY_PHASES":{get:function(){return DAY_PHASES;},set:function($value){DAY_PHASES=$value;}},
+"dayPhaseAt":{get:function(){return dayPhaseAt;},set:function($value){dayPhaseAt=$value;}},
+"SCHED":{get:function(){return SCHED;},set:function($value){SCHED=$value;}},
+"MEALS":{get:function(){return MEALS;},set:function($value){MEALS=$value;}},
+"eveningActivity":{get:function(){return eveningActivity;},set:function($value){eveningActivity=$value;}},
+"EVENING":{get:function(){return EVENING;},set:function($value){EVENING=$value;}},
+"LIGHTS_OUT":{get:function(){return LIGHTS_OUT;},set:function($value){LIGHTS_OUT=$value;}},
+"periodAt":{get:function(){return periodAt;},set:function($value){periodAt=$value;}},
+"needWhere":{get:function(){return needWhere;},set:function($value){needWhere=$value;}},
+"rateAt":{get:function(){return rateAt;},set:function($value){rateAt=$value;}},
+"clockBoundary":{get:function(){return clockBoundary;},set:function($value){clockBoundary=$value;}},
+"realSecondsBetween":{get:function(){return realSecondsBetween;},set:function($value){realSecondsBetween=$value;}},
+"clockTimeBefore":{get:function(){return clockTimeBefore;},set:function($value){clockTimeBefore=$value;}},
+"isNight":{get:function(){return isNight;},set:function($value){isNight=$value;}},
+"DIFV":{get:function(){return DIFV;},set:function($value){DIFV=$value;}},
+"dif":{get:function(){return dif;},set:function($value){dif=$value;}},
+"ITEMS":{get:function(){return ITEMS;},set:function($value){ITEMS=$value;}},
+"ITEM_GLYPH":{get:function(){return ITEM_GLYPH;},set:function($value){ITEM_GLYPH=$value;}},
+"ITEM_COL":{get:function(){return ITEM_COL;},set:function($value){ITEM_COL=$value;}},
+"itemGlyph":{get:function(){return itemGlyph;},set:function($value){itemGlyph=$value;}},
+"itemColor":{get:function(){return itemColor;},set:function($value){itemColor=$value;}},
+"U2M":{get:function(){return U2M;},set:function($value){U2M=$value;}}
+});
+})(GameModules.imports("game3d/js/core.js"));

@@ -1,7 +1,9 @@
+/* @module-capsule */
+(function($imports){
 'use strict';
 /* ---- 建模：柱子、台阶、栏杆、顶层平台和钟 ---- */
 function buildSpiral(c){
-  var K=c.K, s=SPIRAL, i, n=s.steps*s.turns, da=TAU/s.steps, rise=s.turnH/s.steps;
+  var K=c.K, s=$imports.SPIRAL, i, n=s.steps*s.turns, da=$imports.TAU/s.steps, rise=s.turnH/s.steps;
   var rm=(s.rIn+s.rOut)/2, len=s.rOut-s.rIn;
   K.cyl('stone',s.cx,0,s.cz,s.rCol+0.08,s.rCol,s.topH,16,0x7a746a,1.0);              /* 中间的石柱 */
   K.cyl('stone',s.cx,0,s.cz,s.rCol+0.22,s.rCol+0.18,0.25,16,0x6a645a,0.95);
@@ -10,7 +12,7 @@ function buildSpiral(c){
     var x=s.cx+Math.cos(a)*rm, z=s.cz+Math.sin(a)*rm;
     /* Kit 的 frame 旋转：局部 x 轴转到 (cos, -sin)。台阶长边沿半径方向 */
     K.frame(x,z,-a,0);
-    K.box('stone',0,h-0.07,0,len,0.14,rm*da*1.08,shadeHex(0x8a8478,(i&1)?1.0:0.92),1.0);
+    K.box('stone',0,h-0.07,0,len,0.14,rm*da*1.08,(0,$imports.shadeHex)(0x8a8478,(i&1)?1.0:0.92),1.0);
     K.box('stone',0,h-0.30,0,len*0.92,0.32,rm*da*0.9,0x5a544c,0.85);                  /* 台阶底下的石梁 */
     K.box('metal',len/2-0.06,h+0.45,0,0.04,0.90,0.04,0x2a2622,1.0);                      /* 外侧栏杆柱 */
     K.unframe();
@@ -21,10 +23,10 @@ function buildSpiral(c){
     }
   }
   /* 顶层平台：一圈扇形石板，最后一段楼梯上方留口子 */
-  var segs=40, sa=TAU/segs, top=s.topH, tEnd=s.th0+s.amax;
+  var segs=40, sa=$imports.TAU/segs, top=s.topH, tEnd=s.th0+s.amax;
   K.cyl('stone',s.cx,top-0.16,s.cz,s.rIn+0.02,s.rIn+0.02,0.16,16,0x6e685e,1.0);
   for(i=0;i<segs;i++){
-    var am=i*sa+sa/2, d=spTopOffset(am);
+    var am=i*sa+sa/2, d=(0,$imports.spTopOffset)(am);
     if(d<=0&&d>=-s.hole) continue;
     K.frame(s.cx+Math.cos(am)*rm,s.cz+Math.sin(am)*rm,-am,0);
     K.box('stone',0,top-0.08,0,len,0.16,rm*sa*1.12,0x7e786c,1.0);
@@ -40,5 +42,11 @@ function buildSpiral(c){
   K.rod('wood',s.cx+ce*(s.rIn+0.05),top+0.98,s.cz+se*(s.rIn+0.05),s.cx+ce*(s.rOut-0.05),top+0.98,s.cz+se*(s.rOut-0.05),0.03,0.03,5,0x4a3626);
   /* 钟：挂在横贯两面墙的木梁上（以前两根立柱立在平台边，现在那里是楼梯口，柱子会挡头） */
   var cc={K:K,R:c.R,ao:function(){},solid:function(){},beamW:c.W-1.2};
-  K.frame(0,0,0,top); FURN.U(cc,Math.floor(s.cx+c.halfW),Math.floor(s.cz+c.halfH),s.cx,s.cz); K.unframe();
+  K.frame(0,0,0,top); $imports.FURN.U(cc,Math.floor(s.cx+c.halfW),Math.floor(s.cz+c.halfH),s.cx,s.cz); K.unframe();
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/content/spiral-recipe.js",{
+"buildSpiral":{get:function(){return buildSpiral;},set:function($value){buildSpiral=$value;}}
+});
+})(GameModules.imports("game3d/js/content/spiral-recipe.js"));

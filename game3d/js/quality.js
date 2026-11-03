@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 画质配置：只控制表现。玩法、碰撞与移动步长不随画质改变。 */
 'use strict';
 var QUALITY=1;
@@ -40,3 +42,17 @@ var QualityWatch={warm:5,elapsed:0,frames:0,shown:false,
   },
   dismiss:function(){var e=document.getElementById('qualityHint');if(e)e.hidden=true;this.shown=true;}
 };
+
+function lodLow(){ return Quality.get().lodLow; }
+function lodSmooth(){ return Quality.get().smooth; }
+function lodSeg(seg,min){ return Math.max(min||4,Math.round(seg*Quality.get().segments)); }
+/* @module-exports */
+GameModules.publish("game3d/js/quality.js",{
+"QUALITY":{get:function(){return QUALITY;},set:function($value){QUALITY=$value;}},
+"Quality":{get:function(){return Quality;},set:function($value){Quality=$value;}},
+"QualityWatch":{get:function(){return QualityWatch;},set:function($value){QualityWatch=$value;}},
+"lodLow":{get:function(){return lodLow;},set:function($value){lodLow=$value;}},
+"lodSmooth":{get:function(){return lodSmooth;},set:function($value){lodSmooth=$value;}},
+"lodSeg":{get:function(){return lodSeg;},set:function($value){lodSeg=$value;}}
+});
+})(GameModules.imports("game3d/js/quality.js"));

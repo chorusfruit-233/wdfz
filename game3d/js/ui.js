@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 字幕、面板、背包、地图 */
 'use strict';
 
@@ -18,7 +20,7 @@ function os(msg,dur,how){
   el.textContent=msg; el.style.display='block';
   el.style.opacity='1';
   DLG.open=true; DLG.keep=(how===OS_KEEP);
-  DLG.timer=(dur||3.2)*(typeof SUB_MULT!=='undefined'?SUB_MULT:1);
+  DLG.timer=(dur||3.2)*(typeof $imports.SUB_MULT!=='undefined'?$imports.SUB_MULT:1);
 }
 function toast(msg){
   var el=document.getElementById('toast');
@@ -26,7 +28,7 @@ function toast(msg){
   clearTimeout(el._t); el._t=setTimeout(function(){ el.style.opacity='0'; },1500);
 }
 function updateDialog(dt){
-  if(DLG.open && !UI.anyOpen() && !PAUSE.on && !(typeof LESSON!=='undefined'&&LESSON.on)){
+  if(DLG.open && !UI.anyOpen() && !PAUSE.on && !(typeof $imports.LESSON!=='undefined'&&$imports.LESSON.on)){
     DLG.timer-=dt;
     if(DLG.timer<=0&&DLG.queue.length){ var n=DLG.queue.shift(); DLG.keep=false; os(n[0],n[1],n[2]); return; }
     if(DLG.timer<=0){ DLG.open=false; DLG.keep=false; var _e=document.getElementById('sub'); _e.style.opacity='0'; setTimeout(function(){ if(!DLG.open) _e.style.display='none'; },240); }
@@ -57,12 +59,12 @@ UI.open=function(id){
     el.style.display='block';
     document.body.classList.add('jopen');
   }else el.style.display='flex';
-  resetInputState();releaseMouseLook();
+  (0,$imports.resetInputState)();(0,$imports.releaseMouseLook)();
   if(id==='bag') UI.renderBag();
   if(id==='note') UI.renderNote();
   if(id==='think') UI.renderThink();
-  if(id==='mapv'){if(previous!=='mapv')ExplorationMap.selected=null;UI.renderMap();}
-  updateTouchUI();
+  if(id==='mapv'){if(previous!=='mapv')$imports.ExplorationMap.selected=null;UI.renderMap();}
+  (0,$imports.updateTouchUI)();
 };
 UI.close=function(id,resume){
   if(!id) return;
@@ -70,13 +72,13 @@ UI.close=function(id,resume){
   if(el) el.style.display='none';
   if(UI.openPanel===id){
     if(JOURNAL_TABS[id]){ var jr=document.getElementById('journal'); if(jr) jr.style.display='none'; document.body.classList.remove('jopen'); }
-    UI.openPanel=null;resetInputState();
-    if(resume!==false)resumeMouseLook();
-    updateTouchUI();
+    UI.openPanel=null;(0,$imports.resetInputState)();
+    if(resume!==false)(0,$imports.resumeMouseLook)();
+    (0,$imports.updateTouchUI)();
   }
 };
 UI.toggle=function(id){
-  if(S.screen!=='play'||S.dead) return;
+  if($imports.S.screen!=='play'||$imports.S.dead) return;
   if(UI.openPanel===id) UI.close(id); else UI.open(id);
 };
 UI.choice=function(text,opts,options){
@@ -92,7 +94,7 @@ UI.choice=function(text,opts,options){
     if(!UI.chooseOpen||UI.choiceId!==choiceId) return;
     UI.closeChoice();
     opts[i].fn();
-    resumeMouseLook(); updateTouchUI();
+    (0,$imports.resumeMouseLook)(); (0,$imports.updateTouchUI)();
   }
   for(var i=0;i<opts.length;i++){
     (function(o,idx){
@@ -121,10 +123,10 @@ UI.choice=function(text,opts,options){
     }
     paintTimer();
     UI.choiceTicker=setInterval(paintTimer,100);
-    UI.choiceTimer=setTimeout(function(){ select(Math.floor(Math.random()*opts.length)); },options.timeoutMs);
+    UI.choiceTimer=setTimeout(function(){ select(Math.floor($imports.GameRandom.next()*opts.length)); },options.timeoutMs);
   }
-  resetInputState();releaseMouseLook();
-  updateTouchUI();
+  (0,$imports.resetInputState)();(0,$imports.releaseMouseLook)();
+  (0,$imports.updateTouchUI)();
 };
 UI.clearChoiceTimer=function(){
   clearTimeout(UI.choiceTimer); clearInterval(UI.choiceTicker);
@@ -142,53 +144,53 @@ UI.closeChoice=function(){
   UI.chooseOpen=false; document.body.classList.remove('chopen');
   var el=document.getElementById('choices');
   el.style.display='none';
-  updateTouchUI();
+  (0,$imports.updateTouchUI)();
 };
 var BAGTAP={i:-1,t:0};
 function bagUse(i){
   var now=Date.now();
   var dbl=(BAGTAP.i===i && now-BAGTAP.t<340);
-  if(!Inventory.select(i))return;
-  var id=S.bag[i];
+  if(!$imports.Inventory.select(i))return;
+  var id=$imports.S.bag[i];
   if(!id){ BAGTAP.i=-1; UI.renderBag(); return; }
-  if(dbl){ BAGTAP.i=-1; useItem(id); }
+  if(dbl){ BAGTAP.i=-1; (0,$imports.useItem)(id); }
   else { BAGTAP.i=i; BAGTAP.t=now; }
   UI.renderBag();
 }
 function hotToggle(slot,i){
-  var id=S.bag[i];
+  var id=$imports.S.bag[i];
   if(!id) return;
-  if(S.hot[slot]===id){ Inventory.setHot(slot,null); toast('快捷栏 '+(slot+1)+'：取下「'+ITEMS[id].n+'」'); }
-  else{ Inventory.setHot(slot,id); toast('「'+ITEMS[id].n+'」→ 快捷栏 '+(slot+1)+(slot?'（按 2）':'（按 1）')); }
-  try{ SFX.click(); }catch(e){}
+  if($imports.S.hot[slot]===id){ $imports.Inventory.setHot(slot,null); toast('快捷栏 '+(slot+1)+'：取下「'+$imports.ITEMS[id].n+'」'); }
+  else{ $imports.Inventory.setHot(slot,id); toast('「'+$imports.ITEMS[id].n+'」→ 快捷栏 '+(slot+1)+(slot?'（按 2）':'（按 1）')); }
+  try{ $imports.SFX.click(); }catch(e){}
   var el=document.getElementById('hot'); if(el) el._sig='';
   UI.renderHot(); UI.renderBag();
 }
 function bagDescAt(i){
-  var id=S.bag[i];
+  var id=$imports.S.bag[i];
   if(!id) return '第 '+(i+1)+' 格是空的。';
   var st=[];
-  if(S.hot[0]===id) st.push('在快捷栏 1');
-  if(S.hot[1]===id) st.push('在快捷栏 2');
-  if(id==='torch'&&USE.torch) st.push('开着');
-  if(id==='brolly'&&USE.brollyShield) st.push('撑开着');
-  return ITEMS[id].d+(st.length?'\n'+st.join(' · '):'');
+  if($imports.S.hot[0]===id) st.push('在快捷栏 1');
+  if($imports.S.hot[1]===id) st.push('在快捷栏 2');
+  if(id==='torch'&&$imports.USE.torch) st.push('开着');
+  if(id==='brolly'&&$imports.USE.brollyShield) st.push('撑开着');
+  return $imports.ITEMS[id].d+(st.length?'\n'+st.join(' · '):'');
 }
 /* 选中格子的操作按钮：使用、放进 / 取下快捷栏、丢弃。以前只有格子右上角很小的 ①② 和「丢」 */
 function bagActions(i){
   var box=document.getElementById('bagacts'); if(!box) return;
   box.innerHTML='';
-  var id=S.bag[i]; if(!id) return;
+  var id=$imports.S.bag[i]; if(!id) return;
   function btn(label,cls,fn){
     var b=document.createElement('button'); b.type='button'; b.className=cls||''; b.innerHTML=label;
     b.onclick=function(ev){ if(ev&&ev.stopPropagation) ev.stopPropagation(); fn(); };
     box.appendChild(b);
   }
-  btn('使用','primary',function(){ BAGTAP.i=-1; useItem(id); if(UI.openPanel==='bag') UI.renderBag(); });
+  btn('使用','primary',function(){ BAGTAP.i=-1; (0,$imports.useItem)(id); if(UI.openPanel==='bag') UI.renderBag(); });
   for(var s=0;s<2;s++)(function(s){
-    btn(S.hot[s]===id?'从快捷栏 '+(s+1)+' 取下':'放到快捷栏 '+(s+1),S.hot[s]===id?'on':'',function(){ hotToggle(s,i); });
+    btn($imports.S.hot[s]===id?'从快捷栏 '+(s+1)+' 取下':'放到快捷栏 '+(s+1),$imports.S.hot[s]===id?'on':'',function(){ hotToggle(s,i); });
   })(s);
-  btn('丢弃','danger',function(){ dropAt(i); });
+  btn('丢弃','danger',function(){ (0,$imports.dropAt)(i); });
 }
 UI.renderBag=function(){
   var g=document.getElementById('bags');
@@ -197,55 +199,55 @@ UI.renderBag=function(){
   for(var i=0;i<8;i++){
     (function(i){
       var d=document.createElement('div');
-      var id=S.bag[i];
-      d.className='s'+(S.bagSel===i?' on':'')+(id?'':' empty');
+      var id=$imports.S.bag[i];
+      d.className='s'+($imports.S.bagSel===i?' on':'')+(id?'':' empty');
       d.innerHTML=id?
-        ('<span class="item"><span class="ic" style="color:'+itemColor(id)+'">'+itemGlyph(id)+'</span>'+
-         '<span class="nm">'+ITEMS[id].n+'</span></span>'+
-         ((S.hot[0]===id||S.hot[1]===id)?'<span class="hk">'+(S.hot[0]===id?'1':'')+(S.hot[1]===id?'2':'')+'</span>':'')):'';
+        ('<span class="item"><span class="ic" style="color:'+(0,$imports.itemColor)(id)+'">'+(0,$imports.itemGlyph)(id)+'</span>'+
+         '<span class="nm">'+$imports.ITEMS[id].n+'</span></span>'+
+         (($imports.S.hot[0]===id||$imports.S.hot[1]===id)?'<span class="hk">'+($imports.S.hot[0]===id?'1':'')+($imports.S.hot[1]===id?'2':'')+'</span>':'')):'';
       d.onclick=function(){ bagUse(i); };
       g.appendChild(d);
     })(i);
   }
-  var sel=S.bag[S.bagSel];
+  var sel=$imports.S.bag[$imports.S.bagSel];
   var nm=document.getElementById('bagname');
-  if(nm) nm.textContent=sel?ITEMS[sel].n:'　';
+  if(nm) nm.textContent=sel?$imports.ITEMS[sel].n:'　';
   var de=document.getElementById('bagdesc');
-  if(de) de.textContent=sel?bagDescAt(S.bagSel):(S.bag.length?'点一格看看。':'背包是空的。到处翻翻：抽屉、柜子、讲台。');
-  bagActions(S.bagSel);
+  if(de) de.textContent=sel?bagDescAt($imports.S.bagSel):($imports.S.bag.length?'点一格看看。':'背包是空的。到处翻翻：抽屉、柜子、讲台。');
+  bagActions($imports.S.bagSel);
   var cap=document.querySelector('#journal .jtabs [data-tab="bag"]');
-  if(cap) cap.setAttribute('data-count',S.bag.length+'/8');
+  if(cap) cap.setAttribute('data-count',$imports.S.bag.length+'/8');
   UI.bagDirty=false;
   UI.renderHot();
 };
 UI.renderHot=function(){
   var hot=document.getElementById('hot');
   if(!hot) return;
-  var sig=S.hot.join(',');
+  var sig=$imports.S.hot.join(',');
   if(hot._sig===sig) return;
   hot._sig=sig;
   hot.innerHTML='';
   for(var i=0;i<2;i++){
     (function(i){
       var d=document.createElement('div');
-      d.className='hslot'+(S.hot[i]?' on':'');
-      d.innerHTML='<span class="k">'+(i+1)+'</span>'+(S.hot[i]?
-        ('<span class="ic" style="color:'+itemColor(S.hot[i])+'">'+itemGlyph(S.hot[i])+'</span>'+
-         '<span class="nm">'+ITEMS[S.hot[i]].n+'</span>'):'<span class="nm">空</span>');
-      d.onclick=function(){ useHot(i); };
+      d.className='hslot'+($imports.S.hot[i]?' on':'');
+      d.innerHTML='<span class="k">'+(i+1)+'</span>'+($imports.S.hot[i]?
+        ('<span class="ic" style="color:'+(0,$imports.itemColor)($imports.S.hot[i])+'">'+(0,$imports.itemGlyph)($imports.S.hot[i])+'</span>'+
+         '<span class="nm">'+$imports.ITEMS[$imports.S.hot[i]].n+'</span>'):'<span class="nm">空</span>');
+      d.onclick=function(){ (0,$imports.useHot)(i); };
       hot.appendChild(d);
     })(i);
   }
 };
 UI.renderNote=function(){
-  var h=Investigation.render();
-  var ideas=ideasAvailable();
+  var h=$imports.Investigation.render();
+  var ideas=(0,$imports.ideasAvailable)();
   function sec(t){ h+='<h3>'+t+'</h3>'; }
   function li(t,cls){ h+='<div class="nl'+(cls?' '+cls:'')+'">'+t+'</div>'; }
   if(ideas.length)sec('想到的办法');
   for(var i=0;i<ideas.length;i++) li(ideas[i].n);
   var other=[];
-  for(var k in S.spots)other.push(kLabel(k));
+  for(var k in $imports.S.spots)other.push(kLabel(k));
   var CLUE_NOTE=[
     ['lesson','课桌上的字会变。上课时可以低头看一看，但别忘了抬头。'],
     ['roomkey','网络中心的门锁着 —— 钥匙可能在行政楼五楼的校长办公室。'],
@@ -258,28 +260,28 @@ UI.renderNote=function(){
     ['bell','钟楼的钟是哑的。可它和十三下钟声有关系。']
   ], ci;
   for(ci=0;ci<CLUE_NOTE.length;ci++){
-    if(typeof hasClue==='function'&&hasClue(CLUE_NOTE[ci][0]))other.push(CLUE_NOTE[ci][1]);
+    if(typeof $imports.hasClue==='function'&&(0,$imports.hasClue)(CLUE_NOTE[ci][0]))other.push(CLUE_NOTE[ci][1]);
   }
   if(other.length){sec('其他地点与线索');other.forEach(function(t){li(t);});}
   /* 本局能力：说明、状态和最近生效的几次（《天赋系统重构》5.3） */
-  if(typeof Talent!=='undefined'){
-    var tv=Talent.view();
+  if(typeof $imports.Talent!=='undefined'){
+    var tv=$imports.Talent.view();
     sec('本局能力');
     h+='<div class="nl talent-note"><b>'+tv.name+(tv.status?'<small>'+tv.status+'</small>':'')+'</b><span>'+tv.does+'</span>'+(tv.limit?'<em>'+tv.limit+'</em>':'')+'</div>';
-    Talent.state().recent.slice().reverse().forEach(function(r){ li('第 '+r.day+' 天 · '+r.text,'dim'); });
+    $imports.Talent.state().recent.slice().reverse().forEach(function(r){ li('第 '+r.day+' 天 · '+r.text,'dim'); });
   }
-  var dh=(typeof deathHints==='function')?deathHints():[];
+  var dh=(typeof $imports.deathHints==='function')?(0,$imports.deathHints)():[];
   if(dh.length){ sec('梦里记得的事'); for(var di=0;di<dh.length;di++) li(dh[di]); }
-  if(!hasItem('notebook')||!hasItem('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';
+  if(!(0,$imports.hasItem)('notebook')||!(0,$imports.hasItem)('pen')) h+='<div class="nwarn">我：感觉头不舒服，很多东西都容易忘了。（带上笔记本和笔，想到的事就不会忘）</div>';
   document.getElementById('notein').innerHTML=h;
 };
 function kLabel(k){
-  for(var i=0;i<SPOTS.length;i++) if(SPOTS[i].id===k) return SPOTS[i].n;
+  for(var i=0;i<$imports.SPOTS.length;i++) if($imports.SPOTS[i].id===k) return $imports.SPOTS[i].n;
   var m={turn:'被拍肩膀',hand:'隔间的手',repeat:'作业交了吗',roster:'名单',comp:'机房',beast:'第三个隔间'};
   return m[k]||k;
 }
 UI.renderThink=function(){
-  var ideas=ideasAvailable();
+  var ideas=(0,$imports.ideasAvailable)();
   document.getElementById('thinkhint').textContent=ideas.length?
     '选一个，然后去做。':'（什么都想不出来。先走一走。）';
   var el=document.getElementById('ideas');
@@ -290,7 +292,7 @@ UI.renderThink=function(){
       d.type='button';
       d.className='idea';
       d.textContent=it.n;
-      d.onclick=function(){ chooseIdea(it.id); };
+      d.onclick=function(){ (0,$imports.chooseIdea)(it.id); };
       el.appendChild(d);
     })(ideas[i]);
   }
@@ -298,12 +300,12 @@ UI.renderThink=function(){
 /* 把字收进画布里 */
 function mapLabel(c,txt,x,y,cw,ch){
   var w=c.measureText(txt).width;
-  c.fillText(txt,clamp(x,3,cw-w-3),clamp(y,13,ch-4));
+  c.fillText(txt,(0,$imports.clamp)(x,3,cw-w-3),(0,$imports.clamp)(y,13,ch-4));
 }
 UI.renderMap=function(){
-  if(ExplorationMap.render())return;
+  if($imports.ExplorationMap.render())return;
   var el=document.getElementById('mapc');
-  var bw=BOUND.x1-BOUND.x0, bh=BOUND.y1-BOUND.y0;
+  var bw=$imports.BOUND.x1-$imports.BOUND.x0, bh=$imports.BOUND.y1-$imports.BOUND.y0;
   /* 按手册内容区的实际大小铺满（以前固定取窗口的 60% × 76%） */
   var body=el.parentElement&&el.parentElement.parentElement;
   var availW=Math.max(160,Math.min((body?body.clientWidth:window.innerWidth*0.6)-24,900));
@@ -313,14 +315,14 @@ UI.renderMap=function(){
   el.innerHTML='<canvas id="mapcv" width="'+cw+'" height="'+ch+'"></canvas>';
   var cv=document.getElementById('mapcv'); if(!cv) return;
   var c=cv.getContext('2d'); if(!c) return;
-  function X(v){ return (v-BOUND.x0)*sc; }
-  function Y(v){ return (v-BOUND.y0)*sc; }
+  function X(v){ return (v-$imports.BOUND.x0)*sc; }
+  function Y(v){ return (v-$imports.BOUND.y0)*sc; }
   c.strokeStyle='rgba(120,180,150,.35)'; c.lineWidth=2;
-  c.strokeRect(X(BOUND.x0),Y(BOUND.y0),bw*sc,bh*sc);
+  c.strokeRect(X($imports.BOUND.x0),Y($imports.BOUND.y0),bw*sc,bh*sc);
   c.fillStyle='rgba(150,160,150,.16)';
-  for(var ri=0;ri<ROADS.length;ri++){ var rd=ROADS[ri]; c.fillRect(X(rd[0]),Y(rd[1]),(rd[2]-rd[0])*sc,(rd[3]-rd[1])*sc); }
-  for(var i=0;i<OBJ.length;i++){
-    var o=OBJ[i];
+  for(var ri=0;ri<$imports.ROADS.length;ri++){ var rd=$imports.ROADS[ri]; c.fillRect(X(rd[0]),Y(rd[1]),(rd[2]-rd[0])*sc,(rd[3]-rd[1])*sc); }
+  for(var i=0;i<$imports.OBJ.length;i++){
+    var o=$imports.OBJ[i];
     c.fillStyle=o.k==='roof'?'#1c2a30':(o.k==='field'?'#16241b':(o.k==='court'?'#1a2427':(o.k==='garden'?'#17251e':'#182420')));
     c.fillRect(X(o.x),Y(o.y),o.w*sc,o.h*sc);
     c.strokeStyle='rgba(120,180,150,.30)'; c.lineWidth=1;
@@ -329,32 +331,32 @@ UI.renderMap=function(){
   /* 字最后写，免得被后画的方块盖住。窄的建筑（保安岗、钟楼、垃圾房、车棚……）以前不写名字：字放到旁边 */
   c.fillStyle='rgba(160,200,180,.62)'; c.font='10px monospace';
   var boxes=[], used=[];
-  for(i=0;i<OBJ.length;i++){ o=OBJ[i]; if(o.k==='roof') boxes.push([X(o.x),Y(o.y),X(o.x+o.w),Y(o.y+o.h)]); }
-  for(i=0;i<OBJ.length;i++){
-    o=OBJ[i];
+  for(i=0;i<$imports.OBJ.length;i++){ o=$imports.OBJ[i]; if(o.k==='roof') boxes.push([X(o.x),Y(o.y),X(o.x+o.w),Y(o.y+o.h)]); }
+  for(i=0;i<$imports.OBJ.length;i++){
+    o=$imports.OBJ[i];
     if(o.k==='roof'&&o.w*sc>34){ c.fillText(o.n,X(o.x)+3,Y(o.y)+12); used.push([X(o.x)+3,Y(o.y)+2,X(o.x)+3+c.measureText(o.n).width,Y(o.y)+12]); }
   }
-  var gates=[['北门',GATE_N],['西小门',GATE_W],['南门',GATE_S]];
+  var gates=[['北门',$imports.GATE_N],['西小门',$imports.GATE_W],['南门',$imports.GATE_S]];
   c.font='11px monospace';
   for(i=0;i<gates.length;i++){
-    var gw=c.measureText(gates[i][0]).width, gx=clamp(X(gates[i][1].x)-11,3,cw-gw-3), gy=clamp(Y(gates[i][1].y)-6,13,ch-4);
+    var gw=c.measureText(gates[i][0]).width, gx=(0,$imports.clamp)(X(gates[i][1].x)-11,3,cw-gw-3), gy=(0,$imports.clamp)(Y(gates[i][1].y)-6,13,ch-4);
     used.push([gx,gy-11,gx+gw,gy]);
   }
   c.font='10px monospace';
-  for(i=0;i<OBJ.length;i++){
-    o=OBJ[i];
+  for(i=0;i<$imports.OBJ.length;i++){
+    o=$imports.OBJ[i];
     if(o.k!=='roof'||o.w*sc>34) continue;
     /* 右边、下边、左边里挑压得最少的：压住别的字最糟，压住别的楼其次 */
     var nm=o.s||o.n, tw=c.measureText(nm).width, own=X(o.x)+','+Y(o.y);
     var cand=[[X(o.x+o.w)+3,Y(o.y)+12],[X(o.x),Y(o.y+o.h)+11],[X(o.x)-tw-3,Y(o.y)+12]], pos=cand[0], best=1e9;
     for(var k=0;k<cand.length;k++){
-      var r=[clamp(cand[k][0],3,cw-tw-3),0,0,0]; r[1]=clamp(cand[k][1],13,ch-4)-10; r[2]=r[0]+tw; r[3]=r[1]+10;
+      var r=[(0,$imports.clamp)(cand[k][0],3,cw-tw-3),0,0,0]; r[1]=(0,$imports.clamp)(cand[k][1],13,ch-4)-10; r[2]=r[0]+tw; r[3]=r[1]+10;
       var over=function(b){ return r[0]<b[2]&&r[2]>b[0]&&r[1]<b[3]&&r[3]>b[1]; };
       var cost=used.filter(over).length*10+boxes.filter(function(b){ return b[0]+','+b[1]!==own&&over(b); }).length;
       if(cost<best){ best=cost; pos=cand[k]; }
     }
     mapLabel(c,nm,pos[0],pos[1],cw,ch);
-    used.push([clamp(pos[0],3,cw-tw-3),clamp(pos[1],13,ch-4)-10,clamp(pos[0],3,cw-tw-3)+tw,clamp(pos[1],13,ch-4)]);
+    used.push([(0,$imports.clamp)(pos[0],3,cw-tw-3),(0,$imports.clamp)(pos[1],13,ch-4)-10,(0,$imports.clamp)(pos[0],3,cw-tw-3)+tw,(0,$imports.clamp)(pos[1],13,ch-4)]);
   }
   c.fillStyle='#c8a24a'; c.font='11px monospace';
   for(i=0;i<gates.length;i++){
@@ -362,15 +364,36 @@ UI.renderMap=function(){
     /* 门都在边界上，字以前有一半画到了图外（北门只剩一个黄点） */
     mapLabel(c,gates[i][0],X(gates[i][1].x)-11,Y(gates[i][1].y)-6,cw,ch);
   }
-  var px=X(S.x/SC), py=Y(S.y/SC);
-  var R=S.mode==='in'?INTERIORS[S.room]:null, ho=R?objById(R.host):null;
+  var px=X($imports.S.x/$imports.SC), py=Y($imports.S.y/$imports.SC);
+  var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null, ho=R?(0,$imports.objById)(R.host):null;
   if(ho){ px=X(ho.x+ho.w/2); py=Y(ho.y+ho.h/2); }
   c.fillStyle='#79c8a4';
   c.beginPath(); c.arc(px,py,4.5,0,6.283); c.fill();
   c.strokeStyle='rgba(121,200,164,.75)'; c.lineWidth=1.5;
   c.beginPath(); c.moveTo(px,py);
-  c.lineTo(px+Math.cos(S.ang)*16,py+Math.sin(S.ang)*16); c.stroke();
+  c.lineTo(px+Math.cos($imports.S.ang)*16,py+Math.sin($imports.S.ang)*16); c.stroke();
 };
 UI.closePanelAll=function(){
   ['bag','note','think','mapv','pause','set'].forEach(function(id){ UI.close(id,false); });
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/ui.js",{
+"DLG":{get:function(){return DLG;},set:function($value){DLG=$value;}},
+"PAUSE":{get:function(){return PAUSE;},set:function($value){PAUSE=$value;}},
+"OS_KEEP":{get:function(){return OS_KEEP;},set:function($value){OS_KEEP=$value;}},
+"OS_FORCE":{get:function(){return OS_FORCE;},set:function($value){OS_FORCE=$value;}},
+"os":{get:function(){return os;},set:function($value){os=$value;}},
+"toast":{get:function(){return toast;},set:function($value){toast=$value;}},
+"updateDialog":{get:function(){return updateDialog;},set:function($value){updateDialog=$value;}},
+"UI":{get:function(){return UI;},set:function($value){UI=$value;}},
+"JOURNAL_TABS":{get:function(){return JOURNAL_TABS;},set:function($value){JOURNAL_TABS=$value;}},
+"BAGTAP":{get:function(){return BAGTAP;},set:function($value){BAGTAP=$value;}},
+"bagUse":{get:function(){return bagUse;},set:function($value){bagUse=$value;}},
+"hotToggle":{get:function(){return hotToggle;},set:function($value){hotToggle=$value;}},
+"bagDescAt":{get:function(){return bagDescAt;},set:function($value){bagDescAt=$value;}},
+"bagActions":{get:function(){return bagActions;},set:function($value){bagActions=$value;}},
+"kLabel":{get:function(){return kLabel;},set:function($value){kLabel=$value;}},
+"mapLabel":{get:function(){return mapLabel;},set:function($value){mapLabel=$value;}}
+});
+})(GameModules.imports("game3d/js/ui.js"));

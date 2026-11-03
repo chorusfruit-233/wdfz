@@ -1,0 +1,12 @@
+test_calendar_matches_previous_boundary_and_cross_day_behavior (test_domain_rules.DomainRulesTest.test_calendar_matches_previous_boundary_and_cross_day_behavior) ... ok
+test_inventory_capacity_hotbar_and_consumption_without_ui (test_domain_rules.DomainRulesTest.test_inventory_capacity_hotbar_and_consumption_without_ui) ... ok
+test_pressure_curve_is_continuous_and_capped (test_domain_rules.DomainRulesTest.test_pressure_curve_is_continuous_and_capped) ... ok
+test_pressure_query_does_not_write_persistent_state (test_domain_rules.DomainRulesTest.test_pressure_query_does_not_write_persistent_state) ... ok
+test_real_time_slices_preserve_special_window_and_remainder (test_domain_rules.DomainRulesTest.test_real_time_slices_preserve_special_window_and_remainder) ... ok
+test_stats_preserve_frame_settlement_and_state_replacement (test_domain_rules.DomainRulesTest.test_stats_preserve_frame_settlement_and_state_replacement) ... ok
+test_violation_exemption_keeps_inspection_exception (test_domain_rules.DomainRulesTest.test_violation_exemption_keeps_inspection_exception) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.250s
+
+OK

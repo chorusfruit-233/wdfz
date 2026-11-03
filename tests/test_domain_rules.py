@@ -118,7 +118,7 @@ assert.equal(I.select(s,7),true);assert.equal(s.bagSel,7); // UI permits selecti
         self.js("""
 const vm=require('node:vm'),fs=require('node:fs');
 const c={RT:{pressureClock:700},S:{screen:'play'},GameTimeRules:require('./game3d/js/domain/game-time.js'),now:2000};
-c.gameClock=()=>c.now;vm.createContext(c);
+c.gameClock=()=>c.now;require('./tests/support/capsules.cjs').context(c);
 vm.runInContext(fs.readFileSync('game3d/js/campus-pressure.js','utf8'),c);
 const before=JSON.stringify(c.RT),value=c.CampusPressure.current();
 assert.equal(value.clock,2000);assert.equal(JSON.stringify(c.RT),before);

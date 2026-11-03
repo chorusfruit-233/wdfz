@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 拍肩的另一种：身后那张笑脸
    behind —— 你回头了：它就在一米多外，弯着眼睛冲你笑，点一下头就淡掉；
    jump   —— 你没回头：它绕到你面前，一下子贴到鼻尖（突脸）。
@@ -5,19 +7,19 @@
 'use strict';
 
 var SMILE={grp:null,t:0,mode:null,dur:0};
-function smileClear(){ if(SMILE.grp){ GLR.scene.remove(SMILE.grp); SMILE.grp=null; } SMILE.mode=null; }
+function smileClear(){ if(SMILE.grp){ $imports.GLR.scene.remove(SMILE.grp); SMILE.grp=null; } SMILE.mode=null; }
 function smileShow(mode){
   smileClear();
-  var cam=GLR.cam, dir={x:Math.cos(S.ang),z:Math.sin(S.ang)};   /* 按朝向算，不读相机矩阵：刚转过身时矩阵还没更新 */
-  var g=new THREE.Group(), face=fxMesh('smile');
+  var cam=$imports.GLR.cam, dir={x:Math.cos($imports.S.ang),z:Math.sin($imports.S.ang)};   /* 按朝向算，不读相机矩阵：刚转过身时矩阵还没更新 */
+  var g=new $imports.THREE.Group(), face=(0,$imports.fxMesh)('smile');
   g.add(face); g.userData.face=face;
   var d=mode==='jump'?1.0:1.7;
   g.position.set(cam.position.x+dir.x*d, cam.position.y-1.72, cam.position.z+dir.z*d);
   g.rotation.set(0,Math.atan2(cam.position.x-g.position.x,cam.position.z-g.position.z),0);   /* 正对镜头（lookAt 正后方时会给出翻转的欧拉角） */
   SMILE.grp=g; SMILE.t=0; SMILE.mode=mode; SMILE.dur=mode==='jump'?1.3:2.0;
-  GLR.scene.add(g);
-  if(mode==='jump'){ GLR.flash=Math.max(GLR.flash||0,0.7); GLR.hurt=Math.max(GLR.hurt||0,0.6); }
-  try{ SFX.smile&&SFX.smile(mode); }catch(e){}
+  $imports.GLR.scene.add(g);
+  if(mode==='jump'){ $imports.GLR.flash=Math.max($imports.GLR.flash||0,0.7); $imports.GLR.hurt=Math.max($imports.GLR.hurt||0,0.6); }
+  try{ $imports.SFX.smile&&$imports.SFX.smile(mode); }catch(e){}
 }
 function smileTick(dt){
   if(!SMILE.grp) return;
@@ -26,7 +28,7 @@ function smileTick(dt){
   if(SMILE.mode==='jump'){
     var s=Math.min(1,t/0.18);                                   /* 0.18 秒内一下子撑满视野 */
     g.scale.setScalar(0.3+0.62*s);
-    g.position.y=GLR.cam.position.y-1.72*g.scale.y+(Math.random()-0.5)*0.03;
+    g.position.y=$imports.GLR.cam.position.y-1.72*g.scale.y+($imports.PresentationRandom.next()-0.5)*0.03;
   }else{
     g.scale.setScalar(1);
     g.userData.face.rotation.x=Math.sin(Math.min(1,t/0.9)*Math.PI)*0.12;   /* 点一下头 */
@@ -34,3 +36,12 @@ function smileTick(dt){
   }
   if(k>=1) smileClear();
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/fx/smile.js",{
+"SMILE":{get:function(){return SMILE;},set:function($value){SMILE=$value;}},
+"smileClear":{get:function(){return smileClear;},set:function($value){smileClear=$value;}},
+"smileShow":{get:function(){return smileShow;},set:function($value){smileShow=$value;}},
+"smileTick":{get:function(){return smileTick;},set:function($value){smileTick=$value;}}
+});
+})(GameModules.imports("game3d/js/fx/smile.js"));

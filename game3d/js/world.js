@@ -1,38 +1,42 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 场景切换、碰撞、移动、镜头 */
 'use strict';
 
-function clearWorldMesh(){ return Engine.clearWorld(); }
-function addRoomLights(R){ return Engine.addRoomLights(R); }
-function enterWorldRoom(roomId){ return Engine.enterRoom(roomId); }
-function enterWorldOut(){ return Engine.enterOutside(); }
+function clearWorldMesh(){ return $imports.Engine.clearWorld(); }
+function addRoomLights(R){ return $imports.Engine.addRoomLights(R); }
+function enterWorldRoom(roomId){ return $imports.Engine.enterRoom(roomId); }
+function enterWorldOut(){ return $imports.Engine.enterOutside(); }
 
 function worldToScene(wx,wy,roomR){
   if(roomR){
-    var tw=TTILE*U2M, th=TTILE*U2M;
-    return { x:(wx-roomR.ox)*U2M-roomR.cols*tw*0.5, z:(wy-roomR.oy)*U2M-roomR.rows*th*0.5 };
+    var tw=$imports.TTILE*$imports.U2M, th=$imports.TTILE*$imports.U2M;
+    return { x:(wx-roomR.ox)*$imports.U2M-roomR.cols*tw*0.5, z:(wy-roomR.oy)*$imports.U2M-roomR.rows*th*0.5 };
   }
-  return { x:wx*U2M, z:wy*U2M };
+  return { x:wx*$imports.U2M, z:wy*$imports.U2M };
 }
 
 function teachFrontZ(){
   var t=null,i;
-  for(i=0;i<OBJ.length;i++) if(OBJ[i].id==='teach'){ t=OBJ[i]; break; }
-  if(!t) return (GATE_N.y*SC)*U2M;
-  return ((t.y+t.h)*SC)*U2M;
+  for(i=0;i<$imports.OBJ.length;i++) if($imports.OBJ[i].id==='teach'){ t=$imports.OBJ[i]; break; }
+  if(!t) return ($imports.GATE_N.y*$imports.SC)*$imports.U2M;
+  return ((t.y+t.h)*$imports.SC)*$imports.U2M;
 }
 
 
 function buildRoomBounds(){
-  for(var id in INTERIORS){
-    var R=INTERIORS[id];
-    var o=objById(R.host);
+  for(var id in $imports.INTERIORS){
+    var R=$imports.INTERIORS[id];
+    var o=(0,$imports.objById)(R.host);
     R.w=R.cols*R.tw; R.h=R.rows*R.th;
     if(o){
-      var hc={x:o.x*SC+o.w*SC/2, y:o.y*SC+o.h*SC/2};
+      var hc={x:o.x*$imports.SC+o.w*$imports.SC/2, y:o.y*$imports.SC+o.h*$imports.SC/2};
       R.ox=hc.x-R.w/2; R.oy=hc.y-R.h/2;
     }else{ R.ox=0; R.oy=0; }
     R.cx=R.ox+R.w/2; R.cy=R.oy+R.h/2;
+    $imports.SpaceLayout.ensureRoom(R);
   }
+  $imports.SpaceLayout.ensureOutside();
 }
 
 function tileAt(R,wx,wy){
@@ -48,12 +52,12 @@ var FURN_SOLID={'d':0.78,'T':0.86,'t':0.76,'k':0.82,'f':0.78,'b':0.34,
 function solidAtInterior(R,wx,wy){
   var t=tileAt(R,wx,wy);
   if(t==='='){
-    if(typeof NC!=='undefined'&&NC&&NC.blocking&&NC.room===R.id) return true;   /* 他们堵在门口 */
-    return !doorIsOpen(R,wx,wy);
+    if($imports.Classmates.blocked(R.id)) return true;   /* 他们堵在门口 */
+    return !(0,$imports.doorIsOpen)(R,wx,wy);
   }
-  if(isSolidCh(t)) return true;
+  if((0,$imports.isSolidCh)(t)) return true;
   /* stairExtra / propExtra 是米；这里以前直接拿世界单位去比（差 9 倍），楼梯井的挡墙等于没有 */
-  var lx=(wx-R.ox-R.w*0.5)*U2M, lz=(wy-R.oy-R.h*0.5)*U2M, si, sb;
+  var lx=(wx-R.ox-R.w*0.5)*$imports.U2M, lz=(wy-R.oy-R.h*0.5)*$imports.U2M, si, sb;
   if(R&&R.stairExtra){
     for(si=0;si<R.stairExtra.length;si++){
       sb=R.stairExtra[si];
@@ -66,7 +70,7 @@ function solidAtInterior(R,wx,wy){
       if(lx>sb.x0&&lx<sb.x1&&lz>sb.z0&&lz<sb.z1) return true;
     }
   }
-  if(R.spiral&&typeof spiralSolid==='function'&&spiralSolid(R,wx,wy)) return true;
+  if(R.spiral&&typeof $imports.spiralSolid==='function'&&(0,$imports.spiralSolid)(R,wx,wy)) return true;
   if(R.solid&&R.solid(wx,wy)) return true;                    /* 自带碰撞的房间（模块提供，例如虚空迷宫按高度判断） */
   if(R.foot){                        /* 房间建过模型：按模型真实占地（本格和周围一圈的家具都可能伸过来） */
     var c0=Math.floor((wx-R.ox)/R.tw), r0=Math.floor((wy-R.oy)/R.th), dc, dr, F, fi;
@@ -85,67 +89,67 @@ function solidAtInterior(R,wx,wy){
   return false;
 }
 function solidAtOutdoor(wx,wy){
-  var mx=wx/SC, my=wy/SC, i;
-  if(mx<BOUND.x0+4||my<BOUND.y0+4||mx>BOUND.x1-4||my>BOUND.y1-4) return true;
-  for(i=0;i<OBJ.length;i++){
-    var o=OBJ[i];
+  var mx=wx/$imports.SC, my=wy/$imports.SC, i;
+  if(mx<$imports.BOUND.x0+4||my<$imports.BOUND.y0+4||mx>$imports.BOUND.x1-4||my>$imports.BOUND.y1-4) return true;
+  for(i=0;i<$imports.OBJ.length;i++){
+    var o=$imports.OBJ[i];
     if(o.k!=='roof') continue;
     if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) return true;
   }
-  for(i=0;i<OUT_SOLID.length;i++){
-    var q=OUT_SOLID[i];
+  for(i=0;i<$imports.OUT_SOLID.length;i++){
+    var q=$imports.OUT_SOLID[i];
     if(mx>q.x0&&mx<q.x1&&my>q.y0&&my<q.y1) return true;
   }
   return false;
 }
 var PRAD=3.0;      /* 世界单位的玩家半径 */
 function solidAt(wx,wy){
-  if(S.mode==='in'){
-    var R=INTERIORS[S.room]; if(!R) return true;
+  if($imports.S.mode==='in'){
+    var R=$imports.INTERIORS[$imports.S.room]; if(!R) return true;
     return solidAtInterior(R,wx,wy);
   }
   return solidAtOutdoor(wx,wy);
 }
 function canStand(wx,wy){
-  return Collision.depth(wx,wy,PRAD)<1e-7;
+  return $imports.Collision.depth(wx,wy,PRAD)<1e-7;
 }
 function moveBy(dx,dy,dt){
   if(!Number.isFinite(dx)||!Number.isFinite(dy))return;
-  var n=Math.max(1,Math.ceil((dt||1/60)*Physics.hz),Math.ceil(Math.hypot(dx,dy)/(PRAD*0.5)));
+  var n=Math.max(1,Math.ceil((dt||1/60)*$imports.Physics.hz),Math.ceil(Math.hypot(dx,dy)/(PRAD*0.5)));
   dx/=n;dy/=n;
-  var MR=S.mode==='in'?INTERIORS[S.room]:null;
+  var MR=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null;
   for(var i=0;i<n;i++){
-    var before=Collision.depth(S.x,S.y,PRAD),nx=S.x+dx,ny=S.y+dy;
-    var ax=Collision.depth(nx,S.y,PRAD);
-    if(ax<1e-7||ax<before-1e-7){S.x=nx;before=ax;}
-    var ay=Collision.depth(S.x,ny,PRAD);
-    if(ay<1e-7||ay<before-1e-7)S.y=ny;
-    spiralUpdate();
+    var before=$imports.Collision.depth($imports.S.x,$imports.S.y,PRAD),nx=$imports.S.x+dx,ny=$imports.S.y+dy;
+    var ax=$imports.Collision.depth(nx,$imports.S.y,PRAD);
+    if(ax<1e-7||ax<before-1e-7){$imports.S.x=nx;before=ax;}
+    var ay=$imports.Collision.depth($imports.S.x,ny,PRAD);
+    if(ay<1e-7||ay<before-1e-7)$imports.S.y=ny;
+    (0,$imports.spiralUpdate)();
     if(MR&&MR.moved)MR.moved();                               /* 房间自己的高度（台阶、坠落）：每一小步之后更新 */
   }
 }
 
 function doorWorld(o){
   var f=o.door||'s';
-  if(f==='w') return { x:o.x*SC-26, y:(o.y+o.h/2)*SC };
-  if(f==='e') return { x:(o.x+o.w)*SC+26, y:(o.y+o.h/2)*SC };
-  if(f==='n') return { x:o.x*SC+o.w*SC/2, y:o.y*SC-26 };
-  return { x:o.x*SC+o.w*SC/2, y:(o.y+o.h)*SC+26 };
+  if(f==='w') return { x:o.x*$imports.SC-26, y:(o.y+o.h/2)*$imports.SC };
+  if(f==='e') return { x:(o.x+o.w)*$imports.SC+26, y:(o.y+o.h/2)*$imports.SC };
+  if(f==='n') return { x:o.x*$imports.SC+o.w*$imports.SC/2, y:o.y*$imports.SC-26 };
+  return { x:o.x*$imports.SC+o.w*$imports.SC/2, y:(o.y+o.h)*$imports.SC+26 };
 }
 function showBanner(txt){
   var el=document.getElementById('banner');
   if(!el) return;
   el.textContent=txt; el.style.opacity='1';
-  el._t=Lifecycle.renew('banner').timeout(function(){ el.style.opacity='0'; },1800);
+  el._t=$imports.Lifecycle.renew('banner').timeout(function(){ el.style.opacity='0'; },1800);
 }
 function fadeTo(fn){
-  var transition=Lifecycle.renew('transition');
+  var transition=$imports.Lifecycle.renew('transition');
   var f=document.getElementById('fade');
   if(!f){ fn(); return; }
   transition.own(function(){f.style.opacity='0';});
   f.style.transition='opacity .16s ease'; f.style.opacity='1';
   transition.timeout(function(){
-    try{ fn(); }catch(e){Lifecycle.report('scene-transition',e);}
+    try{ fn(); }catch(e){$imports.Lifecycle.report('scene-transition',e);}
     if(transition.active()){f.style.transition='opacity .30s ease'; f.style.opacity='0';}
   },170);
 }
@@ -175,10 +179,10 @@ function entryNear(R,chs){
 }
 function unstick(){
   try{
-    if(S.mode!=='in'||S.seated||HIDE.on) return;
-    var R=INTERIORS[S.room]; if(!R) return;
-    if(!solidAt(S.x,S.y)) return;
-    var c=Math.floor((S.x-R.ox)/R.tw), r=Math.floor((S.y-R.oy)/R.th), rad, dr, dc;
+    if($imports.S.mode!=='in'||$imports.S.seated||$imports.HIDE.on) return;
+    var R=$imports.INTERIORS[$imports.S.room]; if(!R) return;
+    if(!solidAt($imports.S.x,$imports.S.y)) return;
+    var c=Math.floor(($imports.S.x-R.ox)/R.tw), r=Math.floor(($imports.S.y-R.oy)/R.th), rad, dr, dc;
     for(rad=1; rad<=12; rad++){
       for(dr=-rad; dr<=rad; dr++){
         for(dc=-rad; dc<=rad; dc++){
@@ -186,7 +190,7 @@ function unstick(){
           var rr=r+dr, cc=c+dc;
           if(rr<0||cc<0||rr>=R.rows||cc>=R.cols) continue;
           var wx=R.ox+(cc+0.5)*R.tw, wy=R.oy+(rr+0.5)*R.th;
-          if(!solidAt(wx,wy)){ S.x=wx; S.y=wy; return; }
+          if(!solidAt(wx,wy)){ $imports.S.x=wx; $imports.S.y=wy; return; }
         }
       }
     }
@@ -194,64 +198,106 @@ function unstick(){
 }
 /* 场景进入立即校正；后续只在模拟运行时检查，渲染和暂停不移动玩家。 */
 function repairPlayerPlacement(dt){
-  if(S.mode!=='in'||S.dead||HIDE.on)return;
-  S.stuckT=(S.stuckT||0)+dt;
-  if(S.stuckT>0.5){S.stuckT=0;if(solidAt(S.x,S.y))unstick();}
+  if($imports.S.mode!=='in'||$imports.S.dead||$imports.HIDE.on)return;
+  $imports.S.stuckT=($imports.S.stuckT||0)+dt;
+  if($imports.S.stuckT>0.5){$imports.S.stuckT=0;if(solidAt($imports.S.x,$imports.S.y))unstick();}
 }
 function doEnterRoom(id,spawn){
-  var R=INTERIORS[id]; if(!R) return;
-  Lifecycle.scope('transition').cancel();
-  Lifecycle.renew('scene');
-  GameModules.emit('leaveRoom',S.mode==='in'?S.room:null,id);
-  if(typeof FN_P!=='undefined'&&FN_P.grp&&FN_P.room!==id)fnPeopleClear();
-  try{ anfxClear(); }catch(e){}
-  try{ spiralReset(); }catch(e){}
-  S.mode='in'; S.room=id;
+  var R=$imports.INTERIORS[id]; if(!R) return;
+  $imports.SpaceLayout.ensureRoom(R);
+  $imports.Lifecycle.scope('transition').cancel();
+  $imports.Lifecycle.renew('scene');
+  GameModules.emit('leaveRoom',$imports.S.mode==='in'?$imports.S.room:null,id);
+  if(typeof $imports.FN_P!=='undefined'&&$imports.FN_P.grp&&$imports.FN_P.room!==id)(0,$imports.fnPeopleClear)();
+  try{ (0,$imports.anfxClear)(); }catch(e){}
+  try{ (0,$imports.spiralReset)(); }catch(e){}
+  $imports.S.mode='in'; $imports.S.room=id;
   if(spawn){                                  /* 显式指定落点（开局坐座位） */
-    S.x=spawn.x; S.y=spawn.y; if(spawn.ang!==undefined) S.ang=spawn.ang;
-    S.enterCool=0.9;
+    $imports.S.x=spawn.x; $imports.S.y=spawn.y; if(spawn.ang!==undefined) $imports.S.ang=spawn.ang;
+    $imports.S.enterCool=0.9;
   }else if(id==='garage1'){
-    S.x=R.ox+R.w-5*R.tw; S.y=R.oy+13*R.th;
-    ROAM.on=false; ROAM.litAcc=0; S.ang=-PI/2;
-    S.enterCool=1.4;
+    $imports.S.x=R.ox+R.w-5*R.tw; $imports.S.y=R.oy+13*R.th;
+    $imports.ROAM.on=false; $imports.ROAM.litAcc=0; $imports.S.ang=-$imports.PI/2;
+    $imports.S.enterCool=1.4;
   }else{
-    S.x=R.ox+R.w/2; S.y=R.oy+R.h-2*R.th;
-    S.enterCool=0.9;
+    $imports.S.x=R.ox+R.w/2; $imports.S.y=R.oy+R.h-2*R.th;
+    $imports.S.enterCool=0.9;
   }
-  if(!(spawn&&spawn.seated)) S.seated=false;
-  else S.seated=true;
-  if(R.spiral&&spawn&&spawn.spiral) spiralRestore(spawn.spiral);
+  if(!(spawn&&spawn.seated)) $imports.S.seated=false;
+  else $imports.S.seated=true;
+  if(R.spiral&&spawn&&spawn.spiral) (0,$imports.spiralRestore)(spawn.spiral);
   if(R.onEnter) R.onEnter(spawn||null);                      /* 房间自己的落点和高度：要在防卡位之前定下来 */
   var via=ENTER_VIA; ENTER_VIA=null;
+  $imports.Classmates.enter();
   enterWorldRoom(id);
   if(!spawn){
     var en=null;
     try{ en=entryNear(R, via==='stair'?['S']:['O']); if(!en) en=entryNear(R,['O','S','L']); }catch(e){}
-    if(en){ S.x=en.x; S.y=en.y; S.ang=en.ang; }
+    if(en){ $imports.S.x=en.x; $imports.S.y=en.y; $imports.S.ang=en.ang; }
   }
   try{ unstick(); }catch(e){}
-  VisualState.hurt=0;
-  showBanner(INTERIORS[id].name);
-  onEnterRoom(id,!!(spawn&&spawn.restoreVisit));
-  autoSave();
+  $imports.VisualState.hurt=0;
+  showBanner($imports.INTERIORS[id].name);
+  (0,$imports.onEnterRoom)(id,!!(spawn&&spawn.restoreVisit));
+  (0,$imports.autoSave)();
 }
 function exitRoom(){ fadeTo(function(){ doExitRoom(); }); }
 function doExitRoom(){
-  var R=INTERIORS[S.room]; if(!R) return;
-  Lifecycle.scope('transition').cancel();
-  Lifecycle.renew('scene');
-  GameModules.emit('leaveRoom',S.mode==='in'?S.room:null,null);
-  if(typeof FN_P!=='undefined'&&FN_P.grp)fnPeopleClear();
-  try{ anfxClear(); }catch(e){}
-  var o=objById(R.host);
-  try{ Dread.enter(null); }catch(e){}
-  S.mode='out'; S.room=null; S.seated=false;
-  try{ spiralReset(); }catch(e){}
+  var R=$imports.INTERIORS[$imports.S.room]; if(!R) return;
+  $imports.Lifecycle.scope('transition').cancel();
+  $imports.Lifecycle.renew('scene');
+  GameModules.emit('leaveRoom',$imports.S.mode==='in'?$imports.S.room:null,null);
+  if(typeof $imports.FN_P!=='undefined'&&$imports.FN_P.grp)(0,$imports.fnPeopleClear)();
+  try{ (0,$imports.anfxClear)(); }catch(e){}
+  var o=(0,$imports.objById)(R.host);
+  try{ $imports.Dread.enter(null); }catch(e){}
+  $imports.S.mode='out'; $imports.S.room=null; $imports.S.seated=false;
+  $imports.Classmates.enter();
+  try{ (0,$imports.spiralReset)(); }catch(e){}
   showBanner('武大附中 · 校园');
-  if(o){ var d=doorWorld(o); S.x=d.x; S.y=d.y; }
-  S.enterCool=1.0;
+  if(o){ var d=doorWorld(o); $imports.S.x=d.x; $imports.S.y=d.y; }
+  $imports.S.enterCool=1.0;
   enterWorldOut();
-  autoSave();
+  (0,$imports.autoSave)();
 }
 
-function syncCamera(dt,view){ return Engine.syncCamera(dt,view); }
+function syncCamera(dt,view){ return $imports.Engine.syncCamera(dt,view); }
+
+function roomClockFrozen(){ var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null; return !!(R&&R.noClock); }
+
+/* 旧工具的室外避让查询，内部配方必须显式传入自己的草稿。 */
+function outFree(mx,my,pad,roadPad){return (0,$imports.outFreeInLayout)(mx,my,pad,roadPad,$imports.OUT_SOLID);}
+
+/* @module-exports */
+GameModules.publish("game3d/js/world.js",{
+"clearWorldMesh":{get:function(){return clearWorldMesh;},set:function($value){clearWorldMesh=$value;}},
+"addRoomLights":{get:function(){return addRoomLights;},set:function($value){addRoomLights=$value;}},
+"enterWorldRoom":{get:function(){return enterWorldRoom;},set:function($value){enterWorldRoom=$value;}},
+"enterWorldOut":{get:function(){return enterWorldOut;},set:function($value){enterWorldOut=$value;}},
+"worldToScene":{get:function(){return worldToScene;},set:function($value){worldToScene=$value;}},
+"teachFrontZ":{get:function(){return teachFrontZ;},set:function($value){teachFrontZ=$value;}},
+"buildRoomBounds":{get:function(){return buildRoomBounds;},set:function($value){buildRoomBounds=$value;}},
+"tileAt":{get:function(){return tileAt;},set:function($value){tileAt=$value;}},
+"FURN_SOLID":{get:function(){return FURN_SOLID;},set:function($value){FURN_SOLID=$value;}},
+"solidAtInterior":{get:function(){return solidAtInterior;},set:function($value){solidAtInterior=$value;}},
+"solidAtOutdoor":{get:function(){return solidAtOutdoor;},set:function($value){solidAtOutdoor=$value;}},
+"PRAD":{get:function(){return PRAD;},set:function($value){PRAD=$value;}},
+"solidAt":{get:function(){return solidAt;},set:function($value){solidAt=$value;}},
+"canStand":{get:function(){return canStand;},set:function($value){canStand=$value;}},
+"moveBy":{get:function(){return moveBy;},set:function($value){moveBy=$value;}},
+"doorWorld":{get:function(){return doorWorld;},set:function($value){doorWorld=$value;}},
+"showBanner":{get:function(){return showBanner;},set:function($value){showBanner=$value;}},
+"fadeTo":{get:function(){return fadeTo;},set:function($value){fadeTo=$value;}},
+"ENTER_VIA":{get:function(){return ENTER_VIA;},set:function($value){ENTER_VIA=$value;}},
+"enterRoom":{get:function(){return enterRoom;},set:function($value){enterRoom=$value;}},
+"entryNear":{get:function(){return entryNear;},set:function($value){entryNear=$value;}},
+"unstick":{get:function(){return unstick;},set:function($value){unstick=$value;}},
+"repairPlayerPlacement":{get:function(){return repairPlayerPlacement;},set:function($value){repairPlayerPlacement=$value;}},
+"doEnterRoom":{get:function(){return doEnterRoom;},set:function($value){doEnterRoom=$value;}},
+"exitRoom":{get:function(){return exitRoom;},set:function($value){exitRoom=$value;}},
+"doExitRoom":{get:function(){return doExitRoom;},set:function($value){doExitRoom=$value;}},
+"syncCamera":{get:function(){return syncCamera;},set:function($value){syncCamera=$value;}},
+"roomClockFrozen":{get:function(){return roomClockFrozen;},set:function($value){roomClockFrozen=$value;}},
+"outFree":{get:function(){return outFree;},set:function($value){outFree=$value;}}
+});
+})(GameModules.imports("game3d/js/world.js"));

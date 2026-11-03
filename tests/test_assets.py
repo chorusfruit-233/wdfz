@@ -138,7 +138,7 @@ class PackedAssetsTest(unittest.TestCase):
             self.skipTest('校验压缩包需要 Node.js')
         script = r"""
             const fs=require('fs'),vm=require('vm'),zlib=require('zlib'),assert=require('assert');
-            const decoder=vm.createContext({Uint8Array,Uint16Array,Int8Array,Int16Array,Number,Math,Object,setTimeout});
+            const decoder=require('./tests/support/capsules.cjs').context({Uint8Array,Uint16Array,Int8Array,Int16Array,Number,Math,Object,setTimeout});
             vm.runInContext(fs.readFileSync('game3d/js/model/assets.js','utf8'),decoder);
             for(let i=0;i<4;i++){
               let meta,b64;

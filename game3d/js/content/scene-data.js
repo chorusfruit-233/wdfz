@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 场景表现数据。尺寸/布局稳定，画质配置仅决定细节。 */
 'use strict';
 var SCENE_SPEC=Object.freeze({trees:170,shrubs:40});
@@ -21,3 +23,11 @@ var ROOM_LIGHTS={
   lab3:[[-16,2.70,-2,0xc8dce8,1.3,18],[-3,2.70,-2,0xc8dce8,1.1,18],[17,2.60,-2.5,0x8a2418,1.6,16],[0,2.6,0.4,0xc07a4a,0.8,14,'room']],
   bell:[[0,2.4,2.5,0xffa860,0.9,12]],trash:[[0,2.6,0,0xb8d0a8,0.7,10]]
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/content/scene-data.js",{
+"SCENE_SPEC":{get:function(){return SCENE_SPEC;},set:function($value){SCENE_SPEC=$value;}},
+"ROOM_THEMES":{get:function(){return ROOM_THEMES;},set:function($value){ROOM_THEMES=$value;}},
+"ROOM_LIGHTS":{get:function(){return ROOM_LIGHTS;},set:function($value){ROOM_LIGHTS=$value;}}
+});
+})(GameModules.imports("game3d/js/content/scene-data.js"));

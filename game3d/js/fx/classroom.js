@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 教室里的同学、黑板预告、逃课手写字 */
 'use strict';
 
@@ -7,7 +9,7 @@ var SEG_MAP={
   '5':'afgcd','6':'afgecd','7':'abc','8':'abcdefg','9':'abcdfg'
 };
 function anwClear(){
-  if(ANW.grp){ try{ GLR.scene.remove(ANW.grp); }catch(e){} }
+  if(ANW.grp){ try{ $imports.GLR.scene.remove(ANW.grp); }catch(e){} }
   ANW.on=false; ANW.grp=null; ANW.segs=[]; ANW.t=0; ANW.key=''; ANW.room=null;
 }
 function anwSeg(grp,plane,cu,cv,su,sv,mk){
@@ -18,7 +20,7 @@ function anwSeg(grp,plane,cu,cv,su,sv,mk){
   var px=plane.ox+plane.ux*cu+plane.vx*cv+plane.nx*t*1.4;
   var py=plane.oy+plane.uy*cu+plane.vy*cv+plane.ny*t*1.4;
   var pz=plane.oz+plane.uz*cu+plane.vz*cv+plane.nz*t*1.4;
-  var m=anfxBox(grp,mk,Math.max(0.012,SX),Math.max(0.012,SY),Math.max(0.012,SZ),px,py,pz);
+  var m=(0,$imports.anfxBox)(grp,mk,Math.max(0.012,SX),Math.max(0.012,SY),Math.max(0.012,SZ),px,py,pz);
   m.visible=false;
   m.userData={d:ANW.segs.length*0.045};
   ANW.segs.push(m);
@@ -45,9 +47,9 @@ function anwGlyph(grp,plane,ch,u0,v0,w,h,mk){
 }
 function anwSpot(R){
   if(!R) return {kind:'floor'};
-  var ca=Math.cos(S.ang), sa=Math.sin(S.ang), nx=0, nz=0;
+  var ca=Math.cos($imports.S.ang), sa=Math.sin($imports.S.ang), nx=0, nz=0;
   if(Math.abs(ca)>=Math.abs(sa)) nx=ca>=0?1:-1; else nz=sa>=0?1:-1;
-  var sx=Math.floor((S.x-R.ox)/R.tw), sy=Math.floor((S.y-R.oy)/R.th), d, cx2, cy2;
+  var sx=Math.floor(($imports.S.x-R.ox)/R.tw), sy=Math.floor(($imports.S.y-R.oy)/R.th), d, cx2, cy2;
   for(d=1;d<=6;d++){
     cx2=sx+nx*d; cy2=sy+nz*d;
     if(cx2<0||cy2<0||cx2>=R.cols||cy2>=R.rows) return {kind:'floor'};
@@ -56,13 +58,13 @@ function anwSpot(R){
   return {kind:'floor'};
 }
 function anwSpawn(){
-  var p=anfxW2S(S.x,S.y);
-  var R=(S.mode==='in')?INTERIORS[S.room]:null;
+  var p=(0,$imports.anfxW2S)($imports.S.x,$imports.S.y);
+  var R=($imports.S.mode==='in')?$imports.INTERIORS[$imports.S.room]:null;
   var spot=anwSpot(R);
-  var grp=new THREE.Group();
-  ANW.grp=grp; ANW.on=true; ANW.t=0; ANW.segs=[]; ANW.room=S.room;
-  var mk=anfxMat(0xe9eee6,0.94);          /* 粉笔白 */
-  var txt=fmtClock(Math.round(S.tsec+AN.next*rateAt(S.tsec)/60));   /* 预告的是"钟点"（AN.next 是真实秒数） */
+  var grp=new $imports.THREE.Group();
+  ANW.grp=grp; ANW.on=true; ANW.t=0; ANW.segs=[]; ANW.room=$imports.S.room;
+  var mk=(0,$imports.anfxMat)(0xe9eee6,0.94);          /* 粉笔白 */
+  var txt=(0,$imports.fmtClock)(Math.round($imports.S.tsec+$imports.AN.next*(0,$imports.rateAt)($imports.S.tsec)/60));   /* 预告的是"钟点"（AN.next 是真实秒数） */
   ANW.text=txt;
   var plane, i, w=0.20, h=0.30, gap=0.06;
   var total=0;
@@ -71,7 +73,7 @@ function anwSpawn(){
     var nnx=-spot.nx, nnz=-spot.nz;
     var wx=R.ox+(spot.c+0.5)*R.tw+nnx*R.tw*0.5;
     var wy=R.oy+(spot.r+0.5)*R.th+nnz*R.th*0.5;
-    var sp=worldToScene(wx,wy,R);
+    var sp=(0,$imports.worldToScene)(wx,wy,R);
     var teachBoard=(R.host==='teach'&&spot.r===0);
     var deep=teachBoard?0.20:0.035;
     var baseY=teachBoard?1.52:1.42;
@@ -86,7 +88,7 @@ function anwSpawn(){
       u0+=(ch===':')?(w*0.5+gap):(w+gap);
     }
   }else{
-    var snap=Math.round(S.ang/(Math.PI/2))*(Math.PI/2);
+    var snap=Math.round($imports.S.ang/(Math.PI/2))*(Math.PI/2);
     var fx=Math.cos(snap), fz=Math.sin(snap);
     var bx=p.x+fx*2.0, bz=p.z+fz*2.0;
     plane={ox:bx, oy:0.014, oz:bz,
@@ -100,15 +102,13 @@ function anwSpawn(){
       u1+=(ch2===':')?(w*0.5+gap):(w+gap);
     }
   }
-  GLR.scene.add(grp);
+  $imports.GLR.scene.add(grp);
 }
-function anwVisible(){
-  return !!(S.screen==='play'&&!S.dead&&!PAUSE.on&&!AN.active&&AN_WARN[AN.pre]&&anAllowed(AN.pre)&&AN.next>0&&AN.next<=8&&!UI.anyOpen());
-}
+
 function anwTick(dt){
-  if(!anwVisible()){ if(ANW.on) anwClear(); return; }
-  var key=Math.round(S.tsec+AN.next*rateAt(S.tsec)/60)+'|'+(S.room||'out');
-  if(!ANW.on||ANW.key!==key||ANW.room!==S.room){ anwClear(); ANW.key=key; anwSpawn(); }
+  if(!(0,$imports.anwVisible)()){ if(ANW.on) anwClear(); return; }
+  var key=Math.round($imports.S.tsec+$imports.AN.next*(0,$imports.rateAt)($imports.S.tsec)/60)+'|'+($imports.S.room||'out');
+  if(!ANW.on||ANW.key!==key||ANW.room!==$imports.S.room){ anwClear(); ANW.key=key; anwSpawn(); }
   ANW.t+=dt;
   for(var i=0;i<ANW.segs.length;i++){
     var m=ANW.segs[i];
@@ -116,19 +116,20 @@ function anwTick(dt){
   }
 }
 
-var NC={grp:null,list:[],occ:{},room:null,blocking:false,matN:null,matS:null,normal:false,t:0,said:false};
+var NC={grp:null,list:[],room:null,matN:null,matS:null,normal:false,t:0,said:false};
+/* 仅供旧调试工具兼容；画面不再拥有占座和堵门判定。 */
+Object.defineProperties(NC,{
+  occ:{enumerable:true,get:function(){return $imports.Classmates.layout($imports.INTERIORS[NC.room]).occupied;}},
+  blocking:{enumerable:true,get:function(){return $imports.Classmates.state.blocking;},set:function(v){$imports.Classmates.setBlocking(v);}}
+});
 function ncClear(){
-  if(NC.grp){GLR.scene.remove(NC.grp);ThreeBackend.disposeGroup(NC.grp);}
-  NC.grp=null; NC.list=[]; NC.occ={}; NC.room=null; NC.blocking=false; NC.normal=false; NC.t=0;
-}
-function ncOccupied(c,r){
-  if(!NC.occ) return false;
-  return !!NC.occ[c+','+r];
+  if(NC.grp){$imports.GLR.scene.remove(NC.grp);$imports.ThreeBackend.disposeGroup(NC.grp);}
+  NC.grp=null; NC.list=[]; NC.room=null; NC.normal=false; NC.t=0;
 }
 /* 坐在课桌前、两只手搭在桌面上的同学。人形正面朝 +z，这里转半圈：整组正面朝 -z（朝黑板） */
 function ncSeatFigure(mat,x,y,z,rotY){
-  var g=new THREE.Group();
-  var me=figMesh('sit',mat,1); me.rotation.y=Math.PI;
+  var g=new $imports.THREE.Group();
+  var me=(0,$imports.figMesh)('sit',mat,1); me.rotation.y=Math.PI;
   g.add(me);
   g.position.set(x,y||0,z);
   g.rotation.y=rotY||0;
@@ -139,35 +140,23 @@ function ncBuild(R){
   ncClear();
   if(!R||R.host!=='teach'||R.floor<1||R.floor>5) return;
   NC.room=R.id;
-  NC.matN=new THREE.MeshBasicMaterial({color:0x39454f,fog:true});
-  NC.matS=new THREE.MeshBasicMaterial({color:0x080b0d,fog:true});
-  var shadow=(NC.done||proSeen());
+  NC.matN=new $imports.THREE.MeshBasicMaterial({color:0x39454f,fog:true});
+  NC.matS=new $imports.THREE.MeshBasicMaterial({color:0x080b0d,fog:true});
+  var shadow=(NC.done||(0,$imports.proSeen)());
   NC.normal=!shadow;
-  NC.grp=new THREE.Group();
-  GLR.scene.add(NC.grp);
-  var c, r2, ch;
-  var seeded=0;
-  for(r2=1;r2<R.rows-1&&seeded<34;r2++){
-    for(c=1;c<R.cols-1&&seeded<34;c++){
-      ch=R.grid[r2][c];
-      if(ch!=='d') continue;
-      if(R.id==='teach1'&&Math.abs(c-48)<=1&&Math.abs(r2-6)<=1) continue;
-      if(Math.random()<0.42) continue;
-      var wx=R.ox+(c+0.5)*R.tw, wy=R.oy+(r2+0.5+0.32)*R.th;
-      var sp=worldToScene(wx,wy,R);
-      var fig=ncSeatFigure(NC.normal?NC.matN:NC.matS, sp.x, 0, sp.z, 0);
-      NC.grp.add(fig);
-      NC.list.push(fig);
-      NC.occ[c+','+r2]=1;
-      seeded++;
-    }
-  }
+  NC.grp=new $imports.THREE.Group();
+  $imports.GLR.scene.add(NC.grp);
+  $imports.Classmates.layout(R).seats.forEach(function(seat){
+    var wx=R.ox+(seat.c+.5)*R.tw,wy=R.oy+(seat.r+.82)*R.th,sp=(0,$imports.worldToScene)(wx,wy,R);
+    var fig=ncSeatFigure(NC.normal?NC.matN:NC.matS,sp.x,0,sp.z,0);
+    NC.grp.add(fig);NC.list.push(fig);
+  });
   var tc=null,tr=null,cc,rr;
   for(rr=1;rr<R.rows&&!tc;rr++) for(cc=1;cc<R.cols&&!tc;cc++) if(R.grid[rr][cc]==='T'){ tc=cc; tr=rr; }
   if(tc!==null){
-    var tw=worldToScene(R.ox+(tc+0.5)*R.tw, R.oy+(tr+1.6)*R.th, R);
-    var tg=new THREE.Group();
-    tg.add(figMesh('teacher',NC.matN,1));                         /* 讲台边的老师，面朝全班（+z） */
+    var tw=(0,$imports.worldToScene)(R.ox+(tc+0.5)*R.tw, R.oy+(tr+1.6)*R.th, R);
+    var tg=new $imports.THREE.Group();
+    tg.add((0,$imports.figMesh)('teacher',NC.matN,1));                         /* 讲台边的老师，面朝全班（+z） */
     tg.position.set(tw.x,0,tw.z);
     tg.rotation.y=0;
     tg.userData={hx:tw.x,hz:tw.z,ty:0,standing:1};
@@ -185,7 +174,7 @@ function ncFlip(){
     for(k=0;k<f.children.length;k++) f.children[k].material=NC.matS;
   }
   NC.normal=false; NC.done=true;
-  try{ GLR.flash=Math.min(0.55,(GLR.flash||0)+0.4); }catch(e){}
+  try{ $imports.GLR.flash=Math.min(0.55,($imports.GLR.flash||0)+0.4); }catch(e){}
 }
 /* ncFlip 的反向：同学（和讲台边的老师）换回正常的样子。死亡档案室重看完整版开场时用——
    开场看过以后，教室一搭好同学就是里世界的样子，而完整版前三段演的是正常的第四节。不闪白，不改 NC.done */
@@ -200,31 +189,17 @@ function ncRestore(){
   NC.normal=true;
   return true;
 }
-/* 同班表现是否存在：数值压力由规则层按模拟时间结算。 */
-function ncPressureState(){return !!(NC.grp&&NC.room&&S.mode==='in'&&S.room===NC.room);}
 function ncUpdate(dt){
   if(!NC.grp||!NC.room) return;
-  if(S.mode!=='in'||S.room!==NC.room){ ncClear(); return; }
+  if($imports.S.mode!=='in'||$imports.S.room!==NC.room){ ncClear(); return; }
   NC.t+=dt;
   var i,f,ch;
-  if(NC.normal&&!PRO.on&&NC.t>20) ncFlip();
-  var v=S.viol||0;
-  var p=anfxW2S(S.x,S.y);
-  var doorP=null;
-  if(v>=92&&!NC.doorP){
-    var R=INTERIORS[S.room];
-    var best=null,bd=1e9,cc2,rr2;
-    if(R) for(rr2=1;rr2<R.rows-1;rr2++) for(cc2=1;cc2<R.cols-1;cc2++){
-      if(R.grid[rr2][cc2]!=='=') continue;
-      var d2=Math.abs(cc2*R.tw+R.ox-S.x)+Math.abs(rr2*R.th+R.oy-S.y);
-      if(d2<bd){ bd=d2; best=[cc2,rr2]; }
-    }
-    if(best) NC.doorP=worldToScene(INTERIORS[S.room].ox+(best[0]+0.5)*INTERIORS[S.room].tw,
-                                   INTERIORS[S.room].oy+(best[1]+0.5)*INTERIORS[S.room].th, INTERIORS[S.room]);
-  }
-  if(v<80) NC.doorP=null;
-  NC.blocking=(v>=92&&!!NC.doorP);
-  var staring=(AN.active&&AN.id==='stare');
+  if(NC.normal&&!$imports.PRO.on&&NC.t>20) ncFlip();
+  var v=$imports.S.viol||0;
+  var p=(0,$imports.anfxW2S)($imports.S.x,$imports.S.y);
+  var door=$imports.Classmates.state.room===NC.room?$imports.Classmates.state.door:null;
+  NC.doorP=door?(0,$imports.worldToScene)(door.x,door.y,$imports.INTERIORS[NC.room]):null;
+  var staring=($imports.AN.active&&$imports.AN.id==='stare');
   for(i=0;i<NC.list.length;i++){
     f=NC.list[i];
     var ud=f.userData||{};
@@ -234,12 +209,12 @@ function ncUpdate(dt){
       var dS=((wantS-curS+Math.PI*3)%(Math.PI*2))-Math.PI;
       f.rotation.y=curS+dS*Math.min(1,dt*6);
       /* 转过来正对着你的时候站起来：坐着扭头看人，看起来很滑稽 */
-      if(ud.mesh&&!ud.stood&&Math.abs(dS)<0.35){ ud.stood=1; ud.stareStood=1; ud.mesh.geometry=figGeo('person'); }
+      if(ud.mesh&&!ud.stood&&Math.abs(dS)<0.35){ ud.stood=1; ud.stareStood=1; ud.mesh.geometry=(0,$imports.figGeo)('person'); }
       continue;
     }
     if(ud.stareStood&&!staring){                         /* 异象过去了，原来坐着的坐回去 */
       ud.stareStood=0;
-      if(v<35&&ud.mesh){ ud.stood=0; ud.standing=0; ud.mesh.geometry=figGeo('sit'); }
+      if(v<35&&ud.mesh){ ud.stood=0; ud.standing=0; ud.mesh.geometry=(0,$imports.figGeo)('sit'); }
     }
     if(v>=35&&v<70){
       var want=Math.atan2(ud.hx-p.x,ud.hz-p.z);
@@ -261,7 +236,7 @@ function ncUpdate(dt){
       tz=p.z+Math.sin(a3)*rad;
     }
     if(ud.standing<1) ud.standing=Math.min(1,ud.standing+dt*0.8);
-    if(ud.mesh&&ud.standing>0.5&&!ud.stood){ ud.stood=1; ud.mesh.geometry=figGeo('person'); }   /* 站起来：换成站姿（以前是把坐姿整体抬高 30 公分） */
+    if(ud.mesh&&ud.standing>0.5&&!ud.stood){ ud.stood=1; ud.mesh.geometry=(0,$imports.figGeo)('person'); }   /* 站起来：换成站姿（以前是把坐姿整体抬高 30 公分） */
     var dx=tx-f.position.x, dz=tz-f.position.z, dl=Math.hypot(dx,dz);
     if(dl>0.08){
       var sp=Math.min(dl,dt*(v>=92?1.9:1.2));
@@ -271,9 +246,7 @@ function ncUpdate(dt){
     var d3=((wy2-(f.rotation.y||0)+Math.PI*3)%(Math.PI*2))-Math.PI;
     f.rotation.y=(f.rotation.y||0)+d3*Math.min(1,dt*2.5);
   }
-  if(v>=70&&!S.dead){
-    if(!NC.said){ NC.said=true; os('我：他们都在看着我。可是没有人说话。',4.2); }
-  }
+
 }
 
 var SKIP={grp:null,list:[],t:0,room:null,tex:{}};
@@ -287,52 +260,52 @@ function handTex(text){
     c.textBaseline='middle';
     var chars=text.split(''), x=26, i;
     for(i=0;i<chars.length;i++){
-      var sz=58+Math.random()*18;
+      var sz=58+$imports.PresentationRandom.next()*18;
       c.save();
-      c.translate(x, 76+(Math.random()-0.5)*16);
-      c.rotate((Math.random()-0.5)*0.24);
+      c.translate(x, 76+($imports.PresentationRandom.next()-0.5)*16);
+      c.rotate(($imports.PresentationRandom.next()-0.5)*0.24);
       c.font='italic '+Math.round(sz)+'px "KaiTi","STKaiti","Kaiti SC","SimSun",serif';
-      c.fillStyle='rgba(233,227,213,'+(0.72+Math.random()*0.28).toFixed(2)+')';
+      c.fillStyle='rgba(233,227,213,'+(0.72+$imports.PresentationRandom.next()*0.28).toFixed(2)+')';
       c.fillText(chars[i],0,0);
       c.restore();
       x+=sz*0.96;
     }
-    var t=new THREE.CanvasTexture(cv);
-    if(t.colorSpace!==undefined&&THREE.SRGBColorSpace) t.colorSpace=THREE.SRGBColorSpace;
+    var t=new $imports.THREE.CanvasTexture(cv);
+    if(t.colorSpace!==undefined&&$imports.THREE.SRGBColorSpace) t.colorSpace=$imports.THREE.SRGBColorSpace;
     SKIP.tex[text]=t;
     return t;
   }catch(e){ return null; }
 }
 function skipClear(){
-  if(SKIP.grp){ try{ GLR.scene.remove(SKIP.grp); }catch(e){} }
+  if(SKIP.grp){ try{ $imports.GLR.scene.remove(SKIP.grp); }catch(e){} }
   SKIP.grp=null; SKIP.list=[]; SKIP.t=0; SKIP.room=null;
 }
 function skipSpawn(){
   try{
-    if(!SKIP.grp){ SKIP.grp=new THREE.Group(); GLR.scene.add(SKIP.grp); }
-    var txt=SKIP_TEXT[Math.floor(Math.random()*SKIP_TEXT.length)];
+    if(!SKIP.grp){ SKIP.grp=new $imports.THREE.Group(); $imports.GLR.scene.add(SKIP.grp); }
+    var txt=SKIP_TEXT[Math.floor($imports.PresentationRandom.next()*SKIP_TEXT.length)];
     var tex=handTex(txt); if(!tex) return;
-    var p=anfxW2S(S.x,S.y);
-    var R=(S.mode==='in')?INTERIORS[S.room]:null;
-    var ang=Math.random()*6.283, rad=1.4+Math.random()*3.3;
-    var mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0.0,depthWrite:false,fog:true});
-    var m=new THREE.Mesh(new THREE.PlaneGeometry(1.75,0.39),mat);
+    var p=(0,$imports.anfxW2S)($imports.S.x,$imports.S.y);
+    var R=($imports.S.mode==='in')?$imports.INTERIORS[$imports.S.room]:null;
+    var ang=$imports.PresentationRandom.next()*6.283, rad=1.4+$imports.PresentationRandom.next()*3.3;
+    var mat=new $imports.THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0.0,depthWrite:false,fog:true});
+    var m=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(1.75,0.39),mat);
     var onWall=false;
-    if(R&&Math.random()<0.45){
-      var tx=S.x+Math.cos(ang)*rad*(1/Math.max(0.001,R.tw/R.tw)), ty=S.y+Math.sin(ang)*rad;
+    if(R&&$imports.PresentationRandom.next()<0.45){
+      var tx=$imports.S.x+Math.cos(ang)*rad*(1/Math.max(0.001,R.tw/R.tw)), ty=$imports.S.y+Math.sin(ang)*rad;
       var ws=null;
-      try{ ws=wallFaceSnap(R,S.x+Math.cos(ang)*rad, S.y+Math.sin(ang)*rad); }catch(e){}
+      try{ ws=(0,$imports.wallFaceSnap)(R,$imports.S.x+Math.cos(ang)*rad, $imports.S.y+Math.sin(ang)*rad); }catch(e){}
       if(ws){
-        m.position.set(ws.s.x, 1.15+Math.random()*0.5, ws.s.z);
+        m.position.set(ws.s.x, 1.15+$imports.PresentationRandom.next()*0.5, ws.s.z);
         if(ws.nx) m.rotation.y=ws.nx>0?Math.PI/2:-Math.PI/2;
         else m.rotation.y=ws.nz>0?0:Math.PI;
         onWall=true;
       }
     }
     if(!onWall){
-      m.position.set(p.x+Math.cos(ang)*rad, 0.016+Math.random()*0.004, p.z+Math.sin(ang)*rad);
+      m.position.set(p.x+Math.cos(ang)*rad, 0.016+$imports.PresentationRandom.next()*0.004, p.z+Math.sin(ang)*rad);
       m.rotation.x=-Math.PI/2;
-      m.rotation.z=Math.random()*6.283;
+      m.rotation.z=$imports.PresentationRandom.next()*6.283;
     }
     m.userData={life:0};
     SKIP.grp.add(m); SKIP.list.push(m);
@@ -343,13 +316,13 @@ function skipSpawn(){
   }catch(e){}
 }
 function skipTick(dt){
-  if(S.screen!=='play'||S.dead){ if(SKIP.list.length) skipClear(); return; }
-  var v=S.viol||0;
-  if(!S.wrong||v<12){
+  if($imports.S.screen!=='play'||$imports.S.dead){ if(SKIP.list.length) skipClear(); return; }
+  var v=$imports.S.viol||0;
+  if(!$imports.S.wrong||v<12){
     if(SKIP.list.length&&v<8) skipClear();
     return;
   }
-  if(SKIP.room!==S.room){ skipClear(); SKIP.room=S.room; }
+  if(SKIP.room!==$imports.S.room){ skipClear(); SKIP.room=$imports.S.room; }
   var i,m;
   for(i=0;i<SKIP.list.length;i++){
     m=SKIP.list[i];
@@ -363,7 +336,7 @@ function skipTick(dt){
 }
 
 function ensureMarker(){
-  if(GLR.marker) return GLR.marker;
+  if($imports.GLR.marker) return $imports.GLR.marker;
   try{
     var cv=document.createElement('canvas'); cv.width=64; cv.height=64;
     var c=cv.getContext('2d'); if(!c) return null;
@@ -372,13 +345,45 @@ function ensureMarker(){
     c.fillStyle='rgba(190,245,215,0.9)';
     c.beginPath(); c.moveTo(32,20); c.lineTo(42,32); c.lineTo(32,44); c.lineTo(22,32);
     c.closePath(); c.fill();
-    var t=new THREE.CanvasTexture(cv);
-    if(t&&t.colorSpace!==undefined&&THREE.SRGBColorSpace) t.colorSpace=THREE.SRGBColorSpace;
-    var m=new THREE.Mesh(new THREE.PlaneGeometry(0.26,0.26),
-      new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,depthTest:false,opacity:0.92}));
+    var t=new $imports.THREE.CanvasTexture(cv);
+    if(t&&t.colorSpace!==undefined&&$imports.THREE.SRGBColorSpace) t.colorSpace=$imports.THREE.SRGBColorSpace;
+    var m=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.26,0.26),
+      new $imports.THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,depthTest:false,opacity:0.92}));
     m.renderOrder=999;
-    GLR.scene.add(m);
-    GLR.marker=m;
+    $imports.GLR.scene.add(m);
+    $imports.GLR.marker=m;
     return m;
   }catch(e){ return null; }
 }
+
+GameModules.on('frame',function(dt){
+  if($imports.GamePolicy.simulationAllowed((0,$imports.gameInputContext)())&&!$imports.S.dead){ncUpdate(dt);if(!$imports.Inspection.active())skipTick(dt);}
+},{owner:'fx'});
+
+/* @module-exports */
+GameModules.publish("game3d/js/fx/classroom.js",{
+"ANW":{get:function(){return ANW;},set:function($value){ANW=$value;}},
+"SEG_MAP":{get:function(){return SEG_MAP;},set:function($value){SEG_MAP=$value;}},
+"anwClear":{get:function(){return anwClear;},set:function($value){anwClear=$value;}},
+"anwSeg":{get:function(){return anwSeg;},set:function($value){anwSeg=$value;}},
+"SEG_UV":{get:function(){return SEG_UV;},set:function($value){SEG_UV=$value;}},
+"anwGlyph":{get:function(){return anwGlyph;},set:function($value){anwGlyph=$value;}},
+"anwSpot":{get:function(){return anwSpot;},set:function($value){anwSpot=$value;}},
+"anwSpawn":{get:function(){return anwSpawn;},set:function($value){anwSpawn=$value;}},
+"anwTick":{get:function(){return anwTick;},set:function($value){anwTick=$value;}},
+"NC":{get:function(){return NC;},set:function($value){NC=$value;}},
+"ncClear":{get:function(){return ncClear;},set:function($value){ncClear=$value;}},
+"ncSeatFigure":{get:function(){return ncSeatFigure;},set:function($value){ncSeatFigure=$value;}},
+"ncBuild":{get:function(){return ncBuild;},set:function($value){ncBuild=$value;}},
+"ncFlip":{get:function(){return ncFlip;},set:function($value){ncFlip=$value;}},
+"ncRestore":{get:function(){return ncRestore;},set:function($value){ncRestore=$value;}},
+"ncUpdate":{get:function(){return ncUpdate;},set:function($value){ncUpdate=$value;}},
+"SKIP":{get:function(){return SKIP;},set:function($value){SKIP=$value;}},
+"SKIP_TEXT":{get:function(){return SKIP_TEXT;},set:function($value){SKIP_TEXT=$value;}},
+"handTex":{get:function(){return handTex;},set:function($value){handTex=$value;}},
+"skipClear":{get:function(){return skipClear;},set:function($value){skipClear=$value;}},
+"skipSpawn":{get:function(){return skipSpawn;},set:function($value){skipSpawn=$value;}},
+"skipTick":{get:function(){return skipTick;},set:function($value){skipTick=$value;}},
+"ensureMarker":{get:function(){return ensureMarker;},set:function($value){ensureMarker=$value;}}
+});
+})(GameModules.imports("game3d/js/fx/classroom.js"));

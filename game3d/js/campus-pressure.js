@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 校园随游戏时间变危险；只记本局到达过的最晚时刻，暂停和离线不计时。 */
 'use strict';
 var CampusPressure={
@@ -18,26 +20,26 @@ var CampusPressure={
     '我：校园已经彻底变了。但那些躲避它们的办法，应该还管用。'
   ],
   clock:function(){
-    var saved=RT.pressureClock, now=gameClock();
+    var saved=$imports.RT.pressureClock, now=(0,$imports.gameClock)();
     saved=Number.isFinite(saved)&&saved>=0?saved:700;
-    if(S.screen==='play'&&Number.isFinite(now))saved=Math.max(saved,now);
+    if($imports.S.screen==='play'&&Number.isFinite(now))saved=Math.max(saved,now);
     return saved;
   },
   observe:function(){
     var saved=this.clock();
-    RT.pressureClock=saved;
+    $imports.RT.pressureClock=saved;
     return saved;
   },
   restore:function(){
     this.observe();
-    var seen=RT.pressureSeen;
-    RT.pressureSeen=Number.isInteger(seen)?clamp(seen,0,this.current().stage):0;
+    var seen=$imports.RT.pressureSeen;
+    $imports.RT.pressureSeen=Number.isInteger(seen)?(0,$imports.clamp)(seen,0,this.current().stage):0;
   },
   current:function(){
     /* HUD、灯光与音效可查询压力，但不因此写入权威状态。 */
     var clock=this.clock();
     if(this._clock===clock)return this._value;
-    var value=GameTimeRules.pressure(this.curve,clock);
+    var value=$imports.GameTimeRules.pressure(this.curve,clock);
     this._clock=clock;this._value=value;
     return value;
   },
@@ -45,17 +47,23 @@ var CampusPressure={
   tick:function(){
     this.observe();
     var stage=this.current().stage;
-    if(stage<=(RT.pressureSeen||0)||S.dead||S.screen!=='play')return;
+    if(stage<=($imports.RT.pressureSeen||0)||$imports.S.dead||$imports.S.screen!=='play')return;
     /* 不抢剧情、检查或危险预警；多次跨日只补最新一条，不逐条轰炸。 */
-    if(PRO.on||PAUSE.on||UI.anyOpen()||DLG.open||PC.on||PHONE.on||LESSON.on||
-      AN.active||(AN.pre&&AN.next<=8)||PatrolWorld.localChase()||HIDE.on||Inspection.quiet())return;
-    RT.pressureSeen=stage;
-    os(this.messages[stage],5);
+    if($imports.PRO.on||$imports.PAUSE.on||$imports.UI.anyOpen()||$imports.DLG.open||$imports.PC.on||$imports.PHONE.on||$imports.LESSON.on||
+      $imports.AN.active||($imports.AN.pre&&$imports.AN.next<=8)||$imports.PatrolWorld.localChase()||$imports.HIDE.on||$imports.Inspection.quiet())return;
+    $imports.RT.pressureSeen=stage;
+    (0,$imports.os)(this.messages[stage],5);
   },
   paint:function(){
     var el=document.getElementById('campuspressure');if(!el)return;
-    var stage=this.current().stage, label='第 '+S.day+' 天 · '+this.labels[stage];
+    var stage=this.current().stage, label='第 '+$imports.S.day+' 天 · '+this.labels[stage];
     if(el.textContent!==label)el.textContent=label;
     if(el.dataset.stage!==String(stage))el.dataset.stage=String(stage);
   }
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/campus-pressure.js",{
+"CampusPressure":{get:function(){return CampusPressure;},set:function($value){CampusPressure=$value;}}
+});
+})(GameModules.imports("game3d/js/campus-pressure.js"));

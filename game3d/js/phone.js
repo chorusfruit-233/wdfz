@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 手机应用外壳与纸飞机；设备能源、联网和后台任务由 PhoneNetwork 持有。 */
 'use strict';
 
@@ -20,15 +22,15 @@ function phoneEl(){
 }
 PHONE.start=function(){
   if(PHONE.on) return;
-  if(!PhoneNetwork.available()){toast(hasItem('phone')?'手机已断电 · 充到 5% 后自动开机':'没有手机');return;}
+  if(!$imports.PhoneNetwork.available()){(0,$imports.toast)((0,$imports.hasItem)('phone')?'手机已断电 · 充到 5% 后自动开机':'没有手机');return;}
   PHONE.on=true; PHONE.reset();document.body.classList.add('phone-open');
-  if(UI.openPanel==='bag') UI.close('bag',false);
-  resetInputState(); releaseMouseLook();
+  if($imports.UI.openPanel==='bag') $imports.UI.close('bag',false);
+  (0,$imports.resetInputState)(); (0,$imports.releaseMouseLook)();
   var el=phoneEl(); el.style.display='flex';
-  document.getElementById('phhint').textContent=(IS_TOUCH?'点屏幕往上飘':'空格 / W 往上飘')+' · '+(IS_TOUCH?'右上角收起':'Esc 收起');
-  try{ SFX.click(); }catch(e){}
-  PHONE.selectApp(PhoneNetwork.page);
-  updateTouchUI();
+  document.getElementById('phhint').textContent=($imports.IS_TOUCH?'点屏幕往上飘':'空格 / W 往上飘')+' · '+($imports.IS_TOUCH?'右上角收起':'Esc 收起');
+  try{ $imports.SFX.click(); }catch(e){}
+  PHONE.selectApp($imports.PhoneNetwork.page);
+  (0,$imports.updateTouchUI)();
 };
 PHONE.reset=function(){
   PHONE.st='ready'; PHONE.y=PH_H*0.45; PHONE.vy=0; PHONE.pipes=[]; PHONE.score=0; PHONE.t=0; PHONE.msg='';
@@ -39,45 +41,45 @@ PHONE.stop=function(dark){
   PHONE.on=false;document.body.classList.remove('phone-open');
   var el=document.getElementById('phone'); if(el) el.style.display='none';
   /* 不覆盖异象或巡察者刚显示的重要字幕。 */
-  if(dark&&!DLG.open) os('我：屏幕一下子黑了。我抬起头。',2.6);
-  resetInputState(); resumeMouseLook(); updateTouchUI();
+  if(dark&&!$imports.DLG.open) (0,$imports.os)('我：屏幕一下子黑了。我抬起头。',2.6);
+  (0,$imports.resetInputState)(); (0,$imports.resumeMouseLook)(); (0,$imports.updateTouchUI)();
 };
 PHONE.checkInterrupt=function(){
   if(!PHONE.on) return;
-  var danger=PhoneNetwork.page==='plane'&&(AN.active||PatrolWorld.localChase());
-  if(S.dead||S.screen!=='play'||danger||PAUSE.on||UI.anyOpen()||PC.on||Inspection.active()||!PhoneNetwork.available())
-    PHONE.stop(danger&&!S.dead&&S.screen==='play');
+  var danger=$imports.PhoneNetwork.page==='plane'&&($imports.AN.active||$imports.PatrolWorld.localChase());
+  if($imports.S.dead||$imports.S.screen!=='play'||danger||$imports.PAUSE.on||$imports.UI.anyOpen()||$imports.PC.on||$imports.Inspection.active()||!$imports.PhoneNetwork.available())
+    PHONE.stop(danger&&!$imports.S.dead&&$imports.S.screen==='play');
 };
 PHONE.flap=function(){
-  if(PhoneNetwork.page!=='plane')return;
+  if($imports.PhoneNetwork.page!=='plane')return;
   if(!PHONE.on) return;
   if(PHONE.st==='over'){ PHONE.reset(); PHONE.draw(); return; }
   if(PHONE.st==='ready') PHONE.st='fly';
   PHONE.vy=PH_FLAP;
-  try{ SFX.blink(); }catch(e){}
+  try{ $imports.SFX.blink(); }catch(e){}
 };
 PHONE.end=function(){
   PHONE.st='over';
   var g=0;
   if(PHONE.cool<=0&&PHONE.score>0){
-    g=CampusPressure.restGain(Math.min(PH_MAXGAIN,PHONE.score));
-    PlayerStats.changeSan(g,'phone',{max:100}); PHONE.cool=PH_COOL;
-    toast('纸飞机 · 得分 '+PHONE.score+' · SAN +'+g);
+    g=$imports.CampusPressure.restGain(Math.min(PH_MAXGAIN,PHONE.score));
+    $imports.PlayerStats.changeSan(g,'phone',{max:100}); PHONE.cool=PH_COOL;
+    (0,$imports.toast)('纸飞机 · 得分 '+PHONE.score+' · SAN +'+g);
   }
   PHONE.gain=g;
   PHONE.msg=g?'SAN +'+g:(PHONE.score>0?'手机发烫了，静不下心':'');
-  try{ SFX.click(); }catch(e){}
+  try{ $imports.SFX.click(); }catch(e){}
 };
 /* 每帧（只在游戏进行时，世界照常更新） */
 PHONE.tick=function(dt){
   if(PHONE.cool>0) PHONE.cool=Math.max(0,PHONE.cool-dt);
   if(!PHONE.on) return;
   PHONE.checkInterrupt();if(!PHONE.on)return;
-  if(PhoneNetwork.page!=='plane'){PHONE.paintApps();return;}
+  if($imports.PhoneNetwork.page!=='plane'){PHONE.paintApps();return;}
   if(PHONE.st==='fly'){
     PHONE.vy+=PH_G*dt; PHONE.y+=PHONE.vy*dt; PHONE.t+=dt;
     if(!PHONE.pipes.length||PHONE.pipes[PHONE.pipes.length-1].x<PH_W-120)
-      PHONE.pipes.push({x:PH_W+20,gy:70+Math.random()*(PH_H-140-PH_GAP),pass:false});
+      PHONE.pipes.push({x:PH_W+20,gy:70+$imports.GameRandom.next()*(PH_H-140-PH_GAP),pass:false});
     for(var i=0;i<PHONE.pipes.length;i++){
       var p=PHONE.pipes[i]; p.x-=PH_SPD*dt;
       if(!p.pass&&p.x+26<40){ p.pass=true; PHONE.score++; }
@@ -112,25 +114,25 @@ PHONE.draw=function(){
     c.fillStyle='#e8f4ec'; c.font='14px sans-serif';
     c.fillText(PHONE.st==='ready'?'点一下开始':'结束 · 得分 '+PHONE.score,PH_W/2,PH_H/2-10);
     c.font='11px sans-serif'; c.fillStyle='#9fe3c2';
-    c.fillText(PHONE.st==='over'?(PHONE.msg||'再点一下重来'):(PHONE.cool>0?'手机还烫着：这局不回 SAN':'一局最多回 '+CampusPressure.restGain(PH_MAXGAIN)+' 点 SAN'),PH_W/2,PH_H/2+16);
+    c.fillText(PHONE.st==='over'?(PHONE.msg||'再点一下重来'):(PHONE.cool>0?'手机还烫着：这局不回 SAN':'一局最多回 '+$imports.CampusPressure.restGain(PH_MAXGAIN)+' 点 SAN'),PH_W/2,PH_H/2+16);
   }
 };
 
 PHONE.selectApp=function(app){
-  if(app==='plane'&&(AN.active||PatrolWorld.localChase())){toast('遇险时不能玩纸飞机');app='home';}
-  PhoneNetwork.page=app;
+  if(app==='plane'&&($imports.AN.active||$imports.PatrolWorld.localChase())){(0,$imports.toast)('遇险时不能玩纸飞机');app='home';}
+  $imports.PhoneNetwork.page=app;
   var el=phoneEl();el.querySelector('#phcv').hidden=app!=='plane';el.querySelector('#phhint').hidden=app!=='plane';
   el.querySelectorAll('[data-app]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.app===app));});
   var tool=el.querySelector('#phtool');tool.innerHTML='<p data-copy></p>';
-  if(app==='wireless'){var b=document.createElement('button');b.type='button';b.dataset.action='wireless';b.onclick=function(){PhoneNetwork.toggleWireless();PHONE.paintApps();};tool.appendChild(b);}
-  if(app==='container'){var dl=document.createElement('button');dl.type='button';dl.dataset.action='download';dl.onclick=function(){PhoneNetwork.toggleDownload();PHONE.paintApps();};tool.appendChild(dl);}
-  if(app==='sync'){var sync=document.createElement('button');sync.type='button';sync.textContent='同步门禁数据';sync.onclick=function(){PhoneNetwork.sync();PHONE.paintApps();};tool.appendChild(sync);}
+  if(app==='wireless'){var b=document.createElement('button');b.type='button';b.dataset.action='wireless';b.onclick=function(){$imports.PhoneNetwork.toggleWireless();PHONE.paintApps();};tool.appendChild(b);}
+  if(app==='container'){var dl=document.createElement('button');dl.type='button';dl.dataset.action='download';dl.onclick=function(){$imports.PhoneNetwork.toggleDownload();PHONE.paintApps();};tool.appendChild(dl);}
+  if(app==='sync'){var sync=document.createElement('button');sync.type='button';sync.textContent='同步门禁数据';sync.onclick=function(){$imports.PhoneNetwork.sync();PHONE.paintApps();};tool.appendChild(sync);}
   if(app==='plane')PHONE.draw();PHONE.paintApps();
 };
 PHONE.paintApps=function(){
-  if(!PHONE.on)return;var el=phoneEl(),d=PhoneNetwork.device,app=PhoneNetwork.page;
+  if(!PHONE.on)return;var el=phoneEl(),d=$imports.PhoneNetwork.device,app=$imports.PhoneNetwork.page;
   function text(node,value){if(node&&node.textContent!==value)node.textContent=value;}
-  text(el.querySelector('#phstatus'),'电量 '+Math.floor(d.battery)+'% · '+(d.network?'学校网络已连接':'尚未联网')+(Talent.has('tech')?' · 耗电 ×2':''));
+  text(el.querySelector('#phstatus'),'电量 '+Math.floor(d.battery)+'% · '+(d.network?'学校网络已连接':'尚未联网')+($imports.Talent.has('tech')?' · 耗电 ×2':''));
   var copy='',w=d.wireless;
   if(app==='home')copy='工具查看时不能移动，世界仍在运行。收起手机后，后台任务继续。原教室无渗透时，从空电充满：普通约 5 分钟，科技党约 10 分钟。机房接线只抵普通基础耗电；科技党仍每分钟净掉 10 点。';
   if(app==='wireless'){
@@ -139,16 +141,31 @@ PHONE.paintApps=function(){
     var b=el.querySelector('[data-action="wireless"]');if(b){b.disabled=w.status==='complete';text(b,w.status==='running'?'暂停任务':w.status==='idle'?'开始接入':w.status==='complete'?'已连接':'继续任务');}
     if(w.status!=='complete'){
       copy+='\n\n破解每累计 15 运行秒暴露一次当时的位置，巡察者会来搜查；坐下、假条和外出登记不能豁免。';
-      if(w.status==='running')copy+='\n下次暴露：'+Math.ceil(PhoneEnergy.nextSignalIn(w))+' 秒；收起手机仍会继续。';
+      if(w.status==='running')copy+='\n下次暴露：'+Math.ceil($imports.PhoneEnergy.nextSignalIn(w))+' 秒；收起手机仍会继续。';
       if(w.status==='paused')copy+='\n暴露计时已暂停，已发出的位置信息不会撤回。';
     }
-    if(Talent.has('tech')&&w.status!=='complete')copy+=' 科技党执行渗透时，即使在原教室也会净掉电。';
+    if($imports.Talent.has('tech')&&w.status!=='complete')copy+=' 科技党执行渗透时，即使在原教室也会净掉电。';
   }
-  if(app==='location')copy=PhoneNetwork.location();
-  if(app==='sync')copy=RT.data?'门禁数据已经同步。':d.network?'仍需先在网络中心写入白名单；联网手机可以完成同步。':'先接入学校网络。';
+  if(app==='location')copy=$imports.PhoneNetwork.location();
+  if(app==='sync')copy=$imports.RT.data?'门禁数据已经同步。':d.network?'仍需先在网络中心写入白名单；联网手机可以完成同步。':'先接入学校网络。';
   if(app==='container'){copy=(d.download.status==='complete'?'模拟 Kali Linux 容器已就绪，可在机房电脑旁打开终端。':d.download.status==='idle'?'无线接入完成后，自动安装容器。':
       (d.download.status==='paused'?'安装已暂停 ':'容器安装 ')+Math.floor(d.download.elapsed/60*100)+'% · 剩余 '+Math.ceil(60-d.download.elapsed)+' 秒')+
-      (Termination.state.status==='accepted'?'\n服务器停机剩余 '+Math.ceil(Termination.state.remaining)+' 运行秒。':'');
+      ($imports.Termination.state.status==='accepted'?'\n服务器停机剩余 '+Math.ceil($imports.Termination.state.remaining)+' 运行秒。':'');
     var dl=el.querySelector('[data-action="download"]');if(dl){dl.disabled=!['running','paused'].includes(d.download.status);text(dl,d.download.status==='running'?'暂停下载':d.download.status==='paused'?'继续下载':d.download.status==='complete'?'已安装':'等待联网');}}
   text(el.querySelector('[data-copy]'),copy);
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/phone.js",{
+"PHONE":{get:function(){return PHONE;},set:function($value){PHONE=$value;}},
+"PH_W":{get:function(){return PH_W;},set:function($value){PH_W=$value;}},
+"PH_H":{get:function(){return PH_H;},set:function($value){PH_H=$value;}},
+"PH_GAP":{get:function(){return PH_GAP;},set:function($value){PH_GAP=$value;}},
+"PH_SPD":{get:function(){return PH_SPD;},set:function($value){PH_SPD=$value;}},
+"PH_G":{get:function(){return PH_G;},set:function($value){PH_G=$value;}},
+"PH_FLAP":{get:function(){return PH_FLAP;},set:function($value){PH_FLAP=$value;}},
+"PH_COOL":{get:function(){return PH_COOL;},set:function($value){PH_COOL=$value;}},
+"PH_MAXGAIN":{get:function(){return PH_MAXGAIN;},set:function($value){PH_MAXGAIN=$value;}},
+"phoneEl":{get:function(){return phoneEl;},set:function($value){phoneEl=$value;}}
+});
+})(GameModules.imports("game3d/js/phone.js"));

@@ -1,0 +1,13 @@
+test_ast_guard_detects_an_aliased_presentation_write (test_architecture_core.ArchitectureCoreTest.test_ast_guard_detects_an_aliased_presentation_write) ... ok
+test_driving_rules_work_without_ui_and_keep_failure_checkpoints (test_architecture_core.ArchitectureCoreTest.test_driving_rules_work_without_ui_and_keep_failure_checkpoints) ... ok
+test_loader_links_live_ports_and_rejects_unauthorized_replacement (test_architecture_core.ArchitectureCoreTest.test_loader_links_live_ports_and_rejects_unauthorized_replacement) ... ok
+test_optional_ambient_sound_uses_only_presentation_random (test_architecture_core.ArchitectureCoreTest.test_optional_ambient_sound_uses_only_presentation_random) ... ok
+test_pipeline_always_settles_started_steps_once (test_architecture_core.ArchitectureCoreTest.test_pipeline_always_settles_started_steps_once) ... ok
+test_presentation_ports_reject_nested_state_writes (test_architecture_core.ArchitectureCoreTest.test_presentation_ports_reject_nested_state_writes) ... ok
+test_separate_random_sources_are_reproducible_and_replaceable (test_architecture_core.ArchitectureCoreTest.test_separate_random_sources_are_reproducible_and_replaceable) ... ok
+test_world_collision_is_available_without_dom_webgl_or_assets_loader (test_architecture_core.ArchitectureCoreTest.test_world_collision_is_available_without_dom_webgl_or_assets_loader) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 3.019s
+
+OK

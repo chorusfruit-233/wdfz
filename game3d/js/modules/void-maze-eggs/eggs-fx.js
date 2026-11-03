@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 虚空迷宫的彩蛋：画面与声音（模块 void-maze-eggs）
    只听 eggs.js 发出的 mazeEvent，不改玩法状态。内部内容，不进玩家 Wiki。
    反色：3D 画面在后期着色器里反色（uInvert），字幕和界面不反——字照样看得清；只有一次，不是频闪。
@@ -7,18 +9,18 @@
 'use strict';
 
 var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
-  canvasEl:function(){ return (typeof GLR!=='undefined'&&GLR.renderer)?GLR.renderer.domElement:null; },
+  canvasEl:function(){ return (typeof $imports.GLR!=='undefined'&&$imports.GLR.renderer)?$imports.GLR.renderer.domElement:null; },
   setFilter:function(k){                                       /* 反色走后期着色器的 uInvert（截图、手机上都稳）；没有后期时退回 CSS 滤镜 */
     k=k>0.004?k:0;
-    if(typeof GLR!=='undefined'&&GLR.postMat&&GLR.postMat.uniforms.uInvert&&!(typeof GLRTEST!=='undefined'&&GLRTEST.nopost)){ GLR.postMat.uniforms.uInvert.value=k; return; }
+    if(typeof $imports.GLR!=='undefined'&&$imports.GLR.postMat&&$imports.GLR.postMat.uniforms.uInvert&&!(typeof $imports.GLRTEST!=='undefined'&&$imports.GLRTEST.nopost)){ $imports.GLR.postMat.uniforms.uInvert.value=k; return; }
     var c=VoidEggFx.canvasEl(); if(!c) return;
     var v=k?'invert('+k.toFixed(3)+')':'';
     if(c.style.filter!==v) c.style.filter=v;
   },
 
   figure:function(color,opacity,scale){
-    var mat=new THREE.MeshBasicMaterial({color:color,fog:color===0x000000,transparent:true,opacity:opacity,depthWrite:true});
-    var g=new THREE.Group(); g.add(figMesh('tall',mat,scale||1)); g.userData.mat=mat;
+    var mat=new $imports.THREE.MeshBasicMaterial({color:color,fog:color===0x000000,transparent:true,opacity:opacity,depthWrite:true});
+    var g=new $imports.THREE.Group(); g.add((0,$imports.figMesh)('tall',mat,scale||1)); g.userData.mat=mat;
     return g;
   },
   drop:function(g){
@@ -28,8 +30,8 @@ var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
     return null;
   },
   pan:function(x,z){
-    var p=VoidMaze.toScene(S.x,S.y), rel=Math.atan2(z-p.z,x-p.x)-S.ang;
-    return clamp(Math.sin(rel),-1,1)*0.85;
+    var p=$imports.VoidMaze.toScene($imports.S.x,$imports.S.y), rel=Math.atan2(z-p.z,x-p.x)-$imports.S.ang;
+    return (0,$imports.clamp)(Math.sin(rel),-1,1)*0.85;
   },
   clear:function(){
     VoidEggFx.inv={t:0,dur:0,on:false}; VoidEggFx.setFilter(0);
@@ -37,17 +39,17 @@ var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
     VoidEggFx.shadow=null; VoidEggFx.abyss=VoidEggFx.drop(VoidEggFx.abyss);
   },
   onEvent:function(ev){
-    if(!ev||typeof GLR==='undefined'||!GLR.scene) return;
+    if(!ev||typeof $imports.GLR==='undefined'||!$imports.GLR.scene) return;
     if(ev.kind==='invert'){
       VoidEggFx.inv={t:0,dur:ev.dur,on:true};
       VoidEggFx.abyss=VoidEggFx.drop(VoidEggFx.abyss);
       /* 放在视线方向上 9 米处（低头看下去，画面正中），身子的中段对着视线；面朝上面的你 */
-      var a=VoidEggFx.figure(0xffffff,1,1.6), p=VoidMaze.toScene(S.x,S.y), pit=Math.min(-0.5,S.pitch||-0.9), R=9;
-      var hx=p.x+Math.cos(S.ang)*Math.cos(pit)*R, hz=p.z+Math.sin(S.ang)*Math.cos(pit)*R, hy=ev.fy+(S.eyeH||EYE)+Math.sin(pit)*R;
+      var a=VoidEggFx.figure(0xffffff,1,1.6), p=$imports.VoidMaze.toScene($imports.S.x,$imports.S.y), pit=Math.min(-0.5,$imports.S.pitch||-0.9), R=9;
+      var hx=p.x+Math.cos($imports.S.ang)*Math.cos(pit)*R, hz=p.z+Math.sin($imports.S.ang)*Math.cos(pit)*R, hy=ev.fy+($imports.S.eyeH||$imports.EYE)+Math.sin(pit)*R;
       a.position.set(hx,hy-2.1,hz);
       a.rotation.y=Math.atan2(p.x-hx,p.z-hz);
-      GLR.scene.add(a); VoidEggFx.abyss=a;
-      try{ SFX.scapeCut(ev.dur+0.35); SoundPlayer.play('void.thud'); }catch(e){}
+      $imports.GLR.scene.add(a); VoidEggFx.abyss=a;
+      try{ $imports.SFX.scapeCut(ev.dur+0.35); $imports.SoundPlayer.play('void.thud'); }catch(e){}
     }else if(ev.kind==='invertEnd'){
       VoidEggFx.inv.on=false;
       VoidEggFx.abyss=VoidEggFx.drop(VoidEggFx.abyss);
@@ -56,16 +58,16 @@ var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
       var g=VoidEggFx.figure(0x000000,0,1.05);
       g.position.set(ev.x,ev.h,ev.z);
       g.rotation.y=Math.PI/2-ev.face;                           /* 人形默认面朝 +z；face 是它要看的方向 */
-      GLR.scene.add(g);
+      $imports.GLR.scene.add(g);
       VoidEggFx.shadow={id:ev.id,g:g,k:0,out:false};
-      try{ SFX.dread(ev.cue||'steps',{pan:VoidEggFx.pan(ev.x,ev.z),k:0.32,muffled:false,behind:false}); }catch(e){}
+      try{ $imports.SFX.dread(ev.cue||'steps',{pan:VoidEggFx.pan(ev.x,ev.z),k:0.32,muffled:false,behind:false}); }catch(e){}
     }else if(ev.kind==='shadowHide'){
       var s=VoidEggFx.shadow;
-      if(s&&s.id===ev.id){ s.out=true; if(ev.how!=='leave'){ try{ SoundPlayer.play('void.gust',{pan:VoidEggFx.pan(ev.x,ev.z)}); }catch(e){} } else s.g=VoidEggFx.drop(s.g); }
+      if(s&&s.id===ev.id){ s.out=true; if(ev.how!=='leave'){ try{ $imports.SoundPlayer.play('void.gust',{pan:VoidEggFx.pan(ev.x,ev.z)}); }catch(e){} } else s.g=VoidEggFx.drop(s.g); }
     }
   },
   frame:function(dt){
-    var I=VoidEggFx.inv, soft=(typeof SHAKE_ON!=='undefined'&&!SHAKE_ON), peak=soft?0.8:1, kin=soft?0.18:0.05, kout=soft?0.45:0.25;
+    var I=VoidEggFx.inv, soft=(typeof $imports.SHAKE_ON!=='undefined'&&!$imports.SHAKE_ON), peak=soft?0.8:1, kin=soft?0.18:0.05, kout=soft?0.45:0.25;
     if(I.on||I.k>0){
       I.t+=dt;
       var target=I.on?peak:0, rate=I.on?1/kin:1/kout;
@@ -87,3 +89,9 @@ var VoidEggFx={inv:{t:0,dur:0,on:false}, shadow:null, abyss:null, canvas:null,
   GameModules.on('clearWorld',VoidEggFx.clear,own);
   GameModules.on('boundary',VoidEggFx.clear,own);             /* 新局 / 回菜单（Lifecycle.boundary）：反色、人影都收掉 */
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/void-maze-eggs/eggs-fx.js",{
+"VoidEggFx":{get:function(){return VoidEggFx;},set:function($value){VoidEggFx=$value;}}
+});
+})(GameModules.imports("game3d/js/modules/void-maze-eggs/eggs-fx.js"));

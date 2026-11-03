@@ -17,7 +17,18 @@
      tools/asset_viewer.html?q=4&a=desk_student,chair_student&yaw=35&pitch=22&cols=2&light=studio&bg=5d666e
      q：画质档（0–4，决定读哪一档模型和材质）；a：模型名，逗号分开，每个一格；yaw/pitch：机位角（度）；
      zoom：机位离物体的远近倍数；light：studio（棚拍）/ dark（暗处，打一盏手电似的聚光）；list=1 列出包里所有模型 -->
+<script src="../game3d/js/modules.js"></script>
+<script src="../game3d/module-contracts.js"></script>
 <script src="../game3d/lib/three.min.js"></script>
+<script>GameModules.adoptFile('game3d/lib/three.min.js');</script>
+<script src="../game3d/js/domain/random.js"></script>
+<script>GameModules.adoptFile('game3d/js/domain/random.js');</script>
+<script src="../game3d/js/adapters/random-source.js"></script>
+<script src="../game3d/js/domain/spatial-kit.js"></script>
+<script>GameModules.adoptFile('game3d/js/domain/spatial-kit.js');</script>
+<script src="../game3d/js/domain/spatial-math.js"></script>
+<script>GameModules.adoptFile('game3d/js/domain/spatial-math.js');</script>
+<script src="../game3d/js/content/palette.js"></script>
 <script src="../game3d/js/core.js"></script>
 <script src="../game3d/js/quality.js"></script>
 <script>

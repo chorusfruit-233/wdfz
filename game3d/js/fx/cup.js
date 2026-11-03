@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 异象「清华水杯」的画面
    贴着教学楼 / 行政楼 / 实验楼的外墙走的时候，头顶四楼的窗台上有一只白色的杯子（淡紫色的盖子）：
      晃 —— 先在窗台上晃几下（叮叮当当），给你一点时间反应；
@@ -5,14 +7,6 @@
      落 —— 砸在地上弹一下、摔瘪，杯盖滚开，几块碎漆溅出去。
    状态都在 AN.data 里（phase / tf / lx,ly / wall），判定在 anomaly.js。 */
 'use strict';
-
-var CUP_H=10.6;          /* 四楼窗台离地（米）：教学楼每层 3.2 米 */
-var CUP_R=0.95;          /* 砸中半径（米），地上的影子就画这么大 */
-function cupFallTime(){ return Math.sqrt(2*CUP_H/9.8); }
-/* 窗台上晃多久才掉（真实秒）。预知梦最长、梦魇最短；比原来的 1.3 / 0.9 / 0.6 短三成多，
-   影子和约 1.5 秒的真实下坠不变，所以真正能躲的是「看到它掉」之后那一段。 */
-var CUP_WOB={easy:0.85,normal:0.60,hard:0.40};
-function cupWobble(){ return CUP_WOB[S.diff]||CUP_WOB.normal; }
 
 /* ---------- 杯子本身（照着实物做） ----------
    白色哑光的锥形随行杯，下大半圈是一幅油画：紫蓝的天、白云、松树和二校门（门楣上「清華園」）；
@@ -22,9 +16,9 @@ function cupWobble(){ return CUP_WOB[S.diff]||CUP_WOB.normal; }
    尺寸按真杯子（米）：高 17 厘米，杯口直径约 9 厘米，杯底约 7 厘米。 */
 var CUP_DIM={h:0.170,band:0.010,rb:0.0345,rt:0.0448,rim:0.0425,inBot:0.016,lidY:0.166,lidR:0.0462,lidH:0.022};
 var CUP_GEO={}, CUP_MAT={}, CUP_TEX={};
-function cupSeg(){ return Math.max(16,Math.round(28*Quality.get().segments)); }
+function cupSeg(){ return Math.max(16,Math.round(28*$imports.Quality.get().segments)); }
 /* 贴图宽度：游戏里杯子在屏幕上最多两百来像素高，512 就够；超精细、真实档用 1024 */
-function cupTexW(){ return (Quality.get().texture||512)>=1024?1024:512; }
+function cupTexW(){ return ($imports.Quality.get().texture||512)>=1024?1024:512; }
 
 /* 画：u 绕杯身一圈（0→1，从 +z 那一面往 +x 转），v 从底圈上沿（0）到杯口（1）。V 形空白在 u=0.5，二校门在 u=0.82 */
 function cupPaintCanvas(W){
@@ -166,21 +160,21 @@ function cupPaintCanvas(W){
 function cupPaintTex(){
   var W=cupTexW();
   if(CUP_TEX[W]) return CUP_TEX[W];
-  var t=new THREE.CanvasTexture(cupPaintCanvas(W));
-  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
+  var t=new $imports.THREE.CanvasTexture(cupPaintCanvas(W));
+  t.colorSpace=$imports.THREE.SRGBColorSpace; t.anisotropy=4;
   CUP_TEX[W]=t; return t;
 }
 /* 画着油画的杯身：带 u/v 的车削面；顶点色是固定一侧来光的明暗（材质不受场景灯光影响，照样看得出是圆的） */
 function cupWallGeo(seg){
   var D=CUP_DIM, n=6, pts=[], i;
-  for(i=0;i<=n;i++){ var f=i/n; pts.push(new THREE.Vector2(D.rb+(D.rt-D.rb)*f,D.band+(D.h-0.002-D.band)*f)); }
-  var geo=new THREE.LatheGeometry(pts,seg);
+  for(i=0;i<=n;i++){ var f=i/n; pts.push(new $imports.THREE.Vector2(D.rb+(D.rt-D.rb)*f,D.band+(D.h-0.002-D.band)*f)); }
+  var geo=new $imports.THREE.LatheGeometry(pts,seg);
   var N=geo.attributes.normal, C=new Float32Array(N.count*3), L=[0.55,0.42,0.72], ll=Math.hypot(L[0],L[1],L[2]);
   for(i=0;i<N.count;i++){
     var d=(N.getX(i)*L[0]+N.getY(i)*L[1]+N.getZ(i)*L[2])/ll, b=0.66+0.26*Math.max(0,d);
     C[i*3]=b; C[i*3+1]=b; C[i*3+2]=b*0.99;
   }
-  geo.setAttribute('color',new THREE.BufferAttribute(C,3));
+  geo.setAttribute('color',new $imports.THREE.BufferAttribute(C,3));
   return geo;
 }
 /* 车削但两头不封口（建模工具的 lathe 会自动封两端，杯口、内胆就被盖死了）；剖面从下往上法线朝外、从上往下朝里；
@@ -201,7 +195,7 @@ function cupLathe(K,prof,seg,col){
 }
 /* 不画画的部分：银灰的底圈、不锈钢的杯口和内胆（越往下越暗）、内胆底的同心圆 */
 function cupPartsGeo(seg){
-  var D=CUP_DIM, K=new Kit(), m='dark';
+  var D=CUP_DIM, K=new $imports.Kit(), m='dark';
   cupLathe(K,[[0,0],[0.0322,0],[0.0336,0.0014],[0.0339,D.band],[D.rb,D.band+0.0002]],seg,0xc4c7cb);                      /* 杯底和底圈 */
   cupLathe(K,[[D.rt,D.h-0.0024],[D.rt+0.0003,D.h-0.0008],[D.rt-0.0006,D.h+0.0002],[D.rim+0.0006,D.h+0.0002],[D.rim,D.h-0.0012]],seg,0xeef0f2);   /* 杯口 */
   var r=function(y){ return D.rim-(D.rim-0.0322)*(D.h-0.0012-y)/(D.h-0.0012-D.inBot); };
@@ -216,7 +210,7 @@ function cupPartsGeo(seg){
 }
 /* 淡紫色的扣盖：盖住杯口的一圈裙边、收圆的顶、略凹的盖面，一侧喝水口和滑盖；盖子里面颜色深一点 */
 function cupLidGeo(seg){
-  var D=CUP_DIM, K=new Kit(), m='dark', H=D.lidH, R=D.lidR;
+  var D=CUP_DIM, K=new $imports.Kit(), m='dark', H=D.lidH, R=D.lidR;
   cupLathe(K,[[R-0.0008,0],[R,0.0018],[R+0.0002,H-0.006],[R-0.0008,H-0.0018],[R-0.0028,H],[R-0.0062,H],[R-0.0072,H-0.0012],[0,H-0.0012]],seg,0xcdbcf0);
   cupLathe(K,[[D.rt+0.0004,H-0.0035],[D.rt+0.0004,0.0006],[R-0.0008,0]],seg,0xa595cc);                                  /* 裙边里面 */
   cupLathe(K,[[0,H-0.0035],[D.rt+0.0004,H-0.0035]],seg,0x9a8bc2);                                                       /* 盖子底面（朝下） */
@@ -236,100 +230,100 @@ function cupPartGeo(part){
 var CUP_WARM=null;
 function cupWarmMat(){
   if(CUP_WARM) return CUP_WARM;
-  var t=new THREE.DataTexture(new Uint8Array([239,238,234,255]),1,1); t.colorSpace=THREE.SRGBColorSpace; t.needsUpdate=true;
-  CUP_WARM=new THREE.MeshBasicMaterial({map:t,vertexColors:true,fog:true}); CUP_WARM.userData.shared=true;
+  var t=new $imports.THREE.DataTexture(new Uint8Array([239,238,234,255]),1,1); t.colorSpace=$imports.THREE.SRGBColorSpace; t.needsUpdate=true;
+  CUP_WARM=new $imports.THREE.MeshBasicMaterial({map:t,vertexColors:true,fog:true}); CUP_WARM.userData.shared=true;
   return CUP_WARM;
 }
 function cupMats(){
   var W=cupTexW();
   if(CUP_MAT[W]) return CUP_MAT[W];
-  var paint=new THREE.MeshBasicMaterial({map:cupPaintTex(),vertexColors:true,fog:true});
-  var plain=new THREE.MeshBasicMaterial({vertexColors:true,color:0xd8d8d8,fog:true});
-  var lid=new THREE.MeshBasicMaterial({vertexColors:true,color:0xf2f2f2,fog:true});                   /* 和 plain 同一个着色器，只是亮一点 */
+  var paint=new $imports.THREE.MeshBasicMaterial({map:cupPaintTex(),vertexColors:true,fog:true});
+  var plain=new $imports.THREE.MeshBasicMaterial({vertexColors:true,color:0xd8d8d8,fog:true});
+  var lid=new $imports.THREE.MeshBasicMaterial({vertexColors:true,color:0xf2f2f2,fog:true});                   /* 和 plain 同一个着色器，只是亮一点 */
   paint.userData.shared=true; plain.userData.shared=true; lid.userData.shared=true;
   CUP_MAT[W]={paint:paint,plain:plain,lid:lid}; return CUP_MAT[W];
 }
 /* 一只完整的杯子：原点在杯底中心，杯口朝 +y；userData.lid 是盖子（落地时藏起来，换一个单独的盖子滚开） */
 function cupModel(withLid){
-  var M=cupMats(), g=new THREE.Group();
-  g.add(new THREE.Mesh(cupPartGeo('wall'),M.paint));
-  g.add(new THREE.Mesh(cupPartGeo('parts'),M.plain));
+  var M=cupMats(), g=new $imports.THREE.Group();
+  g.add(new $imports.THREE.Mesh(cupPartGeo('wall'),M.paint));
+  g.add(new $imports.THREE.Mesh(cupPartGeo('parts'),M.plain));
   if(withLid!==false){ var lid=cupLidMesh(); lid.position.y=CUP_DIM.lidY; g.add(lid); g.userData.lid=lid; }
   return g;
 }
-function cupLidMesh(){ return new THREE.Mesh(cupPartGeo('lid'),cupMats().lid); }
+function cupLidMesh(){ return new $imports.THREE.Mesh(cupPartGeo('lid'),cupMats().lid); }
 function cupMesh(){ return cupModel(true); }
 /* 落点的地面高度：路、球场、楼前铺装都比草地高一点，影子和杯子要放在最上面那层 */
 var CUP_RAY=null;
 function cupGroundY(x,z){
-  var g=GLR.outMesh||GLR.roomMesh; if(!g) return 0;
-  if(!CUP_RAY) CUP_RAY=new THREE.Raycaster();
-  CUP_RAY.set(new THREE.Vector3(x,1.5,z),new THREE.Vector3(0,-1,0)); CUP_RAY.far=2;
+  var g=$imports.GLR.outMesh||$imports.GLR.roomMesh; if(!g) return 0;
+  if(!CUP_RAY) CUP_RAY=new $imports.THREE.Raycaster();
+  CUP_RAY.set(new $imports.THREE.Vector3(x,1.5,z),new $imports.THREE.Vector3(0,-1,0)); CUP_RAY.far=2;
   var h=CUP_RAY.intersectObject(g,true);
   return h.length?h[0].point.y:0;
 }
 
 function cupFxSpawn(grp){
-  var d=AN.data, w=d.wall; if(!w) return;
+  var d=$imports.AN.data, w=d.wall; if(!w) return;
   var st={};
   /* 窗台：外墙上离你最近的那一点，往外挑 0.2 米 */
-  var p=anfxW2S(w.x*SC,w.y*SC), nx=w.nx, nz=w.ny;
+  var p=(0,$imports.anfxW2S)(w.x*$imports.SC,w.y*$imports.SC), nx=w.nx, nz=w.ny;
   st.sill={x:p.x+nx*0.2,z:p.z+nz*0.2};
   var cup=cupMesh(); cup.scale.setScalar(2.2);                      /* 夸大一点：十米外抬头也要看得见 */
-  cup.position.set(st.sill.x,CUP_H+0.02,st.sill.z); grp.add(cup); st.cup=cup;
+  cup.position.set(st.sill.x,$imports.CUP_H+0.02,st.sill.z); grp.add(cup); st.cup=cup;
   /* 地上的影子：外圈是砸中范围，里圈越来越黑 */
-  var sg=new THREE.CircleGeometry(1,24); sg.rotateX(-PI/2);
-  st.ring=new THREE.Mesh(sg,new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0,depthWrite:false,fog:true}));
-  st.core=new THREE.Mesh(sg,new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0,depthWrite:false,fog:true}));
-  st.ring.scale.set(CUP_R,1,CUP_R); st.ring.visible=false; st.core.visible=false;
+  var sg=new $imports.THREE.CircleGeometry(1,24); sg.rotateX(-$imports.PI/2);
+  st.ring=new $imports.THREE.Mesh(sg,new $imports.THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0,depthWrite:false,fog:true}));
+  st.core=new $imports.THREE.Mesh(sg,new $imports.THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0,depthWrite:false,fog:true}));
+  st.ring.scale.set($imports.CUP_R,1,$imports.CUP_R); st.ring.visible=false; st.core.visible=false;
   st.ring.renderOrder=2; st.core.renderOrder=2;
   grp.add(st.ring); grp.add(st.core);
   /* 杯盖、碎漆：落地时才出现（盖子横着滚，所以套一层只管朝向的组） */
-  st.lidWrap=new THREE.Group(); st.lid=cupLidMesh(); st.lid.scale.setScalar(2.2); st.lid.rotation.z=PI/2;
+  st.lidWrap=new $imports.THREE.Group(); st.lid=cupLidMesh(); st.lid.scale.setScalar(2.2); st.lid.rotation.z=$imports.PI/2;
   st.lidWrap.add(st.lid); st.lidWrap.visible=false; grp.add(st.lidWrap);
   st.chips=[];
-  var cms=[new THREE.MeshBasicMaterial({color:0xd6d4cf,fog:true}),new THREE.MeshBasicMaterial({color:0x8d90cf,fog:true})], i;   /* 白漆和画上的紫蓝 */
+  var cms=[new $imports.THREE.MeshBasicMaterial({color:0xd6d4cf,fog:true}),new $imports.THREE.MeshBasicMaterial({color:0x8d90cf,fog:true})], i;   /* 白漆和画上的紫蓝 */
   for(i=0;i<7;i++){
-    var c=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.006,0.02),cms[i%2]); c.visible=false; grp.add(c);
-    var a=i/7*PI*2+Math.random()*0.6;
-    c.userData={vx:Math.cos(a)*(1.2+Math.random()*1.6),vz:Math.sin(a)*(1.2+Math.random()*1.6),vy:1.2+Math.random()*1.6};
+    var c=new $imports.THREE.Mesh(new $imports.THREE.BoxGeometry(0.03,0.006,0.02),cms[i%2]); c.visible=false; grp.add(c);
+    var a=i/7*$imports.PI*2+$imports.PresentationRandom.next()*0.6;
+    c.userData={vx:Math.cos(a)*(1.2+$imports.PresentationRandom.next()*1.6),vz:Math.sin(a)*(1.2+$imports.PresentationRandom.next()*1.6),vy:1.2+$imports.PresentationRandom.next()*1.6};
     st.chips.push(c);
   }
-  ANFX.cup=st;
+  $imports.ANFX.cup=st;
 }
 function cupFxUpdate(dt){
-  var st=ANFX.cup, d=AN.data; if(!st||!d) return;
-  var t=AN.t, cup=st.cup;
+  var st=$imports.ANFX.cup, d=$imports.AN.data; if(!st||!d) return;
+  var t=$imports.AN.t, cup=st.cup;
   if(d.phase===0){                                                  /* 在窗台上晃 */
-    var k=clamp(t/(d.wob||1),0,1);
+    var k=(0,$imports.clamp)(t/(d.wob||1),0,1);
     cup.rotation.z=Math.sin(t*26)*0.18*k; cup.rotation.x=Math.sin(t*19)*0.1*k;
-    cup.position.set(st.sill.x,CUP_H+0.02+Math.abs(Math.sin(t*26))*0.02*k,st.sill.z);
+    cup.position.set(st.sill.x,$imports.CUP_H+0.02+Math.abs(Math.sin(t*26))*0.02*k,st.sill.z);
     return;
   }
-  var land=anfxW2S(d.lx,d.ly), FALL=cupFallTime();
+  var land=(0,$imports.anfxW2S)(d.lx,d.ly), FALL=(0,$imports.cupFallTime)();
   if(st.gy===undefined) st.gy=cupGroundY(land.x,land.z);
   var gy=st.gy;
   st.ring.position.set(land.x,gy+0.012,land.z); st.core.position.set(land.x,gy+0.013,land.z);
   if(d.phase===1){                                                  /* 往下掉：横着滑向落点，翻着跟头 */
-    var u=clamp((t-d.tf)/FALL,0,1);
-    cup.position.set(st.sill.x+(land.x-st.sill.x)*u, gy+(CUP_H-gy)*(1-u*u)+0.02, st.sill.z+(land.z-st.sill.z)*u);
+    var u=(0,$imports.clamp)((t-d.tf)/FALL,0,1);
+    cup.position.set(st.sill.x+(land.x-st.sill.x)*u, gy+($imports.CUP_H-gy)*(1-u*u)+0.02, st.sill.z+(land.z-st.sill.z)*u);
     cup.rotation.x+=dt*9; cup.rotation.z+=dt*5;
     st.ring.visible=true; st.core.visible=true;
     st.ring.material.opacity=0.30+0.30*u;
-    var cr=CUP_R*(0.25+0.6*u); st.core.scale.set(cr,1,cr); st.core.material.opacity=0.40+0.50*u*u;
+    var cr=$imports.CUP_R*(0.25+0.6*u); st.core.scale.set(cr,1,cr); st.core.material.opacity=0.40+0.50*u*u;
     return;
   }
   /* 落地：弹一下就躺下，摔瘪；淡紫色的杯盖脱出来滚开；碎漆溅出去 */
   var e=t-d.tl;
   if(!st.landed){
     st.landed=true;
-    cup.rotation.set(0,Math.random()*PI*2,PI/2); cup.scale.set(2.2,2.2,1.7);
+    cup.rotation.set(0,$imports.PresentationRandom.next()*$imports.PI*2,$imports.PI/2); cup.scale.set(2.2,2.2,1.7);
     if(cup.userData.lid) cup.userData.lid.visible=false;
-    st.lidA=Math.random()*PI*2;
+    st.lidA=$imports.PresentationRandom.next()*$imports.PI*2;
     st.lidWrap.visible=true; st.lidWrap.rotation.y=Math.atan2(Math.cos(st.lidA),Math.sin(st.lidA));   /* 盖子侧躺，朝滚的方向 */
     st.chips.forEach(function(c){ c.visible=true; c.position.set(land.x,gy+0.05,land.z); });
   }
-  var bounce=Math.max(0,Math.sin(Math.min(e,0.35)/0.35*PI))*0.18*(1-Math.min(1,e/0.35));
+  var bounce=Math.max(0,Math.sin(Math.min(e,0.35)/0.35*$imports.PI))*0.18*(1-Math.min(1,e/0.35));
   cup.position.set(land.x,gy+0.07+bounce,land.z);
   var roll=Math.min(e,1.2);
   st.lidWrap.position.set(land.x+Math.cos(st.lidA)*roll*0.9,gy+CUP_DIM.lidR*2.2,land.z+Math.sin(st.lidA)*roll*0.9);
@@ -341,3 +335,31 @@ function cupFxUpdate(dt){
   });
   st.ring.material.opacity=Math.max(0,0.4-e*0.5); st.core.material.opacity=Math.max(0,0.75-e*0.8);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/fx/cup.js",{
+"CUP_DIM":{get:function(){return CUP_DIM;},set:function($value){CUP_DIM=$value;}},
+"CUP_GEO":{get:function(){return CUP_GEO;},set:function($value){CUP_GEO=$value;}},
+"CUP_MAT":{get:function(){return CUP_MAT;},set:function($value){CUP_MAT=$value;}},
+"CUP_TEX":{get:function(){return CUP_TEX;},set:function($value){CUP_TEX=$value;}},
+"cupSeg":{get:function(){return cupSeg;},set:function($value){cupSeg=$value;}},
+"cupTexW":{get:function(){return cupTexW;},set:function($value){cupTexW=$value;}},
+"cupPaintCanvas":{get:function(){return cupPaintCanvas;},set:function($value){cupPaintCanvas=$value;}},
+"cupPaintTex":{get:function(){return cupPaintTex;},set:function($value){cupPaintTex=$value;}},
+"cupWallGeo":{get:function(){return cupWallGeo;},set:function($value){cupWallGeo=$value;}},
+"cupLathe":{get:function(){return cupLathe;},set:function($value){cupLathe=$value;}},
+"cupPartsGeo":{get:function(){return cupPartsGeo;},set:function($value){cupPartsGeo=$value;}},
+"cupLidGeo":{get:function(){return cupLidGeo;},set:function($value){cupLidGeo=$value;}},
+"cupPartGeo":{get:function(){return cupPartGeo;},set:function($value){cupPartGeo=$value;}},
+"CUP_WARM":{get:function(){return CUP_WARM;},set:function($value){CUP_WARM=$value;}},
+"cupWarmMat":{get:function(){return cupWarmMat;},set:function($value){cupWarmMat=$value;}},
+"cupMats":{get:function(){return cupMats;},set:function($value){cupMats=$value;}},
+"cupModel":{get:function(){return cupModel;},set:function($value){cupModel=$value;}},
+"cupLidMesh":{get:function(){return cupLidMesh;},set:function($value){cupLidMesh=$value;}},
+"cupMesh":{get:function(){return cupMesh;},set:function($value){cupMesh=$value;}},
+"CUP_RAY":{get:function(){return CUP_RAY;},set:function($value){CUP_RAY=$value;}},
+"cupGroundY":{get:function(){return cupGroundY;},set:function($value){cupGroundY=$value;}},
+"cupFxSpawn":{get:function(){return cupFxSpawn;},set:function($value){cupFxSpawn=$value;}},
+"cupFxUpdate":{get:function(){return cupFxUpdate;},set:function($value){cupFxUpdate=$value;}}
+});
+})(GameModules.imports("game3d/js/fx/cup.js"));

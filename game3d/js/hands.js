@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 第一人称的手和手里的东西
    打开手电、撑开雨伞、玩手机时，画面下方能看见自己的手和手里的东西：
      雨伞 —— 左手（伞面在头顶上）
@@ -20,7 +22,7 @@ function hCross(a,b){ return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-
 function hNorm(a){ var l=Math.sqrt(hDot(a,a))||1; return [a[0]/l,a[1]/l,a[2]/l]; }
 function hMix(a,b,t){ return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]; }
 /* 顶点色要线性值（材质 color 会做颜色管理，顶点色不会） */
-function hCol(hex){ var c=new THREE.Color(hex); return [c.r,c.g,c.b]; }
+function hCol(hex){ var c=new $imports.THREE.Color(hex); return [c.r,c.g,c.b]; }
 /* 交给 Kit 的颜色：Kit 把整数当线性值，先换好 */
 function linHex(h){ var c=hCol(h); return (Math.round(c[0]*255)<<16)|(Math.round(c[1]*255)<<8)|Math.round(c[2]*255); }
 
@@ -42,7 +44,7 @@ HMesh.prototype.quad=function(a,b,c,d){ this.tri(a,b,c); this.tri(a,c,d); };
 HMesh.prototype.ring=function(p,T,U,a,b,seg,col){
   var Sd=hCross(T,U), out=[], k;
   for(k=0;k<seg;k++){
-    var th=k/seg*TAU, c=Math.cos(th), s=Math.sin(th);
+    var th=k/seg*$imports.TAU, c=Math.cos(th), s=Math.sin(th);
     var pos=hAdd(p,hAdd(hMul(Sd,a*c),hMul(U,b*s)));
     var nrm=hNorm(hAdd(hMul(Sd,c/a),hMul(U,s/b)));
     out.push(this.v(pos,nrm,col));
@@ -56,7 +58,7 @@ HMesh.prototype.join=function(r0,r1){
 HMesh.prototype.cap=function(r,p,T,U,a,b,len,seg,col){
   var prev=r, i;
   for(i=1;i<=3;i++){
-    var ph=i/4*PI/2, cs=Math.cos(ph);
+    var ph=i/4*$imports.PI/2, cs=Math.cos(ph);
     var rr=this.ring(hAdd(p,hMul(T,len*Math.sin(ph))),T,U,a*cs,b*cs,seg,col);
     for(var k=0;k<rr.length;k++){            /* 法线往外偏，圆头才不发平 */
       var j=rr[k]*3, n=hNorm([this.N[j]*cs+T[0]*Math.sin(ph),this.N[j+1]*cs+T[1]*Math.sin(ph),this.N[j+2]*cs+T[2]*Math.sin(ph)]);
@@ -86,9 +88,9 @@ HMesh.prototype.ellipsoid=function(c,ax,ay,az,col,seg){
   seg=seg||10; var rows=Math.max(4,Math.round(seg*0.6)), grid=[], i, j;
   var la=hDot(ax,ax), lb=hDot(ay,ay), lc=hDot(az,az);
   for(j=0;j<=rows;j++){
-    var ph=j/rows*PI, row=[];
+    var ph=j/rows*$imports.PI, row=[];
     for(i=0;i<seg;i++){
-      var th=i/seg*TAU, ex=Math.sin(ph)*Math.cos(th), ey=Math.cos(ph), ez=Math.sin(ph)*Math.sin(th);
+      var th=i/seg*$imports.TAU, ex=Math.sin(ph)*Math.cos(th), ey=Math.cos(ph), ez=Math.sin(ph)*Math.sin(th);
       var p=hAdd(c,hAdd(hMul(ax,ex),hAdd(hMul(ay,ey),hMul(az,ez))));
       var n=hNorm(hAdd(hMul(ax,ex/la),hAdd(hMul(ay,ey/lb),hMul(az,ez/lc))));
       row.push(this.v(p,n,col));
@@ -108,10 +110,10 @@ HMesh.prototype.geometry=function(mirror){
     for(k=0;k<P.length;k+=3){ P[k]=-P[k]; N[k]=-N[k]; }
     for(k=0;k<I.length;k+=3){ var t=I[k+1]; I[k+1]=I[k+2]; I[k+2]=t; }
   }
-  var g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.BufferAttribute(P,3));
-  g.setAttribute('normal',new THREE.BufferAttribute(N,3));
-  g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(this.C),3));
+  var g=new $imports.THREE.BufferGeometry();
+  g.setAttribute('position',new $imports.THREE.BufferAttribute(P,3));
+  g.setAttribute('normal',new $imports.THREE.BufferAttribute(N,3));
+  g.setAttribute('color',new $imports.THREE.BufferAttribute(new Float32Array(this.C),3));
   g.setIndex(I);
   g.computeBoundingSphere();
   return g;
@@ -295,7 +297,7 @@ function handBuild(poseName){
 }
 /* Blender 建的手（tools/blender/assets/handheld.py）：照着真人手的照片量的比例，整块皮肤、贴着指尖的指甲片，
    指缝、掌心的接触阴影烘在顶点色里；三种拿法和下面现场搭的一样摆，左手把右手镜像。没有模型时照旧现场搭 */
-function handAssetLod(pose){ var a=Assets.get('hand_'+pose); return a?a.pk.lod:'k'; }
+function handAssetLod(pose){ var a=$imports.Assets.get('hand_'+pose); return a?a.pk.lod:'k'; }
 function handMirror(g){
   var p=g.attributes.position, n=g.attributes.normal, ix=g.index.array, k;
   for(k=0;k<p.count;k++){ p.setX(k,-p.getX(k)); n.setX(k,-n.getX(k)); }
@@ -306,38 +308,38 @@ function handMirror(g){
 function handGeo(side,pose){
   var lod=handAssetLod(pose), key=pose+'|'+side+'|'+lod;
   if(HAND_GEO[key]) return HAND_GEO[key];
-  if(lod!=='k'){ var K=new Kit(); K.asset('hand_'+pose,0,0,0,0,{uo:0,vo:0}); var g=K.mergedGeometry(); HAND_GEO[key]=side<0?handMirror(g):g; }
+  if(lod!=='k'){ var K=new $imports.Kit(); K.asset('hand_'+pose,0,0,0,0,{uo:0,vo:0}); var g=K.mergedGeometry(); HAND_GEO[key]=side<0?handMirror(g):g; }
   else HAND_GEO[key]=handBuild(pose).geometry(side<0);
   return HAND_GEO[key];
 }
 /* 手里的东西的模型（没有就 null） */
-function itemAssetGeo(name){ if(!Assets.get(name)) return null; var K=new Kit(); K.asset(name,0,0,0,0,{uo:0,vo:0}); return K.mergedGeometry(); }
+function itemAssetGeo(name){ if(!$imports.Assets.get(name)) return null; var K=new $imports.Kit(); K.asset(name,0,0,0,0,{uo:0,vo:0}); return K.mergedGeometry(); }
 
 /* ---- 手里的东西：都以握持中心为原点 ---- */
-function handMat(col,basic){ return basic?new THREE.MeshBasicMaterial({color:col,fog:false}):new THREE.MeshLambertMaterial({color:col}); }
-function vcMat(side){ return new THREE.MeshLambertMaterial({vertexColors:true,side:side||THREE.FrontSide}); }
+function handMat(col,basic){ return basic?new $imports.THREE.MeshBasicMaterial({color:col,fog:false}):new $imports.THREE.MeshLambertMaterial({color:col}); }
+function vcMat(side){ return new $imports.THREE.MeshLambertMaterial({vertexColors:true,side:side||$imports.THREE.FrontSide}); }
 /* 手电：尾盖、带防滑纹的握把、往前张开的灯头、反光杯和灯珠；沿 -z 朝前，握把中段在原点 */
 function buildTorch(){
-  var torch=new THREE.Group();
-  var TK=new Kit(), tp=[[0.0,0],[0.017,0],[0.021,0.004],[0.0225,0.012],[0.0225,0.03]], q;
+  var torch=new $imports.THREE.Group();
+  var TK=new $imports.Kit(), tp=[[0.0,0],[0.017,0],[0.021,0.004],[0.0225,0.012],[0.0225,0.03]], q;
   for(q=0;q<7;q++) tp.push([0.0238,0.036+q*0.019],[0.0222,0.045+q*0.019]);            /* 握把上一圈圈防滑纹 */
   tp.push([0.0225,0.172],[0.0225,0.182],[0.026,0.196],[0.034,0.222],[0.036,0.236],[0.036,0.248],[0.031,0.250]);
   TK.lathe('metal',0,0,0,tp,20,linHex(0x2a2e33),1.0);
   TK.cyl('metal',0,0.236,0,0.0365,0.0365,0.006,20,linHex(0x4a4f55),1.0,false);              /* 灯头前面一圈亮边 */
   TK.box('metal',0.0232,0.118,0,0.006,0.016,0.011,linHex(0x7a2a22),1.1);                     /* 开关按钮 */
   TK.box('metal',-0.0236,0.06,0,0.003,0.05,0.006,linHex(0x15181b),1.0);                     /* 挂绳扣 */
-  var tb=new THREE.Mesh(itemAssetGeo('torch_body')||TK.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
-  tb.rotation.x=-PI/2; tb.position.z=0.105; torch.add(tb);
-  var refl=new THREE.Mesh(new THREE.CylinderGeometry(0.029,0.012,0.022,18,1,true),new THREE.MeshLambertMaterial({color:0x8a8e92,side:THREE.BackSide}));
-  refl.rotation.x=-PI/2; refl.position.z=0.105-0.236; torch.add(refl);                       /* 反光杯 */
-  var tl=new THREE.Mesh(new THREE.CircleGeometry(0.030,18),handMat(0xfff2c8,true)); tl.position.z=0.105-0.247; tl.rotation.y=PI; torch.add(tl);
-  var led=new THREE.Mesh(new THREE.CircleGeometry(0.007,10),handMat(0xffffff,true)); led.position.z=0.105-0.2465; led.rotation.y=PI; torch.add(led);
+  var tb=new $imports.THREE.Mesh(itemAssetGeo('torch_body')||TK.mergedGeometry(),new $imports.THREE.MeshLambertMaterial({vertexColors:true}));
+  tb.rotation.x=-$imports.PI/2; tb.position.z=0.105; torch.add(tb);
+  var refl=new $imports.THREE.Mesh(new $imports.THREE.CylinderGeometry(0.029,0.012,0.022,18,1,true),new $imports.THREE.MeshLambertMaterial({color:0x8a8e92,side:$imports.THREE.BackSide}));
+  refl.rotation.x=-$imports.PI/2; refl.position.z=0.105-0.236; torch.add(refl);                       /* 反光杯 */
+  var tl=new $imports.THREE.Mesh(new $imports.THREE.CircleGeometry(0.030,18),handMat(0xfff2c8,true)); tl.position.z=0.105-0.247; tl.rotation.y=$imports.PI; torch.add(tl);
+  var led=new $imports.THREE.Mesh(new $imports.THREE.CircleGeometry(0.007,10),handMat(0xffffff,true)); led.position.z=0.105-0.2465; led.rotation.y=$imports.PI; torch.add(led);
   torch.userData.lens=tl; torch.userData.led=led;
   return torch;
 }
 /* 手机：圆角机身、屏幕和黑边、背面摄像头、侧键；屏幕朝 +n 的反方向（对着自己） */
 function buildPhone(){
-  var phone=new THREE.Group(), K=new Kit();
+  var phone=new $imports.THREE.Group(), K=new $imports.Kit();
   K.bevel('plastic',0,0,0,0.068,0.008,0.136,linHex(0x15171a),1,0.006);                      /* 机身：x 宽，z 长，y 厚（屏幕朝 -y） */
   K.bevel('plastic',0,-0.0042,0,0.064,0.001,0.132,linHex(0x050607),1,0.004);                 /* 屏幕玻璃的黑边 */
   K.bevel('metal',-0.018,0.0045,-0.050,0.022,0.002,0.024,linHex(0x22252a),1,0.004);          /* 背面摄像头模组 */
@@ -345,47 +347,47 @@ function buildPhone(){
   K.cyl('metal',-0.013,0.0055,-0.045,0.0045,0.0045,0.0015,10,linHex(0x08090a),1);
   K.box('metal',0.0345,0,-0.02,0.002,0.003,0.016,linHex(0x2a2d31),1);                       /* 侧键 */
   K.box('metal',0.0345,0,0.01,0.002,0.003,0.010,linHex(0x2a2d31),1);
-  var body=new THREE.Mesh(itemAssetGeo('phone_body')||K.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
+  var body=new $imports.THREE.Mesh(itemAssetGeo('phone_body')||K.mergedGeometry(),new $imports.THREE.MeshLambertMaterial({vertexColors:true}));
   phone.add(body);
-  var ps=new THREE.Mesh(new THREE.PlaneGeometry(0.059,0.124),handMat(0x9fd0e8,true));
-  ps.rotation.x=PI/2; ps.position.y=-0.0049; phone.add(ps);
+  var ps=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.059,0.124),handMat(0x9fd0e8,true));
+  ps.rotation.x=$imports.PI/2; ps.position.y=-0.0049; phone.add(ps);
   phone.userData.screen=ps;
   /* 长边（z）顺着拇指方向，宽（x）横在掌心，屏幕朝 -y：正好是手机姿势的坐标 */
   return phone;
 }
 /* 雨伞：伞柄是握持点，伞杆沿 -z（整组转成朝上）；八片伞面在伞骨之间往下塌一点，下面看得见伞骨和撑杆 */
 function buildBrolly(){
-  var brolly=new THREE.Group(), K=new Kit(), i, ag=itemAssetGeo('umbrella');
-  if(ag){ brolly.add(new THREE.Mesh(ag,new THREE.MeshLambertMaterial({vertexColors:true}))); return brolly; }   /* 伞面两面都建了 */
+  var brolly=new $imports.THREE.Group(), K=new $imports.Kit(), i, ag=itemAssetGeo('umbrella');
+  if(ag){ brolly.add(new $imports.THREE.Mesh(ag,new $imports.THREE.MeshLambertMaterial({vertexColors:true}))); return brolly; }   /* 伞面两面都建了 */
   var shaftLen=0.98, top=-shaftLen, ribN=8, R=0.62, drop=0.22;
   K.rod('metal',0,0,0.05,0,0,top-0.04,0.0075,0.0065,8,linHex(0x3a3d40),1);                 /* 伞杆 */
   K.rod('plastic',0,0,0.055,0,0,-0.07,0.016,0.016,12,linHex(0x22180f),1);                  /* 泡棉握把 */
   for(i=0;i<=8;i++){                                                                        /* J 形弯钩 */
-    var a0=i/8*PI, a1=(i+1)/8*PI, rr=0.036;
+    var a0=i/8*$imports.PI, a1=(i+1)/8*$imports.PI, rr=0.036;
     if(i===8) break;
     K.rod('plastic',rr-rr*Math.cos(a0),0,0.055+rr*Math.sin(a0),rr-rr*Math.cos(a1),0,0.055+rr*Math.sin(a1),0.012,0.012,8,linHex(0x22180f),1);
   }
   K.cyl('metal',0,0,0,0.011,0.011,0.03,8,linHex(0x55595e),1);                              /* 下巢 */
   var runZ=top+0.28;
   for(i=0;i<ribN;i++){                                                                      /* 伞骨、撑杆 */
-    var a=i/ribN*TAU+PI/ribN, cx=Math.cos(a), cy=Math.sin(a);
+    var a=i/ribN*$imports.TAU+$imports.PI/ribN, cx=Math.cos(a), cy=Math.sin(a);
     K.rod('metal',0,0,top+0.01,cx*R*0.98,cy*R*0.98,top+drop,0.003,0.0025,4,linHex(0x2b2d30),1);
     K.rod('metal',0,0,runZ,cx*R*0.5,cy*R*0.5,top+drop*0.5+0.012,0.0025,0.0022,4,linHex(0x2b2d30),1);
     K.blob('plastic',cx*R,cy*R,top+drop+0.004,0.007,0.007,0.009,linHex(0x0e0f10),1,5);    /* 伞骨尖的小帽 */
   }
   K.cyl('metal',0,0,runZ-0.02,0.013,0.013,0.04,8,linHex(0x3a3d40),1);
-  var frame=new THREE.Mesh(K.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
+  var frame=new $imports.THREE.Mesh(K.mergedGeometry(),new $imports.THREE.MeshLambertMaterial({vertexColors:true}));
   brolly.add(frame);
   /* 伞面：每片在两根伞骨之间，中间往下塌 */
   var M=new HMesh(null), seg=6, rows=7, cDark=hCol(0x14202e), cEdge=hCol(0x101a26), grid, r2, s2;
   for(i=0;i<ribN;i++){
-    var aa=i/ribN*TAU+PI/ribN, ab=(i+1)/ribN*TAU+PI/ribN;
+    var aa=i/ribN*$imports.TAU+$imports.PI/ribN, ab=(i+1)/ribN*$imports.TAU+$imports.PI/ribN;
     grid=[];
     for(r2=0;r2<=rows;r2++){
       var row=[], u=r2/rows;
       for(s2=0;s2<=seg;s2++){
-        var v=s2/seg, an=aa+(ab-aa)*v, sag=Math.sin(v*PI)*0.035*u;
-        var rad=R*u*(1-0.06*Math.sin(v*PI)*u), z=top+drop*Math.pow(u,1.35)+sag;
+        var v=s2/seg, an=aa+(ab-aa)*v, sag=Math.sin(v*$imports.PI)*0.035*u;
+        var rad=R*u*(1-0.06*Math.sin(v*$imports.PI)*u), z=top+drop*Math.pow(u,1.35)+sag;
         var p=[Math.cos(an)*rad,Math.sin(an)*rad,z], n=hNorm([Math.cos(an)*0.45*u,Math.sin(an)*0.45*u,-1]);
         row.push(M.v(p,n,u>0.95?cEdge:cDark));
       }
@@ -393,11 +395,11 @@ function buildBrolly(){
     }
     for(r2=0;r2<rows;r2++) for(s2=0;s2<seg;s2++) M.quad(grid[r2][s2],grid[r2][s2+1],grid[r2+1][s2+1],grid[r2+1][s2]);
   }
-  var canopy=new THREE.Mesh(M.geometry(false),vcMat(THREE.DoubleSide));
+  var canopy=new $imports.THREE.Mesh(M.geometry(false),vcMat($imports.THREE.DoubleSide));
   brolly.add(canopy);
-  K=new Kit(); K.cyl('plastic',0,0,0,0.012,0.006,0.05,8,linHex(0x0e0f10),1);              /* 伞顶 */
-  var tip=new THREE.Mesh(K.mergedGeometry(),new THREE.MeshLambertMaterial({vertexColors:true}));
-  tip.rotation.x=-PI/2; tip.position.z=top+0.01; brolly.add(tip);
+  K=new $imports.Kit(); K.cyl('plastic',0,0,0,0.012,0.006,0.05,8,linHex(0x0e0f10),1);              /* 伞顶 */
+  var tip=new $imports.THREE.Mesh(K.mergedGeometry(),new $imports.THREE.MeshLambertMaterial({vertexColors:true}));
+  tip.rotation.x=-$imports.PI/2; tip.position.z=top+0.01; brolly.add(tip);
   return brolly;
 }
 /* 每只手每种拿法的摆放（相机坐标，x 右 y 上 -z 前）：位置、旋转 */
@@ -407,15 +409,15 @@ var HAND_PLACE={
   phone:{p:[0.09,-0.16,-0.32],r:[1.2,0.0,2.8]}
 };
 function handArm(side){
-  var g=new THREE.Group();
-  var mesh=new THREE.Mesh(handGeo(side,'torch'),new THREE.MeshLambertMaterial({vertexColors:true}));
+  var g=new $imports.THREE.Group();
+  var mesh=new $imports.THREE.Mesh(handGeo(side,'torch'),new $imports.THREE.MeshLambertMaterial({vertexColors:true}));
   g.add(mesh);
   HANDS.meshes[side<0?'L':'R']=mesh;
   g.userData.side=side;
   return g;
 }
 function handItemLod(item){
-  var name={torch:'torch_body',phone:'phone_body',brolly:'umbrella'}[item],a=Assets.get(name);
+  var name={torch:'torch_body',phone:'phone_body',brolly:'umbrella'}[item],a=$imports.Assets.get(name);
   return a?a.pk.lod:'k';
 }
 function makeHandItem(item){
@@ -433,18 +435,18 @@ function disposeHandItem(g){
   materials.forEach(function(material){material.dispose();});
 }
 function buildHands(){
-  if(HANDS.built||!GLR.cam) return;
+  if(HANDS.built||!$imports.GLR.cam) return;
   HANDS.built=true;
   HANDS.L=handArm(-1); HANDS.R=handArm(1);
   HANDS.items={torch:makeHandItem('torch'),phone:makeHandItem('phone'),brolly:makeHandItem('brolly')};
   /* 手单独放一个场景，渲染层独立绘制再合成（engine/scene.js）：贴着墙也不会被截断。
      灯光照着主场景的环境光、天光、身边的补光每帧抄一份。 */
-  var hs=new THREE.Scene(), root=new THREE.Group();
+  var hs=new $imports.THREE.Scene(), root=new $imports.THREE.Group();
   root.matrixAutoUpdate=false; root.visible=false; root.userData.overlay=true;
-  HANDS.amb=new THREE.AmbientLight(0xffffff,0); HANDS.hemi=new THREE.HemisphereLight(0xffffff,0x000000,0);
-  HANDS.near=new THREE.PointLight(0xffffff,0,3,1.5); HANDS.near.position.set(0.1,0.25,0.1);
+  HANDS.amb=new $imports.THREE.AmbientLight(0xffffff,0); HANDS.hemi=new $imports.THREE.HemisphereLight(0xffffff,0x000000,0);
+  HANDS.near=new $imports.THREE.PointLight(0xffffff,0,3,1.5); HANDS.near.position.set(0.1,0.25,0.1);
   hs.add(HANDS.amb); hs.add(HANDS.hemi); root.add(HANDS.near); hs.add(root);
-  GLR.handScene=hs; GLR.handRoot=root;
+  $imports.GLR.handScene=hs; $imports.GLR.handRoot=root;
   [HANDS.L,HANDS.R].forEach(function(h){ h.visible=false; root.add(h); });
 }
 /* 让 hand 拿着 item：换成对应的手势，物品挂到这只手上，摆到这种拿法的位置 */
@@ -468,32 +470,79 @@ function handHold(hand,item){
   it.visible=true;
 }
 function handsTick(dt){
-  if(!GLR.cam) return;
+  if(!$imports.GLR.cam) return;
   buildHands();
-  var show=S.screen==='play'&&!S.dead&&!HIDE.on&&!(typeof CUT!=='undefined'&&CUT.on)&&!(typeof CarChase!=='undefined'&&CarChase.active());
-  var torchOn=show&&USE.torch&&hasItem('torch'), brollyOn=show&&USE.brollyShield&&hasItem('brolly'), phoneOn=show&&typeof PHONE!=='undefined'&&PHONE.on;       /* 手机只在玩小游戏时拿在手上 */
+  var show=$imports.S.screen==='play'&&!$imports.S.dead&&!$imports.HIDE.on&&!(typeof $imports.CUT!=='undefined'&&$imports.CUT.on)&&!(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active());
+  var torchOn=show&&$imports.USE.torch&&(0,$imports.hasItem)('torch'), brollyOn=show&&$imports.USE.brollyShield&&(0,$imports.hasItem)('brolly'), phoneOn=show&&typeof $imports.PHONE!=='undefined'&&$imports.PHONE.on;       /* 手机只在玩小游戏时拿在手上 */
   var it=HANDS.items, leftUse=null, rightUse=null;
   if(brollyOn) leftUse='brolly';
   if(torchOn) rightUse='torch';
   if(phoneOn){ if(!leftUse) leftUse='phone'; else if(!rightUse) rightUse='phone'; }
   for(var k in it) it[k].visible=false;
   HANDS.L.visible=!!leftUse; HANDS.R.visible=!!rightUse;
-  GLR.handRoot.visible=!!(leftUse||rightUse);
-  if(GLR.handRoot.visible){
-    HANDS.amb.color.copy(GLR.amb.color); HANDS.amb.intensity=GLR.amb.intensity;
-    HANDS.hemi.color.copy(GLR.hemi.color); HANDS.hemi.groundColor.copy(GLR.hemi.groundColor); HANDS.hemi.intensity=GLR.hemi.intensity;
-    HANDS.near.color.copy(GLR.camLight.color); HANDS.near.intensity=GLR.camLight.intensity*0.35+(USE.torch?0.45:0);
+  $imports.GLR.handRoot.visible=!!(leftUse||rightUse);
+  if($imports.GLR.handRoot.visible){
+    HANDS.amb.color.copy($imports.GLR.amb.color); HANDS.amb.intensity=$imports.GLR.amb.intensity;
+    HANDS.hemi.color.copy($imports.GLR.hemi.color); HANDS.hemi.groundColor.copy($imports.GLR.hemi.groundColor); HANDS.hemi.intensity=$imports.GLR.hemi.intensity;
+    HANDS.near.color.copy($imports.GLR.camLight.color); HANDS.near.intensity=$imports.GLR.camLight.intensity*0.35+($imports.USE.torch?0.45:0);
   }
   if(leftUse) handHold(HANDS.L,leftUse);
   if(rightUse) handHold(HANDS.R,rightUse);
   /* 走路时轻轻晃，跑起来晃得大一点 */
-  var ph=VisualState.camera.walkPhase||0, amp=S.moving?(S.run?0.018:0.009):0.002;
+  var ph=$imports.VisualState.camera.walkPhase||0, amp=$imports.S.moving?($imports.S.run?0.018:0.009):0.002;
   [HANDS.L,HANDS.R].forEach(function(h,i){
     var b=h.userData.base; if(!b) return;
     var q=ph+i;
     h.position.set(b[0]+Math.sin(q)*amp,b[1]+Math.abs(Math.cos(q))*amp,b[2]);
   });
-  var lit=!!USE.torch;
+  var lit=!!$imports.USE.torch;
   it.torch.userData.lens.material.color.setHex(lit?0xfff2c8:0x30343a);
   it.torch.userData.led.material.color.setHex(lit?0xffffff:0x3a3e44);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/hands.js",{
+"HANDS":{get:function(){return HANDS;},set:function($value){HANDS=$value;}},
+"HAND_GEO":{get:function(){return HAND_GEO;},set:function($value){HAND_GEO=$value;}},
+"hAdd":{get:function(){return hAdd;},set:function($value){hAdd=$value;}},
+"hSub":{get:function(){return hSub;},set:function($value){hSub=$value;}},
+"hMul":{get:function(){return hMul;},set:function($value){hMul=$value;}},
+"hDot":{get:function(){return hDot;},set:function($value){hDot=$value;}},
+"hCross":{get:function(){return hCross;},set:function($value){hCross=$value;}},
+"hNorm":{get:function(){return hNorm;},set:function($value){hNorm=$value;}},
+"hMix":{get:function(){return hMix;},set:function($value){hMix=$value;}},
+"hCol":{get:function(){return hCol;},set:function($value){hCol=$value;}},
+"linHex":{get:function(){return linHex;},set:function($value){linHex=$value;}},
+"HMesh":{get:function(){return HMesh;},set:function($value){HMesh=$value;}},
+"handAt":{get:function(){return handAt;},set:function($value){handAt=$value;}},
+"HAND_FINGERS":{get:function(){return HAND_FINGERS;},set:function($value){HAND_FINGERS=$value;}},
+"HAND_SKIN":{get:function(){return HAND_SKIN;},set:function($value){HAND_SKIN=$value;}},
+"handFinger":{get:function(){return handFinger;},set:function($value){handFinger=$value;}},
+"handPalm":{get:function(){return handPalm;},set:function($value){handPalm=$value;}},
+"handThumb":{get:function(){return handThumb;},set:function($value){handThumb=$value;}},
+"handSleeve":{get:function(){return handSleeve;},set:function($value){handSleeve=$value;}},
+"wrapFinger":{get:function(){return wrapFinger;},set:function($value){wrapFinger=$value;}},
+"bendFinger":{get:function(){return bendFinger;},set:function($value){bendFinger=$value;}},
+"handForearm":{get:function(){return handForearm;},set:function($value){handForearm=$value;}},
+"HAND_POSES":{get:function(){return HAND_POSES;},set:function($value){HAND_POSES=$value;}},
+"handGripFrame":{get:function(){return handGripFrame;},set:function($value){handGripFrame=$value;}},
+"handBuild":{get:function(){return handBuild;},set:function($value){handBuild=$value;}},
+"handAssetLod":{get:function(){return handAssetLod;},set:function($value){handAssetLod=$value;}},
+"handMirror":{get:function(){return handMirror;},set:function($value){handMirror=$value;}},
+"handGeo":{get:function(){return handGeo;},set:function($value){handGeo=$value;}},
+"itemAssetGeo":{get:function(){return itemAssetGeo;},set:function($value){itemAssetGeo=$value;}},
+"handMat":{get:function(){return handMat;},set:function($value){handMat=$value;}},
+"vcMat":{get:function(){return vcMat;},set:function($value){vcMat=$value;}},
+"buildTorch":{get:function(){return buildTorch;},set:function($value){buildTorch=$value;}},
+"buildPhone":{get:function(){return buildPhone;},set:function($value){buildPhone=$value;}},
+"buildBrolly":{get:function(){return buildBrolly;},set:function($value){buildBrolly=$value;}},
+"HAND_PLACE":{get:function(){return HAND_PLACE;},set:function($value){HAND_PLACE=$value;}},
+"handArm":{get:function(){return handArm;},set:function($value){handArm=$value;}},
+"handItemLod":{get:function(){return handItemLod;},set:function($value){handItemLod=$value;}},
+"makeHandItem":{get:function(){return makeHandItem;},set:function($value){makeHandItem=$value;}},
+"disposeHandItem":{get:function(){return disposeHandItem;},set:function($value){disposeHandItem=$value;}},
+"buildHands":{get:function(){return buildHands;},set:function($value){buildHands=$value;}},
+"handHold":{get:function(){return handHold;},set:function($value){handHold=$value;}},
+"handsTick":{get:function(){return handsTick;},set:function($value){handsTick=$value;}}
+});
+})(GameModules.imports("game3d/js/hands.js"));

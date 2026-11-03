@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 自动生成：python tools/sound_levels.py（不要手改）。每个音效相对配方原始响度的校准（dB），
    让同一类声音一样响：类别目标见 sound-bank.js 的 SOUND_CATS，单个音效再按 lv 调。 */
 'use strict';
@@ -134,3 +136,9 @@ var SOUND_LEVELS={
   'world.mothThump':-5.8,
   'world.patter':-18.0
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/sound-levels.js",{
+"SOUND_LEVELS":{get:function(){return SOUND_LEVELS;},set:function($value){SOUND_LEVELS=$value;}}
+});
+})(GameModules.imports("game3d/js/sound-levels.js"));

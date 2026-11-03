@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 天赋：唯一的定义源和有限的能力接口（《天赋系统重构》M1）。
    名称、效果、限制、可选资格和试验数值都在这里；各模块只问「能不能 / 用什么方式 / 倍率多少」，不再各写一份 S.talent==='…'。
    S.talent 是当前 ID 的唯一来源；S.talentState 记规则版本、一次性消耗、计数和提醒去重，随存档保存。
@@ -48,12 +50,12 @@ var TALENT_CFG={hotwireSec:4.8,keySec:1.6,eatSan:24,feastNormal:9,feastStomach:1
 
 var Talent={
   def:function(id){ return TALENT_DEF[id]||TALENT_DEF.none; },
-  id:function(){ var d=TALENT_DEF[S.talent]; return d?S.talent:'none'; },
-  has:function(id){ return S.talent===id&&!!TALENT_DEF[id]&&!TALENT_DEF[id].legacy; },
+  id:function(){ var d=TALENT_DEF[$imports.S.talent]; return d?$imports.S.talent:'none'; },
+  has:function(id){ return $imports.S.talent===id&&!!TALENT_DEF[id]&&!TALENT_DEF[id].legacy; },
   /* 规范化的状态：只允许定义里的键；非法值裁剪 */
   state:function(){
-    var t=S.talentState;
-    if(!t||typeof t!=='object'||Array.isArray(t)) t=S.talentState={};
+    var t=$imports.S.talentState;
+    if(!t||typeof t!=='object'||Array.isArray(t)) t=$imports.S.talentState={};
     t.schemaVersion=1;
     t.rulesVersion=(t.rulesVersion===1||t.rulesVersion===2)?t.rulesVersion:1;
     t.origin=['selected','random','legacy','repair'].indexOf(t.origin)>=0?t.origin:'legacy';
@@ -67,45 +69,45 @@ var Talent={
   rules:function(){ return this.state().rulesVersion; },
   /* 新局：选择或随机；只在确认开始的时候调用 */
   begin:function(id,origin){
-    S.talent=TALENT_DEF[id]&&TALENT_DEF[id].pick?id:TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)];
-    S.talentState={schemaVersion:1,rulesVersion:TALENT_RULES,origin:origin||'random',consumed:{},notified:{},recent:[]};
+    $imports.S.talent=TALENT_DEF[id]&&TALENT_DEF[id].pick?id:TAL_KEYS[Math.floor($imports.GameRandom.next()*TAL_KEYS.length)];
+    $imports.S.talentState={schemaVersion:1,rulesVersion:TALENT_RULES,origin:origin||'random',consumed:{},notified:{},recent:[]};
     this.state();
   },
   /* 读档：ID 不在定义里（或缺失）→ 确定地落到「没有天赋」，不沿用读档前的值，也不重抽 */
   normalizeSaved:function(d){
     var id=(d&&typeof d.talent==='string'&&TALENT_DEF[d.talent]&&!TALENT_DEF[d.talent].internal)?d.talent:'none';
-    S.talent=id;
+    $imports.S.talent=id;
     var t=d&&d.talentState;
     if(t&&typeof t==='object'&&!Array.isArray(t)){
-      S.talentState=JSON.parse(JSON.stringify(t));
-      if(S.talentState.rulesVersion>TALENT_RULES) S.talentState.rulesVersion=1;      /* 不认识的新版本：按最保守的旧规则跑 */
+      $imports.S.talentState=JSON.parse(JSON.stringify(t));
+      if($imports.S.talentState.rulesVersion>TALENT_RULES) $imports.S.talentState.rulesVersion=1;      /* 不认识的新版本：按最保守的旧规则跑 */
     }else{
-      S.talentState={rulesVersion:1,origin:id==='none'?'repair':'legacy',consumed:{fatalProtection:!!(d&&d.immuneUsed)}};
+      $imports.S.talentState={rulesVersion:1,origin:id==='none'?'repair':'legacy',consumed:{fatalProtection:!!(d&&d.immuneUsed)}};
     }
     this.state();
   },
   serialize:function(){ return JSON.parse(JSON.stringify(this.state())); },
-  note:function(text){ var t=this.state(); t.recent.push({day:S.day,text:String(text)}); t.recent=t.recent.slice(-5); },
+  note:function(text){ var t=this.state(); t.recent.push({day:$imports.S.day,text:String(text)}); t.recent=t.recent.slice(-5); },
 
   /* 能力查询：同一个返回值给判定和提示用，免得提示和规则各写一份 */
   capability:function(ctx){
     if(ctx==='terminal'){
-      var usb=hasItem('usb'), code=this.has('code');
+      var usb=(0,$imports.hasItem)('usb'), code=this.has('code');
       return {ok:usb||code, via:code?'talent':usb?'usb':null};
     }
     if(ctx==='car'){
-      var key=hasItem('key'), drive=this.has('drive');
+      var key=(0,$imports.hasItem)('key'), drive=this.has('drive');
       return {ok:key||drive, via:key?'key':drive?'hotwire':null,
         sec:key?TALENT_CFG.keySec:(drive&&this.rules()>=2?TALENT_CFG.hotwireSec:TALENT_CFG.keySec)};
     }
-    if(ctx==='clock') return {ok:this.has('watch')||hasItem('watch'), via:hasItem('watch')?'item':this.has('watch')?'talent':null};
+    if(ctx==='clock') return {ok:this.has('watch')||(0,$imports.hasItem)('watch'), via:(0,$imports.hasItem)('watch')?'item':this.has('watch')?'talent':null};
     return {ok:false,via:null};
   },
   /* 来源级修正量：无匹配返回中性值 */
   modifier:function(source){
     if(source==='danger.garage'||source==='danger.night') return this.has('night')?TALENT_CFG.darkMul:1;
     if(source==='anomaly.feast') return this.has('stomach')?TALENT_CFG.feastStomach:TALENT_CFG.feastNormal;
-    if(source==='activity.eat') return this.has('stomach')&&this.rules()>=2?TALENT_CFG.eatSan:SAN_ACTS.eat.san;
+    if(source==='activity.eat') return this.has('stomach')&&this.rules()>=2?TALENT_CFG.eatSan:$imports.SAN_ACTS.eat.san;
     return 1;
   },
   /* 一次性保命：只决定能不能挡、消耗了什么；场景恢复和保存由外层结算 */
@@ -126,15 +128,15 @@ var Talent={
   /* 守时（规则 2）：开饭、饭点结束、熄灯前提醒一次。按公开课表的平均流速估提前量，只说「快到了」 */
   WATCH_MARKS:[[735,'午饭开饭了'],[800,'午饭时间快过了'],[1060,'晚饭开饭了'],[1090,'晚饭时间快过了'],[1340,'快熄灯了']],
   tickWatch:function(){
-    if(!this.has('watch')||this.rules()<2||S.screen!=='play'||S.dead) return;
-    var t=this.state(), p=dayPhaseAt(S.tsec), perSec=(p[1]-p[0])/p[2], lead=perSec*TALENT_CFG.watchLead;
+    if(!this.has('watch')||this.rules()<2||$imports.S.screen!=='play'||$imports.S.dead) return;
+    var t=this.state(), p=(0,$imports.dayPhaseAt)($imports.S.tsec), perSec=(p[1]-p[0])/p[2], lead=perSec*TALENT_CFG.watchLead;
     for(var i=0;i<this.WATCH_MARKS.length;i++){
-      var m=this.WATCH_MARKS[i], key=S.day+':'+m[0], ahead=m[0]-S.tsec;
+      var m=this.WATCH_MARKS[i], key=$imports.S.day+':'+m[0], ahead=m[0]-$imports.S.tsec;
       if(t.notified[key]) continue;
       if(ahead>0&&ahead<=lead){
         t.notified[key]=1;
-        Object.keys(t.notified).forEach(function(k){ if(+k.split(':')[0]<S.day-1) delete t.notified[k]; });
-        os('我：（看了一眼表）'+m[1]+'。',3.2); return;
+        Object.keys(t.notified).forEach(function(k){ if(+k.split(':')[0]<$imports.S.day-1) delete t.notified[k]; });
+        (0,$imports.os)('我：（看了一眼表）'+m[1]+'。',3.2); return;
       }
       if(ahead<=0&&ahead>-lead) t.notified[key]=1;       /* 跳时间过去的：不补播 */
     }
@@ -157,8 +159,8 @@ var Talent={
   }
 };
 /* 旧字段 S.immuneUsed 只作别名，从新状态派生，不再是另一份可以单独改的值 */
-Object.defineProperty(S,'immuneUsed',{configurable:true,enumerable:false,
-  get:function(){ return !!(S.talentState&&S.talentState.consumed&&S.talentState.consumed.fatalProtection); },
+Object.defineProperty($imports.S,'immuneUsed',{configurable:true,enumerable:false,
+  get:function(){ return !!($imports.S.talentState&&$imports.S.talentState.consumed&&$imports.S.talentState.consumed.fatalProtection); },
   set:function(v){ Talent.state().consumed.fatalProtection=!!v; }});
 
 /* 新局的天赋选择界面：卡片只负责选中，「开始」才真正开局；返回不碰存档 */
@@ -187,11 +189,11 @@ var TalentPick={diff:null,mode:'normal',sel:null,
   close:function(){ document.getElementById('tpick').hidden=true; this.sel=null; },
   start:function(id,origin){
     var diff=this.diff, mode=this.mode; this.close();
-    if(mode==='speedrun'&&typeof Speedrun!=='undefined') Speedrun.arm(diff);
-    Game.start(diff,{talent:id,origin:origin,mode:mode==='speedrun'?'speedrun':'normal'});
+    if(mode==='speedrun'&&typeof $imports.Speedrun!=='undefined') $imports.Speedrun.arm(diff);
+    $imports.Game.start(diff,{talent:id,origin:origin,mode:mode==='speedrun'?'speedrun':'normal'});
   },
   confirm:function(){ if(this.sel) this.start(this.sel,'selected'); },
-  random:function(){ this.start(TAL_KEYS[Math.floor(Math.random()*TAL_KEYS.length)],'random'); },
+  random:function(){ this.start(TAL_KEYS[Math.floor($imports.GameRandom.next()*TAL_KEYS.length)],'random'); },
   key:function(e){
     var el=document.getElementById('tpick'); if(!el||el.hidden) return false;
     if(e.key==='Escape'){ e.preventDefault(); this.close(); return true; }
@@ -204,3 +206,15 @@ var TalentPick={diff:null,mode:'normal',sel:null,
   }
 };
 document.addEventListener('keydown',function(e){ if(TalentPick.key(e)) e.stopPropagation(); },true);
+
+/* @module-exports */
+GameModules.publish("game3d/js/talents.js",{
+"TALENT_RULES":{get:function(){return TALENT_RULES;},set:function($value){TALENT_RULES=$value;}},
+"TALENT_DEF":{get:function(){return TALENT_DEF;},set:function($value){TALENT_DEF=$value;}},
+"TALENTS":{get:function(){return TALENTS;},set:function($value){TALENTS=$value;}},
+"TAL_KEYS":{get:function(){return TAL_KEYS;},set:function($value){TAL_KEYS=$value;}},
+"TALENT_CFG":{get:function(){return TALENT_CFG;},set:function($value){TALENT_CFG=$value;}},
+"Talent":{get:function(){return Talent;},set:function($value){Talent=$value;}},
+"TalentPick":{get:function(){return TalentPick;},set:function($value){TalentPick=$value;}}
+});
+})(GameModules.imports("game3d/js/talents.js"));

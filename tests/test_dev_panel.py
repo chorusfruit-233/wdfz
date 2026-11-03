@@ -359,7 +359,8 @@ class DebugPanelTest(BrowserCase):
                 self.assert_js(page,"document.getElementById('dev').classList.contains('dev-land')&&!DEV.minimized")
                 # 转成竖屏：回到原来的竖向布局
                 page.set_viewport_size({'width':height,'height':width})
-                page.wait_for_timeout(200)
+                # Resize/visualViewport callbacks finish asynchronously, especially with software WebGL.
+                page.wait_for_function("!document.getElementById('dev').classList.contains('dev-land')&&document.getElementById('dev').getBoundingClientRect().width<=300", timeout=5000)
                 self.assert_js(page,"!document.getElementById('dev').classList.contains('dev-land')&&document.getElementById('dev').getBoundingClientRect().width<=300")
 
     def test_inventory_editor_respects_capacity_and_cleans_hand_and_hotbar(self):

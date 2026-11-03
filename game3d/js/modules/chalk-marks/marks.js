@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 粉笔记号（模块 chalk-marks）：逻辑与存档，不碰渲染对象
    背包或快捷栏里「用」粉笔：在面前的墙上（平视）或脚前的地上（低头）画一个记号——X、↑、O……
    记号跟着存档保留，进出房间、读档后还在。校园里、楼里、虚空迷宫里都能画。
@@ -21,49 +23,49 @@ var CHALK_CFG={max:240, perRoom:80, reach:1.45, floorReach:2.0, eraseR:0.75, loo
 
 var ChalkMarks=(function(){
   var marks=[], serial=0, presets={}, version=0;
-  function placeKey(){ return S.mode==='in'?S.room:null; }
-  function bump(){ version++; try{ if(typeof ChalkFx!=='undefined') ChalkFx.refresh(); }catch(e){} }
+  function placeKey(){ return $imports.S.mode==='in'?$imports.S.room:null; }
+  function bump(){ version++; try{ if(typeof $imports.ChalkFx!=='undefined') $imports.ChalkFx.refresh(); }catch(e){} }
   function symById(id){ for(var i=0;i<CHALK_SYMS.length;i++) if(CHALK_SYMS[i].id===id) return CHALK_SYMS[i]; return null; }
   /* 某一点的地面高度：迷宫里按体素和楼梯，钟楼按旋梯，其余是 0；够不着（虚空）返回 null */
   function floorHere(wx,wy){
-    if(S.mode==='in'&&typeof VoidMaze!=='undefined'&&S.room===MAZE_CFG.room) return VoidMaze.floorAt(wx,wy);
-    return S.floorY||0;
+    if($imports.S.mode==='in'&&typeof $imports.VoidMaze!=='undefined'&&$imports.S.room===$imports.MAZE_CFG.room) return $imports.VoidMaze.floorAt(wx,wy);
+    return $imports.S.floorY||0;
   }
   /* 准星对着的地方：平视找墙，低头找地 */
   function target(){
-    var U=(typeof U2M!=='undefined')?U2M:1/9, step=0.05/U, cos=Math.cos(S.ang), sin=Math.sin(S.ang);
-    var pitch=S.pitch||0, eye=(S.eyeH||EYE);
+    var U=(typeof $imports.U2M!=='undefined')?$imports.U2M:1/9, step=0.05/U, cos=Math.cos($imports.S.ang), sin=Math.sin($imports.S.ang);
+    var pitch=$imports.S.pitch||0, eye=($imports.S.eyeH||$imports.EYE);
     if(pitch>CHALK_CFG.lookDown){
       var last=0, hit=-1;
       for(var d=step;d<=CHALK_CFG.reach/U;d+=step){
-        if(solidAt(S.x+cos*d,S.y+sin*d)){ hit=d; break; }
+        if((0,$imports.solidAt)($imports.S.x+cos*d,$imports.S.y+sin*d)){ hit=d; break; }
         last=d;
       }
       if(hit>0){
         var lo=last, hi=hit, k;
-        for(k=0;k<10;k++){ var mid=(lo+hi)/2; if(solidAt(S.x+cos*mid,S.y+sin*mid)) hi=mid; else lo=mid; }
-        var fx=S.x+cos*lo, fy=S.y+sin*lo, e=0.06/U;
+        for(k=0;k<10;k++){ var mid=(lo+hi)/2; if((0,$imports.solidAt)($imports.S.x+cos*mid,$imports.S.y+sin*mid)) hi=mid; else lo=mid; }
+        var fx=$imports.S.x+cos*lo, fy=$imports.S.y+sin*lo, e=0.06/U;
         /* 墙面朝哪：沿 x 或 y 单独往前一点，哪个方向进了实心，墙就垂直于哪个方向 */
-        var bx=solidAt(fx+cos*e,fy), by=solidAt(fx,fy+sin*e), ang;
+        var bx=(0,$imports.solidAt)(fx+cos*e,fy), by=(0,$imports.solidAt)(fx,fy+sin*e), ang;
         if(bx&&!by) ang=cos>0?Math.PI:0;
         else if(by&&!bx) ang=sin>0?-Math.PI/2:Math.PI/2;
         else ang=Math.abs(cos)>Math.abs(sin)?(cos>0?Math.PI:0):(sin>0?-Math.PI/2:Math.PI/2);
-        var dist=lo*U, hgt=clamp(eye+Math.tan(pitch)*dist,0.35,2.3);
-        return {face:'wall',x:fx,y:fy,h:hgt,a:ang,room:placeKey(),floor:S.floorY||0};
+        var dist=lo*U, hgt=(0,$imports.clamp)(eye+Math.tan(pitch)*dist,0.35,2.3);
+        return {face:'wall',x:fx,y:fy,h:hgt,a:ang,room:placeKey(),floor:$imports.S.floorY||0};
       }
       return null;
     }
     var down=Math.max(0.12,-pitch), dist2=Math.min(CHALK_CFG.floorReach,eye/Math.tan(down))/U;
-    var px=S.x+cos*dist2, py=S.y+sin*dist2;
-    for(var back=0;back<6&&solidAt(px,py);back++){ px-=cos*0.2/U; py-=sin*0.2/U; }    /* 低头对着墙根：往回挪到墙前 */
-    if(solidAt(px,py)) return null;
+    var px=$imports.S.x+cos*dist2, py=$imports.S.y+sin*dist2;
+    for(var back=0;back<6&&(0,$imports.solidAt)(px,py);back++){ px-=cos*0.2/U; py-=sin*0.2/U; }    /* 低头对着墙根：往回挪到墙前 */
+    if((0,$imports.solidAt)(px,py)) return null;
     var fh=floorHere(px,py);
     if(fh===null) return {face:'void'};
-    return {face:'floor',x:px,y:py,h:fh,a:S.ang,room:placeKey()};
+    return {face:'floor',x:px,y:py,h:fh,a:$imports.S.ang,room:placeKey()};
   }
   function nearMark(t){
     if(!t||!(t.face==='floor'||t.face==='wall')) return -1;
-    var best=-1, bd=(CHALK_CFG.eraseR/((typeof U2M!=='undefined')?U2M:1/9)), i, m;
+    var best=-1, bd=(CHALK_CFG.eraseR/((typeof $imports.U2M!=='undefined')?$imports.U2M:1/9)), i, m;
     for(i=0;i<marks.length;i++){
       m=marks[i]; if(m.room!==t.room||m.face!==t.face) continue;
       var mh=m.face==='wall'?(m.f||0)+m.h:m.h, th=t.face==='wall'?(t.floor||0)+t.h:t.h;   /* 墙上的记号按绝对高度比 */
@@ -75,7 +77,7 @@ var ChalkMarks=(function(){
   }
   function place(sym,t){
     if(!symById(sym)||!t||(t.face!=='floor'&&t.face!=='wall')) return null;
-    var m={room:t.room,x:+t.x.toFixed(2),y:+t.y.toFixed(2),h:+t.h.toFixed(3),face:t.face,a:+t.a.toFixed(4),s:sym,n:++serial,d:S.day||1};
+    var m={room:t.room,x:+t.x.toFixed(2),y:+t.y.toFixed(2),h:+t.h.toFixed(3),face:t.face,a:+t.a.toFixed(4),s:sym,n:++serial,d:$imports.S.day||1};
     if(t.face==='wall') m.f=+(t.floor||0).toFixed(3);
     marks.push(m);
     var inRoom=marks.filter(function(q){ return q.room===m.room; });
@@ -87,23 +89,23 @@ var ChalkMarks=(function(){
   function erase(i){ if(i<0||i>=marks.length) return false; marks.splice(i,1); bump(); return true; }
   /* 用粉笔：选一个图案画上去，或者擦掉面前那个 */
   function open(){
-    if(!hasItem('chalk')){ toast('没有粉笔'); return false; }
+    if(!(0,$imports.hasItem)('chalk')){ (0,$imports.toast)('没有粉笔'); return false; }
     var t=target();
-    if(!t){ os('我：够不着能画的地方。走近一面墙，或者低头看着地面。',2.8); return false; }
-    if(t.face==='void'){ os('我：那下面什么都没有。粉笔落不到任何东西上。',2.8); return false; }
+    if(!t){ (0,$imports.os)('我：够不着能画的地方。走近一面墙，或者低头看着地面。',2.8); return false; }
+    if(t.face==='void'){ (0,$imports.os)('我：那下面什么都没有。粉笔落不到任何东西上。',2.8); return false; }
     var near=nearMark(t), opts=[];
     CHALK_SYMS.forEach(function(s){
       opts.push({label:'画「'+s.label+'」',fn:function(){
         var m=place(s.id,t);
-        if(m){ try{ SFX.chalk(); }catch(e){} os(t.face==='wall'?'我：在墙上画了个「'+s.label+'」。':'我：在地上画了个「'+s.label+'」。',2.2); autoSave(); }
+        if(m){ try{ $imports.SFX.chalk(); }catch(e){} (0,$imports.os)(t.face==='wall'?'我：在墙上画了个「'+s.label+'」。':'我：在地上画了个「'+s.label+'」。',2.2); (0,$imports.autoSave)(); }
       }});
     });
     if(near>=0) opts.push({label:'擦掉这里的「'+(symById(marks[near].s)||{label:'?'}).label+'」',fn:function(){
-      erase(near); os('我：用袖子把记号擦掉了，只剩一片白印。',2.2); autoSave();
+      erase(near); (0,$imports.os)('我：用袖子把记号擦掉了，只剩一片白印。',2.2); (0,$imports.autoSave)();
     }});
     opts.push({label:'算了',fn:function(){}});
-    if(UI.openPanel&&typeof JOURNAL_TABS!=='undefined'&&JOURNAL_TABS[UI.openPanel]) UI.close(UI.openPanel,false);   /* 从背包里用：先合上手册，看得见要画的地方 */
-    UI.choice(t.face==='wall'?'在墙上画什么？':'在地上画什么？',opts);
+    if($imports.UI.openPanel&&typeof $imports.JOURNAL_TABS!=='undefined'&&$imports.JOURNAL_TABS[$imports.UI.openPanel]) $imports.UI.close($imports.UI.openPanel,false);   /* 从背包里用：先合上手册，看得见要画的地方 */
+    $imports.UI.choice(t.face==='wall'?'在墙上画什么？':'在地上画什么？',opts);
     return true;
   }
   /* 模块自带的、从一开始就在的旧记号（不存档，画得淡一点） */
@@ -134,3 +136,11 @@ var ChalkMarks=(function(){
     version:function(){ return version; }
   };
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/chalk-marks/marks.js",{
+"CHALK_SYMS":{get:function(){return CHALK_SYMS;},set:function($value){CHALK_SYMS=$value;}},
+"CHALK_CFG":{get:function(){return CHALK_CFG;},set:function($value){CHALK_CFG=$value;}},
+"ChalkMarks":{get:function(){return ChalkMarks;},set:function($value){ChalkMarks=$value;}}
+});
+})(GameModules.imports("game3d/js/modules/chalk-marks/marks.js"));

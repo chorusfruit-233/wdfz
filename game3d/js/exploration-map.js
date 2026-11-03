@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 已走过的楼层草图。几何来自实际格网；墙和关着的门挡住视线后面的格子。
    存档里每层楼只存一串压缩过的位（每个字符 6 格），全校走遍也只有几 KB；
    以前每格一个 "x:y" 键，走遍全校的存档要两百多 KB，每次自动保存都要整串序列化。 */
@@ -5,14 +7,14 @@
 var EXPLORE_B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   state:function(){
-    if(!RT.exploration||typeof RT.exploration!=='object'||Array.isArray(RT.exploration))RT.exploration={};
-    if(this.rt!==RT){this.rt=RT;this.bits={};}             /* 新开一局或读档后 RT 换了：解码缓存作废 */
-    return RT.exploration;
+    if(!$imports.RT.exploration||typeof $imports.RT.exploration!=='object'||Array.isArray($imports.RT.exploration))$imports.RT.exploration={};
+    if(this.rt!==$imports.RT){this.rt=$imports.RT;this.bits={};}             /* 新开一局或读档后 RT 换了：解码缓存作废 */
+    return $imports.RT.exploration;
   },
   clear:function(){this.selected=null;this.acc=0;this.bits={};this.rt=null;},
   /* 某层楼的「看见过」位图；兼容此前每格一个键的旧格式 */
   seen:function(id){
-    var all=this.state(),R=INTERIORS[id];if(!R)return null;
+    var all=this.state(),R=$imports.INTERIORS[id];if(!R)return null;
     var b=this.bits[id];if(b)return b;
     var n=R.cols*R.rows,v=all[id];b=new Uint8Array(n);
     if(typeof v==='string'){
@@ -30,21 +32,21 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   },
   has:function(R,c,r){var b=this.seen(R.id);return !!(b&&c>=0&&r>=0&&c<R.cols&&r<R.rows&&b[r*R.cols+c]);},
   count:function(id){var b=this.seen(id),n=0;if(b)for(var i=0;i<b.length;i++)n+=b[i];return n;},
-  rooms:function(){var all=this.state(),me=this;return Object.keys(all).filter(function(id){return !!INTERIORS[id]&&!INTERIORS[id].noMap&&me.count(id)>0;});},   /* 旧存档里白色空间的草图不再列出 */
+  rooms:function(){var all=this.state(),me=this;return Object.keys(all).filter(function(id){return !!$imports.INTERIORS[id]&&!$imports.INTERIORS[id].noMap&&me.count(id)>0;});},   /* 旧存档里白色空间的草图不再列出 */
   visible:function(R,c,r,tc,tr){
     var dx=tc-c,dy=tr-r,n=Math.max(Math.abs(dx),Math.abs(dy))*2;
     for(var i=1;i<n;i++){
       var x=Math.floor(c+.5+dx*i/n),y=Math.floor(r+.5+dy*i/n),ch=R.grid[y]&&R.grid[y][x];
       if(x===tc&&y===tr)break;
-      if(ch==='#'||(ch==='='&&!OPENDOORS[R.id+':'+x+':'+y]))return false;
+      if(ch==='#'||(ch==='='&&!$imports.OPENDOORS[R.id+':'+x+':'+y]))return false;
     }
     return true;
   },
   observe:function(){
-    if(S.mode!=='in'||S.dead||S.screen!=='play')return;
-    var R=INTERIORS[S.room];if(!R||R.noMap)return;            /* 不能画草图的地方（虚空迷宫） */
+    if($imports.S.mode!=='in'||$imports.S.dead||$imports.S.screen!=='play')return;
+    var R=$imports.INTERIORS[$imports.S.room];if(!R||R.noMap)return;            /* 不能画草图的地方（虚空迷宫） */
     var b=this.seen(R.id),changed=false;
-    var c=Math.floor((S.x-R.ox)/R.tw),r=Math.floor((S.y-R.oy)/R.th);
+    var c=Math.floor(($imports.S.x-R.ox)/R.tw),r=Math.floor(($imports.S.y-R.oy)/R.th);
     for(var y=Math.max(0,r-6);y<=Math.min(R.rows-1,r+6);y++)for(var x=Math.max(0,c-6);x<=Math.min(R.cols-1,c+6);x++){
       var i=y*R.cols+x;
       if(!b[i]&&Math.hypot(x-c,y-r)<=6&&this.visible(R,c,r,x,y)){b[i]=1;changed=true;}
@@ -54,11 +56,11 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   tick:function(dt){this.acc+=dt;if(this.acc>=.3){this.acc=0;this.observe();}},
   label:function(R,c,r){
     var key=R.id+':'+c+':'+r,ch=R.grid[r][c];
-    if(RT.pendingLoot&&RT.pendingLoot[key])return '留';
-    if(RT.deskUsed&&RT.deskUsed[key])return '✓';
-    if(ch==='=')return OPENDOORS[key]?'开':doorLockNeed(R,c,r)?'锁':'门';
-    if(ch==='V')return RT.carTried&&RT.carTried[c+':'+r]?'×':'车';
-    if(ch==='K'&&R.host==='lab'&&(RT.portalBlueprints||{})[R.floor])return '✓';
+    if($imports.RT.pendingLoot&&$imports.RT.pendingLoot[key])return '留';
+    if($imports.RT.deskUsed&&$imports.RT.deskUsed[key])return '✓';
+    if(ch==='=')return $imports.OPENDOORS[key]?'开':(0,$imports.doorLockNeed)(R,c,r)?'锁':'门';
+    if(ch==='V')return $imports.RT.carTried&&$imports.RT.carTried[c+':'+r]?'×':'车';
+    if(ch==='K'&&R.host==='lab'&&($imports.RT.portalBlueprints||{})[R.floor])return '✓';
     return {S:'梯',J:'电',L:'廊',O:'出',H:'藏',T:'台',K:'台',D:'机',Q:'服',u:'书',j:'门',M:'售',d:'桌',f:'柜',R:'架',q:'柜',k:'台',N:'镜',C:'仪',Y:'球',Z:'摆'}[ch]||'';
   },
   /* 字的颜色分四类：路（梯电廊出）、要留意（锁、×、留）、已解决（✓、开）、其他陈设 */
@@ -71,19 +73,19 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
   },
   render:function(){
     this.observe();
-    var esc=Investigation.escape,tools=document.getElementById('maptools');
+    var esc=$imports.Investigation.escape,tools=document.getElementById('maptools');
     var ids=this.rooms();
-    if(this.selected===null)this.selected=S.mode==='in'?S.room:'campus';
+    if(this.selected===null)this.selected=$imports.S.mode==='in'?$imports.S.room:'campus';
     if(this.selected!=='campus'&&ids.indexOf(this.selected)<0)this.selected='campus';
     tools.innerHTML='<label for="mapfloor">查看</label><span class="mapsel"><select id="mapfloor"><option value="campus">校园总图</option>'+
-      ids.map(function(id){return '<option value="'+esc(id)+'">'+esc(INTERIORS[id].name)+(S.mode==='in'&&S.room===id?'　· 你在这里':'')+'</option>';}).join('')+'</select></span>'+
+      ids.map(function(id){return '<option value="'+esc(id)+'">'+esc($imports.INTERIORS[id].name)+($imports.S.mode==='in'&&$imports.S.room===id?'　· 你在这里':'')+'</option>';}).join('')+'</select></span>'+
       '<span class="mapcount">走过 '+ids.length+' 处室内</span>';
     var select=document.getElementById('mapfloor');select.value=this.selected;
-    select.onchange=function(){ExplorationMap.selected=this.value;UI.renderMap();};
+    select.onchange=function(){ExplorationMap.selected=this.value;$imports.UI.renderMap();};
     var box=document.getElementById('floormap'),campus=document.getElementById('mapc'),legend=document.querySelector('.maplegend');
-    var R=INTERIORS[this.selected];box.hidden=!R;campus.hidden=!!R;if(legend)legend.hidden=!!R;
+    var R=$imports.INTERIORS[this.selected];box.hidden=!R;campus.hidden=!!R;if(legend)legend.hidden=!!R;
     if(!R)return false;
-    var here=S.mode==='in'&&S.room===R.id,b=this.seen(R.id),walk=0,seenWalk=0,i;
+    var here=$imports.S.mode==='in'&&$imports.S.room===R.id,b=this.seen(R.id),walk=0,seenWalk=0,i;
     for(i=0;i<b.length;i++)if(R.grid[Math.floor(i/R.cols)][i%R.cols]!=='#'){walk++;if(b[i])seenWalk++;}
     var avail=Math.max(200,(box.parentElement&&box.parentElement.clientWidth||600)-4);
     var size=Math.max(9,Math.min(22,Math.floor(avail/R.cols))),w=R.cols*size,h=R.rows*size,dpr=Math.min(2,window.devicePixelRatio||1);
@@ -133,7 +135,7 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
       ctx.fillText(mark,cx,cy+.5);
     }
     if(here){
-      var px=(S.x-R.ox)/R.tw*size,py=(S.y-R.oy)/R.th*size,a=S.ang,L=Math.max(9,size*.9);
+      var px=($imports.S.x-R.ox)/R.tw*size,py=($imports.S.y-R.oy)/R.th*size,a=$imports.S.ang,L=Math.max(9,size*.9);
       ctx.fillStyle='#d9473e';ctx.strokeStyle='#14110e';ctx.lineWidth=2;ctx.beginPath();
       ctx.moveTo(px+Math.cos(a)*L,py+Math.sin(a)*L);
       ctx.lineTo(px+Math.cos(a+2.45)*L*.62,py+Math.sin(a+2.45)*L*.62);
@@ -144,3 +146,10 @@ var ExplorationMap={selected:null,acc:0,bits:{},rt:null,
     return true;
   }
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/exploration-map.js",{
+"EXPLORE_B64":{get:function(){return EXPLORE_B64;},set:function($value){EXPLORE_B64=$value;}},
+"ExplorationMap":{get:function(){return ExplorationMap;},set:function($value){ExplorationMap=$value;}}
+});
+})(GameModules.imports("game3d/js/exploration-map.js"));

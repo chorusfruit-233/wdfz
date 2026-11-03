@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 死亡档案室
    每一种真实死因第一次发生时，永久解锁一份档案；同一种再死只记次数，不再多解锁。
    - 稳定 ID 按真实死因（kill 的 source）定，不按演出：同样用「伸手」演出的巡察者、车库黑影、车门、驾驶是四份不同的档案；
@@ -56,7 +58,7 @@ ARCHIVE_CUTS.forEach(function(e,i){ e.no=i+1; });
 var ARCHIVE_BY_ID={};
 DEATH_ARCHIVE.concat(ARCHIVE_CUTS).forEach(function(e){ ARCHIVE_BY_ID[e.id]=e; });
 /* 回放舞台：户外用操场边一块空地，室内用各房间的默认入口 */
-var DEATH_STAGE_OUT={x:1580,y:1800,ang:-PI/2};
+var DEATH_STAGE_OUT={x:1580,y:1800,ang:-$imports.PI/2};
 /* 当前这次 kill 的来源：调试面板的「实际死亡」把它设成 debug */
 var KILL_CTX=null;
 
@@ -86,7 +88,7 @@ var DeathArchive={
   },
   /* 由 kill() 在保命判定之后调用。返回新解锁的条目（已解锁过返回 null） */
   record:function(source,fx){
-    if(KILL_CTX==='debug'||(typeof DEV!=='undefined'&&DEV.on)||(typeof ArchiveReplay!=='undefined'&&ArchiveReplay.on)) return null;
+    if(KILL_CTX==='debug'||(typeof $imports.DEV!=='undefined'&&$imports.DEV.on)||(typeof ArchiveReplay!=='undefined'&&ArchiveReplay.on)) return null;
     var id=DeathArchive.idFor(source,fx); if(!id) return null;
     var d=DeathArchive.migrate(DeathArchive.read()), fresh=!d.unlocked[id];
     d.count[id]=(d.count[id]||0)+1;
@@ -114,15 +116,15 @@ var DeathArchive={
   state:function(){ var d=DeathArchive.migrate(DeathArchive.read()); DeathArchive.write(d); return d; },
   /* 这一份档案打开了没有：真的经历过（死亡记录、达成的结局、看过的开场），或者「全部解锁」过 */
   real:function(e,d){
-    if(e.cut) return e.end?!!endsSeen()[e.end]:proSeen();
+    if(e.cut) return e.end?!!(0,$imports.endsSeen)()[e.end]:(0,$imports.proSeen)();
     return !!d.unlocked[e.id];
   },
   isOpen:function(e,d){ d=d||DeathArchive.state(); return !!d.granted[e.id]||DeathArchive.real(e,d); },
   /* 这一份的演出现在有没有：结局 / 开场看过场在不在（《网安仙人》由 campus-network 模块登记），
      ext 的死法看 DeathCG 里注册了没有（迷宫两种死法由 void-maze 模块注册）。模块拿掉了，这一份就不列出、不计数、「全部解锁」也不开 */
   avail:function(e){
-    if(e.cut) return typeof CUT_DEF!=='undefined'&&!!CUT_DEF[e.cut];
-    if(e.ext) return typeof DeathCG!=='undefined'&&DeathCG.has(e.fx);
+    if(e.cut) return typeof $imports.CUT_DEF!=='undefined'&&!!$imports.CUT_DEF[e.cut];
+    if(e.ext) return typeof $imports.DeathCG!=='undefined'&&$imports.DeathCG.has(e.fx);
     return true;
   },
   /* 玩家能看到的条目：打开了的全部，加上没打开的公开条目（只显示「尚未记录」）；演出不在的不列 */
@@ -133,16 +135,16 @@ var DeathArchive={
   /* 「全部解锁」：死亡和演出（包括隐藏的）全部打开，只记在 granted 里。
      要先在页面里画的数字键盘上输调试密码（和调试面板同一个），普通游玩里不会被随手点开，隐藏内容不会因此泄露 */
   askUnlockAll:function(){
-    if(typeof DevLock==='undefined') return false;
+    if(typeof $imports.DevLock==='undefined') return false;
     var btn=document.getElementById('arAll');
-    return DevLock.ask({title:'输入调试密码 · 解锁全部 CG',onOk:DeathArchive.unlockAll,
+    return $imports.DevLock.ask({title:'输入调试密码 · 解锁全部 CG',onOk:DeathArchive.unlockAll,
       onCancel:function(){ if(btn) btn.focus({preventScroll:true}); }});
   },
   unlockAll:function(){
     var d=DeathArchive.state(), left=DeathArchive.locked(d), n=left.length;
     left.forEach(function(e){ d.granted[e.id]=1; });
     DeathArchive.write(d); DeathArchive.paint();
-    try{ toast(n?'已解锁全部 CG（直接解锁 '+n+' 份，不计经历次数）':'全部 CG 都已经解锁了'); }catch(e){}
+    try{ (0,$imports.toast)(n?'已解锁全部 CG（直接解锁 '+n+' 份，不计经历次数）':'全部 CG 都已经解锁了'); }catch(e){}
     var first=document.querySelector('#arcuts .arcard.open button')||document.getElementById('arBack');
     if(first) first.focus({preventScroll:true});
     return n;
@@ -150,14 +152,14 @@ var DeathArchive={
   /* 死亡演出放完以后提示一次（不在致死那一刻打断） */
   notify:function(entry){
     if(!entry) return;
-    try{ toast('死亡档案室 · 新记录：'+entry.n); }catch(e){}
+    try{ (0,$imports.toast)('死亡档案室 · 新记录：'+entry.n); }catch(e){}
   },
 
   /* ---------- 菜单里的档案室 ---------- */
   open:function(){
     var el=document.getElementById('archive'); if(!el) return;
     DeathArchive.paint(); el.hidden=false;
-    try{ resetInputState(); releaseMouseLook(); }catch(e){}
+    try{ (0,$imports.resetInputState)(); (0,$imports.releaseMouseLook)(); }catch(e){}
     var first=el.querySelector('.arcard.open button')||document.getElementById('arBack');
     if(first) first.focus({preventScroll:true});
   },
@@ -226,59 +228,59 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
   play:function(id){
     var e=ARCHIVE_BY_ID[id], d=DeathArchive.state();
     if(!e||!DeathArchive.avail(e)||!DeathArchive.isOpen(e,d)||ArchiveReplay.on) return false;
-    if(S.screen!=='menu') return false;
+    if($imports.S.screen!=='menu') return false;
     ArchiveReplay.on=true; ArchiveReplay.id=id; ArchiveReplay.t0=performance.now();
-    ArchiveReplay.snap={mode:S.mode,room:S.room,x:S.x,y:S.y,ang:S.ang,pitch:S.pitch,seated:S.seated,tsec:S.tsec,day:S.day};
+    ArchiveReplay.snap={mode:$imports.S.mode,room:$imports.S.room,x:$imports.S.x,y:$imports.S.y,ang:$imports.S.ang,pitch:$imports.S.pitch,seated:$imports.S.seated,tsec:$imports.S.tsec,day:$imports.S.day};
     document.getElementById('archive').hidden=true;
     document.getElementById('menu').style.display='none';
     document.body.classList.add('cut','replaying');
     var cap=document.getElementById('arReplay');
     if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; cap.querySelector('i').textContent=e.cut?(e.end?'结局档案 · 回放':'开场 · 回放'):'死亡档案 · 回放'; }
-    S.screen='replay'; S.dead=false; S.death=null; S.seated=false; S.pitch=0; S.eyeLift=0;
-    if(e.hour!==undefined) VisualState.stageHour=e.hour;          /* 先定天色再搭场景：窗光、灯这些按搭建时的时刻 */
+    $imports.S.screen='replay'; $imports.S.dead=false; $imports.S.death=null; $imports.S.seated=false; $imports.S.pitch=0; $imports.S.eyeLift=0;
+    if(e.hour!==undefined) $imports.VisualState.stageHour=e.hour;          /* 先定天色再搭场景：窗光、灯这些按搭建时的时刻 */
     try{
       if(e.stage==='out'){
-        S.x=DEATH_STAGE_OUT.x; S.y=DEATH_STAGE_OUT.y; S.ang=DEATH_STAGE_OUT.ang;
-        if(S.mode!=='out'||!GLR.outMesh){ S.mode='out'; S.room=null; enterWorldOut(); }
-      }else if(e.at){ var R=INTERIORS[e.stage]; doEnterRoom(e.stage,{x:R.ox+e.at.c*R.tw,y:R.oy+e.at.r*R.th,ang:e.at.ang}); }
-      else doEnterRoom(e.stage);
+        $imports.S.x=DEATH_STAGE_OUT.x; $imports.S.y=DEATH_STAGE_OUT.y; $imports.S.ang=DEATH_STAGE_OUT.ang;
+        if($imports.S.mode!=='out'||!$imports.GLR.outMesh){ $imports.S.mode='out'; $imports.S.room=null; (0,$imports.enterWorldOut)(); }
+      }else if(e.at){ var R=$imports.INTERIORS[e.stage]; (0,$imports.doEnterRoom)(e.stage,{x:R.ox+e.at.c*R.tw,y:R.oy+e.at.r*R.th,ang:e.at.ang}); }
+      else (0,$imports.doEnterRoom)(e.stage);
     }catch(err){ ArchiveReplay.stop(); return false; }
-    running=true;
+    $imports.running=true;
     ArchiveReplay.wait=setInterval(function(){
-      var ready=(S.mode==='out'?!!GLR.outMesh:(GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS[S.room]));
+      var ready=($imports.S.mode==='out'?!!$imports.GLR.outMesh:($imports.GLR.roomMesh&&$imports.GLR.roomMesh.userData.roomData===$imports.INTERIORS[$imports.S.room]));
       if(!ArchiveReplay.on){ clearInterval(ArchiveReplay.wait); return; }
       if(!ready&&performance.now()-ArchiveReplay.t0<15000) return;
       clearInterval(ArchiveReplay.wait); ArchiveReplay.wait=0;
-      if(!ready){ ArchiveReplay.stop(); try{ toast('档案读取失败，请稍后再试'); }catch(_e){} return; }
+      if(!ready){ ArchiveReplay.stop(); try{ (0,$imports.toast)('档案读取失败，请稍后再试'); }catch(_e){} return; }
       ArchiveReplay.start(e);
     },60);
     return true;
   },
   start:function(e){
     if(e.cut) return ArchiveReplay.startCut(e);
-    S.screen='replay'; S.seated=false; S.pitch=0;
-    try{ syncCamera(0); }catch(err){}
-    try{ deathFX(e.fx,{preview:true}); }catch(err){}
-    try{ SFX.resume(); SFX.deathFx(e.fx); }catch(err){}
+    $imports.S.screen='replay'; $imports.S.seated=false; $imports.S.pitch=0;
+    try{ (0,$imports.syncCamera)(0); }catch(err){}
+    try{ (0,$imports.deathFX)(e.fx,{preview:true}); }catch(err){}
+    try{ $imports.SFX.resume(); $imports.SFX.deathFx(e.fx); }catch(err){}
     /* 按演出自己的进度收尾（低帧率时演出走得比墙上时钟慢，不能按墙钟截断）；墙钟只做一个宽松的上限 */
-    var sec=Math.max(3.5,DeathTimeline.duration(e.fx)+0.6), w0=performance.now();
+    var sec=Math.max(3.5,$imports.DeathTimeline.duration(e.fx)+0.6), w0=performance.now();
     ArchiveReplay.timer=setInterval(function(){
-      if(ANFX.kind!=='death'||ANFX.t>=sec||performance.now()-w0>sec*4000) ArchiveReplay.stop();
+      if($imports.ANFX.kind!=='death'||$imports.ANFX.t>=sec||performance.now()-w0>sec*4000) ArchiveReplay.stop();
     },100);
   },
   /* 结局和开场：用正式的过场（同一份 CUT_DEF）在这个舞台上播，完成回调只回档案室——不出结局卡、不记结局、不清存档、不停速通表。
      过场期间 S.screen 是 'cut'，点击 / 空格 / 回车 / Esc 走过场自己的跳过 */
   startCut:function(e){
-    if(typeof CUT_DEF==='undefined'||!CUT_DEF[e.cut]){ ArchiveReplay.stop(); return; }
-    ArchiveReplay.cut={enabled:CUT.enabled,dur:CUT_DEF.opening?CUT_DEF.opening.dur:null,short:typeof Opening!=='undefined'?Opening.short:false};
-    CUT.enabled=true;
-    if(e.cut==='opening'&&typeof Opening!=='undefined'){                /* 档案里看完整版；同学先换回正常的样子，演到第四段再褪成里世界 */
-      Opening.short=false; CUT_DEF.opening.dur=OPENING_DUR.full;
-      try{ ncRestore(); }catch(err){}
+    if(typeof $imports.CUT_DEF==='undefined'||!$imports.CUT_DEF[e.cut]){ ArchiveReplay.stop(); return; }
+    ArchiveReplay.cut={enabled:$imports.CUT.enabled,dur:$imports.CUT_DEF.opening?$imports.CUT_DEF.opening.dur:null,short:typeof $imports.Opening!=='undefined'?$imports.Opening.short:false};
+    $imports.CUT.enabled=true;
+    if(e.cut==='opening'&&typeof $imports.Opening!=='undefined'){                /* 档案里看完整版；同学先换回正常的样子，演到第四段再褪成里世界 */
+      $imports.Opening.short=false; $imports.CUT_DEF.opening.dur=$imports.OPENING_DUR.full;
+      try{ (0,$imports.ncRestore)(); }catch(err){}
     }
-    try{ SFX.resume(); }catch(err){}
-    try{ syncCamera(0); }catch(err){}
-    playCut(e.cut,function(){ ArchiveReplay.stop(); });
+    try{ $imports.SFX.resume(); }catch(err){}
+    try{ (0,$imports.syncCamera)(0); }catch(err){}
+    (0,$imports.playCut)(e.cut,function(){ ArchiveReplay.stop(); });
   },
   skip:function(){
     if(!ArchiveReplay.on) return false;
@@ -289,30 +291,30 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
     if(!ArchiveReplay.on) return;
     clearInterval(ArchiveReplay.timer); clearInterval(ArchiveReplay.wait); ArchiveReplay.timer=0; ArchiveReplay.wait=0;
     ArchiveReplay.on=false;
-    if(typeof CUT!=='undefined'&&CUT.on){ CUT.done=null; cutFinish(); }    /* 结局 / 开场回放中途结束：先收掉过场（完成回调已摘掉，不会再进来） */
+    if(typeof $imports.CUT!=='undefined'&&$imports.CUT.on){ $imports.CUT.done=null; (0,$imports.cutFinish)(); }    /* 结局 / 开场回放中途结束：先收掉过场（完成回调已摘掉，不会再进来） */
     var c=ArchiveReplay.cut; ArchiveReplay.cut=null;
     var ent=ARCHIVE_BY_ID[ArchiveReplay.id];
-    if(ent&&ent.hour!==undefined) VisualState.stageHour=null;         /* 回放指定的天色收回（场景没搭好就结束时也收） */
+    if(ent&&ent.hour!==undefined) $imports.VisualState.stageHour=null;         /* 回放指定的天色收回（场景没搭好就结束时也收） */
     if(c){
-      CUT.enabled=c.enabled;
-      if(c.dur!==null&&CUT_DEF.opening) CUT_DEF.opening.dur=c.dur;
-      if(typeof Opening!=='undefined') Opening.short=c.short;
-      try{ openingCap(''); }catch(e){}
-      try{ SoundPlayer.stop('scene'); }catch(e){}                     /* 点火、充能这些演出声音跟着收掉，不带回档案室 */
+      $imports.CUT.enabled=c.enabled;
+      if(c.dur!==null&&$imports.CUT_DEF.opening) $imports.CUT_DEF.opening.dur=c.dur;
+      if(typeof $imports.Opening!=='undefined') $imports.Opening.short=c.short;
+      try{ (0,$imports.openingCap)(''); }catch(e){}
+      try{ $imports.SoundPlayer.stop('scene'); }catch(e){}                     /* 点火、充能这些演出声音跟着收掉，不带回档案室 */
     }
-    try{ if(ANFX.kind==='death') anfxClear(); }catch(e){}
-    try{ SFX.stopDeath&&SFX.stopDeath(); }catch(e){}
-    GLR.flash=0; GLR.hurt=0; VisualState.flash=0; VisualState.hurt=0;
+    try{ if($imports.ANFX.kind==='death') (0,$imports.anfxClear)(); }catch(e){}
+    try{ $imports.SFX.stopDeath&&$imports.SFX.stopDeath(); }catch(e){}
+    $imports.GLR.flash=0; $imports.GLR.hurt=0; $imports.VisualState.flash=0; $imports.VisualState.hurt=0;
     var s=ArchiveReplay.snap; ArchiveReplay.snap=null;
-    if(s){ S.ang=s.ang; S.pitch=s.pitch; S.seated=s.seated; S.tsec=s.tsec; S.day=s.day; }
-    S.dead=false; S.death=null; S.eyeLift=0;
-    S.screen='menu';
+    if(s){ $imports.S.ang=s.ang; $imports.S.pitch=s.pitch; $imports.S.seated=s.seated; $imports.S.tsec=s.tsec; $imports.S.day=s.day; }
+    $imports.S.dead=false; $imports.S.death=null; $imports.S.eyeLift=0;
+    $imports.S.screen='menu';
     document.body.classList.remove('cut','replaying');
     var cap=document.getElementById('arReplay'); if(cap) cap.hidden=true;
     document.getElementById('menu').style.display='block';
     var el=document.getElementById('archive'); if(el){ DeathArchive.paint(); el.hidden=false; }
     ArchiveReplay.refocus();
-    try{ syncCamera(0); }catch(e){}
+    try{ (0,$imports.syncCamera)(0); }catch(e){}
   },
   /* 焦点回到刚重看的那张卡的「重看」上 */
   refocus:function(){
@@ -321,7 +323,7 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
   }
 };
 document.addEventListener('keydown',function(ev){
-  if(typeof DevLock!=='undefined'&&DevLock.on) return;            /* 「全部解锁」的密码键盘开着：按键给键盘（Esc 只关键盘，不关档案室） */
+  if(typeof $imports.DevLock!=='undefined'&&$imports.DevLock.on) return;            /* 「全部解锁」的密码键盘开着：按键给键盘（Esc 只关键盘，不关档案室） */
   if(ArchiveReplay.on&&ArchiveReplay.cut) return;                  /* 结局 / 开场回放：按键走过场自己的跳过 */
   if(ArchiveReplay.on){
     if(ev.key===' '||ev.key==='Enter'||ev.key==='Escape'){ ev.preventDefault(); ev.stopPropagation(); ArchiveReplay.skip(); }
@@ -342,3 +344,17 @@ document.addEventListener('click',function(ev){
 },true);
 /* 启动时先把旧死亡日志迁一次：之后新写进旧日志的死亡不会被当成「旧版本记录」 */
 try{ DeathArchive.state(); }catch(e){}
+
+/* @module-exports */
+GameModules.publish("game3d/js/death-archive.js",{
+"DEATH_ARCHIVE_KEY":{get:function(){return DEATH_ARCHIVE_KEY;},set:function($value){DEATH_ARCHIVE_KEY=$value;}},
+"DEATH_ARCHIVE":{get:function(){return DEATH_ARCHIVE;},set:function($value){DEATH_ARCHIVE=$value;}},
+"DEATH_ARCHIVE_BY_ID":{get:function(){return DEATH_ARCHIVE_BY_ID;},set:function($value){DEATH_ARCHIVE_BY_ID=$value;}},
+"ARCHIVE_CUTS":{get:function(){return ARCHIVE_CUTS;},set:function($value){ARCHIVE_CUTS=$value;}},
+"ARCHIVE_BY_ID":{get:function(){return ARCHIVE_BY_ID;},set:function($value){ARCHIVE_BY_ID=$value;}},
+"DEATH_STAGE_OUT":{get:function(){return DEATH_STAGE_OUT;},set:function($value){DEATH_STAGE_OUT=$value;}},
+"KILL_CTX":{get:function(){return KILL_CTX;},set:function($value){KILL_CTX=$value;}},
+"DeathArchive":{get:function(){return DeathArchive;},set:function($value){DeathArchive=$value;}},
+"ArchiveReplay":{get:function(){return ArchiveReplay;},set:function($value){ArchiveReplay=$value;}}
+});
+})(GameModules.imports("game3d/js/death-archive.js"));

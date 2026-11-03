@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 目光
    "凝视"用的眼睛：黑暗里浮着的一只只杏仁形眼睛，眼眶一圈像火苗一样往外炸的黄光，
    里面是一圈圈的螺旋虹膜 —— 有的金黄、有的血红。全部是画在 canvas 上的贴图，
@@ -82,16 +84,16 @@ function gazeEyeTex(kind){
   c.strokeStyle='#ffd640'; c.lineWidth=7;
   c.beginPath(); lid(c); c.stroke();
   c.restore();
-  var tex=new THREE.CanvasTexture(cv);
-  tex.colorSpace=THREE.SRGBColorSpace;
+  var tex=new $imports.THREE.CanvasTexture(cv);
+  tex.colorSpace=$imports.THREE.SRGBColorSpace;
   GAZE_TEX[kind]=tex;
   return tex;
 }
 /* 一只眼睛。尺寸是宽度（米）；材质每只一份，好各自淡入淡出 */
 function gazeEye(size,kind){
-  var mat=new THREE.SpriteMaterial({map:gazeEyeTex(kind||(Math.random()<0.4?'red':'gold')),
+  var mat=new $imports.THREE.SpriteMaterial({map:gazeEyeTex(kind||($imports.PresentationRandom.next()<0.4?'red':'gold')),
     transparent:true,depthWrite:false,depthTest:false,fog:false,opacity:0});   /* 隔着墙也看得见：它们本来就不在墙里 */
-  var sp=new THREE.Sprite(mat);
+  var sp=new $imports.THREE.Sprite(mat);
   sp.scale.set(size,size*0.6875,1);
   sp.renderOrder=5;
   return sp;
@@ -107,11 +109,20 @@ function gazeWallSpots(R,maxN,nearM){
       if(r2<0||r2>=R.rows||c2<0||c2>=R.cols) continue;
       if(R.grid[r2][c2]==='#') continue;
       var wx=R.ox+(cc+0.5+dirs[k][0]*0.5)*R.tw, wy=R.oy+(rr+0.5+dirs[k][1]*0.5)*R.th;
-      var d=Math.sqrt((wx-S.x)*(wx-S.x)+(wy-S.y)*(wy-S.y))*U2M;
+      var d=Math.sqrt((wx-$imports.S.x)*(wx-$imports.S.x)+(wy-$imports.S.y)*(wy-$imports.S.y))*$imports.U2M;
       if(d>nearM||d<2.4) continue;          /* 贴脸的那面墙不放：挡住半个屏幕就不是"看着你"了 */
       out.push({wx:wx,wy:wy,nx:dirs[k][0],nz:dirs[k][1],d:d});
     }
   }
-  for(k=out.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)), tmp=out[k]; out[k]=out[j]; out[j]=tmp; }
+  for(k=out.length-1;k>0;k--){ var j=Math.floor($imports.PresentationRandom.next()*(k+1)), tmp=out[k]; out[k]=out[j]; out[j]=tmp; }
   return out.slice(0,maxN);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/fx/gaze.js",{
+"GAZE_TEX":{get:function(){return GAZE_TEX;},set:function($value){GAZE_TEX=$value;}},
+"gazeEyeTex":{get:function(){return gazeEyeTex;},set:function($value){gazeEyeTex=$value;}},
+"gazeEye":{get:function(){return gazeEye;},set:function($value){gazeEye=$value;}},
+"gazeWallSpots":{get:function(){return gazeWallSpots;},set:function($value){gazeWallSpots=$value;}}
+});
+})(GameModules.imports("game3d/js/fx/gaze.js"));

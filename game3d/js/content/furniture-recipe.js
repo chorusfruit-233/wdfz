@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 家具与室内设施
    每种格子字符一个摆放函数：FURN[ch](c, x, y, cx, cz)
      c  —— 当前房间的上下文（Kit、尺寸、坐标换算、碰撞登记、接触阴影）
@@ -16,8 +18,8 @@ FURN.J=function(c,x,y,cx,cz){
   if(isDream){
     K.box('plain',cx,1.35,cz,0.14,2.7,0.94,0xe9f7ff,1);
     K.box('plain',cx-0.09,1.4,cz,0.03,2.2,0.70,0x8ec6d1,1);
-  }else if(c.R.host==='lift'){ liftCabin(c,x,y,cx,cz); return; }   /* 轿厢：model/lift.js */
-  else { liftLanding(c,x,y,cx,cz); return; }                         /* 走廊上的电梯门：model/lift.js */
+  }else if(c.R.host==='lift'){ (0,$imports.liftCabin)(c,x,y,cx,cz); return; }   /* 轿厢：model/lift.js */
+  else { (0,$imports.liftLanding)(c,x,y,cx,cz); return; }                         /* 走廊上的电梯门：model/lift.js */
   c.solid(cx,cz,c.tw,c.th);
 };
 FURN.j=function(c,x,y,cx,cz){
@@ -56,11 +58,11 @@ FURN.d=function(c,x,y,cx,cz){
   K.frame(cx,dz,0);
   K.asset('desk_student',0,0,0,0);                                               /* 木纹桌面、钢框、可调高的腿、铁皮桌斗、挂钩 */
   /* 桌面：高中生的桌子——前沿一排书立着（书立夹着），一摞练习册、卷子、水杯、笔 */
-  var hh=hash2(x*3+7,y*5+11), h2=hash2(y*7+3,x*11+5), top=0.7575;
-  if(hh>0.15) propBooksUpright(K,(h2-0.5)*0.1+0.04,top,-0.175,0.26+hh*0.2,x*7+y*3,0);
+  var hh=(0,$imports.hash2)(x*3+7,y*5+11), h2=(0,$imports.hash2)(y*7+3,x*11+5), top=0.7575;
+  if(hh>0.15) (0,$imports.propBooksUpright)(K,(h2-0.5)*0.1+0.04,top,-0.175,0.26+hh*0.2,x*7+y*3,0);
   if(hh>0.42) K.box('paper',(hh-0.7)*0.18,top+0.003,0.07,0.25,0.004,0.18,0xe6ece6,1.0);   /* 卷子 */
-  if(h2>0.55) propBookPile(K,0.22,top,0.06,2+((h2*10)|0)%3,x*7+y);
-  if(h2<0.35) propBottle(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
+  if(h2>0.55) (0,$imports.propBookPile)(K,0.22,top,0.06,2+((h2*10)|0)%3,x*7+y);
+  if(h2<0.35) (0,$imports.propBottle)(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
   if(hh<0.30) K.rod('plastic',-0.2,top+0.006,0.05,-0.05,top+0.006,0.08,0.006,0.006,6,0x2a4a8a);  /* 一支笔 */
   K.unframe();
   chairModel(K,cx,cz+0.30,0,0.44);
@@ -87,7 +89,7 @@ FURN.V=function(c,x,y,cx,cz){
   }
   c.ao(cx,cz,3.9,2.3,1.0);
   /* 车头的蓝牌：盖在车模型自带的空白牌照上（模型里牌照前面在 x=1.899、高 0.40），号码和钥匙环、调查笔记一致 */
-  c.meshes.push(carPlate(Investigation.carName(x,y),cx+1.9025,0.40,cz));
+  if(c.view&&c.view.carPlate)c.meshes.push(c.view.carPlate(x,y,cx+1.9025,0.40,cz));
   c.solid(cx,cz,3.70,1.85);              /* 碰撞按整个车身，不止一格 */
   K.frame(cx,cz,0);
   K.asset('car_sedan',0,0,0,0,{tint:{body:col}});
@@ -112,7 +114,7 @@ FURN.b=function(c,x,y,cx,cz){
   K.asset((nbL&&nbR)?'bunk_frame_n':(nbR?'bunk_frame_l':'bunk_frame_r'),0,0,0,0);
   [0.30,1.38].forEach(function(y0,lv){
     K.asset('bed_mattress',0,y0,0,0);
-    K.asset(hash2(x+lv*7,y)>0.3?'quilt_folded':'quilt_block',0,y0,0,0,{tint:{q:QUILT_COLS[(x*3+y*5+lv)%5]}});
+    K.asset((0,$imports.hash2)(x+lv*7,y)>0.3?'quilt_folded':'quilt_block',0,y0,0,0,{tint:{q:QUILT_COLS[(x*3+y*5+lv)%5]}});
   });
   K.unframe();
 };
@@ -123,12 +125,12 @@ FURN.x=function(c,x,y,cx,cz){ c.ao(cx,cz,0.7,0.6,0.7); c.K.asset('map_stand',cx,
 /* ---- 音乐教室：第一个 'p' 是立式钢琴（琴背靠墙）和琴凳，其余是圆琴凳 ---- */
 FURN.p=function(c,x,y,cx,cz){
   var K=c.K, R=c.R;
-  if(S.__pianoPlaced){
+  if(c.pianoPlaced){
     K.asset('stool_piano',cx,0,cz,0);
     c.ao(cx,cz,0.4,0.4,0.6);
     return;
   }
-  S.__pianoPlaced=1;
+  c.pianoPlaced=1;
   var rot=0;
   if(R.grid[y-1]&&R.grid[y-1][x]==='#') rot=Math.PI;
   else if(R.grid[y+1]&&R.grid[y+1][x]==='#') rot=0;
@@ -175,7 +177,7 @@ FURN.k=function(c,x,y,cx,cz){
   K.asset('food_pan_fill',cx+0.20,0.935,cz+0.04,Math.PI,{tint:{a:f2[0],b:f2[1]}});
 };
 /* ---- 机房 ---- */
-FURN.f=function(c,x,y,cx,cz){ c.ao(cx,cz,0.9,0.8,0.85); c.K.asset('server_rack',cx,0,cz,hash2(x,y)>0.5?Math.PI:0); };   /* 服务器机柜 */
+FURN.f=function(c,x,y,cx,cz){ c.ao(cx,cz,0.9,0.8,0.85); c.K.asset('server_rack',cx,0,cz,(0,$imports.hash2)(x,y)>0.5?Math.PI:0); };   /* 服务器机柜 */
 FURN.Q=function(c,x,y,cx,cz){ c.ao(cx,cz,0.9,0.8,0.85); c.K.asset('server_console',cx,0,cz,0); };          /* 门禁控制台 */
 /* ---- 货架：器材室放球，别处放纸箱（哪层哪格有、是哪种按格子坐标定） ---- */
 FURN.R=function(c,x,y,cx,cz){
@@ -185,10 +187,10 @@ FURN.R=function(c,x,y,cx,cz){
   for(k=0;k<4;k++){
     var sy=0.106+k*0.56;
     for(j=0;j<3;j++){
-      if(hash2(x*7+k,y*3+j)<0.35) continue;
+      if((0,$imports.hash2)(x*7+k,y*3+j)<0.35) continue;
       var bx=cx-0.26+j*0.26;
-      if(c.R.id==='gear1') K.asset(['ball_basket','ball_soccer','ball_volley'][(j+k)%3],bx,sy,cz,hash2(j,k)*6.28);
-      else K.asset('carton_'+((j+k+x)%3),bx,sy,cz+(hash2(k,j+y)-0.5)*0.06,(hash2(j,x+k)-0.5)*0.12);
+      if(c.R.id==='gear1') K.asset(['ball_basket','ball_soccer','ball_volley'][(j+k)%3],bx,sy,cz,(0,$imports.hash2)(j,k)*6.28);
+      else K.asset('carton_'+((j+k+x)%3),bx,sy,cz+((0,$imports.hash2)(k,j+y)-0.5)*0.06,((0,$imports.hash2)(j,x+k)-0.5)*0.12);
     }
   }
 };
@@ -218,10 +220,27 @@ FURN.A=function(c,x,y,cx,cz){
 FURN.L=function(c,x,y,cx,cz){
   var K=c.K;
   K.g('decal').quad(cx-0.45,cz-0.35,cx+0.45,cz-0.35,cx+0.45,cz+0.35,cx-0.45,cz+0.35,0.004,0x6a2a22);
-  K.asset('sign_hanging',cx,WALLH-3.0,cz,0);
+  K.asset('sign_hanging',cx,$imports.WALLH-3.0,cz,0);
 };
 /* 没有专门模型的字符：一个按原色的倒角块（不该出现，留着兜底） */
 function furnFallback(c,x,y,cx,cz,ch){
-  var colName=PALETTE_NAME[ch];
-  if(colName) c.K.bevel('plastic',cx,0.4,cz,0.85,0.8,0.85,PALETTE[colName]||PALETTE.wall,1.0,0.03);
+  var colName=$imports.PALETTE_NAME[ch];
+  if(colName) c.K.bevel('plastic',cx,0.4,cz,0.85,0.8,0.85,$imports.PALETTE[colName]||$imports.PALETTE.wall,1.0,0.03);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/content/furniture-recipe.js",{
+"FURN":{get:function(){return FURN;},set:function($value){FURN=$value;}},
+"C_DESK":{get:function(){return C_DESK;},set:function($value){C_DESK=$value;}},
+"C_SEAT":{get:function(){return C_SEAT;},set:function($value){C_SEAT=$value;}},
+"C_FRAME":{get:function(){return C_FRAME;},set:function($value){C_FRAME=$value;}},
+"C_STEEL":{get:function(){return C_STEEL;},set:function($value){C_STEEL=$value;}},
+"C_DARKP":{get:function(){return C_DARKP;},set:function($value){C_DARKP=$value;}},
+"chairModel":{get:function(){return chairModel;},set:function($value){chairModel=$value;}},
+"officeChair":{get:function(){return officeChair;},set:function($value){officeChair=$value;}},
+"CAR_COLS":{get:function(){return CAR_COLS;},set:function($value){CAR_COLS=$value;}},
+"QUILT_COLS":{get:function(){return QUILT_COLS;},set:function($value){QUILT_COLS=$value;}},
+"FOODS":{get:function(){return FOODS;},set:function($value){FOODS=$value;}},
+"furnFallback":{get:function(){return furnFallback;},set:function($value){furnFallback=$value;}}
+});
+})(GameModules.imports("game3d/js/content/furniture-recipe.js"));

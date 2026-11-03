@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 前情提要 */
 'use strict';
 
@@ -16,13 +18,13 @@ var PRO_PAGES=[
 ];
 var PRO={on:false,i:0,seen:false,woke:false,see:false,busy:false};
 function eyelid(close,mid,open){
-  var scope=Lifecycle.renew('eyelid');
+  var scope=$imports.Lifecycle.renew('eyelid');
   var t=document.getElementById('lidtop'), b=document.getElementById('lidbot');
   if(!t||!b){ mid(); if(open) open(); return; }
   scope.own(function(){t.style.height='0';b.style.height='0';});
   t.style.height='50%'; b.style.height='50%';
   scope.timeout(function(){
-    try{ mid(); }catch(e){Lifecycle.report('eyelid',e);}
+    try{ mid(); }catch(e){$imports.Lifecycle.report('eyelid',e);}
     scope.timeout(function(){
       t.style.height='0'; b.style.height='0';
       if(open) scope.timeout(open,240);
@@ -32,11 +34,11 @@ function eyelid(close,mid,open){
 function proWake(then){
   if(PRO.woke) { if(then) then(); return; }
   PRO.woke=true;
-  try{ SFX.resume(); }catch(e){}
+  try{ $imports.SFX.resume(); }catch(e){}
   eyelid(460, function(){
-    try{ ncFlip(); }catch(e){}
-    try{ VisualState.worldNorm=0; }catch(e){}
-    try{ SFX.blink(); }catch(e){}
+    try{ (0,$imports.ncFlip)(); }catch(e){}
+    try{ $imports.VisualState.worldNorm=0; }catch(e){}
+    try{ $imports.SFX.blink(); }catch(e){}
     PRO.see=true;
     var el=document.getElementById('pro');
     if(el) el.classList.add('see');
@@ -47,12 +49,12 @@ function proSeen(){
 }
 function proMark(){ try{ localStorage.setItem('wdfz_pro','1'); }catch(e){} }
 function proShow(){
-  Lifecycle.renew('prologue-text');Lifecycle.renew('eyelid');
-  Lifecycle.renew('prologue');
+  $imports.Lifecycle.renew('prologue-text');$imports.Lifecycle.renew('eyelid');
+  $imports.Lifecycle.renew('prologue');
   var el=document.getElementById('pro');
   if(!el){ proEnd(); return; }
   PRO.on=true; PRO.i=0; PRO.woke=false; PRO.see=false; PRO.busy=false;
-  try{ VisualState.worldNorm=1; }catch(e){}          /* 先按"正常世界"渲染 */
+  try{ $imports.VisualState.worldNorm=1; }catch(e){}          /* 先按"正常世界"渲染 */
   try{ if(el.classList) el.classList.remove('see'); }catch(e){}
   try{ document.body.classList.add('pro'); }catch(e){}
   PRO.seen=proSeen();
@@ -63,24 +65,24 @@ function proShow(){
 function proEnd(){
   proCancel();
   proMark();
-  try{ ncFlip(); }catch(e){Lifecycle.report('prologue-end',e);}
-  os('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
+  try{ (0,$imports.ncFlip)(); }catch(e){$imports.Lifecycle.report('prologue-end',e);}
+  (0,$imports.os)('我：第四节。我坐在自己的位子上——至少，名牌上写的是我的名字。',4.8);
 }
 /* 取消不写已看标记，也不产生新字幕；新局、读档和退出共用。 */
 function proCancel(){
-  Lifecycle.renew('prologue');Lifecycle.renew('prologue-text');Lifecycle.renew('eyelid');
+  $imports.Lifecycle.renew('prologue');$imports.Lifecycle.renew('prologue-text');$imports.Lifecycle.renew('eyelid');
   PRO.on=false;
   PRO.busy=false;PRO.woke=false;PRO.see=false;
   var el=document.getElementById('pro');
   if(el){ el.classList.remove('on'); el.classList.remove('see'); el.style.display='none'; }
   try{ document.body.classList.remove('pro'); }catch(e){}
-  try{ VisualState.worldNorm=0; }catch(e){}
+  try{ $imports.VisualState.worldNorm=0; }catch(e){}
 }
 function proSetText(txt){
   var t=document.getElementById('protext');
   if(!t) return;
   t.style.opacity='0';
-  Lifecycle.renew('prologue-text').timeout(function(){
+  $imports.Lifecycle.renew('prologue-text').timeout(function(){
     if(!PRO.on||!t) return;
     t.textContent=txt; t.style.opacity='1';
   },200);
@@ -102,3 +104,19 @@ function proNext(){
   }
   proSetText(PRO_PAGES[PRO.i]);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/prologue.js",{
+"PRO_PAGES":{get:function(){return PRO_PAGES;},set:function($value){PRO_PAGES=$value;}},
+"PRO":{get:function(){return PRO;},set:function($value){PRO=$value;}},
+"eyelid":{get:function(){return eyelid;},set:function($value){eyelid=$value;}},
+"proWake":{get:function(){return proWake;},set:function($value){proWake=$value;}},
+"proSeen":{get:function(){return proSeen;},set:function($value){proSeen=$value;}},
+"proMark":{get:function(){return proMark;},set:function($value){proMark=$value;}},
+"proShow":{get:function(){return proShow;},set:function($value){proShow=$value;}},
+"proEnd":{get:function(){return proEnd;},set:function($value){proEnd=$value;}},
+"proCancel":{get:function(){return proCancel;},set:function($value){proCancel=$value;}},
+"proSetText":{get:function(){return proSetText;},set:function($value){proSetText=$value;}},
+"proNext":{get:function(){return proNext;},set:function($value){proNext=$value;}}
+});
+})(GameModules.imports("game3d/js/prologue.js"));

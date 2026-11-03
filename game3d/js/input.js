@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 键鼠与触屏输入、玩家移动 */
 'use strict';
 
@@ -9,25 +11,25 @@ var INPUT={mode:'mouse',lookId:null,lookType:null,stickId:null,stickCenter:null,
   touchHandled:false};   /* 这一次触摸已经由游戏处理过（松指触发了按钮，或按下时跳过了演出）：浏览器随后补发的 click 一律吞掉 */
 
 function devOwnsInput(target){
-  return !!(typeof DEV!=='undefined'&&DEV.on&&target&&target.closest&&target.closest('#dev'));
+  return !!(typeof $imports.DEV!=='undefined'&&$imports.DEV.on&&target&&target.closest&&target.closest('#dev'));
 }
 function devInputBlocked(){
-  return typeof DEV!=='undefined'&&DEV.on&&(DEV.freeze||!!DEV.drag);
+  return typeof $imports.DEV!=='undefined'&&$imports.DEV.on&&($imports.DEV.freeze||!!$imports.DEV.drag);
 }
 /* 平台适配入口：策略只接收值，不读取 DOM 或持有这些系统。 */
 function gameInputContext(target,editing){
-  return {hidden:document.hidden,terminal:!!(typeof TerminalUI!=='undefined'&&TerminalUI.on),screen:S.screen,dead:!!S.dead,prologue:!!(typeof PRO!=='undefined'&&PRO.on),
-    paused:!!PAUSE.on,panelOpen:!!UI.anyOpen(),choice:!!UI.chooseOpen,
-    computer:!!(typeof PC!=='undefined'&&PC.on),phone:!!(typeof PHONE!=='undefined'&&PHONE.on),
-    lesson:!!(typeof LESSON!=='undefined'&&LESSON.on),
-    debugFrozen:!!(typeof DEV!=='undefined'&&((DEV.on&&DEV.freeze)||DEV.locking)),   /* 输调试密码时也冻结 */
-    debugDragging:!!(typeof DEV!=='undefined'&&DEV.on&&DEV.drag),
-    intro:S.intro>0,driving:!!(typeof CarChase!=='undefined'&&CarChase.active()),
-    deathPending:!!(typeof DEATH_PENDING!=='undefined'&&DEATH_PENDING),
+  return {hidden:document.hidden,terminal:!!(typeof $imports.TerminalUI!=='undefined'&&$imports.TerminalUI.on),screen:$imports.S.screen,dead:!!$imports.S.dead,prologue:!!(typeof $imports.PRO!=='undefined'&&$imports.PRO.on),
+    paused:!!$imports.PAUSE.on,panelOpen:!!$imports.UI.anyOpen(),choice:!!$imports.UI.chooseOpen,
+    computer:!!(typeof $imports.PC!=='undefined'&&$imports.PC.on),phone:!!(typeof $imports.PHONE!=='undefined'&&$imports.PHONE.on),
+    lesson:!!(typeof $imports.LESSON!=='undefined'&&$imports.LESSON.on),
+    debugFrozen:!!(typeof $imports.DEV!=='undefined'&&(($imports.DEV.on&&$imports.DEV.freeze)||$imports.DEV.locking)),   /* 输调试密码时也冻结 */
+    debugDragging:!!(typeof $imports.DEV!=='undefined'&&$imports.DEV.on&&$imports.DEV.drag),
+    intro:$imports.S.intro>0,driving:!!(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active()),
+    deathPending:!!(typeof $imports.DEATH_PENDING!=='undefined'&&$imports.DEATH_PENDING),
     targetDebug:devOwnsInput(target),editing:!!editing};
 }
 function playerInputAllowed(){
-  return GamePolicy.playerAllowed(gameInputContext());
+  return $imports.GamePolicy.playerAllowed(gameInputContext());
 }
 function pointerIsLocked(){return document.pointerLockElement===document.getElementById('cv');}
 function releaseCapture(el,id){
@@ -47,7 +49,7 @@ function endStick(){
   releaseCapture(document.getElementById('stick'),id);
 }
 function resetInputState(){
-  KEY={};endLook();endStick();TOUCH.run=false;S.moving=false;S.run=false;
+  KEY={};endLook();endStick();TOUCH.run=false;$imports.S.moving=false;$imports.S.run=false;
 }
 window.__resetInput=resetInputState;
 
@@ -56,7 +58,7 @@ function releaseMouseLook(){
   if(pointerIsLocked()&&document.exitPointerLock){try{document.exitPointerLock();}catch(e){}}
 }
 function requestMouseLook(){
-  if(typeof CarChase!=='undefined'&&CarChase.active())return Promise.resolve(false);
+  if(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active())return Promise.resolve(false);
   if(INPUT.mode!=='mouse'||!playerInputAllowed()||devOwnsInput(document.activeElement))return Promise.resolve(false);
   var cv=document.getElementById('cv');
   INPUT.wantsLock=true;
@@ -94,17 +96,17 @@ function resumeMouseLook(){
   if(INPUT.wantsLock&&INPUT.mode==='mouse'&&playerInputAllowed())requestMouseLook();
 }
 function useTouchInput(){
-  var changed=!IS_TOUCH;
+  var changed=!$imports.IS_TOUCH;
   INPUT.mode='touch';INPUT.lastTouchAt=performance.now();INPUT.blockClickUntil=INPUT.lastTouchAt+800;
-  IS_TOUCH=true;document.body.classList.add('touch');
+  $imports.IS_TOUCH=true;document.body.classList.add('touch');
   if(pointerIsLocked()||INPUT.lockPending)releaseMouseLook();
-  if(changed)updateTouchUI();
+  if(changed)(0,$imports.updateTouchUI)();
 }
 function useMouseInput(){
   INPUT.mode='mouse';INPUT.blockClickUntil=0;
-  if(IS_TOUCH){
-    IS_TOUCH=false;document.body.classList.remove('touch');
-    updateTouchUI();
+  if($imports.IS_TOUCH){
+    $imports.IS_TOUCH=false;document.body.classList.remove('touch');
+    (0,$imports.updateTouchUI)();
   }
 }
 function updateInputUI(){
@@ -170,11 +172,11 @@ function initTouchActivation(){
   window.addEventListener('blur',function(){taps.clear();});
 }
 function initInput(){
-  INPUT.mode=IS_TOUCH?'touch':'mouse';
+  INPUT.mode=$imports.IS_TOUCH?'touch':'mouse';
   var cv=document.getElementById('cv'),stick=document.getElementById('stick');
   initTouchActivation();
   document.addEventListener('focusin',function(e){
-    if(devOwnsInput(e.target)){resetInputState();releaseMouseLook();updateTouchUI();}
+    if(devOwnsInput(e.target)){resetInputState();releaseMouseLook();(0,$imports.updateTouchUI)();}
   });
   document.addEventListener('pointerdown',function(e){
     /* 调试浮窗只接管自己的控件；点回游戏时，同一次手势就能重新移动或转向。 */
@@ -185,108 +187,108 @@ function initInput(){
     if(devOwnsInput(document.activeElement)){
       document.activeElement.blur();
       if(e.target===cv||(e.target.closest&&e.target.closest('#touch')))cv.focus({preventScroll:true});
-      updateTouchUI();
+      (0,$imports.updateTouchUI)();
     }
-    var owner=GamePolicy.inputOwner(gameInputContext());
+    var owner=$imports.GamePolicy.inputOwner(gameInputContext());
     if(owner==='cutscene'){
       /* 按下就跳过演出；松指后补发的 click 会落在随后出现的结局界面按钮上，要吞掉 */
       if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
-      cutSkip(); return;
+      (0,$imports.cutSkip)(); return;
     }
-    if(S.screen==='replay'&&typeof ArchiveReplay!=='undefined'&&ArchiveReplay.on){
+    if($imports.S.screen==='replay'&&typeof $imports.ArchiveReplay!=='undefined'&&$imports.ArchiveReplay.on){
       /* 死亡档案回放：按下就结束，补发的 click 不能点到随后出现的档案卡片上 */
       if(e.pointerType==='touch'||e.pointerType==='pen')INPUT.touchHandled=true;
-      ArchiveReplay.skip(); return;
+      $imports.ArchiveReplay.skip(); return;
     }
     /* 死亡演出中：按下跳到结果（死亡界面或惊醒）；补发的 click 同样不能点到随后出现的按钮 */
     if(owner==='death'){
-      if(deathSkip()&&(e.pointerType==='touch'||e.pointerType==='pen'))INPUT.touchHandled=true;
+      if((0,$imports.deathSkip)()&&(e.pointerType==='touch'||e.pointerType==='pen'))INPUT.touchHandled=true;
       return;
     }
     if(e.pointerType==='touch'||e.pointerType==='pen')useTouchInput();
     else if(INPUT.lookType!=='touch'&&INPUT.lookType!=='pen'&&INPUT.stickId===null)useMouseInput();
   },{capture:true,passive:true});
   window.addEventListener('keydown',function(e){
-    if(typeof TerminalUI!=='undefined'&&TerminalUI.on){if(e.key==='Escape'){e.preventDefault();TerminalUI.close();}return;}
+    if(typeof $imports.TerminalUI!=='undefined'&&$imports.TerminalUI.on){if(e.key==='Escape'){e.preventDefault();$imports.TerminalUI.close();}return;}
     var k=physicalKey(e);
     var editing=e.target.matches('input,select,textarea,[contenteditable="true"]');
-    if(typeof DevLock!=='undefined'&&DevLock.on){DevLock.key(e);return;}   /* 调试密码键盘打开时，按键只给它 */
-    if(e.key==='F2'&&(!editing||DEV.on)){e.preventDefault();if(!e.repeat&&typeof Dev!=='undefined')Dev.toggle();return;}
-    if(freeCursorKey(e)&&!editing&&S.screen==='play'&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
+    if(typeof $imports.DevLock!=='undefined'&&$imports.DevLock.on){$imports.DevLock.key(e);return;}   /* 调试密码键盘打开时，按键只给它 */
+    if(e.key==='F2'&&(!editing||$imports.DEV.on)){e.preventDefault();if(!e.repeat&&typeof $imports.Dev!=='undefined')$imports.Dev.toggle();return;}
+    if(freeCursorKey(e)&&!editing&&$imports.S.screen==='play'&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
       e.preventDefault();if(!e.repeat)toggleFreeCursor(e);return;
     }
     if(devOwnsInput(e.target)){
-      if(k==='tab')Dev.focusTrap(e);
-      if(k==='escape'){e.preventDefault();if(!e.repeat)Dev.close();}
+      if(k==='tab')$imports.Dev.focusTrap(e);
+      if(k==='escape'){e.preventDefault();if(!e.repeat)$imports.Dev.close();}
       return;
     }
-    if(k==='escape'&&DEV.on&&DEV.freeze){e.preventDefault();if(!e.repeat)Dev.close();return;}
+    if(k==='escape'&&$imports.DEV.on&&$imports.DEV.freeze){e.preventDefault();if(!e.repeat)$imports.Dev.close();return;}
     if(editing){
       if(k!=='escape')return;
       e.target.blur();
     }
-    var owner=GamePolicy.inputOwner(gameInputContext());
+    var owner=$imports.GamePolicy.inputOwner(gameInputContext());
     if(owner==='cutscene'){
-      if(k===' '||k==='enter'||k==='escape'){e.preventDefault();if(!e.repeat)cutSkip();}
+      if(k===' '||k==='enter'||k==='escape'){e.preventDefault();if(!e.repeat)(0,$imports.cutSkip)();}
       return;
     }
     if(owner==='prologue'){
-      if(k===' '||k==='enter'){e.preventDefault();if(!e.repeat)proNext();}
+      if(k===' '||k==='enter'){e.preventDefault();if(!e.repeat)(0,$imports.proNext)();}
       return;
     }
     if(owner==='death'&&(k===' '||k==='enter'||k==='escape')){   /* 跳过死亡演出 */
-      e.preventDefault();if(!e.repeat)deathSkip();return;
+      e.preventDefault();if(!e.repeat)(0,$imports.deathSkip)();return;
     }
-    if(S.screen!=='play'||S.dead||e.ctrlKey||e.metaKey||e.altKey)return;
+    if($imports.S.screen!=='play'||$imports.S.dead||e.ctrlKey||e.metaKey||e.altKey)return;
     if(k==='escape'){
       e.preventDefault();if(e.repeat)return;
-      if(PC.on){PCGAME.stop();return;}
-      if(PHONE.on){PHONE.stop();return;}
-      if(LESSON.on){LESSON.close(true);return;}
-      if(UI.openPanel==='set'){UI.close('set',false);if(PAUSE.on)UI.open('pause');return;}
-      if(UI.openPanel&&UI.openPanel!=='pause'){UI.close(UI.openPanel);return;}
-      if(PAUSE.on&&performance.now()-INPUT.unlockedAt<200)return;
-      Game.pauseToggle();return;
+      if($imports.PC.on){$imports.PCGAME.stop();return;}
+      if($imports.PHONE.on){$imports.PHONE.stop();return;}
+      if($imports.LESSON.on){$imports.LESSON.close(true);return;}
+      if($imports.UI.openPanel==='set'){$imports.UI.close('set',false);if($imports.PAUSE.on)$imports.UI.open('pause');return;}
+      if($imports.UI.openPanel&&$imports.UI.openPanel!=='pause'){$imports.UI.close($imports.UI.openPanel);return;}
+      if($imports.PAUSE.on&&performance.now()-INPUT.unlockedAt<200)return;
+      $imports.Game.pauseToggle();return;
     }
     if(k===' '&&e.target.closest('button,a,[role="button"]'))return;
     if(owner==='computer'){
       if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){KEY[k]=true;e.preventDefault();}
       return;
     }
-    if(owner==='lesson'){if(/^[1-3]$/.test(k)){e.preventDefault();if(!e.repeat)LESSON.answer(+k-1);}return;}
+    if(owner==='lesson'){if(/^[1-3]$/.test(k)){e.preventDefault();if(!e.repeat)$imports.LESSON.answer(+k-1);}return;}
     if(owner==='phone'){
-      if([' ','w','arrowup','enter'].indexOf(k)>=0){e.preventDefault();if(!e.repeat)PHONE.flap();}
+      if([' ','w','arrowup','enter'].indexOf(k)>=0){e.preventDefault();if(!e.repeat)$imports.PHONE.flap();}
       return;
     }
-    if(owner==='choice'&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)UI.choiceKey(+k);return;}
+    if(owner==='choice'&&/^[1-9]$/.test(k)){e.preventDefault();if(!e.repeat)$imports.UI.choiceKey(+k);return;}
     if(owner==='pause'||owner==='blocked'||owner==='choice')return;
     if(owner==='driving'){
       if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0){e.preventDefault();KEY[k]=true;}
       return;
     }
     if(['tab','h','j','m'].indexOf(k)>=0){
-      e.preventDefault();if(!e.repeat)UI.toggle({tab:'bag',h:'think',j:'note',m:'mapv'}[k]);return;
+      e.preventDefault();if(!e.repeat)$imports.UI.toggle({tab:'bag',h:'think',j:'note',m:'mapv'}[k]);return;
     }
     if(!playerInputAllowed())return;
     if(['w','a','s','d',' ','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0)e.preventDefault();
     KEY[k]=true;if(e.repeat)return;
-    if(k==='e')tryInteract();
-    if(k==='r'&&!Investigation.openDesk())LESSON.open();
-    if(k==='f')toggleTorch();
-    if(k==='g')dropSelected();
-    if(k==='1')useHot(0);
-    if(k==='2')useHot(1);
+    if(k==='e')(0,$imports.tryInteract)();
+    if(k==='r'&&!$imports.Investigation.openDesk())$imports.LESSON.open();
+    if(k==='f')(0,$imports.toggleTorch)();
+    if(k==='g')(0,$imports.dropSelected)();
+    if(k==='1')(0,$imports.useHot)(0);
+    if(k==='2')(0,$imports.useHot)(1);
   },{passive:false});
   window.addEventListener('keyup',function(e){
     KEY[physicalKey(e)]=false;
     /* 单按 Alt 松开时，部分浏览器会把焦点移到自己的菜单栏，之后按键就进不了游戏 */
-    if(e.key==='Alt'&&S.screen==='play')e.preventDefault();
+    if(e.key==='Alt'&&$imports.S.screen==='play')e.preventDefault();
   });
 
   var proEl=document.getElementById('pro');
   if(proEl)proEl.addEventListener('click',function(e){
     e.stopPropagation();
-    if(GamePolicy.inputOwner(gameInputContext())==='prologue')proNext();
+    if($imports.GamePolicy.inputOwner(gameInputContext())==='prologue')(0,$imports.proNext)();
   });
   cv.addEventListener('click',function(e){
     if(!playerInputAllowed()||INPUT.mode!=='mouse'||
@@ -300,8 +302,8 @@ function initInput(){
     if(!pointerIsLocked()||INPUT.mode!=='mouse'||!playerInputAllowed()||devOwnsInput(document.activeElement))return;
     var mx=e.movementX||0,my=e.movementY||0;
     if(!isFinite(mx)||!isFinite(my))return;
-    S.ang+=clamp(mx,-maxDelta,maxDelta)*.0022*lookSensitivity(false);
-    S.pitch=clamp(S.pitch-clamp(my,-maxDelta,maxDelta)*.0022*lookSensitivity(false),-1.25,1.25);
+    $imports.S.ang+=(0,$imports.clamp)(mx,-maxDelta,maxDelta)*.0022*(0,$imports.lookSensitivity)(false);
+    $imports.S.pitch=(0,$imports.clamp)($imports.S.pitch-(0,$imports.clamp)(my,-maxDelta,maxDelta)*.0022*(0,$imports.lookSensitivity)(false),-1.25,1.25);
   });
   cv.addEventListener('pointerdown',function(e){
     if(!playerInputAllowed()||e.button>0)return;
@@ -323,8 +325,8 @@ function initInput(){
     // 全屏/旋转屏幕造成的坐标突变只丢弃这一帧，下一帧仍能继续转向。
     if(Math.abs(dx)>maxDelta||Math.abs(dy)>maxDelta)return;
     INPUT.dragDistance+=Math.hypot(dx,dy);
-    var sense=lookSensitivity(INPUT.lookType!=='mouse');
-    S.ang+=dx*.0042*sense;S.pitch=clamp(S.pitch-dy*.0042*sense,-1.25,1.25);
+    var sense=(0,$imports.lookSensitivity)(INPUT.lookType!=='mouse');
+    $imports.S.ang+=dx*.0042*sense;$imports.S.pitch=(0,$imports.clamp)($imports.S.pitch-dy*.0042*sense,-1.25,1.25);
   },{passive:true});
   function lookEnd(e){
     if(e.pointerId!==INPUT.lookId)return;
@@ -363,8 +365,8 @@ function initInput(){
     stick.addEventListener('lostpointercapture',stickEnd);
   }
   /* 手机上不再单独放奔跑键：摇杆推到底就是跑 */
-  document.getElementById('tAct').addEventListener('click',function(){if(playerInputAllowed())tryInteract();});
-  document.getElementById('tPause').addEventListener('click',function(){if(!PAUSE.on)Game.pause();});
+  document.getElementById('tAct').addEventListener('click',function(){if(playerInputAllowed())(0,$imports.tryInteract)();});
+  document.getElementById('tPause').addEventListener('click',function(){if(!$imports.PAUSE.on)$imports.Game.pause();});
 
   document.addEventListener('pointerlockchange',function(){
     var locked=pointerIsLocked(),wasLocked=INPUT.hadLock;INPUT.hadLock=locked;
@@ -374,28 +376,28 @@ function initInput(){
       if(INPUT.lookType==='mouse')endLook();
     }else if(INPUT.freeCursor){
       INPUT.freeCursor=false;INPUT.unlockedAt=performance.now();resetInputState();   /* 按 Alt 放出来的：不暂停 */
-    }else if(wasLocked&&INPUT.mode==='mouse'&&playerInputAllowed()&&!devOwnsInput(document.activeElement)&&!(typeof FULLSCREEN!=='undefined'&&FULLSCREEN.busy)){
-      INPUT.unlockedAt=performance.now();resetInputState();Game.pause();
+    }else if(wasLocked&&INPUT.mode==='mouse'&&playerInputAllowed()&&!devOwnsInput(document.activeElement)&&!(typeof $imports.FULLSCREEN!=='undefined'&&$imports.FULLSCREEN.busy)){
+      INPUT.unlockedAt=performance.now();resetInputState();$imports.Game.pause();
     }
     updateInputUI();
   });
   document.addEventListener('pointerlockerror',function(){INPUT.lockPending=false;updateInputUI();});
   function leaveGame(){
     resetInputState();
-    if(playerInputAllowed())Game.pause();
+    if(playerInputAllowed())$imports.Game.pause();
     releaseMouseLook();
   }
   window.addEventListener('blur',leaveGame);
-  document.addEventListener('visibilitychange',function(){lastT=performance.now();accum=0;if(document.hidden)leaveGame();});
+  document.addEventListener('visibilitychange',function(){$imports.lastT=performance.now();$imports.accum=0;if(document.hidden)leaveGame();});
   window.addEventListener('contextmenu',function(e){if(e.target===cv)e.preventDefault();});
 }
 
 function updatePlayer(dt){
-  if(S.dead||S.screen!=='play'||(S.intro||0)>0)return;
-  var snack=(S.snackT||0)>0;
-  if(snack) S.snackT=Math.max(0,S.snackT-dt);
-  capStamina();
-  if(HIDE.on){ S.moving=false; S.run=false; restoreStamina(11*dt); syncCamera(dt); return; }   /* 躲在柜子里：不能动 */
+  if($imports.S.dead||$imports.S.screen!=='play'||($imports.S.intro||0)>0)return;
+  var snack=($imports.S.snackT||0)>0;
+  if(snack) $imports.S.snackT=Math.max(0,$imports.S.snackT-dt);
+  (0,$imports.capStamina)();
+  if($imports.HIDE.on){ $imports.S.moving=false; $imports.S.run=false; (0,$imports.restoreStamina)(11*dt); (0,$imports.syncCamera)(dt); return; }   /* 躲在柜子里：不能动 */
   var locked=!playerInputAllowed(),fw=0,sd=0;
   if(!locked){
     if(KEY.w||KEY.arrowup)fw++;
@@ -409,27 +411,61 @@ function updatePlayer(dt){
   /* 士力架：这几秒里体力空了也能跑，跑也不掉体力。躲柜子时世界照走，计时也要继续。 */
   /* 跑空以后要喘过气（回到 STAM_BACK）才能再跑。以前体力一回到 6 以上就又跑起来，
      马上又掉下去，按着疾跑（或手机摇杆推到底）时就一顿一顿地在跑和走之间来回切。 */
-  if(S.stam<=6)S.tired=true;
-  else if(S.stam>=STAM_BACK)S.tired=false;
-  S.run=wantRun&&(!S.tired||snack)&&(fw!==0||sd!==0);
+  if($imports.S.stam<=6)$imports.S.tired=true;
+  else if($imports.S.stam>=STAM_BACK)$imports.S.tired=false;
+  $imports.S.run=wantRun&&(!$imports.S.tired||snack)&&(fw!==0||sd!==0);
   var mag=Math.hypot(fw,sd);
-  if(S.seated&&mag>.08)S.seated=false;
-  S.moving=mag>.08&&!S.seated;
-  if(S.moving){
-    var spd=S.run?SPD_RUN:SPD_WALK;
-    if(typeof DEV!=='undefined'&&DEV.fast)spd*=2.6;
+  if($imports.S.seated&&mag>.08)$imports.S.seated=false;
+  $imports.S.moving=mag>.08&&!$imports.S.seated;
+  if($imports.S.moving){
+    var spd=$imports.S.run?SPD_RUN:SPD_WALK;
+    if(typeof $imports.DEV!=='undefined'&&$imports.DEV.fast)spd*=2.6;
     if(mag>1){fw/=mag;sd/=mag;}
-    var ca=Math.cos(S.ang),sa=Math.sin(S.ang),x=S.x,y=S.y;
-    moveBy((ca*fw-sa*sd)*spd*dt,(sa*fw+ca*sd)*spd*dt,dt);
-    S.moving=Math.hypot(S.x-x,S.y-y)>.0001;
+    var ca=Math.cos($imports.S.ang),sa=Math.sin($imports.S.ang),x=$imports.S.x,y=$imports.S.y;
+    (0,$imports.moveBy)((ca*fw-sa*sd)*spd*dt,(sa*fw+ca*sd)*spd*dt,dt);
+    $imports.S.moving=Math.hypot($imports.S.x-x,$imports.S.y-y)>.0001;
   }
-  if(S.moving&&!S.seated){
-    S.stepT=(S.stepT||0)-dt;
-    if(S.stepT<=0){S.stepT=S.run?.30:.46;SFX.step();}
-  }else S.stepT=0;
-  if(S.run&&S.moving){if(!snack)PlayerStats.changeStamina(-17*dt,'running',{min:0});}
-  else restoreStamina(11*dt);
-  if(S.enterCool>0)S.enterCool-=dt;
-  syncCamera(dt);
+  if($imports.S.moving&&!$imports.S.seated){
+    $imports.S.stepT=($imports.S.stepT||0)-dt;
+    if($imports.S.stepT<=0){$imports.S.stepT=$imports.S.run?.30:.46;$imports.SFX.step();}
+  }else $imports.S.stepT=0;
+  if($imports.S.run&&$imports.S.moving){if(!snack)$imports.PlayerStats.changeStamina(-17*dt,'running',{min:0});}
+  else (0,$imports.restoreStamina)(11*dt);
+  if($imports.S.enterCool>0)$imports.S.enterCool-=dt;
+  (0,$imports.syncCamera)(dt);
 }
 var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=30,STAM_BACK=35;
+
+/* @module-exports */
+GameModules.publish("game3d/js/input.js",{
+"KEY":{get:function(){return KEY;},set:function($value){KEY=$value;}},
+"TOUCH":{get:function(){return TOUCH;},set:function($value){TOUCH=$value;}},
+"LOOKDRAG":{get:function(){return LOOKDRAG;},set:function($value){LOOKDRAG=$value;}},
+"INPUT":{get:function(){return INPUT;},set:function($value){INPUT=$value;}},
+"devOwnsInput":{get:function(){return devOwnsInput;},set:function($value){devOwnsInput=$value;}},
+"devInputBlocked":{get:function(){return devInputBlocked;},set:function($value){devInputBlocked=$value;}},
+"gameInputContext":{get:function(){return gameInputContext;},set:function($value){gameInputContext=$value;}},
+"playerInputAllowed":{get:function(){return playerInputAllowed;},set:function($value){playerInputAllowed=$value;}},
+"pointerIsLocked":{get:function(){return pointerIsLocked;},set:function($value){pointerIsLocked=$value;}},
+"releaseCapture":{get:function(){return releaseCapture;},set:function($value){releaseCapture=$value;}},
+"endLook":{get:function(){return endLook;},set:function($value){endLook=$value;}},
+"endStick":{get:function(){return endStick;},set:function($value){endStick=$value;}},
+"resetInputState":{get:function(){return resetInputState;},set:function($value){resetInputState=$value;}},
+"releaseMouseLook":{get:function(){return releaseMouseLook;},set:function($value){releaseMouseLook=$value;}},
+"requestMouseLook":{get:function(){return requestMouseLook;},set:function($value){requestMouseLook=$value;}},
+"freeCursorKey":{get:function(){return freeCursorKey;},set:function($value){freeCursorKey=$value;}},
+"toggleFreeCursor":{get:function(){return toggleFreeCursor;},set:function($value){toggleFreeCursor=$value;}},
+"resumeMouseLook":{get:function(){return resumeMouseLook;},set:function($value){resumeMouseLook=$value;}},
+"useTouchInput":{get:function(){return useTouchInput;},set:function($value){useTouchInput=$value;}},
+"useMouseInput":{get:function(){return useMouseInput;},set:function($value){useMouseInput=$value;}},
+"updateInputUI":{get:function(){return updateInputUI;},set:function($value){updateInputUI=$value;}},
+"physicalKey":{get:function(){return physicalKey;},set:function($value){physicalKey=$value;}},
+"initTouchActivation":{get:function(){return initTouchActivation;},set:function($value){initTouchActivation=$value;}},
+"initInput":{get:function(){return initInput;},set:function($value){initInput=$value;}},
+"updatePlayer":{get:function(){return updatePlayer;},set:function($value){updatePlayer=$value;}},
+"SPD_WALK":{get:function(){return SPD_WALK;},set:function($value){SPD_WALK=$value;}},
+"SPD_RUN":{get:function(){return SPD_RUN;},set:function($value){SPD_RUN=$value;}},
+"SNACK_SEC":{get:function(){return SNACK_SEC;},set:function($value){SNACK_SEC=$value;}},
+"STAM_BACK":{get:function(){return STAM_BACK;},set:function($value){STAM_BACK=$value;}}
+});
+})(GameModules.imports("game3d/js/input.js"));

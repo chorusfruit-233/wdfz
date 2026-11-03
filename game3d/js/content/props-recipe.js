@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 常见小物件（摆放；模型见 tools/blender/assets/props.py）
    房间、走廊、室外都会用到的、照着真东西做的小件：吊扇、吊装的灯、安全出口灯、应急灯、监控探头、烟感、
    开关面板、饮水机、分类垃圾桶、卫生角（拖把、扫把、水桶、簸箕）、盆栽、柜式空调、吊装投影机、
@@ -13,7 +15,7 @@
 /* 道具都在 Blender 里建（tools/blender/assets/props.py），这里只管摆。吊在顶上的按吊顶 3 米建，ceilY 不是 3 米时整体平移 */
 /* ---- 吊扇：吸顶罩、吊杆、电机罩、三片带倾角的扇叶。扇叶离地 2.70 米（巡察者 2.6 米高，不会扫到头） ---- */
 function propCeilFan(K,x,z,ceilY,seed){
-  K.asset('fan_ceiling',x,ceilY-3,z,hash2(seed||1,7)*6.283);
+  K.asset('fan_ceiling',x,ceilY-3,z,(0,$imports.hash2)(seed||1,7)*6.283);
 }
 
 /* ---- 吊装的灯具（教室护眼灯）：灯面离地 2.68 米 ----
@@ -46,7 +48,7 @@ function propBinPair(K,x,z,rot){ K.asset('bin_pair',x,0,z,rot||0); }
 /* ---- 卫生角：水桶、拖把、扫把、簸箕，靠墙放（墙在局部 z=0，往 +z 摆开，占地约 0.9 × 0.4） ---- */
 function propCleaning(K,x,z,rot){ K.asset('cleaning_corner',x,0,z,rot||0); }
 /* ---- 盆栽（发财树 / 绿萝），h 是大小 ---- */
-function propPlant(K,x,z,h,seed){ K.asset((seed||1)%2?'plant_money':'plant_pothos',x,0,z,hash2(seed||1,3)*6.283,{s:h||1}); }
+function propPlant(K,x,z,h,seed){ K.asset((seed||1)%2?'plant_money':'plant_pothos',x,0,z,(0,$imports.hash2)(seed||1,3)*6.283,{s:h||1}); }
 /* ---- 柜式空调（占地 0.50 × 0.30，背靠墙） ---- */
 function propACCabinet(K,x,z,rot){ K.asset('ac_cabinet',x,0,z,rot||0); }
 /* ---- 吊装投影机（镜头朝 -z） ---- */
@@ -62,12 +64,12 @@ function propBooksUpright(K,x,y,z,len,seed,rot){
 }
 /* ---- 一摞横放的书（大小不一，错开一点）；返回书顶的高度 ---- */
 function propBookPile(K,x,y,z,n,seed){
-  var name='books_pile_'+Math.max(2,Math.min(4,n|0)), a=Assets.get(name);
-  K.asset(name,x,y,z,(hash2(seed,2)-0.5)*0.6);
-  return y+((a&&a.m.k&&a.m.k.h)||0.05);
+  var name='books_pile_'+Math.max(2,Math.min(4,n|0)), a=$imports.CollisionAssetDetails[name];
+  K.asset(name,x,y,z,((0,$imports.hash2)(seed,2)-0.5)*0.6);
+  return y+((a&&a.h)||0.05);
 }
 /* ---- 水杯：磨砂塑料杯身 + 盖（h 是高度） ---- */
-function propBottle(K,x,y,z,col,h){ K.asset('bottle_water',x,y,z,hash2(x*31|0,z*17|0)*6.28,{tint:{b:col||0x8ab8d8},s:(h||0.22)/0.20}); }
+function propBottle(K,x,y,z,col,h){ K.asset('bottle_water',x,y,z,(0,$imports.hash2)(x*31|0,z*17|0)*6.28,{tint:{b:col||0x8ab8d8},s:(h||0.22)/0.20}); }
 /* ---- 墙上挂的东西：画框里的一张纸（标语、名人名言、课程表），局部 z=0 是墙面 ---- */
 var FRAME_HEAD=[0xb8483a,0x3a6a9a,0x4a7a4a,0xc8902a];
 function propFrame(K,x,y,z,rot,w,h,paper,frame,seed){
@@ -101,3 +103,34 @@ function propFloorPaper(K,x,z,rot,seed){
   if(seed%4===0) K.asset('paper_floor',0.03,0.0025,0.05,0.35,{shade:0.9});
   K.restore(F);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/content/props-recipe.js",{
+"propCeilFan":{get:function(){return propCeilFan;},set:function($value){propCeilFan=$value;}},
+"lampOpt":{get:function(){return lampOpt;},set:function($value){lampOpt=$value;}},
+"propHangLamp":{get:function(){return propHangLamp;},set:function($value){propHangLamp=$value;}},
+"lampMat":{get:function(){return lampMat;},set:function($value){lampMat=$value;}},
+"propExitSign":{get:function(){return propExitSign;},set:function($value){propExitSign=$value;}},
+"propEmergencyLight":{get:function(){return propEmergencyLight;},set:function($value){propEmergencyLight=$value;}},
+"propCamDome":{get:function(){return propCamDome;},set:function($value){propCamDome=$value;}},
+"propSmoke":{get:function(){return propSmoke;},set:function($value){propSmoke=$value;}},
+"propSwitch":{get:function(){return propSwitch;},set:function($value){propSwitch=$value;}},
+"propSocket":{get:function(){return propSocket;},set:function($value){propSocket=$value;}},
+"propWaterDispenser":{get:function(){return propWaterDispenser;},set:function($value){propWaterDispenser=$value;}},
+"propBinPair":{get:function(){return propBinPair;},set:function($value){propBinPair=$value;}},
+"propCleaning":{get:function(){return propCleaning;},set:function($value){propCleaning=$value;}},
+"propPlant":{get:function(){return propPlant;},set:function($value){propPlant=$value;}},
+"propACCabinet":{get:function(){return propACCabinet;},set:function($value){propACCabinet=$value;}},
+"propProjector":{get:function(){return propProjector;},set:function($value){propProjector=$value;}},
+"propCurtains":{get:function(){return propCurtains;},set:function($value){propCurtains=$value;}},
+"BOOK_ROWS":{get:function(){return BOOK_ROWS;},set:function($value){BOOK_ROWS=$value;}},
+"propBooksUpright":{get:function(){return propBooksUpright;},set:function($value){propBooksUpright=$value;}},
+"propBookPile":{get:function(){return propBookPile;},set:function($value){propBookPile=$value;}},
+"propBottle":{get:function(){return propBottle;},set:function($value){propBottle=$value;}},
+"FRAME_HEAD":{get:function(){return FRAME_HEAD;},set:function($value){FRAME_HEAD=$value;}},
+"propFrame":{get:function(){return propFrame;},set:function($value){propFrame=$value;}},
+"DECAL_UV":{get:function(){return DECAL_UV;},set:function($value){DECAL_UV=$value;}},
+"propDecal":{get:function(){return propDecal;},set:function($value){propDecal=$value;}},
+"propFloorPaper":{get:function(){return propFloorPaper;},set:function($value){propFloorPaper=$value;}}
+});
+})(GameModules.imports("game3d/js/content/props-recipe.js"));

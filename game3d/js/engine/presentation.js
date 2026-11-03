@@ -1,49 +1,51 @@
+/* @module-capsule */
+(function($imports){
 /* 纯表现：异象精灵、路人、巡察者和交互标记。 */
 'use strict';
 var ENTS=[];
 function entAdd(color,w,h,x,y,z){
-  var geo=new THREE.PlaneGeometry(w,h);
-  var mat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.85,side:THREE.DoubleSide,depthWrite:false});
-  var m=new THREE.Mesh(geo,mat);
+  var geo=new $imports.THREE.PlaneGeometry(w,h);
+  var mat=new $imports.THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.85,side:$imports.THREE.DoubleSide,depthWrite:false});
+  var m=new $imports.THREE.Mesh(geo,mat);
   m.position.set(x,y,z);
-  GLR.scene.add(m);
+  $imports.GLR.scene.add(m);
   ENTS.push(m);
   return m;
 }
 function entClear(){
-  for(var i=0;i<ENTS.length;i++){ GLR.scene.remove(ENTS[i]); ENTS[i].geometry.dispose(); ENTS[i].material.dispose(); }
+  for(var i=0;i<ENTS.length;i++){ $imports.GLR.scene.remove(ENTS[i]); ENTS[i].geometry.dispose(); ENTS[i].material.dispose(); }
   ENTS=[];
 }
 function entFace(){
   for(var i=0;i<ENTS.length;i++){
-    ENTS[i].quaternion.copy(GLR.cam.quaternion);
+    ENTS[i].quaternion.copy($imports.GLR.cam.quaternion);
   }
 }
 
 
 var FN_P={grp:null,room:null,mat:null};
 function fnPeopleClear(){
-  if(FN_P.grp){GLR.scene.remove(FN_P.grp);ThreeBackend.disposeGroup(FN_P.grp);}
+  if(FN_P.grp){$imports.GLR.scene.remove(FN_P.grp);$imports.ThreeBackend.disposeGroup(FN_P.grp);}
   FN_P.grp=null; FN_P.room=null;
 }
 function fnPeopleBuild(){
   fnPeopleClear();
-  if(S.mode!=='in'||!S.room) return;
-  var R=INTERIORS[S.room]; if(!R) return;
-  if(!FN_P.mat){FN_P.mat=new THREE.MeshBasicMaterial({color:0x41505c,fog:true});FN_P.mat.userData.shared=true;}
-  var g=new THREE.Group();
-  GLR.scene.add(g); FN_P.grp=g; FN_P.room=S.room;
-  var p=anfxW2S(S.x,S.y), made=0, c,r2,tries=0;
+  if($imports.S.mode!=='in'||!$imports.S.room) return;
+  var R=$imports.INTERIORS[$imports.S.room]; if(!R) return;
+  if(!FN_P.mat){FN_P.mat=new $imports.THREE.MeshBasicMaterial({color:0x41505c,fog:true});FN_P.mat.userData.shared=true;}
+  var g=new $imports.THREE.Group();
+  $imports.GLR.scene.add(g); FN_P.grp=g; FN_P.room=$imports.S.room;
+  var p=(0,$imports.anfxW2S)($imports.S.x,$imports.S.y), made=0, c,r2,tries=0;
   while(made<4&&tries++<160){
-    c=1+Math.floor(Math.random()*(R.cols-2));
-    r2=1+Math.floor(Math.random()*(R.rows-2));
+    c=1+Math.floor($imports.PresentationRandom.next()*(R.cols-2));
+    r2=1+Math.floor($imports.PresentationRandom.next()*(R.rows-2));
     var ch=R.grid[r2][c];
     if(ch==='#'||ch==='='||ch==='O'||ch==='S'||ch==='L') continue;
-    var w=worldToScene(R.ox+(c+0.5)*R.tw,R.oy+(r2+0.5)*R.th,R);
+    var w=(0,$imports.worldToScene)(R.ox+(c+0.5)*R.tw,R.oy+(r2+0.5)*R.th,R);
     var d=Math.hypot(w.x-p.x,w.z-p.z);
     if(d<2.2||d>7.5) continue;
-    var fg=new THREE.Group();
-    fg.add(figMesh('person',FN_P.mat,1));
+    var fg=new $imports.THREE.Group();
+    fg.add((0,$imports.figMesh)('person',FN_P.mat,1));
     fg.position.set(w.x,0,w.z);
     fg.rotation.y=Math.atan2(p.x-w.x,p.z-w.z);                 /* 正面（+z）朝着你 */
     g.add(fg);
@@ -51,17 +53,17 @@ function fnPeopleBuild(){
   }
 }
 function fnPeopleTick(){
-  var on=(S.fn&&S.fn.on&&S.fn.v<72);
+  var on=($imports.S.fn&&$imports.S.fn.on&&$imports.S.fn.v<72);
   if(!on){ if(FN_P.grp) fnPeopleClear(); return; }
-  if(FN_P.room!==S.room) fnPeopleBuild();
+  if(FN_P.room!==$imports.S.room) fnPeopleBuild();
 }
 
 var PAT_GEAR={};
 function patGearGeo(){
-  var ag=figAssetGeo('pat_gear','patGear',true); if(ag) return ag;      /* 大衣、大檐帽、袖章、夹板（figures.py） */
-  var key=Quality.get().segments;
+  var ag=(0,$imports.figAssetGeo)('pat_gear','patGear',true); if(ag) return ag;      /* 大衣、大檐帽、袖章、夹板（figures.py） */
+  var key=$imports.Quality.get().segments;
   if(PAT_GEAR[key]) return PAT_GEAR[key];
-  var K=new Kit(), m='dark', coat=0x1c2026, sp=FIG_SPEC.teacher, t=sp.thin;
+  var K=new $imports.Kit(), m='dark', coat=0x1c2026, sp=$imports.FIG_SPEC.teacher, t=sp.thin;
   var hipY=sp.leg, sh=hipY+sp.torso, hx=sp.w/2, hy=sh+sp.neck+sp.head*0.5, s;
   K.bevel(m,0,(sh+hipY)/2,0,0.36,sh-hipY,0.25,coat,1,0.06);                 /* 大衣上身 */
   K.bevel(m,0,(hipY+0.50)/2,0,0.37,hipY-0.50,0.27,coat,1,0.05);              /* 下摆到膝下 */
@@ -89,45 +91,66 @@ function patGearGeo(){
   PAT_GEAR[key].userData={shared:true,patGear:true};
   return PAT_GEAR[key];
 }
+function patEnsureFig(){if(!$imports.GLR.patFig)patAddFig();}
 function patAddFig(){
   patRemoveFig();
   try{
-    var g=new THREE.Group();
-    var body=figMesh('teacher',new THREE.MeshBasicMaterial({color:0x040506,fog:true}),1.12);
+    var g=new $imports.THREE.Group();
+    var body=(0,$imports.figMesh)('teacher',new $imports.THREE.MeshBasicMaterial({color:0x040506,fog:true}),1.12);
     g.add(body);
-    var gear=new THREE.Mesh(patGearGeo(),new THREE.MeshBasicMaterial({vertexColors:true,color:0x555555,fog:true})   /* 顶点色当线性值用，整体压暗 */);
+    var gear=new $imports.THREE.Mesh(patGearGeo(),new $imports.THREE.MeshBasicMaterial({vertexColors:true,color:0x555555,fog:true})   /* 顶点色当线性值用，整体压暗 */);
     gear.scale.setScalar(1.12); g.add(gear);
-    GLR.patFig=g; GLR.scene.add(g);
-  }catch(e){ GLR.patFig=null; }
+    $imports.GLR.patFig=g; $imports.GLR.scene.add(g);
+  }catch(e){ $imports.GLR.patFig=null; }
 }
-function patRemoveFig(){if(GLR.patFig){GLR.scene.remove(GLR.patFig);ThreeBackend.disposeGroup(GLR.patFig);GLR.patFig=null;}}
+function patRemoveFig(){if($imports.GLR.patFig){$imports.GLR.scene.remove($imports.GLR.patFig);$imports.ThreeBackend.disposeGroup($imports.GLR.patFig);$imports.GLR.patFig=null;}}
 function patRender(){
-  var g=GLR.patFig; if(!g) return;
-  if(VisualState.stage||PAT.state!=='walk'||PAT.room!==patRoomHere()||PAT.transition){ g.visible=false; return; }
-  var p=PAT.room==='out'?worldToScene(PAT.x,PAT.y,null):worldToScene(PAT.x,PAT.y,INTERIORS[PAT.room]);
-  g.visible=true; g.position.set(p.x,PAT.fy||0,p.z);
-  g.lookAt(GLR.cam.position.x,0,GLR.cam.position.z);  /* 人形正面朝 +z，lookAt 正好让它面朝你 */
+  var g=$imports.GLR.patFig; if(!g) return;
+  if($imports.VisualState.stage||$imports.PAT.state!=='walk'||$imports.PAT.room!==(0,$imports.patRoomHere)()||$imports.PAT.transition){ g.visible=false; return; }
+  var p=$imports.PAT.room==='out'?(0,$imports.worldToScene)($imports.PAT.x,$imports.PAT.y,null):(0,$imports.worldToScene)($imports.PAT.x,$imports.PAT.y,$imports.INTERIORS[$imports.PAT.room]);
+  g.visible=true; g.position.set(p.x,$imports.PAT.fy||0,p.z);
+  g.lookAt($imports.GLR.cam.position.x,0,$imports.GLR.cam.position.z);  /* 人形正面朝 +z，lookAt 正好让它面朝你 */
 }
 
 function updateMarker(dt){
-  var m=GLR.marker||ensureMarker();
+  var m=$imports.GLR.marker||(0,$imports.ensureMarker)();
   if(!m) return;
-  if(S.mode!=='in'||S.dead||S.screen!=='play'||PAUSE.on||(typeof UI!=='undefined'&&UI.anyOpen())){ m.visible=false; return; }
-  markT-=dt;
-  if(markT<=0){
-    markT=0.1;
-    var hit=nearWorld(24);
-    if(!hit){ m.visible=false; GLR.markHit=null; return; }
-    GLR.markHit=hit;
-    var R=INTERIORS[S.room];
-    var p=worldToScene(hit.x,hit.y,R);
-    var hy=Math.min(2.55,(typeof furnH==='function'?furnH(hit.ch):0.9)+0.22);
+  if($imports.S.mode!=='in'||$imports.S.dead||$imports.S.screen!=='play'||$imports.PAUSE.on||(typeof $imports.UI!=='undefined'&&$imports.UI.anyOpen())){ m.visible=false; return; }
+  $imports.markT-=dt;
+  if($imports.markT<=0){
+    $imports.markT=0.1;
+    var hit=(0,$imports.nearWorld)(24);
+    if(!hit){ m.visible=false; $imports.GLR.markHit=null; return; }
+    $imports.GLR.markHit=hit;
+    var R=$imports.INTERIORS[$imports.S.room];
+    var p=(0,$imports.worldToScene)(hit.x,hit.y,R);
+    var hy=Math.min(2.55,(typeof $imports.furnH==='function'?(0,$imports.furnH)(hit.ch):0.9)+0.22);
     m.position.set(p.x,hy,p.z);
     m.visible=true;
   }
-  if(m.visible&&GLR.markHit){
-    m.quaternion.copy(GLR.cam.quaternion);
-    var pu=1+0.09*Math.sin((GLR.time||0)*4.2);
+  if(m.visible&&$imports.GLR.markHit){
+    m.quaternion.copy($imports.GLR.cam.quaternion);
+    var pu=1+0.09*Math.sin(($imports.GLR.time||0)*4.2);
     m.scale.set(pu,pu,pu);
   }
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/engine/presentation.js",{
+"ENTS":{get:function(){return ENTS;},set:function($value){ENTS=$value;}},
+"entAdd":{get:function(){return entAdd;},set:function($value){entAdd=$value;}},
+"entClear":{get:function(){return entClear;},set:function($value){entClear=$value;}},
+"entFace":{get:function(){return entFace;},set:function($value){entFace=$value;}},
+"FN_P":{get:function(){return FN_P;},set:function($value){FN_P=$value;}},
+"fnPeopleClear":{get:function(){return fnPeopleClear;},set:function($value){fnPeopleClear=$value;}},
+"fnPeopleBuild":{get:function(){return fnPeopleBuild;},set:function($value){fnPeopleBuild=$value;}},
+"fnPeopleTick":{get:function(){return fnPeopleTick;},set:function($value){fnPeopleTick=$value;}},
+"PAT_GEAR":{get:function(){return PAT_GEAR;},set:function($value){PAT_GEAR=$value;}},
+"patGearGeo":{get:function(){return patGearGeo;},set:function($value){patGearGeo=$value;}},
+"patEnsureFig":{get:function(){return patEnsureFig;},set:function($value){patEnsureFig=$value;}},
+"patAddFig":{get:function(){return patAddFig;},set:function($value){patAddFig=$value;}},
+"patRemoveFig":{get:function(){return patRemoveFig;},set:function($value){patRemoveFig=$value;}},
+"patRender":{get:function(){return patRender;},set:function($value){patRender=$value;}},
+"updateMarker":{get:function(){return updateMarker;},set:function($value){updateMarker=$value;}}
+});
+})(GameModules.imports("game3d/js/engine/presentation.js"));

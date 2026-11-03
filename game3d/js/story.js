@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 线索点、逃生思路、假正常、结局与死亡 */
 'use strict';
 
@@ -20,25 +22,25 @@ var SPOTS=[
 var SPOT_ROOM={guard:['guard'],garw:['garage'],trash:['trash'],admin:['data'],lab:['comp']};
 var SPOT_INDOOR_ONLY={stall:1};
 function spotMark(id){
-  if(S.spots[id]) return;
+  if($imports.S.spots[id]) return;
   var sp=null;
   for(var i=0;i<SPOTS.length;i++) if(SPOTS[i].id===id) sp=SPOTS[i];
   if(!sp) return;
-  S.spots[id]=1;
-  os('我：（记下了「'+sp.n+'」）',3);
-  UI.spotsDirty=true;
+  $imports.S.spots[id]=1;
+  (0,$imports.os)('我：（记下了「'+sp.n+'」）',3);
+  $imports.UI.spotsDirty=true;
 }
 function spotTick(){
-  if(S.mode==='in'){
-    var R=INTERIORS[S.room], ids=R&&SPOT_ROOM[R.host];
+  if($imports.S.mode==='in'){
+    var R=$imports.INTERIORS[$imports.S.room], ids=R&&SPOT_ROOM[R.host];
     if(ids) for(var k=0;k<ids.length;k++) spotMark(ids[k]);
-    if(R&&R.host==='teach'&&inToiletHere()) spotMark('stall');   /* 隔间那条路只在教学楼 */
+    if(R&&R.host==='teach'&&(0,$imports.inToiletHere)()) spotMark('stall');   /* 隔间那条路只在教学楼 */
     return;
   }
   for(var i=0;i<SPOTS.length;i++){
     var sp=SPOTS[i];
-    if(S.spots[sp.id]||SPOT_INDOOR_ONLY[sp.id]) continue;
-    var mx=S.x/SC,my=S.y/SC;
+    if($imports.S.spots[sp.id]||SPOT_INDOOR_ONLY[sp.id]) continue;
+    var mx=$imports.S.x/$imports.SC,my=$imports.S.y/$imports.SC;
     if(mx>sp.x-30&&mx<sp.x+sp.w+30&&my>sp.y-30&&my<sp.y+sp.h+30) spotMark(sp.id);
   }
 }
@@ -58,7 +60,7 @@ function ideasAvailable(){
   var out=[];
   for(var i=0;i<IDEAS.length;i++){
     var it=IDEAS[i];
-    if(!S.spots[it.need]) continue;
+    if(!$imports.S.spots[it.need]) continue;
     out.push(it);
   }
   return out;
@@ -78,8 +80,8 @@ var FN_EVENTS=[
   {where:['admin','teach'], seen:'老师叫我去办公室，说有事找我谈。', real:'办公室里所有的椅子都朝门摆着，没有人坐过。'}
 ];
 function fnWhereNow(){
-  if(S.mode!=='in'||!S.room) return 'out';
-  var R=INTERIORS[S.room]; if(!R) return 'out';
+  if($imports.S.mode!=='in'||!$imports.S.room) return 'out';
+  var R=$imports.INTERIORS[$imports.S.room]; if(!R) return 'out';
   if(R.id==='canteen1') return 'canteen';
   if(R.host==='dormN'||R.host==='dormS') return 'dorm';
   if(R.host==='admin') return 'admin';
@@ -88,30 +90,30 @@ function fnWhereNow(){
   return 'out';
 }
 function fnTick(dt){
-  var f=S.fn;
-  if(!f||!f.on){if(FN_P.grp)fnPeopleClear();return;}
-  if(S.dead||S.screen!=='play') return;
-  if(UI.chooseOpen) return;
+  var f=$imports.S.fn;
+  if(!f||!f.on){if($imports.FN_P.grp)(0,$imports.fnPeopleClear)();return;}
+  if($imports.S.dead||$imports.S.screen!=='play') return;
+  if($imports.UI.chooseOpen) return;
   if(f.v>=100){
     f.on=false;
-    fnPeopleClear();
+    (0,$imports.fnPeopleClear)();
     kill('你笑得停不下来。笑了很久。','laugh','laugh');
     return;
   }
   if(f.left===undefined) f.left=4;
   if(f.left<=0){
     f.on=false;
-    try{ fnPeopleClear(); }catch(e){}
-    try{ os('我：……天黑了。刚才那些都很正常，正常得不对。',4.6); }catch(e){}
-    try{ VisualState.flash=Math.max(VisualState.flash||0,0.35); }catch(e){}
+    try{ (0,$imports.fnPeopleClear)(); }catch(e){}
+    try{ (0,$imports.os)('我：……天黑了。刚才那些都很正常，正常得不对。',4.6); }catch(e){}
+    try{ $imports.VisualState.flash=Math.max($imports.VisualState.flash||0,0.35); }catch(e){}
     return;
   }
   if(f.v>72&&!f.shown){
     f.shown=true;
-    VisualState.hurt=Math.max(VisualState.hurt||0,0.45);
-    os('我：……刚才那些，我是不是笑得太大声了。',4.4);
+    $imports.VisualState.hurt=Math.max($imports.VisualState.hurt||0,0.45);
+    (0,$imports.os)('我：……刚才那些，我是不是笑得太大声了。',4.4);
   }
-  try{ fnPeopleTick(); }catch(e){}
+  try{ (0,$imports.fnPeopleTick)(); }catch(e){}
   var tag=fnWhereNow(), pool=[], pi;
   f.used=f.used||{};
   for(pi=0;pi<FN_EVENTS.length;pi++){
@@ -120,25 +122,25 @@ function fnTick(dt){
     if(wz.indexOf('any')>=0||wz.indexOf(tag)>=0) pool.push(pi);
   }
   if(!pool.length) return;
-  if(Inspection.quiet())return;
+  if($imports.Inspection.quiet())return;
   f.next-=dt;
   if(f.next>0) return;
-  f.next=22+Math.random()*12;
-  var pick=pool[Math.floor(Math.random()*pool.length)];
+  f.next=22+$imports.GameRandom.next()*12;
+  var pick=pool[Math.floor($imports.GameRandom.next()*pool.length)];
   f.used[pick]=1; f.n++;
   f.left=Math.max(0,(f.left===undefined?4:f.left)-1);
   var e=FN_EVENTS[pick];
-  try{ SFX.click(); }catch(err){}
-  UI.choice('看起来是——\n'+e.seen,[
+  try{ $imports.SFX.click(); }catch(err){}
+  $imports.UI.choice('看起来是——\n'+e.seen,[
     {label:'笑一下', fn:function(){
-      UI.closeChoice(); f.v+=14;
-      os('其实——'+e.real,4.6);
-      try{ toast('（你笑出了声）'); }catch(err){}
+      $imports.UI.closeChoice(); f.v+=14;
+      (0,$imports.os)('其实——'+e.real,4.6);
+      try{ (0,$imports.toast)('（你笑出了声）'); }catch(err){}
     }},
     {label:'不笑，装作没这回事', fn:function(){
-      UI.closeChoice(); f.v+=5;
-      os('其实——'+e.real,4.6);
-      try{ toast('（你忍住了）'); }catch(err){}
+      $imports.UI.closeChoice(); f.v+=5;
+      (0,$imports.os)('其实——'+e.real,4.6);
+      try{ (0,$imports.toast)('（你忍住了）'); }catch(err){}
     }}
   ]);
 }
@@ -147,15 +149,15 @@ function chooseIdea(id){
   var it=null,i;
   for(i=0;i<IDEAS.length;i++) if(IDEAS[i].id===id) it=IDEAS[i];
   if(!it) return;
-  UI.close('think');
+  $imports.UI.close('think');
   if(it.route&&it.route.indexOf('trap_')===0){
     /* 以前在哪里选都会立刻触发；现在得真的站在那个地方 */
     var where=trapWhere(it.route);
-    if(where){ os(where,3.0); return; }
-    UI.choice('「'+it.n+'」——真的要这么做吗？',[
-      {label:'再想想',fn:function(){ UI.closeChoice(); }},
+    if(where){ (0,$imports.os)(where,3.0); return; }
+    $imports.UI.choice('「'+it.n+'」——真的要这么做吗？',[
+      {label:'再想想',fn:function(){ $imports.UI.closeChoice(); }},
       {label:'就这么办',fn:function(){
-        UI.closeChoice();
+        $imports.UI.closeChoice();
         if(it.route==='trap_out') kill('你从门缝里挤了出去。外面是一条很长的马路，路尽头有一扇校门。你走进去——衣服上还有雨，教学楼里，铃刚刚响。','slit','trap_out');
         else if(it.route==='trap_wall') kill('你翻上了墙头。墙外面还有一道墙。再外面，还有一道。你一直翻，翻到手指不再是手指的形状。','squeeze','trap_wall');
         else kill('路过的那个人停了下来。他慢慢转过头——他没有脸，只有一个很大的、在笑的洞。然后他从墙里直接走了进来。','face','trap_beg');
@@ -167,77 +169,77 @@ function chooseIdea(id){
   if(it.route==='face'){ tryFaceRoute(); return; }
   if(it.route==='trash'){ tryTrashRoute(); return; }
   if(it.route==='beast'){ tryBeastRoute(); return; }
-  if(it.route==='portal'){ tryPortalRoute(); return; }
+  if(it.route==='portal'){ (0,$imports.tryPortalRoute)(); return; }
 }
 
 /* 陷阱路线要在对应地点才能执行：返回 null 表示人在地方，否则返回提示 */
 function trapWhere(route){
-  var mx=S.x/SC, my=S.y/SC, out=(S.mode==='out');
-  if(route==='trap_out') return (out&&Math.hypot(mx-GATE_N.x,my-GATE_N.y)<60)?null:'我：正门在北边。要走，得先走到北门的闸机前面。';
+  var mx=$imports.S.x/$imports.SC, my=$imports.S.y/$imports.SC, out=($imports.S.mode==='out');
+  if(route==='trap_out') return (out&&Math.hypot(mx-$imports.GATE_N.x,my-$imports.GATE_N.y)<60)?null:'我：正门在北边。要走，得先走到北门的闸机前面。';
   if(route==='trap_wall'){
     var sp=SPOTS.filter(function(s){ return s.id==='climb'; })[0];
     return (out&&sp&&mx>sp.x-20&&mx<sp.x+sp.w+20&&my>sp.y-20&&my<sp.y+sp.h+20)?null:'我：得先到车棚后面那段矮墙（攀爬点）去。';
   }
-  return (out&&mx>BOUND.x1-70)?null:'我：得先走到东边的围墙底下。';
+  return (out&&mx>$imports.BOUND.x1-70)?null:'我：得先走到东边的围墙底下。';
 }
 function tryCarRoute(){
-  if(!Talent.capability('car').ok){ os('我：我没有钥匙。',2.6); return; }
-  if(S.mode!=='in'||S.room!=='garage1'){ os('我：得先下到车库去。',2.6); return; }
-  os('我：牌号对得上的那两辆，油表不是零。',4);
+  if(!$imports.Talent.capability('car').ok){ (0,$imports.os)('我：我没有钥匙。',2.6); return; }
+  if($imports.S.mode!=='in'||$imports.S.room!=='garage1'){ (0,$imports.os)('我：得先下到车库去。',2.6); return; }
+  (0,$imports.os)('我：牌号对得上的那两辆，油表不是零。',4);
 }
 /* 能开的那一辆：离入口最远的 8 辆里随机挑一辆（每局不同，存在 RT 里） */
 function carRightCell(){
-  if(RT.carRight) return RT.carRight;
-  var R=INTERIORS.garage1, cars=[], r, c;
+  if($imports.RT.carRight) return $imports.RT.carRight;
+  var R=$imports.INTERIORS.garage1, cars=[], r, c;
   for(r=0;r<R.rows;r++) for(c=0;c<R.cols;c++) if(R.grid[r][c]==='V') cars.push([c,r]);
   cars.sort(function(a,b){ return a[0]-b[0]; });        /* 入口在东头：列号小的离得远 */
   var far=cars.slice(0,Math.max(1,Math.floor(cars.length/2)));
-  var chosen=far[Math.floor(Math.random()*far.length)];
-  RT.carRight=chosen[0]+':'+chosen[1];
-  return RT.carRight;
+  var chosen=far[Math.floor($imports.GameRandom.next()*far.length)];
+  $imports.RT.carRight=chosen[0]+':'+chosen[1];
+  return $imports.RT.carRight;
 }
 function useCar(cx,cy){
-  var cap=Talent.capability('car');
-  if(!cap.ok){ os('我：车门锁着。',2.4); return; }
-  if(RT.carUsed){ os('我：已经开过一辆了。',2.4); return; }
-  if(roamGuardsCar()){
+  var cap=$imports.Talent.capability('car');
+  if(!cap.ok){ (0,$imports.os)('我：车门锁着。',2.4); return; }
+  if($imports.RT.carUsed){ (0,$imports.os)('我：已经开过一辆了。',2.4); return; }
+  if((0,$imports.roamGuardsCar)()){
     kill('你拉开车门，钻进去，摸到钥匙孔。后视镜里，它就站在后座上，弯着腰，脸贴着车顶。','grip','car_entry');
     return;
   }
   var cell=cx+':'+cy;
-  RT.carTried=RT.carTried||{};
-  if(RT.carTried[cell]){ os('我：这辆试过了。不是它。',1.8); return; }
+  $imports.RT.carTried=$imports.RT.carTried||{};
+  if($imports.RT.carTried[cell]){ (0,$imports.os)('我：这辆试过了。不是它。',1.8); return; }
   /* 拧钥匙要一会儿：站着别动，那东西还在车道上。搭线（车感好、没钥匙）要更久 */
   var wire=cap.via==='hotwire';
-  holdJob(cap.sec,function(){
-    if(S.dead) return;
-    if(roamGuardsCar()){ kill(wire?'我还蹲在方向盘底下捏着两根线，车窗上就贴上来一张脸。':'钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip','car_entry'); return; }
+  (0,$imports.holdJob)(cap.sec,function(){
+    if($imports.S.dead) return;
+    if((0,$imports.roamGuardsCar)()){ kill(wire?'我还蹲在方向盘底下捏着两根线，车窗上就贴上来一张脸。':'钥匙还插在锁孔里，车窗上就贴上来一张脸。','grip','car_entry'); return; }
     if(cell!==carRightCell()){
-      RT.carTried[cell]=1;
-      Investigation.record('vehicle:'+cell,Investigation.carName(cx,cy)+(wire?'：已试，搭线打不着。':'：已试，钥匙不匹配。'),'验证','车库');
-      autoSave();
-      var n=Object.keys(RT.carTried).length;
-      os(pick(wire?['我：线碰上了，仪表盘一点反应都没有。不是这辆。','我：电瓶是死的。下一辆。','我：火花跳了一下就没了。不是它。']
+      $imports.RT.carTried[cell]=1;
+      $imports.Investigation.record('vehicle:'+cell,$imports.Investigation.carName(cx,cy)+(wire?'：已试，搭线打不着。':'：已试，钥匙不匹配。'),'验证','车库');
+      (0,$imports.autoSave)();
+      var n=Object.keys($imports.RT.carTried).length;
+      (0,$imports.os)((0,$imports.pick)(wire?['我：线碰上了，仪表盘一点反应都没有。不是这辆。','我：电瓶是死的。下一辆。','我：火花跳了一下就没了。不是它。']
                   :['我：钥匙插进去，拧不动。不是这辆。','我：锁孔是对的，钥匙齿不对。下一辆。','我：车门开了一条缝，又自己合上了。不是它。'])+'（试过 '+n+' 辆）',2.6);
       return;
     }
     carDrive();
   });
-  os(wire?'我：我弯下腰去摸方向盘底下的线……这要一会儿。':'我：我把钥匙插进锁孔，慢慢地拧……',cap.sec);
+  (0,$imports.os)(wire?'我：我弯下腰去摸方向盘底下的线……这要一会儿。':'我：我把钥匙插进锁孔，慢慢地拧……',cap.sec);
 }
 function carDrive(){
-  if(AN.active||Inspection.pending()){os('我：现在走不开，先解决眼前的事。',2.5);return;}
-  autoSave();
-  os('我：引擎着了。车往前冲了出去。',4);
-  playCut('car',function(){CarChase.start();});
+  if($imports.AN.active||$imports.Inspection.pending()){(0,$imports.os)('我：现在走不开，先解决眼前的事。',2.5);return;}
+  (0,$imports.autoSave)();
+  (0,$imports.os)('我：引擎着了。车往前冲了出去。',4);
+  (0,$imports.playCut)('car',function(){$imports.CarChase.start();});
 }
 function tryFaceRoute(){
-  if(!RT.hacked){ os('我：得先进实验楼三楼机房里那间锁着的网络中心，再去行政楼三楼改数据。',3.8); return; }
-  if(!RT.data){ os('我：白名单还没改完。',2.6); return; }
-  if(S.mode!=='out'||dist2(GATE_W.x*SC,GATE_W.y*SC,S.x,S.y)>=70*70){
-    os('我：还得去西小门的闸机前。',2.6);return;
+  if(!$imports.RT.hacked){ (0,$imports.os)('我：得先进实验楼三楼机房里那间锁着的网络中心，再去行政楼三楼改数据。',3.8); return; }
+  if(!$imports.RT.data){ (0,$imports.os)('我：白名单还没改完。',2.6); return; }
+  if($imports.S.mode!=='out'||(0,$imports.dist2)($imports.GATE_W.x*$imports.SC,$imports.GATE_W.y*$imports.SC,$imports.S.x,$imports.S.y)>=70*70){
+    (0,$imports.os)('我：还得去西小门的闸机前。',2.6);return;
   }
-  tryGateWest();
+  (0,$imports.tryGateWest)();
 }
 /* 每局抽三道题并保存顺序和进度；离开后可继续。答错扣一点 SAN，并且换一道没出过的题——
    不能把三个选项挨个试过去。题目是高中各科的基础题。 */
@@ -268,14 +270,14 @@ var FACE_EXPLANATIONS=[
 ];
 var FaceChallenge={
   state:function(){
-    var q=RT.faceQuiz;
+    var q=$imports.RT.faceQuiz;
     if(!q||!Array.isArray(q.order)||q.order.length!==3||new Set(q.order).size!==3||
        q.order.some(function(i){return !Number.isInteger(i)||!FACE_QUESTIONS[i];})){
       var pool=FACE_QUESTIONS.map(function(_,i){return i;}),order=[];
-      while(order.length<3)order.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
-      q=RT.faceQuiz={order:order,done:0,used:order.slice()};autoSave();
+      while(order.length<3)order.push(pool.splice(Math.floor($imports.GameRandom.next()*pool.length),1)[0]);
+      q=$imports.RT.faceQuiz={order:order,done:0,used:order.slice()};(0,$imports.autoSave)();
     }
-    q.done=Number.isInteger(q.done)?clamp(q.done,0,3):0;
+    q.done=Number.isInteger(q.done)?(0,$imports.clamp)(q.done,0,3):0;
     if(!Array.isArray(q.used))q.used=q.order.slice();       /* 旧档没有这一项 */
     return q;
   },
@@ -283,59 +285,59 @@ var FaceChallenge={
   swap:function(q){
     var left=FACE_QUESTIONS.map(function(_,i){return i;}).filter(function(i){return q.used.indexOf(i)<0&&q.order.indexOf(i)<0;});
     if(!left.length)return;
-    var next=left[Math.floor(Math.random()*left.length)];
+    var next=left[Math.floor($imports.GameRandom.next()*left.length)];
     q.order[q.done]=next;q.used.push(next);
   },
   open:function(){
     var q=FaceChallenge.state();
     if(q.done>=3){
-      UI.choice('闸机亮起绿灯。外面的路安静得出奇。',[
-        {label:'通过闸机',fn:function(){Speedrun.proof('face');triggerEnding('face');}},
+      $imports.UI.choice('闸机亮起绿灯。外面的路安静得出奇。',[
+        {label:'通过闸机',fn:function(){$imports.Speedrun.proof('face');triggerEnding('face');}},
         {label:'暂时留下',fn:function(){}}
       ]);return;
     }
     var questionId=q.order[q.done],question=FACE_QUESTIONS[questionId],opts=question.choices.map(function(label,i){
       return {label:label,fn:function(){
-        if(i===question.answer){q.done++;autoSave();FaceChallenge.open();return;}
-        var remedy=Talent.faceRemedy(), loss=remedy?0:FACE_WRONG_SAN*dif().san;   /* 编程社（规则 2）：第一次答错核对后台，不扣这一次 */
-        PlayerStats.changeSan(-loss,'face-answer',{min:0});settleSan();
+        if(i===question.answer){q.done++;(0,$imports.autoSave)();FaceChallenge.open();return;}
+        var remedy=$imports.Talent.faceRemedy(), loss=remedy?0:FACE_WRONG_SAN*(0,$imports.dif)().san;   /* 编程社（规则 2）：第一次答错核对后台，不扣这一次 */
+        $imports.PlayerStats.changeSan(-loss,'face-answer',{min:0});(0,$imports.settleSan)();
         var feedback=FACE_EXPLANATIONS[questionId];
-        Investigation.record('face:'+questionId,feedback,'验证','西小门 · 验证反馈');
-        FaceChallenge.swap(q);autoSave();
-        if(S.dead)return;
-        UI.choice((remedy?'验证未通过。你对照门禁后台核了一遍，这次没有扣到你（编程社，只有一次）。':'验证未通过（SAN −'+loss+'）。')+feedback+' 已通过的题目仍然保留。',[
+        $imports.Investigation.record('face:'+questionId,feedback,'验证','西小门 · 验证反馈');
+        FaceChallenge.swap(q);(0,$imports.autoSave)();
+        if($imports.S.dead)return;
+        $imports.UI.choice((remedy?'验证未通过。你对照门禁后台核了一遍，这次没有扣到你（编程社，只有一次）。':'验证未通过（SAN −'+loss+'）。')+feedback+' 已通过的题目仍然保留。',[
           {label:'继续验证',fn:function(){FaceChallenge.open();}},
           {label:'先离开',fn:function(){}}
         ]);
       }};
     });
     opts.push({label:'暂时离开',fn:function(){}});
-    UI.choice('白名单验证 '+(q.done+1)+'/3：'+question.text,opts);
+    $imports.UI.choice('白名单验证 '+(q.done+1)+'/3：'+question.text,opts);
   }
 };
 function tryTrashRoute(){
-  if(S.mode!=='in'||S.room!=='trash1'){ os('我：得先进垃圾房。',2.4); return; }
-  addClue('trash');
+  if($imports.S.mode!=='in'||$imports.S.room!=='trash1'){ (0,$imports.os)('我：得先进垃圾房。',2.4); return; }
+  (0,$imports.addClue)('trash');
   kill('桶盖合上了。外面有人敲了两下，像在确认里面有没有人。','trash','trash');
 }
 function tryBeastRoute(){
-  if(!inToiletHere()||S.room!=='teach1'){ os('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
+  if(!(0,$imports.inToiletHere)()||$imports.S.room!=='teach1'){ (0,$imports.os)('我：得在教学楼一楼的厕所里，第三个隔间门口。',2.8); return; }
   useStall();
 }
 function useStall(){
-  S.spots.stall=1; UI.spotsDirty=true;
-  if(RT.beastDrop&&S.room==='teach1'){
-    UI.choice('门后传来一个声音：「你愿意跟我一起走吗？」',[
-      {label:'跟上',fn:function(){Speedrun.proof('beast');triggerEnding('beast');}},
-      {label:'先等等',fn:function(){os('我：门后没有再催促。',2.5);}}
+  $imports.S.spots.stall=1; $imports.UI.spotsDirty=true;
+  if($imports.RT.beastDrop&&$imports.S.room==='teach1'){
+    $imports.UI.choice('门后传来一个声音：「你愿意跟我一起走吗？」',[
+      {label:'跟上',fn:function(){$imports.Speedrun.proof('beast');triggerEnding('beast');}},
+      {label:'先等等',fn:function(){(0,$imports.os)('我：门后没有再催促。',2.5);}}
     ]);
     return;
   }
-  addClue('stall');
-  if(S.room==='teach1'){
-    os('我：第三个隔间的门从里面锁着。门缝底下很暗，暗得不像有地面。',5.6,OS_KEEP);
+  (0,$imports.addClue)('stall');
+  if($imports.S.room==='teach1'){
+    (0,$imports.os)('我：第三个隔间的门从里面锁着。门缝底下很暗，暗得不像有地面。',5.6,$imports.OS_KEEP);
   }else{
-    os('我：隔间的门在里面锁着。门缝底下很暗，暗得不像有地面。',3.4);
+    (0,$imports.os)('我：隔间的门在里面锁着。门缝底下很暗，暗得不像有地面。',3.4);
   }
 }
 
@@ -384,7 +386,7 @@ function deathLogRead(){ try{ return JSON.parse(localStorage.getItem(DEATH_LOG_K
 function deathLogAdd(fx,source){
   var d=deathLogRead(); d.counts=d.counts||{}; d.counts[fx]=(d.counts[fx]||0)+1;
   d.sources=d.sources||{};if(source)d.sources[source]=(d.sources[source]||0)+1;
-  d.last=(d.last||[]).concat([{fx:fx,source:source||null,day:S.day,where:S.mode==='in'?S.room:'out'}]).slice(-12);
+  d.last=(d.last||[]).concat([{fx:fx,source:source||null,day:$imports.S.day,where:$imports.S.mode==='in'?$imports.S.room:'out'}]).slice(-12);
   try{ localStorage.setItem(DEATH_LOG_KEY,JSON.stringify(d)); }catch(e){}
 }
 /* 死过两次以上、而且有对应线索的死法，最多三条，最近的在前 */
@@ -400,68 +402,68 @@ function deathHints(){
   return out;
 }
 function kill(msg,fx,source){
-  if(typeof DEV!=='undefined'&&DEV.god){ try{ toast('【无敌】挡下了'); }catch(e){} return; }
-  if(S.dead||S.death||S.screen==='cut'||S.screen==='end') return;
-  if(hasItem('elixir')){ elixirSave(); protectCommit(); return; }      /* 不知名药丸：替你死一次 */
-  if(Talent.tryPreventDeath()){ immuneSave(); protectCommit(); return; }
-  var deathScope=Lifecycle.renew('death');
-  S.deathView={ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
-  Termination.cancel();PHONE.stop();TerminalUI.close();
-  S.dead=true; S.death=fx||'vignette'; S.deadT=0; S.eyeLift=0;
-  Playtest.event('死亡',source||S.death);
-  var _arc=null; try{ _arc=DeathArchive.record(source,S.death); }catch(e){}   /* 死亡档案：这种死法第一次发生时解锁，演出放完再提示（先于死亡日志，免得把这一次当成旧记录迁进去） */
-  try{ deathLogAdd(S.death,source); }catch(e){}
+  if(typeof $imports.DEV!=='undefined'&&$imports.DEV.god){ try{ (0,$imports.toast)('【无敌】挡下了'); }catch(e){} return; }
+  if($imports.S.dead||$imports.S.death||$imports.S.screen==='cut'||$imports.S.screen==='end') return;
+  if((0,$imports.hasItem)('elixir')){ elixirSave(); protectCommit(); return; }      /* 不知名药丸：替你死一次 */
+  if($imports.Talent.tryPreventDeath()){ immuneSave(); protectCommit(); return; }
+  var deathScope=$imports.Lifecycle.renew('death');
+  $imports.S.deathView={ang:$imports.S.ang,pitch:$imports.S.pitch,eyeLift:$imports.S.eyeLift||0};
+  $imports.Termination.cancel();$imports.PHONE.stop();$imports.TerminalUI.close();
+  $imports.S.dead=true; $imports.S.death=fx||'vignette'; $imports.S.deadT=0; $imports.S.eyeLift=0;
+  $imports.Playtest.event('死亡',source||$imports.S.death);
+  var _arc=null; try{ _arc=$imports.DeathArchive.record(source,$imports.S.death); }catch(e){}   /* 死亡档案：这种死法第一次发生时解锁，演出放完再提示（先于死亡日志，免得把这一次当成旧记录迁进去） */
+  try{ deathLogAdd($imports.S.death,source); }catch(e){}
   var cause=DEATH_SOURCES[source];
-  if(cause)Investigation.record('failure:'+source,cause.cause,'验证','刚才的经历');
-  if(typeof Inspection!=='undefined')Inspection.cancel();
-  if(typeof Elevator!=='undefined')Elevator.cancel();
-  if(typeof CarChase!=='undefined'&&RT.carChase)CarChase.cancel();
-  try{ deathFX(S.death); }catch(e){}
-  DEATH_MESSAGES[S.death]=msg;
+  if(cause)$imports.Investigation.record('failure:'+source,cause.cause,'验证','刚才的经历');
+  if(typeof $imports.Inspection!=='undefined')$imports.Inspection.cancel();
+  if(typeof $imports.Elevator!=='undefined')$imports.Elevator.cancel();
+  if(typeof $imports.CarChase!=='undefined'&&$imports.RT.carChase)$imports.CarChase.cancel();
+  try{ (0,$imports.deathFX)($imports.S.death); }catch(e){}
+  DEATH_MESSAGES[$imports.S.death]=msg;
   var f=document.getElementById('flash');
   deathScope.own(function(){f.style.opacity='0';});
   f.style.background='#1a0000'; f.style.opacity='0.9';
   deathScope.timeout(function(){ f.style.opacity='0'; f.style.transition='opacity 1.2s'; },40);
-  VisualState.hurt=0.45;                     /* 以前直接拉满，整屏一层粉，演出本身反而看不清 */
-  try{ if(SFX.deathFx) SFX.deathFx(S.death); else SFX.death(); }catch(e){ try{ SFX.death(); }catch(_e){} }
-  var _ep=(DFX_EPI[S.death]||'');
-  var _hold=DeathTimeline.duration(S.death)*1000;
+  $imports.VisualState.hurt=0.45;                     /* 以前直接拉满，整屏一层粉，演出本身反而看不清 */
+  try{ if($imports.SFX.deathFx) $imports.SFX.deathFx($imports.S.death); else $imports.SFX.death(); }catch(e){ try{ $imports.SFX.death(); }catch(_e){} }
+  var _ep=(DFX_EPI[$imports.S.death]||'');
+  var _hold=$imports.DeathTimeline.duration($imports.S.death)*1000;
   /* 预知梦：第一天死掉，会在 11:40 的座位上惊醒（最多三次）。以前只有异象能"差点"，饿死、违规照样直接结束 */
-  var wake=(S.diff==='easy'&&S.day===1&&(RT.wakes||0)<3);
-  if(!wake) clearSave();                 /* 没有下一次了：不能再读档回来 */
-  var _sr=null; if(!wake){ try{ _sr=Speedrun.fail('failed',source||S.death); }catch(e){} }   /* 速通：死透了就停表、记未通关 */
-  var _deadId=S.deadId=(S.deadId||0)+1, finished=false;
+  var wake=($imports.S.diff==='easy'&&$imports.S.day===1&&($imports.RT.wakes||0)<3);
+  if(!wake) (0,$imports.clearSave)();                 /* 没有下一次了：不能再读档回来 */
+  var _sr=null; if(!wake){ try{ _sr=$imports.Speedrun.fail('failed',source||$imports.S.death); }catch(e){} }   /* 速通：死透了就停表、记未通关 */
+  var _deadId=$imports.S.deadId=($imports.S.deadId||0)+1, finished=false;
   /* 演出放完（或被跳过）只收一次：墓志铭、死亡界面或预知梦惊醒。旧的一次死亡被复活取消后不会再写回来 */
   function finish(){
-    if(finished||S.deadId!==_deadId||!S.dead) return;
+    if(finished||$imports.S.deadId!==_deadId||!$imports.S.dead) return;
     finished=true;deathScope.cancel(); if(DEATH_PENDING&&DEATH_PENDING.id===_deadId) DEATH_PENDING=null;
-    try{ DeathArchive.notify(_arc); }catch(e){}
+    try{ $imports.DeathArchive.notify(_arc); }catch(e){}
     if(wake){ dreamWake(); return; }
     var e2=document.getElementById('dieepi'); if(e2) e2.textContent=_ep;
     var el=document.getElementById('die');
     document.getElementById('diem').textContent=msg;
     document.getElementById('diecause').textContent=cause?cause.cause:'';
-    var _dsr=document.getElementById('diesr'); if(_dsr){ _dsr.textContent=Speedrun.dieText(_sr); _dsr.hidden=!_sr; }
+    var _dsr=document.getElementById('diesr'); if(_dsr){ _dsr.textContent=$imports.Speedrun.dieText(_sr); _dsr.hidden=!_sr; }
     el.style.display='flex';
-    try{ var rv=document.getElementById('dieRevive'); if(rv) rv.style.display=(typeof DEV!=='undefined'&&DEV.on)?'block':'none'; }catch(e){}
+    try{ var rv=document.getElementById('dieRevive'); if(rv) rv.style.display=(typeof $imports.DEV!=='undefined'&&$imports.DEV.on)?'block':'none'; }catch(e){}
   }
   DEATH_PENDING={id:_deadId,finish:finish,at:performance.now()};
-  os(msg,2.6,OS_FORCE);
+  (0,$imports.os)(msg,2.6,$imports.OS_FORCE);
   deathScope.timeout(finish,_hold);
 }
 /* 死亡演出可以跳过：至少看 0.6 秒（避免本来想点别的、一下子把整段跳没了），之后点一下或按空格 / 回车直接到结果 */
 var DEATH_PENDING=null;
 function deathSkip(){
-  if(!DEATH_PENDING||!S.dead) return false;
+  if(!DEATH_PENDING||!$imports.S.dead) return false;
   if(performance.now()-DEATH_PENDING.at<600) return false;
   DEATH_PENDING.finish(); return true;
 }
 
 function elixirSave(){
-  removeItem('elixir');
+  (0,$imports.removeItem)('elixir');
   survivalReset();
-  os('我：……那粒药丸自己在舌根底下化开了。苦得发麻。我还站着——刚才那一下，像是有人替我挨了。',5.2,OS_FORCE);
-  toast('不知名药丸 · 救了你一次');
+  (0,$imports.os)('我：……那粒药丸自己在舌根底下化开了。苦得发麻。我还站着——刚才那一下，像是有人替我挨了。',5.2,$imports.OS_FORCE);
+  (0,$imports.toast)('不知名药丸 · 救了你一次');
 }
 /* 保命用掉以后要立刻落盘（以前没在跑异象时只改了内存，刷新就把免疫「退」回来了）。
    不在这里直接存：调用方后面还要把来源恢复完（驾驶回检查点、同化回落），这一轮同步代码跑完再存完整快照 */
@@ -471,46 +473,46 @@ function protectCommit(){
   PROTECT_SAVE=1;
   Promise.resolve().then(function(){
     PROTECT_SAVE=0;
-    if(S.screen!=='play'||S.dead) return;
-    try{ saveGame(); }catch(e){ try{ toast('本次变化尚未保存'); }catch(_e){} }
+    if($imports.S.screen!=='play'||$imports.S.dead) return;
+    try{ (0,$imports.saveGame)(); }catch(e){ try{ (0,$imports.toast)('本次变化尚未保存'); }catch(_e){} }
   });
 }
 function immuneSave(){
-  Playtest.event('天赋生效','immune');
+  $imports.Playtest.event('天赋生效','immune');
   survivalReset();
-  os('我：刚才那一下本该要了我的命。可它擦身而过，像是没有认出我。',5.2,OS_FORCE);
-  toast('天生免疫 · 挡下了一次致命事件');
+  (0,$imports.os)('我：刚才那一下本该要了我的命。可它擦身而过，像是没有认出我。',5.2,$imports.OS_FORCE);
+  (0,$imports.toast)('天生免疫 · 挡下了一次致命事件');
 }
 function survivalReset(){
-  VisualState.flash=0.9; VisualState.hurt=0.4;
-  PlayerStats.setSan(S.san,'survival',{min:45}); PlayerStats.setViolation(S.viol,'survival',{max:40});
-  PatrolWorld.rescued();
-  try{ if(AN.active) anEnd(); }catch(e){}
-  try{ if(ROAM.on){ ROAM.stage='wait'; ROAM.waitT=8; ROAM.x=-1e6; ROAM.y=-1e6; ROAM.litAcc=0; } }catch(e){}
-  try{ SFX.wake&&SFX.wake(); }catch(e){}
+  $imports.VisualState.flash=0.9; $imports.VisualState.hurt=0.4;
+  $imports.PlayerStats.setSan($imports.S.san,'survival',{min:45}); $imports.PlayerStats.setViolation($imports.S.viol,'survival',{max:40});
+  $imports.PatrolWorld.rescued();
+  try{ if($imports.AN.active) (0,$imports.anEnd)(); }catch(e){}
+  try{ if($imports.ROAM.on){ $imports.ROAM.stage='wait'; $imports.ROAM.waitT=8; $imports.ROAM.x=-1e6; $imports.ROAM.y=-1e6; $imports.ROAM.litAcc=0; } }catch(e){}
+  try{ $imports.SFX.wake&&$imports.SFX.wake(); }catch(e){}
 }
 function dreamWake(){
-  RT.wakes=(RT.wakes||0)+1;
-  var left=3-RT.wakes;
-  eyelid(700,function(){
-    try{ anfxClear(); }catch(e){}
-    AN.active=false; AN.id=null; AN.data={}; AN.t=0; AN.acc=0; AN.pre=null; AN.preNext=0; AN.locked=false;
-    AN.next=60;
-    S.dead=false; S.death=null; S.deadT=0; S.eyeLift=0; S.pitch=0;S.deathView=null;
-    S.tsec=700; PlayerStats.setSan(78,'dream-wake'); PlayerStats.setViolation(0,'dream-wake'); PlayerStats.setStamina(100,'dream-wake'); S.snackT=0; PlayerStats.setAssimilation(0,'dream-wake'); S.ttTier=0; S.hiddenLatch=false; S.hiddenAsked=false;
-    VisualState.hurt=0; VisualState.flash=0;
+  $imports.RT.wakes=($imports.RT.wakes||0)+1;
+  var left=3-$imports.RT.wakes;
+  (0,$imports.eyelid)(700,function(){
+    try{ (0,$imports.anfxClear)(); }catch(e){}
+    $imports.AN.active=false; $imports.AN.id=null; $imports.AN.data={}; $imports.AN.t=0; $imports.AN.acc=0; $imports.AN.pre=null; $imports.AN.preNext=0; $imports.AN.locked=false;
+    $imports.AN.next=60;
+    $imports.S.dead=false; $imports.S.death=null; $imports.S.deadT=0; $imports.S.eyeLift=0; $imports.S.pitch=0;$imports.S.deathView=null;
+    $imports.S.tsec=700; $imports.PlayerStats.setSan(78,'dream-wake'); $imports.PlayerStats.setViolation(0,'dream-wake'); $imports.PlayerStats.setStamina(100,'dream-wake'); $imports.S.snackT=0; $imports.PlayerStats.setAssimilation(0,'dream-wake'); $imports.S.ttTier=0; $imports.S.hiddenLatch=false; $imports.S.hiddenAsked=false;
+    $imports.VisualState.hurt=0; $imports.VisualState.flash=0;
     var f=document.getElementById('flash'); if(f){ f.style.transition='none'; f.style.opacity='0'; }
-    UI.closeChoice(); PAUSE.on=false; ROAM.on=false;
-    OPENDOORS={};                        /* 回到 11:40：开过的门也都关回去了 */
-    examEnd();
-    Mechanics.dream();
-    var R1=INTERIORS['teach1'];
-    doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
-    try{ SFX.wake&&SFX.wake(); }catch(e){}
+    $imports.UI.closeChoice(); $imports.PAUSE.on=false; $imports.ROAM.on=false;
+    $imports.OPENDOORS={};                        /* 回到 11:40：开过的门也都关回去了 */
+    (0,$imports.examEnd)();
+    $imports.Mechanics.dream();
+    var R1=$imports.INTERIORS['teach1'];
+    (0,$imports.doEnterRoom)('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-$imports.PI/2, seated:true});
+    try{ $imports.SFX.wake&&$imports.SFX.wake(); }catch(e){}
   },function(){
-    os('……我猛地抬起头，后背全是汗。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,OS_FORCE);
-    toast(left>0?'预知梦 · 还能再醒 '+left+' 次':'预知梦 · 下一次，不会再醒了');
-    autoSave();
+    (0,$imports.os)('……我猛地抬起头，后背全是汗。我还坐在自己的位子上。\n刚才那些——是梦吗？可我记得每一条走廊。',5.5,$imports.OS_FORCE);
+    (0,$imports.toast)(left>0?'预知梦 · 还能再醒 '+left+' 次':'预知梦 · 下一次，不会再醒了');
+    (0,$imports.autoSave)();
   });
 }
 
@@ -525,47 +527,98 @@ var ENDINGS={
   portal:{t:'《门》',true:1,l:['光圈合上之前，你回头看了一眼。','实验台、显微镜、离心机，还有教室里那一排排低着的头——都在原地，一动不动。','你没有再回头。','门的那一边是一个普通的下午。铃响了，有人在走廊里叫你的名字，你答应了一声。']}
 };
 function triggerEnding(id,skipCut){
-  if(S.dead||S.screen==='cut'||S.screen==='end') return;
-  if(id!=='cyber')Termination.cancel();
+  if($imports.S.dead||$imports.S.screen==='cut'||$imports.S.screen==='end') return;
+  if(id!=='cyber')$imports.Termination.cancel();
   if(id==='trash'){tryTrashRoute();return;}
-  RT.end=id;
-  Playtest.event('结局',id);
+  $imports.RT.end=id;
+  $imports.Playtest.event('结局',id);
   var e=ENDINGS[id];
-  endMark(id);
-  if(!e.fake) clearSave();                    /* 假结局之后还能接着玩 */
-  Speedrun.lastResult=e.fake?null:Speedrun.finish(id);   /* 速通在通关确认的这一刻停表，不等结局演出 */
-  if(skipCut)showEndingCard(id);else playCut(id,function(){ showEndingCard(id); });
+  (0,$imports.endMark)(id);
+  if(!e.fake) (0,$imports.clearSave)();                    /* 假结局之后还能接着玩 */
+  $imports.Speedrun.lastResult=e.fake?null:$imports.Speedrun.finish(id);   /* 速通在通关确认的这一刻停表，不等结局演出 */
+  if(skipCut)showEndingCard(id);else (0,$imports.playCut)(id,function(){ showEndingCard(id); });
 }
 function showEndingCard(id){
   var e=ENDINGS[id];
-  VisualState.flash=0.6;
-  Lifecycle.scope('session').timeout(function(){ VisualState.flash=0; },600);
+  $imports.VisualState.flash=0.6;
+  $imports.Lifecycle.scope('session').timeout(function(){ $imports.VisualState.flash=0; },600);
   /* 结局卡：样式在 game.css（#ends），和死亡、暂停同一套档案式界面 */
   var tag=e.fake?'<div class="etag fake">假 结 局</div>':(e.true?'<div class="etag">真 结 局</div>':'');
   var more=e.fake?'<button type="button" class="ewake" onclick="fakeWake()">……再睁开眼</button>':'';
   var echo='';
-  if(id==='car'&&Investigation.state().entries.parking)echo='你想起停车登记上空着的离校栏。这一次，车没有回到原来的车位。';
-  if(id==='face'&&RT.data)echo='闸机认出了那张照片。你离开了，但那个名字仍属于学校。';
-  if(id==='portal'&&RT.portalDiary)echo='日记里的人一直在寻找校门。你终于明白，图纸画的是另一道边界。';
+  if(id==='car'&&$imports.Investigation.state().entries.parking)echo='你想起停车登记上空着的离校栏。这一次，车没有回到原来的车位。';
+  if(id==='face'&&$imports.RT.data)echo='闸机认出了那张照片。你离开了，但那个名字仍属于学校。';
+  if(id==='portal'&&$imports.RT.portalDiary)echo='日记里的人一直在寻找校门。你终于明白，图纸画的是另一道边界。';
   var html='<div id="ends">'+tag+
     '<div class="et">'+e.t+'</div>'+
     '<div class="el">'+e.l.join('<br>')+(echo?'<br><br>'+echo:'')+'</div>'+
-    '<div class="emeta">第 '+S.day+' 天'+(hasClock()?' · '+fmtClock(S.tsec):'')+'</div>'+(e.fake?'':Speedrun.cardHtml(Speedrun.lastResult))+more+
+    '<div class="emeta">第 '+$imports.S.day+' 天'+((0,$imports.hasClock)()?' · '+(0,$imports.fmtClock)($imports.S.tsec):'')+'</div>'+(e.fake?'':$imports.Speedrun.cardHtml($imports.Speedrun.lastResult))+more+
     '<button type="button" class="equit" onclick="Game.quit()">回到主菜单</button></div>';
   var d=document.createElement('div');
   d.innerHTML=html;
   document.body.appendChild(d);
-  S.screen='end';
+  $imports.S.screen='end';
 }
 /* 假结局之后：在第二天的早读醒来，东西都还在；垃圾桶这条路走不通了 */
 function fakeWake(){
   var es=document.getElementById('ends'); if(es) es.remove();
-  RT.end=null; RT.trashFake=1;
-  S.screen='play'; S.dead=false; S.day=Math.max(2,S.day+1); S.tsec=441;
-  VisualState.worldNorm=0;
-  var R1=INTERIORS['teach1'];
-  doEnterRoom('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-PI/2, seated:true});
-  S.seated=true;
-  if(running){ lastT=performance.now(); accum=0; }
-  os('我：……我在座位上醒过来。早读。衣服上有一股垃圾房的味道。\n那个桶没有把我送出去——它把我送回来了。',6,OS_FORCE);
+  $imports.RT.end=null; $imports.RT.trashFake=1;
+  $imports.S.screen='play'; $imports.S.dead=false; $imports.S.day=Math.max(2,$imports.S.day+1); $imports.S.tsec=441;
+  $imports.VisualState.worldNorm=0;
+  var R1=$imports.INTERIORS['teach1'];
+  (0,$imports.doEnterRoom)('teach1',{x:R1.ox+48.5*9, y:R1.oy+6.5*9, ang:-$imports.PI/2, seated:true});
+  $imports.S.seated=true;
+  if($imports.running){ $imports.lastT=performance.now(); $imports.accum=0; }
+  (0,$imports.os)('我：……我在座位上醒过来。早读。衣服上有一股垃圾房的味道。\n那个桶没有把我送出去——它把我送回来了。',6,$imports.OS_FORCE);
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/story.js",{
+"SPOTS":{get:function(){return SPOTS;},set:function($value){SPOTS=$value;}},
+"SPOT_ROOM":{get:function(){return SPOT_ROOM;},set:function($value){SPOT_ROOM=$value;}},
+"SPOT_INDOOR_ONLY":{get:function(){return SPOT_INDOOR_ONLY;},set:function($value){SPOT_INDOOR_ONLY=$value;}},
+"spotMark":{get:function(){return spotMark;},set:function($value){spotMark=$value;}},
+"spotTick":{get:function(){return spotTick;},set:function($value){spotTick=$value;}},
+"IDEAS":{get:function(){return IDEAS;},set:function($value){IDEAS=$value;}},
+"ideasAvailable":{get:function(){return ideasAvailable;},set:function($value){ideasAvailable=$value;}},
+"FN_EVENTS":{get:function(){return FN_EVENTS;},set:function($value){FN_EVENTS=$value;}},
+"fnWhereNow":{get:function(){return fnWhereNow;},set:function($value){fnWhereNow=$value;}},
+"fnTick":{get:function(){return fnTick;},set:function($value){fnTick=$value;}},
+"chooseIdea":{get:function(){return chooseIdea;},set:function($value){chooseIdea=$value;}},
+"trapWhere":{get:function(){return trapWhere;},set:function($value){trapWhere=$value;}},
+"tryCarRoute":{get:function(){return tryCarRoute;},set:function($value){tryCarRoute=$value;}},
+"carRightCell":{get:function(){return carRightCell;},set:function($value){carRightCell=$value;}},
+"useCar":{get:function(){return useCar;},set:function($value){useCar=$value;}},
+"carDrive":{get:function(){return carDrive;},set:function($value){carDrive=$value;}},
+"tryFaceRoute":{get:function(){return tryFaceRoute;},set:function($value){tryFaceRoute=$value;}},
+"FACE_WRONG_SAN":{get:function(){return FACE_WRONG_SAN;},set:function($value){FACE_WRONG_SAN=$value;}},
+"FACE_QUESTIONS":{get:function(){return FACE_QUESTIONS;},set:function($value){FACE_QUESTIONS=$value;}},
+"FACE_EXPLANATIONS":{get:function(){return FACE_EXPLANATIONS;},set:function($value){FACE_EXPLANATIONS=$value;}},
+"FaceChallenge":{get:function(){return FaceChallenge;},set:function($value){FaceChallenge=$value;}},
+"tryTrashRoute":{get:function(){return tryTrashRoute;},set:function($value){tryTrashRoute=$value;}},
+"tryBeastRoute":{get:function(){return tryBeastRoute;},set:function($value){tryBeastRoute=$value;}},
+"useStall":{get:function(){return useStall;},set:function($value){useStall=$value;}},
+"DEATH_MESSAGES":{get:function(){return DEATH_MESSAGES;},set:function($value){DEATH_MESSAGES=$value;}},
+"DFX_EPI":{get:function(){return DFX_EPI;},set:function($value){DFX_EPI=$value;}},
+"DFX_SFX":{get:function(){return DFX_SFX;},set:function($value){DFX_SFX=$value;}},
+"DEATH_LOG_KEY":{get:function(){return DEATH_LOG_KEY;},set:function($value){DEATH_LOG_KEY=$value;}},
+"DEATH_SOURCES":{get:function(){return DEATH_SOURCES;},set:function($value){DEATH_SOURCES=$value;}},
+"DEATH_HINTS":{get:function(){return DEATH_HINTS;},set:function($value){DEATH_HINTS=$value;}},
+"deathLogRead":{get:function(){return deathLogRead;},set:function($value){deathLogRead=$value;}},
+"deathLogAdd":{get:function(){return deathLogAdd;},set:function($value){deathLogAdd=$value;}},
+"deathHints":{get:function(){return deathHints;},set:function($value){deathHints=$value;}},
+"kill":{get:function(){return kill;},set:function($value){kill=$value;}},
+"DEATH_PENDING":{get:function(){return DEATH_PENDING;},set:function($value){DEATH_PENDING=$value;}},
+"deathSkip":{get:function(){return deathSkip;},set:function($value){deathSkip=$value;}},
+"elixirSave":{get:function(){return elixirSave;},set:function($value){elixirSave=$value;}},
+"PROTECT_SAVE":{get:function(){return PROTECT_SAVE;},set:function($value){PROTECT_SAVE=$value;}},
+"protectCommit":{get:function(){return protectCommit;},set:function($value){protectCommit=$value;}},
+"immuneSave":{get:function(){return immuneSave;},set:function($value){immuneSave=$value;}},
+"survivalReset":{get:function(){return survivalReset;},set:function($value){survivalReset=$value;}},
+"dreamWake":{get:function(){return dreamWake;},set:function($value){dreamWake=$value;}},
+"ENDINGS":{get:function(){return ENDINGS;},set:function($value){ENDINGS=$value;}},
+"triggerEnding":{get:function(){return triggerEnding;},set:function($value){triggerEnding=$value;}},
+"showEndingCard":{get:function(){return showEndingCard;},set:function($value){showEndingCard=$value;}},
+"fakeWake":{get:function(){return fakeWake;},set:function($value){fakeWake=$value;}}
+});
+})(GameModules.imports("game3d/js/story.js"));

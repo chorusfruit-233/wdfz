@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 主角的自言自语：同一个地方，SAN 不同，想的话不同
    四档：稳（≥75）、发毛（50–75）、松动（25–50）、快撑不住（<25）。
    每 40–75 秒找一个空当说一句（有字幕、异象、选择框、手机时不说），最近说过的不重复。 */
@@ -53,17 +55,17 @@ var MONO_LINES={
     outNight:['我：天上没有月亮。只有一只眼睛。']
   }
 };
-function monoTier(){ var s=S.san; return s>=75?'calm':(s>=50?'uneasy':(s>=25?'frayed':'breaking')); }
+function monoTier(){ var s=$imports.S.san; return s>=75?'calm':(s>=50?'uneasy':(s>=25?'frayed':'breaking')); }
 function monoPlace(){
-  if(S.mode==='out') return isNight()?'outNight':'outDay';
-  var R=INTERIORS[S.room]; if(!R) return 'any';
-  if(S.room==='garage1') return 'garage';
-  if(S.room==='bell1') return 'bell';
-  if(S.room==='teach6') return 'roof';
+  if($imports.S.mode==='out') return (0,$imports.isNight)()?'outNight':'outDay';
+  var R=$imports.INTERIORS[$imports.S.room]; if(!R) return 'any';
+  if($imports.S.room==='garage1') return 'garage';
+  if($imports.S.room==='bell1') return 'bell';
+  if($imports.S.room==='teach6') return 'roof';
   if(R.host==='canteen') return 'canteen';
   if(R.host==='dormN'||R.host==='dormS') return 'dorm';
-  if(inToiletHere()) return 'toilet';
-  if(R.host==='teach'){ return (corridorHere())?'hall':'class'; }
+  if((0,$imports.inToiletHere)()) return 'toilet';
+  if(R.host==='teach'){ return ((0,$imports.corridorHere)())?'hall':'class'; }
   return 'any';
 }
 /* 这一刻会说哪一句（测试也用） */
@@ -72,14 +74,25 @@ function monoPick(){
   var pool=(tier[place]||[]).concat(tier.any);
   var fresh=pool.filter(function(l){ return MONO.recent.indexOf(l)<0; });
   if(!fresh.length) fresh=pool;
-  return fresh[Math.floor(Math.random()*fresh.length)];
+  return fresh[Math.floor($imports.GameRandom.next()*fresh.length)];
 }
 function monoTick(dt){
   MONO.t-=dt;
   if(MONO.t>0) return;
-  if(DLG.open||AN.active||UI.chooseOpen||UI.anyOpen()||PHONE.on||S.seated&&needWhere(S.tsec)==='教室'&&Math.random()<0.5){ MONO.t=6; return; }
+  if($imports.DLG.open||$imports.AN.active||$imports.UI.chooseOpen||$imports.UI.anyOpen()||$imports.PHONE.on||$imports.S.seated&&(0,$imports.needWhere)($imports.S.tsec)==='教室'&&$imports.GameRandom.next()<0.5){ MONO.t=6; return; }
   var line=monoPick();
   MONO.recent.push(line); if(MONO.recent.length>8) MONO.recent.shift();
-  os(line,3.6);
-  MONO.t=40+Math.random()*35;
+  (0,$imports.os)(line,3.6);
+  MONO.t=40+$imports.GameRandom.next()*35;
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/mono.js",{
+"MONO":{get:function(){return MONO;},set:function($value){MONO=$value;}},
+"MONO_LINES":{get:function(){return MONO_LINES;},set:function($value){MONO_LINES=$value;}},
+"monoTier":{get:function(){return monoTier;},set:function($value){monoTier=$value;}},
+"monoPlace":{get:function(){return monoPlace;},set:function($value){monoPlace=$value;}},
+"monoPick":{get:function(){return monoPick;},set:function($value){monoPick=$value;}},
+"monoTick":{get:function(){return monoTick;},set:function($value){monoTick=$value;}}
+});
+})(GameModules.imports("game3d/js/mono.js"));

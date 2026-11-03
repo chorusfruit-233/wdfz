@@ -31,13 +31,13 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `emits` | 这个模块在代码里发出的钩子（`GameModules.emit/first`） |
 | `uses` | 这个模块监听的钩子 |
 
-当前 46 个模块（截至 2026-11-03 / main `0bf55f1`）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
+当前 46 个功能模块（2026-11-03 完成文件级依赖收口）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，以及最后加载的主循环。具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
 
 **改功能的做法**：先在清单里找到模块 → 只读它登记的文件和它 `uses` / `emits` 的钩子 → 改完跑这个模块对应的测试（见第 6 节）。跨模块改动先看对方的 `exports` 是否需要变；导出名字改了，同时改清单。
 
 ### 1.2 旧代码与新代码
 
-- 原有文件**位置不变**（测试、工具、录像脚本都按路径引用），按职责归入清单里的模块；加载顺序与改造前逐个相同（`tests/test_modules.py` 核对）。
+- 文件按职责登记；2026-11-03 进一步把共享空间配方移到 `content/`，把主循环接线和 HUD 分开。旧 HTML、Mod、测试与录像所用的全局入口是兼容外观，实现和依赖位于文件闭包内。具体文件以清单及 `game3d/module-contracts.js` 为准。
 - 新功能一律做成 `game3d/js/modules/<id>/` 下的独立模块，通过钩子、房间接口和清单接入，尽量不改旧文件。本轮的「粉笔记号」「虚空迷宫」「Mod 管理」就是这样加进来的，旧文件只加了钩子调用点。
 - 功能模块要能**整块拿掉**：别的代码用到它时先判断 `typeof X!=='undefined'`，并保留原来的行为作兜底（例如没有 `void-maze` 时电梯回到原来的白色空间，没有 `chalk-marks` 时粉笔只「看一眼说明」；模块自己的死亡演出通过 `DeathCG.register` 接入，拿掉模块就没有这两段演出）。`tests/test_modules.py` 会把这三个功能模块从清单里拿掉再启动游戏验证。
 - 渲染对象（`THREE.*`、`GLR.*`）只出现在引擎、建模、特效类文件里；玩法逻辑文件不直接建渲染对象（`test_engine` 已有检查）。新模块同样拆成「逻辑」和「画面」两个文件，例如 `chalk-marks/marks.js` 与 `marks-fx.js`。
@@ -54,24 +54,27 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `boot` | `main.js` `boot()` 末尾 | emit | 界面、渲染都已就绪 |
 | `loaded` | `modules.js`，全部脚本和 Mod 加载完 | emit | — |
 | `reset` | `GameModules.resetAll()`（新局 `freshState` 末尾） | emit | 清本局状态 |
-| `tick` | `main.js` `update()`，每个模拟步（暂停、手册或选择框打开、前情提要、驾驶逃脱、死亡时不发） | emit | `dt`（秒） |
-| `enterRoom` | `main.js` `onEnterRoom` | emit | `id, restoring` |
+| `tick` | `app/simulation.js`（`main.js` 的 `update()` 委托），每个模拟步（暂停、手册或选择框打开、前情提要、驾驶逃脱、死亡时不发） | emit | `dt`（秒） |
+| `enterRoom` | `app/world-events.js` `onEnterRoom` | emit | `id, restoring` |
 | `leaveRoom` | `world.js` `doEnterRoom` / `doExitRoom` 开头 | emit | `from`（房间 ID 或 `null` 表示室外）, `to` |
 | `interact` | `interact.js` `tryInteract`（站起、出柜、名单之后，默认交互之前） | first | 返回 `true` 表示已处理 |
 | `hint` | `interact.js` `interactHint` | first | 返回提示文字 |
 | `itemUse` | `items.js` `useItem` 开头 | first | `id`；返回 `true` 表示已处理 |
-| `clockText` | `main.js` `updateHUD` | first | 返回要显示的时间文字 |
-| `mapBlocked` | `ui.js` 打开地图页、`main.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
+| `clockText` | `ui/hud.js` `updateHUD` | first | 返回要显示的时间文字 |
+| `mapBlocked` | `ui.js` 打开地图页、`ui/hud.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
 | `lightState` | `lighting.js` `lightState()` 末尾 | emit | `st`：可改 `amb/hemi/dir/ptK`；`st.steady=true` 灯不闪；`st.fog={r,g,b,density}` 改雾 |
 | `clearWorld` | `engine/scene.js` 换场景前 | emit | 撤掉模块自己加进场景的东西 |
 | `sceneBuilt` | `engine/scene.js` 房间 / 室外场景建好后 | emit | `roomId`（室外为 `null`） |
 | `devTab` | `dev.js` 切换调试面板页签 | emit | `id`；模块加的页签（`DEV_TABS.push`）在这里画内容 |
 | `boundary` | `app/session.js`：`Lifecycle.boundary` 时（新局 `new-session`、回菜单 `menu`） | emit | `reason`；收掉上一局的画面效果、计时 |
 | `newGame` | `app/session.js` `Game.start`，`freshState` 之后（只在新开局，读档不发） | emit | `{diff, mode}`（`mode` 为 `normal` / `speedrun`）；开局才给的东西（例如内部彩蛋天赋的手电） |
-| `frame` | `main.js` `render()`，每个画面帧 | emit | `dt`；表现层自己的动画（彩蛋的反色、黑影淡入淡出） |
+| `frame` | `app/presentation-loop.js` `render()`，每个画面帧 | emit | `dt`；表现层自己的动画（彩蛋的反色、黑影淡入淡出） |
 | `soundscape` | `audio.js` 每帧 | first | 返回要用的整片环境声 ID（见第 4.1 节） |
 | `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |
 | `mazeEvent` | `modules/void-maze-eggs/eggs.js`（内部彩蛋） | emit | `{kind, …}`：`invert / invertEnd / shadowShow / shadowHide` |
+
+| `tracesChanged` | `app/traces.js` 痕迹记录完成 | emit | 通知表现重建痕迹；记录本身不需要场景 |
+| `dayAppearance` | `day-events.js` 日状态更新完成 | emit | 校庆装饰刷新；每帧也可重建，不修改日状态 |
 
 **加钩子的规则**：只在「多个模块都可能要插手」的流程点加；名字用小驼峰动词或名词；在清单里对应模块的 `emits` 登记；在本表补一行；`tests/test_modules.py` 会检查清单里的 `emits` 确实在该模块文件里发出、`uses` 的钩子确实有人发。热路径（碰撞、每帧移动）不用全局钩子，用下面的房间接口。
 
@@ -201,3 +204,20 @@ GameModules.mod({
 纯规则文件：`domain/phone-energy.js`、`domain/campus-terminal.js`、`domain/route-graph.js`。终端不应引入宿主 shell、网络连接或脚本执行。持久域为 `mechanics`、`patrolWorld`、`attendanceDuty`、`phoneDevice`、`terminalPuzzle`、`termination`；`RT.hacked` 与 `RT.data` 仍是原白名单唯一真值。
 
 碰撞重建工具 `python tools/patrol_geometry.py`，路线工具 `python tools/patrol_route.py`（Playwright、NetworkX）。改变模型代理或地图后重建并核对 `docs/巡察路线生成报告.json`，不可拿渲染缓存有无作为离屏可达依据。最低权匹配与最优性仅限报告声明的骨架。
+
+## 7. 文件依赖契约与编辑流程
+
+每个有状态脚本在私有闭包内实现，通过 `GameModules.imports(文件)` 取得显式依赖，通过 `publish` 发布活绑定。跨文件替换状态或函数仍只更新同一份值；兼容全局没有复制出第二套 `S`／`RT`。`domain/` 中可独立运行的纯模块仍支持 Node 直接读取。
+
+`game3d/module-contracts.js` 记录每个文件的所有者、层次、导出、导入、允许替换的绑定和表现层只读状态。不要手改此生成文件。编辑现有闭包中的实现，或新增普通脚本并登记清单，然后运行：
+
+```bash
+node tools/link_modules.cjs --write
+python tools/check_modules.py
+```
+
+链接器使用仓库自带的 AST 工具，解析真实词法作用域，生成当前交付的普通脚本；无需 npm 安装或线上构建。第二条命令同时检查契约新鲜度、隐式依赖、别名写入、数值归属、独立随机流和碰撞代理数据。新功能不得直接通过 `window.S` 等绕过端口。
+
+表现层经端口读取的 `S`／`RT`／`AN`／`PAT`／`HIDE`／`ROAM` 是活的只读视图；嵌套赋值、删除和数组修改会报错。需要交互时调用应用命令。Mod 原有稳定 API 保持 1.0，由 `app/mod-adapter.js` 接入；通用模块加载器不再读取物品表、地图和玩家状态。兼容全局供旧页面、调试和外部工具使用，不是新模块的隐式依赖来源，也不是安全沙箱。
+
+共享尺寸或模型代理变化时先运行 `node tools/export_collision_data.cjs --write`，再运行链接器。空间规则使用独立碰撞代理及共享配方；加载哪个模型细节包都不重新决定物理占地。音效校准工具会在写出声音数据后自动更新模块契约。

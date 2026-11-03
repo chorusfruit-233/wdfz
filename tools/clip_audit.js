@@ -59,7 +59,7 @@ var ClipAudit=(function(){
   /* 室外零碎道具（addOutdoorProps 里直接画的）：按源码里的段落认，再按空间连通分成一个个实例 */
   var PROP_SECT=null;
   function propSection(){
-    var st=(new Error()).stack||'', m=st.match(/outdoor\.js:(\d+)/);
+    var st=(new Error()).stack||'', m=st.match(/outdoor-recipe\.js:(\d+)/);
     if(!m||!PROP_SECT) return 'props';
     var ln=+m[1], best='props';
     for(var i=0;i<PROP_SECT.length;i++) if(ln>=PROP_SECT[i][0]) best=PROP_SECT[i][1];
@@ -399,7 +399,7 @@ var ClipAudit=(function(){
     if(!PROP_SECT){
       PROP_SECT=[];
       /* 按源码里的「---- 名字 ----」注释切段（用文件里的真实行号，和调用栈对得上） */
-      var xhr=new XMLHttpRequest(); xhr.open('GET','game3d/js/model/outdoor.js',false); xhr.send();
+      var xhr=new XMLHttpRequest(); xhr.open('GET','game3d/js/content/outdoor-recipe.js',false); xhr.send();
       xhr.responseText.split('\n').forEach(function(l,i){ var m=l.match(/\/\* ---- ([^：:（( -]+)/); if(m) PROP_SECT.push([i+1,m[1]]); });
     }
     REC={list:[],mat:'',outdoor:true}; OWN=[]; OWNID=0;

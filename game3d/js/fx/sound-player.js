@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 音效播放器（模块 audio）
    读 sound-bank.js 的配方现场合成。每次播放都在配方给的范围里重新取值（音高、响度、时间、滤波都差一点），
    同一声不会两次一模一样；再乘上 sound-levels.js 的响度校准（tools/sound_levels.py 生成），让同一类声音一样响。
@@ -13,22 +15,22 @@
 'use strict';
 
 var SoundPlayer=(function(){
-  var rng=Math.random, active=[], extra={};
+  var rng=$imports.PresentationRandom.next, active=[], extra={};
   var CAT_WET={ui:0.04,step:0.22,foley:0.3,world:0.6,distant:0.6,threat:0.4,event:0.5,death:0.4,scene:0.35,music:0.45,void:0.9};
   var LAYER_T={tone:1,noise:1,bell:1,vowel:1,fm:1};
   var BELL=[[0.5,0.9,1],[1,0.75,0.8],[1.19,0.5,0.6],[1.5,0.32,0.5],[2,0.42,0.45],[2.51,0.22,0.3],[2.99,0.16,0.25],[4.17,0.09,0.16]];
 
-  function def(id){ return extra[id]||(typeof SOUND_BANK!=='undefined'?SOUND_BANK[id]:null)||null; }
+  function def(id){ return extra[id]||(typeof $imports.SOUND_BANK!=='undefined'?$imports.SOUND_BANK[id]:null)||null; }
   function cat(id){ var d=def(id); return d?d.cat:null; }
   function ids(){
-    var out=Object.keys(typeof SOUND_BANK!=='undefined'?SOUND_BANK:{});
+    var out=Object.keys(typeof $imports.SOUND_BANK!=='undefined'?$imports.SOUND_BANK:{});
     Object.keys(extra).forEach(function(k){ if(out.indexOf(k)<0) out.push(k); });
     return out;
   }
   function dB(x){ return Math.pow(10,x/20); }
   function lvl(id,raw){
     if(raw) return 1;
-    var t=(typeof SOUND_LEVELS!=='undefined')?SOUND_LEVELS[id]:undefined;
+    var t=(typeof $imports.SOUND_LEVELS!=='undefined')?$imports.SOUND_LEVELS[id]:undefined;
     return typeof t==='number'?dB(t):1;
   }
   function pick(v,o,i){
@@ -227,8 +229,8 @@ var SoundPlayer=(function(){
 
   /* ---------- 游戏里的输出：SFX 的分类总线、混响、方位 ---------- */
   function liveEnv(){
-    if(typeof SFX==='undefined'||!SFX.synth) return null;
-    var A=SFX.synth(), a=A.ctx(); if(!a) return null;
+    if(typeof $imports.SFX==='undefined'||!$imports.SFX.synth) return null;
+    var A=$imports.SFX.synth(), a=A.ctx(); if(!a) return null;
     return {ctx:a, now:function(){ return a.currentTime; }, noise:A.noiseBuf,
       dry:function(c){ return A.bus(c); },
       send:function(c,w){ return A.send(c,w); },
@@ -259,8 +261,8 @@ var SoundPlayer=(function(){
   /* 停掉某一类（或全部）正在响的声音 */
   function stop(c){
     if(!active.length) return 0;
-    if(typeof SFX==='undefined'||!SFX.synth) return 0;
-    var a=SFX.synth().ctx(), n=0; if(!a) return 0;
+    if(typeof $imports.SFX==='undefined'||!$imports.SFX.synth) return 0;
+    var a=$imports.SFX.synth().ctx(), n=0; if(!a) return 0;
     active=active.filter(function(h){
       if(c&&h.cat!==c) return h.end>a.currentTime;
       if(fade(h,a.currentTime)) n++;
@@ -321,7 +323,7 @@ var SoundPlayer=(function(){
   var LKEYS='t at dur g atk hold f to glide type q lp vib am wet pan panK n every accel decay fstep jit panTo ratio index idecay partials f1 f2 f3 fq voice breath p'.split(' '),
       SKEYS='cat name lv vary wet len rep layers'.split(' ');
   function validate(){
-    var bad=[], C=typeof SOUND_CATS!=='undefined'?SOUND_CATS:{};
+    var bad=[], C=typeof $imports.SOUND_CATS!=='undefined'?$imports.SOUND_CATS:{};
     ids().forEach(function(id){
       var D=def(id);
       if(!D||!C[D.cat]) bad.push(id+': 类别不对');
@@ -340,13 +342,19 @@ var SoundPlayer=(function(){
   }
   return {
     play:play, stop:stop, fade:fade, render:render, length:length, has:function(id){ return !!def(id); }, def:def, cat:cat, ids:ids,
-    level:function(id){ var t=typeof SOUND_LEVELS!=='undefined'?SOUND_LEVELS[id]:undefined; return typeof t==='number'?t:null; },
+    level:function(id){ var t=typeof $imports.SOUND_LEVELS!=='undefined'?$imports.SOUND_LEVELS[id]:undefined; return typeof t==='number'?t:null; },
     measure:measure, validate:validate, loudness:loudness,
-    active:function(){ var a=(typeof SFX!=='undefined'&&SFX.synth)?SFX.synth().ctx():null, now=a?a.currentTime:0; return active.filter(function(h){ return h.end>now; }).map(function(h){ return h.id; }); },
+    active:function(){ var a=(typeof $imports.SFX!=='undefined'&&$imports.SFX.synth)?$imports.SFX.synth().ctx():null, now=a?a.currentTime:0; return active.filter(function(h){ return h.end>now; }).map(function(h){ return h.id; }); },
     /* Mod 用：加一个自己的音效（同名覆盖内置）；配方格式见文件开头 */
     add:function(id,d){ if(!id||!d||!Array.isArray(d.layers)) return false; extra[id]=d; return true; },
-    seed:function(s){ rng=s===undefined||s===null?Math.random:mulberry(s); }
+    seed:function(s){ rng=s===undefined||s===null?$imports.PresentationRandom.next:mulberry(s); }
   };
 })();
 /* 音频时钟上的延迟发声也属于本局；新局、读档或回菜单时一并停止。 */
 GameModules.on('boundary',function(){ SoundPlayer.stop(); },{owner:'audio'});
+
+/* @module-exports */
+GameModules.publish("game3d/js/fx/sound-player.js",{
+"SoundPlayer":{get:function(){return SoundPlayer;},set:function($value){SoundPlayer=$value;}}
+});
+})(GameModules.imports("game3d/js/fx/sound-player.js"));

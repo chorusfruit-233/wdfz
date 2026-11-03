@@ -10,6 +10,7 @@
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import subprocess
 import argparse, json, os, re, shutil, sys, threading
 from playwright.sync_api import sync_playwright
 
@@ -73,6 +74,7 @@ def write(rows, cats):
     LEVELS.write_text("/* 自动生成：python tools/sound_levels.py（不要手改）。每个音效相对配方原始响度的校准（dB），\n"
                       "   让同一类声音一样响：类别目标见 sound-bank.js 的 SOUND_CATS，单个音效再按 lv 调。 */\n"
                       "'use strict';\nvar SOUND_LEVELS={\n" + body + "\n};\n", encoding='utf-8')
+    subprocess.run(['node', str(ROOT / 'tools/link_modules.cjs'), '--write'], cwd=ROOT, check=True)
     lines = ['# 音效响度表', '',
              '> 自动生成：`python tools/sound_levels.py`（不要手改）。改了 `game3d/js/sound-bank.js` 里的配方以后重跑。',
              '',

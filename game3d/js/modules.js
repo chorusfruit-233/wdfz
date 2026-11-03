@@ -15,7 +15,69 @@ var GameModules=(function(){
   var STORE_KEY='wdfz_mods';           /* 上传的 Mod：[{id,name,code,enabled,added}] */
   var ENABLE_KEY='wdfz_mods_on';        /* 内置 Mod 的开关：{id:true} */
   var modules=[], byId={}, hooks={}, mods=[], modById={}, errors=[], persist=[], builtin=[], loaded=false;
-  var EMPTY=[];
+  var EMPTY=[],modServices=Object.create(null);
+  function bindModServices(services){modServices=Object.freeze(Object.assign(Object.create(null),services));}
+  function service(name,args,fallback){return typeof modServices[name]==='function'?modServices[name].apply(null,args):fallback;}
+  /* 文件级依赖端口。实现留在各自闭包；window 仅保留旧 HTML、Mod 和工具的兼容外观。 */
+  var contracts=Object.create(null),symbols=Object.create(null),linked=Object.create(null);
+  function configureContracts(list){
+    (list||[]).forEach(function(c){
+      if(!c||!c.file||contracts[c.file])throw new Error('重复或非法文件契约：'+(c&&c.file));
+      contracts[c.file]=c;
+    });
+  }
+  var readViews=new WeakMap();
+  function readView(value){
+    if(!value||typeof value!=='object'||Object.isFrozen(value))return value;
+    if(readViews.has(value))return readViews.get(value);
+    function denied(){throw new TypeError('表现层不能写入玩法状态');}
+    var view=new Proxy(value,{get:function(target,key){return readView(Reflect.get(target,key));},
+      set:denied,deleteProperty:denied,defineProperty:denied,setPrototypeOf:denied});
+    readViews.set(value,view);return view;
+  }
+  function importFile(file){
+    var c=contracts[file];if(!c)throw new Error('文件未声明依赖：'+file);
+    var ports=Object.create(null);
+    Object.keys(c.imports||{}).forEach(function(name){
+      var owner=c.imports[name];
+      Object.defineProperty(ports,name,{enumerable:true,get:function(){
+        var binding=symbols[name];
+        if(binding&&binding.file!==owner)throw new Error('接口归属不匹配：'+file+' → '+name);
+        var value=binding?binding.get():undefined;
+        return (c.readonly||[]).indexOf(name)>=0?readView(value):value;
+      },set:function(value){
+        if((c.writes||[]).indexOf(name)<0)throw new Error('未授权替换接口：'+file+' → '+name);
+        var binding=symbols[name];if(!binding||!binding.set)throw new Error('接口不可替换：'+name);
+        binding.set(value);
+      }});
+    });
+    return Object.freeze(ports);
+  }
+  function publishFile(file,definitions){
+    var c=contracts[file];if(!c)throw new Error('文件未声明导出：'+file);
+    if(linked[file])throw new Error('文件重复发布：'+file);
+    var actual=Object.keys(definitions),expected=c.provides||[];
+    if(actual.length!==expected.length||expected.some(function(n){return !definitions[n];}))throw new Error('文件导出与契约不同：'+file);
+    actual.forEach(function(name){
+      if(symbols[name])throw new Error('接口重复归属：'+name);
+      var d=definitions[name];if(typeof d.get!=='function')throw new Error('接口缺少读取器：'+name);
+      symbols[name]={file:file,get:d.get,set:d.set};
+      var legacy=Object.getOwnPropertyDescriptor(globalThis,name);
+      if(!c.standalone&&(!legacy||legacy.configurable))Object.defineProperty(globalThis,name,{configurable:true,enumerable:true,get:d.get,set:d.set});
+    });
+    linked[file]=true;
+  }
+  /* 独立纯规则仍可直接在 Node 中读取；浏览器加载后登记同一份对象，不复制状态。 */
+  function adoptFile(file){
+    var c=contracts[file];if(!c||!c.standalone)return;
+    var out=Object.create(null);
+    (c.provides||[]).forEach(function(name){out[name]={get:function(){return globalThis[name];},set:function(v){globalThis[name]=v;}};});
+    publishFile(file,out);
+  }
+  function dependencySnapshot(){
+    return Object.keys(contracts).map(function(file){var c=contracts[file];return {file:file,module:c.module,layer:c.layer,readonly:(c.readonly||[]).slice(),standalone:!!c.standalone,
+      imports:Object.assign({},c.imports),provides:(c.provides||[]).slice(),writes:(c.writes||[]).slice(),linked:!!linked[file]};});
+  }
 
   function qs(){ try{ return location.search||''; }catch(e){ return ''; } }
   function param(name){
@@ -83,6 +145,15 @@ var GameModules=(function(){
   function verify(){
     modules.forEach(function(m){
       m.missing=m.exports.filter(function(n){ return globalType(n)==='undefined'; });
+      m.files.forEach(function(file){
+        var c=contracts[file];if(!c)return;
+        if(!linked[file])m.missing.push('file:'+file);
+        Object.keys(c.imports||{}).forEach(function(name){
+          var provider=contracts[c.imports[name]],binding=symbols[name];
+          /* 可选模块整块移除时，它的接口可以缺席；已启用模块不得缺失。 */
+          if(provider&&byId[provider.module]&&(!binding||binding.file!==provider.file))m.missing.push('import:'+name);
+        });
+      });
       m.status=m.missing.length?'missing':'ok';
       if(m.missing.length) log('verify',m.id,'缺少导出：'+m.missing.join('、'));
     });
@@ -156,26 +227,13 @@ var GameModules=(function(){
       version:API_VERSION, id:m.id,
       on:function(name,fn,opt){ opt=Object.assign({owner:owner},opt||{}); return on(name,fn,opt); },
       off:off,
-      say:function(text,sec){ try{ os(String(text),sec||3); }catch(e){} },
-      toast:function(text){ try{ toast(String(text)); }catch(e){} },
-      state:function(){ return (typeof S!=='undefined')?S:null; },
-      addItem:function(id,def){
-        if(typeof ITEMS==='undefined'||!id||!def) return false;
-        ITEMS[id]={n:String(def.name||id),d:String(def.desc||'')};
-        if(def.glyph&&typeof ITEM_GLYPH!=='undefined') ITEM_GLYPH[id]=String(def.glyph);
-        if(def.color&&typeof ITEM_COL!=='undefined') ITEM_COL[id]=String(def.color);
-        if(typeof def.use==='function'&&typeof ITEM_USE!=='undefined') ITEM_USE[id]=def.use;
-        return true;
-      },
-      giveItem:function(id){ return (typeof addItem==='function')?addItem(id):false; },
-      addRoom:function(id,def){
-        if(typeof mkFloor!=='function'||!def||!def.grid) return null;
-        var R=mkFloor(id,def.name||id,def.host||('mod_'+m.id),def.floor||1,def.grid);
-        ['build','collide','solid','moved','onEnter','noMap','noClock'].forEach(function(k){ if(def[k]!==undefined) R[k]=def[k]; });
-        if(typeof buildRoomBounds==='function') buildRoomBounds();
-        return R;
-      },
-      enterRoom:function(id,spawn){ if(typeof INTERIORS!=='undefined'&&INTERIORS[id]&&typeof enterRoom==='function') enterRoom(id,spawn); },
+      say:function(text,sec){return service('say',[String(text),sec||3]);},
+      toast:function(text){return service('toast',[String(text)]);},
+      state:function(){return service('state',[],null);},
+      addItem:function(id,def){return service('addItem',[id,def],false);},
+      giveItem:function(id){return service('giveItem',[id],false);},
+      addRoom:function(id,def){return service('addRoom',[m.id,id,def],null);},
+      enterRoom:function(id,spawn){return service('enterRoom',[id,spawn]);},
       store:function(spec){ persistent(owner,spec); },
       modules:function(){ return GameModules.modules(); }
     };
@@ -230,7 +288,10 @@ var GameModules=(function(){
   function boot(){
     if(loaded) return; loaded=true;
     var html=[];
-    modules.forEach(function(m){ m.files.forEach(function(f){ html.push(scriptTag(f)); }); });
+    modules.forEach(function(m){ m.files.forEach(function(f){
+      html.push(scriptTag(f));
+      html.push('<script>GameModules.adoptFile('+JSON.stringify(f)+')<\/script>');
+    }); });
     html.push('<script>GameModules._afterCore()<\/script>');
     if(!safeMode()){
       html.push(scriptTag('game3d/mods/index.js'));
@@ -252,7 +313,8 @@ var GameModules=(function(){
   }
 
   var G={
-    API_VERSION:API_VERSION,
+    API_VERSION:API_VERSION,bindModServices:bindModServices,
+    configureContracts:configureContracts,imports:importFile,publish:publishFile,adoptFile:adoptFile,dependencies:dependencySnapshot,
     define:define, on:on, off:off, has:has, emit:emit, first:first,
     persistent:persistent, saveAll:saveAll, loadAll:loadAll, resetAll:resetAll,
     mod:mod, boot:boot, verify:verify, safeMode:safeMode,

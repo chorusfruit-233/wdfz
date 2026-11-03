@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 地图数据：室内网格、校园物件、校门与边界 */
 'use strict';
 
@@ -17,7 +19,7 @@ var CLS_DOOR=[8,16,24,32,40,48];
 var MY_ROOM=5, MY_COL=48, MY_ROW=6;
 
 function teachFloor(f){
-  var W=TCOLS, H=22, g=blank(W,H,'.'), x, y, i;
+  var W=$imports.TCOLS, H=22, g=blank(W,H,'.'), x, y, i;
   border(g,W,H,'#');
   var sep=[4,12,20,28,36,44,52];
   for(i=0;i<sep.length;i++) for(y=1;y<16;y++) g[y][sep[i]]='#';
@@ -198,7 +200,7 @@ function gearFloor(){
 var INTERIORS={};
 function mkFloor(id,name,host,floor,grid,enter){
   INTERIORS[id]={id:id,name:name,host:host,floor:floor,grid:grid,
-    rows:grid.length,cols:grid[0].length,tw:TTILE,th:TTILE,enter:enter===undefined?true:enter};
+    rows:grid.length,cols:grid[0].length,tw:$imports.TTILE,th:$imports.TTILE,enter:enter===undefined?true:enter};
   return INTERIORS[id];
 }
 function buildInteriorData(){
@@ -270,7 +272,7 @@ function buildInteriorData(){
   mkFloor('bell1','钟楼','bell',1,bellFloor()).spiral=true;
   mkFloor('guard1','保安岗','guard',1,guardFloor());
   mkFloor('gear1','体育器材室','gear',1,gearFloor());
-  if(typeof placeLockers==='function') placeLockers();          /* 储物柜和校长办公室：patrol.js */
+  if(typeof $imports.placeLockers==='function') (0,$imports.placeLockers)();          /* 储物柜和校长办公室：patrol.js */
   GameModules.emit('interiors');                                /* 模块在这里加 / 改房间（例如 void-maze 改写 lift_dream） */
 }
 
@@ -305,4 +307,43 @@ var BOUND={x0:200,y0:95,x1:830,y1:1290};
 var ELEV_Y=990;
 
 function objById(id){ for(var i=0;i<OBJ.length;i++) if(OBJ[i].id===id) return OBJ[i]; return null; }
-function objWorld(o){ return {x:o.x*SC,y:o.y*SC,w:o.w*SC,h:o.h*SC}; }
+function objWorld(o){ return {x:o.x*$imports.SC,y:o.y*$imports.SC,w:o.w*$imports.SC,h:o.h*$imports.SC}; }
+
+/* @module-exports */
+GameModules.publish("game3d/js/map.js",{
+"blank":{get:function(){return blank;},set:function($value){blank=$value;}},
+"border":{get:function(){return border;},set:function($value){border=$value;}},
+"CLS_SPAN":{get:function(){return CLS_SPAN;},set:function($value){CLS_SPAN=$value;}},
+"CLS_NAME":{get:function(){return CLS_NAME;},set:function($value){CLS_NAME=$value;}},
+"CLS_DOOR":{get:function(){return CLS_DOOR;},set:function($value){CLS_DOOR=$value;}},
+"MY_ROOM":{get:function(){return MY_ROOM;},set:function($value){MY_ROOM=$value;}},
+"MY_COL":{get:function(){return MY_COL;},set:function($value){MY_COL=$value;}},
+"MY_ROW":{get:function(){return MY_ROW;},set:function($value){MY_ROW=$value;}},
+"teachFloor":{get:function(){return teachFloor;},set:function($value){teachFloor=$value;}},
+"rooftop":{get:function(){return rooftop;},set:function($value){rooftop=$value;}},
+"elevatorCabin":{get:function(){return elevatorCabin;},set:function($value){elevatorCabin=$value;}},
+"elevatorDream":{get:function(){return elevatorDream;},set:function($value){elevatorDream=$value;}},
+"portalTunnelFloor":{get:function(){return portalTunnelFloor;},set:function($value){portalTunnelFloor=$value;}},
+"genericFloor":{get:function(){return genericFloor;},set:function($value){genericFloor=$value;}},
+"computerFloor":{get:function(){return computerFloor;},set:function($value){computerFloor=$value;}},
+"canteenFloor":{get:function(){return canteenFloor;},set:function($value){canteenFloor=$value;}},
+"dormFloor":{get:function(){return dormFloor;},set:function($value){dormFloor=$value;}},
+"garageFloor":{get:function(){return garageFloor;},set:function($value){garageFloor=$value;}},
+"trashFloor":{get:function(){return trashFloor;},set:function($value){trashFloor=$value;}},
+"linkFloor":{get:function(){return linkFloor;},set:function($value){linkFloor=$value;}},
+"bellFloor":{get:function(){return bellFloor;},set:function($value){bellFloor=$value;}},
+"guardFloor":{get:function(){return guardFloor;},set:function($value){guardFloor=$value;}},
+"gearFloor":{get:function(){return gearFloor;},set:function($value){gearFloor=$value;}},
+"INTERIORS":{get:function(){return INTERIORS;},set:function($value){INTERIORS=$value;}},
+"mkFloor":{get:function(){return mkFloor;},set:function($value){mkFloor=$value;}},
+"buildInteriorData":{get:function(){return buildInteriorData;},set:function($value){buildInteriorData=$value;}},
+"OBJ":{get:function(){return OBJ;},set:function($value){OBJ=$value;}},
+"GATE_N":{get:function(){return GATE_N;},set:function($value){GATE_N=$value;}},
+"GATE_W":{get:function(){return GATE_W;},set:function($value){GATE_W=$value;}},
+"GATE_S":{get:function(){return GATE_S;},set:function($value){GATE_S=$value;}},
+"BOUND":{get:function(){return BOUND;},set:function($value){BOUND=$value;}},
+"ELEV_Y":{get:function(){return ELEV_Y;},set:function($value){ELEV_Y=$value;}},
+"objById":{get:function(){return objById;},set:function($value){objById=$value;}},
+"objWorld":{get:function(){return objWorld;},set:function($value){objWorld=$value;}}
+});
+})(GameModules.imports("game3d/js/map.js"));

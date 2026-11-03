@@ -1,0 +1,17 @@
+name: Module boundaries and headless rules
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate contracts, layers, state ownership and collision content
+        run: python3 tools/check_modules.py
+      - name: Exercise actual rule modules without a browser or WebGL
+        run: |
+          python3 -m unittest discover -s tests -p test_architecture_core.py -v
+          python3 -m unittest discover -s tests -p test_domain_rules.py -v

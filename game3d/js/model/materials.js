@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 材质库
    按材质分开，每种一张灰度颜色图和一张高度图（高度图在这里算成法线贴图）。
    贴图是离线生成的（tools/textures/build_textures.py → game3d/assets/textures_512.js、textures_1024.js，WebP），
@@ -43,7 +45,7 @@ var MAT_DEF={
 };
 var MATS={}, TEXS={};
 
-function texSize(){ return Quality.get().texture; }
+function texSize(){ return $imports.Quality.get().texture; }
 /* 每张贴图最大 1024（离线贴图包的最大一档）；「真实」档也用 1024，省显存 */
 function matTexSize(){ return Math.min(texSize(),1024); }
 
@@ -76,7 +78,7 @@ function texPackWant(){
   var res=texPackRes();
   if(TEXP.packs[res]||TEXP.loading[res]||texPackBest()>=res||typeof document==='undefined') return;
   TEXP.loading[res]=1;
-  var s=document.createElement('script'); s.src=ASSETS_BASE+'textures_'+res+'.js'; s.async=true;
+  var s=document.createElement('script'); s.src=$imports.ASSETS_BASE+'textures_'+res+'.js'; s.async=true;
   s.onerror=function(){ delete TEXP.loading[res]; };
   document.head.appendChild(s);
 }
@@ -84,9 +86,9 @@ function texBootFinished(res){if(!TEXP.packs[res])delete TEXP.loading[res];}
 /* 一档读好了：已经建好的材质换上新贴图 */
 function texPackReady(){ if(MAT_TEX_SIZE) matRefreshQuality(true); }
 function texParams(t,aniso){
-  t.wrapS=THREE.RepeatWrapping; t.wrapT=THREE.RepeatWrapping;
-  try{ t.anisotropy=Math.min(aniso,GLR.renderer.capabilities.getMaxAnisotropy()); }catch(e){ t.anisotropy=Math.min(aniso,4); }
-  t.generateMipmaps=true; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
+  t.wrapS=$imports.THREE.RepeatWrapping; t.wrapT=$imports.THREE.RepeatWrapping;
+  try{ t.anisotropy=Math.min(aniso,$imports.GLR.renderer.capabilities.getMaxAnisotropy()); }catch(e){ t.anisotropy=Math.min(aniso,4); }
+  t.generateMipmaps=true; t.minFilter=$imports.THREE.LinearMipmapLinearFilter; t.magFilter=$imports.THREE.LinearFilter;
   return t;
 }
 function makeMatTex(kind){
@@ -95,15 +97,15 @@ function makeMatTex(kind){
   var im=texPackImg(kind,0);
   if(im){ c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high'; c.drawImage(im,0,0,SZ,SZ); }
   else{ var v=TEX_MEAN[kind]||220; c.fillStyle='rgb('+v+','+v+','+v+')'; c.fillRect(0,0,SZ,SZ); }
-  var t=texParams(new THREE.CanvasTexture(cv),8);
-  t.colorSpace=THREE.SRGBColorSpace;
+  var t=texParams(new $imports.THREE.CanvasTexture(cv),8);
+  t.colorSpace=$imports.THREE.SRGBColorSpace;
   return t;
 }
 /* 一簇叶子（带透明通道）：中间密、边上稀，叶子一片片有深有浅，几根细枝 */
 function makeFoliageTex(){
   var SZ=Math.max(128,Math.min(512,texSize())), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
   var c=cv.getContext('2d'), i, k=SZ/256;
-  function R(){ return Math.random(); }
+  function R(){ return $imports.PresentationRandom.next(); }
   c.clearRect(0,0,SZ,SZ);
   c.strokeStyle='rgba(70,60,50,1)'; c.lineWidth=1.2*k;
   for(i=0;i<7;i++){ var a=R()*6.283; c.beginPath(); c.moveTo(SZ/2,SZ/2); c.lineTo(SZ/2+Math.cos(a)*SZ*0.4,SZ/2+Math.sin(a)*SZ*0.4); c.stroke(); }
@@ -114,10 +116,10 @@ function makeFoliageTex(){
     c.fillStyle='rgb('+v+','+v+','+v+')';
     c.beginPath(); c.ellipse(x,y,(5+R()*5)*k,(2.2+R()*2.2)*k,R()*3.14,0,6.283); c.fill();
   }
-  var t=new THREE.CanvasTexture(cv);
-  t.wrapS=THREE.ClampToEdgeWrapping; t.wrapT=THREE.ClampToEdgeWrapping;
-  t.generateMipmaps=true; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
-  t.colorSpace=THREE.SRGBColorSpace;
+  var t=new $imports.THREE.CanvasTexture(cv);
+  t.wrapS=$imports.THREE.ClampToEdgeWrapping; t.wrapT=$imports.THREE.ClampToEdgeWrapping;
+  t.generateMipmaps=true; t.minFilter=$imports.THREE.LinearMipmapLinearFilter; t.magFilter=$imports.THREE.LinearFilter;
+  t.colorSpace=$imports.THREE.SRGBColorSpace;
   return t;
 }
 /* 污渍图集：2×2 格——左上水渍（一圈圈晕开、边上一道深的水线）、右上霉斑（一片细密的点）、
@@ -125,7 +127,7 @@ function makeFoliageTex(){
 function makeGrimeTex(){
   var SZ=Math.max(256,Math.min(512,texSize())), cv=document.createElement('canvas'); cv.width=SZ; cv.height=SZ;
   var c=cv.getContext('2d'), h=SZ/2, k=h/256, i, j;
-  function R(){ return Math.random(); }
+  function R(){ return $imports.PresentationRandom.next(); }
   c.clearRect(0,0,SZ,SZ);
   /* 水渍 */
   for(i=0;i<9;i++){
@@ -155,16 +157,16 @@ function makeGrimeTex(){
     c.strokeStyle='rgba(255,255,255,'+(0.10+R()*0.35).toFixed(2)+')'; c.lineWidth=(0.8+R()*2.2)*k;
     c.beginPath(); c.moveTo(sx,sy); c.lineTo(sx+Math.cos(sa)*sl,sy+Math.sin(sa)*sl); c.stroke();
   }
-  var t=new THREE.CanvasTexture(cv);
-  t.wrapS=THREE.ClampToEdgeWrapping; t.wrapT=THREE.ClampToEdgeWrapping;
-  t.generateMipmaps=true; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
-  t.colorSpace=THREE.SRGBColorSpace;
+  var t=new $imports.THREE.CanvasTexture(cv);
+  t.wrapS=$imports.THREE.ClampToEdgeWrapping; t.wrapT=$imports.THREE.ClampToEdgeWrapping;
+  t.generateMipmaps=true; t.minFilter=$imports.THREE.LinearMipmapLinearFilter; t.magFilter=$imports.THREE.LinearFilter;
+  t.colorSpace=$imports.THREE.SRGBColorSpace;
   return t;
 }
 function matTex(kind){
   if(kind==='grime'){ if(!TEXS[kind]) TEXS[kind]=makeGrimeTex(); return TEXS[kind]; }      /* 贴花离不开贴图（关贴图也要） */
   if(kind==='foliage'){ if(!TEXS[kind]) TEXS[kind]=makeFoliageTex(); return TEXS[kind]; }    /* 叶片卡离不开贴图（关贴图也要） */
-  if(!kind||NOTEX) return null;
+  if(!kind||$imports.NOTEX) return null;
   if(!TEXS[kind]) TEXS[kind]=makeMatTex(kind);
   return TEXS[kind];
 }
@@ -200,16 +202,16 @@ function heightToNormal(cv){
   return nc;
 }
 function matNormal(kind){
-  if(!kind||NOTEX||!Quality.get().relief||!RELIEF[kind]) return null;
+  if(!kind||$imports.NOTEX||!$imports.Quality.get().relief||!RELIEF[kind]) return null;
   var key='n:'+kind;
   if(TEXS[key]===undefined){
     var h=null; try{ h=makeMatHeight(kind); }catch(e){ h=null; }
     if(!h){ TEXS[key]=null; return null; }
-    var t=new THREE.CanvasTexture(heightToNormal(h));
-    t.wrapS=THREE.RepeatWrapping; t.wrapT=THREE.RepeatWrapping;
-    try{ t.anisotropy=Math.min(4,GLR.renderer.capabilities.getMaxAnisotropy()); }catch(e){ t.anisotropy=2; }
-    t.generateMipmaps=true; t.minFilter=THREE.LinearMipmapLinearFilter; t.magFilter=THREE.LinearFilter;
-    t.colorSpace=THREE.NoColorSpace;
+    var t=new $imports.THREE.CanvasTexture(heightToNormal(h));
+    t.wrapS=$imports.THREE.RepeatWrapping; t.wrapT=$imports.THREE.RepeatWrapping;
+    try{ t.anisotropy=Math.min(4,$imports.GLR.renderer.capabilities.getMaxAnisotropy()); }catch(e){ t.anisotropy=2; }
+    t.generateMipmaps=true; t.minFilter=$imports.THREE.LinearMipmapLinearFilter; t.magFilter=$imports.THREE.LinearFilter;
+    t.colorSpace=$imports.THREE.NoColorSpace;
     TEXS[key]=t;
   }
   return TEXS[key];
@@ -244,18 +246,18 @@ function matPBR(key){
   var d=MAT_DEF[key]||MAT_DEF.plaster, m, o;
   var rough=Math.max(0.22,Math.min(0.96,1-Math.sqrt((d[2]||0)/90))), metal=(key==='metal')?0.7:0;
   if(key==='glass'){
-    m=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:0.34,roughness:0.05,metalness:0,depthWrite:false,envMapIntensity:1.4});
+    m=new $imports.THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:0.34,roughness:0.05,metalness:0,depthWrite:false,envMapIntensity:1.4});
   }else if(key==='grime'){
-    m=new THREE.MeshStandardMaterial({vertexColors:true,map:matTex('grime'),transparent:true,depthWrite:false,roughness:1,metalness:0,
+    m=new $imports.THREE.MeshStandardMaterial({vertexColors:true,map:matTex('grime'),transparent:true,depthWrite:false,roughness:1,metalness:0,
       polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
   }else if(key==='foliage'){
-    m=new THREE.MeshStandardMaterial({vertexColors:true,map:matTex('foliage'),alphaTest:0.42,roughness:0.82,metalness:0});
+    m=new $imports.THREE.MeshStandardMaterial({vertexColors:true,map:matTex('foliage'),alphaTest:0.42,roughness:0.82,metalness:0});
   }else{
     o={vertexColors:true,roughness:rough,metalness:metal,envMapIntensity:0.55};
     var t=matTex(d[0]); if(t) o.map=t;
-    var nt=matNormal(d[0]); if(nt){ o.normalMap=nt; var ns=RELIEF[d[0]]*1.4; o.normalScale=new THREE.Vector2(ns,ns); }
+    var nt=matNormal(d[0]); if(nt){ o.normalMap=nt; var ns=RELIEF[d[0]]*1.4; o.normalScale=new $imports.THREE.Vector2(ns,ns); }
     if(d[4]){ o.polygonOffset=true; o.polygonOffsetFactor=d[4]; o.polygonOffsetUnits=d[4]*2; }
-    m=new THREE.MeshStandardMaterial(o);
+    m=new $imports.THREE.MeshStandardMaterial(o);
   }
   m.userData.shared=true;
   MATS_PBR[key]=m;
@@ -264,34 +266,34 @@ function matPBR(key){
 /* 共享材质：所有房间、室外都用同一批，切场景时不销毁（userData.shared） */
 function matOf(key){
   if(!MAT_TEX_SIZE){ MAT_TEX_SIZE=texSize(); texPackWant(); }
-  if(Quality.get().pbr&&!PBR_SKIP[key]) return matPBR(key);
+  if($imports.Quality.get().pbr&&!PBR_SKIP[key]) return matPBR(key);
   if(MATS[key]) return MATS[key];
   var d=MAT_DEF[key]||MAT_DEF.plaster, m;
   if(key==='glass'){
-    m=new THREE.MeshPhongMaterial({vertexColors:true,transparent:true,opacity:0.42,shininess:d[2],specular:d[3],depthWrite:false});
+    m=new $imports.THREE.MeshPhongMaterial({vertexColors:true,transparent:true,opacity:0.42,shininess:d[2],specular:d[3],depthWrite:false});
   }else if(key==='grime'){
-    m=new THREE.MeshLambertMaterial({vertexColors:true,map:matTex('grime'),transparent:true,depthWrite:false,
+    m=new $imports.THREE.MeshLambertMaterial({vertexColors:true,map:matTex('grime'),transparent:true,depthWrite:false,
       polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
   }else if(key==='emitDying'){
-    m=new THREE.MeshBasicMaterial({vertexColors:true,fog:true});                            /* 快坏的灯管：lighting.js 每帧调颜色 */
+    m=new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true});                            /* 快坏的灯管：lighting.js 每帧调颜色 */
   }else if(key==='emit'){
-    m=new THREE.MeshBasicMaterial({vertexColors:true,fog:true});
+    m=new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true});
   }else if(key==='lamp'){
-    m=new THREE.MeshBasicMaterial({vertexColors:true,fog:true}); GLR.lampHeadMat=m;      /* 路灯灯头：颜色由 lampTick() 调 */
+    m=new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true}); $imports.GLR.lampHeadMat=m;      /* 路灯灯头：颜色由 lampTick() 调 */
   }else if(key==='litwin'){
-    m=new THREE.MeshBasicMaterial({vertexColors:true,fog:true}); GLR.winLitMat=m;        /* 夜里亮着的窗 */
+    m=new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true}); $imports.GLR.winLitMat=m;        /* 夜里亮着的窗 */
   }else if(key==='foliage'){
-    m=new THREE.MeshPhongMaterial({vertexColors:true,map:matTex('foliage'),alphaTest:0.42,shininess:0,specular:0x000000});
+    m=new $imports.THREE.MeshPhongMaterial({vertexColors:true,map:matTex('foliage'),alphaTest:0.42,shininess:0,specular:0x000000});
   }else if(key==='sky'){
     /* 窗外的天光：白天亮、夜里暗，颜色由 lampTick() 每帧调 */
-    m=new THREE.MeshBasicMaterial({vertexColors:true,fog:true});
-    GLR.winSkyMat=m;
+    m=new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true});
+    $imports.GLR.winSkyMat=m;
   }else{
     var o={vertexColors:true,shininess:d[2],specular:d[3]};
     var t=matTex(d[0]); if(t) o.map=t;
-    var nt=matNormal(d[0]); if(nt){ o.normalMap=nt; var ns=RELIEF[d[0]]; o.normalScale=new THREE.Vector2(ns,ns); }
+    var nt=matNormal(d[0]); if(nt){ o.normalMap=nt; var ns=RELIEF[d[0]]; o.normalScale=new $imports.THREE.Vector2(ns,ns); }
     if(d[4]){ o.polygonOffset=true; o.polygonOffsetFactor=d[4]; o.polygonOffsetUnits=d[4]*2; }
-    m=new THREE.MeshPhongMaterial(o);
+    m=new $imports.THREE.MeshPhongMaterial(o);
   }
   m.userData.shared=true;
   MATS[key]=m;
@@ -301,7 +303,42 @@ function matUV(key){ var d=MAT_DEF[key]; return d?d[1]:2.4; }
 /* 开局要的那一档贴图包：照存档里的画质（assets.js 的 bootQuality），解析到这里就同步插进页面 */
 (function(){
   if(typeof document==='undefined'||!document.write) return;
-  var res=Quality.get(bootQuality()).texture>512?1024:512;
+  var res=$imports.Quality.get((0,$imports.bootQuality)()).texture>512?1024:512;
   TEXP.loading[res]=1;
-  document.write('<script src="'+ASSETS_BASE+'textures_'+res+'.js" onerror="texBootFinished('+res+')" onload="texBootFinished('+res+')"><\/script>');
+  document.write('<script src="'+$imports.ASSETS_BASE+'textures_'+res+'.js" onerror="texBootFinished('+res+')" onload="texBootFinished('+res+')"><\/script>');
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/model/materials.js",{
+"MAT_DEF":{get:function(){return MAT_DEF;},set:function($value){MAT_DEF=$value;}},
+"MATS":{get:function(){return MATS;},set:function($value){MATS=$value;}},
+"TEXS":{get:function(){return TEXS;},set:function($value){TEXS=$value;}},
+"texSize":{get:function(){return texSize;},set:function($value){texSize=$value;}},
+"matTexSize":{get:function(){return matTexSize;},set:function($value){matTexSize=$value;}},
+"TEXP":{get:function(){return TEXP;},set:function($value){TEXP=$value;}},
+"TEX_MEAN":{get:function(){return TEX_MEAN;},set:function($value){TEX_MEAN=$value;}},
+"texPackRes":{get:function(){return texPackRes;},set:function($value){texPackRes=$value;}},
+"TEX_PACK":{get:function(){return TEX_PACK;},set:function($value){TEX_PACK=$value;}},
+"texPackImg":{get:function(){return texPackImg;},set:function($value){texPackImg=$value;}},
+"texPackBest":{get:function(){return texPackBest;},set:function($value){texPackBest=$value;}},
+"texPackWant":{get:function(){return texPackWant;},set:function($value){texPackWant=$value;}},
+"texBootFinished":{get:function(){return texBootFinished;},set:function($value){texBootFinished=$value;}},
+"texPackReady":{get:function(){return texPackReady;},set:function($value){texPackReady=$value;}},
+"texParams":{get:function(){return texParams;},set:function($value){texParams=$value;}},
+"makeMatTex":{get:function(){return makeMatTex;},set:function($value){makeMatTex=$value;}},
+"makeFoliageTex":{get:function(){return makeFoliageTex;},set:function($value){makeFoliageTex=$value;}},
+"makeGrimeTex":{get:function(){return makeGrimeTex;},set:function($value){makeGrimeTex=$value;}},
+"matTex":{get:function(){return matTex;},set:function($value){matTex=$value;}},
+"RELIEF":{get:function(){return RELIEF;},set:function($value){RELIEF=$value;}},
+"makeMatHeight":{get:function(){return makeMatHeight;},set:function($value){makeMatHeight=$value;}},
+"heightToNormal":{get:function(){return heightToNormal;},set:function($value){heightToNormal=$value;}},
+"matNormal":{get:function(){return matNormal;},set:function($value){matNormal=$value;}},
+"MAT_TEX_SIZE":{get:function(){return MAT_TEX_SIZE;},set:function($value){MAT_TEX_SIZE=$value;}},
+"matRefreshQuality":{get:function(){return matRefreshQuality;},set:function($value){matRefreshQuality=$value;}},
+"MATS_PBR":{get:function(){return MATS_PBR;},set:function($value){MATS_PBR=$value;}},
+"PBR_SKIP":{get:function(){return PBR_SKIP;},set:function($value){PBR_SKIP=$value;}},
+"matPBR":{get:function(){return matPBR;},set:function($value){matPBR=$value;}},
+"matOf":{get:function(){return matOf;},set:function($value){matOf=$value;}},
+"matUV":{get:function(){return matUV;},set:function($value){matUV=$value;}}
+});
+})(GameModules.imports("game3d/js/model/materials.js"));

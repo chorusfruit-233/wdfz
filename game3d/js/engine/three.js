@@ -1,36 +1,38 @@
+/* @module-capsule */
+(function($imports){
 /* Three.js 后端：设备、离屏目标与后期。游戏逻辑通过 Engine 调用。 */
 'use strict';
 var ThreeBackend={name:'three',version:1};
 ThreeBackend.boot=function(){
   var cv=document.getElementById('cv');
-  var renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
+  var renderer=new $imports.THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.4));
   renderer.setSize(window.innerWidth,window.innerHeight,false);
-  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.outputColorSpace=$imports.THREE.SRGBColorSpace;
   try{ renderer.useLegacyLights=false; }catch(e){}
-  renderer.toneMapping=THREE.NoToneMapping;
+  renderer.toneMapping=$imports.THREE.NoToneMapping;
   renderer.toneMappingExposure=1.15;
   renderer.shadowMap.enabled=false;   /* 阴影每帧要额外整场景一遍，关掉 */
-  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type=$imports.THREE.PCFSoftShadowMap;
 
-  var scene=new THREE.Scene();
-  scene.fog=new THREE.FogExp2(FOG_COL,0.040);
-  scene.background=new THREE.Color(SKY_COL);
+  var scene=new $imports.THREE.Scene();
+  scene.fog=new $imports.THREE.FogExp2($imports.FOG_COL,0.040);
+  scene.background=new $imports.THREE.Color($imports.SKY_COL);
 
-  var cam=new THREE.PerspectiveCamera(74,window.innerWidth/window.innerHeight,0.08,240);
-  cam.position.set(0,EYE,0);
+  var cam=new $imports.THREE.PerspectiveCamera(74,window.innerWidth/window.innerHeight,0.08,240);
+  cam.position.set(0,$imports.EYE,0);
   scene.add(cam);
 
-  var amb=new THREE.AmbientLight(0x7a7772,1.0);
+  var amb=new $imports.THREE.AmbientLight(0x7a7772,1.0);
   scene.add(amb);
-  var hemi=new THREE.HemisphereLight(0xa8adae,0x3a362f,1.0);
+  var hemi=new $imports.THREE.HemisphereLight(0xa8adae,0x3a362f,1.0);
   scene.add(hemi);
-  var moon=new THREE.DirectionalLight(0xc8dae6,1.0);
+  var moon=new $imports.THREE.DirectionalLight(0xc8dae6,1.0);
   moon.position.set(-8.4,16,8.6);
   moon.castShadow=false;
   scene.add(moon);
 
-  var torch=new THREE.SpotLight(0xdceaf0,0,20,0.42,0.62,1.1);
+  var torch=new $imports.THREE.SpotLight(0xdceaf0,0,20,0.42,0.62,1.1);
   torch.position.set(0,0,0);
   torch.castShadow=false;
   torch.shadow.mapSize.width=1024;
@@ -38,32 +40,32 @@ ThreeBackend.boot=function(){
   torch.shadow.camera.near=0.3;
   torch.shadow.camera.far=20;
   torch.shadow.bias=-0.0012;
-  var torchT=new THREE.Object3D(); torchT.position.set(0,0,-1);
+  var torchT=new $imports.THREE.Object3D(); torchT.position.set(0,0,-1);
   cam.add(torch); cam.add(torchT); torch.target=torchT;
 
-  var camLight=new THREE.PointLight(0xbfd0d8,LCFG.camI,LCFG.camDist,LCFG.camDecay);
+  var camLight=new $imports.THREE.PointLight(0xbfd0d8,$imports.LCFG.camI,$imports.LCFG.camDist,$imports.LCFG.camDecay);
   cam.add(camLight);
   var lampPool=[], lp;
   for(lp=0;lp<3;lp++){                       /* 数量固定：室内也留着（强度 0），免得切场景重编着色器 */
-    var pl0=new THREE.PointLight(0xffd9a0,0,LCFG.lampDist,1.6);
+    var pl0=new $imports.THREE.PointLight(0xffd9a0,0,$imports.LCFG.lampDist,1.6);
     pl0.userData={on:false};
     pl0.position.set(0,-50,0);
     scene.add(pl0); lampPool.push(pl0);
   }
 
-  var rt=new THREE.WebGLRenderTarget(2,2,{
-    minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,
-    format:THREE.RGBAFormat,depthBuffer:true,stencilBuffer:false
+  var rt=new $imports.THREE.WebGLRenderTarget(2,2,{
+    minFilter:$imports.THREE.LinearFilter,magFilter:$imports.THREE.LinearFilter,
+    format:$imports.THREE.RGBAFormat,depthBuffer:true,stencilBuffer:false
   });
 
-  var postScene=new THREE.Scene();
-  var postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-  var postMat=new THREE.ShaderMaterial({
+  var postScene=new $imports.THREE.Scene();
+  var postCam=new $imports.THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  var postMat=new $imports.THREE.ShaderMaterial({
     uniforms:{
       tDiffuse:{value:rt.texture},tDepth:{value:rt.texture},tHands:{value:rt.texture},uHands:{value:0},uAO:{value:0},uNear:{value:cam.near},uFar:{value:cam.far},uAA:{value:0},
-      uTime:{value:0}, uRes:{value:new THREE.Vector2(2,2)},
+      uTime:{value:0}, uRes:{value:new $imports.THREE.Vector2(2,2)},
       uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0}, uBloom:{value:0}, uGrain:{value:1}, uInvert:{value:0},
-      uFx:{value:GLRTEST.nofx?1.0:0.0}
+      uFx:{value:$imports.GLRTEST.nofx?1.0:0.0}
     },
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
     fragmentShader:[
@@ -186,72 +188,79 @@ ThreeBackend.boot=function(){
     ].join('\n'),
     depthTest:false,depthWrite:false
   });
-  postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat));
+  postScene.add(new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(2,2),postMat));
 
-  GLR={renderer:renderer,scene:scene,cam:cam,torch:torch,camLight:camLight,lampPool:lampPool,
+  $imports.GLR={renderer:renderer,scene:scene,cam:cam,torch:torch,camLight:camLight,lampPool:lampPool,
        amb:amb,hemi:hemi,moon:moon,
        rt:rt,postScene:postScene,postCam:postCam,postMat:postMat,
        roomLights:[],roomLightBase:[],roomMesh:null,outMesh:null,time:0,hurt:0,flash:0};
 
-  window.addEventListener('resize',resizeGL);
-  window.addEventListener('orientationchange',function(){ setTimeout(resizeGL,260); });
-  try{ if(window.visualViewport) window.visualViewport.addEventListener('resize',resizeGL); }catch(e){}
-  resizeGL();
-  return GLR;
+  window.addEventListener('resize',$imports.resizeGL);
+  window.addEventListener('orientationchange',function(){ setTimeout($imports.resizeGL,260); });
+  try{ if(window.visualViewport) window.visualViewport.addEventListener('resize',$imports.resizeGL); }catch(e){}
+  (0,$imports.resizeGL)();
+  return $imports.GLR;
 };
 
 /* 画面颗粒：设置里的强度（0 关、1 开）乘画质系数（真实档画面干净，颗粒再轻一些） */
 ThreeBackend.grainLevel=1;
 ThreeBackend.grain=function(level){
   if(level!==undefined)ThreeBackend.grainLevel=level;
-  if(typeof GLR==='undefined'||!GLR||!GLR.postMat)return;
-  GLR.postMat.uniforms.uGrain.value=ThreeBackend.grainLevel*(Quality.get().pbr?0.6:1);
+  if(typeof $imports.GLR==='undefined'||!$imports.GLR||!$imports.GLR.postMat)return;
+  $imports.GLR.postMat.uniforms.uGrain.value=ThreeBackend.grainLevel*($imports.Quality.get().pbr?0.6:1);
 };
 /* 「真实」档的环境反射：一个暗的灰绿色房间，顶上几根灯管。金属、玻璃、瓷砖上有一点点反光，不会发亮 */
 function buildEnvTex(){
-  var pm=new THREE.PMREMGenerator(GLR.renderer), sc=new THREE.Scene(), i;
-  var geo=new THREE.SphereGeometry(10,32,16), cols=[], pos=geo.attributes.position;
+  var pm=new $imports.THREE.PMREMGenerator($imports.GLR.renderer), sc=new $imports.THREE.Scene(), i;
+  var geo=new $imports.THREE.SphereGeometry(10,32,16), cols=[], pos=geo.attributes.position;
   for(i=0;i<pos.count;i++){ var t=pos.getY(i)/10, v=t>0?0.06+0.05*t:0.06+0.035*t; cols.push(v*0.9,v,v*0.92); }
-  geo.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
-  var room=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({side:THREE.BackSide,vertexColors:true}));
+  geo.setAttribute('color',new $imports.THREE.Float32BufferAttribute(cols,3));
+  var room=new $imports.THREE.Mesh(geo,new $imports.THREE.MeshBasicMaterial({side:$imports.THREE.BackSide,vertexColors:true}));
   sc.add(room);
-  var tube=new THREE.BoxGeometry(5,0.3,0.6), tm=new THREE.MeshBasicMaterial({color:0x8c958a});
-  for(i=-1;i<=1;i++){ var b=new THREE.Mesh(tube,tm); b.position.set(i*3.4,8.6,0); sc.add(b); }
+  var tube=new $imports.THREE.BoxGeometry(5,0.3,0.6), tm=new $imports.THREE.MeshBasicMaterial({color:0x8c958a});
+  for(i=-1;i<=1;i++){ var b=new $imports.THREE.Mesh(tube,tm); b.position.set(i*3.4,8.6,0); sc.add(b); }
   var tex=pm.fromScene(sc,0.035).texture;
   pm.dispose(); geo.dispose(); tube.dispose(); room.material.dispose(); tm.dispose();
   return tex;
 }
 ThreeBackend.resize=function(){
-  var w=Math.max(1,window.innerWidth),h=Math.max(1,window.innerHeight),q=Quality.get();
+  var w=Math.max(1,window.innerWidth),h=Math.max(1,window.innerHeight),q=$imports.Quality.get();
   /* 限制高分屏的总像素，避免旋转或大屏下离屏目标无限膨胀。 */
   var dpr=Math.min(window.devicePixelRatio||1,q.dpr,Math.sqrt(5000000/(w*h)));
-  GLR.renderer.setPixelRatio(dpr);
-  GLR.renderer.setSize(w,h,false);
-  GLR.cam.aspect=w/h; GLR.cam.updateProjectionMatrix();
-  var cap=GLR.renderer.capabilities;
+  $imports.GLR.renderer.setPixelRatio(dpr);
+  $imports.GLR.renderer.setSize(w,h,false);
+  $imports.GLR.cam.aspect=w/h; $imports.GLR.cam.updateProjectionMatrix();
+  var cap=$imports.GLR.renderer.capabilities;
   var samples=cap.isWebGL2?Math.min(q.samples,cap.maxSamples||0):0;
-  var ao=!!q.ao&&(cap.isWebGL2||GLR.renderer.extensions.has('WEBGL_depth_texture'));
-  if(GLR.rt.samples!==samples||!!GLR.rt.depthTexture!==ao){
-    if(GLR.rt.depthTexture)GLR.rt.depthTexture.dispose();
-    GLR.rt.dispose();
-    GLR.rt=new THREE.WebGLRenderTarget(2,2,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:true,stencilBuffer:false});
-    GLR.rt.samples=samples;
-    if(ao)GLR.rt.depthTexture=new THREE.DepthTexture(2,2,THREE.UnsignedIntType);
+  var ao=!!q.ao&&(cap.isWebGL2||$imports.GLR.renderer.extensions.has('WEBGL_depth_texture'));
+  if($imports.GLR.rt.samples!==samples||!!$imports.GLR.rt.depthTexture!==ao){
+    if($imports.GLR.rt.depthTexture)$imports.GLR.rt.depthTexture.dispose();
+    $imports.GLR.rt.dispose();
+    $imports.GLR.rt=new $imports.THREE.WebGLRenderTarget(2,2,{minFilter:$imports.THREE.LinearFilter,magFilter:$imports.THREE.LinearFilter,depthBuffer:true,stencilBuffer:false});
+    $imports.GLR.rt.samples=samples;
+    if(ao)$imports.GLR.rt.depthTexture=new $imports.THREE.DepthTexture(2,2,$imports.THREE.UnsignedIntType);
   }
-  var u=GLR.postMat.uniforms;
-  u.tDiffuse.value=GLR.rt.texture;u.tDepth.value=GLR.rt.depthTexture||GLR.rt.texture;
+  var u=$imports.GLR.postMat.uniforms;
+  u.tDiffuse.value=$imports.GLR.rt.texture;u.tDepth.value=$imports.GLR.rt.depthTexture||$imports.GLR.rt.texture;
   u.uAO.value=ao?q.ao:0;u.uAA.value=q.samples&&!samples?1:0;
   u.uBloom.value=q.bloom||0;ThreeBackend.grain();
-  if(q.pbr&&!GLR.envTex)GLR.envTex=buildEnvTex();
-  GLR.scene.environment=q.pbr?GLR.envTex:null;
-  var RTS=(GLRTEST&&GLRTEST.hq)?1:q.scale;
+  if(q.pbr&&!$imports.GLR.envTex)$imports.GLR.envTex=buildEnvTex();
+  $imports.GLR.scene.environment=q.pbr?$imports.GLR.envTex:null;
+  var RTS=($imports.GLRTEST&&$imports.GLRTEST.hq)?1:q.scale;
   var rw=Math.max(2,Math.round(w*dpr*RTS)), rh=Math.max(2,Math.round(h*dpr*RTS));
-  GLR.rt.setSize(rw,rh);
-  if(!GLR.handRT||GLR.handRT.samples!==samples){
-    if(GLR.handRT)GLR.handRT.dispose();
-    GLR.handRT=new THREE.WebGLRenderTarget(2,2,{depthBuffer:true,stencilBuffer:false});
-    GLR.handRT.samples=samples;
+  $imports.GLR.rt.setSize(rw,rh);
+  if(!$imports.GLR.handRT||$imports.GLR.handRT.samples!==samples){
+    if($imports.GLR.handRT)$imports.GLR.handRT.dispose();
+    $imports.GLR.handRT=new $imports.THREE.WebGLRenderTarget(2,2,{depthBuffer:true,stencilBuffer:false});
+    $imports.GLR.handRT.samples=samples;
   }
-  GLR.handRT.setSize(rw,rh);u.tHands.value=GLR.handRT.texture;
-  GLR.postMat.uniforms.uRes.value.set(rw,rh);
+  $imports.GLR.handRT.setSize(rw,rh);u.tHands.value=$imports.GLR.handRT.texture;
+  $imports.GLR.postMat.uniforms.uRes.value.set(rw,rh);
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/engine/three.js",{
+"ThreeBackend":{get:function(){return ThreeBackend;},set:function($value){ThreeBackend=$value;}},
+"buildEnvTex":{get:function(){return buildEnvTex;},set:function($value){buildEnvTex=$value;}}
+});
+})(GameModules.imports("game3d/js/engine/three.js"));

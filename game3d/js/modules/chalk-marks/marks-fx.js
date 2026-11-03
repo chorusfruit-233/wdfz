@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 粉笔记号：画面（模块 chalk-marks）
    每种图案一张手画的粉笔贴图（线条有断续、颗粒），贴在地上或墙面上；受场景光照（黑暗里要用手电才看得清）。
    场景换了（进出房间）重新摆当前地方的记号；画 / 擦以后立刻刷新。 */
@@ -39,8 +41,8 @@ var ChalkFx={g:null, place:undefined, tex:{}, mats:{}, geo:null,
     c.globalCompositeOperation='destination-out';
     for(i=0;i<900;i++){ c.fillStyle='rgba(0,0,0,'+(0.2+rnd()*0.7)+')'; c.fillRect(rnd()*128,rnd()*128,1+rnd()*2,1+rnd()*2); }
     c.globalCompositeOperation='source-over';
-    var t=new THREE.CanvasTexture(cv);
-    t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
+    var t=new $imports.THREE.CanvasTexture(cv);
+    t.colorSpace=$imports.THREE.SRGBColorSpace; t.anisotropy=4;
     ChalkFx.tex[sym]=t;
     return t;
   },
@@ -48,7 +50,7 @@ var ChalkFx={g:null, place:undefined, tex:{}, mats:{}, geo:null,
     var key=sym+(old?':old':'');
     if(ChalkFx.mats[key]) return ChalkFx.mats[key];
     var t=ChalkFx.texture(sym); if(!t) return null;
-    var m=new THREE.MeshLambertMaterial({map:t,transparent:true,opacity:old?0.5:0.92,color:old?0xd6ccb4:0xffffff,
+    var m=new $imports.THREE.MeshLambertMaterial({map:t,transparent:true,opacity:old?0.5:0.92,color:old?0xd6ccb4:0xffffff,
       depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3,fog:true});
     ChalkFx.mats[key]=m;
     return m;
@@ -59,15 +61,15 @@ var ChalkFx={g:null, place:undefined, tex:{}, mats:{}, geo:null,
   },
   /* 摆当前地方（某个房间 / 室外）的全部记号 */
   build:function(){
-    if(typeof GLR==='undefined'||!GLR.scene) return;
+    if(typeof $imports.GLR==='undefined'||!$imports.GLR.scene) return;
     ChalkFx.clear();
-    var room=S.mode==='in'?S.room:null, R=room?INTERIORS[room]:null;
+    var room=$imports.S.mode==='in'?$imports.S.room:null, R=room?$imports.INTERIORS[room]:null;
     if(room&&!R) return;
-    if(!ChalkFx.geo) ChalkFx.geo=new THREE.PlaneGeometry(1,1);
-    var g=new THREE.Group(); g.name='chalk-marks'; g.userData.worldPart=true;   /* 属于场景：死亡演出藏场景时一起藏 */
-    ChalkMarks.visible(room).forEach(function(m){
+    if(!ChalkFx.geo) ChalkFx.geo=new $imports.THREE.PlaneGeometry(1,1);
+    var g=new $imports.THREE.Group(); g.name='chalk-marks'; g.userData.worldPart=true;   /* 属于场景：死亡演出藏场景时一起藏 */
+    $imports.ChalkMarks.visible(room).forEach(function(m){
       var mat=ChalkFx.material(m.s,!!m.old); if(!mat) return;
-      var mesh=new THREE.Mesh(ChalkFx.geo,mat), p=worldToScene(m.x,m.y,R), j=hash2(Math.abs(m.n)*3+1,m.s.length*7);
+      var mesh=new $imports.THREE.Mesh(ChalkFx.geo,mat), p=(0,$imports.worldToScene)(m.x,m.y,R), j=(0,$imports.hash2)(Math.abs(m.n)*3+1,m.s.length*7);
       mesh.rotation.order='YXZ';
       if(m.face==='floor'){
         var sz=0.8*(0.92+0.16*j);
@@ -83,7 +85,7 @@ var ChalkFx={g:null, place:undefined, tex:{}, mats:{}, geo:null,
       mesh.renderOrder=2;
       g.add(mesh);
     });
-    GLR.scene.add(g);
+    $imports.GLR.scene.add(g);
     ChalkFx.g=g; ChalkFx.place=room;
   },
   refresh:function(){ if(ChalkFx.place!==undefined||ChalkFx.g) ChalkFx.build(); },
@@ -91,3 +93,9 @@ var ChalkFx={g:null, place:undefined, tex:{}, mats:{}, geo:null,
 };
 GameModules.on('sceneBuilt',function(){ ChalkFx.build(); },{owner:'chalk-marks'});
 GameModules.on('clearWorld',function(){ ChalkFx.clear(); },{owner:'chalk-marks'});
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/chalk-marks/marks-fx.js",{
+"ChalkFx":{get:function(){return ChalkFx;},set:function($value){ChalkFx=$value;}}
+});
+})(GameModules.imports("game3d/js/modules/chalk-marks/marks-fx.js"));

@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 死亡演出：按死因分镜。每种都是「前兆 → 接触／失控 → 临终视角 → 收束」四段，
    所有位置、镜头都只由经过的时间 k（秒）算出来，帧率高低结果一样。
    模型都放在「视线坐标系」里：原点在玩家脚下，+z 是死亡那一刻的视线方向，+y 向上。
@@ -16,55 +18,55 @@ var DeathCG=(function(){
   }
   function mat(col,op,opt){
     opt=opt||{};
-    var m=new THREE.MeshBasicMaterial({color:col,transparent:op!==undefined,opacity:op===undefined?1:op,
-      fog:opt.fog!==false,side:opt.side||THREE.FrontSide,depthTest:opt.over?false:true,depthWrite:!(opt.over||op!==undefined)});
+    var m=new $imports.THREE.MeshBasicMaterial({color:col,transparent:op!==undefined,opacity:op===undefined?1:op,
+      fog:opt.fog!==false,side:opt.side||$imports.THREE.FrontSide,depthTest:opt.over?false:true,depthWrite:!(opt.over||op!==undefined)});
     return m;
   }
 
   /* 每次死亡一份上下文 */
   function Ctx(type,grp,preview){
-    var p=anfxW2S(S.x,S.y), F=new THREE.Group();
-    F.position.set(p.x,S.floorY||0,p.z); F.rotation.y=Math.PI/2-S.ang; grp.add(F);
+    var p=(0,$imports.anfxW2S)($imports.S.x,$imports.S.y), F=new $imports.THREE.Group();
+    F.position.set(p.x,$imports.S.floorY||0,p.z); F.rotation.y=Math.PI/2-$imports.S.ang; grp.add(F);
     this.type=type; this.F=F; this.preview=preview; this.rand=rng(type);
-    var base=(!preview&&S.deathView)||{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
+    var base=(!preview&&$imports.S.deathView)||{ang:$imports.S.ang,pitch:$imports.S.pitch,eyeLift:$imports.S.eyeLift||0};
     this.base=preview?null:{ang:base.ang,pitch:base.pitch,eyeLift:base.eyeLift};
-    this.shk=(typeof SHAKE_ON==='undefined'||SHAKE_ON)?1:0;
+    this.shk=(typeof $imports.SHAKE_ON==='undefined'||$imports.SHAKE_ON)?1:0;
     this.flashed={}; this.cued={}; this.lift=0; this.veilMesh=null;
   }
   Ctx.prototype={
     /* 加到视线坐标系，并登记为动画对象 */
-    add:function(o,x,y,z,parent){ o.position.set(x||0,y||0,z||0); (parent||this.F).add(o); ANFX.items.push(o); return o; },
-    mesh:function(geo,m,x,y,z,parent){ return this.add(new THREE.Mesh(geo,m),x,y,z,parent); },
-    box:function(w,h,d,col,op,x,y,z,opt){ return this.mesh(new THREE.BoxGeometry(w,h,d),mat(col,op,opt),x,y,z); },
+    add:function(o,x,y,z,parent){ o.position.set(x||0,y||0,z||0); (parent||this.F).add(o); $imports.ANFX.items.push(o); return o; },
+    mesh:function(geo,m,x,y,z,parent){ return this.add(new $imports.THREE.Mesh(geo,m),x,y,z,parent); },
+    box:function(w,h,d,col,op,x,y,z,opt){ return this.mesh(new $imports.THREE.BoxGeometry(w,h,d),mat(col,op,opt),x,y,z); },
     fig:function(kind,col,scale,x,z){
-      var g=new THREE.Group(); g.add(figMesh(kind,mat(col),scale||1)); g.rotation.order='YXZ';
+      var g=new $imports.THREE.Group(); g.add((0,$imports.figMesh)(kind,mat(col),scale||1)); g.rotation.order='YXZ';
       return this.add(g,x,0,z);
     },
     fx:function(name,scale,x,y,z){
-      var g=new THREE.Group(); g.add(fxMesh(name)); if(scale) g.scale.setScalar(scale); g.rotation.order='YXZ';
+      var g=new $imports.THREE.Group(); g.add((0,$imports.fxMesh)(name)); if(scale) g.scale.setScalar(scale); g.rotation.order='YXZ';
       return this.add(g,x,y,z);
     },
     /* 收束：贴着镜头的一层颜色，画在所有东西上面 */
     veil:function(col){
-      var m=mat(col,0,{side:THREE.BackSide,over:true,fog:false});
-      this.veilMesh=new THREE.Mesh(new THREE.SphereGeometry(0.3,12,8),m); this.veilMesh.renderOrder=999;
+      var m=mat(col,0,{side:$imports.THREE.BackSide,over:true,fog:false});
+      this.veilMesh=new $imports.THREE.Mesh(new $imports.THREE.SphereGeometry(0.3,12,8),m); this.veilMesh.renderOrder=999;
       this.F.add(this.veilMesh); return this.veilMesh;
     },
-    camY:function(){ return EYE+this.lift; },
+    camY:function(){ return $imports.EYE+this.lift; },
     /* 镜头：相对死亡那一刻的朝向；开头 0.4 秒从玩家原来的俯仰过渡过来 */
     cam:function(view,k,dAng,pitch,lift){
-      var b=this.base||{ang:S.ang,pitch:S.pitch,eyeLift:S.eyeLift||0};
+      var b=this.base||{ang:$imports.S.ang,pitch:$imports.S.pitch,eyeLift:$imports.S.eyeLift||0};
       this.lift=lift||0;
       view.ang=b.ang+(dAng||0);
-      view.pitch=clamp((pitch||0)+(b.pitch||0)*(1-ss(k,0,0.4)),-1.45,1.45);
+      view.pitch=(0,$imports.clamp)((pitch||0)+(b.pitch||0)*(1-ss(k,0,0.4)),-1.45,1.45);
       view.eyeLift=this.lift;
-      try{ syncCamera(0,view); }catch(e){}
+      try{ (0,$imports.syncCamera)(0,view); }catch(e){}
       if(this.veilMesh) this.veilMesh.position.set(0,this.camY(),0);
     },
     shade:function(v){ if(this.veilMesh) this.veilMesh.material.opacity=Math.min(0.94,v); },
     /* 只闪一次，亮度封顶（不做连续频闪） */
     flash:function(id,k,at,v){
-      if(k>=at&&!this.flashed[id]){ this.flashed[id]=1; GLR.flash=Math.max(GLR.flash||0,Math.min(0.5,v)); }
+      if(k>=at&&!this.flashed[id]){ this.flashed[id]=1; $imports.GLR.flash=Math.max($imports.GLR.flash||0,Math.min(0.5,v)); }
     },
     /* 声音跟着分镜的节拍：到点只响一次（声音先行，画面里的事情紧跟着发生） */
     cue:function(id,k,at,fn){
@@ -72,12 +74,12 @@ var DeathCG=(function(){
     },
     /* 合批：很多静止的小方块合成一个网格（顶点色），一次绘制 */
     merged:function(build,x,y,z){
-      var K=new Kit(); build(K);
-      return this.mesh(K.mergedGeometry(),new THREE.MeshBasicMaterial({vertexColors:true,fog:true}),x,y,z);
+      var K=new $imports.Kit(); build(K);
+      return this.mesh(K.mergedGeometry(),new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true}),x,y,z);
     },
     /* 合批：很多会动的同类小东西用实例化网格，一次绘制；每帧用 setI 摆 */
     inst:function(geo,m,count){
-      var im=new THREE.InstancedMesh(geo,m,count); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.frustumCulled=false;
+      var im=new $imports.THREE.InstancedMesh(geo,m,count); im.instanceMatrix.setUsage($imports.THREE.DynamicDrawUsage); im.frustumCulled=false;
       return this.add(im,0,0,0);
     },
     /* 让一个东西的 +z 正面朝向镜头 */
@@ -85,17 +87,17 @@ var DeathCG=(function(){
     /* 把场景本身（当前房间或室外）藏起来，只看演出自己搭的布景；场景里标了 userData.worldPart 的东西（地上的粉笔记号等）一起藏。
        清场（anfxClear）时按原样还原 */
     hideWorld:function(){
-      var list=[S.mode==='in'?GLR.roomMesh:GLR.outMesh];
-      if(GLR.scene) GLR.scene.children.forEach(function(o){ if(o.userData&&o.userData.worldPart) list.push(o); });
-      ANFX.hidden=ANFX.hidden||[];
-      list.forEach(function(o){ if(o&&o.visible!==undefined){ ANFX.hidden.push({obj:o,visible:o.visible}); o.visible=false; } });
+      var list=[$imports.S.mode==='in'?$imports.GLR.roomMesh:$imports.GLR.outMesh];
+      if($imports.GLR.scene) $imports.GLR.scene.children.forEach(function(o){ if(o.userData&&o.userData.worldPart) list.push(o); });
+      $imports.ANFX.hidden=$imports.ANFX.hidden||[];
+      list.forEach(function(o){ if(o&&o.visible!==undefined){ $imports.ANFX.hidden.push({obj:o,visible:o.visible}); o.visible=false; } });
     }
   };
 
   var IDUM=null, WARM={done:false,keep:null};
   /* 摆实例化网格里的第 i 个；缩放为 0 就是藏起来 */
   function setI(im,i,x,y,z,rx,ry,rz,sx,sy,sz){
-    if(!IDUM) IDUM=new THREE.Object3D();
+    if(!IDUM) IDUM=new $imports.THREE.Object3D();
     IDUM.position.set(x,y,z); IDUM.rotation.set(rx||0,ry||0,rz||0);
     IDUM.scale.set(sx===undefined?1:sx,sy===undefined?(sx===undefined?1:sx):sy,sz===undefined?(sx===undefined?1:sx):sz);
     IDUM.updateMatrix(); im.setMatrixAt(i,IDUM.matrix);
@@ -107,15 +109,15 @@ var DeathCG=(function(){
     build:function(c){
       var i;
       c.hideWorld();
-      var green=mat(0x2e4a36,undefined,{side:THREE.DoubleSide}), rib=mat(0x56684f);
-      c.mesh(new THREE.CylinderGeometry(0.62,0.55,1.25,22,1,true),green,0,0.625,0);
-      for(i=0;i<2;i++){ var t=c.mesh(new THREE.TorusGeometry(0.6-i*0.03,0.018,6,24),rib,0,0.3+i*0.7,0); t.rotation.x=Math.PI/2; }
+      var green=mat(0x2e4a36,undefined,{side:$imports.THREE.DoubleSide}), rib=mat(0x56684f);
+      c.mesh(new $imports.THREE.CylinderGeometry(0.62,0.55,1.25,22,1,true),green,0,0.625,0);
+      for(i=0;i<2;i++){ var t=c.mesh(new $imports.THREE.TorusGeometry(0.6-i*0.03,0.018,6,24),rib,0,0.3+i*0.7,0); t.rotation.x=Math.PI/2; }
       for(i=0;i<5;i++) c.box(0.18+((i*7)%5)*0.03,0.04,0.14,0xb8b2a6,undefined,((i*37)%9-4)*0.08,0.03,((i*53)%9-4)*0.07);   /* 桶底的废纸 */
-      c.hinge=new THREE.Group(); c.add(c.hinge,-0.62,1.25,0);
-      var lid=new THREE.Mesh(new THREE.CylinderGeometry(0.64,0.64,0.05,22),mat(0x24402c)); lid.position.x=0.62; c.hinge.add(lid);
+      c.hinge=new $imports.THREE.Group(); c.add(c.hinge,-0.62,1.25,0);
+      var lid=new $imports.THREE.Mesh(new $imports.THREE.CylinderGeometry(0.64,0.64,0.05,22),mat(0x24402c)); lid.position.x=0.62; c.hinge.add(lid);
       c.hinge.userData.trashLid=true; c.hinge.rotation.z=1.9;          /* 一开始盖子是开着的 */
-      c.lamp=c.mesh(new THREE.CircleGeometry(0.45,20),mat(0xe8e2cc,undefined,{fog:false}),0.4,3.0,0.2); c.lamp.rotation.x=Math.PI/2;   /* 垃圾房顶上的灯 */
-      c.slit=c.mesh(new THREE.TorusGeometry(0.63,0.008,4,40),mat(0xf0e6c8,0.5,{fog:false}),0,1.24,0); c.slit.rotation.x=Math.PI/2;   /* 盖子边上漏进来的一圈光 */
+      c.lamp=c.mesh(new $imports.THREE.CircleGeometry(0.45,20),mat(0xe8e2cc,undefined,{fog:false}),0.4,3.0,0.2); c.lamp.rotation.x=Math.PI/2;   /* 垃圾房顶上的灯 */
+      c.slit=c.mesh(new $imports.THREE.TorusGeometry(0.63,0.008,4,40),mat(0xf0e6c8,0.5,{fog:false}),0,1.24,0); c.slit.rotation.x=Math.PI/2;   /* 盖子边上漏进来的一圈光 */
       c.veil(0x000000);
     },
     update:function(c,k,view){
@@ -126,9 +128,9 @@ var DeathCG=(function(){
       c.lamp.visible=close<0.97;
       c.slit.visible=close>0.9;
       c.slit.material.opacity=(0.22+0.55*kn)*(1-ss(k,2.8,3.4));
-      c.cue('shut',k,1.2,function(){ SFX.door(); });
-      c.cue('k1',k,1.9,function(){ SFX.door(); });
-      c.cue('k2',k,2.35,function(){ SFX.door(); });
+      c.cue('shut',k,1.2,function(){ $imports.SFX.door(); });
+      c.cue('k1',k,1.9,function(){ $imports.SFX.door(); });
+      c.cue('k2',k,2.35,function(){ $imports.SFX.door(); });
       c.shade(0.55*ss(k,1.1,1.3)*(1-0.5*kn)+0.4*ss(k,3.0,3.5));
     }
   };
@@ -137,7 +139,7 @@ var DeathCG=(function(){
   CG.grip={
     build:function(c){
       var i,r=c.rand;
-      c.stain=c.mesh(new THREE.CircleGeometry(1,24),mat(0x030405,0.92),0,0.012,0);
+      c.stain=c.mesh(new $imports.THREE.CircleGeometry(1,24),mat(0x030405,0.92),0,0.012,0);
       c.stain.rotation.x=-Math.PI/2;
       c.hands=[];
       for(i=0;i<12;i++){
@@ -156,11 +158,11 @@ var DeathCG=(function(){
         var g=h.userData.g, up=ss(k,g.d,g.d+0.5), rad=g.r*(1-reach*0.6);
         h.visible=k>g.d;
         h.position.set(Math.cos(g.a)*rad,-0.4+up*0.75+reach*0.7,Math.sin(g.a)*rad);
-        if(i<3&&end>0){ h.position.lerp(new THREE.Vector3((i-1)*0.16,cy-0.08,0.32),end); }
+        if(i<3&&end>0){ h.position.lerp(new $imports.THREE.Vector3((i-1)*0.16,cy-0.08,0.32),end); }
         h.rotation.y=Math.atan2(-h.position.x,-h.position.z);
         h.rotation.x=-0.9*(1-up)-0.6*reach;               /* 先是手腕翻上来，然后手指朝上抓 */
       });
-      c.cue('grab',k,1.5,function(){ SFX.sting(); });
+      c.cue('grab',k,1.5,function(){ $imports.SFX.sting(); });
       c.shade(0.9*ss(k,2.8,3.2));
     }
   };
@@ -173,26 +175,26 @@ var DeathCG=(function(){
       c.box(7.1,0.1,0.42,0x6a655d,undefined,0,2.33,2.4);
       var flesh=mat(0x7c302c);
       c.segs=[];
-      for(i=0;i<12;i++){ c.segs.push(c.mesh(new THREE.CylinderGeometry(0.07,0.08,1,7),flesh,0,1.6,2.8)); }
+      for(i=0;i<12;i++){ c.segs.push(c.mesh(new $imports.THREE.CylinderGeometry(0.07,0.08,1,7),flesh,0,1.6,2.8)); }
       c.head=c.fx('neckhead',1,0,2.1,2.8);
       c.veil(0x050101);
     },
     update:function(c,k,view){
       var peek=ss(k,0,0.5), rise=ss(k,0.5,1.6), bend=ss(k,1.6,2.6), end=ss(k,2.6,3.4);
-      var lift=1.3*end, cy=EYE+lift;
-      var top=new THREE.Vector3(0,2.1+0.35*peek+2.6*rise,2.8);
-      var near=new THREE.Vector3(0,cy+0.02,0.75-0.2*end);
-      var hp=new THREE.Vector3(); lerp3(hp,top,near,bend); hp.y+=Math.sin(bend*Math.PI)*0.9;
+      var lift=1.3*end, cy=$imports.EYE+lift;
+      var top=new $imports.THREE.Vector3(0,2.1+0.35*peek+2.6*rise,2.8);
+      var near=new $imports.THREE.Vector3(0,cy+0.02,0.75-0.2*end);
+      var hp=new $imports.THREE.Vector3(); lerp3(hp,top,near,bend); hp.y+=Math.sin(bend*Math.PI)*0.9;
       c.head.position.copy(hp);
       c.head.scale.setScalar(1+0.3*bend+0.35*end);
       c.head.rotation.y=Math.atan2(-hp.x,-hp.z)*bend+Math.PI*(1-bend);   /* 先是后脑勺对着墙这边，弯过来时转成正脸 */
       c.head.rotation.x=0.3*bend;
       /* 脖子：从墙后的肩膀沿一条弯线连到头 */
-      var base=new THREE.Vector3(0,1.6,2.8), ctrl=new THREE.Vector3(0,Math.max(top.y,hp.y)+0.6*bend,2.8-0.2*bend);
-      var prev=base.clone(), n=c.segs.length, up=new THREE.Vector3(0,1,0);
+      var base=new $imports.THREE.Vector3(0,1.6,2.8), ctrl=new $imports.THREE.Vector3(0,Math.max(top.y,hp.y)+0.6*bend,2.8-0.2*bend);
+      var prev=base.clone(), n=c.segs.length, up=new $imports.THREE.Vector3(0,1,0);
       c.segs.forEach(function(s,i){
         var t=(i+1)/n, a=(1-t)*(1-t), b=2*(1-t)*t, d=t*t;
-        var pt=new THREE.Vector3(base.x*a+ctrl.x*b+hp.x*d, base.y*a+ctrl.y*b+hp.y*d, base.z*a+ctrl.z*b+hp.z*d);
+        var pt=new $imports.THREE.Vector3(base.x*a+ctrl.x*b+hp.x*d, base.y*a+ctrl.y*b+hp.y*d, base.z*a+ctrl.z*b+hp.z*d);
         var dir=pt.clone().sub(prev), len=dir.length()||0.001;
         s.position.copy(prev).addScaledVector(dir,0.5);
         s.quaternion.setFromUnitVectors(up,dir.multiplyScalar(1/len));
@@ -239,7 +241,7 @@ var DeathCG=(function(){
       c.tw.rotation.z=0.14*ss(k,0.2,0.8)*(1-end);                       /* 歪头，和你一样的角度 */
       c.tw.rotation.x=0.22*reach;                                        /* 停在一臂远，俯身凑过来看你 */
       c.cam(view,k,0,-0.04,0);
-      c.cue('in',k,2.6,function(){ SFX.vanish(); });
+      c.cue('in',k,2.6,function(){ $imports.SFX.vanish(); });
       c.shade(0.92*ss(k,2.7,3.1));
     }
   };
@@ -249,27 +251,27 @@ var DeathCG=(function(){
     build:function(c){
       var i,r=c.rand,n=70;
       /* 和游戏里的蛾群同一种：黑色的翅膀（前翅尖、后翅圆）+ 黑色的身子（weather.js），实例化一次画完 */
-      var ws=new THREE.Shape();
+      var ws=new $imports.THREE.Shape();
       ws.moveTo(0,0.012); ws.lineTo(0.05,0.03); ws.lineTo(0.072,0.018); ws.quadraticCurveTo(0.06,-0.012,0.04,-0.016);
       ws.quadraticCurveTo(0.03,-0.04,0.008,-0.03); ws.lineTo(0,-0.014); ws.lineTo(0,0.012);
-      var wing=new THREE.ShapeGeometry(ws,3); wing.rotateX(-Math.PI/2);
-      c.wingIM=c.inst(wing,mat(0x111111,undefined,{side:THREE.DoubleSide}),n*2);
-      c.bodyIM=c.inst(new THREE.BoxGeometry(0.016,0.016,0.06),mat(0x080808),n);
+      var wing=new $imports.THREE.ShapeGeometry(ws,3); wing.rotateX(-Math.PI/2);
+      c.wingIM=c.inst(wing,mat(0x111111,undefined,{side:$imports.THREE.DoubleSide}),n*2);
+      c.bodyIM=c.inst(new $imports.THREE.BoxGeometry(0.016,0.016,0.06),mat(0x080808),n);
       c.moths=[];
       for(i=0;i<n;i++) c.moths.push({a:r()*6.283,r:0.35+r()*1.3,h:r()*0.9,sp:(r()<0.5?-1:1)*(1.6+r()*1.8),ph:r()*6.283,fl:26+r()*16});
       /* 前兆：灯下面聚着一团（游戏里这个异象也是这么出场的）——黑的蛾子映在灯光里才看得见 */
       c.box(0.008,0.5,0.008,0x111111,undefined,0,2.55,4.5);                        /* 吊灯的线 */
-      c.bulb=c.mesh(new THREE.SphereGeometry(0.06,10,8),mat(0xffe9c0,undefined,{fog:false}),0,2.26,4.5);
-      var tex=(typeof shadeTex==='function')?shadeTex('pool'):null;
-      c.glow=c.add(new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:0xffd9a0,transparent:true,depthWrite:false,fog:false,
-        blending:THREE.AdditiveBlending,opacity:0.7})),0,2.26,4.5);
+      c.bulb=c.mesh(new $imports.THREE.SphereGeometry(0.06,10,8),mat(0xffe9c0,undefined,{fog:false}),0,2.26,4.5);
+      var tex=(typeof $imports.shadeTex==='function')?(0,$imports.shadeTex)('pool'):null;
+      c.glow=c.add(new $imports.THREE.Sprite(new $imports.THREE.SpriteMaterial({map:tex,color:0xffd9a0,transparent:true,depthWrite:false,fog:false,
+        blending:$imports.THREE.AdditiveBlending,opacity:0.7})),0,2.26,4.5);
       c.glow.scale.set(1.5,1.5,1);                                                   /* 不碰到天花板，免得光晕被切出硬边 */
       c.veil(0x0c0905);
     },
     update:function(c,k,view){
       var gather=ss(k,0.4,1.4), close=ss(k,1.4,2.5), cover=ss(k,2.5,3.2);
       c.cam(view,k,0,0.22*gather*(1-close)-0.1*close+0.05*Math.sin(k*17)*close*c.shk,-0.35*cover);
-      var cy=c.camY(), a=new THREE.Vector3(), b=new THREE.Vector3(), q=new THREE.Vector3(), o=c.mothO||(c.mothO=new THREE.Object3D());
+      var cy=c.camY(), a=new $imports.THREE.Vector3(), b=new $imports.THREE.Vector3(), q=new $imports.THREE.Vector3(), o=c.mothO||(c.mothO=new $imports.THREE.Object3D());
       o.rotation.order='YZX';
       var sc=1.5+1.0*cover;                                                          /* 扑到脸上的时候显得大 */
       c.moths.forEach(function(m,i){
@@ -278,7 +280,7 @@ var DeathCG=(function(){
         var R=2.2*(1-close)+0.3+0.15*m.r, ang2=m.a+k*m.sp*1.6;
         b.set(Math.cos(ang2)*R, 0.6+m.h*2+(cy-0.6-m.h*2)*close*0.7, Math.sin(ang2)*R);   /* 绕着你的柱子 */
         q.lerpVectors(a,b,gather);
-        if(cover>0){ q.lerp(new THREE.Vector3(Math.cos(ang2)*0.18,cy+Math.sin(ang2*1.3)*0.1,0.16+0.08*Math.sin(ang2)),cover*0.9); }
+        if(cover>0){ q.lerp(new $imports.THREE.Vector3(Math.cos(ang2)*0.18,cy+Math.sin(ang2*1.3)*0.1,0.16+0.08*Math.sin(ang2)),cover*0.9); }
         var head=m.sp>0?-ang2:Math.PI-ang2, flap=Math.sin(k*m.fl+m.ph)*1.1+0.25;
         o.position.copy(q); o.rotation.set(0,head,0); o.scale.set(sc,sc,sc); o.updateMatrix(); c.bodyIM.setMatrixAt(i,o.matrix);
         o.rotation.set(0,head,flap); o.updateMatrix(); c.wingIM.setMatrixAt(i*2,o.matrix);
@@ -296,7 +298,7 @@ var DeathCG=(function(){
   CG.shatter={
     build:function(c){
       var i,j,r=c.rand,metal=mat(0x9a9890),dark=mat(0x1a1c1e),shard=mat(0xc8c8c0);
-      var dome=new THREE.SphereGeometry(0.08,10,5,0,6.283,0,Math.PI/2), sgeo=new THREE.TetrahedronGeometry(0.05);
+      var dome=new $imports.THREE.SphereGeometry(0.08,10,5,0,6.283,0,Math.PI/2), sgeo=new $imports.THREE.TetrahedronGeometry(0.05);
       c.bells=[]; c.shards=[];
       c.merged(function(K){ for(var q=0;q<8;q++) K.box('dark',-2.1+q*0.6,0.98,2.0+Math.abs(q-3.5)*0.25,0.5,0.03,0.03,0x0b0c0d,1); });   /* 八根车把，一次画完 */
       c.shardIM=c.inst(sgeo,shard,40);
@@ -336,13 +338,13 @@ var DeathCG=(function(){
   /* ---- drown：雨下个不停，水从脚下涨起来，没过头顶，往下沉 ---- */
   CG.drown={
     build:function(c){
-      var i,r=c.rand,rain=mat(0x9fb6c4,0.5),geo=new THREE.BoxGeometry(0.012,0.5,0.012);
+      var i,r=c.rand,rain=mat(0x9fb6c4,0.5),geo=new $imports.THREE.BoxGeometry(0.012,0.5,0.012);
       c.rain=[]; c.rainIM=c.inst(geo,rain,80);
       for(i=0;i<80;i++){ var a=r()*6.283, d=0.6+r()*4; c.rain.push({x:Math.cos(a)*d,z:Math.abs(Math.sin(a))*d+0.4,off:r()*5}); }
-      c.water=c.mesh(new THREE.PlaneGeometry(16,16),mat(0x1d2c35,0.8,{side:THREE.DoubleSide}),0,0,0);
+      c.water=c.mesh(new $imports.THREE.PlaneGeometry(16,16),mat(0x1d2c35,0.8,{side:$imports.THREE.DoubleSide}),0,0,0);
       c.water.rotation.x=-Math.PI/2;
       c.bub=[];
-      var bg=new THREE.SphereGeometry(0.025,6,4),bm=mat(0xa8c8d8,0.6);
+      var bg=new $imports.THREE.SphereGeometry(0.025,6,4),bm=mat(0xa8c8d8,0.6);
       c.bubIM=c.inst(bg,bm,24);
       for(i=0;i<24;i++) c.bub.push({x:(r()-0.5)*0.8,z:0.4+r()*0.8,off:r()*1.4});
       c.veil(0x081218);
@@ -351,7 +353,7 @@ var DeathCG=(function(){
       var sinkT=ss(k,2.4,3.4);
       c.cam(view,k,0,-0.35*ss(k,0.2,1.4)*(1-ss(k,1.8,2.3))+0.75*ss(k,1.9,2.8),-0.9*sinkT);
       var cy=c.camY();
-      var L=0.5*ss(k,0.3,1.0)+0.9*ss(k,1.0,1.8)+(EYE+0.45-1.4)*ss(k,1.8,2.4)+0.6*sinkT;   /* 脚踝→腰→没过头顶 */
+      var L=0.5*ss(k,0.3,1.0)+0.9*ss(k,1.0,1.8)+($imports.EYE+0.45-1.4)*ss(k,1.8,2.4)+0.6*sinkT;   /* 脚踝→腰→没过头顶 */
       c.water.position.y=L;
       c.rain.forEach(function(o,i){
         var y=4.5-((k*9+o.off)%5);
@@ -369,12 +371,12 @@ var DeathCG=(function(){
   CG.water={
     build:function(c){
       var i,r=c.rand;
-      c.stain=c.mesh(new THREE.CircleGeometry(1,24),mat(0x4a5a52,0.85,{side:THREE.DoubleSide}),0,2.88,1.0);
+      c.stain=c.mesh(new $imports.THREE.CircleGeometry(1,24),mat(0x4a5a52,0.85,{side:$imports.THREE.DoubleSide}),0,2.88,1.0);
       c.stain.rotation.x=Math.PI/2;
       c.drips=[];
-      var dg=new THREE.BoxGeometry(0.025,0.08,0.025),dm=mat(0xa8c8d4,0.95);
+      var dg=new $imports.THREE.BoxGeometry(0.025,0.08,0.025),dm=mat(0xa8c8d4,0.95);
       for(i=0;i<16;i++){ var d=c.mesh(dg,dm,(r()-0.5)*1.6,2.8,0.4+r()*1.4); d.userData.off=r(); c.drips.push(d); }
-      c.bulge=c.mesh(new THREE.SphereGeometry(1,18,8,0,6.283,Math.PI/2,Math.PI/2),mat(0x3a5560,0.85,{side:THREE.DoubleSide}),0,2.9,1.0);
+      c.bulge=c.mesh(new $imports.THREE.SphereGeometry(1,18,8,0,6.283,Math.PI/2,Math.PI/2),mat(0x3a5560,0.85,{side:$imports.THREE.DoubleSide}),0,2.9,1.0);
       c.veil(0x0b1820);
     },
     update:function(c,k,view){
@@ -395,17 +397,17 @@ var DeathCG=(function(){
   /* ---- freeze：冷库。呼出的白气、地上结霜，冰锥从四周长过来，霜爬满视野 ---- */
   CG.freeze={
     build:function(c){
-      var i,r=c.rand,ice=mat(0xcfe4ee,0.85),cone=new THREE.ConeGeometry(0.07,1,5);
-      c.frost=c.mesh(new THREE.CircleGeometry(4,32),mat(0xdfeef5,0),0,0.015,0);
+      var i,r=c.rand,ice=mat(0xcfe4ee,0.85),cone=new $imports.THREE.ConeGeometry(0.07,1,5);
+      c.frost=c.mesh(new $imports.THREE.CircleGeometry(4,32),mat(0xdfeef5,0),0,0.015,0);
       c.frost.rotation.x=-Math.PI/2;
       c.spikes=[]; c.spikeIM=c.inst(cone,ice,30);
       for(i=0;i<30;i++){ var a=i/30*6.283+(r()-0.5)*0.2; c.spikes.push({s:{a:a,r:2.4+r()*1.2,h:0.6+r()*1.4,d:r()*0.6}}); }
       c.puffs=[];
-      var pg=new THREE.SphereGeometry(1,10,6);
+      var pg=new $imports.THREE.SphereGeometry(1,10,6);
       for(i=0;i<3;i++){ c.puffs.push(c.mesh(pg,mat(0xeef4f6,0),0,0,0)); }
       c.panes=[];
-      var pm=mat(0xd8eaf2,0.45,{side:THREE.DoubleSide});
-      for(i=0;i<8;i++){ var pn=c.mesh(new THREE.CircleGeometry(0.2+r()*0.12,7),pm,0,0,0); pn.userData.a=i/8*6.283+r()*0.3; c.panes.push(pn); }
+      var pm=mat(0xd8eaf2,0.45,{side:$imports.THREE.DoubleSide});
+      for(i=0;i<8;i++){ var pn=c.mesh(new $imports.THREE.CircleGeometry(0.2+r()*0.12,7),pm,0,0,0); pn.userData.a=i/8*6.283+r()*0.3; c.panes.push(pn); }
       c.veil(0xc8dce4);
     },
     update:function(c,k,view){
@@ -437,27 +439,27 @@ var DeathCG=(function(){
   CG.gaze={
     build:function(c){
       var i,r=c.rand;
-      c.smile=c.fx('smile',1,0,EYE-1.7,-1.0);
+      c.smile=c.fx('smile',1,0,$imports.EYE-1.7,-1.0);
       c.eyes=[];
       for(i=0;i<18;i++){
-        var e=gazeEye(1,r()<0.4?'red':'gold'), a=Math.PI*(0.25+r()*0.5)+Math.PI, d=1.8+r()*2.4;
+        var e=(0,$imports.gazeEye)(1,r()<0.4?'red':'gold'), a=Math.PI*(0.25+r()*0.5)+Math.PI, d=1.8+r()*2.4;
         e.userData.e={x:Math.cos(a)*d,z:Math.sin(a)*d,y:0.5+r()*2.1,s:0.4+r()*0.6,d:r()*0.5};
         c.add(e,e.userData.e.x,e.userData.e.y,e.userData.e.z); c.eyes.push(e);
       }
-      GLR.gazeT=1;
+      $imports.GLR.gazeT=1;
       c.veil(0x050203);
     },
     update:function(c,k,view){
       var turn=0.22*ss(k,0.15,0.5)*(1-ss(k,0.5,0.8))+Math.PI*ss(k,0.8,1.7);   /* 瞥一眼，又转回去，然后被扭过去 */
       c.cam(view,k,turn,-0.04,0);
-      c.cue('giggle',k,1.75,function(){ SFX.smile('behind'); });
+      c.cue('giggle',k,1.75,function(){ $imports.SFX.smile('behind'); });
       var close=ss(k,2.0,2.9);
       c.smile.position.z=-1.0+0.55*close;
       c.smile.scale.setScalar(1+0.5*close);
-      c.smile.position.y=EYE-1.7*(1+0.5*close);
+      c.smile.position.y=$imports.EYE-1.7*(1+0.5*close);
       c.eyes.forEach(function(e){
         var u=e.userData.e, o=ss(k,1.5+u.d,1.9+u.d), sh=1-0.5*close;
-        e.position.set(u.x*sh,u.y+(EYE-u.y)*0.3*close,u.z*sh);
+        e.position.set(u.x*sh,u.y+($imports.EYE-u.y)*0.3*close,u.z*sh);
         e.material.opacity=o;
         e.scale.set(u.s*(0.3+0.7*o)*(1+0.4*close),u.s*0.6875*o*(1+0.4*close),1);
       });
@@ -500,24 +502,24 @@ var DeathCG=(function(){
   CG.voice={
     build:function(c){
       var i;
-      c.spk=new THREE.Group(); c.add(c.spk,0,2.55,2.6);
-      var body=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.38,0.22),mat(0x3a3f42)); c.spk.add(body);
-      var gr=new THREE.Mesh(new THREE.CircleGeometry(0.15,16),mat(0x0a0c0e)); gr.position.z=-0.115; gr.rotation.y=Math.PI; c.spk.add(gr);
+      c.spk=new $imports.THREE.Group(); c.add(c.spk,0,2.55,2.6);
+      var body=new $imports.THREE.Mesh(new $imports.THREE.BoxGeometry(0.55,0.38,0.22),mat(0x3a3f42)); c.spk.add(body);
+      var gr=new $imports.THREE.Mesh(new $imports.THREE.CircleGeometry(0.15,16),mat(0x0a0c0e)); gr.position.z=-0.115; gr.rotation.y=Math.PI; c.spk.add(gr);
       c.rings=[];
-      var rg=new THREE.TorusGeometry(0.3,0.012,4,28);
+      var rg=new $imports.THREE.TorusGeometry(0.3,0.012,4,28);
       for(i=0;i<8;i++){ c.rings.push(c.mesh(rg,mat(0x9aa4ac,0.5),0,2.55,2.5)); }
       c.veil(0x060606);
     },
     update:function(c,k,view){
       var cover=ss(k,1.6,2.6), end=ss(k,2.6,3.2);
       c.cam(view,k,0,0.3*ss(k,0,0.6)*(1-cover)-0.3*cover*(1-end)+0.03*Math.sin(k*40)*c.shk*cover*(1-end),-0.35*cover);
-      var cy=c.camY(), from=new THREE.Vector3(0,2.55,2.5), to=new THREE.Vector3(0,cy,0.15);
+      var cy=c.camY(), from=new $imports.THREE.Vector3(0,2.55,2.5), to=new $imports.THREE.Vector3(0,cy,0.15);
       c.spk.position.set(0.01*Math.sin(k*50)*seg(k,0.4,3),2.55+(cy+0.05-2.55)*end,2.6-2.15*end);
       c.spk.scale.setScalar(1+0.5*end);
       c.rings.forEach(function(rr,i){
         var ph=k*1.1+Math.pow(Math.max(0,k-1.6),2)*1.2-0.4-i*0.28;    /* 越来越密 */
         rr.visible=ph>0&&ph<1&&end<0.6;
-        var t=clamp(ph,0,1); rr.position.lerpVectors(from,to,t);
+        var t=(0,$imports.clamp)(ph,0,1); rr.position.lerpVectors(from,to,t);
         rr.scale.setScalar(1+t*4); rr.material.opacity=0.55*(1-t*0.6);
       });
       c.shade(0.9*ss(k,2.95,3.2));
@@ -528,7 +530,7 @@ var DeathCG=(function(){
   CG.bell={
     build:function(c){
       c.bell=c.fx('bell',1,0,1.4,0);          /* 钟口刚好在头顶（室内也不会被天花板挡住） */
-      c.spot=c.mesh(new THREE.CircleGeometry(1,24),mat(0x050608,0.6),0,0.012,0);
+      c.spot=c.mesh(new $imports.THREE.CircleGeometry(1,24),mat(0x050608,0.6),0,0.012,0);
       c.spot.rotation.x=-Math.PI/2;
       c.veil(0x020202);
     },
@@ -540,7 +542,7 @@ var DeathCG=(function(){
       c.bell.rotation.z=0.22*Math.sin(k*4)*(1-drop)+0.03*Math.sin(k*50)*ring;
       c.spot.scale.setScalar(0.3+0.8*seg(k,0,1.45)); c.spot.visible=k<1.5;
       c.flash('hit',k,1.45,0.3);
-      c.cue('hit',k,1.45,function(){ SFX.bigBell(1); });
+      c.cue('hit',k,1.45,function(){ $imports.SFX.bigBell(1); });
       c.shade(0.4*ss(k,1.5,1.7)+0.5*ss(k,3.0,3.4));
     }
   };
@@ -574,18 +576,18 @@ var DeathCG=(function(){
   CG.deep={
     build:function(c){
       var i,r=c.rand;
-      c.table=new THREE.Group(); c.add(c.table,0,0,1.5);
+      c.table=new $imports.THREE.Group(); c.add(c.table,0,0,1.5);
       var wood=mat(0x4a3626), plate=mat(0xd8d0c0), food=mat(0x8a2a1e);
-      var top=new THREE.Mesh(new THREE.BoxGeometry(2.4,0.08,0.9),wood); top.position.y=0.78; c.table.add(top);
-      [[-1.1,-0.38],[1.1,-0.38],[-1.1,0.38],[1.1,0.38]].forEach(function(l){ var g=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.76,0.06),wood); g.position.set(l[0],0.38,l[1]); c.table.add(g); });
+      var top=new $imports.THREE.Mesh(new $imports.THREE.BoxGeometry(2.4,0.08,0.9),wood); top.position.y=0.78; c.table.add(top);
+      [[-1.1,-0.38],[1.1,-0.38],[-1.1,0.38],[1.1,0.38]].forEach(function(l){ var g=new $imports.THREE.Mesh(new $imports.THREE.BoxGeometry(0.06,0.76,0.06),wood); g.position.set(l[0],0.38,l[1]); c.table.add(g); });
       c.dishes=[];
       for(i=0;i<6;i++){
-        var d=new THREE.Group(), pl=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.13,0.03,14),plate), fd=new THREE.Mesh(new THREE.SphereGeometry(0.1,10,6,0,6.283,0,Math.PI/2),food);
+        var d=new $imports.THREE.Group(), pl=new $imports.THREE.Mesh(new $imports.THREE.CylinderGeometry(0.16,0.13,0.03,14),plate), fd=new $imports.THREE.Mesh(new $imports.THREE.SphereGeometry(0.1,10,6,0,6.283,0,Math.PI/2),food);
         fd.position.y=0.015; d.add(pl); d.add(fd); d.position.set(-0.9+i*0.36,0.83,(i%2?0.18:-0.15)); d.userData.ph=r()*6; c.table.add(d); c.dishes.push(d);
       }
-      c.pit=c.mesh(new THREE.CircleGeometry(1,32),mat(0x010203),0,0.014,1.4); c.pit.rotation.x=-Math.PI/2;
-      c.shaft=c.mesh(new THREE.CylinderGeometry(1.2,1.2,14,24,1,true),mat(0x0a0c0e,undefined,{side:THREE.DoubleSide}),0,-7,0);
-      c.mouth=c.mesh(new THREE.RingGeometry(1.2,9,32),mat(0x6c7176,undefined,{side:THREE.DoubleSide}),0,0.0,0); c.mouth.rotation.x=Math.PI/2;
+      c.pit=c.mesh(new $imports.THREE.CircleGeometry(1,32),mat(0x010203),0,0.014,1.4); c.pit.rotation.x=-Math.PI/2;
+      c.shaft=c.mesh(new $imports.THREE.CylinderGeometry(1.2,1.2,14,24,1,true),mat(0x0a0c0e,undefined,{side:$imports.THREE.DoubleSide}),0,-7,0);
+      c.mouth=c.mesh(new $imports.THREE.RingGeometry(1.2,9,32),mat(0x6c7176,undefined,{side:$imports.THREE.DoubleSide}),0,0.0,0); c.mouth.rotation.x=Math.PI/2;
       c.veil(0x000000);
     },
     update:function(c,k,view){
@@ -605,10 +607,10 @@ var DeathCG=(function(){
   CG.floor={
     build:function(c){
       /* 和异象里同一只杯子（fx/cup.js）：白色的杯身画着二校门，淡紫色的盖子 */
-      c.cup=new THREE.Group(); c.add(c.cup,0,EYE+9,0.15);
-      var body=cupModel(false); body.position.y=-CUP_DIM.h/2; c.cup.add(body);          /* 绕杯身中间翻跟头 */
-      c.lid=c.add(cupLidMesh(),0,0,0);
-      c.lidOff=new THREE.Vector3(0,CUP_DIM.lidY-CUP_DIM.h/2,0);
+      c.cup=new $imports.THREE.Group(); c.add(c.cup,0,$imports.EYE+9,0.15);
+      var body=(0,$imports.cupModel)(false); body.position.y=-$imports.CUP_DIM.h/2; c.cup.add(body);          /* 绕杯身中间翻跟头 */
+      c.lid=c.add((0,$imports.cupLidMesh)(),0,0,0);
+      c.lidOff=new $imports.THREE.Vector3(0,$imports.CUP_DIM.lidY-$imports.CUP_DIM.h/2,0);
       c.veil(0x050000);
     },
     update:function(c,k,view){
@@ -616,14 +618,14 @@ var DeathCG=(function(){
       c.cam(view,k,0.35*hit,1.1*ss(k,0.1,0.7)*(1-hit)-0.3*hit,-1.45*hit);
       var f=Math.pow(seg(k,0.2,1.15),2), h=9*(1-f);
       if(k<1.15){
-        c.cup.position.set(0,EYE+h,0.15+h*0.5); c.cup.rotation.set(k*14,0,0.3);
+        c.cup.position.set(0,$imports.EYE+h,0.15+h*0.5); c.cup.rotation.set(k*14,0,0.3);
         c.cup.updateMatrix(); c.lid.position.copy(c.lidOff).applyMatrix4(c.cup.matrix); c.lid.quaternion.copy(c.cup.quaternion);   /* 盖子扣在杯口上一起翻 */
       }
       else{
         /* 落地以后：杯身横着往前滚，淡紫色的杯盖脱出来滚到另一边 */
         c.cup.position.set(-0.22-0.15*lie,0.045,0.75+0.3*lie);          /* 镜头往一侧偏了，杯子落在视线里 */
         c.cup.rotation.set(lie*9,0,Math.PI/2);
-        c.lid.position.set(0.25+0.6*lie,CUP_DIM.lidR,0.75+0.1*lie);
+        c.lid.position.set(0.25+0.6*lie,$imports.CUP_DIM.lidR,0.75+0.1*lie);
         c.lid.rotation.set(Math.PI/2,lie*12,0);                        /* 侧躺着，绕自己的轴滚 */
       }
       c.flash('hit',k,1.15,0.4);
@@ -635,12 +637,12 @@ var DeathCG=(function(){
   CG.ring={
     build:function(c){
       var i,r=c.rand;
-      c.circle=c.mesh(new THREE.RingGeometry(2.0,2.06,48),mat(0xd8d4cc,0.85,{side:THREE.DoubleSide}),0,0.012,0); c.circle.rotation.x=-Math.PI/2;
+      c.circle=c.mesh(new $imports.THREE.RingGeometry(2.0,2.06,48),mat(0xd8d4cc,0.85,{side:$imports.THREE.DoubleSide}),0,0.012,0); c.circle.rotation.x=-Math.PI/2;
       c.flames=[];
       for(i=0;i<5;i++){
         var a=i/5*6.283+0.3, x=Math.cos(a)*1.7, z=Math.sin(a)*1.7;
         c.box(0.05,0.2,0.05,0xe8e0cc,undefined,x,0.1,z);
-        var fl=c.mesh(new THREE.SphereGeometry(0.03,6,4),mat(0xffc860),x,0.24,z); fl.userData.f={x:x,z:z,i:i}; c.flames.push(fl);
+        var fl=c.mesh(new $imports.THREE.SphereGeometry(0.03,6,4),mat(0xffc860),x,0.24,z); fl.userData.f={x:x,z:z,i:i}; c.flames.push(fl);
       }
       c.stones=[];
       for(i=0;i<16;i++){ var s=c.box(0.08,0.08,0.08,0xd8d4cc,undefined,0,0,0); s.userData.s={a:i/16*6.283,d:r()*0.5,h:0.4+(i%4)*0.45}; c.stones.push(s); }
@@ -673,13 +675,13 @@ var DeathCG=(function(){
   CG.loop={
     build:function(c){
       var i,wood=mat(0x6a4a32),wall=mat(0x4a4f55);
-      c.walls=[c.mesh(new THREE.BoxGeometry(0.1,2.8,26),wall,-1.3,1.4,13),c.mesh(new THREE.BoxGeometry(0.1,2.8,26),wall,1.3,1.4,13)];
+      c.walls=[c.mesh(new $imports.THREE.BoxGeometry(0.1,2.8,26),wall,-1.3,1.4,13),c.mesh(new $imports.THREE.BoxGeometry(0.1,2.8,26),wall,1.3,1.4,13)];
       c.frames=[];
       for(i=0;i<10;i++){
-        var g=new THREE.Group();
-        var Kf=new Kit(); [[-0.62,1.1,0.1,2.2],[0.62,1.1,0.1,2.2],[0,2.25,1.34,0.1]].forEach(function(b){ Kf.box('wood',b[0],b[1],0,b[2],b[3],0.12,0x24180f,1); });
-        g.add(new THREE.Mesh(Kf.mergedGeometry(),new THREE.MeshBasicMaterial({vertexColors:true,fog:true})));   /* 一个门框一次画完 */
-        var lamp=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.04,0.12),mat(0xfff4dc,undefined,{fog:false})); lamp.position.set(0,2.72,1.2); g.add(lamp); g.userData.lamp=lamp;
+        var g=new $imports.THREE.Group();
+        var Kf=new $imports.Kit(); [[-0.62,1.1,0.1,2.2],[0.62,1.1,0.1,2.2],[0,2.25,1.34,0.1]].forEach(function(b){ Kf.box('wood',b[0],b[1],0,b[2],b[3],0.12,0x24180f,1); });
+        g.add(new $imports.THREE.Mesh(Kf.mergedGeometry(),new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true})));   /* 一个门框一次画完 */
+        var lamp=new $imports.THREE.Mesh(new $imports.THREE.BoxGeometry(0.5,0.04,0.12),mat(0xfff4dc,undefined,{fog:false})); lamp.position.set(0,2.72,1.2); g.add(lamp); g.userData.lamp=lamp;
         c.add(g,0,0,2+i*2.4); c.frames.push(g);
       }
       c.man=c.fig('person',0x07090b,1,0,1.6); c.man.rotation.y=Math.PI; c.man.visible=false;
@@ -696,7 +698,7 @@ var DeathCG=(function(){
       c.walls[0].position.x=-1.3+0.5*narrow; c.walls[1].position.x=1.3-0.5*narrow;
       c.man.visible=k>2.95;
       c.flash('man',k,2.95,0.2);
-      c.cue('man',k,2.95,function(){ SFX.sting(); });
+      c.cue('man',k,2.95,function(){ $imports.SFX.sting(); });
       c.shade(0.9*ss(k,3.1,3.4));
     }
   };
@@ -706,8 +708,8 @@ var DeathCG=(function(){
     build:function(c){
       var i,lm=mat(0xfff2d0,undefined,{over:true,fog:false});
       c.lamps=[];
-      for(i=0;i<8;i++){ var l=c.mesh(new THREE.BoxGeometry(0.9,0.05,0.16),lm,0,2.75,0.5+i*1.2); l.renderOrder=1000; c.lamps.push(l); }
-      c.pale=new THREE.Group(); c.pale.add(figMesh('tall',mat(0xa8aeb0,undefined,{over:true}),1)); c.add(c.pale,0,0,2.2);
+      for(i=0;i<8;i++){ var l=c.mesh(new $imports.THREE.BoxGeometry(0.9,0.05,0.16),lm,0,2.75,0.5+i*1.2); l.renderOrder=1000; c.lamps.push(l); }
+      c.pale=new $imports.THREE.Group(); c.pale.add((0,$imports.figMesh)('tall',mat(0xa8aeb0,undefined,{over:true}),1)); c.add(c.pale,0,0,2.2);
       c.pale.traverse(function(o){o.renderOrder=1001;}); c.pale.rotation.y=Math.PI; c.pale.visible=false;
       c.veil(0x000000);
     },
@@ -718,13 +720,13 @@ var DeathCG=(function(){
         var lit=!(on(0.35,0.42)&&i%2)&&!on(0.7,0.78)&&k<1.0+(7-i)*0.15;
         if(i===0) lit=lit||on(2.35,2.45)||on(2.6,2.66)||k>=3.05;
         l.visible=lit;
-        c.cue('off'+i,k,1.0+(7-i)*0.15,function(){ SFX.crackle(0.5+0.06*(7-i),0); });   /* 一盏盏灭下来，每盏噼啪一声，越近越响 */
+        c.cue('off'+i,k,1.0+(7-i)*0.15,function(){ $imports.SFX.crackle(0.5+0.06*(7-i),0); });   /* 一盏盏灭下来，每盏噼啪一声，越近越响 */
       });
       var blink=on(2.35,2.45)?1:on(2.6,2.66)?2:k>=3.05?3:0;
       c.pale.visible=blink>0;
       c.pale.position.z=[2.2,2.2,1.3,0.55][blink];
       c.flash('last',k,3.05,0.25);
-      c.cue('last',k,3.05,function(){ SFX.sting(); });
+      c.cue('last',k,3.05,function(){ $imports.SFX.sting(); });
       c.shade(0.9*ss(k,1.4,2.3));                       /* 灯灭到哪里，黑到哪里；只剩灯和那个人看得见 */
     }
   };
@@ -753,7 +755,7 @@ var DeathCG=(function(){
         c.face(f);
       });
       c.big.visible=end>0;
-      c.cue('big',k,2.6,function(){ SFX.smile('jump'); });
+      c.cue('big',k,2.6,function(){ $imports.SFX.smile('jump'); });
       var bs=0.8+0.6*end; c.big.scale.setScalar(bs); c.big.position.set(0,cy-1.7*bs,0.9-0.2*end); c.face(c.big);
       c.shade(0.85*ss(k,2.95,3.2));
     }
@@ -778,29 +780,35 @@ var DeathCG=(function(){
        以前第一次死、第一次看结局时要现编着色器，手机上会在最要紧的那一下卡住。
        编译时把渲染目标设成离屏的那张（真正画的时候也是画到那里），材质留着不释放，编好的程序才不会被回收 */
     warm:function(){
-      if(WARM.done||typeof GLR==='undefined'||!GLR||!GLR.renderer||!GLR.scene||!GLR.cam) return false;
+      if(WARM.done||typeof $imports.GLR==='undefined'||!$imports.GLR||!$imports.GLR.renderer||!$imports.GLR.scene||!$imports.GLR.cam) return false;
       WARM.done=true;
-      var g=new THREE.Group(), box=new THREE.BoxGeometry(0.01,0.01,0.01), D=THREE.DoubleSide;
+      var g=new $imports.THREE.Group(), box=new $imports.THREE.BoxGeometry(0.01,0.01,0.01), D=$imports.THREE.DoubleSide;
       [mat(0x808080),mat(0x808080,0.5),mat(0x808080,0.5,{side:D}),mat(0x808080,undefined,{side:D}),
-       mat(0x808080,undefined,{fog:false}),mat(0x808080,0.5,{fog:false}),mat(0x808080,0,{side:THREE.BackSide,over:true,fog:false}),
-       mat(0x808080,undefined,{over:true,fog:false}),new THREE.MeshBasicMaterial({vertexColors:true,fog:true}),
-       new THREE.MeshLambertMaterial({color:0x808080,side:D})].forEach(function(m){ g.add(new THREE.Mesh(box,m)); });
+       mat(0x808080,undefined,{fog:false}),mat(0x808080,0.5,{fog:false}),mat(0x808080,0,{side:$imports.THREE.BackSide,over:true,fog:false}),
+       mat(0x808080,undefined,{over:true,fog:false}),new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true}),
+       new $imports.THREE.MeshLambertMaterial({color:0x808080,side:D})].forEach(function(m){ g.add(new $imports.THREE.Mesh(box,m)); });
       [mat(0x808080),mat(0x808080,0.5),mat(0x808080,undefined,{side:D}),mat(0x808080,0.6)].forEach(function(m){
-        var im=new THREE.InstancedMesh(box,m,1); im.frustumCulled=false; g.add(im);
+        var im=new $imports.THREE.InstancedMesh(box,m,1); im.frustumCulled=false; g.add(im);
       });
-      g.add(new THREE.Sprite(new THREE.SpriteMaterial({transparent:true,depthWrite:false,depthTest:false,fog:false})));
+      g.add(new $imports.THREE.Sprite(new $imports.THREE.SpriteMaterial({transparent:true,depthWrite:false,depthTest:false,fog:false})));
       /* 共用的顶点色材质（手、头、笑脸、钟……）和贴了图的眼睛精灵 */
-      if(typeof fxVCMat==='function') g.add(new THREE.Mesh(box,fxVCMat()));
-      if(typeof gazeEye==='function'){ var eye=gazeEye(0.01,'red'); eye.material.opacity=0.01; g.add(eye); }
+      if(typeof $imports.fxVCMat==='function') g.add(new $imports.THREE.Mesh(box,(0,$imports.fxVCMat)()));
+      if(typeof $imports.gazeEye==='function'){ var eye=(0,$imports.gazeEye)(0.01,'red'); eye.material.opacity=0.01; g.add(eye); }
       /* 清华水杯的油画材质（水杯死亡、异象都用）：只编着色器，画本身开局十几秒后再画 */
-      if(typeof cupWarmMat==='function') g.add(new THREE.Mesh(box,cupWarmMat()));
-      g.position.copy(GLR.cam.position); g.updateMatrixWorld(true);
+      if(typeof $imports.cupWarmMat==='function') g.add(new $imports.THREE.Mesh(box,(0,$imports.cupWarmMat)()));
+      g.position.copy($imports.GLR.cam.position); g.updateMatrixWorld(true);
       /* 只编这一小组（灯光、雾取当前场景的），不用把整个校园再走一遍 */
-      var prev=GLR.renderer.getRenderTarget();
-      try{ GLR.renderer.setRenderTarget(GLR.rt||null); GLR.renderer.compile(g,GLR.cam,GLR.scene); }catch(e){}
-      try{ GLR.renderer.setRenderTarget(prev); }catch(e){}
+      var prev=$imports.GLR.renderer.getRenderTarget();
+      try{ $imports.GLR.renderer.setRenderTarget($imports.GLR.rt||null); $imports.GLR.renderer.compile(g,$imports.GLR.cam,$imports.GLR.scene); }catch(e){}
+      try{ $imports.GLR.renderer.setRenderTarget(prev); }catch(e){}
       WARM.keep=g;
       return true;
     }
   };
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/fx/death-cg.js",{
+"DeathCG":{get:function(){return DeathCG;},set:function($value){DeathCG=$value;}}
+});
+})(GameModules.imports("game3d/js/fx/death-cg.js"));

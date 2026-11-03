@@ -15,8 +15,8 @@ class PressureClockTest(unittest.TestCase):
         script=r"""
 const fs=require('fs'),vm=require('vm'),a=require('assert/strict');
 const c={console,Math,Number,os:()=>{},setTimeout:()=>{},S:{tsec:440,day:1,mode:'out'}};
-vm.createContext(c);
-for(const f of ['core','domain/player-stats','domain/game-time','systems'])vm.runInContext(fs.readFileSync('game3d/js/'+f+'.js','utf8'),c);
+require('./tests/support/capsules.cjs').context(c);
+for(const f of ['domain/random','core','domain/player-stats','domain/game-time','systems'])vm.runInContext(fs.readFileSync('game3d/js/'+f+'.js','utf8'),c);
 for(const [from,to,seconds] of [[440,770,360],[770,1070,360],[1070,1340,360],[1340,1500,120]]){
  a.ok(Math.abs(c.realSecondsBetween(from,to)-seconds)<1e-7);
  c.S.tsec=from;c.S.day=2;c.clockTick(seconds);a.ok(Math.abs(c.S.tsec-(to===1500?440:to))<1e-7);

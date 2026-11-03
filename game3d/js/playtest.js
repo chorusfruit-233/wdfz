@@ -1,15 +1,17 @@
+/* @module-capsule */
+(function($imports){
 /* 可选的本地试玩记录。独立于存档，不发送网络请求，不保存参与者身份。 */
 'use strict';
 var Playtest={data:null,started:0,last:0,mode:'menu',frameBins:null,
-  currentMode:function(){return document.hidden?'background':S.screen!=='play'||PRO.on||PAUSE.on||UI.anyOpen()||PC.on||(DEV.on&&DEV.freeze)?'menu':S.dead?'death':'play';},
+  currentMode:function(){return document.hidden?'background':$imports.S.screen!=='play'||$imports.PRO.on||$imports.PAUSE.on||$imports.UI.anyOpen()||$imports.PC.on||($imports.DEV.on&&$imports.DEV.freeze)?'menu':$imports.S.dead?'death':'play';},
   toggle:function(){
     if(this.data&&this.data.recording){this.sample();this.data.recording=false;this.paint();return;}
     this.started=this.last=performance.now();this.mode=this.currentMode();this.frameBins=[0,0,0,0];
     this.data={version:1,recording:true,startedAt:new Date().toISOString(),userAgent:navigator.userAgent,
-      environment:'由执行者补录真实设备；浏览器信息不证明是真机',settings:JSON.parse(JSON.stringify(SET)),
+      environment:'由执行者补录真实设备；浏览器信息不证明是真机',settings:JSON.parse(JSON.stringify($imports.SET)),
       viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},
       seconds:{play:0,menu:0,background:0,death:0},simulationSeconds:0,events:[],discardedEvents:0,
-      talent:{id:Talent.id(),rulesVersion:Talent.rules(),origin:Talent.state().origin}};
+      talent:{id:$imports.Talent.id(),rulesVersion:$imports.Talent.rules(),origin:$imports.Talent.state().origin}};
     this.event('开始记录');this.paint();
   },
   sample:function(){
@@ -23,15 +25,15 @@ var Playtest={data:null,started:0,last:0,mode:'menu',frameBins:null,
   simulation:function(dt){if(this.data&&this.data.recording)this.data.simulationSeconds+=dt;},
   event:function(type,detail){
     if(!this.data||!this.data.recording)return;
-    this.sample();var ev={type:type,detail:detail||'',elapsedSeconds:(performance.now()-this.started)/1000,day:S.day,gameMinutes:S.tsec,
-      room:S.mode==='in'?S.room:'out',san:S.san,violation:S.viol,assimilation:S.tt,inventory:S.bag.slice()};
+    this.sample();var ev={type:type,detail:detail||'',elapsedSeconds:(performance.now()-this.started)/1000,day:$imports.S.day,gameMinutes:$imports.S.tsec,
+      room:$imports.S.mode==='in'?$imports.S.room:'out',san:$imports.S.san,violation:$imports.S.viol,assimilation:$imports.S.tt,inventory:$imports.S.bag.slice()};
     if(this.data.events.length>=500){this.data.events.shift();this.data.discardedEvents++;}
     this.data.events.push(ev);
   },
   note:function(){
     var el=document.getElementById('playtestNote'),value=el.value.trim();
-    if(!this.data||!this.data.recording){toast('先点「开始记录」');return;}
-    if(value){this.event('观察者记录',value.slice(0,500));el.value='';this.paint();toast('已记入本地试玩记录');}
+    if(!this.data||!this.data.recording){(0,$imports.toast)('先点「开始记录」');return;}
+    if(value){this.event('观察者记录',value.slice(0,500));el.value='';this.paint();(0,$imports.toast)('已记入本地试玩记录');}
   },
   paint:function(){
     var on=!!(this.data&&this.data.recording),button=document.getElementById('playtestToggle');
@@ -50,3 +52,9 @@ var Playtest={data:null,started:0,last:0,mode:'menu',frameBins:null,
   }
 };
 document.addEventListener('visibilitychange',function(){Playtest.sample();});
+
+/* @module-exports */
+GameModules.publish("game3d/js/playtest.js",{
+"Playtest":{get:function(){return Playtest;},set:function($value){Playtest=$value;}}
+});
+})(GameModules.imports("game3d/js/playtest.js"));

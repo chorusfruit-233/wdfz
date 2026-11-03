@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 建筑外观
    buildOutdoorGeometry() —— 整个校园：地面与道具（outdoor.js）+ 每栋楼 + 球场 + 围墙与校门。
    楼的轮廓、高度、颜色都沿用原来的；以前每层是一整条黑色"窗带"，现在是一扇扇的窗
@@ -18,15 +20,15 @@ function signMesh(text,w,h,bg,fg,font){
     var cv=document.createElement('canvas'); cv.width=512; cv.height=Math.max(32,Math.round(512*h/w));
     var c=cv.getContext('2d');
     c.fillStyle=bg; c.fillRect(0,0,cv.width,cv.height);
-    var i; for(i=0;i<300;i++){ c.globalAlpha=0.05; c.fillStyle=Math.random()>0.5?'#fff':'#000'; c.fillRect(Math.random()*cv.width,Math.random()*cv.height,3,3); }
+    var i; for(i=0;i<300;i++){ c.globalAlpha=0.05; c.fillStyle=$imports.PresentationRandom.next()>0.5?'#fff':'#000'; c.fillRect($imports.PresentationRandom.next()*cv.width,$imports.PresentationRandom.next()*cv.height,3,3); }
     c.globalAlpha=1;
     c.fillStyle=fg; c.textAlign='center'; c.textBaseline='middle';
     c.font=(font||'600')+' '+Math.round(cv.height*0.62)+'px "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif';
     c.fillText(text,cv.width/2,cv.height*0.54,cv.width*0.92);
-    t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
+    t=new $imports.THREE.CanvasTexture(cv); t.colorSpace=$imports.THREE.SRGBColorSpace; t.anisotropy=4;
     SIGN_TEX[key]=t;
   }
-  var m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshPhongMaterial({map:t,shininess:0,specular:0x000000}));
+  var m=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(w,h),new $imports.THREE.MeshPhongMaterial({map:t,shininess:0,specular:0x000000}));
   return m;
 }
 /* 把牌子贴到某个立面上：face 's'/'n'/'e'/'w'，dist 离立面中心线多远 */
@@ -64,11 +66,11 @@ function facadeBlocked(face,u0,u1,y0,y1){
   if(!o) return false;
   var horiz=(face==='s'||face==='n');
   var line=(face==='s')?o.y+o.h:(face==='n'?o.y:(face==='e'?o.x+o.w:o.x));
-  for(i=0;i<OBJ.length;i++){
-    var b=OBJ[i]; if(b===o||(b.k!=='roof'&&b.k!=='link')) continue;
+  for(i=0;i<$imports.OBJ.length;i++){
+    var b=$imports.OBJ[i]; if(b===o||(b.k!=='roof'&&b.k!=='link')) continue;
     var n0=horiz?b.y:b.x, n1=horiz?b.y+b.h:b.x+b.w;
     if(line<n0-2||line>n1+2) continue;                                   /* 不贴着这面墙 */
-    var a0=M(horiz?b.x:b.y)-0.4, a1=M(horiz?b.x+b.w:b.y+b.h)+0.4;
+    var a0=(0,$imports.M)(horiz?b.x:b.y)-0.4, a1=(0,$imports.M)(horiz?b.x+b.w:b.y+b.h)+0.4;
     if(u1>a0&&u0<a1&&y0<objHeightM(b)) return true;
   }
   return false;
@@ -90,7 +92,7 @@ function plinthAround(K,px,pz,sw,sd,h,out,col){
 function facadeWindows(K,face,px,pz,sw,sd,u0,u1,y,ww,wh,spacing,litKey,grille){
   var horiz=(face==='s'||face==='n'), sg=(face==='s'||face==='e')?1:-1;
   var plane=horiz?pz+sg*sd/2:px+sg*sw/2;
-  var len=u1-u0, n=Math.max(1,Math.floor(len/spacing)), k, low=lodLow(), det=Quality.get().facadeDetail;
+  var len=u1-u0, n=Math.max(1,Math.floor(len/spacing)), k, low=(0,$imports.lodLow)(), det=$imports.Quality.get().facadeDetail;
   var OUT={s:'s',n:'n',e:'e',w:'w'}[face], BACK={s:'n',n:'s',e:'w',w:'e'}[face], SIDES='nsewud'.replace(BACK,'');
   for(k=0;k<n;k++){
     var u=u0+(k+0.5)*len/n;
@@ -106,49 +108,49 @@ function facadeWindows(K,face,px,pz,sw,sd,u0,u1,y,ww,wh,spacing,litKey,grille){
       else K.g(mat).boxFaces(plane+sg*dn,y+dy,u+du,sn,sy,su,col,sh,faces||SIDES);
     }
     var wn=Math.round(ww*100)+'_'+Math.round(wh*100);
-    if(!low&&Assets.has('fwin_'+wn)){
+    if(!low&&$imports.Assets.has('fwin_'+wn)){
       /* 窗套、窗台、铝外框、亮子、两扇推拉窗、防盗网是 Blender 的模型（tools/blender/assets/exterior.py）：
          一前一后两条轨，推开的那一边露出屋里；屋里亮不亮灯、拉没拉窗帘还是按位置在这里画 */
       K.frame(horiz?u:plane,horiz?plane:u,FACE_ROT[face]);
       K.asset('fwin_'+wn,0,y,0,0);
       var ssw=(ww-0.08)/2+0.025, ssy=y+(-wh/2+0.04+wh/2-wh*0.24-0.0175)/2;
-      var opn=(hash2(seed,11)-0.5)*ww*0.25;
+      var opn=((0,$imports.hash2)(seed,11)-0.5)*ww*0.25;
       K.asset('fsash_'+wn,-ww/2+0.04+ssw/2+Math.max(0,opn),ssy,0.048,0);
       K.asset('fsash_'+wn, ww/2-0.04-ssw/2-Math.max(0,-opn),ssy,0.022,Math.PI);
       if(det&&grille) K.asset('fgrille_'+wn,0,y,0,0);
       K.unframe();
-      var lit2=(litKey!==undefined&&hash2((u*7)|0,(y*13+litKey)|0)<0.22);
+      var lit2=(litKey!==undefined&&(0,$imports.hash2)((u*7)|0,(y*13+litKey)|0)<0.22);
       if(lit2) F('litwin',0,0,0.005,ww*0.96,wh*0.96,0.002,0xffffff,1.0,OUT);
-      var cr2=hash2(seed,3);
+      var cr2=(0,$imports.hash2)(seed,3);
       if(cr2<0.7){
-        var cw2=ww*(0.18+hash2(seed,5)*0.30), cs2=(hash2(seed,7)<0.5)?-1:1, ccol2=[0x8a6a5a,0x5a6a8a,0xb8a888,0x6a7a5a,0x9a5a5a,0xc8c0b0][(seed>>>0)%6];
-        F('fabric',cs2*(ww/2-cw2/2),0,0.007,cw2,wh*0.98,0.002,lit2?shadeHex(ccol2,1.5):ccol2,lit2?1.0:0.7,OUT);
-        if(cr2<0.25) F('fabric',-cs2*(ww/2-cw2*0.3),0,0.007,cw2*0.6,wh*0.98,0.002,lit2?shadeHex(ccol2,1.5):ccol2,lit2?1.0:0.7,OUT);
+        var cw2=ww*(0.18+(0,$imports.hash2)(seed,5)*0.30), cs2=((0,$imports.hash2)(seed,7)<0.5)?-1:1, ccol2=[0x8a6a5a,0x5a6a8a,0xb8a888,0x6a7a5a,0x9a5a5a,0xc8c0b0][(seed>>>0)%6];
+        F('fabric',cs2*(ww/2-cw2/2),0,0.007,cw2,wh*0.98,0.002,lit2?(0,$imports.shadeHex)(ccol2,1.5):ccol2,lit2?1.0:0.7,OUT);
+        if(cr2<0.25) F('fabric',-cs2*(ww/2-cw2*0.3),0,0.007,cw2*0.6,wh*0.98,0.002,lit2?(0,$imports.shadeHex)(ccol2,1.5):ccol2,lit2?1.0:0.7,OUT);
       }
       continue;
     }
     if(low){                                                       /* 流畅档：平贴的窗，和以前一样 */
-      B('plaster',0,0.02,0.010,ww+0.18,wh+0.18,0.02,WHITEBAND,1.0);
-      B('dark',0,0,0.022,ww,wh,0.01,WIN_DARK,1.0);
+      B('plaster',0,0.02,0.010,ww+0.18,wh+0.18,0.02,$imports.WHITEBAND,1.0);
+      B('dark',0,0,0.022,ww,wh,0.01,$imports.WIN_DARK,1.0);
       B('stone',0,-wh/2-0.035,0.07,ww+0.26,0.07,0.14,0xd8d4cb,1.05);              /* 窗台紧贴窗下沿，和模型的窗台一样高 */
-      if(litKey!==undefined&&hash2((u*7)|0,(y*13+litKey)|0)<0.22) B('litwin',0,0,0.036,ww*0.92,wh*0.92,0.004,0xffffff,1.0);
+      if(litKey!==undefined&&(0,$imports.hash2)((u*7)|0,(y*13+litKey)|0)<0.22) B('litwin',0,0,0.036,ww*0.92,wh*0.92,0.004,0xffffff,1.0);
       continue;
     }
     /* 窗套：凸出墙面 10 厘米的白色线脚，窗户缩在里面，有进深、有阴影 */
     var fw=0.09, dep=0.10;
-    F('plaster',0,wh/2+fw/2,dep/2,ww+fw*2,fw,dep,WHITEBAND,1.0);
-    F('plaster',-(ww/2+fw/2),0,dep/2,fw,wh,dep,WHITEBAND,0.96);
-    F('plaster', (ww/2+fw/2),0,dep/2,fw,wh,dep,WHITEBAND,0.96);
+    F('plaster',0,wh/2+fw/2,dep/2,ww+fw*2,fw,dep,$imports.WHITEBAND,1.0);
+    F('plaster',-(ww/2+fw/2),0,dep/2,fw,wh,dep,$imports.WHITEBAND,0.96);
+    F('plaster', (ww/2+fw/2),0,dep/2,fw,wh,dep,$imports.WHITEBAND,0.96);
     F('stone',0,-wh/2-0.035,0.085,ww+0.30,0.07,0.17,0xd8d4cb,1.05);            /* 窗台：再往外挑一点 */
-    F('dark',0,0,0.004,ww,wh,0.008,WIN_DARK,1.0,OUT);                           /* 屋里：暗的 */
-    var lit=(litKey!==undefined&&hash2((u*7)|0,(y*13+litKey)|0)<0.22);
+    F('dark',0,0,0.004,ww,wh,0.008,$imports.WIN_DARK,1.0,OUT);                           /* 屋里：暗的 */
+    var lit=(litKey!==undefined&&(0,$imports.hash2)((u*7)|0,(y*13+litKey)|0)<0.22);
     if(lit) F('litwin',0,0,0.010,ww*0.96,wh*0.96,0.002,0xffffff,1.0,OUT);
     /* 屋里的窗帘：大半拉在一边，颜色各家不同 */
-    var cr=hash2(seed,3);
+    var cr=(0,$imports.hash2)(seed,3);
     if(cr<0.7){
-      var cw=ww*(0.18+hash2(seed,5)*0.30), cs=(hash2(seed,7)<0.5)?-1:1, ccol=[0x8a6a5a,0x5a6a8a,0xb8a888,0x6a7a5a,0x9a5a5a,0xc8c0b0][(seed>>>0)%6];
-      F('fabric',cs*(ww/2-cw/2),0,0.013,cw,wh*0.98,0.002,lit?shadeHex(ccol,1.5):ccol,lit?1.0:0.7,OUT);
-      if(cr<0.25) F('fabric',-cs*(ww/2-cw*0.3),0,0.013,cw*0.6,wh*0.98,0.002,lit?shadeHex(ccol,1.5):ccol,lit?1.0:0.7,OUT);
+      var cw=ww*(0.18+(0,$imports.hash2)(seed,5)*0.30), cs=((0,$imports.hash2)(seed,7)<0.5)?-1:1, ccol=[0x8a6a5a,0x5a6a8a,0xb8a888,0x6a7a5a,0x9a5a5a,0xc8c0b0][(seed>>>0)%6];
+      F('fabric',cs*(ww/2-cw/2),0,0.013,cw,wh*0.98,0.002,lit?(0,$imports.shadeHex)(ccol,1.5):ccol,lit?1.0:0.7,OUT);
+      if(cr<0.25) F('fabric',-cs*(ww/2-cw*0.3),0,0.013,cw*0.6,wh*0.98,0.002,lit?(0,$imports.shadeHex)(ccol,1.5):ccol,lit?1.0:0.7,OUT);
     }
     /* 铝合金推拉窗：外框、上面一条固定亮子、两扇推拉扇一前一后，中间的碰头梃 */
     var mc=0xb8bcbc, fb=0.04, z0=0.03;
@@ -158,7 +160,7 @@ function facadeWindows(K,face,px,pz,sw,sd,u0,u1,y,ww,wh,spacing,litKey,grille){
     F('metal', ww/2-fb/2,0,z0,fb,wh-fb*2,0.04,mc,1.0);
     var ty=wh/2-wh*0.24;
     F('metal',0,ty,z0,ww-fb*2,0.035,0.04,mc,1.05);                                   /* 亮子横档 */
-    var open=(hash2(seed,11)-0.5)*ww*0.25;                                          /* 推开了一点 */
+    var open=((0,$imports.hash2)(seed,11)-0.5)*ww*0.25;                                          /* 推开了一点 */
     F('metal',open-0.02,(ty-wh/2+fb)/2,z0+0.012,0.035,ty-(-wh/2+fb),0.03,mc,1.08);  /* 碰头梃 */
     F('metal',open+0.02,(ty-wh/2+fb)/2,z0-0.008,0.035,ty-(-wh/2+fb),0.03,mc,1.0);
     F('glass',0,0,z0,ww-fb*2,wh-fb*2,0.004,0x6a8494,1.1,OUT);
@@ -177,10 +179,10 @@ function downpipe(K,face,px,pz,sw,sd,u,top){
   var horiz=(face==='s'||face==='n'), sg=(face==='s'||face==='e')?1:-1, plane=horiz?pz+sg*sd/2:px+sg*sw/2;
   var off=0.16, x=horiz?u:plane+sg*off, z=horiz?plane+sg*off:u, k;
   if(facadeBlocked(face,u-0.3,u+0.3,0,3)) return;
-  if(Assets.has('dp_clamp')){                       /* 雨水斗、管卡、下口和接水簸箕是模型，管子按楼高画 */
+  if($imports.Assets.has('dp_clamp')){                       /* 雨水斗、管卡、下口和接水簸箕是模型，管子按楼高画 */
     K.frame(horiz?u:plane,horiz?plane:u,FACE_ROT[face]);
     K.asset('dp_shoe',0,0,0,0);
-    K.rod('plastic',0,0.38,0.16,0,top-0.33,0.16,0.055,0.055,lodLow()?8:12,0xd8d6d0,1.0);
+    K.rod('plastic',0,0.38,0.16,0,top-0.33,0.16,0.055,0.055,(0,$imports.lodLow)()?8:12,0xd8d6d0,1.0);
     for(k=2;k<top-0.8;k+=2) K.asset('dp_clamp',0,k,0,0);
     K.asset('dp_head',0,top-0.30,0,0);
     K.unframe();
@@ -196,7 +198,7 @@ function downpipe(K,face,px,pz,sw,sd,u,top){
 }
 /* 女儿墙上的避雷带：一圈细圆钢架在小支架上 */
 function lightningBelt(K,px,pz,sw,sd,y){
-  if(lodLow()) return;
+  if((0,$imports.lodLow)()) return;
   var E=[[px-sw/2,pz-sd/2,px+sw/2,pz-sd/2],[px+sw/2,pz-sd/2,px+sw/2,pz+sd/2],[px+sw/2,pz+sd/2,px-sw/2,pz+sd/2],[px-sw/2,pz+sd/2,px-sw/2,pz-sd/2]], i, k;
   for(i=0;i<4;i++){
     var e=E[i], L=Math.hypot(e[2]-e[0],e[3]-e[1]), n=Math.max(2,Math.round(L/1.5));
@@ -208,7 +210,7 @@ function lightningBelt(K,px,pz,sw,sd,y){
 function solarHeater(K,x,y,z,rot){
   if(K.asset('solar_heater',x,y,z,rot)) return;
   K.frame(x,z,rot);
-  var k, n=lodLow()?6:12, w=1.9;
+  var k, n=(0,$imports.lodLow)()?6:12, w=1.9;
   K.rod('metal',-w/2,y+1.05,-0.55,w/2,y+1.05,-0.55,0.20,0.20,12,0xd8dcdc,1.1);                  /* 水箱 */
   for(k=0;k<n;k++){ var tx=-w/2+0.08+k*(w-0.16)/(n-1);
     K.rod('glass',tx,y+0.95,-0.42,tx,y+0.15,0.75,0.028,0.028,6,0x2a3440,1.2); }                    /* 真空管 */
@@ -228,8 +230,8 @@ function bandAround(K,px,pz,sw,sd,y,h,out,col){
     if(g&&g.face===f[0]&&y-h/2<g.top) segs=[[c0-len/2,g.c-g.wide],[g.c+g.wide,c0+len/2]];   /* 门头那一段断开 */
     segs.forEach(function(sg){
       var L=sg[1]-sg[0], m=(sg[0]+sg[1])/2; if(L<0.05) return;
-      if(f[4]) K.box('plaster',m,y,f[2],L,h,out,col||WHITEBAND,1.0);
-      else K.box('plaster',f[1],y,m,out,h,L,col||WHITEBAND,1.0);
+      if(f[4]) K.box('plaster',m,y,f[2],L,h,out,col||$imports.WHITEBAND,1.0);
+      else K.box('plaster',f[1],y,m,out,h,L,col||$imports.WHITEBAND,1.0);
     });
   }
 }
@@ -245,18 +247,18 @@ function acUnit(K,x,y,z,face){
 }
 /* 楼顶：楼梯间 + 水箱 + 一根天线 */
 function roofTop(K,px,top,pz,sw,sd,seed){
-  var hx=px+sw*0.28*(hash2(seed,3)>0.5?1:-1), hz=pz-sd*0.12;
-  if(Assets.has('roof_stairhouse')){                 /* 楼梯间（门、爬梯、百叶）、水箱、楼梯间顶上的电视天线 */
+  var hx=px+sw*0.28*((0,$imports.hash2)(seed,3)>0.5?1:-1), hz=pz-sd*0.12;
+  if($imports.Assets.has('roof_stairhouse')){                 /* 楼梯间（门、爬梯、百叶）、水箱、楼梯间顶上的电视天线 */
     K.asset('roof_stairhouse',hx,top,hz,0);
-    K.asset('roof_tank',px-sw*0.30*(hash2(seed,5)>0.5?1:-1),top,pz+sd*0.10,hash2(seed,9)*6.283);
-    K.asset('roof_antenna',hx+0.25,top+2.97,hz-0.15,hash2(seed,13)*6.283);
+    K.asset('roof_tank',px-sw*0.30*((0,$imports.hash2)(seed,5)>0.5?1:-1),top,pz+sd*0.10,(0,$imports.hash2)(seed,9)*6.283);
+    K.asset('roof_antenna',hx+0.25,top+2.97,hz-0.15,(0,$imports.hash2)(seed,13)*6.283);
     return;
   }
-  K.bevel('brick',hx,top+1.4,hz,3.2,2.8,3.0,BRICK,0.96,0.04);
-  K.box('plaster',hx,top+2.86,hz,3.4,0.12,3.2,WHITEBAND,1.0);
+  K.bevel('brick',hx,top+1.4,hz,3.2,2.8,3.0,$imports.BRICK,0.96,0.04);
+  K.box('plaster',hx,top+2.86,hz,3.4,0.12,3.2,$imports.WHITEBAND,1.0);
   K.box('dark',hx,top+1.05,hz+1.505,0.9,2.0,0.02,0x2a3136,1.0);
-  K.cyl('metal',px-sw*0.30*(hash2(seed,5)>0.5?1:-1),top,pz+sd*0.10,0.9,0.9,1.6,12,0x9aa0a4,1.0);
-  K.cyl('metal',px-sw*0.30*(hash2(seed,5)>0.5?1:-1),top+1.6,pz+sd*0.10,0.92,0.2,0.3,12,0x8a9094,1.0);
+  K.cyl('metal',px-sw*0.30*((0,$imports.hash2)(seed,5)>0.5?1:-1),top,pz+sd*0.10,0.9,0.9,1.6,12,0x9aa0a4,1.0);
+  K.cyl('metal',px-sw*0.30*((0,$imports.hash2)(seed,5)>0.5?1:-1),top+1.6,pz+sd*0.10,0.92,0.2,0.3,12,0x8a9094,1.0);
   K.rod('metal',hx+1.2,top+2.9,hz,hx+1.2,top+5.4,hz,0.03,0.015,5,0x6a6e72);
 }
 
@@ -300,7 +302,7 @@ function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name){
     var sy=colonnade?3.34:dh+1.35, sd2=colonnade?2.99:dep*0.29+0.02;
     var smx=bx+nx*sd2, smz=bz+nz*sd2;
     sm.position.set(smx,sy,smz); sm.rotation.y=rot; grp.add(sm);
-    var back=new THREE.Mesh(new THREE.BoxGeometry(Math.min(dw+1.2,4.6),0.56,0.08),new THREE.MeshPhongMaterial({color:0xd8d4cc,shininess:0,specular:0}));
+    var back=new $imports.THREE.Mesh(new $imports.THREE.BoxGeometry(Math.min(dw+1.2,4.6),0.56,0.08),new $imports.THREE.MeshPhongMaterial({color:0xd8d4cc,shininess:0,specular:0}));
     back.position.set(bx+nx*(sd2-0.05),sy,bz+nz*(sd2-0.05)); back.rotation.y=rot; grp.add(back);
   }
 }
@@ -330,7 +332,7 @@ function addSmallDoor(K, px, pz, sw, sd, face){
 /* 花园里的校训牌 */
 function addGardenSign(grp){
   try{
-    var gx=535*SC*U2M, gz=1040*SC*U2M;
+    var gx=535*$imports.SC*$imports.U2M, gz=1040*$imports.SC*$imports.U2M;
     var m=signMesh('十年树木  百年树人',10.4,1.6,'#ddd8ce','#7a3226');
     m.position.set(gx,1.35,gz+1.6+0.176); grp.add(m);
     var m2=signMesh('十年树木  百年树人',10.4,1.6,'#ddd8ce','#7a3226');
@@ -342,11 +344,11 @@ function addGardenSign(grp){
 function bldClassroom(K,grp,o,px,pz,sw,sd){
   var total=16.0, g0=3.2, dep=2.6;
   facadeDoor(o,px,pz,sw,sd,'colonnade');
-  K.box('brick',px,total/2,pz,sw,total,sd,BRICK,0.97);
-  plinthAround(K,px,pz,sw,sd,0.9,0.08,shadeHex(BASE_GREY,0.92));                 /* 底层浅灰：0.9 米高，以前 1.5 米把一楼窗户截掉半截 */
+  K.box('brick',px,total/2,pz,sw,total,sd,$imports.BRICK,0.97);
+  plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));                 /* 底层浅灰：0.9 米高，以前 1.5 米把一楼窗户截掉半截 */
   /* 女儿墙（挑出的尺寸改成固定值：以前按楼宽的百分比，宽楼挑出半米，插进隔壁钟楼的柱子） */
-  K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,WHITEBAND,1.0);
-  K.box('brick',px,total+0.78,pz,sw+0.12,0.80,sd+0.12,BRICK,0.99);
+  K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,$imports.WHITEBAND,1.0);
+  K.box('brick',px,total+0.78,pz,sw+0.12,0.80,sd+0.12,$imports.BRICK,0.99);
   K.bevel('stone',px,total+1.22,pz,sw+0.24,0.10,sd+0.24,0xd8d4cb,1.05,0.02);
   roofTop(K,px,total+1.27,pz,sw,sd,o.x);                                      /* 立在女儿墙压顶上面（以前从 16 米起，下半截埋在实心的女儿墙里） */
   lightningBelt(K,px,pz,sw+0.16,sd+0.16,total+1.27);
@@ -359,15 +361,15 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
   for(cn2=0;cn2<=colN;cn2++){
     var pcx=px-sw/2+(sw/colN)*cn2;
     if(Math.abs(pcx-px)<3.2) continue;
-    K.bevel('brick',pcx,g0/2,pz+sd/2+dep/2,0.46,g0,0.46,BRICK,1.02,0.03);
-    K.bevel('stone',pcx,0.16,pz+sd/2+dep/2,0.62,0.32,0.62,BASE_GREY,0.95,0.03);
-    K.bevel('stone',pcx,g0-0.12,pz+sd/2+dep/2,0.56,0.12,0.56,WHITEBAND,1.0,0.02);
+    K.bevel('brick',pcx,g0/2,pz+sd/2+dep/2,0.46,g0,0.46,$imports.BRICK,1.02,0.03);
+    K.bevel('stone',pcx,0.16,pz+sd/2+dep/2,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
+    K.bevel('stone',pcx,g0-0.12,pz+sd/2+dep/2,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
   }
-  if(!DEV_HIDE.canopy) K.bevel('plaster',px,g0+0.14,pz+sd/2+dep/2,sw+0.4,0.30,dep+0.5,WHITEBAND,1.02,0.04);
-  K.box('concrete',px,g0-0.30,pz+sd/2+dep/2,sw+0.2,0.26,dep+0.3,BRICK_D,0.96);
+  if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',px,g0+0.14,pz+sd/2+dep/2,sw+0.4,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
+  K.box('concrete',px,g0-0.30,pz+sd/2+dep/2,sw+0.2,0.26,dep+0.3,$imports.BRICK_D,0.96);
   /* 首层：柱廊后面的窗 */
   var spans=faceFreeSpans(o,'s'), si;
-  for(si=0;si<spans.length;si++) facadeWindows(K,'s',px,pz,sw,sd,M(spans[si][0])+2.4,M(spans[si][1])-2.4,1.7,1.8,1.2,4.2);
+  for(si=0;si<spans.length;si++) facadeWindows(K,'s',px,pz,sw,sd,(0,$imports.M)(spans[si][0])+2.4,(0,$imports.M)(spans[si][1])-2.4,1.7,1.8,1.2,4.2);
   /* 二到五层 */
   var fl, nfl=4;
   for(fl=1;fl<=nfl;fl++){
@@ -380,7 +382,7 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
     /* 南面：一层层外走廊的栏板 + 红色栏杆 + 空调外机 */
     var sy=fy-0.77, rz=pz+sd/2+0.62;                                              /* 栏板顶比窗台低一点（以前窗台埋进栏板 6 厘米） */
     K.box('concrete',px,sy,pz+sd/2+0.36,sw*0.98,0.14,0.72,0xd8d4cb,1.04);
-    K.box('plaster',px,sy-0.04,pz+sd/2+0.73,sw*0.98,0.24,0.04,WHITEBAND,1.0);
+    K.box('plaster',px,sy-0.04,pz+sd/2+0.73,sw*0.98,0.24,0.04,$imports.WHITEBAND,1.0);
     var rpn=Math.max(4,Math.round(sw/1.3)), rp;
     for(rp=0;rp<=rpn;rp++){ var rx=px-sw*0.48+(sw*0.96/rpn)*rp; K.rod('metal',rx,sy+0.07,rz,rx,sy+1.05,rz,0.025,0.025,5,0x8b3a2e,1.0); }
     K.rod('metal',px-sw*0.48,sy+1.05,rz,px+sw*0.48,sy+1.05,rz,0.04,0.04,6,0x8b3a2e,1.05);
@@ -394,13 +396,13 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
 function bldDorm(K,grp,o,px,pz,sw,sd){
   var dh=OBLD_H[o.id], dn=Math.round(dh/3.0), dfl;
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,dh/2,pz,sw,dh,sd,BRICK,0.97);
-  plinthAround(K,px,pz,sw,sd,0.7,0.10,BASE_GREY);                                 /* 以前 2.5 米高，一楼窗户整个埋在里面 */
-  K.box('plaster',px,dh+0.16,pz,sw-0.02,0.32,sd-0.02,WHITEBAND,1.0);
+  K.box('brick',px,dh/2,pz,sw,dh,sd,$imports.BRICK,0.97);
+  plinthAround(K,px,pz,sw,sd,0.7,0.10,$imports.BASE_GREY);                                 /* 以前 2.5 米高，一楼窗户整个埋在里面 */
+  K.box('plaster',px,dh+0.16,pz,sw-0.02,0.32,sd-0.02,$imports.WHITEBAND,1.0);
   K.bevel('stone',px,dh+0.45,pz,sw+0.2,0.10,sd+0.2,0xd8d4cb,1.0,0.02);
   roofTop(K,px,dh+0.5,pz,sw,sd,o.y);
   lightningBelt(K,px,pz,sw+0.12,sd+0.12,dh+0.5);
-  if(!lodLow()){                                                                 /* 楼顶一排太阳能热水器 */
+  if(!(0,$imports.lodLow)()){                                                                 /* 楼顶一排太阳能热水器 */
     var shx;
     for(shx=px-sw/2+2.2;shx<px+sw/2-2;shx+=3.2) solarHeater(K,shx,dh+0.5,pz+sd*0.28,Math.PI);
   }
@@ -414,7 +416,7 @@ function bldDorm(K,grp,o,px,pz,sw,sd){
     facadeWindows(K,'e',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,dy-1.27,1.2,1.1,3.2,dfl+7,dfl===1);
     facadeWindows(K,'w',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,dy-1.27,1.2,1.1,3.2,dfl+9,dfl===1);
     for(sp2=0;sp2<spans.length;sp2++){
-      var sa=M(spans[sp2][0]), sb=M(spans[sp2][1]), sw3=sb-sa-0.3, sx3=(sa+sb)/2;
+      var sa=(0,$imports.M)(spans[sp2][0]), sb=(0,$imports.M)(spans[sp2][1]), sw3=sb-sa-0.3, sx3=(sa+sb)/2;
       if(sw3<2) continue;
       var fz3=pz+bs*sd/2;
       facadeWindows(K,balFace,px,pz,sw,sd,sa+0.6,sb-0.6,dy-1.20,1.0,2.0,3.5,dfl+o.x);   /* 阳台门 */
@@ -426,7 +428,7 @@ function bldDorm(K,grp,o,px,pz,sw,sd){
       K.rod('metal',sx3-sw3*0.42,dy+1.55,fz3+bs*0.72,sx3+sw3*0.42,dy+1.55,fz3+bs*0.72,0.012,0.012,4,0xb8b2a8,1.0);   /* 晾衣杆 */
       var cl, cn3=Math.max(2,Math.round(sw3/5));
       for(cl=0;cl<cn3;cl++){
-        if(hash2(dfl*7+cl,o.x)<0.35) continue;
+        if((0,$imports.hash2)(dfl*7+cl,o.x)<0.35) continue;
         var ccx=sx3-sw3*0.40+cl*(sw3*0.80/Math.max(1,cn3-1));
         K.rod('metal',ccx-0.24,dy+1.52,fz3+bs*0.72,ccx+0.24,dy+1.52,fz3+bs*0.72,0.008,0.008,4,0x8a8a8a);   /* 衣架 */
         K.bevel('fabric',ccx,dy+1.16,fz3+bs*0.72,0.50,0.70,0.05,[0x5a6c7a,0x7a6a5a,0x6a7a64,0x8a7a80,0x6a6a7a][(cl+dfl)%5],1.0,0.02);   /* 校服 */
@@ -439,8 +441,8 @@ function bldDorm(K,grp,o,px,pz,sw,sd){
 function bldBell(K,grp,o,px,pz,sw,sd){
   var bh=19.0, bTop=15.2, fs2, f;
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,bTop/2,pz,sw,bTop,sd,BRICK,0.98);
-  plinthAround(K,px,pz,sw,sd,1.6,0.17,STONE);
+  K.box('brick',px,bTop/2,pz,sw,bTop,sd,$imports.BRICK,0.98);
+  plinthAround(K,px,pz,sw,sd,1.6,0.17,$imports.STONE);
   var FACES=['s','n','e','w'];
   for(f=0;f<4;f++){
     var face=FACES[f], horiz=(face==='s'||face==='n'), sg=(face==='s'||face==='e')?1:-1;
@@ -453,7 +455,7 @@ function bldBell(K,grp,o,px,pz,sw,sd){
       if(K.asset(twn,horiz?px+off:px+sg*sw/2,bTop*0.31,horiz?pz+sg*sd/2:pz+off,FACE_ROT[face])) continue;   /* 尖拱窗：石窗套、铁窗棂 */
       var wx=horiz?px+off:px+sg*(sw/2+0.02), wz=horiz?pz+sg*(sd/2+0.02):pz+off;
       var wsz=horiz?[sw*0.20,0.04]:[0.04,sd*0.20];
-      K.box('dark',wx,bTop*0.56,wz,wsz[0],bTop*0.50,wsz[1],WIN_DARK,1.0);
+      K.box('dark',wx,bTop*0.56,wz,wsz[0],bTop*0.50,wsz[1],$imports.WIN_DARK,1.0);
       K.box('stone',wx,bTop*0.31,wz+(horiz?sg*0.06:0),horiz?sw*0.24:0.14,0.10,horiz?0.14:sd*0.24,0xd8d4cb,1.0);
       K.cyl('stone',wx,bTop*0.81,wz,horiz?sw*0.11:0.05,0.02,0.4,8,0xd8d4cb,1.0);       /* 窗顶的尖拱 */
     }
@@ -473,7 +475,7 @@ function bldBell(K,grp,o,px,pz,sw,sd){
   var pv2;
   for(pv2=0;pv2<4;pv2++){
     var ax2=px+((pv2&1)?1:-1)*(sw/2-0.5), az2=pz+((pv2&2)?1:-1)*(sd/2-0.5);
-    K.bevel('brick',ax2,(bTop+bh)/2,az2,0.7,bh-bTop,0.7,BRICK,1.0,0.05);
+    K.bevel('brick',ax2,(bTop+bh)/2,az2,0.7,bh-bTop,0.7,$imports.BRICK,1.0,0.05);
   }
   K.box('concrete',px,bTop+0.05,pz,sw*0.96,0.1,sd*0.96,0x9a948a,1.0);
   K.bevel('stone',px,bTop+1.1,pz,sw*0.98,0.22,sd*0.98,0xc9c4bb,1.05,0.03);          /* 亭台栏板 */
@@ -495,9 +497,9 @@ function bldBell(K,grp,o,px,pz,sw,sd){
 function bldCanteen(K,grp,o,px,pz,sw,sd){
   var h=OBLD_H.canteen;
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,h/2,pz,sw,h,sd,BRICK,0.97);
-  plinthAround(K,px,pz,sw,sd,0.9,0.10,BASE_GREY);
-  K.box('plaster',px,h+0.16,pz,sw-0.02,0.32,sd-0.02,WHITEBAND,1.0);
+  K.box('brick',px,h/2,pz,sw,h,sd,$imports.BRICK,0.97);
+  plinthAround(K,px,pz,sw,sd,0.9,0.10,$imports.BASE_GREY);
+  K.box('plaster',px,h+0.16,pz,sw-0.02,0.32,sd-0.02,$imports.WHITEBAND,1.0);
   K.bevel('stone',px,h+0.40,pz,sw+0.2,0.08,sd+0.2,0xd8d4cb,1.0,0.02);
   bandAround(K,px,pz,sw,sd,4.3,0.20,0.06);
   lightningBelt(K,px,pz,sw+0.2,sd+0.2,h+0.44);
@@ -517,12 +519,12 @@ function bldCanteen(K,grp,o,px,pz,sw,sd){
 /* ---- 小平房：保安岗、器材室、垃圾站 ---- */
 function bldSmall(K,grp,o,px,pz,sw,sd){
   var h=OBLD_H[o.id]!==undefined?OBLD_H[o.id]:11.5;
-  var body=(o.id==='trash')?0xa8aca0:BRICK;
+  var body=(o.id==='trash')?0xa8aca0:$imports.BRICK;
   facadeDoor(o,px,pz,sw,sd,'small');
   K.box(o.id==='trash'?'concrete':'brick',px,h/2,pz,sw,h,sd,body,0.97);
-  plinthAround(K,px,pz,sw,sd,h*0.24,0.08,BASE_GREY);
+  plinthAround(K,px,pz,sw,sd,h*0.24,0.08,$imports.BASE_GREY);
   K.bevel('concrete',px,h+0.12,pz,sw+0.6,0.24,sd+0.6,0xc9c4bb,1.0,0.04);             /* 挑出来的屋面板 */
-  K.box('plaster',px,h-0.06,pz,sw*1.002,0.12,sd*1.002,WHITEBAND,1.0);
+  K.box('plaster',px,h-0.06,pz,sw*1.002,0.12,sd*1.002,$imports.WHITEBAND,1.0);
   var face=o.door||'s';
   if(o.id==='guard'){
     facadeWindows(K,'n',px,pz,sw,sd,px-sw/2+0.6,px+sw/2-0.6,1.8,1.8,1.2,2.2,1);      /* 朝校门的大窗 */
@@ -544,7 +546,7 @@ function bldSmall(K,grp,o,px,pz,sw,sd){
 /* ---- 电动车棚：钢柱、波纹顶、一排车 ---- */
 function bldShed(K,o,px,pz,sw,sd){
   var hgt=OBLD_H.shed, sc, sn=Math.max(5,Math.round(sd/4));
-  if(Math.abs(sw-8)<0.3&&Assets.has('shed_frame')){
+  if(Math.abs(sw-8)<0.3&&$imports.Assets.has('shed_frame')){
     /* 门式钢架、一米一段的波纹板屋面（按棚长等分、略拉伸）、隔几根柱子一个充电箱；车棚宽 8 米（模型按这个尺寸建的） */
     for(sc=0;sc<=sn;sc++){
       var fz=pz-sd*0.46+sc*(sd*0.92/sn);
@@ -561,16 +563,16 @@ function bldShed(K,o,px,pz,sw,sd){
     K.rod('metal',px-sw*0.42,hgt,szz,px+sw*0.42,hgt-0.4,szz,0.06,0.06,6,0x2b343b);
   }
   var rb, rn=Math.round(sw/0.5);
-  if(!(Math.abs(sw-8)<0.3&&Assets.has('shed_frame')))
+  if(!(Math.abs(sw-8)<0.3&&$imports.Assets.has('shed_frame')))
   for(rb=0;rb<rn;rb++){                                                               /* 波纹板 */
     var rx=px-sw/2+(rb+0.5)*sw/rn, ry=hgt+0.06-(rb+0.5)/rn*0.4;
     K.box('metal',rx,ry+(rb%2?0.03:0),pz,sw/rn+0.01,0.03,sd,0x3a4a52,rb%2?1.05:0.95);
   }
   var bk2, bkn=Math.floor(sd/1.1);
   for(bk2=0;bk2<bkn;bk2++){
-    if(hash2(bk2,57)<0.28) continue;
+    if((0,$imports.hash2)(bk2,57)<0.28) continue;
     var bz5=pz-sd/2+0.8+bk2*1.1, bcol=[0x3a4a5a,0x6a2a2a,0xd8d4cc,0x2a2e33,0x4a6a4a][bk2%5], bx5=px-sw*0.10;
-    if(!K.asset('ebike',bx5,0,bz5,0,{tint:{body:bcol}})) ebikeModel(K,bx5,bz5,0,bcol,lodLow());
+    if(!K.asset('ebike',bx5,0,bz5,0,{tint:{body:bcol}})) ebikeModel(K,bx5,bz5,0,bcol,(0,$imports.lodLow)());
   }
 }
 /* 电动车：后半截车身（座垫下面是电池仓）、前面的护板、踏板、两个小轮子、车把和后视镜。车头朝局部 +x */
@@ -603,8 +605,8 @@ function bldLink(K,o,px,pz,sw,sd){
   var lv, flr=3.2;
   for(lv=0;lv<5;lv++){
     var ly=flr*(lv+1);
-    K.box('concrete',px,ly-0.16,pz,sw,0.32,sd,BRICK,1.02);
-    K.box('plaster',px,ly-0.34,pz,sw*0.99,0.06,sd*0.99,WHITEBAND,1.0);
+    K.box('concrete',px,ly-0.16,pz,sw,0.32,sd,$imports.BRICK,1.02);
+    K.box('plaster',px,ly-0.34,pz,sw*0.99,0.06,sd*0.99,$imports.WHITEBAND,1.0);
     if(lv<4){
       var rn=Math.max(3,Math.round(sd/1.15)), rk;
       for(rk=0;rk<=rn;rk++){
@@ -621,8 +623,8 @@ function bldLink(K,o,px,pz,sw,sd){
   var cn=3, ck2;
   for(ck2=0;ck2<=cn;ck2++){
     var czx=px-sw/2+(sw/cn)*ck2;
-    K.bevel('brick',czx,8.0,pz-sd/2+0.4,0.42,16.0,0.42,BRICK,0.94,0.03);
-    K.bevel('brick',czx,8.0,pz+sd/2-0.4,0.42,16.0,0.42,BRICK,0.94,0.03);
+    K.bevel('brick',czx,8.0,pz-sd/2+0.4,0.42,16.0,0.42,$imports.BRICK,0.94,0.03);
+    K.bevel('brick',czx,8.0,pz+sd/2-0.4,0.42,16.0,0.42,$imports.BRICK,0.94,0.03);
   }
   K.bevel('concrete',px,16.20,pz,sw*1.02,0.30,sd*1.02,0x8b3a2e,1.0,0.04);
 }
@@ -652,22 +654,12 @@ function garageRamp(K,px,pz,sw,sd){
   }
 }
 /* ---- 地下车库人行口：一个玻璃顶的楼梯间 ---- */
-function garagePed(K,px,pz,sw,sd){
-  var w=Math.min(sw,7.0), d=Math.min(sd,5.0), h=3.0;
-  K.box('plaster',px,h/2,pz,w,h,d,0x9a958c,1.0);
-  K.bevel('concrete',px,h+0.12,pz,w+0.4,0.24,d+0.4,0x5a646a,1.0,0.04);
-  K.box('glass',px,h-0.5,pz+d/2+0.02,w*0.92,0.8,0.02,0x2a3a44,1.1);
-  K.box('dark',px,h-0.5,pz+d/2+0.01,w*0.92,0.8,0.01,0x0a0e10,1.0);
-  K.bevel('metal',px,1.05,pz+d/2+0.04,1.6,2.1,0.06,0x2a3136,1.0,0.01);
-  K.box('plastic',px,2.3,pz+d/2+0.06,1.4,0.24,0.04,0x1d3a5a,1.2);
-  K.box('emit',px+0.45,2.3,pz+d/2+0.09,0.3,0.12,0.02,0x2fae6a,1.0);
-  addSolidM(px,pz,w/2,d/2);
-}
+
 /* 一面墙上没被别的楼挡住的区段（地图单位的 x 区间） */
 function faceFreeSpans(o,face){
   var fy=(face==='s')?o.y+o.h:o.y, spans=[[o.x,o.x+o.w]], i, j;
-  for(i=0;i<OBJ.length;i++){
-    var b=OBJ[i]; if(b===o||b.k!=='roof') continue;
+  for(i=0;i<$imports.OBJ.length;i++){
+    var b=$imports.OBJ[i]; if(b===o||b.k!=='roof') continue;
     if(fy<b.y-2||fy>b.y+b.h+2) continue;
     var out=[];
     for(j=0;j<spans.length;j++){
@@ -682,122 +674,18 @@ function faceFreeSpans(o,face){
 }
 
 /* ---- 球场、操场 ---- */
-function fieldModel(K,o,px,pz,sw,sd){
-  var trackW=Math.min(sw,sd)*0.17;
-  var ix0=px-sw/2+trackW, ix1=px+sw/2-trackW, iz0=pz-sd/2+trackW, iz1=pz+sd/2-trackW, ln;
-  var F=K.g('court');
-  /* 塑胶跑道：一圈四条（不和内场草皮叠在一起） */
-  F.quad(px-sw/2,pz-sd/2, px+sw/2,pz-sd/2, px+sw/2,iz0, px-sw/2,iz0, 0.060, 0xa0443a);
-  F.quad(px-sw/2,iz1, px+sw/2,iz1, px+sw/2,pz+sd/2, px-sw/2,pz+sd/2, 0.060, 0xa0443a);
-  F.quad(px-sw/2,iz0, ix0,iz0, ix0,iz1, px-sw/2,iz1, 0.060, 0xa0443a);
-  F.quad(ix1,iz0, px+sw/2,iz0, px+sw/2,iz1, ix1,iz1, 0.060, 0xa0443a);
-  for(ln=1;ln<=4;ln++){
-    var off=trackW*ln/5;
-    F.quad(px-sw/2+off,pz-sd/2+off, px+sw/2-off,pz-sd/2+off, px+sw/2-off,pz-sd/2+off+0.12, px-sw/2+off,pz-sd/2+off+0.12, 0.064, 0xe8e6e0);
-    F.quad(px-sw/2+off,pz+sd/2-off-0.12, px+sw/2-off,pz+sd/2-off-0.12, px+sw/2-off,pz+sd/2-off, px-sw/2+off,pz+sd/2-off, 0.064, 0xe8e6e0);
-    F.quad(px-sw/2+off,pz-sd/2+off, px-sw/2+off+0.12,pz-sd/2+off, px-sw/2+off+0.12,pz+sd/2-off, px-sw/2+off,pz+sd/2-off, 0.064, 0xe8e6e0);
-    F.quad(px+sw/2-off-0.12,pz-sd/2+off, px+sw/2-off,pz-sd/2+off, px+sw/2-off,pz+sd/2-off, px+sw/2-off-0.12,pz+sd/2-off, 0.064, 0xe8e6e0);
-  }
-  /* 人造草：一条条深浅相间 */
-  var st, nst=10;
-  for(st=0;st<nst;st++){
-    var za=iz0+(iz1-iz0)*st/nst, zb=iz0+(iz1-iz0)*(st+1)/nst;
-    K.g('fgrass').quad(ix0,za, ix1,za, ix1,zb, ix0,zb, 0.062, st%2?0x3f6b3f:0x467548);
-  }
-  F.quad(ix0,(iz0+iz1)/2-0.06, ix1,(iz0+iz1)/2-0.06, ix1,(iz0+iz1)/2+0.06, ix0,(iz0+iz1)/2+0.06, 0.066, 0xe4e2dc);   /* 中线 */
-  var k, cr=Math.min(ix1-ix0,iz1-iz0)*0.16, ci;
-  for(ci=0;ci<OBJ.length;ci++){                       /* 中圈不压到内场里的篮球场 */
-    var co=OBJ[ci]; if(co.k!=='court') continue;
-    var cz0=M(co.y), cz1=M(co.y+co.h), czc=(iz0+iz1)/2;
-    if(M(co.x)<ix1&&M(co.x+co.w)>ix0){ if(cz1<=czc) cr=Math.min(cr,czc-cz1-0.15); else if(cz0>=czc) cr=Math.min(cr,cz0-czc-0.15); }
-  }
-  for(k=0;k<24;k++){ var a=k/24*6.283, b=(k+1)/24*6.283, cxm=(ix0+ix1)/2, czm=(iz0+iz1)/2;
-    K.rod('court',cxm+Math.cos(a)*cr,0.068,czm+Math.sin(a)*cr,cxm+Math.cos(b)*cr,0.068,czm+Math.sin(b)*cr,0.05,0.05,4,0xe4e2dc); }
-  K.box('court',px,0.065,iz0,ix1-ix0,0.01,0.12,0xe4e2dc,1);
-  K.box('court',px,0.065,iz1,ix1-ix0,0.01,0.12,0xe4e2dc,1);
-  K.box('court',ix0,0.065,pz,0.12,0.01,iz1-iz0,0xe4e2dc,1);
-  K.box('court',ix1,0.065,pz,0.12,0.01,iz1-iz0,0xe4e2dc,1);
-  F.quad(ix1-6,iz0+4, ix1-2,iz0+4, ix1-2,iz0+8, ix1-6,iz0+8, 0.070, 0xc8b98a);           /* 沙坑 */
-  var gl2;
-  for(gl2=0;gl2<2;gl2++){                                                                  /* 两头的球门 */
-    var gzz=gl2?iz1-0.6:iz0+0.6, gsg=gl2?1:-1;
-    if(K.asset('soccer_goal',px,0,gzz,gl2?Math.PI:0)){ addSolidM(px-1.6,gzz,0.1,0.1); addSolidM(px+1.6,gzz,0.1,0.1); continue; }
-    K.rod('metal',px-1.6,0,gzz,px-1.6,2.0,gzz,0.05,0.05,8,0xe8e8e2,1.1);
-    K.rod('metal',px+1.6,0,gzz,px+1.6,2.0,gzz,0.05,0.05,8,0xe8e8e2,1.1);
-    K.rod('metal',px-1.6,2.0,gzz,px+1.6,2.0,gzz,0.05,0.05,8,0xe8e8e2,1.1);
-    K.rod('metal',px-1.6,2.0,gzz,px-1.6,0,gzz+gsg*0.9,0.025,0.025,5,0xc8ccc8);
-    K.rod('metal',px+1.6,2.0,gzz,px+1.6,0,gzz+gsg*0.9,0.025,0.025,5,0xc8ccc8);
-    K.box('fabric',px,1.0,gzz+gsg*0.9,3.2,1.9,0.01,0xc8ccc8,0.85);
-    K.box('fabric',px-1.6,1.0,gzz+gsg*0.45,0.01,1.9,0.9,0xc8ccc8,0.85);
-    K.box('fabric',px+1.6,1.0,gzz+gsg*0.45,0.01,1.9,0.9,0xc8ccc8,0.85);
-    addSolidM(px-1.6,gzz,0.1,0.1); addSolidM(px+1.6,gzz,0.1,0.1);
-  }
-}
-function courtModel(K,o,px,pz,sw,sd){
-  var base=PALETTE[o.k]||PALETTE.roof;
-  if(o.k==='garden'){ K.g('fgrass').quad(px-sw/2,pz-sd/2, px+sw/2,pz-sd/2, px+sw/2,pz+sd/2, px-sw/2,pz+sd/2, 0.012, 0x5f8a56); return; }
-  K.bevel('court',px,0.045,pz,sw,0.09,sd,base,1.0,0.03);
-  K.box('court',px,0.092,pz-sd/2+0.12,sw-0.2,0.004,0.08,0xd8d8d0,1);
-  K.box('court',px,0.092,pz+sd/2-0.12,sw-0.2,0.004,0.08,0xd8d8d0,1);
-  K.box('court',px-sw/2+0.12,0.092,pz,0.08,0.004,sd-0.2,0xd8d8d0,1);
-  K.box('court',px+sw/2-0.12,0.092,pz,0.08,0.004,sd-0.2,0xd8d8d0,1);
-  if(o.k==='track'){
-    var ln; for(ln=1;ln<4;ln++) K.box('court',px,0.092,pz-sd/2+sd*ln/4,sw-0.3,0.004,0.06,0xd8d8d0,1);
-    return;
-  }
-  var along=(sw>sd);
-  K.box('court',along?px:px,0.092,along?pz:pz,along?0.06:sw-0.2,0.004,along?sd-0.2:0.06,0xd8d8d0,1);   /* 中线 */
-  courtGear(K,o,px,pz,sw,sd);
-}
-function courtGear(K,o,px,pz,sw,sd){
-  var along=(sw>sd), i;
-  if(o.id.indexOf('bad')===0){
-    var nC=(o.id==='bad3')?3:2;
-    for(i=0;i<nC;i++){
-      var cxn=along?(px-sw/2+(i+0.5)*sw/nC):px, czn=along?pz:(pz-sd/2+(i+0.5)*sd/nC);
-      var len=along?sd*0.86:sw*0.86;
-      if(along&&Assets.has('badminton_post')){
-        K.asset('badminton_post',cxn,0.09,czn-len/2,Math.PI/2); K.asset('badminton_post',cxn,0.09,czn+len/2,-Math.PI/2);   /* 立在球场面层上 */
-        K.box('fabric',cxn,1.20,czn,0.01,0.72,len,0xd8d8d2,0.9);
-        K.box('fabric',cxn,1.55,czn,0.03,0.04,len,0xf0f0ea,1.0);
-        addSolidM(cxn,czn-len/2,0.1,0.1); addSolidM(cxn,czn+len/2,0.1,0.1);
-      }else if(along){
-        K.rod('metal',cxn,0,czn-len/2,cxn,1.55,czn-len/2,0.03,0.03,6,0x3a3f44);
-        K.rod('metal',cxn,0,czn+len/2,cxn,1.55,czn+len/2,0.03,0.03,6,0x3a3f44);
-        K.box('fabric',cxn,1.20,czn,0.01,0.72,len,0xd8d8d2,0.9);
-        K.box('fabric',cxn,1.55,czn,0.03,0.04,len,0xf0f0ea,1.0);
-        addSolidM(cxn,czn-len/2,0.1,0.1); addSolidM(cxn,czn+len/2,0.1,0.1);
-      }else{
-        K.box('fabric',cxn,1.20,czn,len,0.72,0.01,0xd8d8d2,0.9);
-      }
-    }
-    return;
-  }
-  for(i=0;i<2;i++){                                         /* 篮球架：立柱、斜臂、篮板、篮筐 */
-    var sg=i?1:-1;
-    var hx=along?px+sg*(sw/2-0.4):px, hz=along?pz:pz+sg*(sd/2-0.4);
-    var bx=along?-sg*1.2:0, bz=along?0:-sg*1.2;
-    if(K.asset('hoop_stand',hx,0.09,hz,along?-sg*Math.PI/2:(sg>0?Math.PI:0))){ addSolidM(hx,hz,0.3,0.3); continue; }   /* 伸臂朝球场中间，墩子坐在面层上 */
-    K.cyl('metal',hx,0,hz,0.10,0.08,3.2,10,0x2f3a44,1.0);
-    K.bevel('concrete',hx,0.15,hz,0.6,0.3,0.6,0x8a8a86,1,0.03);
-    K.rod('metal',hx,3.0,hz,hx+bx*0.9,3.25,hz+bz*0.9,0.05,0.05,6,0x2f3a44);
-    K.bevel('plastic',hx+bx,3.25,hz+bz,along?0.05:1.8,1.05,along?1.8:0.05,0xe8e8e4,1.05,0.015);
-    K.box('emit',hx+bx-(along?sg*0.03:0),3.10,hz+bz-(along?0:sg*0.03),along?0.004:0.6,0.45,along?0.6:0.004,0xc04a2a,0.7);
-    var rk, rr=0.23, rcx=hx+bx*1.20, rcz=hz+bz*1.20;
-    for(rk=0;rk<12;rk++){ var a1=rk/12*6.283, a2=(rk+1)/12*6.283; K.rod('metal',rcx+Math.cos(a1)*rr,2.95,rcz+Math.sin(a1)*rr,rcx+Math.cos(a2)*rr,2.95,rcz+Math.sin(a2)*rr,0.012,0.012,4,0xc0502a,1.1); }
-    for(rk=0;rk<8;rk++){ var a3=rk/8*6.283; K.rod('fabric',rcx+Math.cos(a3)*rr,2.95,rcz+Math.sin(a3)*rr,rcx+Math.cos(a3)*rr*0.6,2.55,rcz+Math.sin(a3)*rr*0.6,0.004,0.004,3,0xe8e8e0); }
-    addSolidM(hx,hz,0.3,0.3);
-  }
-}
+
+
+
 
 /* ---- 围墙：毛石基座 + 墙帽 + 铁艺栏杆（立杆顶上有矛尖）；三个校门处留口子 ---- */
 function fenceRun(K,fx,fz,len,horiz,noA,noB){   /* noA / noB：这一头挨着校门的门柱，不再立墙柱 */
   if(len<0.3) return;
-  var baseH=1.5, railH=1.5, t=0.62, low=lodLow();
+  var baseH=1.5, railH=1.5, t=0.62, low=(0,$imports.lodLow)();
   function B(m,u,y,s,l,h,d,col,sh){ if(horiz) K.box(m,fx+u,y,fz+s,l,h,d,col,sh); else K.box(m,fx+s,y,fz+u,d,h,l,col,sh); }
-  B('stone',0,baseH/2,0,len,baseH,t,STONE,1.0);
+  B('stone',0,baseH/2,0,len,baseH,t,$imports.STONE,1.0);
   B('stone',0,baseH+0.06,0,len+0.02,0.12,t+0.10,0x8f938f,1.05);
-  if(!low&&Assets.has('fence_panel_200')){
+  if(!low&&$imports.Assets.has('fence_panel_200')){
     /* 石柱、两米一段的铁艺栏杆（矛尖、上下横档）是模型；柱距四米左右，一段段栏杆按柱间净距等分、沿墙拉伸 */
     var pm=Math.max(1,Math.round(len/4)), pr=horiz?0:Math.PI/2, pk, pj;
     for(pk=0;pk<=pm;pk++){ if((pk===0&&noA)||(pk===pm&&noB)) continue; var pu=-len/2+(len/pm)*pk; K.asset('fence_pillar',horiz?fx+pu:fx,0,horiz?fz:fz+pu,pr); }
@@ -809,10 +697,10 @@ function fenceRun(K,fx,fz,len,horiz,noA,noB){   /* noA / noB：这一头挨着�
   }
   B('metal',0,baseH+railH,0,len,0.06,0.06,0x2f6b3f,1.0);
   B('metal',0,baseH+0.30,0,len,0.05,0.05,0x2f6b3f,1.0);
-  var n=Math.max(2,Math.round(len/Quality.get().fenceStep)), k;
+  var n=Math.max(2,Math.round(len/$imports.Quality.get().fenceStep)), k;
   for(k=0;k<=n;k++){
     var u=-len/2+(len/n)*k;
-    var spear=Quality.get().facadeDetail;                                   /* 矛尖只在「精细」及以上画 */
+    var spear=$imports.Quality.get().facadeDetail;                                   /* 矛尖只在「精细」及以上画 */
     if(horiz){ K.rod('metal',fx+u,baseH+0.12,fz,fx+u,baseH+railH+0.12,fz,0.016,0.016,4,0x2f6b3f); if(spear) K.cyl('metal',fx+u,baseH+railH+0.12,fz,0.03,0.0,0.12,4,0x2f6b3f); }
     else { K.rod('metal',fx,baseH+0.12,fz+u,fx,baseH+railH+0.12,fz+u,0.016,0.016,4,0x2f6b3f); if(spear) K.cyl('metal',fx,baseH+railH+0.12,fz+u,0.03,0.0,0.12,4,0x2f6b3f); }
   }
@@ -826,7 +714,7 @@ function fenceRun(K,fx,fz,len,horiz,noA,noB){   /* noA / noB：这一头挨着�
 }
 function fenceSide(K,horiz,fixed,a0,a1,gaps){
   gaps=gaps.slice().sort(function(p,q){ return p[0]-q[0]; });
-  var cur=a0, gi, ng=Assets.has('gate_pillar');
+  var cur=a0, gi, ng=$imports.Assets.has('gate_pillar');
   for(gi=0;gi<gaps.length;gi++){
     var g0=gaps[gi][0]-gaps[gi][1], g1=gaps[gi][0]+gaps[gi][1];
     if(g0>cur){ if(horiz) fenceRun(K,(cur+g0)/2,fixed,g0-cur,true,ng&&cur>a0,ng); else fenceRun(K,fixed,(cur+g0)/2,g0-cur,false,ng&&cur>a0,ng); }
@@ -836,10 +724,10 @@ function fenceSide(K,horiz,fixed,a0,a1,gaps){
 }
 /* 校门：vert=true 时门开在东西两侧的墙上 */
 function gateModel(K,grp,wx,wy,wide,tallSign,vert,name){
-  var gx=wx*SC*U2M, gz=wy*SC*U2M;
+  var gx=wx*$imports.SC*$imports.U2M, gz=wy*$imports.SC*$imports.U2M;
   K.frame(gx,gz,vert?Math.PI/2:0);
   var pw=0.70, ph=tallSign?4.6:3.0;
-  if(Assets.has('gate_pillar')){
+  if($imports.Assets.has('gate_pillar')){
     /* 门柱（正门的高到门头梁）、一段段的铁栅门（金色矛尖）、三辊闸、侧门上锁着的铁链和挂锁是模型 */
     var pn=tallSign?'gate_pillar_tall':'gate_pillar', gw=wide*0.60, g0=-wide/2+pw*0.5, gn=Math.max(1,Math.round(gw/1.2)), gl=gw/gn, gk;
     K.asset(pn,-wide/2,0,0,0); K.asset(pn,wide/2,0,0,0);
@@ -896,15 +784,15 @@ function gateModel(K,grp,wx,wy,wide,tallSign,vert,name){
    以前是一长串 if；加一种楼只要在表里加一行 */
 var BLD_BY_ID={
   garage:function(K,grp,o,px,pz,sw,sd){ garageRamp(K,px,pz,sw,sd); },
-  garw:  function(K,grp,o,px,pz,sw,sd){ garagePed(K,px,pz,sw,sd); },
+  garw:  function(K,grp,o,px,pz,sw,sd){ (0,$imports.garagePed)(K,px,pz,sw,sd); },
   bell:   function(K,grp,o,px,pz,sw,sd){ bldBell(K,grp,o,px,pz,sw,sd); },
   dormN:  function(K,grp,o,px,pz,sw,sd){ bldDorm(K,grp,o,px,pz,sw,sd); },
   canteen:function(K,grp,o,px,pz,sw,sd){ bldCanteen(K,grp,o,px,pz,sw,sd); },
   shed:  function(K,grp,o,px,pz,sw,sd){ bldShed(K,o,px,pz,sw,sd); }
 };
 var BLD_BY_KIND={
-  field: function(K,grp,o,px,pz,sw,sd){ fieldModel(K,o,px,pz,sw,sd); },
-  court: function(K,grp,o,px,pz,sw,sd){ courtModel(K,o,px,pz,sw,sd); },
+  field: function(K,grp,o,px,pz,sw,sd){ (0,$imports.fieldModel)(K,o,px,pz,sw,sd); },
+  court: function(K,grp,o,px,pz,sw,sd){ (0,$imports.courtModel)(K,o,px,pz,sw,sd); },
   link:  function(K,grp,o,px,pz,sw,sd){ bldLink(K,o,px,pz,sw,sd); }
 };
 BLD_BY_KIND.track=BLD_BY_KIND.court; BLD_BY_KIND.garden=BLD_BY_KIND.court; BLD_BY_ID.dormS=BLD_BY_ID.dormN;
@@ -913,38 +801,82 @@ function bldBuilderOf(o){
                                                     :function(K,grp,o2,px,pz,sw,sd){ bldSmall(K,grp,o2,px,pz,sw,sd); });
 }
 function buildOutdoorGeometry(){
-  var K=new Kit({cull:{floor:0.002},chunk:64,inst:1,sparse:Quality.get().lod>=2?2:0}), grp=new THREE.Group(), i; /* 流畅、均衡和精细合并稀疏小物件 */
-  var x0=BOUND.x0*SC*U2M, y0=BOUND.y0*SC*U2M;
-  var x1=BOUND.x1*SC*U2M, y1=BOUND.y1*SC*U2M;
+  var K=new $imports.Kit({cull:{floor:0.002},chunk:64,inst:1,sparse:$imports.Quality.get().lod>=2?2:0}), grp=new $imports.THREE.Group(), i; /* 流畅、均衡和精细合并稀疏小物件 */
+  var x0=$imports.BOUND.x0*$imports.SC*$imports.U2M, y0=$imports.BOUND.y0*$imports.SC*$imports.U2M;
+  var x1=$imports.BOUND.x1*$imports.SC*$imports.U2M, y1=$imports.BOUND.y1*$imports.SC*$imports.U2M;
   var cx=(x0+x1)/2, cz=(y0+y1)/2;
-  OUTX={treeN:0};
-  OUT_SOLID=[]; OUT_LAMPS=[];
-  addOutdoorProps(K, x0, y0, x1, y1);
+  $imports.OUTX={treeN:0};
+  K.solids=[]; K.lamps=[];
+  (0,$imports.addOutdoorProps)(K, x0, y0, x1, y1);
 
-  for(i=0;i<OBJ.length;i++){
-    var o=OBJ[i], ow=objWorld(o);
-    var px=(ow.x+ow.w/2)*U2M, pz=(ow.y+ow.h/2)*U2M;
-    var sw=ow.w*U2M, sd=ow.h*U2M;
+  for(i=0;i<$imports.OBJ.length;i++){
+    var o=$imports.OBJ[i], ow=(0,$imports.objWorld)(o);
+    var px=(ow.x+ow.w/2)*$imports.U2M, pz=(ow.y+ow.h/2)*$imports.U2M;
+    var sw=ow.w*$imports.U2M, sd=ow.h*$imports.U2M;
     FAC.o=o; FAC.gap=null;
-    if(o.k==='link'&&DEV_HIDE.link) continue;
+    if(o.k==='link'&&$imports.DEV_HIDE.link) continue;
     bldBuilderOf(o)(K,grp,o,px,pz,sw,sd);
   }
   FAC.o=null; FAC.gap=null;
-  if(!DEV_HIDE.fence){
-    var gN=GATE_N.x*SC*U2M, gWz=GATE_W.y*SC*U2M, gS=GATE_S.x*SC*U2M;
+  if(!$imports.DEV_HIDE.fence){
+    var gN=$imports.GATE_N.x*$imports.SC*$imports.U2M, gWz=$imports.GATE_W.y*$imports.SC*$imports.U2M, gS=$imports.GATE_S.x*$imports.SC*$imports.U2M;
     var NW=12.0, WW=5.0, SW2=5.4;
-    gateModel(K,grp,GATE_N.x,GATE_N.y,NW,true,false);
-    gateModel(K,grp,GATE_W.x,GATE_W.y,WW,false,true);
-    gateModel(K,grp,GATE_S.x,GATE_S.y,SW2,false,false);
+    gateModel(K,grp,$imports.GATE_N.x,$imports.GATE_N.y,NW,true,false);
+    gateModel(K,grp,$imports.GATE_W.x,$imports.GATE_W.y,WW,false,true);
+    gateModel(K,grp,$imports.GATE_S.x,$imports.GATE_S.y,SW2,false,false);
     /* 墙段从校门门柱的外侧面开始（端头那根墙柱正好贴着门柱）；东西两侧的墙段从南北墙的外侧面开始，拐角不再两段叠在一起 */
-    var GP=Assets.has('gate_pillar')?0.35+0.07:0.35+0.21, CW=0.36+0.21;   /* 门柱是模型时，墙段从门柱基座外沿开始，挨着门柱的那头不立墙柱 */
+    var GP=$imports.Assets.has('gate_pillar')?0.35+0.07:0.35+0.21, CW=0.36+0.21;   /* 门柱是模型时，墙段从门柱基座外沿开始，挨着门柱的那头不立墙柱 */
     fenceSide(K,true,  y0, x0, x1, [[gN,NW/2+GP]]);
     fenceSide(K,true,  y1, x0, x1, [[gS,SW2/2+GP]]);
     fenceSide(K,false, x0, y0+CW, y1-CW, [[gWz,WW/2+GP]]);
     fenceSide(K,false, x1, y0+CW, y1-CW, []);
   }
+  $imports.OUTX.treeN=K.treeN;$imports.OUT_LAMPS=K.lamps;
   K.build(grp);
-  try{ addGrass(grp); }catch(e){}
-  try{ if(!DEV_HIDE.sign) addGardenSign(grp); }catch(e){}
+  try{ (0,$imports.addGrass)(grp); }catch(e){}
+  try{ if(!$imports.DEV_HIDE.sign) addGardenSign(grp); }catch(e){}
   return grp;
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/model/building.js",{
+"OBLD_H":{get:function(){return OBLD_H;},set:function($value){OBLD_H=$value;}},
+"BLD_NAME":{get:function(){return BLD_NAME;},set:function($value){BLD_NAME=$value;}},
+"SIGN_TEX":{get:function(){return SIGN_TEX;},set:function($value){SIGN_TEX=$value;}},
+"signMesh":{get:function(){return signMesh;},set:function($value){signMesh=$value;}},
+"placeSign":{get:function(){return placeSign;},set:function($value){placeSign=$value;}},
+"FAC":{get:function(){return FAC;},set:function($value){FAC=$value;}},
+"objHeightM":{get:function(){return objHeightM;},set:function($value){objHeightM=$value;}},
+"facadeDoor":{get:function(){return facadeDoor;},set:function($value){facadeDoor=$value;}},
+"facadeBlocked":{get:function(){return facadeBlocked;},set:function($value){facadeBlocked=$value;}},
+"plinthAround":{get:function(){return plinthAround;},set:function($value){plinthAround=$value;}},
+"facadeWindows":{get:function(){return facadeWindows;},set:function($value){facadeWindows=$value;}},
+"FACE_ROT":{get:function(){return FACE_ROT;},set:function($value){FACE_ROT=$value;}},
+"downpipe":{get:function(){return downpipe;},set:function($value){downpipe=$value;}},
+"lightningBelt":{get:function(){return lightningBelt;},set:function($value){lightningBelt=$value;}},
+"solarHeater":{get:function(){return solarHeater;},set:function($value){solarHeater=$value;}},
+"bandAround":{get:function(){return bandAround;},set:function($value){bandAround=$value;}},
+"acUnit":{get:function(){return acUnit;},set:function($value){acUnit=$value;}},
+"roofTop":{get:function(){return roofTop;},set:function($value){roofTop=$value;}},
+"addEntrance":{get:function(){return addEntrance;},set:function($value){addEntrance=$value;}},
+"addSmallDoor":{get:function(){return addSmallDoor;},set:function($value){addSmallDoor=$value;}},
+"addGardenSign":{get:function(){return addGardenSign;},set:function($value){addGardenSign=$value;}},
+"bldClassroom":{get:function(){return bldClassroom;},set:function($value){bldClassroom=$value;}},
+"bldDorm":{get:function(){return bldDorm;},set:function($value){bldDorm=$value;}},
+"bldBell":{get:function(){return bldBell;},set:function($value){bldBell=$value;}},
+"bldCanteen":{get:function(){return bldCanteen;},set:function($value){bldCanteen=$value;}},
+"bldSmall":{get:function(){return bldSmall;},set:function($value){bldSmall=$value;}},
+"bldShed":{get:function(){return bldShed;},set:function($value){bldShed=$value;}},
+"ebikeModel":{get:function(){return ebikeModel;},set:function($value){ebikeModel=$value;}},
+"bldLink":{get:function(){return bldLink;},set:function($value){bldLink=$value;}},
+"garageRamp":{get:function(){return garageRamp;},set:function($value){garageRamp=$value;}},
+"faceFreeSpans":{get:function(){return faceFreeSpans;},set:function($value){faceFreeSpans=$value;}},
+"fenceRun":{get:function(){return fenceRun;},set:function($value){fenceRun=$value;}},
+"fenceSide":{get:function(){return fenceSide;},set:function($value){fenceSide=$value;}},
+"gateModel":{get:function(){return gateModel;},set:function($value){gateModel=$value;}},
+"BLD_BY_ID":{get:function(){return BLD_BY_ID;},set:function($value){BLD_BY_ID=$value;}},
+"BLD_BY_KIND":{get:function(){return BLD_BY_KIND;},set:function($value){BLD_BY_KIND=$value;}},
+"bldBuilderOf":{get:function(){return bldBuilderOf;},set:function($value){bldBuilderOf=$value;}},
+"buildOutdoorGeometry":{get:function(){return buildOutdoorGeometry;},set:function($value){buildOutdoorGeometry=$value;}}
+});
+})(GameModules.imports("game3d/js/model/building.js"));

@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 建模工具
    GeoBuilder：往一个 BufferGeometry 里加图元（盒、倒角盒、圆柱/圆台、两点之间的杆、椭球、四边形）。
      · 顶点色决定颜色；贴图坐标按世界坐标投影（法线朝哪个轴就用另外两个轴），所以纹理在物体之间连续。
@@ -9,18 +11,13 @@
    写实化（见「建模写实化」）：圆柱、杆、椭球平滑着色；旋转体 lathe、挤出体 prism、叶片卡 leafCards；Kit.sub 嵌套坐标。 */
 'use strict';
 
-function hash2(a,b){ var h=(a*374761393+b*668265263)^0x5bf03635; h=(h^(h>>13))*1274126177; return ((h^(h>>16))>>>0)/4294967295; }
-function shadeHex(col,s){
-  var r=Math.min(255,Math.max(0,((col>>16)&255)*s))|0;
-  var g=Math.min(255,Math.max(0,((col>>8)&255)*s))|0;
-  var b=Math.min(255,Math.max(0,(col&255)*s))|0;
-  return (r<<16)|(g<<8)|b;
-}
-function lodLow(){ return Quality.get().lodLow; }
+
+
+
 /* 「真实」档：没有硬棱——盒子都是圆角盒，圆柱两头收圆边，杆和圆柱一律平滑着色 */
-function lodSmooth(){ return Quality.get().smooth; }
+
 /* 圆柱、杆、椭球的分段数按档位缩放：流畅 0.6 倍、超精细 1.75 倍、真实 2.6 倍 */
-function lodSeg(seg,min){ return Math.max(min||4,Math.round(seg*Quality.get().segments)); }
+
 
 var UVTILE=2.4;
 /* ---- 存储：类型化数组，按需翻倍扩容 ----
@@ -107,7 +104,7 @@ GeoBuilder.prototype.face=function(pts,n,rgb,noTf,vn,uvs){
   this.v=v+m;
 };
 GeoBuilder.prototype.box=function(x,y,z,sx,sy,sz,col,shade){
-  if(lodSmooth()){ var md=Math.min(sx,sy,sz); if(md>=0.008){ this.roundBox(x,y,z,sx,sy,sz,col,shade,Math.min(0.01,md*0.2),1); return; } }
+  if((0,$imports.lodSmooth)()){ var md=Math.min(sx,sy,sz); if(md>=0.008){ this.roundBox(x,y,z,sx,sy,sz,col,shade,Math.min(0.01,md*0.2),1); return; } }
   var rgb=this._rgb(col,shade), hx=sx/2,hy=sy/2,hz=sz/2;
   this.face([[x-hx,y-hy,z+hz],[x+hx,y-hy,z+hz],[x+hx,y+hy,z+hz],[x-hx,y+hy,z+hz]],[0,0,1],rgb);
   this.face([[x+hx,y-hy,z-hz],[x-hx,y-hy,z-hz],[x-hx,y+hy,z-hz],[x+hx,y+hy,z-hz]],[0,0,-1],rgb);
@@ -164,8 +161,8 @@ GeoBuilder.prototype.roundBox=function(x,y,z,sx,sy,sz,col,shade,r,seg){
 GeoBuilder.prototype.bevel=function(x,y,z,sx,sy,sz,col,shade,r){
   r=r===undefined?0.02:r;
   r=Math.min(r,sx*0.3,sy*0.3,sz*0.3);
-  if(lodSmooth()){ var rr=Math.max(r,Math.min(0.01,Math.min(sx,sy,sz)*0.2)); this.roundBox(x,y,z,sx,sy,sz,col,shade,rr,rr>=0.02?2:1); return; }
-  if(lodLow()||r<0.004){ this.box(x,y,z,sx,sy,sz,col,shade); return; }
+  if((0,$imports.lodSmooth)()){ var rr=Math.max(r,Math.min(0.01,Math.min(sx,sy,sz)*0.2)); this.roundBox(x,y,z,sx,sy,sz,col,shade,rr,rr>=0.02?2:1); return; }
+  if((0,$imports.lodLow)()||r<0.004){ this.box(x,y,z,sx,sy,sz,col,shade); return; }
   var rgb=this._rgb(col,shade), hx=sx/2,hy=sy/2,hz=sz/2, a=hx-r,b=hy-r,c=hz-r, s, t, q;
   var Q=0.7071, Tq=0.5774;
   /* 六个主面 */
@@ -201,17 +198,17 @@ GeoBuilder.prototype.bevel=function(x,y,z,sx,sy,sz,col,shade,r){
 };
 /* 竖直的圆柱 / 圆台（y 为底面中心） */
 GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
-  if(lodSmooth()&&seg>=6&&caps!==false&&caps!=='top'&&h>0.004){        /* 真实档：两头的边收成圆角 */
+  if((0,$imports.lodSmooth)()&&seg>=6&&caps!==false&&caps!=='top'&&h>0.004){        /* 真实档：两头的边收成圆角 */
     var f=Math.min(0.008,h*0.25,rb>0.001?rb*0.3:1,rt>0.001?rt*0.3:1), prof=[], t;
-    if(rb>0.001){ prof.push([0,0]); for(t=0;t<=3;t++) prof.push([rb-f+f*Math.sin(t*PI/6),f-f*Math.cos(t*PI/6)]); }
+    if(rb>0.001){ prof.push([0,0]); for(t=0;t<=3;t++) prof.push([rb-f+f*Math.sin(t*$imports.PI/6),f-f*Math.cos(t*$imports.PI/6)]); }
     else prof.push([0,0]);
-    if(rt>0.001){ for(t=3;t>=0;t--) prof.push([rt-f+f*Math.sin(t*PI/6),h-f+f*Math.cos(t*PI/6)]); prof.push([0,h]); }
+    if(rt>0.001){ for(t=3;t>=0;t--) prof.push([rt-f+f*Math.sin(t*$imports.PI/6),h-f+f*Math.cos(t*$imports.PI/6)]); prof.push([0,h]); }
     else prof.push([0,h]);
     this.lathe(x,y,z,prof,Math.max(seg,10),col,shade);
     return;
   }
-  var smooth=(seg>=6)||(lodSmooth()&&seg>=4&&caps===false);                           /* 4、5 段的是故意做成棱柱 / 棱锥的（攒尖顶、矛尖），不抹平 */
-  seg=lodSeg(seg,lodLow()?4:5);
+  var smooth=(seg>=6)||((0,$imports.lodSmooth)()&&seg>=4&&caps===false);                           /* 4、5 段的是故意做成棱柱 / 棱锥的（攒尖顶、矛尖），不抹平 */
+  seg=(0,$imports.lodSeg)(seg,(0,$imports.lodLow)()?4:5);
   var rgb=this._rgb(col,shade), k, a0, a1;
   var slope=(rb-rt)/h, nl=Math.sqrt(1+slope*slope), ny=slope/nl;
   for(k=0;k<seg;k++){
@@ -227,8 +224,8 @@ GeoBuilder.prototype.cyl=function(x,y,z,rb,rt,h,seg,col,shade,caps){
 };
 /* 两点之间的杆（任意方向），r0、r1 两端半径 */
 GeoBuilder.prototype.rod=function(x0,y0,z0,x1,y1,z1,r0,r1,seg,col,shade){
-  var real=lodSmooth();
-  seg=lodSeg(seg,real?10:4);
+  var real=(0,$imports.lodSmooth)();
+  seg=(0,$imports.lodSeg)(seg,real?10:4);
   var dx=x1-x0, dy=y1-y0, dz=z1-z0, L=Math.sqrt(dx*dx+dy*dy+dz*dz)||1e-6;
   var ax=dx/L, ay=dy/L, az=dz/L;
   var ux,uy,uz;                                  /* 找一根垂直的轴 */
@@ -268,12 +265,12 @@ GeoBuilder.prototype.rodCap=function(cx,cy,cz,ax,ay,az,r,c0,s0,c1,s1,P,rgb){
 };
 /* 低多边形椭球：jit>0 时每个顶点随机抖一下（树冠、灌木），面是平的 */
 GeoBuilder.prototype.blob=function(x,y,z,rx,ry,rz,col,shade,seg,jit,seed){
-  seg=lodSeg(seg||7,5); var rings=Math.max(3,Math.round(seg*0.6)), rgb=this._rgb(col,shade);
+  seg=(0,$imports.lodSeg)(seg||7,5); var rings=Math.max(3,Math.round(seg*0.6)), rgb=this._rgb(col,shade);
   var V=[], VN=[], i, j, sd=seed||1;
   for(j=0;j<=rings;j++){
     var row=[], nrow=[], ph=j/rings*Math.PI;
     for(i=0;i<seg;i++){
-      var th=i/seg*6.2832, jj=(jit&&j>0&&j<rings)?(1+(hash2(sd*31+i,j*17+sd)-0.5)*jit):1;
+      var th=i/seg*6.2832, jj=(jit&&j>0&&j<rings)?(1+((0,$imports.hash2)(sd*31+i,j*17+sd)-0.5)*jit):1;
       var ex=Math.sin(ph)*Math.cos(th), ey=Math.cos(ph), ez=Math.sin(ph)*Math.sin(th);
       row.push([x+ex*rx*jj, y+ey*ry*jj, z+ez*rz*jj]);
       var gx=ex/rx, gy=ey/ry, gz=ez/rz, gl=Math.sqrt(gx*gx+gy*gy+gz*gz)||1;   /* 椭球面的法线（不随抖动变：树冠看起来是一团软的） */
@@ -285,7 +282,7 @@ GeoBuilder.prototype.blob=function(x,y,z,rx,ry,rz,col,shade,seg,jit,seed){
     var i1=(i+1)%seg, a=V[j][i], b=V[j][i1], c=V[j+1][i1], d=V[j+1][i];
     var na=VN[j][i], nb=VN[j][i1], nc=VN[j+1][i1], nd=VN[j+1][i];
     var cx=(a[0]+b[0]+c[0]+d[0])/4-x, cy=(a[1]+b[1]+c[1]+d[1])/4-y, cz=(a[2]+b[2]+c[2]+d[2])/4-z, l=Math.sqrt(cx*cx+cy*cy+cz*cz)||1;
-    var sh=(jit?(0.92+hash2(i+sd,j)*0.16):1);
+    var sh=(jit?(0.92+(0,$imports.hash2)(i+sd,j)*0.16):1);
     var rg=[rgb[0]*sh,rgb[1]*sh,rgb[2]*sh];
     if(j===0) this.face([a,c,d],[cx/l,cy/l,cz/l],rg,false,[na,nc,nd]);
     else if(j===rings-1) this.face([a,b,d],[cx/l,cy/l,cz/l],rg,false,[na,nb,nd]);
@@ -296,7 +293,7 @@ GeoBuilder.prototype.blob=function(x,y,z,rx,ry,rz,col,shade,seg,jit,seed){
    轮廓相邻两段夹角小于 35° 的折点按平滑处理（灯罩、瓶子、垃圾桶、轮胎），大于的保留棱线（台阶、凸缘）。
    第一个、最后一个点半径大于 0 时封口。 */
 GeoBuilder.prototype.lathe=function(x,y,z,prof,seg,col,shade){
-  seg=lodSeg(seg||12,lodLow()?5:6);
+  seg=(0,$imports.lodSeg)(seg||12,(0,$imports.lodLow)()?5:6);
   var rgb=this._rgb(col,shade), n=prof.length, i, k, SN=[];
   for(i=0;i<n-1;i++){                                     /* 每一段的外法线（在 半径-高度 平面里） */
     var dr=prof[i+1][0]-prof[i][0], dh=prof[i+1][1]-prof[i][1], L=Math.sqrt(dr*dr+dh*dh)||1;
@@ -306,7 +303,7 @@ GeoBuilder.prototype.lathe=function(x,y,z,prof,seg,col,shade){
     var a=SN[i], j=atEnd?i+1:i-1;
     if(j<0||j>=SN.length) return a;
     var b=SN[j], d=a[0]*b[0]+a[1]*b[1];
-    if(d<(lodSmooth()?0.45:0.82)) return a;           /* 真实档：60° 以内的折角都抹圆 */
+    if(d<((0,$imports.lodSmooth)()?0.45:0.82)) return a;           /* 真实档：60° 以内的折角都抹圆 */
     var mx=a[0]+b[0], my=a[1]+b[1], ml=Math.sqrt(mx*mx+my*my)||1;
     return [mx/ml,my/ml];
   }
@@ -337,8 +334,8 @@ GeoBuilder.prototype.lathe=function(x,y,z,prof,seg,col,shade){
    车身、屋脊、台阶侧板这种「侧面一个形状、往里一样厚」的东西。r>0 时两侧的棱切一道倒角。 */
 GeoBuilder.prototype.prism=function(x,y,z,prof,depth,col,shade,r){
   var rgb=this._rgb(col,shade), n=prof.length, hz=depth/2, i, ins=Math.min(r||0,hz*0.4);
-  if(lodLow()) ins=0;
-  if(lodSmooth()) ins=Math.max(ins,Math.min(0.01,hz*0.3));             /* 真实档：挤出体的两侧也收一道边 */
+  if((0,$imports.lodLow)()) ins=0;
+  if((0,$imports.lodSmooth)()) ins=Math.max(ins,Math.min(0.01,hz*0.3));             /* 真实档：挤出体的两侧也收一道边 */
   var cu=0, cv=0; for(i=0;i<n;i++){ cu+=prof[i][0]/n; cv+=prof[i][1]/n; }
   /* 倒角：两个端面往里缩 ins，侧面和端面之间加一圈斜面 */
   function shrink(p){ var du=p[0]-cu, dv=p[1]-cv, l=Math.sqrt(du*du+dv*dv)||1, s=Math.max(0,1-ins/l); return [cu+du*s,cv+dv*s]; }
@@ -414,27 +411,27 @@ function geoHalfTables(){
   return GEO_HT;
 }
 function geoHalfOK(){
-  if(GEO_HALF===null){ try{ GEO_HALF=!!(GLR&&GLR.renderer&&GLR.renderer.capabilities.isWebGL2); }catch(e){ GEO_HALF=false; } }
+  if(GEO_HALF===null){ try{ GEO_HALF=!!($imports.GLR&&$imports.GLR.renderer&&$imports.GLR.renderer.capabilities.isWebGL2); }catch(e){ GEO_HALF=false; } }
   return GEO_HALF;
 }
 function geoFromArrays(P,N,C,U,I,nv,ni){
-  var g=new THREE.BufferGeometry(), k, cmax=0, n3=nv*3;
-  g.setAttribute('position',new THREE.BufferAttribute(P.slice(0,n3),3));
-  g.setAttribute('normal',new THREE.BufferAttribute(N.slice(0,n3),3,true));
+  var g=new $imports.THREE.BufferGeometry(), k, cmax=0, n3=nv*3;
+  g.setAttribute('position',new $imports.THREE.BufferAttribute(P.slice(0,n3),3));
+  g.setAttribute('normal',new $imports.THREE.BufferAttribute(N.slice(0,n3),3,true));
   for(k=0;k<n3;k++) if(C[k]>cmax) cmax=C[k];
   if(cmax<=1){
     var c8=new Uint8Array(n3);
     for(k=0;k<n3;k++) c8[k]=Math.round(C[k]*255);
-    g.setAttribute('color',new THREE.BufferAttribute(c8,3,true));
+    g.setAttribute('color',new $imports.THREE.BufferAttribute(c8,3,true));
   }else if(geoHalfOK()){
     var h=new Uint16Array(n3), H=geoHalfTables(), fv=H.f, uv=H.u, base=H.base, shift=H.shift;
     for(k=0;k<n3;k++){ fv[0]=C[k]; var f=uv[0], e=(f>>23)&0x1ff; h[k]=base[e]+((f&0x007fffff)>>shift[e]); }
-    g.setAttribute('color',new THREE.Float16BufferAttribute(h,3));
-  }else g.setAttribute('color',new THREE.BufferAttribute(C.slice(0,n3),3));
-  g.setAttribute('uv',new THREE.BufferAttribute(U.slice(0,nv*2),2));
+    g.setAttribute('color',new $imports.THREE.Float16BufferAttribute(h,3));
+  }else g.setAttribute('color',new $imports.THREE.BufferAttribute(C.slice(0,n3),3));
+  g.setAttribute('uv',new $imports.THREE.BufferAttribute(U.slice(0,nv*2),2));
   var idx=(nv<=65535)?new Uint16Array(ni):new Uint32Array(ni);
   for(k=0;k<ni;k++) idx[k]=I[k];
-  g.setIndex(new THREE.BufferAttribute(idx,1));
+  g.setIndex(new $imports.THREE.BufferAttribute(idx,1));
   g.computeBoundingSphere();
   return g;
 }
@@ -505,9 +502,9 @@ GeoBuilder.prototype.buildChunks=function(size){
    opts.chunk —— 打开切块：顶点多的材质按位置切成几块（每块约 KIT_CHUNK_V 个顶点，最多 KIT_CHUNK_MAX 块），视野外的块不画。
    opts.inst  —— 打开实例化：资源包里标了 i 的模型（课桌椅、床、灯……一层楼重复几十上百次）不抄顶点，
                  build() 时每种模型、每个材质组一个 InstancedMesh（按 KIT_INST_CELL 米分格，视野外的格子不画）。 */
-function Kit(opts){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; opts=opts||{}; this.cull=opts.cull||null; this.chunk=opts.chunk||0; this.inst=opts.inst||0; this.sparse=opts.sparse||0; this.IN=null; }
+function Kit(opts){ this.B={}; this.T={x:0,y:0,z:0,c:1,s:0}; opts=opts||{}; this.cull=opts.cull||null; this.chunk=opts.chunk||0; this.inst=opts.inst||0; this.sparse=opts.sparse||0; this.IN=null;this.solids=[];this.lamps=[];this.treeN=0; }
 var KIT_CHUNK_V=20000, KIT_CHUNK_MAX=8;   /* 切得太碎绘制次数会变多（手机上每次绘制都有开销），所以按顶点数定块数 */
-Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder(matUV(key),this); return this.B[key]; };
+Kit.prototype.g=function(key){ if(!this.B[key]) this.B[key]=new GeoBuilder((0,$imports.matUV)(key),this); return this.B[key]; };
 Kit.prototype.frame=function(x,z,rot,y){ this.T.x=x||0; this.T.z=z||0; this.T.y=y||0; this.T.c=Math.cos(rot||0); this.T.s=Math.sin(rot||0); return this; };
 Kit.prototype.unframe=function(){ return this.frame(0,0,0,0); };
 /* 嵌套的局部坐标：在当前坐标系里再平移、转一下（小物件放在家具上时用），返回旧的，用完 restore 回去 */
@@ -519,21 +516,7 @@ Kit.prototype.sub=function(x,z,rot,y){
 Kit.prototype.restore=function(o){ var T=this.T; T.x=o.x; T.y=o.y; T.z=o.z; T.c=o.c; T.s=o.s; return this; };
 /* 由建模尺寸记录解析包围盒，不读取渲染顶点；改变分段/倒角不改变碰撞。
    各图元在 0.10–1.85 米内的投影用于家具占地，frame 变换与模型一致。 */
-var CAP_Y0=0.10,CAP_Y1=1.85;
-Kit.prototype._capBounds=function(m,x0,y0,z0,x1,y1,z1,sceneSpace){
-  if(!this.cap||m==='decal')return;
-  var T=this.T;if(!sceneSpace){y0+=T.y;y1+=T.y;}
-  if(y1<CAP_Y0||y0>CAP_Y1)return;
-  if(!sceneSpace){
-    var ax0=Infinity,ax1=-Infinity,az0=Infinity,az1=-Infinity;
-    [x0,x1].forEach(function(x){[z0,z1].forEach(function(z){
-      var xx=T.x+x*T.c+z*T.s,zz=T.z-x*T.s+z*T.c;
-      ax0=Math.min(ax0,xx);ax1=Math.max(ax1,xx);az0=Math.min(az0,zz);az1=Math.max(az1,zz);
-    });});
-    x0=ax0;x1=ax1;z0=az0;z1=az1;
-  }
-  this.cap.push({x0:x0,x1:x1,z0:z0,z1:z1});
-};
+
 Kit.prototype.box=function(m,x,y,z,sx,sy,sz,col,sh){
   this.g(m).box(x,y,z,sx,sy,sz,col,sh);this._capBounds(m,x-sx/2,y-sy/2,z-sz/2,x+sx/2,y+sy/2,z+sz/2);
 };
@@ -596,8 +579,8 @@ Kit.prototype._mergeSparseInstances=function(buckets){
       if(!mk||mk==='glass'||mk==='grime'||g[3]*list.length>2000)return;
       bucket.merged[gi]=true;
       list.forEach(function(it){
-        var color=Assets.rgb(it.cols[gi]),shade=it.shade;
-        var builder=builders[mk]||(builders[mk]=new GeoBuilder(matUV(mk),self));
+        var color=$imports.Assets.rgb(it.cols[gi]),shade=it.shade;
+        var builder=builders[mk]||(builders[mk]=new GeoBuilder((0,$imports.matUV)(mk),self));
         builder.appendAsset(pk,m.b,g,it.X,[color[0]*shade,color[1]*shade,color[2]*shade],0,0,1);
       });
     });
@@ -606,7 +589,7 @@ Kit.prototype._mergeSparseInstances=function(buckets){
 };
 Kit.prototype._buildInstances=function(grp,buckets){
   if(!this.IN) return;
-  if(!KIT_M4){ KIT_M4=new THREE.Matrix4(); KIT_C=new THREE.Color(); }
+  if(!KIT_M4){ KIT_M4=new $imports.THREE.Matrix4(); KIT_C=new $imports.THREE.Color(); }
   var M=KIT_M4, col=KIT_C;
   buckets.forEach(function(bucket){
       var name=bucket.name,pk=bucket.pk,m=bucket.m,list=bucket.list,remap=list[0].remap,gi;
@@ -615,7 +598,7 @@ Kit.prototype._buildInstances=function(grp,buckets){
         var g=m.g[gi], mk=g[0];
         if(remap&&remap[mk]!==undefined) mk=remap[mk];
         if(!mk) continue;
-        var geo=Assets.groupGeometry(pk,name,gi,mk), mesh=new THREE.InstancedMesh(geo,matOf(mk),list.length), j;
+        var geo=$imports.Assets.groupGeometry(pk,name,gi,mk), mesh=new $imports.THREE.InstancedMesh(geo,(0,$imports.matOf)(mk),list.length), j;
         for(j=0;j<list.length;j++){
           var X=list[j].X, sc=X.k||1, sq=sc*(X.q||1);
           /* 绕 y 转：three.js 的 rotation.y=a 时 x'=x·cos a+z·sin a、z'=−x·sin a+z·cos a，和 Kit 的 frame 一样；
@@ -623,7 +606,7 @@ Kit.prototype._buildInstances=function(grp,buckets){
           M.set(X.c*sq,0,X.s*sc,X.x, 0,sc,0,X.y, -X.s*sq,0,X.c*sc,X.z, 0,0,0,1);
           mesh.setMatrixAt(j,M);
           var hx=list[j].cols[gi], f=g[6]*list[j].shade;
-          col.setRGB(((hx>>16)&255)/255*f,((hx>>8)&255)/255*f,(hx&255)/255*f,THREE.LinearSRGBColorSpace);
+          col.setRGB(((hx>>16)&255)/255*f,((hx>>8)&255)/255*f,(hx&255)/255*f,$imports.THREE.LinearSRGBColorSpace);
           mesh.setColorAt(j,col);
         }
         mesh.instanceMatrix.needsUpdate=true; if(mesh.instanceColor) mesh.instanceColor.needsUpdate=true;
@@ -635,16 +618,16 @@ Kit.prototype._buildInstances=function(grp,buckets){
   });
 };
 Kit.prototype.build=function(group){
-  var grp=group||new THREE.Group(), buckets=this._instanceBuckets(),sparse=this._mergeSparseInstances(buckets),self=this;
+  var grp=group||new $imports.THREE.Group(), buckets=this._instanceBuckets(),sparse=this._mergeSparseInstances(buckets),self=this;
   function addBuilders(builders){
     for(var k in builders){
       var b=builders[k]; if(!b.v) continue;
       var nc=0, geos, j;
-      if(self.chunk) nc=lodLow()?(b.v>65535?Math.ceil(b.v/60000):0)       /* 流畅档（手机）绘制次数更要紧：只在超过 16 位索引时才拆 */
+      if(self.chunk) nc=(0,$imports.lodLow)()?(b.v>65535?Math.ceil(b.v/60000):0)       /* 流畅档（手机）绘制次数更要紧：只在超过 16 位索引时才拆 */
                                  :Math.min(KIT_CHUNK_MAX,Math.floor(b.v/KIT_CHUNK_V));
       geos=(nc>=2)?b.buildChunks(b.cellFor(nc)):[b.build()];
       for(j=0;j<geos.length;j++){
-        var mesh=new THREE.Mesh(geos[j],matOf(k));
+        var mesh=new $imports.THREE.Mesh(geos[j],(0,$imports.matOf)(k));
         if(k==='glass') mesh.renderOrder=2;
         mesh.userData.matKey=k;
         grp.add(mesh);
@@ -684,13 +667,13 @@ GeoBuilder.prototype.appendAsset=function(pk,b,g,X,rgbMul,uo,vo,uvScale){
 GeoBuilder.prototype.proxy=function(p){};
 var ASSET_WHITE=[1,1,1];
 Kit.prototype.asset=function(name,x,y,z,rot,opt){
-  var a=Assets.get(name); if(!a) return false;
+  var a=$imports.Assets.get(name); if(!a) return false;
   opt=opt||{};
   var T=this.T, pk=a.pk, m=a.m, ca=Math.cos(rot||0), sa=Math.sin(rot||0), s=opt.s||1, i;
   x=x||0; y=y||0; z=z||0;
   var X={x:T.x+x*T.c+z*T.s, y:T.y+y, z:T.z-x*T.s+z*T.c, c:T.c*ca-T.s*sa, s:T.s*ca+T.c*sa, k:s, q:opt.sx||1};   /* sx：沿模型自己的 x 拉长（一段段的栏杆、门扇） */
-  var uo=opt.uo!==undefined?opt.uo:hash2(Math.round(X.x*7)+311,Math.round(X.z*7)+97)*3.7;
-  var vo=opt.vo!==undefined?opt.vo:hash2(Math.round(X.z*5)+13,Math.round(X.x*5)+71)*3.1;
+  var uo=opt.uo!==undefined?opt.uo:(0,$imports.hash2)(Math.round(X.x*7)+311,Math.round(X.z*7)+97)*3.7;
+  var vo=opt.vo!==undefined?opt.vo:(0,$imports.hash2)(Math.round(X.z*5)+13,Math.round(X.x*5)+71)*3.1;
   var tint=opt.tint||{}, remap=opt.mat||null, G=m.g, first=null;
   if(this.inst&&m.i&&!opt.merge){
     /* 实例化：只记下摆放（场景坐标的位置、转角、缩放）和这一次的染色、换材质 */
@@ -709,7 +692,7 @@ Kit.prototype.asset=function(name,x,y,z,rot,opt){
     if(remap&&remap[key]!==undefined) key=remap[key];
     if(!key) continue;                                      /* 映射成空：这一组不要 */
     var mul=ASSET_WHITE;
-    if(tag){ var tc=tint[tag]!==undefined?tint[tag]:(m.t&&m.t[tag]!==undefined?m.t[tag]:0xffffff); mul=Assets.rgb(tc); }
+    if(tag){ var tc=tint[tag]!==undefined?tint[tag]:(m.t&&m.t[tag]!==undefined?m.t[tag]:0xffffff); mul=$imports.Assets.rgb(tc); }
     if(opt.shade) mul=[mul[0]*opt.shade,mul[1]*opt.shade,mul[2]*opt.shade];
     var gb=this.g(key); if(!first) first=gb;
     var fixed=(key==='foliage'||key==='grime');               /* 叶片卡、污渍是整张图集：贴图不能错开 */
@@ -717,7 +700,7 @@ Kit.prototype.asset=function(name,x,y,z,rot,opt){
   }
   if(m.p){
     for(i=0;i<m.p.length;i++){
-      var w=assetProxyWorld(m.p[i],X);
+      var w=(0,$imports.assetProxyWorld)(m.p[i],X);
       if(this.cap) this._capBounds('asset',w.bb[0],w.bb[1],w.bb[2],w.bb[3],w.bb[4],w.bb[5],true);
       if(first) first.proxy(w.p);
     }
@@ -725,28 +708,7 @@ Kit.prototype.asset=function(name,x,y,z,rot,opt){
   return true;
 };
 /* 代理 → 场景坐标（穿模审查的格式），顺便给出外包盒 */
-function assetProxyWorld(q,X){
-  var s=X.k||1, c=X.c, sn=X.s, sq=X.q||1;
-  function W(p){ var lx=p[0]*s*sq, lz=p[2]*s; return [X.x+lx*c+lz*sn, X.y+p[1]*s, X.z-lx*sn+lz*c]; }
-  var p, bb, ex, ez;
-  if(q.t==='box'||q.t==='blob'){
-    /* 拉长时盒子按它自己的转角把 x、z 两个半边长分摊（转角是 0 或 90° 时是准的） */
-    var a=(q.a||0)+Math.atan2(sn,c), qa=q.a||0, fx=Math.abs(Math.cos(qa))*sq+Math.abs(Math.sin(qa)), fz=Math.abs(Math.sin(qa))*sq+Math.abs(Math.cos(qa));
-    var h=(q.t==='box'?q.h:q.r).map(function(v,i){ return v*s*(i===0?fx:(i===2?fz:1)); }), cc=W(q.c);
-    p=q.t==='box'?{t:'box',c:cc,h:h,tc:Math.cos(a),ts:Math.sin(a)}:{t:'blob',c:cc,r:h,tc:Math.cos(a),ts:Math.sin(a),jit:q.jit||0};
-    ex=Math.abs(h[0]*Math.cos(a))+Math.abs(h[2]*Math.sin(a)); ez=Math.abs(h[0]*Math.sin(a))+Math.abs(h[2]*Math.cos(a));
-    bb=[cc[0]-ex,cc[1]-h[1],cc[2]-ez,cc[0]+ex,cc[1]+h[1],cc[2]+ez];
-  }else if(q.t==='cyl'){
-    var c0=W(q.c), r=Math.max(q.rb,q.rt)*s;
-    p={t:'cyl',c:c0,rb:q.rb*s,rt:q.rt*s,hh:q.hh*s};
-    bb=[c0[0]-r,c0[1],c0[2]-r,c0[0]+r,c0[1]+q.hh*s,c0[2]+r];
-  }else{
-    var A=W(q.a), B=W(q.b), rr=Math.max(q.r0,q.r1)*s;
-    p={t:'rod',a:A,b:B,r0:q.r0*s,r1:q.r1*s};
-    bb=[Math.min(A[0],B[0])-rr,Math.min(A[1],B[1])-rr,Math.min(A[2],B[2])-rr,Math.max(A[0],B[0])+rr,Math.max(A[1],B[1])+rr,Math.max(A[2],B[2])+rr];
-  }
-  return {p:p,bb:bb};
-}
+
 /* 合成一个几何体，每个材质一组（geometry.groups[i].materialKey）：单独显示的人物、手用 */
 Kit.prototype.groupedGeometry=function(){
   var keys=Object.keys(this.B).filter(function(k){ return this.B[k].v>0; },this), nv=0, ni=0, k, b, j;
@@ -778,40 +740,30 @@ Kit.prototype.mergedGeometry=function(){
 };
 
 /* ---- 旧接口：标记高度（准星上的小菱形停在多高）、楼梯朝向 ---- */
-function furnH(ch){
-  switch(ch){
-    case '#': case '=': return WALLH;
-    case 'T': return 1.05; case 'd': return 0.74; case 'P': return 0.46; case 'b': return 0.55;
-    case 't': return 0.75; case 'k': return 0.95; case 'f': return 2.1; case 'R': return 1.85;
-    case 'l': return 0.92; case 'w': return 0.85; case 'v': return 1.7; case 'c': return 1.35;
-    case 'D': return 1.25; case 'X': return 1.2; case 'B': case 'G': return 1.9; case 'S': return 0.16;
-    case 'O': return 2.2; case 'K': return 1.05; case 'C': return 0.72; case 'N': return 1.20;
-    case 'Z': return 1.00; case 'Y': return 1.20; case 'V': return 1.6; case 'q': return 0.92;
-    case 'n': return 1.25; case 'x': return 1.85; case 'p': return 1.25; case 'Q': return 1.85;
-    case 'U': return 1.4; case 'A': return 0.9; case 'L': return 2.2; case 'H': return 2.0; case 'M': return 1.9;
-    default: return 0;
-  }
-}
-function stairInfo(R,x,y){
-  var gw=1,gd=1,gx2,gy2;
-  for(gx2=x+1; gx2<R.cols && R.grid[y][gx2]==='S'; gx2++) gw++;
-  for(gy2=y+1; gy2<R.rows && R.grid[gy2][x]==='S'; gy2++) gd++;
-  var longX=(gw>=gd);
-  function tf(cc,rr){
-    if(cc<0||rr<0||cc>=R.cols||rr>=R.rows) return -2;      /* 越界 = 楼外 */
-    var t=R.grid[rr][cc];
-    return (t==='#'||t==='='||t==='O')?-1:1;
-  }
-  var dirs=longX?[[0,1],[0,-1]]:[[1,0],[-1,0]];
-  var best=dirs[0], bestScore=1e9, bestBlock=-2, di;
-  for(di=0;di<2;di++){
-    var dd=dirs[di], sc=0, blk=-2;
-    for(var k2=1;k2<=3;k2++){
-      var fr=tf(x+dd[0]*k2, y+dd[1]*k2);
-      if(fr<0){ blk=fr; break; }
-      sc++;
-    }
-    if(sc<bestScore){ bestScore=sc; best=dd; bestBlock=blk; }
-  }
-  return {gw:gw,gd:gd,longX:longX,dx:best[0],dy:best[1],free:bestScore,block:bestBlock};
-}
+
+
+
+Kit.prototype._capBounds=$imports.SpatialKit.prototype._capBounds;
+Kit.prototype.has=function(name){return $imports.Assets.has(name);};
+Kit.prototype.solidM=$imports.SpatialKit.prototype.solidM;
+
+/* @module-exports */
+GameModules.publish("game3d/js/model/kit.js",{
+"UVTILE":{get:function(){return UVTILE;},set:function($value){UVTILE=$value;}},
+"GeoBuilder":{get:function(){return GeoBuilder;},set:function($value){GeoBuilder=$value;}},
+"BoxBuilder":{get:function(){return BoxBuilder;},set:function($value){BoxBuilder=$value;}},
+"FACE_W":{get:function(){return FACE_W;},set:function($value){FACE_W=$value;}},
+"GEO_HALF":{get:function(){return GEO_HALF;},set:function($value){GEO_HALF=$value;}},
+"GEO_HT":{get:function(){return GEO_HT;},set:function($value){GEO_HT=$value;}},
+"geoHalfTables":{get:function(){return geoHalfTables;},set:function($value){geoHalfTables=$value;}},
+"geoHalfOK":{get:function(){return geoHalfOK;},set:function($value){geoHalfOK=$value;}},
+"geoFromArrays":{get:function(){return geoFromArrays;},set:function($value){geoFromArrays=$value;}},
+"Kit":{get:function(){return Kit;},set:function($value){Kit=$value;}},
+"KIT_CHUNK_V":{get:function(){return KIT_CHUNK_V;},set:function($value){KIT_CHUNK_V=$value;}},
+"KIT_CHUNK_MAX":{get:function(){return KIT_CHUNK_MAX;},set:function($value){KIT_CHUNK_MAX=$value;}},
+"KIT_INST_CELL":{get:function(){return KIT_INST_CELL;},set:function($value){KIT_INST_CELL=$value;}},
+"KIT_M4":{get:function(){return KIT_M4;},set:function($value){KIT_M4=$value;}},
+"KIT_C":{get:function(){return KIT_C;},set:function($value){KIT_C=$value;}},
+"ASSET_WHITE":{get:function(){return ASSET_WHITE;},set:function($value){ASSET_WHITE=$value;}}
+});
+})(GameModules.imports("game3d/js/model/kit.js"));

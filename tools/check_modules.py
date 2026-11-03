@@ -1,6 +1,8 @@
 """检查静态站点的模块边界；不需要 npm、浏览器或第三方 Python 依赖。"""
 from pathlib import Path
 import re
+import subprocess
+import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
 # 纯模块的完整清单：新领域模块自动接受同样约束。
@@ -72,6 +74,26 @@ def check(root=ROOT):
         for dependency in dependencies:
             if consumer not in scripts or dependency not in scripts or scripts.index(dependency) >= scripts.index(consumer):
                 errors.append(f'启动依赖顺序错误: {dependency} → {consumer}')
+    for page in (root / 'tools').glob('*.html'):
+        source = page.read_text(encoding='utf-8')
+        refs = re.findall(r'<script\b[^>]*\bsrc="([^"]+)"', source)
+        capsules = [ref for ref in refs if (page.parent / ref).is_file()
+                    and (page.parent / ref).read_text(encoding='utf-8').startswith('/* @module-capsule */')]
+        if capsules:
+            loaders = [ref for ref in refs if ref.endswith('/js/modules.js')]
+            contracts = [ref for ref in refs if ref.endswith('/module-contracts.js')]
+            if not loaders or not contracts or max(refs.index(loaders[0]), refs.index(contracts[0])) >= refs.index(capsules[0]):
+                errors.append(f'独立工具缺少前置模块接线: {page.relative_to(root)}')
+    # The linker validates lexical ownership; the AST checker catches aliases and nested writes.
+    node = shutil.which('node')
+    if not node:
+        errors.append('模块边界检查需要 Node.js（运行游戏本身不需要）')
+    else:
+        for tool in ('link_modules.cjs', 'check_architecture.cjs', 'export_collision_data.cjs'):
+            result = subprocess.run([node, str(root / 'tools' / tool)], cwd=root,
+                                    capture_output=True, text=True, timeout=45)
+            if result.returncode:
+                errors.extend((result.stdout + result.stderr).strip().splitlines())
     return errors
 
 

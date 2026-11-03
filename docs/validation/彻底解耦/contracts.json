@@ -1,0 +1,174 @@
+{
+  "files": 139,
+  "privateFiles": 121,
+  "symbols": 1223,
+  "layers": {
+    "vendor": 1,
+    "domain": 14,
+    "adapter": 4,
+    "application": 67,
+    "presentation": 39,
+    "content": 12,
+    "tools": 2
+  },
+  "presentationStateViews": [
+    {
+      "file": "game3d/js/model/assets.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/engine/api.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/engine/scene.js",
+      "readonly": [
+        "S",
+        "ROAM"
+      ]
+    },
+    {
+      "file": "game3d/js/engine/presentation.js",
+      "readonly": [
+        "S",
+        "PAT"
+      ]
+    },
+    {
+      "file": "game3d/js/model/portal.js",
+      "readonly": [
+        "RT",
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/model/lift.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/car-chase-view.js",
+      "readonly": [
+        "S",
+        "RT"
+      ]
+    },
+    {
+      "file": "game3d/js/hands.js",
+      "readonly": [
+        "S",
+        "HIDE"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/gaze.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/anomaly-fx.js",
+      "readonly": [
+        "S",
+        "AN"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/death-cg.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/weather.js",
+      "readonly": [
+        "S",
+        "AN"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/cup.js",
+      "readonly": [
+        "AN"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/cola.js",
+      "readonly": [
+        "AN",
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/smile.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/traces.js",
+      "readonly": [
+        "S",
+        "RT",
+        "AN",
+        "HIDE"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/classroom.js",
+      "readonly": [
+        "S",
+        "AN"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/dread-fx.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/inspection-fx.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/fx/day-decor.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/lighting.js",
+      "readonly": [
+        "S",
+        "AN"
+      ]
+    },
+    {
+      "file": "game3d/js/audio.js",
+      "readonly": [
+        "S",
+        "AN"
+      ]
+    },
+    {
+      "file": "game3d/js/modules/chalk-marks/marks-fx.js",
+      "readonly": [
+        "S"
+      ]
+    },
+    {
+      "file": "game3d/js/modules/void-maze-eggs/eggs-fx.js",
+      "readonly": [
+        "S"
+      ]
+    }
+  ]
+}

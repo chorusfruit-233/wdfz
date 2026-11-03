@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 《网安仙人》公开真结局：16 秒实时 3D 分镜（计划《巡察者常驻、手机网络系统与网安仙人》9.2 节）。
    只在隔离舞台上演：不写玩家位置，不改游戏时间（天色用 VisualState.stageHour 单独指定，只影响画面），
    不加实时点光源（三处室内布景的明暗走 lightState 钩子，中途不重编着色器）。
@@ -14,10 +16,10 @@
   var SEG={A:[0,3.2],B:[3.2,7.2],C:[7.2,11.2],D:[11.2,16]};
   var RACKS=10, LED_ROWS=5, LED_COLS=2, LEDS=RACKS*LED_ROWS*LED_COLS;
   function seg(t,a,b){ return t<=a?0:t>=b?1:(t-a)/(b-a); }
-  function ease(x){ x=clamp(x,0,1); return x*x*(3-2*x); }
+  function ease(x){ x=(0,$imports.clamp)(x,0,1); return x*x*(3-2*x); }
   function ph(t,a,b){ return ease(seg(t,a,b)); }
   var DUMMY=null;
-  function setI(im,i,x,y,z,s){ if(!DUMMY) DUMMY=new THREE.Object3D(); DUMMY.position.set(x,y,z); DUMMY.rotation.set(0,0,0); DUMMY.scale.setScalar(s); DUMMY.updateMatrix(); im.setMatrixAt(i,DUMMY.matrix); }
+  function setI(im,i,x,y,z,s){ if(!DUMMY) DUMMY=new $imports.THREE.Object3D(); DUMMY.position.set(x,y,z); DUMMY.rotation.set(0,0,0); DUMMY.scale.setScalar(s); DUMMY.updateMatrix(); im.setMatrixAt(i,DUMMY.matrix); }
   /* 「两短一长」：灯管在巡察者附近的闪法（亮 / 灭交替，秒） */
   var FLICKER=[0.10,0.08,0.10,0.08,0.10,0.30,0.55,0.08,0.10,0.08,0.10,0.30];
   function flickerOn(t){
@@ -30,9 +32,9 @@
   /* ---------- 文字屏：只在内容变化时重画（每次重画都要重新上传贴图） ---------- */
   function screen(w,h,pw,ph2,parent,x,y,z,rot){
     var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-    var tex=new THREE.CanvasTexture(cv); tex.generateMipmaps=false; tex.minFilter=THREE.LinearFilter; tex.colorSpace=THREE.SRGBColorSpace;
-    var m=new THREE.MeshBasicMaterial({map:tex,toneMapped:false,fog:false}); m.userData.disposeMap=true;   /* 清场时连贴图一起释放 */
-    var mesh=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph2),m); mesh.position.set(x,y,z); mesh.rotation.y=rot||0; parent.add(mesh);
+    var tex=new $imports.THREE.CanvasTexture(cv); tex.generateMipmaps=false; tex.minFilter=$imports.THREE.LinearFilter; tex.colorSpace=$imports.THREE.SRGBColorSpace;
+    var m=new $imports.THREE.MeshBasicMaterial({map:tex,toneMapped:false,fog:false}); m.userData.disposeMap=true;   /* 清场时连贴图一起释放 */
+    var mesh=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(pw,ph2),m); mesh.position.set(x,y,z); mesh.rotation.y=rot||0; parent.add(mesh);
     return {cv:cv,ctx:cv.getContext('2d'),tex:tex,mesh:mesh,key:null};
   }
   function paint(scr,key,draw){ if(!scr.ctx||scr.key===key) return; scr.key=key; draw(scr.ctx,scr.cv.width,scr.cv.height); scr.tex.needsUpdate=true; }
@@ -100,15 +102,15 @@
     }
   }
 
-  CUT_DEF.cyber={dur:DUR,setup:function(d){
-    Engine.beginOutsideStage();
-    var base=cutW2S(560,1008), x=base.x, z=base.z; d.x=x; d.z=z;
-    d.portrait=(GLR.cam.aspect||1.6)<0.8;
-    VisualState.stageHour=5.2;                                   /* 天还没亮（只是画面） */
+  $imports.CUT_DEF.cyber={dur:DUR,setup:function(d){
+    $imports.Engine.beginOutsideStage();
+    var base=(0,$imports.cutW2S)(560,1008), x=base.x, z=base.z; d.x=x; d.z=z;
+    d.portrait=($imports.GLR.cam.aspect||1.6)<0.8;
+    $imports.VisualState.stageHour=5.2;                                   /* 天还没亮（只是画面） */
     d.light={amb:0.1,hemi:0.08,dir:0.02,fog:{r:0.02,g:0.026,b:0.03,density:0.05}};
 
     /* ===== A：机房 ===== */
-    d.A=cutAdd(new THREE.Group()); var K=new Kit(), i, j;
+    d.A=(0,$imports.cutAdd)(new $imports.THREE.Group()); var K=new $imports.Kit(), i, j;
     K.box('fterrazzo',x,-0.05,z,7,0.1,11,0x5d6466,1);
     for(i=-3;i<=3;i++) K.box('decal',x+i*0.6,0.004,z,0.02,0.003,11,0x2e3436,1);          /* 架空地板的缝 */
     for(i=-9;i<=9;i++) K.box('decal',x,0.004,z+i*0.6,7,0.003,0.02,0x2e3436,1);
@@ -124,8 +126,8 @@
     K.asset('speaker_box',x+3.38,2.65,z-0.6,-Math.PI/2,{merge:true});                    /* 墙上的喇叭：高过机柜，看得见 */
     K.box('emit',x-1.2,3.12,z+1.5,0.9,0.04,0.18,0x9fb8b8,0.55); K.box('emit',x+1.2,3.12,z-2.5,0.9,0.04,0.18,0x9fb8b8,0.55);   /* 两盏应急灯 */
     d.A.add(K.build());
-    d.ledOn=new THREE.InstancedMesh(new THREE.BoxGeometry(0.04,0.035,0.03),new THREE.MeshBasicMaterial({color:0x6ff09a}),LEDS);
-    d.ledOff=new THREE.InstancedMesh(new THREE.BoxGeometry(0.04,0.035,0.03),new THREE.MeshBasicMaterial({color:0x0e1712}),LEDS);
+    d.ledOn=new $imports.THREE.InstancedMesh(new $imports.THREE.BoxGeometry(0.04,0.035,0.03),new $imports.THREE.MeshBasicMaterial({color:0x6ff09a}),LEDS);
+    d.ledOff=new $imports.THREE.InstancedMesh(new $imports.THREE.BoxGeometry(0.04,0.035,0.03),new $imports.THREE.MeshBasicMaterial({color:0x0e1712}),LEDS);
     d.leds=[];
     for(i=0;i<RACKS;i++){
       var sd=i%2?1:-1, rw=Math.floor(i/2), fx=x+sd*(1.45-0.42), fz=z-4.0+rw*1.25;
@@ -141,7 +143,7 @@
     d.log=screen(1024,320,1.04,0.325,d.A,x,1.45,z-4.75+0.4,0);
 
     /* ===== B：走廊（墙裙、柜子、教室门、窗、灯管） ===== */
-    d.B=cutAdd(new THREE.Group()); var H=new Kit(), L=new Kit();
+    d.B=(0,$imports.cutAdd)(new $imports.THREE.Group()); var H=new $imports.Kit(), L=new $imports.Kit();
     var x0=x-1.6, x1=x+1.6, zN=z-18, zS=z+6, len=zS-zN, zc=(zN+zS)/2;
     H.box('fterrazzo',x,-0.05,zc,3.2,0.1,len,0x8e9690,1);
     H.box('plaster',x0-0.06,1.95,zc,0.12,2.3,len,0xb3b8ad,1); H.box('plaster',x1+0.06,1.95,zc,0.12,2.3,len,0xb3b8ad,1);
@@ -161,13 +163,13 @@
     for(i=0;i<6;i++){ var lz=z+4-i*4; H.box('metal',x,3.05,lz,1.3,0.06,0.26,0x7c8280,1); L.box('emit',x,3.01,lz,1.2,0.03,0.18,0xe8f0ea,1); }
     H.box('emit',x0+0.1,2.55,zN+0.6,0.32,0.13,0.03,0x58c27a,1);                                    /* 安全出口灯 */
     d.B.add(H.build()); d.lamps=L.build(); d.B.add(d.lamps);
-    d.fig=new THREE.Group();
-    d.fig.add(figMesh('teacher',new THREE.MeshBasicMaterial({color:0x040506,fog:true}),1.12));
-    var gear=new THREE.Mesh(patGearGeo(),new THREE.MeshBasicMaterial({vertexColors:true,color:0x555555,fog:true})); gear.scale.setScalar(1.12); d.fig.add(gear);
+    d.fig=new $imports.THREE.Group();
+    d.fig.add((0,$imports.figMesh)('teacher',new $imports.THREE.MeshBasicMaterial({color:0x040506,fog:true}),1.12));
+    var gear=new $imports.THREE.Mesh((0,$imports.patGearGeo)(),new $imports.THREE.MeshBasicMaterial({vertexColors:true,color:0x555555,fog:true})); gear.scale.setScalar(1.12); d.fig.add(gear);
     d.fig.position.set(x,0,z-3); d.B.add(d.fig);                  /* 人形正面朝 +z：面对着镜头走来的方向 */
 
     /* ===== C：机房一角的显示器（档案对照） ===== */
-    d.C=cutAdd(new THREE.Group()); var M=new Kit();
+    d.C=(0,$imports.cutAdd)(new $imports.THREE.Group()); var M=new $imports.Kit();
     M.box('fterrazzo',x,-0.05,z,6,0.1,6,0x4e5553,1);
     M.box('plaster',x,1.6,z-1.2,6,3.2,0.12,0x434b49,1); M.box('plaster',x-3,1.6,z+1.8,0.12,3.2,6,0x3e4544,1); M.box('plaster',x+3,1.6,z+1.8,0.12,3.2,6,0x3e4544,1);
     M.box('plaster',x,3.2,z+1.8,6,0.1,6,0x2f3534,1);
@@ -184,26 +186,26 @@
     d.arch=screen(d.portrait?768:1280,d.portrait?1280:768,sw,sh,d.C,x,my,z-0.75+0.019,0);
 
     d.A.visible=true; d.B.visible=d.C.visible=false;
-    if(VisualState.stage) VisualState.stage.mesh.visible=false;
+    if($imports.VisualState.stage) $imports.VisualState.stage.mesh.visible=false;
     /* 先把三处布景的材质都编好（不在演出中途第一次显示时现编，手机上会卡一下） */
     try{
       d.B.visible=d.C.visible=true;
-      var prev=GLR.renderer.getRenderTarget(); GLR.renderer.setRenderTarget(GLR.rt||null);
-      GLR.renderer.compile(CUT.grp,GLR.cam,GLR.scene); GLR.renderer.setRenderTarget(prev);
+      var prev=$imports.GLR.renderer.getRenderTarget(); $imports.GLR.renderer.setRenderTarget($imports.GLR.rt||null);
+      $imports.GLR.renderer.compile($imports.CUT.grp,$imports.GLR.cam,$imports.GLR.scene); $imports.GLR.renderer.setRenderTarget(prev);
     }catch(e){}
     d.B.visible=d.C.visible=false;
-    try{ SFX.stopAmbient(); d.sound=SoundPlayer.play('scene.cyberEnd'); Lifecycle.scope('cutscene').own(function(){ SoundPlayer.fade(d.sound); }); }catch(e){}
+    try{ $imports.SFX.stopAmbient(); d.sound=$imports.SoundPlayer.play('scene.cyberEnd'); $imports.Lifecycle.scope('cutscene').own(function(){ $imports.SoundPlayer.fade(d.sound); }); }catch(e){}
   },frame:function(k,d){
     var t=k*DUR, x=d.x, z=d.z, i;
     var inA=t<SEG.B[0], inB=!inA&&t<SEG.C[0], inC=!inA&&!inB&&t<SEG.D[0], inD=t>=SEG.D[0];
     d.A.visible=inA; d.B.visible=inB; d.C.visible=inC;
-    if(VisualState.stage) VisualState.stage.mesh.visible=inD;
+    if($imports.VisualState.stage) $imports.VisualState.stage.mesh.visible=inD;
     /* 段与段之间短短的黑场 */
     var fade=0;
     [SEG.B[0],SEG.C[0],SEG.D[0]].forEach(function(b){ fade=Math.max(fade,1-Math.abs(t-b)/0.22); });
     if(t>SEG.D[0]) fade=Math.max(fade,1-seg(t,SEG.D[0],SEG.D[0]+0.5));
     fade=Math.max(fade,seg(t,15.1,15.95));
-    cutFade(clamp(fade,0,1));
+    (0,$imports.cutFade)((0,$imports.clamp)(fade,0,1));
 
     if(inA){
       /* 指示灯：每架灭之前闪一下 */
@@ -215,51 +217,57 @@
       var lines=LOG.filter(function(l){ return t>=l[0]; }).length;
       paint(d.log,lines,function(c,W,H){ drawLog(c,W,H,lines); });
       var dolly=ph(t,0,3.2), dim=seg(t,0.6,2.8);
-      cutLook(x+0.18,1.5,z+1.6-1.7*dolly, x,1.3,z-4.75);
+      (0,$imports.cutLook)(x+0.18,1.5,z+1.6-1.7*dolly, x,1.3,z-4.75);
       d.light={amb:0.22-0.1*dim,hemi:0.16-0.08*dim,dir:0.03,fog:{r:0.02,g:0.026,b:0.03,density:0.045}};
-      VisualState.patrolRed=0;
+      $imports.VisualState.patrolRed=0;
     }else if(inB){
       var on=flickerOn(t), settled=t>=FLICKER_END;
       d.lamps.visible=on;
       var lamp=settled?1:(on?0.95:0.22);
       d.light={amb:0.17*lamp,hemi:0.12*lamp,dir:0.04,fog:{r:0.045,g:0.05,b:0.05,density:0.045}};
       /* 巡察者在这一层的红：闪的时候一阵一阵，稳住以后退掉 */
-      VisualState.patrolRed=0.32*(1-ph(t,FLICKER_END-0.2,FLICKER_END+0.6))*(on?1:0.6);
+      $imports.VisualState.patrolRed=0.32*(1-ph(t,FLICKER_END-0.2,FLICKER_END+0.6))*(on?1:0.6);
       /* 失去活动：肩膀垂下去，整个人往前沉一点，之后一动不动 */
       var slump=ph(t,FLICKER_END+0.1,FLICKER_END+1.3);
       d.fig.rotation.set(0.12*slump,0,0); d.fig.position.y=-0.05*slump;
       var go=ph(t,SEG.B[0],SEG.B[1]);
-      cutLook(x+0.35-0.15*go,1.6,z+4.6-3.2*go, x,1.75-0.25*slump,z-3);
+      (0,$imports.cutLook)(x+0.35-0.15*go,1.6,z+4.6-3.2*go, x,1.75-0.25*slump,z-3);
     }else if(inC){
-      VisualState.patrolRed=0;
+      $imports.VisualState.patrolRed=0;
       var st=archState(t);
       paint(d.arch,st.key,function(c,W,H){ drawArchive(c,W,H,st,d.portrait); });
       /* 推近到屏幕：最后屏幕在画面里占七成左右（按当前视角和宽高比算，横竖屏都看得清字） */
-      var push=ph(t,SEG.C[0],10.4), vf=Math.tan((GLR.cam.fov||72)*Math.PI/360), hf=vf*(GLR.cam.aspect||1.6);
+      var push=ph(t,SEG.C[0],10.4), vf=Math.tan(($imports.GLR.cam.fov||72)*Math.PI/360), hf=vf*($imports.GLR.cam.aspect||1.6);
       var near=Math.max(d.scr.w/2/(hf*0.72),d.scr.h/2/(vf*0.72)), far=near+1.1;
       var dist=far+(near-far)*push;
-      cutLook(x+0.12*(1-push),d.scr.y+0.07*(1-push),z-0.75+dist, x,d.scr.y,z-0.75);
+      (0,$imports.cutLook)(x+0.12*(1-push),d.scr.y+0.07*(1-push),z-0.75+dist, x,d.scr.y,z-0.75);
       d.light={amb:0.06,hemi:0.04,dir:0.0,fog:{r:0.01,g:0.012,b:0.014,density:0.07}};
     }else{
       /* 天亮了：天色从日出到早上七点；颜色和正常的光一起回来（比游戏平时压暗的阴天亮一些） */
       d.light=null; d.boost=1+0.8*ph(t,11.6,14.2);
-      VisualState.patrolRed=0;
-      VisualState.stageHour=6.0+1.1*seg(t,SEG.D[0],DUR);         /* 日出到早上七点 */
-      GLR.worldNorm=ph(t,SEG.D[0]+0.2,13.8);
-      GLR.dayExpo=Math.max(GLR.dayExpo||0.6,0.6+0.4*ph(t,12,14.5));   /* 不再是压暗的阴天：普通的早晨 */
+      $imports.VisualState.patrolRed=0;
+      $imports.VisualState.stageHour=6.0+1.1*seg(t,SEG.D[0],DUR);         /* 日出到早上七点 */
+      $imports.GLR.worldNorm=ph(t,SEG.D[0]+0.2,13.8);
+      $imports.GLR.dayExpo=Math.max($imports.GLR.dayExpo||0.6,0.6+0.4*ph(t,12,14.5));   /* 不再是压暗的阴天：普通的早晨 */
       var rise=ph(t,SEG.D[0],DUR);                                 /* 从楼前升起、往后退，最后楼顶在画面下半，上面是天 */
-      cutLook(x+2*rise,1.5+8.5*rise,z+6+12*rise, x,3+19*rise,z-28);
+      (0,$imports.cutLook)(x+2*rise,1.5+8.5*rise,z+6+12*rise, x,3+19*rise,z-28);
     }
   },clean:function(d){
-    VisualState.stageHour=null; VisualState.patrolRed=0;
+    $imports.VisualState.stageHour=null; $imports.VisualState.patrolRed=0;
     d.light=null; d.boost=0;
   }};
 
   /* 三处室内布景的明暗由这里给（演出期间的舞台是室外模式）；天亮那一段不管，用正常的室外光 */
   GameModules.on('lightState',function(st){
-    var d=(typeof CUT!=='undefined'&&CUT.on&&CUT.id==='cyber')?CUT.data:null;
+    var d=(typeof $imports.CUT!=='undefined'&&$imports.CUT.on&&$imports.CUT.id==='cyber')?$imports.CUT.data:null;
     if(!d) return;
     if(d.light){ st.amb=d.light.amb; st.hemi=d.light.hemi; st.dir=d.light.dir; st.fog=d.light.fog; }
     else if(d.boost){ st.amb*=d.boost; st.hemi*=d.boost; st.dir*=d.boost; }
   },{owner:'cyber-route'});
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/cyber-route/ending.js",{
+
+});
+})(GameModules.imports("game3d/js/modules/cyber-route/ending.js"));

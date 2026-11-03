@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 虚空迷宫：死在迷宫里的两段死亡演出（模块 void-maze，画面）
    用 DeathCG.register 接进死亡演出，DeathTimeline.define 登记时长，调试面板的死亡预览列表也在这里加；
    死因、墓志铭这些文字在 maze.js。两段都先把场景藏起来（Ctx.hideWorld），在视线坐标系里自己搭布景：
@@ -19,9 +21,9 @@
 'use strict';
 
 (function(){
-  if(typeof DeathCG==='undefined'||!DeathCG.register) return;
-  var U=DeathCG.kit, seg=U.seg, ss=U.ss, mat=U.mat, setI=U.setI;
-  var LOOK=MAZE_LOOK, GAP=0x8fd0ff;              /* 门缝的光比迷宫里的出口再蓝一点：画面整体去色以后还认得出是淡蓝 */
+  if(typeof $imports.DeathCG==='undefined'||!$imports.DeathCG.register) return;
+  var U=$imports.DeathCG.kit, seg=U.seg, ss=U.ss, mat=U.mat, setI=U.setI;
+  var LOOK=$imports.MAZE_LOOK, GAP=0x8fd0ff;              /* 门缝的光比迷宫里的出口再蓝一点：画面整体去色以后还认得出是淡蓝 */
   function on(k,a,b){ return k>=a&&k<b; }
   /* 实例化网格建好时每个都在原点：先全部缩成 0，免得第一帧之前在脚下闪一下 */
   function hideAll(im,n){ for(var i=0;i<n;i++) setI(im,i,0,0,0,0,0,0,0,0,0); im.instanceMatrix.needsUpdate=true; return im; }
@@ -56,7 +58,7 @@
     return true;
   }
 
-  DeathCG.register('void',{
+  $imports.DeathCG.register('void',{
     build:function(c){
       c.hideWorld();
       var W=HALL;
@@ -74,7 +76,7 @@
         K.box('plaster',0,HH/2,-HL-0.05,2*HW,HH,0.1,W,0.2);
       },0,0,0);
       var cols=[0x4a4c4b,GAP,LOOK.door];
-      c.doors=PART.map(function(p,i){ return hideAll(c.inst(new THREE.BoxGeometry(p.w,p.h,p.d),mat(cols[i]),DOORS.length),DOORS.length); });
+      c.doors=PART.map(function(p,i){ return hideAll(c.inst(new $imports.THREE.BoxGeometry(p.w,p.h,p.d),mat(cols[i]),DOORS.length),DOORS.length); });
       c.veil(0x000000);
     },
     update:function(c,k,view){
@@ -120,14 +122,14 @@
     return out.set(-sy*cp*u+lx,eye+Math.sin(p0)*u,cy*cp*u+lz);
   }
 
-  DeathCG.register('abyss',{
+  $imports.DeathCG.register('abyss',{
     build:function(c){
       c.hideWorld();
       var r=c.rand, i, W=LOOK.white;
       /* 虚空：藏起迷宫以后，四周换成一整片黑（不画别的房间的天空渐变）。透明材质 + 最先画，只填没有东西的地方 */
-      var sky=c.mesh(new THREE.SphereGeometry(80,16,10),mat(0x000000,1,{side:THREE.BackSide,fog:false}),0,0,0);
+      var sky=c.mesh(new $imports.THREE.SphereGeometry(80,16,10),mat(0x000000,1,{side:$imports.THREE.BackSide,fog:false}),0,0,0);
       sky.renderOrder=-10;
-      if(!qa){ qa=new THREE.Quaternion(); qb=new THREE.Quaternion(); tv=new THREE.Vector3(); }
+      if(!qa){ qa=new $imports.THREE.Quaternion(); qb=new $imports.THREE.Quaternion(); tv=new $imports.THREE.Vector3(); }
       /* 刚才掉下来的那块平台：在头顶前方，越来越远。底面暗，靠这边的侧面和上沿被上面的冷光照着一点 */
       c.ledge=c.merged(function(K){
         K.box('plaster',0,0.3,3.3,6,0.56,6,W,0.2);
@@ -135,7 +137,7 @@
         K.box('plaster',0,0.6,0.28,6,0.03,0.03,W,0.9);
       },0,0,0);
       /* 往上飞走的白色碎块（体素） */
-      c.rub=hideAll(c.inst(new THREE.BoxGeometry(1,1,1),mat(0xcfcdc6),RUBBLE),RUBBLE);
+      c.rub=hideAll(c.inst(new $imports.THREE.BoxGeometry(1,1,1),mat(0xcfcdc6),RUBBLE),RUBBLE);
       c.bits=[];
       for(i=0;i<RUBBLE;i++) c.bits.push({a:r()*6.283,d:2.0+r()*5.5,s:0.15+r()*0.5,y:r()*36,v:0.65+r()*0.35,w:(r()-0.5)*3,ph:r()*6.283});
       /* 画着粉笔箭头的那一块：箭头画在 +z 面上，用 c.face 转过来对着镜头 */
@@ -148,10 +150,10 @@
       },0,0,0);
       c.mark.visible=false;
       /* 很深的下面：一开始的那块方地（斜线方块，只有上面一点冷光，灰的），地上站着一个人，手里有手电 */
-      c.pad=new THREE.Group(); c.add(c.pad,0,0,1.2);
-      c.mesh(new THREE.BoxGeometry(4.8,0.3,4.8),mat(0x8f9294,undefined,{fog:false}),0,-0.15,0,c.pad);
+      c.pad=new $imports.THREE.Group(); c.add(c.pad,0,0,1.2);
+      c.mesh(new $imports.THREE.BoxGeometry(4.8,0.3,4.8),mat(0x8f9294,undefined,{fog:false}),0,-0.15,0,c.pad);
       c.mesh((function(){
-        var K=new Kit(), t, h=0.004, a=2.2;
+        var K=new $imports.Kit(), t, h=0.004, a=2.2;
         for(t=-2*a+0.35;t<2*a;t+=0.7){                                 /* 线 x − z = t 和方块相交的那一段 */
           var za=Math.max(-a,-a-t), zb=Math.min(a,a-t);
           if(zb-za<0.05) continue;
@@ -160,12 +162,12 @@
         }
         [[0,-a,2*a,0.05],[0,a,2*a,0.05],[-a,0,0.05,2*a],[a,0,0.05,2*a]].forEach(function(b){ K.box('decal',b[0],h,b[1],b[2],0.003,b[3],LOOK.hatch,0.55); });   /* 方块的四条边 */
         return K.mergedGeometry();
-      })(),new THREE.MeshBasicMaterial({vertexColors:true,fog:true}),0,0,0,c.pad);
-      c.man=new THREE.Group(); c.man.add(figMesh('person',mat(0x0b0d10),1)); c.add(c.man,0.2,0,0.1,c.pad);
-      c.beam=new THREE.Group(); c.add(c.beam,0.45,1.12,0.2,c.pad);
-      var cone=new THREE.ConeGeometry(0.42,2.0,14,1,false); cone.translate(0,-1.0,0); cone.rotateX(-Math.PI/2);   /* 尖在手电上，朝 +z 张开 */
+      })(),new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true}),0,0,0,c.pad);
+      c.man=new $imports.THREE.Group(); c.man.add((0,$imports.figMesh)('person',mat(0x0b0d10),1)); c.add(c.man,0.2,0,0.1,c.pad);
+      c.beam=new $imports.THREE.Group(); c.add(c.beam,0.45,1.12,0.2,c.pad);
+      var cone=new $imports.THREE.ConeGeometry(0.42,2.0,14,1,false); cone.translate(0,-1.0,0); cone.rotateX(-Math.PI/2);   /* 尖在手电上，朝 +z 张开 */
       c.mesh(cone,mat(0xf4f8fa,0.22,{fog:false}),0,0,0,c.beam);
-      c.mesh(new THREE.CircleGeometry(0.06,12),mat(0xffffff,undefined,{fog:false}),0,0,0.01,c.beam);   /* 手电的灯头 */
+      c.mesh(new $imports.THREE.CircleGeometry(0.06,12),mat(0xffffff,undefined,{fog:false}),0,0,0.01,c.beam);   /* 手电的灯头 */
       c.veil(0x000000);
     },
     update:function(c,k,view){
@@ -182,21 +184,27 @@
       var mk=null;
       for(i=0;i<PASS.length;i++) if(k>=PASS[i].a&&k<PASS[i].b){ mk=PASS[i]; break; }
       c.mark.visible=!!mk;
-      if(mk){ passAt(mk,k,eye,c.mark.position); c.mark.lookAt(GLR.cam.position); c.mark.rotateZ(0.12*Math.sin(k*2.1)); }   /* 画箭头的那面始终朝着镜头 */
+      if(mk){ passAt(mk,k,eye,c.mark.position); c.mark.lookAt($imports.GLR.cam.position); c.mark.rotateZ(0.12*Math.sin(k*2.1)); }   /* 画箭头的那面始终朝着镜头 */
       c.pad.position.y=eye-1.35-(Dend-D);
       c.man.rotation.y=Math.PI+0.4*Math.sin(k*0.9);
       /* 手电：先在地上找，2.45 秒起一点点抬起来，2.95 秒照到脸上 */
       c.pad.updateWorldMatrix(true,true);
       tv.set(1.1*Math.cos(k*1.7),0,0.6+1.1*Math.sin(k*1.7)); c.pad.localToWorld(tv);
       c.beam.lookAt(tv); qa.copy(c.beam.quaternion);
-      c.beam.lookAt(GLR.cam.position); qb.copy(c.beam.quaternion);
+      c.beam.lookAt($imports.GLR.cam.position); qb.copy(c.beam.quaternion);
       c.beam.quaternion.copy(qa).slerp(qb,ss(k,2.45,2.95));
       c.flash('glare',k,2.97,0.35);
       c.shade(0.1+0.85*ss(k,3.0,3.12));
     }
   });
 
-  DeathTimeline.define('void',3.6);
-  DeathTimeline.define('abyss',3.6);
-  if(typeof DEV_DEATH!=='undefined') DEV_DEATH.push(['虚空迷宫·迷失','void'],['虚空迷宫·坠落','abyss']);
+  $imports.DeathTimeline.define('void',3.6);
+  $imports.DeathTimeline.define('abyss',3.6);
+  if(typeof $imports.DEV_DEATH!=='undefined') $imports.DEV_DEATH.push(['虚空迷宫·迷失','void'],['虚空迷宫·坠落','abyss']);
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/void-maze/maze-death.js",{
+
+});
+})(GameModules.imports("game3d/js/modules/void-maze/maze-death.js"));

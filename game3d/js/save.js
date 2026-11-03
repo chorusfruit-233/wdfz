@@ -1,114 +1,116 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 存档 */
 'use strict';
 
 /* 存档字段表：每一组把"存"和"读"写在一起，加字段只改一处，不会存了忘读、读了忘存。
    读档按表的顺序执行：时钟要先于冷却时间的换算，背包要先于手持状态，模式 / 房间要先于车库里那个东西。
    clockVersion 2 起时钟按"天 * 1440 + 当天分钟"连续计；更早的存档读进来时换算一次。 */
-function saveNum(v,lo,hi){ return Number.isFinite(v)?clamp(v,lo,hi):0; }
+function saveNum(v,lo,hi){ return Number.isFinite(v)?(0,$imports.clamp)(v,lo,hi):0; }
 function saveObj(v){ return (v&&typeof v==='object'&&!Array.isArray(v))?Object.assign({},v):{}; }
 var SAVE_DIAGNOSTIC=null;
 function saveReport(stage,error){
   SAVE_DIAGNOSTIC={stage:stage,message:error&&error.message?error.message:String(error)};
 }
-var GameStorage=StorageAdapter.create(function(){return localStorage;},function(e){saveReport(e.operation,e.error);});
-function prepareSave(d){return SaveData.prepare(d,{lightsOut:LIGHTS_OUT,rooms:INTERIORS,items:ITEMS});}
+var GameStorage=$imports.StorageAdapter.create(function(){return localStorage;},function(e){saveReport(e.operation,e.error);});
+function prepareSave(d){return $imports.SaveData.prepare(d,{lightsOut:$imports.LIGHTS_OUT,rooms:$imports.INTERIORS,items:$imports.ITEMS});}
 var SAVE_SCHEMA=[
   { /* 位置和时钟 */
-    save:function(d){ d.mode=S.mode; d.room=S.room; d.x=S.x; d.y=S.y; d.ang=S.ang; d.pitch=S.pitch; d.tsec=S.tsec; d.day=S.day; d.diff=S.diff; },
+    save:function(d){ d.mode=$imports.S.mode; d.room=$imports.S.room; d.x=$imports.S.x; d.y=$imports.S.y; d.ang=$imports.S.ang; d.pitch=$imports.S.pitch; d.tsec=$imports.S.tsec; d.day=$imports.S.day; d.diff=$imports.S.diff; },
     load:function(d){
-      S.mode=d.mode||'out'; S.room=d.room||null;
-      S.x=d.x; S.y=d.y; S.ang=d.ang||0; S.pitch=d.pitch||0;
-      S.tsec=d.tsec; S.day=d.day;
+      $imports.S.mode=d.mode||'out'; $imports.S.room=d.room||null;
+      $imports.S.x=d.x; $imports.S.y=d.y; $imports.S.ang=d.ang||0; $imports.S.pitch=d.pitch||0;
+      $imports.S.tsec=d.tsec; $imports.S.day=d.day;
     }
   },
   { /* 身体：SAN、违规、体力、士力架 / 药片 / 手机的剩余时间 */
     save:function(d){
-      d.san=S.san; d.viol=S.viol; d.stam=S.stam; d.tired=!!S.tired;
-      d.snackT=Math.max(0,S.snackT||0); d.pillT=Math.max(0,S.pillT||0); d.phoneCool=Math.max(0,PHONE.cool||0);
+      d.san=$imports.S.san; d.viol=$imports.S.viol; d.stam=$imports.S.stam; d.tired=!!$imports.S.tired;
+      d.snackT=Math.max(0,$imports.S.snackT||0); d.pillT=Math.max(0,$imports.S.pillT||0); d.phoneCool=Math.max(0,$imports.PHONE.cool||0);
     },
     load:function(d){
-      S.san=saveNum(d.san,0,100); S.viol=saveNum(d.viol,0,100); S.stam=saveNum(d.stam,0,staminaMax());
-      S.tired=(typeof d.tired==='boolean')?d.tired:S.stam<=6;
-      S.snackT=saveNum(d.snackT,0,SNACK_SEC); S.pillT=saveNum(d.pillT,0,PILL_SEC); PHONE.cool=saveNum(d.phoneCool,0,PH_COOL);
+      $imports.S.san=saveNum(d.san,0,100); $imports.S.viol=saveNum(d.viol,0,100); $imports.S.stam=saveNum(d.stam,0,(0,$imports.staminaMax)());
+      $imports.S.tired=(typeof d.tired==='boolean')?d.tired:$imports.S.stam<=6;
+      $imports.S.snackT=saveNum(d.snackT,0,$imports.SNACK_SEC); $imports.S.pillT=saveNum(d.pillT,0,$imports.PILL_SEC); $imports.PHONE.cool=saveNum(d.phoneCool,0,$imports.PH_COOL);
     }
   },
   { /* 设施冷却（按连续时钟记） */
-    save:function(d){ d.actCool=S.actCool||{}; },
+    save:function(d){ d.actCool=$imports.S.actCool||{}; },
     load:function(d){
-      S.actCool=saveObj(d.actCool);
+      $imports.S.actCool=saveObj(d.actCool);
     }
   },
   { /* 天赋免疫、课表违规的计时与档位 */
-    save:function(d){ d.immuneUsed=!!S.immuneUsed; d.tt=S.tt; d.ttTier=S.ttTier; },          /* immuneUsed 只为旧版本读档保留，从 talentState 派生 */
-    load:function(d){ S.tt=saveNum(d.tt,0,100); S.ttTier=d.ttTier||0; }
+    save:function(d){ d.immuneUsed=!!$imports.S.immuneUsed; d.tt=$imports.S.tt; d.ttTier=$imports.S.ttTier; },          /* immuneUsed 只为旧版本读档保留，从 talentState 派生 */
+    load:function(d){ $imports.S.tt=saveNum(d.tt,0,100); $imports.S.ttTier=d.ttTier||0; }
   },
   { /* 考试模式 */
-    save:function(d){ d.exam=!!S.exam; d.examCur=S.examCur; d.examSeat=S.examSeat||0; d.examTot=S.examTot||0; },
-    load:function(d){ S.exam=!!d.exam; S.examCur=(d.examCur===undefined)?null:d.examCur; S.examSeat=d.examSeat||0; S.examTot=d.examTot||0; }
+    save:function(d){ d.exam=!!$imports.S.exam; d.examCur=$imports.S.examCur; d.examSeat=$imports.S.examSeat||0; d.examTot=$imports.S.examTot||0; },
+    load:function(d){ $imports.S.exam=!!d.exam; $imports.S.examCur=(d.examCur===undefined)?null:d.examCur; $imports.S.examSeat=d.examSeat||0; $imports.S.examTot=d.examTot||0; }
   },
   { /* 背包、快捷栏、天赋、搜过的地方、线索、坐着没有 */
-    save:function(d){ d.bag=S.bag; d.hot=S.hot; d.talent=Talent.id(); d.talentState=Talent.serialize(); d.spots=S.spots; d.clues=S.clues; d.seated=S.seated; },
+    save:function(d){ d.bag=$imports.S.bag; d.hot=$imports.S.hot; d.talent=$imports.Talent.id(); d.talentState=$imports.Talent.serialize(); d.spots=$imports.S.spots; d.clues=$imports.S.clues; d.seated=$imports.S.seated; },
     load:function(d){
-      S.bag=d.bag||[]; S.hot=d.hot||[null,null];
-      Talent.normalizeSaved(d); S.spots=d.spots||{}; S.clues=d.clues||{};       /* 天赋 ID 校验与迁移：未知 / 缺失 → 没有天赋，不沿用读档前的值 */
-      S.seated=!!d.seated;
+      $imports.S.bag=d.bag||[]; $imports.S.hot=d.hot||[null,null];
+      $imports.Talent.normalizeSaved(d); $imports.S.spots=d.spots||{}; $imports.S.clues=d.clues||{};       /* 天赋 ID 校验与迁移：未知 / 缺失 → 没有天赋，不沿用读档前的值 */
+      $imports.S.seated=!!d.seated;
     }
   },
   { /* 老存档的同化选择已取消：保留同化值，首个有效更新按满值结果结算。 */
     save:function(d){ d.hiddenAsked=false; d.hiddenLatch=false; d.hiddenWindow=0; },
-    load:function(){ S.hiddenLatch=false;S.hiddenAsked=false;S.hiddenWindow=0; }
+    load:function(){ $imports.S.hiddenLatch=false;$imports.S.hiddenAsked=false;$imports.S.hiddenWindow=0; }
   },
   { /* 假正常 */
-    save:function(d){ d.fn=S.fn; },
-    load:function(d){ if(d.fn) S.fn=Object.assign({v:0,on:false,note:false,n:0,next:0,shown:false},d.fn); }
+    save:function(d){ d.fn=$imports.S.fn; },
+    load:function(d){ if(d.fn) $imports.S.fn=Object.assign({v:0,on:false,note:false,n:0,next:0,shown:false},d.fn); }
   },
   { /* 剧情标志、手里用着的东西、开着的门 */
-    save:function(d){ d.rt=RT; d.use=USE; d.openDoors=OPENDOORS; },
+    save:function(d){ d.rt=$imports.RT; d.use=$imports.USE; d.openDoors=$imports.OPENDOORS; },
     load:function(d){
-      if(d.rt){RT=Object.assign(newRT(),d.rt);RT.dayRhythmVersion=d.rt.dayRhythmVersion||0;}
-      DayEvents.afterLoad(d);                                  /* 旧存档：读进来的那天不补特殊日 */
-      if(d.use) USE=d.use;
-      normalizeUseState();
-      if(d.openDoors) OPENDOORS=d.openDoors;
+      if(d.rt){$imports.RT=Object.assign((0,$imports.newRT)(),d.rt);$imports.RT.dayRhythmVersion=d.rt.dayRhythmVersion||0;}
+      $imports.DayEvents.afterLoad(d);                                  /* 旧存档：读进来的那天不补特殊日 */
+      if(d.use) $imports.USE=d.use;
+      (0,$imports.normalizeUseState)();
+      if(d.openDoors) $imports.OPENDOORS=d.openDoors;
     }
   },
   { /* 异象：正在发生的那一个、节奏、预报、冷却；没答完的选择读档后重新问，剩下的时间接着算 */
     save:function(d){
-      d.anRained=AN.rained; d.anCool=AN.cool;
-      d.anId=AN.id; d.anT=AN.t; d.anAcc=AN.acc;
-      d.anData=(function(){ try{ return JSON.parse(JSON.stringify(AN.data||{})); }catch(e){ return {}; } })();
-      d.anNext=AN.next; d.anLastBig=AN.lastBig; d.anPre=AN.pre; d.anPreNext=AN.preNext;
-      d.anLocked=!!AN.locked; d.anLockWait=AN.lockWait||0;
-      d.anChoiceMs=(AN.active&&UI.chooseOpen&&UI.choiceTimer)?Math.max(0,UI.choiceDeadline-performance.now()):null;
+      d.anRained=$imports.AN.rained; d.anCool=$imports.AN.cool;
+      d.anId=$imports.AN.id; d.anT=$imports.AN.t; d.anAcc=$imports.AN.acc;
+      d.anData=(function(){ try{ return JSON.parse(JSON.stringify($imports.AN.data||{})); }catch(e){ return {}; } })();
+      d.anNext=$imports.AN.next; d.anLastBig=$imports.AN.lastBig; d.anPre=$imports.AN.pre; d.anPreNext=$imports.AN.preNext;
+      d.anLocked=!!$imports.AN.locked; d.anLockWait=$imports.AN.lockWait||0;
+      d.anChoiceMs=($imports.AN.active&&$imports.UI.chooseOpen&&$imports.UI.choiceTimer)?Math.max(0,$imports.UI.choiceDeadline-performance.now()):null;
     },
     load:function(d){
-      AN.id=d.anId||null; AN.t=d.anT||0; AN.acc=d.anAcc||0;
-      AN.data=(d.anData&&typeof d.anData==='object')?d.anData:{};
-      AN.next=(typeof d.anNext==='number')?d.anNext:45;
-      AN.rained=!!d.anRained; AN.cool=d.anCool||{};
-      AN.pre=d.anPre||null; AN.preNext=d.anPreNext||0; AN.locked=!!d.anLocked; AN.lockWait=d.anLockWait||0;
-      AN.lastBig=!!d.anLastBig; AN.active=!!d.anId;
-      if(AN.active&&AN.data.asked&&AN.data.chosen===null&&['turn','hand','repeat','cold'].indexOf(AN.id)>=0){
-        AN.data.asked=false;
-        if(Number.isFinite(d.anChoiceMs)) AN.data.choiceRemaining=d.anChoiceMs;
+      $imports.AN.id=d.anId||null; $imports.AN.t=d.anT||0; $imports.AN.acc=d.anAcc||0;
+      $imports.AN.data=(d.anData&&typeof d.anData==='object')?d.anData:{};
+      $imports.AN.next=(typeof d.anNext==='number')?d.anNext:45;
+      $imports.AN.rained=!!d.anRained; $imports.AN.cool=d.anCool||{};
+      $imports.AN.pre=d.anPre||null; $imports.AN.preNext=d.anPreNext||0; $imports.AN.locked=!!d.anLocked; $imports.AN.lockWait=d.anLockWait||0;
+      $imports.AN.lastBig=!!d.anLastBig; $imports.AN.active=!!d.anId;
+      if($imports.AN.active&&$imports.AN.data.asked&&$imports.AN.data.chosen===null&&['turn','hand','repeat','cold'].indexOf($imports.AN.id)>=0){
+        $imports.AN.data.asked=false;
+        if(Number.isFinite(d.anChoiceMs)) $imports.AN.data.choiceRemaining=d.anChoiceMs;
       }
-      AN.sub=0;
+      $imports.AN.sub=0;
     }
   },
   { /* 躲藏与被发现状态跟随巡察存档；缺少此字段的旧档仍按未躲藏恢复。 */
-    save:function(d){d.hiding=HIDE.on?{c:HIDE.c,r:HIDE.r,seen:HIDE.seen,t:HIDE.t}:null;},
+    save:function(d){d.hiding=$imports.HIDE.on?{c:$imports.HIDE.c,r:$imports.HIDE.r,seen:$imports.HIDE.seen,t:$imports.HIDE.t}:null;},
     load:function(d){
-      var h=d.hiding,R=S.mode==='in'&&INTERIORS[S.room];
-      HIDE.on=!!(h&&R&&Number.isInteger(h.c)&&Number.isInteger(h.r)&&R.grid[h.r]&&R.grid[h.r][h.c]==='H');
-      if(HIDE.on){HIDE.c=h.c;HIDE.r=h.r;HIDE.seen=!!h.seen;HIDE.t=saveNum(h.t,0,1e8);}
+      var h=d.hiding,R=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room];
+      $imports.HIDE.on=!!(h&&R&&Number.isInteger(h.c)&&Number.isInteger(h.r)&&R.grid[h.r]&&R.grid[h.r][h.c]==='H');
+      if($imports.HIDE.on){$imports.HIDE.c=h.c;$imports.HIDE.r=h.r;$imports.HIDE.seen=!!h.seen;$imports.HIDE.t=saveNum(h.t,0,1e8);}
     }
   },
   { /* 车库里那个东西（只在车库里存）；钟楼旋梯上的位置（进房间时由 enterRoom 读） */
     save:function(d){
-      d.roam=(S.mode==='in'&&S.room==='garage1')?Object.assign({},ROAM):null;
-      d.spiral=spiralHere()?{state:SP.state,a:SP.a,th:SP.th}:null;
+      d.roam=($imports.S.mode==='in'&&$imports.S.room==='garage1')?Object.assign({},$imports.ROAM):null;
+      d.spiral=(0,$imports.spiralHere)()?{state:$imports.SP.state,a:$imports.SP.a,th:$imports.SP.th}:null;
     },
-    load:function(d){ if(S.mode==='in'&&S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign(ROAM,d.roam); }
+    load:function(d){ if($imports.S.mode==='in'&&$imports.S.room==='garage1'&&d.roam&&typeof d.roam==='object') Object.assign($imports.ROAM,d.roam); }
   },
   { /* 模块和 Mod 的状态：各自登记（GameModules.persistent / Mod 的 persist），按 id 存在 d.mods 里 */
     save:function(d){ d.mods=GameModules.saveAll(); },
@@ -116,10 +118,10 @@ var SAVE_SCHEMA=[
   }
 ];
 /* 速通用单独的存档槽，不覆盖、不删除普通模式的「继续上次」 */
-function saveSlot(){ return (typeof RUN_MODE!=='undefined'&&RUN_MODE==='speedrun')?'wdfz3d_speedrun_slot':'wdfz3d'; }
+function saveSlot(){ return (typeof $imports.RUN_MODE!=='undefined'&&$imports.RUN_MODE==='speedrun')?'wdfz3d_speedrun_slot':'wdfz3d'; }
 function saveGame(){
   try{
-    CampusPressure.observe();
+    $imports.CampusPressure.observe();
     var d={v:1, clockVersion:2};
     SAVE_SCHEMA.forEach(function(f){ f.save(d); });
     return GameStorage.write(saveSlot(),JSON.stringify(prepareSave(d)));   /* 速通写自己的存档槽 */
@@ -129,18 +131,18 @@ function saveGame(){
 function applySave(d){
   d=prepareSave(d);                         /* 校验和迁移先完成，再改当前会话；不修改调用者的数据 */
   SAVE_SCHEMA.forEach(function(f){ f.load(d); });
-  Investigation.migrate();
-  SchoolDay.restore();
-  Mechanics.migrate(d);
-  CampusPressure.restore();
-  try{ Elevator.fixCabinPosition(); }catch(e){}          /* 旧存档站在旧轿厢外围的：放回现在的轿厢正中 */
+  $imports.Investigation.migrate();
+  $imports.SchoolDay.restore();
+  $imports.Mechanics.migrate(d);
+  $imports.CampusPressure.restore();
+  try{ $imports.Elevator.fixCabinPosition(); }catch(e){}          /* 旧存档站在旧轿厢外围的：放回现在的轿厢正中 */
   return d;
 }
 /* 规则恢复之后由应用流程调用；applySave 本身不构建模型、操纵 DOM 或设置灯光。 */
 function restoreSavePresentation(){
-  var el=document.getElementById('hideslits');if(el)el.style.display=HIDE.on?'block':'none';
-  VisualState.patrolRed=PatrolWorld.localChase()?1:0;
-  Engine.torch(USE.torch);
+  var el=document.getElementById('hideslits');if(el)el.style.display=$imports.HIDE.on?'block':'none';
+  $imports.VisualState.patrolRed=$imports.PatrolWorld.localChase()?1:0;
+  $imports.Engine.torch($imports.USE.torch);
 }
 function loadGame(){
   try{
@@ -153,7 +155,7 @@ function loadGame(){
 /* 以前只有暂停菜单里能手动存档，死了、结局了存档也还在：「梦魇」可以读档重来。
    现在进出房间、预知梦醒来时自动存；死透了或者打出结局就删档。 */
 function autoSave(){
-  if(S.screen==='play'&&!S.dead) saveGame();
+  if($imports.S.screen==='play'&&!$imports.S.dead) saveGame();
 }
 function clearSave(){
   GameStorage.remove(saveSlot());
@@ -161,7 +163,7 @@ function clearSave(){
 /* 拿到过的结局单独记，不跟存档一起删 */
 var ENDS_KEY='wdfz3d_ends';
 function endsSeen(){
-  try{ var result=GameStorage.read(ENDS_KEY),d=JSON.parse(result.value||'{}'); return SaveData.record(d)?d:{}; }catch(e){ saveReport('read-endings',e);return {}; }
+  try{ var result=GameStorage.read(ENDS_KEY),d=JSON.parse(result.value||'{}'); return $imports.SaveData.record(d)?d:{}; }catch(e){ saveReport('read-endings',e);return {}; }
 }
 function endMark(id){
   var d=endsSeen(); d[id]=1;
@@ -172,8 +174,31 @@ function paintMenuSave(){
   if(sc) sc.style.display=loadGame()?'block':'none';
   var el=document.getElementById('mends');
   if(!el) return;
-  var seen=endsSeen(), ids=Object.keys(ENDINGS), got=[];
-  for(var i=0;i<ids.length;i++) if(seen[ids[i]]) got.push(ENDINGS[ids[i]].t+(ENDINGS[ids[i]].true?'（真）':ENDINGS[ids[i]].fake?'（假）':''));
+  var seen=endsSeen(), ids=Object.keys($imports.ENDINGS), got=[];
+  for(var i=0;i<ids.length;i++) if(seen[ids[i]]) got.push($imports.ENDINGS[ids[i]].t+($imports.ENDINGS[ids[i]].true?'（真）':$imports.ENDINGS[ids[i]].fake?'（假）':''));
   el.textContent=got.length?'已见结局 '+got.length+' / '+ids.length+'　'+got.join(' '):'公开真结局：闸门 · 白名单 · 门 · 网安仙人（未解锁）';
   el.style.display='block';
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/save.js",{
+"saveNum":{get:function(){return saveNum;},set:function($value){saveNum=$value;}},
+"saveObj":{get:function(){return saveObj;},set:function($value){saveObj=$value;}},
+"SAVE_DIAGNOSTIC":{get:function(){return SAVE_DIAGNOSTIC;},set:function($value){SAVE_DIAGNOSTIC=$value;}},
+"saveReport":{get:function(){return saveReport;},set:function($value){saveReport=$value;}},
+"GameStorage":{get:function(){return GameStorage;},set:function($value){GameStorage=$value;}},
+"prepareSave":{get:function(){return prepareSave;},set:function($value){prepareSave=$value;}},
+"SAVE_SCHEMA":{get:function(){return SAVE_SCHEMA;},set:function($value){SAVE_SCHEMA=$value;}},
+"saveSlot":{get:function(){return saveSlot;},set:function($value){saveSlot=$value;}},
+"saveGame":{get:function(){return saveGame;},set:function($value){saveGame=$value;}},
+"applySave":{get:function(){return applySave;},set:function($value){applySave=$value;}},
+"restoreSavePresentation":{get:function(){return restoreSavePresentation;},set:function($value){restoreSavePresentation=$value;}},
+"loadGame":{get:function(){return loadGame;},set:function($value){loadGame=$value;}},
+"autoSave":{get:function(){return autoSave;},set:function($value){autoSave=$value;}},
+"clearSave":{get:function(){return clearSave;},set:function($value){clearSave=$value;}},
+"ENDS_KEY":{get:function(){return ENDS_KEY;},set:function($value){ENDS_KEY=$value;}},
+"endsSeen":{get:function(){return endsSeen;},set:function($value){endsSeen=$value;}},
+"endMark":{get:function(){return endMark;},set:function($value){endMark=$value;}},
+"paintMenuSave":{get:function(){return paintMenuSave;},set:function($value){paintMenuSave=$value;}}
+});
+})(GameModules.imports("game3d/js/save.js"));

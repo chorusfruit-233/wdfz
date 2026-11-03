@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 虚空迷宫：布局数据（模块 void-maze）
    错误的电梯（按钮只剩 67、89）门外的空间。黑暗、能见度低；由方正、有棱有角的白色结构组成，很封闭。
    整体是一个立体的「地下迷宫」：大小不一的空泡（房间）由走廊连起来，有的空泡没有地面，下面是虚空。
@@ -162,3 +164,12 @@ var MAZE_WALK=[
   {id:'RA',  t:'ramp', x0:3,x1:9,   z0:-31,z1:-29, ax:'x', a0:3, a1:9,  h0:0, h1:4},
   {id:'RX',  t:'ramp', x0:7,x1:10,  z0:-16,z1:-14, ax:'x', a0:7, a1:10, h0:0, h1:2}
 ];
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/void-maze/maze-data.js",{
+"MAZE_CFG":{get:function(){return MAZE_CFG;},set:function($value){MAZE_CFG=$value;}},
+"MAZE_AIR":{get:function(){return MAZE_AIR;},set:function($value){MAZE_AIR=$value;}},
+"MAZE_SOLID":{get:function(){return MAZE_SOLID;},set:function($value){MAZE_SOLID=$value;}},
+"MAZE_WALK":{get:function(){return MAZE_WALK;},set:function($value){MAZE_WALK=$value;}}
+});
+})(GameModules.imports("game3d/js/modules/void-maze/maze-data.js"));

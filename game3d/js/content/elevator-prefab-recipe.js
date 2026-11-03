@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 电梯预制件 v2（无机房乘客电梯；按真实结构比例，带倒角/圆管/内凹面板）
    纯数据生成器：不碰 THREE、不碰 DOM。
    每个部件是 {kind, part, type:'box'|'cyl'|'rod', ...}：
@@ -360,3 +362,23 @@ function buildElevatorPrefab(opts){
   boxes.forEach(function(bp){ if(bp.part) parts[bp.part]=bp; });
   return {spec:spec,boxes:boxes,parts:parts,colliders:colliders};
 }
+
+/* @module-exports */
+GameModules.publish("game3d/js/content/elevator-prefab-recipe.js",{
+"EV_SPEC":{get:function(){return EV_SPEC;},set:function($value){EV_SPEC=$value;}},
+"EV_COL":{get:function(){return EV_COL;},set:function($value){EV_COL=$value;}},
+"evBox":{get:function(){return evBox;},set:function($value){evBox=$value;}},
+"evCyl":{get:function(){return evCyl;},set:function($value){evCyl=$value;}},
+"evRod":{get:function(){return evRod;},set:function($value){evRod=$value;}},
+"evPlate":{get:function(){return evPlate;},set:function($value){evPlate=$value;}},
+"evBolts":{get:function(){return evBolts;},set:function($value){evBolts=$value;}},
+"evShaft":{get:function(){return evShaft;},set:function($value){evShaft=$value;}},
+"evRails":{get:function(){return evRails;},set:function($value){evRails=$value;}},
+"evCar":{get:function(){return evCar;},set:function($value){evCar=$value;}},
+"evLanding":{get:function(){return evLanding;},set:function($value){evLanding=$value;}},
+"evHall":{get:function(){return evHall;},set:function($value){evHall=$value;}},
+"evCarFittings":{get:function(){return evCarFittings;},set:function($value){evCarFittings=$value;}},
+"evMachine":{get:function(){return evMachine;},set:function($value){evMachine=$value;}},
+"buildElevatorPrefab":{get:function(){return buildElevatorPrefab;},set:function($value){buildElevatorPrefab=$value;}}
+});
+})(GameModules.imports("game3d/js/content/elevator-prefab-recipe.js"));

@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 人形
    统一的人形：头（后脑、头发、下巴、鼻子、眉骨、耳朵）、颈和斜方肌、校服立领和外套下摆、胸腹两段躯干、臀、
    大臂小臂（肌肉鼓起、肘）、带四指和拇指的手、大腿小腿（膝盖、腿肚）、带鞋头鞋跟的鞋。每种姿势只生成一次几何体，所有人共用（一个人一次绘制）。
@@ -56,19 +58,19 @@ function figShoe(K,m,x,z,c){
 /* Blender 建的模型（tools/blender/assets/figures.py）：按这一档的模型包合成一个几何体，标上种类（换画质时按它换）。
    自己缓存，不随 Assets.clearCache 换掉：回到原来的画质还是同一个几何体 */
 function figAssetGeo(name,flag,val){
-  var a=Assets.get(name); if(!a) return null;
+  var a=$imports.Assets.get(name); if(!a) return null;
   var key='A|'+name+'|'+a.pk.lod;
   if(FIG_GEO[key]) return FIG_GEO[key];
-  var K=new Kit(); K.asset(name,0,0,0,0,{uo:0,vo:0});
+  var K=new $imports.Kit(); K.asset(name,0,0,0,0,{uo:0,vo:0});
   var g=K.mergedGeometry(); g.userData={shared:true}; g.userData[flag]=val;
   FIG_GEO[key]=g;
   return g;
 }
 function figGeo(kind){
   var ag=figAssetGeo('fig_'+(FIG_SPEC[kind]?kind:'tall'),'figKind',kind); if(ag) return ag;
-  var key=kind+'|'+Quality.get().segments;
+  var key=kind+'|'+$imports.Quality.get().segments;
   if(FIG_GEO[key]) return FIG_GEO[key];
-  var sp=FIG_SPEC[kind]||FIG_SPEC.tall, K=new Kit(), m='dark', c=0xffffff, t=sp.thin;
+  var sp=FIG_SPEC[kind]||FIG_SPEC.tall, K=new $imports.Kit(), m='dark', c=0xffffff, t=sp.thin;
   var sit=(kind==='sit');
   var hipY=sit?0.535:sp.leg, sh=hipY+sp.torso, hx=sp.w/2, s;
   var hk=sp.head/0.23;                                                       /* 手、脚跟着头的大小走 */
@@ -142,7 +144,7 @@ function figGeo(kind){
 }
 /* 生成一个人：返回 Mesh（共享几何体），调用者负责位置 / 朝向 */
 function figMesh(kind,mat,scale){
-  var me=new THREE.Mesh(figGeo(kind),mat);
+  var me=new $imports.THREE.Mesh(figGeo(kind),mat);
   if(scale&&scale!==1) me.scale.setScalar(scale);
   return me;
 }
@@ -151,16 +153,16 @@ function figMesh(kind,mat,scale){
 var FX_GEO={}, FX_VC_MAT=null;
 function fxVCMat(){
   if(!FX_VC_MAT){
-    FX_VC_MAT=new THREE.MeshBasicMaterial({vertexColors:true,fog:true,side:THREE.DoubleSide});   /* 镜头钻进去也看得见（钟罩下来的时候） */
+    FX_VC_MAT=new $imports.THREE.MeshBasicMaterial({vertexColors:true,fog:true,side:$imports.THREE.DoubleSide});   /* 镜头钻进去也看得见（钟罩下来的时候） */
     FX_VC_MAT.userData.shared=true;   /* 各个演出共用这一份；以前每次死亡清场都把它释放掉，下一次又要现编着色器 */
   }
   return FX_VC_MAT;
 }
 function fxGeo(name){
   var ag=figAssetGeo('fx_'+name,'fxKind',name); if(ag) return ag;
-  var key=name+'|'+Quality.get().segments;
+  var key=name+'|'+$imports.Quality.get().segments;
   if(FX_GEO[key]) return FX_GEO[key];
-  var K=new Kit(), m='dark', i;
+  var K=new $imports.Kit(), m='dark', i;
   if(name==='hand'){                        /* 从地下伸出来的手：掌心朝下、五指往前抓，后面拖着一截小臂 */
     var sk=0x6f6a63;
     K.bevel(m,0,0,0,0.22,0.06,0.24,sk,1,0.025);
@@ -227,4 +229,23 @@ function fxGeo(name){
   FX_GEO[key].userData={shared:true,fxKind:name};
   return FX_GEO[key];
 }
-function fxMesh(name){ return new THREE.Mesh(fxGeo(name),fxVCMat()); }
+function fxMesh(name){ return new $imports.THREE.Mesh(fxGeo(name),fxVCMat()); }
+
+/* @module-exports */
+GameModules.publish("game3d/js/model/figure.js",{
+"FIG_GEO":{get:function(){return FIG_GEO;},set:function($value){FIG_GEO=$value;}},
+"FIG_SPEC":{get:function(){return FIG_SPEC;},set:function($value){FIG_SPEC=$value;}},
+"figLimb":{get:function(){return figLimb;},set:function($value){figLimb=$value;}},
+"figHand":{get:function(){return figHand;},set:function($value){figHand=$value;}},
+"figHandFlat":{get:function(){return figHandFlat;},set:function($value){figHandFlat=$value;}},
+"figShoe":{get:function(){return figShoe;},set:function($value){figShoe=$value;}},
+"figAssetGeo":{get:function(){return figAssetGeo;},set:function($value){figAssetGeo=$value;}},
+"figGeo":{get:function(){return figGeo;},set:function($value){figGeo=$value;}},
+"figMesh":{get:function(){return figMesh;},set:function($value){figMesh=$value;}},
+"FX_GEO":{get:function(){return FX_GEO;},set:function($value){FX_GEO=$value;}},
+"FX_VC_MAT":{get:function(){return FX_VC_MAT;},set:function($value){FX_VC_MAT=$value;}},
+"fxVCMat":{get:function(){return fxVCMat;},set:function($value){fxVCMat=$value;}},
+"fxGeo":{get:function(){return fxGeo;},set:function($value){fxGeo=$value;}},
+"fxMesh":{get:function(){return fxMesh;},set:function($value){fxMesh=$value;}}
+});
+})(GameModules.imports("game3d/js/model/figure.js"));

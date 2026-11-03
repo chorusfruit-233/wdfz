@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 特殊校园日
    每个游戏日按本局种子定一次，记在 RT.dayEvents[day]，跟着存档走：读档、跳时、重开同一个存档都是同一个结果。
      校庆 anniversary —— 当天所有「每秒往下掉」的 SAN 速度减半（异象逐秒、巡察、危险区、车道上的东西、学生会注视），
@@ -29,29 +31,29 @@ function dayHash(seed,day){
 }
 var DayEvents={
   seed:function(){
-    if(!Number.isFinite(RT.runSeed)) RT.runSeed=Math.floor(Math.random()*4294967296)>>>0;
-    return RT.runSeed;
+    if(!Number.isFinite($imports.RT.runSeed)) $imports.RT.runSeed=Math.floor($imports.GameRandom.next()*4294967296)>>>0;
+    return $imports.RT.runSeed;
   },
-  had:function(id){ var m=RT.dayEvents||{}; return Object.keys(m).some(function(k){ return m[k]===id; }); },
+  had:function(id){ var m=$imports.RT.dayEvents||{}; return Object.keys(m).some(function(k){ return m[k]===id; }); },
   roll:function(day){
     if(day<DAY_EVENT_CFG.firstDay) return 'none';
-    var u=dayHash(DayEvents.seed(),day), p=DAY_EVENT_CFG.p, ev=RT.dayEvents||{};
+    var u=dayHash(DayEvents.seed(),day), p=DAY_EVENT_CFG.p, ev=$imports.RT.dayEvents||{};
     if(u<p.anniversary) return DayEvents.had('anniversary')?'none':'anniversary';
     if(u<p.anniversary+p.occupied) return ev[day-1]==='occupied'?'none':'occupied';   /* 不连着两天占课 */
     return 'none';
   },
   /* 当天还没定就定下来（只定一次） */
   ensure:function(){
-    RT.dayEvents=RT.dayEvents||{};
-    var d=S.day||1;
-    if(RT.dayEvents[d]===undefined) RT.dayEvents[d]=DayEvents.roll(d);
-    return RT.dayEvents[d];
+    $imports.RT.dayEvents=$imports.RT.dayEvents||{};
+    var d=$imports.S.day||1;
+    if($imports.RT.dayEvents[d]===undefined) $imports.RT.dayEvents[d]=DayEvents.roll(d);
+    return $imports.RT.dayEvents[d];
   },
   /* 上学的那一段（07:20–22:30）才算「当天」 */
-  schoolHours:function(){ return S.tsec>=440&&S.tsec<LIGHTS_OUT+10; },
+  schoolHours:function(){ return $imports.S.tsec>=440&&$imports.S.tsec<$imports.LIGHTS_OUT+10; },
   today:function(){
     if(!DayEvents.schoolHours()) return 'none';
-    var id=RT.dayEvents&&RT.dayEvents[S.day];
+    var id=$imports.RT.dayEvents&&$imports.RT.dayEvents[$imports.S.day];
     return DAY_EVENT_DEF[id]?id:'none';
   },
   is:function(id){ return DayEvents.today()===id; },
@@ -61,67 +63,39 @@ var DayEvents={
   lessonBonus:function(){ return DayEvents.is('occupied')?DAY_EVENT_CFG.occupied.lessonBonus:0; },
   tag:function(){ var d=DAY_EVENT_DEF[DayEvents.today()]; return d?d.tag:''; },
   tick:function(){
-    if(S.screen!=='play'||S.dead) return;
+    if($imports.S.screen!=='play'||$imports.S.dead) return;
     DayEvents.ensure();
     var id=DayEvents.today();
-    RT.daySaid=RT.daySaid||{};
-    if(id!=='none'&&!RT.daySaid[S.day]&&!(S.intro>0)&&!(typeof PRO!=='undefined'&&PRO.on)){
-      RT.daySaid[S.day]=1;
-      os(DAY_EVENT_DEF[id].say,6);
-      try{ Playtest.event('特殊日',id); }catch(e){}
+    $imports.RT.daySaid=$imports.RT.daySaid||{};
+    if(id!=='none'&&!$imports.RT.daySaid[$imports.S.day]&&!($imports.S.intro>0)&&!(typeof $imports.PRO!=='undefined'&&$imports.PRO.on)){
+      $imports.RT.daySaid[$imports.S.day]=1;
+      (0,$imports.os)(DAY_EVENT_DEF[id].say,6);
+      try{ $imports.Playtest.event('特殊日',id); }catch(e){}
     }
-    try{ DayDecor.sync(); }catch(e){}
+    GameModules.emit('dayAppearance');
   },
   /* 旧存档：读进来的那一天不补特殊日（免得半天里突然变成校庆）；之后的日子照常按种子定 */
   afterLoad:function(d){
     var rt=d&&d.rt||{};
-    if(!rt.dayEvents||typeof rt.dayEvents!=='object'){ RT.dayEvents={}; RT.dayEvents[S.day||1]='none'; }
+    if(!rt.dayEvents||typeof rt.dayEvents!=='object'){ $imports.RT.dayEvents={}; $imports.RT.dayEvents[$imports.S.day||1]='none'; }
     if(!Number.isFinite(rt.runSeed)){
       var src=String(d&&d.diff||'')+'|'+((rt.carPlates||[]).join(','))+'|'+(d&&d.day||1);
       var h=2166136261>>>0;
       for(var i=0;i<src.length;i++){ h^=src.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
-      RT.runSeed=h;
+      $imports.RT.runSeed=h;
     }
   }
 };
 /* 每秒往下掉的 SAN 统一走这里：速度 × 当天的倍率（校庆 0.5）。一次性扣除不要用它。 */
-function sanDrain(rate,dt,source){ if(rate>0&&dt>0) PlayerStats.changeSan(-(dt*rate*DayEvents.drainMul()),source||'drain'); }   /* 写入走 PlayerStats（模块边界） */
+function sanDrain(rate,dt,source){ if(rate>0&&dt>0) $imports.PlayerStats.changeSan(-(dt*rate*DayEvents.drainMul()),source||'drain'); }   /* 写入走 PlayerStats（模块边界） */
 
-/* 校庆横幅：教学楼正面二楼，红底黄字。只在校庆当天、人在室外时挂着（单独一组，不进室外合并网格，也不参与碰撞）。 */
-var DayDecor={grp:null,
-  sync:function(){
-    var want=S.mode==='out'&&DayEvents.is('anniversary')&&typeof GLR!=='undefined'&&!!GLR.scene;
-    if(want&&!DayDecor.grp) DayDecor.build();
-    else if(!want&&DayDecor.grp) DayDecor.clear();
-  },
-  texture:function(){
-    var cv=document.createElement('canvas'); cv.width=1024; cv.height=96;
-    var g=cv.getContext('2d');
-    g.fillStyle='#b3121b'; g.fillRect(0,0,1024,96);
-    g.fillStyle='#8a0d14'; g.fillRect(0,0,1024,6); g.fillRect(0,90,1024,6);
-    g.fillStyle='#f6d36b'; g.font='bold 58px "Noto Serif CJK SC","Source Han Serif SC",serif';
-    g.textAlign='center'; g.textBaseline='middle';
-    g.fillText('热烈庆祝武大附中建校纪念日',512,50);
-    var t=new THREE.CanvasTexture(cv); t.anisotropy=4;
-    return t;
-  },
-  build:function(){
-    var o=objById('teach'); if(!o) return;
-    var cx=(o.x+o.w/2)*SC*U2M, fz=teachFrontZ();
-    var grp=new THREE.Group(), mat=new THREE.MeshLambertMaterial({map:DayDecor.texture(),side:THREE.DoubleSide});
-    /* 二、三楼之间：上下两道楼板边各挑出约 0.75 米，横幅挂在它们外沿，仰头看不会被楼板边挡住 */
-    var banner=new THREE.Mesh(new THREE.PlaneGeometry(13,1.1),mat);
-    banner.position.set(cx,5.55,fz+0.82); grp.add(banner);
-    var rope=new THREE.MeshLambertMaterial({color:0x6a5a48});
-    [-6.6,6.6].forEach(function(dx){ var r=new THREE.Mesh(new THREE.BoxGeometry(0.04,2.6,0.04),rope); r.position.set(cx+dx,5.55,fz+0.8); grp.add(r); });
-    grp.name='day-decor'; GLR.scene.add(grp); DayDecor.grp=grp;
-  },
-  clear:function(){
-    var grp=DayDecor.grp; DayDecor.grp=null; if(!grp) return;
-    try{ GLR.scene.remove(grp); }catch(e){}
-    grp.traverse(function(o){
-      if(o.geometry) o.geometry.dispose();
-      if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); }
-    });
-  }
-};
+
+/* @module-exports */
+GameModules.publish("game3d/js/day-events.js",{
+"DAY_EVENT_CFG":{get:function(){return DAY_EVENT_CFG;},set:function($value){DAY_EVENT_CFG=$value;}},
+"DAY_EVENT_DEF":{get:function(){return DAY_EVENT_DEF;},set:function($value){DAY_EVENT_DEF=$value;}},
+"dayHash":{get:function(){return dayHash;},set:function($value){dayHash=$value;}},
+"DayEvents":{get:function(){return DayEvents;},set:function($value){DayEvents=$value;}},
+"sanDrain":{get:function(){return sanDrain;},set:function($value){sanDrain=$value;}}
+});
+})(GameModules.imports("game3d/js/day-events.js"));

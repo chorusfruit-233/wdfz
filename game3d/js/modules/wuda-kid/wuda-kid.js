@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 隐藏彩蛋天赋「武大子弟」（模块 wuda-kid）——内部内容，不进玩家 Wiki
    效果：开局自带一支手电筒（放进背包和快捷栏 1）。
    隐藏：不在天赋选择、随机池和暂停里的天赋说明中出现；不占 S.talent，和本局抽到 / 选的天赋同时生效（叠加）。
@@ -13,14 +15,14 @@ var WUDA_KID_CFG={key:'wdfz_wuda', chance:0.03, clicks:3, windowMs:1600, item:'t
 
 var WudaKid=(function(){
   var C=WUDA_KID_CFG, st={on:false,told:false,t:0,via:null}, taps=[];
-  var store=StorageAdapter.create(function(){ return localStorage; });
+  var store=$imports.StorageAdapter.create(function(){ return localStorage; });
   function armed(){ var r=store.read(C.key); return !!(r.ok&&r.value==='1'); }
   function setArmed(v){ if(v) store.write(C.key,'1'); else store.remove(C.key); }
   /* 静默放进背包：开场演出里不弹「拿到了」 */
   function grant(){
-    if(InventoryRules.add(S,C.item,true)!=='added') return false;
-    if(S.hot[0]===null) InventoryRules.setHot(S,0,C.item);
-    try{ bagChanged(); }catch(e){}
+    if($imports.InventoryRules.add($imports.S,C.item,true)!=='added') return false;
+    if($imports.S.hot[0]===null) $imports.InventoryRules.setHot($imports.S,0,C.item);
+    try{ (0,$imports.bagChanged)(); }catch(e){}
     return true;
   }
   function tap(el,now){
@@ -30,13 +32,13 @@ var WudaKid=(function(){
     taps=[];
     var on=!armed(); setArmed(on);
     if(el){ el.classList.toggle('wuda-on',on); el.classList.remove('wuda-flash'); void el.offsetWidth; el.classList.add('wuda-flash'); }   /* 闪一下（CSS 动画，不开定时器） */
-    try{ SFX.resume(); SFX.blink(); }catch(e){}
-    try{ toast(on?C.onText:C.offText); }catch(e){}
+    try{ $imports.SFX.resume(); $imports.SFX.blink(); }catch(e){}
+    try{ (0,$imports.toast)(on?C.onText:C.offText); }catch(e){}
     return on;
   }
   var api={
     active:function(){ return st.on; }, armed:armed, tap:tap, grant:grant, state:st,
-    roll:function(){ return Math.random(); },                 /* 单独一处取随机数：测试可以替换 */
+    roll:function(){ return $imports.GameRandom.next(); },                 /* 单独一处取随机数：测试可以替换 */
     /* 菜单打开过：必定有；否则按 3% 几率 */
     pick:function(){ return armed()?'menu':(api.roll()<C.chance?'chance':null); },
     newGame:function(o){
@@ -47,7 +49,7 @@ var WudaKid=(function(){
     tick:function(dt){
       if(!st.on||st.told||!(dt>0)) return;
       st.t+=dt; if(st.t<C.tellAfter) return;
-      st.told=true; try{ os(C.line,4.2); }catch(e){}
+      st.told=true; try{ (0,$imports.os)(C.line,4.2); }catch(e){}
     },
     reset:function(){ st.on=false; st.told=false; st.t=0; st.via=null; },
     load:function(d){ st.on=!!(d&&d.on); st.told=!!(d&&d.told); st.via=st.on?(d.via==='menu'?'menu':'chance'):null; st.t=st.told?C.tellAfter:0; }
@@ -72,3 +74,10 @@ var WudaKid=(function(){
     el.addEventListener('click',function(){ WudaKid.tap(el); });
   },own);
 })();
+
+/* @module-exports */
+GameModules.publish("game3d/js/modules/wuda-kid/wuda-kid.js",{
+"WUDA_KID_CFG":{get:function(){return WUDA_KID_CFG;},set:function($value){WUDA_KID_CFG=$value;}},
+"WudaKid":{get:function(){return WudaKid;},set:function($value){WudaKid=$value;}}
+});
+})(GameModules.imports("game3d/js/modules/wuda-kid/wuda-kid.js"));

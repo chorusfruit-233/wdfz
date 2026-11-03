@@ -1,3 +1,5 @@
+/* @module-capsule */
+(function($imports){
 /* 里世界 3D · 声音库（模块 audio，只有数据）
    2026-11-02 全部音效重做：所有一次性音效都写成配方，由 fx/sound-player.js 现场合成；不加载任何音频文件。
    · 每次播放都在范围里重新取值（[最小, 最大]），同一声不会两次一样；
@@ -552,3 +554,15 @@ var SOUND_BANK={
     {t:'noise',f:1500,type:'bandpass',q:1,dur:0.35,g:0.25,atk:0.2},
     {t:'tone',f:62,to:58,dur:2.2,g:0.25,at:0.6,atk:0.3}]}
 };
+
+/* @module-exports */
+GameModules.publish("game3d/js/sound-bank.js",{
+"SOUND_CATS":{get:function(){return SOUND_CATS;},set:function($value){SOUND_CATS=$value;}},
+"BELL_TUNE":{get:function(){return BELL_TUNE;},set:function($value){BELL_TUNE=$value;}},
+"CHIME":{get:function(){return CHIME;},set:function($value){CHIME=$value;}},
+"TINE":{get:function(){return TINE;},set:function($value){TINE=$value;}},
+"STEEL":{get:function(){return STEEL;},set:function($value){STEEL=$value;}},
+"SAME_STEP":{get:function(){return SAME_STEP;},set:function($value){SAME_STEP=$value;}},
+"SOUND_BANK":{get:function(){return SOUND_BANK;},set:function($value){SOUND_BANK=$value;}}
+});
+})(GameModules.imports("game3d/js/sound-bank.js"));
