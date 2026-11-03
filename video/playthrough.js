@@ -17,6 +17,10 @@ window.Pilot = (() => {
       san:S.san,viol:S.viol,bag:S.bag.slice(),talent:S.talent,dead:S.dead,frameSeconds:dtG,
       anomaly:AN.active?AN.id:null,patrol:PAT.state,ending:RT.end||null,
       paused:PAUSE.on,choice:UI.chooseOpen,inputsAllowed:playerInputAllowed(),
+      activeSeconds:Mechanics.activePlaySeconds,attempt:Mechanics.attemptId,assimilation:S.tt,seated:S.seated,
+      network:{battery:PhoneNetwork.device.battery,powered:PhoneNetwork.device.powered,connected:PhoneNetwork.device.network,
+        wireless:{...PhoneNetwork.device.wireless},download:{...PhoneNetwork.device.download}},
+      server:{...Termination.state},
       chase:RT.carChase?{...RT.carChase}:null,
       route:selectedRoute,progress:{hacked:!!RT.hacked,data:!!RT.data,quiz:RT.faceQuiz?.done||0,
         diary:!!RT.portalDiary,blueprints:Object.keys(RT.portalBlueprints||{}).filter(k=>RT.portalBlueprints[k]),
@@ -268,17 +272,17 @@ window.Pilot = (() => {
     }
     await sleep(1000);if(S.room===before)throw Error('楼梯未切换楼层');
   }
-  async function bagAction(id,label){
+  async function bagAction(id,label,close=true){
     stop();await tap('Tab');await sleep(500);
     const slot=document.querySelectorAll('#bags .s')[S.bag.indexOf(id)];
     if(!slot)throw Error('背包中没有 '+id);slot.click();await sleep(500);
     const button=[...document.querySelectorAll('#bagacts button')].find(b=>b.textContent===label);
     if(!button)throw Error('背包操作不存在 '+label);button.click();event('input',{bag:id,action:label});
-    await sleep(700);await tap('Escape');await sleep(300);
+    await sleep(700);if(close){await tap('Escape');await sleep(300);}
   }
   async function roomForItem(){
     if(S.bag.length<7)return;
-    const needed=selectedRoute==='car'?['key','torch']:selectedRoute==='face'?['roomkey','usb']:['roomkey','coil','lens','vial','battery','goggles'];
+    const needed=selectedRoute==='car'?['key','torch']:selectedRoute==='face'?['roomkey','usb']:selectedRoute==='cyber'?['roomkey','phone','elixir','seal','hw']:['roomkey','coil','lens','vial','battery','goggles'];
     const expendable=S.bag.find(id=>![...needed,'pill'].includes(id));
     if(expendable)await bagAction(expendable,'丢弃');
     else if(hasItem('pill'))await bagAction('pill','使用');
@@ -451,12 +455,13 @@ window.Pilot = (() => {
     await finishEnding('car');
   }
   function start(route='car'){
-    if(!['car','face','portal'].includes(route))throw Error('不支持的真结局路线');
+    if(!['car','face','portal','cyber'].includes(route))throw Error('不支持的真结局路线');
     selectedRoute=route;
     started=performance.now();const label=document.createElement('div');label.id='pilot-label';
     label.style.cssText='position:fixed;right:12px;top:76px;z-index:50000;background:#101718dd;color:#d9e2da;padding:6px 10px;border-radius:3px;font:12px sans-serif;pointer-events:none;max-width:48%';
     document.body.appendChild(label);
-    (async()=>{await opening();await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
+    (async()=>{await opening();if(route==='cyber')await PilotCyber.run({sleep,chapter,event,stop,tap,look,alive,defense,go,cells,interact,nearest,building,floor,officeKey,choose,bagAction,finishEnding});
+      else await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
       .catch(e=>{stop();failed=e.stack||String(e);event('failure',failed);});
   }
   return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,face,tap,choose,stop,garageExit};

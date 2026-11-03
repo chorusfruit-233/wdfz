@@ -12,7 +12,7 @@ from capture import ROOT, game_server, launch_browser
 from example import package_example
 
 # 新局要先选天赋：每条路线用它已发布实录里的那一项（汽车 / 白名单 / 造门）
-ROUTE_TALENT = {'car': 'watch', 'face': 'code', 'portal': 'night'}
+ROUTE_TALENT = {'car': 'watch', 'face': 'code', 'portal': 'night', 'cyber': 'tech'}
 
 
 def probe(path):
@@ -52,7 +52,7 @@ def validate_success(result):
     """Do not publish an incomplete run, a fake ending, or a debug-assisted run."""
     state, checks = result.get('state', {}), result.get('runtime_checks', {})
     route = result.get('settings', {}).get('route', 'car')
-    if (route not in ('car', 'face', 'portal') or not state.get('finished') or state.get('failed') or state.get('dead')
+    if (route not in ROUTE_TALENT or not state.get('finished') or state.get('failed') or state.get('dead')
             or state.get('screen') != 'end' or state.get('ending') != route
             or result.get('error') or result.get('page_errors')):
         raise ValueError('未完成无页面错误的指定真结局')
@@ -62,6 +62,24 @@ def validate_success(result):
         raise ValueError('搜查或过场演出被跳过')
     if route == 'car' and not any(s.get('chase') and s['chase'].get('distance', 0) > 250 for s in result.get('observations', [])):
         raise ValueError('缺少实际驾驶过程')
+    if route == 'cyber':
+        needed = ['wirelessStarted', 'wirelessConnected', 'containerReady', 'controllerSelected',
+                  'transactionTraced', 'shutdownValidated', 'shutdownAccepted', 'serverCompleted']
+        milestones = [e for e in result.get('events', []) if e.get('kind') == 'milestone' and e.get('detail') in needed]
+        if [e['detail'] for e in milestones] != needed:
+            raise ValueError('缺少按顺序完成的网络路线过程')
+        accepted, completed = milestones[-2:]
+        if (completed.get('activeSeconds', 0) - accepted.get('activeSeconds', 0) < 598
+                or state.get('server', {}).get('status') != 'completed'
+                or state.get('server', {}).get('remaining') != 0
+                or state.get('attempt') != 1 or checks.get('studySkipped', 0) != 0):
+            raise ValueError('缺少原速完整生存阶段，或使用了重开／课堂快进')
+        files = {e.get('detail', {}).get('file') for e in result.get('events', []) if e.get('kind') == 'terminal-file'}
+        if not {'/school/site.txt', '/school/assets.tsv', '/school/runtime.log', '/school/services.txt'}.issubset(files):
+            raise ValueError('缺少终端实际读取的解谜证据')
+        if not state.get('network', {}).get('connected') or state.get('network', {}).get('download', {}).get('status') != 'complete':
+            raise ValueError('联网或容器下载没有完成')
+        return
     if route != 'car':
         milestones = [e['detail'] for e in result.get('events', []) if e.get('kind') == 'milestone']
         needed = (['whitelistWritten', 'whitelistSynced', 'whitelistVerified'] if route == 'face' else
@@ -85,7 +103,7 @@ def main():
     ap.add_argument('--out', type=Path, default=ROOT / 'video/build/playthrough')
     ap.add_argument('--timeout', type=int, default=1200)
     ap.add_argument('--quality', type=int, choices=range(5), default=0, help='游戏内画质档位（0–4）')
-    ap.add_argument('--route', choices=('car', 'face', 'portal'), default='car', help='汽车 / 白名单 / 造门真结局')
+    ap.add_argument('--route', choices=tuple(ROUTE_TALENT), default='car', help='汽车 / 白名单 / 造门 / 网安仙人真结局')
     ap.add_argument('--gpu', action='store_true', help='使用浏览器默认 GPU 后端，代替软件渲染')
     ap.add_argument('--no-video', action='store_true', help='验证路线，仅生成日志和末帧')
     args = ap.parse_args()
@@ -102,7 +120,10 @@ def main():
                           'automated_inputs': True, 'reads_map_and_state': True, 'speed': 1,
                           'fresh_browser_profile': True, 'route': args.route, 'talent': ROUTE_TALENT[args.route], 'software_renderer': not args.gpu,
                           'controls': 'touch_joystick_and_look_with_keyboard_actions'}
-    for filename in ('navigation.js', 'playthrough.js', 'playthrough.py', 'game-audio.js', 'capture.py', 'example.py', 'playthrough.html'):
+    generators = ['navigation.js', 'playthrough.js', 'playthrough.py', 'game-audio.js', 'capture.py', 'example.py', 'playthrough.html']
+    if args.route == 'cyber':
+        generators.append('cyber.js')
+    for filename in generators:
         result.setdefault('generator_sha256', {})[filename] = hashlib.sha256((ROOT / 'video' / filename).read_bytes()).hexdigest()
     with game_server() as url, sync_playwright() as pw:
         browser = launch_browser(pw, software=not args.gpu)
@@ -126,6 +147,8 @@ def main():
             page.locator('#tpGo').click()
             page.wait_for_function("S.screen==='play'||(CUT.on&&CUT.id==='opening')", timeout=60000)
             page.add_script_tag(path=str(ROOT / 'video/navigation.js'))
+            if args.route == 'cyber':
+                page.add_script_tag(path=str(ROOT / 'video/cyber.js'))
             page.add_script_tag(path=str(ROOT / 'video/playthrough.js'))
             page.evaluate('(route)=>Pilot.start(route)', args.route)
             deadline = time.monotonic() + args.timeout
@@ -139,6 +162,9 @@ def main():
                     break
                 if len(samples) % 15 == 0:
                     print('状态：' + json.dumps(state, ensure_ascii=False), flush=True)
+                    (args.out / 'progress.json').write_text(json.dumps(state, ensure_ascii=False), encoding='utf-8')
+                if len(samples) % 60 == 0:
+                    page.screenshot(path=str(args.out / 'live-frame.png'))
                 if state['finished'] or state['failed']:
                     break
             else:
@@ -152,7 +178,7 @@ def main():
                 result['runtime_checks'] = page.evaluate('''() => ({
                     devOpen:DEV.on, godMode:DEV.god, fastMovement:DEV.fast,
                     searchEnabled:SEARCH.on, cutscenesEnabled:CUT.enabled,
-                    timeScale:typeof GAME_TIME_SCALE==='undefined'?null:GAME_TIME_SCALE,
+                    timeScale:typeof GAME_TIME_SCALE==='undefined'?null:GAME_TIME_SCALE,studySkipped:RT.studySkipped||0,
                     finalEnding:RT.end, carDistance:RT.carChase?.distance,
                     actualSettings:{quality:QUALITY,volume:SET.vol},
                     endingCard:document.getElementById('ends')?.innerText||null
