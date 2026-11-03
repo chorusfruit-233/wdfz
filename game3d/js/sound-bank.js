@@ -50,6 +50,39 @@ var SOUND_BANK={
     {t:'noise',f:900,type:'lowpass',q:0.7,dur:0.06,g:0.12,at:0.11},                     /* 放进包里的一下 */
     {t:'bell',f:1318.5,dur:0.6,g:0.05,at:0.04,partials:CHIME},
     {t:'bell',f:1760,dur:0.7,g:0.045,at:0.13,partials:CHIME}]},
+  /* 成就（2026-11-03）：四档各一种，干、近、不做方位；避开上下课铃、钟声的旋律和巡察「两短一长」的节奏 */
+  'ui.achieve.normal':{cat:'ui',name:'成就 · 普通（粉笔轻点）',lv:-2,vary:{p:0.03,g:0.08},layers:[
+    {t:'noise',f:3200,type:'bandpass',q:3,dur:0.035,g:0.28,atk:0.001},                  /* 粉笔点在黑板上 */
+    {t:'noise',f:900,type:'bandpass',q:1.4,dur:0.02,g:0.08},
+    {t:'tone',f:1568,dur:0.34,g:0.05,at:0.03,atk:0.004}]},                              /* 一声很轻的高音 */
+  'ui.achieve.elite':{cat:'ui',name:'成就 · 精英（两声上行钢片）',lv:0,vary:{p:0.02,g:0.08},layers:[
+    {t:'bell',f:988,dur:0.38,g:0.06,partials:TINE},
+    {t:'bell',f:1319,dur:0.5,g:0.06,at:0.14,partials:TINE}]},
+  'ui.achieve.epic':{cat:'ui',name:'成就 · 史诗（失谐的玻璃和弦）',lv:2,vary:{p:0.01,g:0.06},layers:[
+    {t:'bell',f:784,dur:1.4,g:0.04,partials:TINE},
+    {t:'bell',f:991,dur:1.3,g:0.036,at:0.05,partials:TINE},                             /* 略高一点点：不完全和谐 */
+    {t:'bell',f:1176,dur:1.25,g:0.032,at:0.1,partials:TINE},
+    {t:'noise',f:6200,type:'highpass',q:0.7,dur:0.9,g:0.025,atk:0.2}]},                 /* 玻璃的沙沙尾音 */
+  'ui.achieve.hidden':{cat:'ui',name:'成就 · 隐藏（倒放的低铃）',lv:0,vary:{p:0.01,g:0.06},layers:[
+    {t:'tone',f:196,dur:1.15,g:0.09,atk:1.05},                                          /* 由弱到强，到头突然断开 */
+    {t:'tone',f:293.7,dur:1.15,g:0.04,atk:1.05,type:'triangle',lp:1200},
+    {t:'noise',f:420,type:'lowpass',dur:1.15,g:0.07,atk:1.05}]},
+  /* 结算画面的评级（2026-11-03）：F–D、C–B、A–S、SS–SSS 四组 */
+  'ui.grade.low':{cat:'ui',name:'评级 · F–D（闷的一声）',lv:2,layers:[
+    {t:'tone',f:92,to:58,dur:0.38,g:0.26},
+    {t:'noise',f:300,type:'lowpass',dur:0.22,g:0.28,atk:0.002}]},
+  'ui.grade.mid':{cat:'ui',name:'评级 · C–B（纸和笔）',lv:-2,layers:[
+    {t:'noise',f:2400,type:'bandpass',q:0.8,dur:0.26,g:0.2,atk:0.05},                    /* 翻纸 */
+    {t:'noise',f:4200,type:'bandpass',q:3,dur:0.2,g:0.14,at:0.26,atk:0.02,am:[[22,30],0.6,'square']}]},   /* 笔尖划一道 */
+  'ui.grade.high':{cat:'ui',name:'评级 · A–S（盖章）',lv:4,layers:[
+    {t:'noise',f:900,type:'lowpass',dur:0.09,g:0.5,atk:0.001},                          /* 章落在纸上 */
+    {t:'tone',f:140,to:88,dur:0.18,g:0.2},
+    {t:'noise',f:1800,type:'bandpass',q:1,dur:0.05,g:0.14,at:0.02}]},
+  'ui.grade.top':{cat:'ui',name:'评级 · SS–SSS（盖章后的长音）',lv:4,layers:[
+    {t:'noise',f:900,type:'lowpass',dur:0.09,g:0.5,atk:0.001},
+    {t:'tone',f:140,to:88,dur:0.18,g:0.2},
+    {t:'tone',f:1318.5,dur:1.6,g:0.04,at:0.18,atk:0.02},                               /* 一声清亮的长音 */
+    {t:'tone',f:1975.5,dur:1.4,g:0.014,at:0.22,atk:0.03}]},
   'ui.alarm':{cat:'ui',name:'警示',lv:6,layers:[
     {t:'tone',f:520,to:180,type:'square',lp:2400,dur:0.8,g:0.1},
     {t:'tone',f:530,to:185,type:'square',lp:2400,dur:0.8,g:0.06}]},

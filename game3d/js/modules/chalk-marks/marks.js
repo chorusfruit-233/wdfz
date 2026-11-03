@@ -84,6 +84,7 @@ var ChalkMarks=(function(){
     if(inRoom.length>CHALK_CFG.perRoom) marks.splice(marks.indexOf(inRoom[0]),1);
     while(marks.length>CHALK_CFG.max) marks.shift();
     bump();
+    (0,$imports.gameFact)('chalk',{sym:sym});
     return m;
   }
   function erase(i){ if(i<0||i>=marks.length) return false; marks.splice(i,1); bump(); return true; }

@@ -1,6 +1,6 @@
 # Claude 测试攻略
 
-> 当前基线说明（2026-11-03）：主线为 `0bf55f1`；清单 46 个模块、七项公开可选天赋、四条公开真结局。常驻巡察与手机网络应选择 `test_patrol_world`、`test_campus_network_rules`、`test_campus_network`、`test_network_lifecycle`、`test_wireless_signals`；回放选择 `test_archive_speedrun`。旧测试总数和旧版录像不证明当前规则通过。本说明仍仅适用于 Claude。
+> 当前基线说明（2026-11-03）：主线为 `606bf91`（文件级解耦收口）；清单 46 个模块（成就与积分评级分支加到 49 个），七项公开可选天赋、四条公开真结局。常驻巡察与手机网络应选择 `test_patrol_world`、`test_campus_network_rules`、`test_campus_network`、`test_network_lifecycle`、`test_wireless_signals`；回放选择 `test_archive_speedrun`；成就、积分评级与通关记录选择 `test_achievements`、`test_run_record`。旧测试总数和旧版录像不证明当前规则通过。本说明仍仅适用于 Claude。
 
 本文仅适用于 Claude，不对其他 AI 协作者设定要求。它帮助 Claude 快速定位代码、复现问题并选择回归检查，适用于当前 3D 游戏；项目约定不检查 2D 版。详细覆盖清单见[测试说明](测试说明.md)，产品规则和验收场景见[产品对齐文档](产品对齐文档.md)。以下命令均在仓库根目录执行。
 
@@ -56,7 +56,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 调试面板可用 F2 或暂停菜单的「调试」打开，密码在页面里画的数字键盘上点（也可以直接按数字键、回车），密码是 `game3d/js/dev.js` 的 `DEV_CODE`；自动化脚本可以点 `#devlock [data-k="数字"]` 再点确认，或直接 `DevLock.submit(DEV_CODE)`。面板支持室内外传送、触发异象、调整时间、无敌和状态查看。它适合快速搭建场景，但传送或直接触发异象不能证明正常行走、触发条件或完整剧情链路可用；这些需求还要按玩家路径验证。
 
-状态会影响复现：`wdfz3d` 是存档，`wdfz3d_ends` 是结局记录，`wdfz3d_deaths` 是跨局的死亡记录（笔记「梦里记得的事」读它），`wdfz_pro` 控制前情提要，`zw3d_set` 保存设置，`wdfz3d_death_archive_v1` 是死亡档案室（含「全部解锁」写的 `granted`）。检查档案室的结局与开场回放时，用 `wdfz3d_ends` 预置已见结局即可；要一次打开全部档案，点档案室的「全部解锁」再在键盘上输密码，或直接 `DeathArchive.unlockAll()`——它只写 `granted`，不会改结局记录和死亡次数，所以不能拿它证明某条路线真的达成过。优先使用新的浏览器上下文或独立临时配置，避免覆盖已有玩家数据；不要直接清除用户浏览器的数据。localStorage 按来源隔离，不同端口可能有不同状态。修改画质、时间、角色位置、房间或事件时，记录初始状态和操作步骤。
+状态会影响复现：`wdfz3d` 是存档，`wdfz3d_ends` 是结局记录，`wdfz3d_deaths` 是跨局的死亡记录（笔记「梦里记得的事」读它），`wdfz_pro` 控制前情提要，`zw3d_set` 保存设置，`wdfz3d_death_archive_v1` 是 CG 档案馆（原死亡档案室，含「全部解锁」写的 `granted`），`wdfz3d_achievements_v1` 是成就，`wdfz3d_clears_v1` 与 `wdfz3d_clear_<id>` 是通关记录和回放，`wdfz3d_runlog_cur` 是进行中这一局的回放流水。注意测试基类 `BrowserCase.page()` 会关掉「翻找读条」，这在规则里算调试开关：要测成就、积分和通关记录，先把 `SEARCH.on` 设回 `true`，再清掉 `Achievements.run().debug`（见 `tests/test_achievements.py`、`tests/test_run_record.py`）；调试面板「档案」页签可以预览任一档结算画面、按评级生成「调试生成」的记录。检查档案室的结局与开场回放时，用 `wdfz3d_ends` 预置已见结局即可；要一次打开全部档案，点档案室的「全部解锁」再在键盘上输密码，或直接 `DeathArchive.unlockAll()`——它只写 `granted`，不会改结局记录和死亡次数，所以不能拿它证明某条路线真的达成过。优先使用新的浏览器上下文或独立临时配置，避免覆盖已有玩家数据；不要直接清除用户浏览器的数据。localStorage 按来源隔离，不同端口可能有不同状态。修改画质、时间、角色位置、房间或事件时，记录初始状态和操作步骤。
 
 ## 4. 自动化复现与结果边界
 

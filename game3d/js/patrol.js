@@ -48,13 +48,13 @@ $imports.FURN.M=function(c,x,y,cx,cz){
   K.box('emit',cx-0.37,1.85,cz,0.02,0.08,0.7,0xdcecf4,1);                                /* 灯条 */
   K.box('dark',cx-0.37,0.25,cz-0.08,0.02,0.18,0.5,0x0a0a0a,1);                           /* 出货口 */
 };
-var HIDE={on:false,c:0,r:0,seen:false,t:0};
+var HIDE={on:false,c:0,r:0,seen:false,t:0,near:false};
 function lockerFront(R,c,r){ return {x:R.ox+(c+0.5)*R.tw, y:R.oy+(r+1.5)*R.th}; }
 function hideIn(hit){
   var R=$imports.INTERIORS[$imports.S.room];
   HIDE.seen=!!(PAT.state==='walk'&&patSees()&&$imports.PatrolWorld.hunting());   /* 当着它的面钻进去，等于没躲（要在 HIDE.on 之前算） */
   if(HIDE.seen)$imports.PatrolWorld.observeLocker(hit.c,hit.r);
-  HIDE.on=true; HIDE.c=hit.c; HIDE.r=hit.r; HIDE.t=0;
+  HIDE.on=true; HIDE.c=hit.c; HIDE.r=hit.r; HIDE.t=0; HIDE.near=false;
   $imports.S.x=R.ox+(hit.c+0.5)*R.tw; $imports.S.y=R.oy+(hit.r+0.62)*R.th; $imports.S.ang=$imports.PI/2; $imports.S.pitch=0;
   (0,$imports.resetInputState)();
   var el=document.getElementById('hideslits'); if(el) el.style.display='block';
@@ -62,8 +62,9 @@ function hideIn(hit){
   (0,$imports.os)(HIDE.seen?'我：我钻进了柜子。……它看见了。脚步声没有停，正朝这边来。':'我：我钻进储物柜，把门带上。铁皮上一排缝，外面的光一条一条的。',3.4);
 }
 function hideOut(){
-  var R=$imports.INTERIORS[$imports.S.room];
-  HIDE.on=false;
+  var R=$imports.INTERIORS[$imports.S.room], ok=HIDE.on&&HIDE.near&&!HIDE.seen&&!PAT.locked;   /* 它来过附近、没看见我进去、出来时没被盯上 */
+  HIDE.on=false; HIDE.near=false;
+  if(ok) (0,$imports.gameFact)('patrol',{what:'locker'});
   var el=document.getElementById('hideslits'); if(el) el.style.display='none';
   if(R){ var f=lockerFront(R,HIDE.c,HIDE.r); $imports.S.x=f.x; $imports.S.y=f.y; }
   try{ $imports.SFX.door(); }catch(e){}

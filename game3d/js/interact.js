@@ -196,6 +196,7 @@ function doSanAct(key){
   var gain=$imports.CampusPressure.restGain(base);  /* 按休息结束时的压力结算，跨夜休息不能绕过衰减。 */
   $imports.PlayerStats.changeSan(gain,'interact',{max:100});
   $imports.S.actCool[key]=(0,$imports.gameClock)()+a.cd;
+  (0,$imports.gameFact)('rest',{key:key});
   (0,$imports.restoreStamina)(25);
   if(key==='piano'){ try{ $imports.SFX.resume(); $imports.SFX.moonlight(); }catch(e){} }
   else if(key==='pc'){ try{ $imports.PCGAME.start(); }catch(e){} }

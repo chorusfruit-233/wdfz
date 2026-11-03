@@ -206,6 +206,7 @@ var VoidMaze=(function(){
       ride.host=ride.host==='teach'?'lab':'teach';
     }
     $imports.Playtest.event('离开虚空迷宫',id);
+    (0,$imports.gameFact)('maze',{what:'leave',exit:id});
     $imports.Elevator.arrive(floor);
     (0,$imports.os)(id==='exit2'?'我：推开门，外面是另一栋楼的电梯厅。回头看，只有一扇普通的电梯门。':
       '我：推开门，是我上电梯的那一层。身后的门变回了电梯门，指示灯一格一格地暗下去。',4,$imports.OS_FORCE);

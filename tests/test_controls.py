@@ -60,6 +60,10 @@ class ControlsTest(BrowserCase):
                 self.assertIn('第一次能操作', survival)              # 速通模式的计时口径
                 self.assertIn('尚未记录', survival)                  # 死亡档案室
                 self.assertIn('结局与开场', survival)                # 档案室也收公开结局和开场演出
+                self.assertIn('结算画面', survival)                  # CG 档案馆第三部分
+                self.assertIn('没有任何加成', survival)              # 成就只是记录
+                self.assertIn('SSS 只在梦魇难度', survival)          # 评级门槛
+                self.assertIn('足迹图', survival)                    # 通关记录与回放
                 self.assertIn('校庆日', page.locator('#events').inner_html())
                 page.get_by_role('link', name='← 返回游戏').click()
                 page.wait_for_url('**/index.html')

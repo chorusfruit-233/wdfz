@@ -495,6 +495,9 @@ var SFX=(function(){
     door:function(){ return P('foley.door'); },
     stairs:function(){ return P('foley.stairs'); },
     pickup:function(){ return P('ui.pickup'); },
+    /* 成就四档（n / e / p / h）与结算画面四组评级（low / mid / high / top） */
+    achieve:function(t){ return P('ui.achieve.'+({n:'normal',e:'elite',p:'epic',h:'hidden'}[t]||'normal')); },
+    grade:function(band){ return P('ui.grade.'+(band||'mid')); },
     chalk:function(){ return P('foley.chalk'); },                     /* 用粉笔画记号 */
     deep:function(){ return P('void.fall'); },                        /* 掉进异空间的虚空 */
     anim:function(mode){ var dur=mode===2?3.0:(mode===3?2.6:2.4); $imports.VisualState.deathAnim={mode:mode,t:0,dur:dur}; },

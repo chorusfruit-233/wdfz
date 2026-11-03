@@ -152,7 +152,7 @@
     </div>
     <div class="mextra">
       <button type="button" class="mside" id="btnspeed" onclick="Speedrun.open()"><b>速通模式</b><i>计时到通关，记录个人最佳</i></button>
-      <button type="button" class="mside" id="btnarchive" onclick="DeathArchive.open()"><b>死亡档案室</b><i>死法、结局与开场，都能重看</i></button>
+      <button type="button" class="mside" id="btnarchive" onclick="DeathArchive.open()"><b>CG 档案馆</b><i>死法、结局、开场与结算画面，都能重看</i></button>
     </div>
     <div class="mends" id="mends" style="display:none"></div>
     <div class="mios" id="mios">此浏览器不支持网页全屏。iPhone 可通过「分享 → 添加到主屏幕」，再从主屏幕图标打开。</div>
@@ -175,13 +175,14 @@
   <div class="tpfoot"><button type="button" id="srBack" onclick="Speedrun.close()">返回</button></div>
 </div></div>
 <div id="archive" class="mdialog" role="dialog" aria-modal="true" aria-labelledby="arTitle" hidden><div class="mdbox wide">
-  <div class="tphead"><b id="arTitle">死亡档案室</b><i id="arCount"></i></div>
-  <p class="tplead">每一种死法第一次发生时记一份；达成过的结局、看过的开场也收在这里，都能「重看」。被药丸、天赋挡下的死亡不算，调试面板里的也不算。记录只存在这台设备的浏览器里，清除网站数据会一起清掉。</p>
+  <div class="tphead"><b id="arTitle">CG 档案馆</b><i id="arCount"></i></div>
+  <p class="tplead">每一种死法第一次发生时记一份；达成过的结局、看过的开场、拿到过的评级的结算画面也收在这里，都能「重看」。被药丸、天赋挡下的死亡不算，调试面板里的也不算。记录只存在这台设备的浏览器里，清除网站数据会一起清掉。</p>
   <div class="arscroll">
     <div class="arsec"><b>死亡</b></div>
     <div class="arcards" id="arcards"></div>
     <div class="arsec"><b>结局与开场</b><i id="arCutCount"></i></div>
     <div class="arcards" id="arcuts"></div>
+    <div id="arextra"></div>
   </div>
   <p class="arnote" id="arNote"></p>
   <div class="tpfoot"><button type="button" id="arAll" onclick="DeathArchive.askUnlockAll()" title="需要调试密码">全部解锁</button><button type="button" id="arBack" onclick="DeathArchive.close()">返回</button></div>
