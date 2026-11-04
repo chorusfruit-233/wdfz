@@ -194,3 +194,29 @@ class NativeWebGPUTest(BrowserCase):
         page=self.page(renderer='webgl')
         self.assert_js(page,'GLR.renderer.isWebGLRenderer&&Engine.status().fallbackReason===null')
         self.assert_js(page,"!window.WdfzWebGPU&&!document.querySelector('script[src*=\"three-webgpu\"]')")
+
+    def test_grain_changes_real_pixels_without_periodic_banding(self):
+        page=self.gpu()
+        result=page.evaluate("""async()=>{
+          render(0);const r=GLR.renderer,u=GLR.postMat.uniforms;
+          const out=ThreeBackend.target(1024,512,{depthBuffer:false});
+          u.uHands.value=0;u.uAO.value=0;u.uBloom.value=0;u.uTime.value=12;
+          async function pixels(){r.setRenderTarget(out);r.render(GLR.postScene,GLR.postCam);await r.backend.device.queue.onSubmittedWorkDone();
+            return r.readRenderTargetPixelsAsync(out,450,200,96,64);}
+          u.uGrain.value=0;const base=await pixels();u.uGrain.value=1;const noisy=await pixels();
+          const delta=Array.from({length:96*64},(_,i)=>noisy[i*4]-base[i*4]);
+          const mean=delta.reduce((a,b)=>a+b,0)/delta.length;
+          const variance=delta.reduce((a,b)=>a+(b-mean)**2,0)/delta.length;
+          const correlations=[4,8,10,16].map(offset=>{
+            let cross=0,squareA=0,squareB=0;
+            for(let y=0;y<64;y++)for(let x=0;x<96-offset;x++){
+              const a=delta[y*96+x]-mean,b=delta[y*96+x+offset]-mean;
+              cross+=a*b;squareA+=a*a;squareB+=b*b;
+            }
+            return cross/Math.sqrt(squareA*squareB);
+          });
+          r.setRenderTarget(null);out.dispose();return {variance,correlations};
+        }""")
+        self.assertGreater(result['variance'],0.05,result)
+        self.assertTrue(all(abs(c)<.25 for c in result['correlations']),result)
+        self.check_gpu(page)

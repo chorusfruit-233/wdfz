@@ -1,17 +1,16 @@
 {
   "date": "2026-11-04",
   "base": "1b227c15210e7950edc43950f9a074f0e0c71fcb",
-  "implementation": "c9e26b12f3ca92c159ef98508c4083970aec0318",
-  "runtimeSHA256": "e1e31503f1d2a7a7f1398ffc54031e91a140e07395010978cab81338034518ee",
+  "runtimeSHA256": "6d88b30216a782456a25c3897adfbfd33f796ae9aaa812fc99f60f0419ea6f2f",
   "scope": "Selected renderer, input, lifecycle, save, geometry and module regressions; grouped runs and necessary reruns, not the entire repository test suite. Later passing runs supersede earlier failures by test ID.",
   "environment": {
     "chromium": "154.0.8037.57",
     "device": "SwiftShader/Vulkan software adapter, native WebGPU backend",
     "touch": "Chromium emulation, no physical mobile device"
   },
-  "uniqueTests": 264,
+  "uniqueTests": 265,
   "finalCounts": {
-    "passed": 263,
+    "passed": 264,
     "skipped": 1
   },
   "reports": [
@@ -53,6 +52,12 @@
       "id": "grain",
       "log": "logs/grain.log.gz",
       "invocations": 2,
+      "success": true
+    },
+    {
+      "id": "grain-final",
+      "log": "logs/grain-final.log.gz",
+      "invocations": 3,
       "success": true
     }
   ],
@@ -1080,7 +1085,7 @@
     },
     "test_webgpu.NativeWebGPUTest.test_all_quality_tiers_and_real_stair_scene_keep_gpu_and_collision": {
       "outcome": "passed",
-      "source": "gpu"
+      "source": "grain-final"
     },
     "test_webgpu.NativeWebGPUTest.test_device_loss_preserves_session_camera_and_input_canvas": {
       "outcome": "passed",
@@ -1089,6 +1094,10 @@
     "test_webgpu.NativeWebGPUTest.test_explicit_compatibility_mode_never_loads_webgpu_extension": {
       "outcome": "passed",
       "source": "gpu"
+    },
+    "test_webgpu.NativeWebGPUTest.test_grain_changes_real_pixels_without_periodic_banding": {
+      "outcome": "passed",
+      "source": "grain-final"
     },
     "test_webgpu.NativeWebGPUTest.test_native_backend_draws_scene_and_shares_core_types": {
       "outcome": "passed",
@@ -1100,7 +1109,7 @@
     },
     "test_webgpu.NativeWebGPUTest.test_post_hand_composition_and_inversion_change_real_pixels": {
       "outcome": "passed",
-      "source": "grain"
+      "source": "grain-final"
     },
     "test_webgpu.NativeWebGPUTest.test_post_setup_failure_uses_fresh_webgl_scene": {
       "outcome": "passed",
@@ -1119,5 +1128,13 @@
     "No physical GPU performance, power or thermal validation",
     "No iOS, Safari, Firefox or physical touch device validation",
     "No natural complete playthrough"
+  ],
+  "initialImplementation": "c9e26b12f3ca92c159ef98508c4083970aec0318",
+  "runtimeUpdates": [
+    {
+      "beforeSHA256": "e1e31503f1d2a7a7f1398ffc54031e91a140e07395010978cab81338034518ee",
+      "afterSHA256": "6d88b30216a782456a25c3897adfbfd33f796ae9aaa812fc99f60f0419ea6f2f",
+      "change": "WGSL grain uses integer mixing to avoid periodic float-precision artifacts; native grain, post and all-quality cases rerun, and captures regenerated with grain explicitly disabled."
+    }
   ]
 }

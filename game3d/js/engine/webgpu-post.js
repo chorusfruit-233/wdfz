@@ -6,8 +6,10 @@ var WebGPUPost={create:function(uniforms,multisampled){
   var N=$imports.RenderDevice.library();
   var depthType=multisampled?'texture_depth_multisampled_2d':'texture_depth_2d';
   var hash=N.wgslFn(`fn schoolHash(p:vec2<f32>)->f32{
-    var q=fract(p*vec2<f32>(443.8975,397.2973));q+=vec2<f32>(dot(q,q.yx+vec2<f32>(19.19)));
-    return fract((q.x+q.y)*q.x);
+    // Float products lose fractional precision as the pixel/time offset grows, creating bands.
+    var h=bitcast<u32>(p.x)^(bitcast<u32>(p.y)*0x9e3779b9u);
+    h=(h^(h>>16u))*0x7feb352du;h=(h^(h>>15u))*0x846ca68bu;h=h^(h>>16u);
+    return f32(h&0x00ffffffu)/16777216.0;
   }`);
   var color=N.wgslFn(`fn schoolColor(tex:texture_2d<f32>,texSampler:sampler,uv:vec2<f32>,res:vec2<f32>,aa:f32)->vec3<f32>{
     let c=textureSampleLevel(tex,texSampler,uv,0.0).rgb;if(aa<0.5){return c;}

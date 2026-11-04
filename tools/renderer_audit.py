@@ -25,7 +25,7 @@ if __name__=='__main__':
             p=case.page(renderer=requested)
             assert p.evaluate('Engine.status().backend')==expected,p.evaluate('Engine.status()')
             p.evaluate("""GameRandom.bind(RandomRules.create(1194).next);freshState('hard');running=false;
-              clearIntroTimers();S.intro=0;PRO.on=false;S.tsec=760;SET.grain=0;SET.soundCaptions=2;
+              clearIntroTimers();S.intro=0;PRO.on=false;S.tsec=760;SET.grain=0;Engine.grain(0);SET.soundCaptions=2;
               S.bag=['torch'];USE.torch=true;VisualState.time=12;
               document.getElementById('banner').style.display='none';""")
             for quality in [0,4]:
@@ -43,9 +43,10 @@ if __name__=='__main__':
                         camera:{x:GLR.cam.position.x,y:GLR.cam.position.y,z:GLR.cam.position.z,fov:GLR.cam.fov},
                         physics:JSON.stringify([R.foot,R.propExtra,R.stairExtra]),
                         target:[GLR.rt.width,GLR.rt.height],samples:GLR.rt.samples,ao:GLR.postMat.uniforms.uAO.value,
-                        hands:GLR.postMat.uniforms.uHands.value,errors:GameModules.errors(),lifecycle:Lifecycle.snapshot().errors};
+                        hands:GLR.postMat.uniforms.uHands.value,grain:GLR.postMat.uniforms.uGrain.value,
+                        errors:GameModules.errors(),lifecycle:Lifecycle.snapshot().errors};
                     }""")
-                    assert result['backend']['backend']==expected and not result['errors'] and not result['lifecycle'],result
+                    assert result['backend']['backend']==expected and result['grain']==0 and not result['errors'] and not result['lifecycle'],result
                     physics=result.pop('physics');result['physicsSHA256']=hashlib.sha256(physics.encode()).hexdigest()
                     filename=f'{expected}-q{quality}-{scene}.png';p.screenshot(path=str(DEST/filename),timeout=60000)
                     result['image']=filename;rows.append(result);print(json.dumps(result,ensure_ascii=False),flush=True)
