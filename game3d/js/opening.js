@@ -40,15 +40,20 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
   setup:function(d){
     var R=$imports.INTERIORS.teach1;
     d.short=!!Opening.short;
-    d.seat=(0,$imports.cutCell)('teach1',$imports.MY_COL,$imports.MY_ROW);
+    var sw=openingSeat(), own=$imports.ClassroomLayout.ownSeat, ch=$imports.ClassroomLayout.chairAt(own.col,own.row);
+    d.seat=(0,$imports.worldToScene)(sw.x,sw.y,R);                              /* 醒来的第一人称：和开场后坐着的位置一样（椅子上） */
     d.board=(0,$imports.cutCell)('teach1',44.55,7);
-    /* 讲台边的老师（面朝全班），和「你」——第三人称镜头里趴在座位上的那个人 */
-    var mat=(0,$imports.cutBasic)(0x4a5560);
-    var t=(0,$imports.cutCell)('teach1',45.6,8.6);                           /* 讲台右手边的空地：前排课桌在第 2 行，不会站到桌子上 */
-    d.teacher=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.teacher.add((0,$imports.figMesh)('teacher',mat,1)); d.teacher.position.set(t.x,0,t.z);
+    /* 老师：就用教室里站在讲台和黑板之间的那位（NC.teacher），不另造一个；没有时才自己摆一个在同一处。
+       「你」——第三人称镜头里趴在座位上的那个人，和同学一样坐在椅子上 */
+    if($imports.NC.teacher){ d.teacher=$imports.NC.teacher; d.ncTeacher=true; }
+    else{
+      var ts=$imports.ClassroomLayout.teacherSpot(own.classId), t=(0,$imports.worldToScene)(R.ox+ts.x*R.tw,R.oy+ts.y*R.th,R);
+      d.teacher=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.teacher.add((0,$imports.figMesh)('teacher',(0,$imports.cutBasic)(0x4a5560),1));
+      d.teacher.position.set(t.x,0,t.z); d.teacher.rotation.y=$imports.PI/2;
+    }
     d.me=(0,$imports.cutAdd)(new $imports.THREE.Group());
     var me=(0,$imports.figMesh)('sit',(0,$imports.cutBasic)(0x55606a),1); me.rotation.y=Math.PI; d.me.add(me);
-    var mp=(0,$imports.worldToScene)(R.ox+($imports.MY_COL+.5)*R.tw,R.oy+($imports.MY_ROW+.5)*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
+    var mp=(0,$imports.worldToScene)(R.ox+(ch.x+.02)*R.tw,R.oy+ch.y*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
     /* 阳光里的粉笔灰：讲台前一片小光点，正常时慢慢飘，第 3 段停住 */
     var n=Math.max(60,Math.round(160*($imports.Quality.get().segments||1))), pos=new Float32Array(n*3), i;
     var a=(0,$imports.cutCell)('teach1',45.6,0.8), b=(0,$imports.cutCell)('teach1',51.4,3.6);
@@ -94,13 +99,14 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
       (0,$imports.cutLook)((0,$imports.cutLerp)(s0.x,s1.x,t2),1.5,(0,$imports.cutLerp)(s0.z,s1.z,t2), d.teacher.position.x,1.45,d.teacher.position.z);
       if(K>0.37&&!d.hum){ d.hum=1; try{ $imports.SFX.crackle(0.6,0.5); }catch(e){} }
     }else if(K<0.58){                                                /* 3 时间停住，镜头转向「你」 */
+      d.teacher.rotation.x=0; d.teacher.rotation.y=$imports.PI/2;
       var t3=(0,$imports.cutEase)((K-0.42)/0.16), cam=(0,$imports.cutCell)('teach1',50.4,4.4);
       var lx=(0,$imports.cutLerp)(d.board.x,d.me.position.x,t3), lz=(0,$imports.cutLerp)(d.board.z+1.2,d.me.position.z,t3), ly=(0,$imports.cutLerp)(1.6,0.95,t3);
       (0,$imports.cutLook)(cam.x,1.55,cam.z, lx,ly,lz);
       $imports.VisualState.worldNorm=1-0.45*(0,$imports.cutPhase)(K,0.46,0.58);
     }else if(K<0.76){                                                /* 4 坠下去：颜色褪掉、趴下、闭眼 */
       var t4=(0,$imports.cutEase)((K-0.58)/0.18), q0=(0,$imports.cutCell)('teach1',49.6,5.2), q1=(0,$imports.cutCell)('teach1',48.95,5.75);
-      d.me.visible=K<0.735; d.me.rotation.x=-0.32*(0,$imports.cutPhase)(K,0.6,0.68); d.teacher.visible=K<0.72;
+      d.me.visible=K<0.735; d.me.rotation.x=-0.32*(0,$imports.cutPhase)(K,0.6,0.68); d.teacher.visible=d.ncTeacher||K<0.72;   /* 教室里那位跟着全班一起变，不藏 */
       var fl=K<0.7?(0.06*Math.max(0,Math.sin(K*160))*shk):0;
       (0,$imports.cutLook)((0,$imports.cutLerp)(q0.x,q1.x,t4),(0,$imports.cutLerp)(1.42,1.18,t4)-fl,(0,$imports.cutLerp)(q0.z,q1.z,t4), d.me.position.x,0.9,d.me.position.z);
       $imports.VisualState.worldNorm=0.55*(1-(0,$imports.cutPhase)(K,0.6,0.7));
@@ -109,14 +115,17 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
       if(d.short&&k<0.04) (0,$imports.cutFade)(1-k/0.04);
     }else{                                                           /* 5、6 第一人称醒来，停在开局的视角 */
       var t5=(0,$imports.cutEase)((K-0.78)/0.14), y=(0,$imports.cutLerp)(0.84,1.12,t5), pitch=(0,$imports.cutLerp)(-0.95,0,t5), ang=$imports.ClassroomLayout.ownSeat.facing;
-      d.me.visible=false; d.teacher.visible=false; $imports.VisualState.worldNorm=0;
+      d.me.visible=false; d.teacher.visible=!!d.ncTeacher; $imports.VisualState.worldNorm=0;
       if(!d.flip){ d.flip=1; try{ (0,$imports.ncFlip)(); }catch(e){} }
       (0,$imports.cutLook)(d.seat.x,y,d.seat.z, d.seat.x+Math.cos(ang)*Math.cos(pitch),y+Math.sin(pitch),d.seat.z+Math.sin(ang)*Math.cos(pitch));
       (0,$imports.cutFade)(K<0.82?1-(K-0.76)/0.06:0);
       if(K>0.78&&!d.wake){ d.wake=1; try{ $imports.SFX.wake&&$imports.SFX.wake(); }catch(e){} }
     }
   },
-  clean:function(d){ openingCap(''); }
+  clean:function(d){
+    openingCap('');
+    if(d.ncTeacher&&d.teacher){ d.teacher.visible=true; d.teacher.rotation.x=0; d.teacher.rotation.y=(d.teacher.userData&&d.teacher.userData.ty)||$imports.PI/2; }   /* 跳过时也把老师放回原样 */
+  }
 };
 
 var Opening={on:false,short:false,handed:true,waitT:0,

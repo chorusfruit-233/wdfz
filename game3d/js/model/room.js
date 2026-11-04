@@ -380,18 +380,18 @@ function doorNameTex(text){
     signGrime(g,w,h,rnd,'0,0,0',90);
   });
 }
-/* 自己的名牌：对折立着的纸，名字写了又擦，看不出是谁 */
+/* 自己的名牌：对折立着的纸，手写的三个字——看得出是个名字，认不出是什么字（开场独白：「名牌上写的是我的名字」） */
 function nameCardTex(){
   return signTex(256,128,'namecard',function(g,w,h,rnd){
     g.fillStyle='#ece6d6'; g.fillRect(0,0,w,h);
-    g.strokeStyle='rgba(30,36,80,.75)'; g.lineWidth=3; g.lineCap='round';
-    for(var k=0;k<3;k++){                                                      /* 三个字的位置：只剩几笔 */
-      var cx=w*(0.28+k*0.22), cy=h*0.52;
-      for(var s=0;s<4;s++){ g.beginPath(); g.moveTo(cx+(rnd()-.5)*30,cy+(rnd()-.5)*34); g.lineTo(cx+(rnd()-.5)*30,cy+(rnd()-.5)*34); g.stroke(); }
+    g.strokeStyle='rgba(28,34,78,.82)'; g.lineWidth=2.6; g.lineCap='round'; g.lineJoin='round';
+    for(var k=0;k<3;k++){                                                      /* 每个字一团连笔：横、竖、撇、捺挤在一个方格里 */
+      var cx=w*(0.27+k*0.23), cy=h*0.52, n=6+Math.floor(rnd()*3);
+      g.beginPath(); g.moveTo(cx-18+rnd()*8,cy-16+rnd()*10);
+      for(var s=0;s<n;s++) g.quadraticCurveTo(cx+(rnd()-.5)*40,cy+(rnd()-.5)*40,cx+(rnd()-.5)*36,cy+(rnd()-.5)*34);
+      g.stroke();
     }
-    g.fillStyle='rgba(150,140,128,.55)';                                       /* 橡皮擦过的一片灰 */
-    for(var i=0;i<90;i++){ g.beginPath(); g.ellipse(w*0.5+(rnd()-.5)*w*0.62,h*0.52+(rnd()-.5)*h*0.42,4+rnd()*10,2+rnd()*4,rnd()*3,0,6.283); g.fill(); }
-    signGrime(g,w,h,rnd,'90,80,60',260);
+    signGrime(g,w,h,rnd,'90,80,60',220);
   });
 }
 function classroomSigns(c,put){
@@ -408,7 +408,7 @@ function classroomSigns(c,put){
       put(pl,CX(d[0])-0.1,2.32,CZ(d[1])+th/2+0.0325,0,0,0,0,cls);
     });
   }
-  /* 自己的课桌：右前角立着一张对折的名牌。桌子的局部坐标里人在 +z，转 90° 以后局部 (x, z) 落到场景的 (z, −x) */
+  /* 自己的课桌：右前角立着一张对折的名牌（写着名字，看不清）。桌子的局部坐标里人在 +z，转 90° 以后局部 (x, z) 落到场景的 (z, −x) */
   if(R.id===L.ownSeat.room){
     var own=L.ownSeat, dk=L.deskAt(own.col,own.row);
     var dx=CX(own.col)+(dk.x-own.col-0.5)*tw, dz=CZ(own.row)+(dk.y-own.row-0.5)*th, lx=0.17, lz=-0.15;
