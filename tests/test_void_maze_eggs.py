@@ -95,6 +95,7 @@ class VoidMazeEggsTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
+        page.wait_for_function('Engine.ready()&&Assets.ready()', timeout=60000)   # 和 BrowserCase.page 一样等渲染器和模型包
         page.evaluate("PHOTO_TRIED=true;running=false;CUT.enabled=false;Game.start('hard')")
         page.wait_for_function("S.room==='teach1'")
         page.evaluate("running=false;clearIntroTimers();S.intro=0;AN.active=false;AN.next=1e5;PAT.next=1e5;RT.inspection=null;" + SETUP)

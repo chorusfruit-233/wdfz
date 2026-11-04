@@ -268,7 +268,7 @@ class VoidMazeTest(BrowserCase):
         r = page.evaluate("""()=>{doEnterRoom('teach1');S.ang=0.3;S.pitch=0;syncCamera(0);
           function at(id,k,fn){deathFX(id,{preview:true});anfxUpdate(k);const v=fn(ANFX.cg);anfxClear();return v;}
           const m=new THREE.Matrix4(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();
-          function sc(im,i){im.getMatrixAt(i,m);m.decompose(p,q,s);return +s.x.toFixed(2);}
+          function sc(im,i){im.getMatrixAt(i,m);return +s.setFromMatrixColumn(m,0).length().toFixed(2);}   /* r187 的 decompose 遇到缩放 0 返回 1，直接量第一列 */
           const door=k=>at('void',k,c=>({front:sc(c.doors[2],0),frontLit:sc(c.doors[1],0)>0,
             side:[2,3,4,5,6,7].map(i=>sc(c.doors[2],i)),lit:[1,2,3,4,5,6,7].filter(i=>sc(c.doors[1],i)>0).length}));
           const fall=k=>at('abyss',k,c=>{const cam=GLR.cam.position.clone(),b=new THREE.Vector3();c.beam.getWorldPosition(b);
