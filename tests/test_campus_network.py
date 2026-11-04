@@ -5,7 +5,7 @@ class CampusNetworkTest(BrowserCase):
     def game(self,touch=False):
         p=self.page(touch=touch)
         p.evaluate("""freshState('hard');running=false;PRO.on=false;S.intro=0;S.talent='none';S.tsec=700;
-          const R=INTERIORS.teach1;doEnterRoom('teach1',{x:R.ox+48.5*9,y:R.oy+6.5*9,seated:true});AN.next=1e6;""")
+          const R=INTERIORS.teach1;doEnterRoom('teach1',Object.assign(ClassroomLayout.anchor(R,ClassroomLayout.ownSeat),{seated:true}));AN.next=1e6;""")
         return p
 
     def test_day_one_no_permit_then_independent_duty_and_missing_penalty(self):

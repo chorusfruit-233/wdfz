@@ -72,10 +72,11 @@ class WirelessSignalTest(BrowserCase):
 
     def test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning(self):
         p = self.game()
-        self.assert_js(p, """(()=>{const R=INTERIORS.teach1;S.x=R.ox+48.5*9;S.y=R.oy+6.5*9;
+        # 坐在自己的座位上（布局见 ClassroomLayout）；巡察者放在同一间教室、5 米外的过道里（第 12 行），中间没有墙
+        self.assert_js(p, """(()=>{const R=INTERIORS.teach1,L=ClassroomLayout,a=L.anchor(R,L.ownSeat);S.x=a.x;S.y=a.y;
           S.seated=true;S.tsec=1400;RT.leaveUntil=gameClock()+120;
           const immune=PatrolWorld.exempt()&&!PatrolWorld.eligible()&&!PatrolWorld.hunting();PhoneNetwork.tick(15);
-          Object.assign(PAT,{room:S.room,x:S.x,y:S.y+45,fy:0,transition:null,safety:0,near:false});
+          Object.assign(PAT,{room:S.room,x:S.x+45,y:R.oy+(L.deskRows[3]+1.5)*R.th,fy:0,transition:null,safety:0,near:false});
           PatrolWorld.tick(.1);const warning=PAT.warning>3&&!PAT.locked&&PatrolWorld.hunting();
           PatrolWorld.tick(3.4);const protectedByWarning=PAT.warning>0&&!S.dead&&!PAT.locked;
           PatrolWorld.tick(.8);return immune&&warning&&protectedByWarning&&PAT.locked&&S.dead&&!PAT.permanent;})()""")

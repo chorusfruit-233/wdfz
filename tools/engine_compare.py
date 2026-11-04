@@ -46,15 +46,15 @@ def sample(browser, root, label, qualities, frames, pictures):
                     ncClear();NC.grp=new THREE.Group();NC.room='teach1';NC.normal=false;
                     NC.matS=new THREE.MeshBasicMaterial({color:0x080b0d,fog:true});
                     GLR.scene.add(NC.grp);let R=INTERIORS.teach1;
-                    for(let row=2;row<=8;row+=2)for(let col=3;col<R.cols-2;col+=2){
+                    for(const [col,row] of ClassroomLayout.seatTiles(ClassroomLayout.ownSeat.classId)){   // 布局见 domain/classroom-layout.js
                       if(R.grid[row][col]!=='d'||NC.list.length>=20)continue;
-                      let p=worldToScene(R.ox+(col+.5)*R.tw,R.oy+(row+.82)*R.th,R);
-                      let f=ncSeatFigure(NC.matS,p.x,0,p.z,0);NC.grp.add(f);NC.list.push(f);
+                      let ch=ClassroomLayout.chairAt(col,row),p=worldToScene(R.ox+ch.x*R.tw,R.oy+ch.y*R.th,R);
+                      let f=ncSeatFigure(NC.matS,p.x,0,p.z,Math.PI/2);NC.grp.add(f);NC.list.push(f);   // 面朝西边的黑板
                     }""")
                 for scene in ('教室', '校园'):
                     if scene == '教室':
-                        page.evaluate("""S.seated=true;S.x=INTERIORS.teach1.ox+48.5*9;
-                            S.y=INTERIORS.teach1.oy+6.5*9;S.ang=-Math.PI/2;S.pitch=-.04;
+                        page.evaluate("""S.seated=true;let a=ClassroomLayout.anchor(INTERIORS.teach1,ClassroomLayout.ownSeat);S.x=a.x;
+                            S.y=a.y;S.ang=a.ang;S.pitch=-.04;
                             if(typeof VisualState!=='undefined'&&VisualState.camera)VisualState.camera.eyeH=1.12;else S.eyeH=1.12;syncCamera(0);""")
                     else:
                         page.evaluate("""S.mode='out';S.room=null;S.seated=false;S.tsec=1080;

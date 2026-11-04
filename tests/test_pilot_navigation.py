@@ -70,7 +70,7 @@ class DoorwayNavigationTest(BrowserCase):
           if(!TerminalUI.on||hasItem('roomkey'))throw Error('普通学生机没有正常打开终端');
           document.querySelector('#campus-terminal [data-exit]').click();
           await PilotCyber.bridge(Pilot,'teach');await Pilot.floor(1);
-          const R=INTERIORS.teach1;await Pilot.go({x:R.ox+48.5*R.tw,y:R.oy+6.5*R.th},11);await Pilot.tap('e');
+          const R=INTERIORS.teach1,o=ClassroomLayout.ownSeat;await Pilot.go({x:R.ox+(o.col+.5)*R.tw,y:R.oy+(o.row+.5)*R.th},11);await Pilot.tap('e');
         })().then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)});""")
         page.wait_for_function('window.result', timeout=180000)
         self.assertEqual(page.evaluate('window.result'), {'ok': True},
