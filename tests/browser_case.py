@@ -3,6 +3,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import os
+import json
 import shutil
 import threading
 import unittest
@@ -28,7 +29,7 @@ class BrowserCase(unittest.TestCase):
         cls.browser = cls.playwright.chromium.launch(
             executable_path=executable,
             headless=True,
-            args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+            args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] + getattr(cls, 'extra_browser_args', []),
         )
 
     @classmethod
@@ -57,7 +58,7 @@ class BrowserCase(unittest.TestCase):
         act(page.locator('#tpcards .tpcard').first)
         act(page.locator('#tpGo'))
 
-    def page(self, touch=False, hybrid=False):
+    def page(self, touch=False, hybrid=False, renderer='webgl'):
         context = self.browser.new_context(
             viewport={'width': 390, 'height': 844} if touch else {'width': 1000, 'height': 700},
             has_touch=touch, is_mobile=touch, device_scale_factor=1,
@@ -65,8 +66,8 @@ class BrowserCase(unittest.TestCase):
         self.contexts.append(context)
         context.add_init_script("""
             localStorage.setItem('wdfz_pro','1');
-            localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));
-        """)
+            localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0,renderer:%s}));
+        """ % json.dumps(renderer))
         if hybrid:
             context.add_init_script("""
                 Object.defineProperty(navigator,'maxTouchPoints',{value:5,configurable:true});
@@ -75,6 +76,7 @@ class BrowserCase(unittest.TestCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
+        page.wait_for_function('Engine.ready()', timeout=60000)
         # Gameplay fixtures need the asynchronously loaded selected pack before direct scene calls.
         # Asset-failure tests use their own context and deliberately bypass this helper.
         page.wait_for_function('Assets.ready()', timeout=60000)

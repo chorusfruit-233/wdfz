@@ -10,7 +10,7 @@ var GamePolicy={
     return c.screen==='play'?'play':c.screen||'menu';
   },
   presentationAllowed:function(c){
-    return c.screen==='play'&&!c.prologue&&!c.debugFrozen&&!c.hidden;
+    return c.screen==='play'&&!c.prologue&&!c.debugFrozen&&!c.hidden&&!c.rendererBusy;
   },
   simulationAllowed:function(c){
     return this.presentationAllowed(c)&&!c.dead&&!c.paused&&!c.panelOpen&&!c.computer&&!c.intro;
@@ -19,6 +19,7 @@ var GamePolicy={
     return this.simulationAllowed(c)&&!c.phone&&!c.terminal&&!c.lesson&&!c.debugDragging&&!c.intro;
   },
   inputOwner:function(c){
+    if(c.rendererBusy)return 'blocked';
     if(c.targetDebug)return 'debug';
     if(c.terminal)return 'terminal';
     if(c.editing)return 'text';

@@ -1,13 +1,36 @@
 """画质、资源生命周期、碰撞和本地离线启动的浏览器集成回归。"""
 from pathlib import Path
+import json
 import re
 import mimetypes
 from urllib.parse import unquote, urlparse
-from playwright.sync_api import Error
+from playwright.sync_api import Error, TimeoutError as PlaywrightTimeoutError
 from browser_case import BrowserCase
 
 
 class EngineTest(BrowserCase):
+    def assert_offline_start(self, page):
+        """Offline checks start with a ready selected pack; random gameplay is covered elsewhere."""
+        try:
+            page.wait_for_function('Engine.ready() && Assets.ready()', timeout=60000)
+            page.evaluate("""PHOTO_TRIED=true;
+              if(typeof DAY_EVENT_CFG!=='undefined')DAY_EVENT_CFG.p={anniversary:0,occupied:0};
+              if(typeof WUDA_KID_CFG!=='undefined')WUDA_KID_CFG.chance=0;""")
+            self.start_from_menu(page)
+            # The room ID is set before the fade callback builds its actual scene.
+            page.wait_for_function("Engine.ready()&&S.screen==='play'&&S.room==='teach1'&&Assets.ready()"
+                                   "&&!!GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS.teach1", timeout=60000)
+        except PlaywrightTimeoutError:
+            detail=page.evaluate("""()=>({renderer:Engine.status(),assetsReady:Assets.ready(),
+              packs:Object.keys(ASSETS.packs),assetErrors:ASSETS.errors,
+              screen:S.screen,room:S.room,dead:S.dead,opening:Opening.on,cut:CUT.on,
+              mesh:!!GLR.roomMesh,sameRoom:!!GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS.teach1,
+              runtimeError:document.getElementById('errbox')?.textContent,
+              moduleErrors:GameModules.errors(),lifecycleErrors:Lifecycle.snapshot().errors})""")
+            self.fail('Offline startup did not reach the rendered classroom: '+json.dumps(detail,ensure_ascii=False))
+        page.evaluate('clearIntroTimers();running=false;S.intro=0;render(.016)')
+        self.assert_js(page, "Engine.ready()&&GLR.roomMesh&&QUALITY===3&&!document.getElementById('errbox')")
+
     def test_ultra_real_render_and_resource_release(self):
         page = self.page()
         gl_errors = []
@@ -146,6 +169,7 @@ class EngineTest(BrowserCase):
     def test_local_file_start_with_network_disabled(self):
         context = self.browser.new_context(offline=True, viewport={'width': 800, 'height': 600})
         self.contexts.append(context)
+        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:3,renderer:'webgl',vol:0,amb:0}));")
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         remote = []
@@ -156,20 +180,14 @@ class EngineTest(BrowserCase):
             if 'ERR_BLOCKED_BY_ADMINISTRATOR' in str(exc):
                 self.skipTest('此环境的 Chromium 管理策略禁止 file://；另有断网本地资源加载测试')
             raise
-        page.evaluate("PHOTO_TRIED=true;localStorage.setItem('wdfz_pro','1');Settings.q(3)")
-        self.start_from_menu(page)
-        # 开局进教室有一段淡入：S.room 先变成 teach1，教室场景要等淡入的回调才建好（模型包也是异步读的）。
-        # 只等 S.room 就停循环断言，正赶上还没建好时 GLR.roomMesh 是空的（main 上单独跑约一半失败）。
-        page.wait_for_function("S.screen==='play'&&S.room==='teach1'&&Assets.ready()&&!!GLR.roomMesh"
-                               "&&GLR.roomMesh.userData.roomData===INTERIORS.teach1", timeout=60000)
-        page.evaluate('clearIntroTimers();running=false;S.intro=0;render(.016)')
-        self.assert_js(page, "Engine.ready()&&GLR.roomMesh&&QUALITY===3&&!document.getElementById('errbox')")
+        self.assert_offline_start(page)
         self.assertEqual(remote, [])
 
     def test_packaged_assets_boot_with_network_offline(self):
         root = Path(__file__).resolve().parents[1]
         context = self.browser.new_context(offline=True, viewport={'width': 800, 'height': 600})
         self.contexts.append(context)
+        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:3,renderer:'webgl',vol:0,amb:0}));")
         def local_asset(route):
             relative = unquote(urlparse(route.request.url).path).lstrip('/') or 'index.html'
             file = (root / relative).resolve()
@@ -183,11 +201,7 @@ class EngineTest(BrowserCase):
         failed = []
         page.on('requestfailed', lambda r: failed.append(r.url))
         page.goto('http://wdfz.local/index.html', wait_until='load')
-        page.evaluate("PHOTO_TRIED=true;localStorage.setItem('wdfz_pro','1');Settings.q(3)")
-        self.start_from_menu(page)
-        page.wait_for_function("S.screen==='play'&&S.room==='teach1'")
-        page.evaluate('clearIntroTimers();running=false;S.intro=0;render(.016)')
-        self.assert_js(page, "Engine.ready()&&GLR.roomMesh&&QUALITY===3&&!document.getElementById('errbox')")
+        self.assert_offline_start(page)
         self.assertEqual(failed, [])
 
     def test_sustained_low_fps_hint_requires_active_play_and_user_choice(self):
@@ -267,6 +281,7 @@ class EngineTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
+        page.wait_for_function('Engine.ready()', timeout=60000)
         page.evaluate('PHOTO_TRIED=true;running=false')
         for q in (3, 0, 2, 1, 3, 0):
             page.evaluate('q=>Settings.q(q)', q)

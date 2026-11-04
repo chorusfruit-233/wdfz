@@ -1,0 +1,51 @@
+{
+  "modules": [
+    "test_modules",
+    "test_controls.ControlsTest.test_brightness_setting_survives_reload",
+    "test_controls.ControlsTest.test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move"
+  ],
+  "tests": 13,
+  "seconds": 63.905006055982085,
+  "success": true,
+  "records": {
+    "test_modules.ManifestStaticTest.test_declared_hooks_match_the_code": {
+      "outcome": "passed"
+    },
+    "test_modules.ManifestStaticTest.test_every_script_is_registered_once_and_index_uses_the_loader": {
+      "outcome": "passed"
+    },
+    "test_modules.ManifestStaticTest.test_feature_logic_files_do_not_touch_the_renderer": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_all_modules_load_and_verify_without_mods": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_broken_mod_and_hook_errors_are_isolated": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_builtin_switch_and_upload_persist_across_reload": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_feature_modules_can_be_removed_from_the_manifest": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_mod_panel_imports_a_file_from_the_pause_menu": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_module_state_is_saved_under_mods_and_reset_on_new_game": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_room_no_clock_contract_also_applies_outside_elevator": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_url_mod_loads_and_safe_mode_skips_it": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_brightness_setting_survives_reload": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move": {
+      "outcome": "passed"
+    }
+  }
+}

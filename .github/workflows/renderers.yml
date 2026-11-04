@@ -1,0 +1,38 @@
+name: WebGPU and WebGL fallback
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: renderers-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  renderers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify checked-in renderer bundles
+        run: |
+          npm --prefix tools/vendor ci --ignore-scripts --no-audit --no-fund
+          npm --prefix tools/vendor run build
+          git diff --exit-code -- game3d/lib
+      - name: Install browser test runtime
+        run: |
+          python -m pip install playwright==1.62.0
+          python -m playwright install --with-deps chromium
+      - name: Native WebGPU, device loss and fallback regressions
+        run: python -m unittest discover -s tests -p test_webgpu.py -v
+      - name: WebGL quality, offline, boot and sensory regressions
+        run: |
+          python -m unittest discover -s tests -p test_engine.py -v
+          python -m unittest discover -s tests -p test_sensory.py -v
+          PYTHONPATH=tests python -m unittest -v test_modules test_controls.ControlsTest.test_brightness_setting_survives_reload

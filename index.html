@@ -16,6 +16,9 @@
 </head>
 <body>
 <canvas id="cv" tabindex="0" aria-label="3D 游戏画面，可拖动转动视角"></canvas>
+<div id="rendererLoading" role="status">正在准备游戏画面……</div>
+<div id="rendererNotice" role="status" hidden></div>
+<div id="rendererError" role="alert" hidden>无法启动 3D 画面。请重试，或使用支持 WebGL 2 的浏览器。<br><button type="button" onclick="Settings.retryRenderer()">重试兼容模式</button></div>
 <button id="fullscreen-toggle" class="screen-control" type="button" onclick="goFullscreen()" aria-pressed="false">进入全屏</button>
 <div id="lookhint" hidden>点击画面恢复鼠标环视 · 按住拖动也可转向</div>
 <div id="qualityHint" role="status" hidden><span>画面持续卡顿，建议降低画质。</span><button type="button" onclick="Settings.q(QUALITY-1)">降低一档</button><button type="button" onclick="QualityWatch.dismiss()" aria-label="关闭画质建议">×</button></div>
@@ -93,6 +96,8 @@
 <div id="set"><div class="pbox setbox">
   <div class="ptitle">设置</div>
   <section class="sgroup" aria-labelledby="sgView"><h4 id="sgView">画面</h4>
+  <div class="srow"><label for="sRenderer">图形模式</label><select id="sRenderer" onchange="Settings.renderer(this.value)"><option value="auto">自动（推荐）</option><option value="webgl">WebGL 兼容模式</option></select></div>
+  <p class="shint" id="rendererCurrent">正在准备游戏画面</p>
   <div class="srow"><span>亮度</span><input type="range" id="sBr" min="60" max="150" value="100" oninput="Settings.bright(this.value)" aria-label="亮度"><b id="sBrV">100</b></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
     <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button><button onclick="Settings.q(3)">超精细</button><button onclick="Settings.q(4)">真实</button></div></div>
