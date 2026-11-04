@@ -52,7 +52,11 @@ var ARCHIVE_CUTS=[
   {id:'end:face',    cut:'face',    end:'face',   n:'《白名单》',   d:'闸机的红灯「嘀」地变白。走出门回头，门里一个接一个站满了目送的人。', stage:'teach1'},
   {id:'end:portal',  cut:'portal',  end:'portal', n:'《门》',       d:'导轨一段段闭合，光圈撑开。退了半步，然后走了进去。', stage:'lab1'},
   {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
-  {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1}
+  {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1},
+  /* 异色空间的进出过场（内部，2026-11-04）：演出由 void-maze 模块的 maze-cut.js 注册；解锁看 seen 记录（DeathArchive.markSeen），
+     没经历过完全不出现、不计数；回放舞台都是迷宫（离开那段在白场时自己换到教学楼二楼的电梯厅） */
+  {id:'cut:void_in', cut:'void_in', seen:1, n:'不存在的那一层', d:'楼层显示跳成一个不认识的符号，灯一排排灭了。门开，外面什么都没有，只有一块方地浮着。', stage:'lift_dream', secret:1},
+  {id:'cut:void_out',cut:'void_out',seen:1, n:'回来',         d:'门缝里的蓝光涌进来，白色一点点退开。回头，是一扇普通的电梯门，指示灯一格一格暗了。', stage:'lift_dream', secret:1}
 ];
 ARCHIVE_CUTS.forEach(function(e,i){ e.no=i+1; });
 /* 档案室里全部条目（死亡 + 演出），按 ID 查 */
@@ -69,7 +73,7 @@ var KILL_CTX=null;
 
 var DeathArchive={
   /* granted：「全部解锁」直接打开的条目（死亡和演出都记在这里），和真的经历过分开：不计次数、不算「新记录」、不写结局记录 */
-  blank:function(){ return {version:1,unlocked:{},first:{},count:{},legacy:{},granted:{},pending:0,migrated:0}; },
+  blank:function(){ return {version:1,unlocked:{},first:{},count:{},legacy:{},granted:{},seen:{},pending:0,migrated:0}; },
   read:function(){
     var d=null;
     try{ d=JSON.parse(localStorage.getItem(DEATH_ARCHIVE_KEY)||'null'); }catch(e){ d=null; }
@@ -80,6 +84,7 @@ var DeathArchive={
       Object.keys(src).forEach(function(id){ if(DEATH_ARCHIVE_BY_ID[id]) out[k][id]=src[id]; });   /* 未知 ID 丢掉，不改成别的死法 */
     });
     if(d.granted&&typeof d.granted==='object') Object.keys(d.granted).forEach(function(id){ if((ARCHIVE_BY_ID[id]||/^x\.[A-Za-z0-9_.-]{1,40}$/.test(id))&&d.granted[id]) out.granted[id]=1; });
+    if(d.seen&&typeof d.seen==='object') Object.keys(d.seen).forEach(function(id){ var e=ARCHIVE_BY_ID[id]; if(e&&e.seen&&d.seen[id]) out.seen[id]=1; });
     out.pending=Number.isFinite(d.pending)?Math.max(0,d.pending|0):0;
     out.migrated=d.migrated?1:0;
     return out;
@@ -121,7 +126,7 @@ var DeathArchive={
   state:function(){ var d=DeathArchive.migrate(DeathArchive.read()); DeathArchive.write(d); return d; },
   /* 这一份档案打开了没有：真的经历过（死亡记录、达成的结局、看过的开场），或者「全部解锁」过 */
   real:function(e,d){
-    if(e.cut) return e.end?!!(0,$imports.endsSeen)()[e.end]:(0,$imports.proSeen)();
+    if(e.cut) return e.seen?!!(d&&d.seen&&d.seen[e.id]):(e.end?!!(0,$imports.endsSeen)()[e.end]:(0,$imports.proSeen)());
     return !!d.unlocked[e.id];
   },
   isOpen:function(e,d){ d=d||DeathArchive.state(); return !!d.granted[e.id]||DeathArchive.real(e,d); },
@@ -161,6 +166,13 @@ var DeathArchive={
     var first=document.querySelector('#arcuts .arcard.open button')||document.getElementById('arBack');
     if(first) first.focus({preventScroll:true});
     return n;
+  },
+  /* 过场看过了（异色空间进出这类只在游玩中出现一次的演出）：记进 seen；档案室回放不算。返回是不是第一次 */
+  markSeen:function(id){
+    var e=ARCHIVE_BY_ID[id]; if(!e||!e.seen) return false;
+    if(typeof ArchiveReplay!=='undefined'&&ArchiveReplay.on) return false;
+    var d=DeathArchive.state(); if(d.seen[id]) return false;
+    d.seen[id]=1; DeathArchive.write(d); return true;
   },
   /* 死亡演出放完以后提示一次（不在致死那一刻打断） */
   notify:function(entry){
@@ -257,7 +269,7 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
     document.getElementById('menu').style.display='none';
     document.body.classList.add('cut','replaying');
     var cap=document.getElementById('arReplay');
-    if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; cap.querySelector('i').textContent=e.cut?(e.end?'结局档案 · 回放':'开场 · 回放'):'死亡档案 · 回放'; }
+    if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; cap.querySelector('i').textContent=e.cut?(e.end?'结局档案 · 回放':(e.seen?'过场 · 回放':'开场 · 回放')):'死亡档案 · 回放'; }
     $imports.S.screen='replay'; $imports.S.dead=false; $imports.S.death=null; $imports.S.seated=false; $imports.S.pitch=0; $imports.S.eyeLift=0;
     if(e.hour!==undefined) $imports.VisualState.stageHour=e.hour;          /* 先定天色再搭场景：窗光、灯这些按搭建时的时刻 */
     try{
