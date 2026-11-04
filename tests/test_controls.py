@@ -56,7 +56,7 @@ class ControlsTest(BrowserCase):
                 self.assertIn('放出鼠标（不暂停）', controls)
                 self.assertIn('自己教室', controls)
                 self.assertIn('隔着墙', controls)                    # 交互判定按格子遮挡
-                self.assertIn('层门会滑开', page.locator('#places').inner_text())   # 电梯门
+                self.assertIn('直接走进轿厢', page.locator('#places').inner_text())   # 电梯：门开着时直接走进走出
                 self.assertIn('声音与文字', page.locator('#settings').inner_text())
                 survival = page.locator('#survival').inner_text()
                 self.assertIn('第一次能操作', survival)              # 速通模式的计时口径
