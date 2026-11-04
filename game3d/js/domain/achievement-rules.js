@@ -122,6 +122,7 @@ var AchievementRules=(function(){
     A('h.shadows','h','cross','它们一直在','五处站着的人都见过了。','mazeEvent',function(f,v){ return size(v.sets.mazeShadows)>=5; },{set:'mazeShadows',goal:5,needs:['void-maze-eggs']}),
     A('h.wuda','h','once','武大子弟','开局时口袋里多了一支手电。','opening',function(f,v){ return !!v.wuda; },{needs:['wuda-kid']}),
     A('h.cola','h','once','天降可乐','那只杯子之后，夜里又掉下来一样东西。','anomaly',function(f){ return f.phase==='start'&&f.id==='cola'; }),
+    A('h.crowd','h','once','最后一个进来的人','电梯满员的时候，自己走了出去。','anomaly',function(f){ return f.phase==='end'&&f.id==='crowd'&&f.survived===true; },{needs:['lift-crowd']}),
     A('h.beast_run','h','once','追着旧校服','速通模式里，有效打通了那条隐藏路线。','speedrun',function(f){ return f.status==='finished'&&f.route==='beast'; })
   ];
   /* 解锁后显示的一句话：只写发生了什么 */
@@ -182,6 +183,7 @@ var AchievementRules=(function(){
     'h.shadows':'它们一直站在那里。我只是现在才看见。',
     'h.wuda':'口袋里多了一支手电，我不记得是谁给的。',
     'h.cola':'夜里，又有东西从上面掉了下来。',
+    'h.crowd':'门合上以前我走了出来。显示屏上还是「满员」。',
     'h.beast_run':'我追着那个背影，一路没有停。'
   };
   LIST.forEach(function(a){ a.m=MEMO[a.id]||''; });

@@ -31,12 +31,13 @@ var RunScore=(function(){
     var P=$imports.SCORE_CFG.pts;
     switch(f.kind){
       case 'anomaly':
-        if(f.phase==='start'){ st.an=f.id; st.anHurt=0; try{ $imports.RunLog.event('anomaly','遭遇「'+anName(f.id)+'」',0); }catch(e){} }
+        if(f.phase==='start'){ st.an=f.id; st.anHurt=0; try{ $imports.RunLog.event('anomaly','遭遇「'+(f.name||anName(f.id))+'」',0); }catch(e){} }
         else if(f.phase==='hurt'){ if(st.an===f.id) st.anHurt=1; }
         else if(f.phase==='end'&&st.an===f.id){
           if(f.survived){
-            if(st.anHurt) add('应对 · 异象','「'+anName(f.id)+'」受伤后脱身',P.anomalyHurt,'anomaly');
-            else add('应对 · 异象','化解「'+anName(f.id)+'」',f.lethal?P.anomalyLethal:P.anomalyClean,'anomaly');
+            var nm=f.name||anName(f.id);                     /* 不在异象表里的（模块自己的稀有事件）带着自己的名字 */
+            if(st.anHurt) add('应对 · 异象','「'+nm+'」受伤后脱身',P.anomalyHurt,'anomaly');
+            else add('应对 · 异象','化解「'+nm+'」',f.lethal?P.anomalyLethal:P.anomalyClean,'anomaly');
           }
           st.an=null; st.anHurt=0;
         }

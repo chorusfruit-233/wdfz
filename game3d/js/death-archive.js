@@ -13,7 +13,7 @@
 
 var DEATH_ARCHIVE_KEY='wdfz3d_death_archive_v1';
 /* 注册表：死因 ID → 演出 → 档案标题、一句记录 → 回放舞台。secret:1 的条目在解锁前完全不出现，也不算进「已记录 x / y」的总数
-   （目前是虚空迷宫里的两种死法；演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫）。
+   （目前是虚空迷宫里的两种死法，演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫；和电梯里的「满员」，演出由 lift-crowd 模块提供）。
    ext:1 表示演出由模块注册：模块拿掉了，这一份就不列出（见 DeathArchive.avail）。 */
 var DEATH_ARCHIVE=[
   {id:'patrol',       fx:'grip',     n:'点名',         d:'灯按拍子闪的时候，它就在这一层。一只手从后面按住了我的头顶。', stage:'teach1'},
@@ -36,6 +36,7 @@ var DEATH_ARCHIVE=[
   {id:'trap_wall',    fx:'squeeze',  n:'墙外的墙',     d:'墙外面还有一道墙。我一直翻，翻到手指不再是手指的形状。', stage:'out'},
   {id:'trap_beg',     fx:'face',     n:'路过的人',     d:'他慢慢转过头——没有脸，只有一个很大的、在笑的洞。', stage:'out'},
   {id:'void_lost',    fx:'void',     n:'哪一扇门',     d:'白墙上的门一扇扇裂开、亮起来，又一格一格暗下去。我想不起自己是从哪一扇进来的。', stage:'lift_dream', secret:1, ext:1},
+  {id:'crowd',        fx:'crowd',    n:'满员',         d:'门合上，蜂鸣停了。肩膀上搭上来的手越来越多，楼层灯一路往上跳。门再打开时，轿厢里只有一张学生证。', stage:'teach2', secret:1, ext:1},
   {id:'void_fall',    fx:'abyss',    n:'往下',         d:'我一直往下掉。下面那块画着斜线的白色方地上站着一个人，抬起手电照我。', stage:'lift_dream', secret:1, ext:1}
 ];
 var DEATH_ARCHIVE_BY_ID={};

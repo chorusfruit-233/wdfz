@@ -167,6 +167,7 @@ var Elevator={
   enterCabin:function(host,floor){
     if($imports.RT.elevatorRide&&$imports.RT.elevatorRide.host===host&&$imports.RT.elevatorRide.phase==='cabin'){$imports.RT.elevatorRide.origin=floor;return $imports.RT.elevatorRide;}
     $imports.RT.elevatorRide={host:host,origin:floor,target:floor,phase:'cabin',rare:$imports.GameRandom.next()<ELEVATOR_CONFIG.rareChance,remaining:0,pending:null};
+    GameModules.emit('liftBoard',$imports.RT.elevatorRide,host,floor);      /* 别的模块在这一刻定自己的稀有事件（和错误的电梯互斥），一起存档 */
     (0,$imports.autoSave)();
     return $imports.RT.elevatorRide;
   },
@@ -184,6 +185,7 @@ var Elevator={
   controls:function(){
     var ride=Elevator.recover();
     if(ride.phase==='moving'){(0,$imports.os)('我：电梯还在运行。',2);return;}
+    if(GameModules.first('liftControls',ride))return;                       /* 别的模块接管了操纵盘（比如按钮没反应） */
     var lift=Elevator.state(ride.host);
     if(lift.door>0&&!Elevator.inRide()&&!Elevator.inDoorway($imports.INTERIORS[$imports.S.room],$imports.S.x,$imports.S.y,$imports.PRAD))Elevator.close(ride.host);
     var opts=[];
@@ -206,6 +208,7 @@ var Elevator={
   },
   depart:function(){
     var ride=$imports.RT.elevatorRide;if(!ride||ride.phase!=='cabin'||ride.pending===null||ride.pending===undefined)return;
+    if(GameModules.first('liftDepart',ride,ride.host))return;               /* 别的模块接管了这一次出发（门已经关上） */
     var target=ride.pending;ride.pending=null;
     if(target==='67'||target==='89'){Elevator.enterDream(target);return;}
     var lift=Elevator.state(ride.host),from=$imports.INTERIORS[ride.host+ride.origin],car=$imports.INTERIORS['lift_'+ride.host];

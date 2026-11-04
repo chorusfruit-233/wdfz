@@ -71,6 +71,9 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `frame` | `app/presentation-loop.js` `render()`，每个画面帧 | emit | `dt`；表现层自己的动画（彩蛋的反色、黑影淡入淡出） |
 | `soundscape` | `audio.js` 每帧 | first | 返回要用的整片环境声 ID（见第 4.1 节） |
 | `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |
+| `liftBoard` | `elevator.js` `Elevator.enterCabin`，跨进轿厢、乘梯记录建好以后、存档之前（2026-11-04） | emit | `ride, host, floor`：别的模块在这一刻定自己的稀有事件（和错误的电梯互斥，写在 `ride` 上一起存档） |
+| `liftDepart` | `elevator.js` `Elevator.depart` 开头：门关上、要出发之前（关门后自动出发和门本来就关着时按楼层都走这里） | first | `ride, host`；返回 `true` 表示先不出发（模块接管这一次关门） |
+| `liftControls` | `elevator.js` `Elevator.controls` 开头 | first | `ride`；返回 `true` 表示操纵盘已处理（不弹楼层选项） |
 | `mazeEvent` | `modules/void-maze-eggs/eggs.js`（内部彩蛋） | emit | `{kind, …}`：`invert / invertEnd / shadowShow / shadowHide` |
 | `gameFact` | `app/facts.js` 的 `gameFact(kind, data)`；各系统在事实成立的那一刻调一次（2026-11-03） | emit | `{kind, …}`：`opening`、`day`、`anomaly`（`phase` 为 `start / hurt / end`）、`patrol`（`what` 为 `locked / lost / locker / banish / permanent`）、`inspection`、`register`、`exam`、`lesson`、`rest`、`snake`、`fakeNormal`、`garage`、`face`、`protect`、`wake`、`death`、`ending`（带 `legit`）、`speedrun`、`chalk`、`specialDay`、`maze`，以及调试面板打开时的 `debug`。只读：成就、本局积分、回放都只听它，不改玩法；可信与否（调试局、回放）由监听方判断 |
 | `endingCard` | `story.js` 的 `showEndingCard`，结局卡加进页面以后（2026-11-03） | emit | `{el, id}`：往结局卡上加内容（成就的「本局新达成」、通关记录的「结算」按钮），插在「回到主菜单」之前 |

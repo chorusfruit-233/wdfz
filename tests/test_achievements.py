@@ -29,9 +29,9 @@ class AchievementTest(BrowserCase):
           return {n:L.length,t,ids:new Set(L.map(a=>a.id)).size,pub:AchievementRules.publicList().length,
             secretOk:L.every(a=>(a.t==='h')===!!a.secret),texts:L.every(a=>a.n&&a.how&&a.m),
             keys:[...new Set(L.flatMap(a=>Object.keys(a)))].sort()}}""")
-        self.assertEqual(r['n'], 57)                                  # 2026-11-04 加精英「它比门慢」
-        self.assertEqual(r['t'], {'n': 20, 'e': 18, 'p': 9, 'h': 10})
-        self.assertEqual(r['ids'], 57)
+        self.assertEqual(r['n'], 58)                                  # 2026-11-04 加精英「它比门慢」、隐藏「最后一个进来的人」
+        self.assertEqual(r['t'], {'n': 20, 'e': 18, 'p': 9, 'h': 11})
+        self.assertEqual(r['ids'], 58)
         self.assertEqual(r['pub'], 47)
         self.assertTrue(r['secretOk'] and r['texts'])
         # 只有判定与显示用的字段：没有任何奖励、加成之类的东西

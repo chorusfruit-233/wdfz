@@ -157,6 +157,8 @@ function liftCabinBody(c,x,y,cx,cz,F,annex){
   for(i=0;i<5;i++) button(1.74-i*0.105,pz,$imports.EV_COL.paint,true);
   button(1.10,pz-0.075,$imports.EV_COL.paint,false); button(1.10,pz,$imports.EV_COL.paint,false); button(1.10,pz+0.085,0xe28a6a,false);
   K.unframe();
+  /* 操纵盘靠里一侧贴着乘梯须知（每节轿厢都有） */
+  if(c.view&&c.view.liftNotice) c.view.liftNotice(c,cx,cz,rot,px-0.003,1.56+dy,pz-0.22);
   /* 轿壁的碰撞：人只能在 1.5 × 1.4 米的轿厢里面走 */
   var hw=s.carW/2-s.carWall, back=s.carCZ-s.carD/2+s.carWall+dz, fr=-0.5-s.carWall-0.01;
   liftSolid(c,cx,cz,rot,-1.6,-hw,back-1,0);

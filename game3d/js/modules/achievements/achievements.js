@@ -9,7 +9,7 @@
    - 解锁提示排队，只在安全空当显示，并按档位播放不同的短音效。 */
 'use strict';
 var ACH_KEY='wdfz3d_achievements_v1';
-var ACH_INTERNAL_ANOMALIES=['cola'];        /* 不在图鉴里的内部异象：不算进「异象图鉴」 */
+var ACH_INTERNAL_ANOMALIES=['cola','crowd'];        /* 不在图鉴里的内部异象：不算进「异象图鉴」 */
 
 var Achievements=(function(){
   var rec=null, run=null, avail=null, toastT=0, toastGap=0, showing=null;
