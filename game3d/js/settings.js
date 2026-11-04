@@ -3,9 +3,10 @@
 /* 里世界 3D · 设置 */
 'use strict';
 
-var SET={distortion:2,reduceFlash:0,soundCaptions:1,vol:70,sub:1,q:1,shake:1,amb:1,bright:100,grain:1,mouseSense:100,touchSense:100,textSize:100,touchSize:100,touchLayout:null};
+var SET={renderer:'auto',distortion:2,reduceFlash:0,soundCaptions:1,vol:70,sub:1,q:1,shake:1,amb:1,bright:100,grain:1,mouseSense:100,touchSense:100,textSize:100,touchSize:100,touchLayout:null};
 var COMFORT_LIMITS={mouseSense:[25,250],touchSense:[25,250],textSize:[85,150],touchSize:[85,125]};
 function normalizeComfort(){
+  if(!['auto','webgl'].includes(SET.renderer))SET.renderer='auto';
   ['distortion','soundCaptions'].forEach(function(k){if(![0,1,2].includes(SET[k]))SET[k]=k==='distortion'?2:1;});
   SET.reduceFlash=SET.reduceFlash===1?1:0;
   Object.keys(COMFORT_LIMITS).forEach(function(k){var v=Number(SET[k]),lim=COMFORT_LIMITS[k];SET[k]=Number.isFinite(v)?(0,$imports.clamp)(v,lim[0],lim[1]):100;});
@@ -47,6 +48,9 @@ function loadSet(){
 }
 function saveSet(){ try{ localStorage.setItem('zw3d_set',JSON.stringify(SET)); }catch(e){} }
 function paintSet(){
+  var mode=document.getElementById('sRenderer');if(mode)mode.value=SET.renderer;
+  var rendererLabel=document.getElementById('rendererCurrent');
+  if(rendererLabel){var state=$imports.Engine.status();rendererLabel.textContent='当前：'+(state.backend==='webgpu'?'WebGPU':state.backend==='webgl'?'WebGL 2':'正在准备')+' · 选择在下次打开游戏时生效';}
   Object.keys(COMFORT_LIMITS).forEach(function(k){var el=document.getElementById(k),value=document.getElementById(k+'Value');if(el)el.value=SET[k];if(value)value.textContent=SET[k]+'%';});
   if(typeof $imports.TouchLayout!=='undefined')$imports.TouchLayout.paint();
   var v=document.getElementById('sVol'); if(v) v.value=SET.vol;
@@ -58,6 +62,8 @@ function paintSet(){
   });
 }
 var Settings={
+  renderer:function(value){SET.renderer=value;normalizeComfort();saveSet();paintSet();},
+  retryRenderer:function(){SET.renderer='webgl';saveSet();var url=new URL(location.href);url.searchParams.set('renderer','webgl');location.assign(url.href);},
   sensory:function(key,value){if(!['distortion','reduceFlash','soundCaptions'].includes(key))return;SET[key]=value;normalizeComfort();paintSet();saveSet();if(typeof $imports.SoundCaptions!=='undefined')$imports.SoundCaptions.paint();},
   comfort:function(key,value){if(!COMFORT_LIMITS[key])return;SET[key]=Number(value);applyComfort();paintSet();saveSet();},
   resetComfort:function(){Object.keys(COMFORT_LIMITS).forEach(function(k){SET[k]=100;});SET.touchLayout=null;applyComfort();paintSet();saveSet();(0,$imports.toast)('操作与文字设置已恢复默认');},

@@ -2,10 +2,8 @@
 (function($imports){
 /* Three.js 后端：设备、离屏目标与后期。游戏逻辑通过 Engine 调用。 */
 'use strict';
-var ThreeBackend={name:'three',version:1};
-ThreeBackend.boot=function(){
-  var cv=document.getElementById('cv');
-  var renderer=new $imports.THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
+var ThreeBackend={name:'three',version:2};
+ThreeBackend.configure=function(renderer){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.4));
   renderer.setSize(window.innerWidth,window.innerHeight,false);
   renderer.outputColorSpace=$imports.THREE.SRGBColorSpace;
@@ -13,7 +11,14 @@ ThreeBackend.boot=function(){
   renderer.toneMapping=$imports.THREE.NoToneMapping;
   renderer.toneMappingExposure=1.15;
   renderer.shadowMap.enabled=false;   /* 阴影每帧要额外整场景一遍，关掉 */
-  renderer.shadowMap.type=$imports.THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type=$imports.THREE.PCFShadowMap;
+  renderer.info.autoReset=false;
+};
+ThreeBackend.target=function(w,h,options){
+  return $imports.RenderDevice.gpu()?new $imports.THREE.RenderTarget(w,h,options):new $imports.THREE.WebGLRenderTarget(w,h,options);
+};
+ThreeBackend.setup=function(renderer){
+  ThreeBackend.configure(renderer);
 
   var scene=new $imports.THREE.Scene();
   scene.fog=new $imports.THREE.FogExp2($imports.FOG_COL,0.040);
@@ -53,7 +58,7 @@ ThreeBackend.boot=function(){
     scene.add(pl0); lampPool.push(pl0);
   }
 
-  var rt=new $imports.THREE.WebGLRenderTarget(2,2,{
+  var rt=ThreeBackend.target(2,2,{
     minFilter:$imports.THREE.LinearFilter,magFilter:$imports.THREE.LinearFilter,
     format:$imports.THREE.RGBAFormat,depthBuffer:true,stencilBuffer:false
   });
@@ -189,18 +194,56 @@ ThreeBackend.boot=function(){
     ].join('\n'),
     depthTest:false,depthWrite:false
   });
+  var glPost=postMat;
+  if($imports.RenderDevice.gpu())postMat=$imports.WebGPUPost.create(postMat.uniforms);
   postScene.add(new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(2,2),postMat));
 
   $imports.GLR={renderer:renderer,scene:scene,cam:cam,torch:torch,camLight:camLight,lampPool:lampPool,
        amb:amb,hemi:hemi,moon:moon,
-       rt:rt,postScene:postScene,postCam:postCam,postMat:postMat,
+       rt:rt,postScene:postScene,postCam:postCam,postMat:postMat,glPost:glPost,
        roomLights:[],roomLightBase:[],roomMesh:null,outMesh:null,time:0,hurt:0,flash:0};
 
-  window.addEventListener('resize',$imports.resizeGL);
-  window.addEventListener('orientationchange',function(){ setTimeout($imports.resizeGL,260); });
-  try{ if(window.visualViewport) window.visualViewport.addEventListener('resize',$imports.resizeGL); }catch(e){}
-  (0,$imports.resizeGL)();
+  ThreeBackend.resize();
   return $imports.GLR;
+};
+ThreeBackend.boot=async function(){
+  var renderer=await $imports.RenderDevice.create();
+  try{
+    ThreeBackend.setup(renderer);
+    if($imports.RenderDevice.gpu()){
+      await $imports.RenderDevice.prepare(renderer.compileAsync($imports.GLR.postScene,$imports.GLR.postCam));
+      await renderer.backend.device.queue.onSubmittedWorkDone();
+      if($imports.RenderDevice.startupError())throw new Error($imports.RenderDevice.startupError());
+    }
+    $imports.RenderDevice.activate(renderer);
+  }catch(e){
+    if($imports.RenderDevice.gpu()){await $imports.RenderDevice.fallback('gpu-pipeline-failed',e);$imports.RenderDevice.dispose(renderer);}
+    else{$imports.RenderDevice.failed();$imports.RenderDevice.dispose(renderer);throw e;}
+    if(!$imports.RenderDevice.ready())throw e;
+  }
+  ThreeBackend.resize(); // The viewport may have changed while the GPU was being prepared.
+  window.addEventListener('resize',$imports.resizeGL);
+  window.addEventListener('orientationchange',function(){setTimeout($imports.resizeGL,260);});
+  try{if(window.visualViewport)window.visualViewport.addEventListener('resize',$imports.resizeGL);}catch(e){}
+  return $imports.GLR;
+};
+ThreeBackend.replaceRenderer=function(renderer){
+  ThreeBackend.configure(renderer);$imports.GLR.renderer=renderer;
+  if($imports.GLR.rt)$imports.GLR.rt.dispose();if($imports.GLR.handRT)$imports.GLR.handRT.dispose();
+  $imports.GLR.rt=ThreeBackend.target(2,2,{depthBuffer:true,stencilBuffer:false});$imports.GLR.handRT=null;
+  if($imports.GLR.postMat!==$imports.GLR.glPost)$imports.GLR.postMat.dispose();
+  $imports.GLR.postMat=$imports.GLR.glPost;$imports.GLR.postScene.children[0].material=$imports.GLR.postMat;
+  if($imports.GLR.envTarget)$imports.GLR.envTarget.dispose();else if($imports.GLR.envTex)$imports.GLR.envTex.dispose();
+  $imports.GLR.envTarget=null;$imports.GLR.envTex=null;$imports.GLR.scene.environment=null;
+  $imports.GLR.scene.traverse(function(o){
+    if(o.isCamera){o.coordinateSystem=$imports.THREE.WebGLCoordinateSystem;o.updateProjectionMatrix();}
+    if(o.shadow){
+      o.shadow.camera.coordinateSystem=$imports.THREE.WebGLCoordinateSystem;o.shadow.camera.updateProjectionMatrix();
+      if(o.shadow.map)o.shadow.map.dispose();o.shadow.map=null;if(o.shadow.mapPass)o.shadow.mapPass.dispose();o.shadow.mapPass=null;
+    }
+  });
+  $imports.GLR.postCam.coordinateSystem=$imports.THREE.WebGLCoordinateSystem;$imports.GLR.postCam.updateProjectionMatrix();
+  ThreeBackend.resize();renderer.shadowMap.enabled=$imports.Quality.get().shadow>0;
 };
 
 /* 画面颗粒：设置里的强度（0 关、1 开）乘画质系数（真实档画面干净，颗粒再轻一些） */
@@ -212,7 +255,7 @@ ThreeBackend.grain=function(level){
 };
 /* 「真实」档的环境反射：一个暗的灰绿色房间，顶上几根灯管。金属、玻璃、瓷砖上有一点点反光，不会发亮 */
 function buildEnvTex(){
-  var pm=new $imports.THREE.PMREMGenerator($imports.GLR.renderer), sc=new $imports.THREE.Scene(), i;
+  var pm=$imports.RenderDevice.gpu()?new ($imports.RenderDevice.library().PMREMGenerator)($imports.GLR.renderer):new $imports.THREE.PMREMGenerator($imports.GLR.renderer), sc=new $imports.THREE.Scene(), i;
   var geo=new $imports.THREE.SphereGeometry(10,32,16), cols=[], pos=geo.attributes.position;
   for(i=0;i<pos.count;i++){ var t=pos.getY(i)/10, v=t>0?0.06+0.05*t:0.06+0.035*t; cols.push(v*0.9,v,v*0.92); }
   geo.setAttribute('color',new $imports.THREE.Float32BufferAttribute(cols,3));
@@ -220,7 +263,7 @@ function buildEnvTex(){
   sc.add(room);
   var tube=new $imports.THREE.BoxGeometry(5,0.3,0.6), tm=new $imports.THREE.MeshBasicMaterial({color:0x8c958a});
   for(i=-1;i<=1;i++){ var b=new $imports.THREE.Mesh(tube,tm); b.position.set(i*3.4,8.6,0); sc.add(b); }
-  var tex=pm.fromScene(sc,0.035).texture;
+  $imports.GLR.envTarget=pm.fromScene(sc,0.035);var tex=$imports.GLR.envTarget.texture;
   pm.dispose(); geo.dispose(); tube.dispose(); room.material.dispose(); tm.dispose();
   return tex;
 }
@@ -232,14 +275,15 @@ ThreeBackend.resize=function(){
   $imports.GLR.renderer.setSize(w,h,false);
   $imports.GLR.cam.aspect=w/h; $imports.GLR.cam.updateProjectionMatrix();
   var cap=$imports.GLR.renderer.capabilities;
-  var samples=cap.isWebGL2?Math.min(q.samples,cap.maxSamples||0):0;
-  var ao=!!q.ao&&(cap.isWebGL2||$imports.GLR.renderer.extensions.has('WEBGL_depth_texture'));
-  if($imports.GLR.rt.samples!==samples||!!$imports.GLR.rt.depthTexture!==ao){
+  var samples=cap.isWebGL2||cap.isWebGPU?Math.min(q.samples,cap.maxSamples||0):0;
+  var ao=!!q.ao&&(cap.isWebGL2||cap.isWebGPU||$imports.GLR.renderer.extensions.has('WEBGL_depth_texture'));
+  var depth=ao||$imports.RenderDevice.gpu();
+  if($imports.GLR.rt.samples!==samples||!!$imports.GLR.rt.depthTexture!==depth){
     if($imports.GLR.rt.depthTexture)$imports.GLR.rt.depthTexture.dispose();
     $imports.GLR.rt.dispose();
-    $imports.GLR.rt=new $imports.THREE.WebGLRenderTarget(2,2,{minFilter:$imports.THREE.LinearFilter,magFilter:$imports.THREE.LinearFilter,depthBuffer:true,stencilBuffer:false});
+    $imports.GLR.rt=ThreeBackend.target(2,2,{minFilter:$imports.THREE.LinearFilter,magFilter:$imports.THREE.LinearFilter,depthBuffer:true,stencilBuffer:false});
     $imports.GLR.rt.samples=samples;
-    if(ao)$imports.GLR.rt.depthTexture=new $imports.THREE.DepthTexture(2,2,$imports.THREE.UnsignedIntType);
+    if(depth){$imports.GLR.rt.depthTexture=new $imports.THREE.DepthTexture(2,2,$imports.THREE.UnsignedIntType);if($imports.RenderDevice.gpu())$imports.GLR.rt.depthTexture.samples=samples;}
   }
   var u=$imports.GLR.postMat.uniforms;
   u.tDiffuse.value=$imports.GLR.rt.texture;u.tDepth.value=$imports.GLR.rt.depthTexture||$imports.GLR.rt.texture;
@@ -252,11 +296,15 @@ ThreeBackend.resize=function(){
   $imports.GLR.rt.setSize(rw,rh);
   if(!$imports.GLR.handRT||$imports.GLR.handRT.samples!==samples){
     if($imports.GLR.handRT)$imports.GLR.handRT.dispose();
-    $imports.GLR.handRT=new $imports.THREE.WebGLRenderTarget(2,2,{depthBuffer:true,stencilBuffer:false});
+    $imports.GLR.handRT=ThreeBackend.target(2,2,{depthBuffer:true,stencilBuffer:false});
     $imports.GLR.handRT.samples=samples;
   }
   $imports.GLR.handRT.setSize(rw,rh);u.tHands.value=$imports.GLR.handRT.texture;
   $imports.GLR.postMat.uniforms.uRes.value.set(rw,rh);
+  if($imports.RenderDevice.gpu()&&$imports.GLR.postMat.userData.multisampled!==!!samples){
+    var uniforms=$imports.GLR.postMat.uniforms;$imports.GLR.postMat.dispose();
+    $imports.GLR.postMat=$imports.WebGPUPost.create(uniforms,!!samples);$imports.GLR.postScene.children[0].material=$imports.GLR.postMat;
+  }
 };
 
 /* @module-exports */

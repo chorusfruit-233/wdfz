@@ -185,7 +185,7 @@ class EngineTest(BrowserCase):
         page.goto('http://wdfz.local/index.html', wait_until='load')
         page.evaluate("PHOTO_TRIED=true;localStorage.setItem('wdfz_pro','1');Settings.q(3)")
         self.start_from_menu(page)
-        page.wait_for_function("S.screen==='play'&&S.room==='teach1'")
+        page.wait_for_function("Engine.ready()&&S.screen==='play'&&S.room==='teach1'&&Assets.ready()&&GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS.teach1", timeout=60000)
         page.evaluate('clearIntroTimers();running=false;S.intro=0;render(.016)')
         self.assert_js(page, "Engine.ready()&&GLR.roomMesh&&QUALITY===3&&!document.getElementById('errbox')")
         self.assertEqual(failed, [])
@@ -267,6 +267,7 @@ class EngineTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
+        page.wait_for_function('Engine.ready()', timeout=60000)
         page.evaluate('PHOTO_TRIED=true;running=false')
         for q in (3, 0, 2, 1, 3, 0):
             page.evaluate('q=>Settings.q(q)', q)

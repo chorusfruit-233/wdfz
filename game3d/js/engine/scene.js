@@ -248,6 +248,7 @@ $imports.ThreeBackend.syncCamera=function(dt,view){
 
 $imports.ThreeBackend.draw=function(dt){
   if(!$imports.GLR.renderer) return;
+  $imports.GLR.renderer.info.reset();
   if($imports.S.dead){ $imports.GLR.hurt=Math.min(0.85,$imports.GLR.hurt+dt*0.12); }
   else { $imports.GLR.hurt=Math.max(0,$imports.GLR.hurt-dt*0.6); }
   $imports.GLR.flash=Math.max(0, ($imports.GLR.flash||0)-dt*1.7);
@@ -329,7 +330,8 @@ $imports.ThreeBackend.drawHands=function(){
 };
 
 $imports.ThreeBackend.captureMenu=function(){
-    var cv=document.getElementById('cv');
+    $imports.GLR.renderer.info.reset();
+    var cv=$imports.GLR.renderer.domElement;
     var c=$imports.GLR.cam, yaw=-0.35;
     c.position.set(66.7,7.0,133.3);
     c.fov=74; c.updateProjectionMatrix();

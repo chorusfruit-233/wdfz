@@ -802,9 +802,7 @@ var DeathCG=(function(){
       }
       g.position.copy($imports.GLR.cam.position); g.updateMatrixWorld(true);
       /* 只编这一小组（灯光、雾取当前场景的），不用把整个校园再走一遍 */
-      var prev=$imports.GLR.renderer.getRenderTarget();
-      try{ $imports.GLR.renderer.setRenderTarget($imports.GLR.rt||null); $imports.GLR.renderer.compile(g,$imports.GLR.cam,$imports.GLR.scene); }catch(e){}
-      try{ $imports.GLR.renderer.setRenderTarget(prev); }catch(e){}
+      try{$imports.Engine.precompile(g);}catch(e){}
       WARM.keep=g;
       return true;
     }

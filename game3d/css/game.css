@@ -6,8 +6,13 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05040
   touch-action:manipulation;-webkit-touch-callout:none;-webkit-user-select:none}
 /* 面板要能上下滚，所以单独放行纵向手势 */
 #menu,#die{touch-action:pan-y}
-#cv{position:fixed;inset:0;width:100%;height:100%;height:100dvh;display:block;image-rendering:auto;
+#cv,.render-surface{position:fixed;inset:0;width:100%;height:100%;height:100dvh;display:block;image-rendering:auto;
   touch-action:none}
+.render-surface{pointer-events:none}
+#rendererLoading,#rendererNotice,#rendererError{position:fixed;inset:16px 16px auto;z-index:900;padding:12px;background:#171a18;color:#e4e0d4;border:1px solid #68665a;font:14px/1.6 var(--ui-font)}
+#rendererError button{margin-top:8px;padding:8px 14px}
+#rendererNotice{pointer-events:none;animation:rendererNoticeFade 5s forwards}
+@keyframes rendererNoticeFade{0%,85%{opacity:1}100%{opacity:0;visibility:hidden}}
 #scan{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0}
 #vig{display:none}   /* 径向渐变在暗部会产生同心分层，暗角改由着色器负责 */
 

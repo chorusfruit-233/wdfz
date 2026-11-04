@@ -5,17 +5,36 @@
 var VisualState={time:0,hurt:0,flash:0,patrolFlick:0,patrolRed:0,worldNorm:0,gazeShake:0,deathAnim:null,camera:{walkPhase:0,eyeH:1.65,fov:72},stage:null,stageHour:null};
 var QUALITY_LOAD_GENERATION=0;
 var Engine={
-  boot:function(){
-    var result=$imports.ThreeBackend.boot();
+  boot:async function(){
+    var result=await $imports.ThreeBackend.boot();
     /* 兼容原有表现模块及调试工具；游戏层只写 VisualState。 */
     Object.keys(VisualState).forEach(function(k){
       Object.defineProperty($imports.GLR,k,{configurable:true,enumerable:true,get:function(){return VisualState[k];},set:function(v){VisualState[k]=v;}});
     });
     return result;
   },
-  ready:function(){return !!$imports.GLR.renderer;},
+  ready:function(){return $imports.RenderDevice.ready()&&!!$imports.GLR.renderer;},
+  status:function(){return $imports.RenderDevice.status();},
+  recover:function(reason){return $imports.RenderDevice.fallback(reason||'gpu-render-error');},
+  metrics:function(){
+    var info=$imports.GLR.renderer&&$imports.GLR.renderer.info;
+    return info?{geometries:info.memory.geometries,textures:info.memory.textures,
+      programs:info.programs?info.programs.length:info.memory.programs||0,
+      calls:$imports.RenderDevice.gpu()?info.render.drawCalls:info.render.calls}:null;
+  },
   resize:function(){if(this.ready())$imports.ThreeBackend.resize();},
-  draw:function(dt){if(this.ready())$imports.ThreeBackend.draw(dt);},
+  draw:function(dt){
+    if(!this.ready())return;
+    try{$imports.ThreeBackend.draw(dt);}catch(e){if($imports.RenderDevice.gpu())$imports.RenderDevice.fallback('gpu-render-error',e);else throw e;}
+  },
+  precompile:function(group){
+    var renderer=$imports.GLR.renderer;if(!renderer||!this.ready())return;
+    var previous=renderer.getRenderTarget();renderer.setRenderTarget($imports.GLR.rt||null);
+    try{
+      if($imports.RenderDevice.gpu())renderer.compileAsync(group,$imports.GLR.cam,$imports.GLR.scene).catch(function(e){if(renderer===$imports.GLR.renderer)$imports.RenderDevice.fallback('gpu-pipeline-failed',e);});
+      else renderer.compile(group,$imports.GLR.cam,$imports.GLR.scene);
+    }finally{renderer.setRenderTarget(previous);}
+  },
   resetSan:function(value){$imports.ThreeBackend.resetSan(value);this.resetCamera();},
   resetCamera:function(){VisualState.camera={walkPhase:0,eyeH:$imports.EYE,fov:72};},
   sceneView:function(){return VisualState.stage||$imports.S;},

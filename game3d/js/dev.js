@@ -413,7 +413,8 @@ var Dev={
   },
   refreshDiagnostics:function(){
     var renderer=$imports.GLR.renderer,info=renderer&&renderer.info;
-    document.getElementById('devrender').textContent=info?'几何体 '+info.memory.geometries+' · 纹理 '+info.memory.textures+' · 着色程序 '+(info.programs?info.programs.length:0):'渲染器未就绪';
+    var metrics=$imports.Engine.metrics(),device=$imports.Engine.status();
+    document.getElementById('devrender').textContent=metrics?device.backend+' · 几何体 '+metrics.geometries+' · 纹理 '+metrics.textures+' · 着色程序 '+metrics.programs:'渲染器未就绪';
     document.getElementById('devinput').textContent=($imports.INPUT.mode==='touch'?'触屏':'鼠标')+' · '+((0,$imports.pointerIsLocked)()?'鼠标已捕获':'鼠标未捕获')+' · '+((0,$imports.playerInputAllowed)()?'允许游戏输入':'游戏输入暂停');
     document.getElementById('devquality').textContent=$imports.Quality.get().label+' · '+innerWidth+' × '+innerHeight;
     document.getElementById('devhistory').textContent=DEV.history.slice(-5).map(function(entry){return entry.message;}).join('\n')||'尚无调试操作';
@@ -432,8 +433,8 @@ var Dev={
         driving:$imports.CarChase.active(),hiding:$imports.HIDE.on},
       debug:{freeze:DEV.freeze,god:DEV.god,fast:DEV.fast,search:$imports.SEARCH.on},
       input:{mode:$imports.INPUT.mode,pointerLocked:(0,$imports.pointerIsLocked)(),allowed:(0,$imports.playerInputAllowed)(),panel:$imports.UI.openPanel||null,choice:$imports.UI.chooseOpen},
-      rendering:{quality:$imports.Quality.get().label,viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},
-        memory:info?{geometries:info.memory.geometries,textures:info.memory.textures,programs:info.programs?info.programs.length:0}:null},
+      rendering:{device:$imports.Engine.status(),quality:$imports.Quality.get().label,viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},
+        memory:$imports.Engine.metrics()},
       recentActions:DEV.history.slice()};
   },
   makeReport:function(){

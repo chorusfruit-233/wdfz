@@ -190,8 +190,7 @@
     /* 先把三处布景的材质都编好（不在演出中途第一次显示时现编，手机上会卡一下） */
     try{
       d.B.visible=d.C.visible=true;
-      var prev=$imports.GLR.renderer.getRenderTarget(); $imports.GLR.renderer.setRenderTarget($imports.GLR.rt||null);
-      $imports.GLR.renderer.compile($imports.CUT.grp,$imports.GLR.cam,$imports.GLR.scene); $imports.GLR.renderer.setRenderTarget(prev);
+      $imports.Engine.precompile($imports.CUT.grp);
     }catch(e){}
     d.B.visible=d.C.visible=false;
     try{ $imports.SFX.stopAmbient(); d.sound=$imports.SoundPlayer.play('scene.cyberEnd'); $imports.Lifecycle.scope('cutscene').own(function(){ $imports.SoundPlayer.fade(d.sound); }); }catch(e){}
