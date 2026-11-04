@@ -196,8 +196,9 @@ var VoidMaze=(function(){
     var p=toScene($imports.S.x,$imports.S.y);
     return Math.abs(($imports.S.floorY||0)-C.chalk.h)<0.6&&Math.hypot(p.x-C.chalk.x,p.z-C.chalk.z)<1.3;
   }
-  /* 出口 1：回到上电梯的那一层；出口 2：另一栋楼同一层的电梯厅 */
-  function leave(id){
+  /* 出口 1：回到上电梯的那一层；出口 2：另一栋楼同一层的电梯厅。
+     有进出过场（maze-cut.js 的 VoidCut）时：先播离开的过场，白场那一下才真正换场；跳过也只换一次 */
+  function leaveMove(id){
     var ride=$imports.Elevator.recover();
     if(ride.phase!=='dream') ride.phase='dream';
     var floor=ride.origin||1;
@@ -208,14 +209,22 @@ var VoidMaze=(function(){
     $imports.Playtest.event('离开虚空迷宫',id);
     (0,$imports.gameFact)('maze',{what:'leave',exit:id});
     $imports.Elevator.arrive(floor);
+  }
+  function leaveSay(id){
     (0,$imports.os)(id==='exit2'?'我：推开门，外面是另一栋楼的电梯厅。回头看，只有一扇普通的电梯门。':
       '我：推开门，是我上电梯的那一层。身后的门变回了电梯门，指示灯一格一格地暗下去。',4,$imports.OS_FORCE);
   }
+  function leave(id){
+    if(typeof $imports.VoidCut!=='undefined'&&$imports.VoidCut.leave(id,function(){ leaveMove(id); },function(){ leaveSay(id); })) return;
+    leaveMove(id); leaveSay(id);
+  }
   function enter(button){
-    var s=spawnPoint();
+    var s=spawnPoint(), ride=$imports.RT.elevatorRide;
     MZ.t=0; MZ.told={};
-    (0,$imports.doEnterRoom)(C.room,s);
-    (0,$imports.os)('我：门外不是走廊。很黑，四周是一块块方方正正的白色墙面。身后的电梯门合上了，然后就不见了。',4.5,$imports.OS_FORCE);
+    (0,$imports.doEnterRoom)(C.room,s);                 /* 先进迷宫、存好档：读档直接在起点，不会重播过场 */
+    function say(){ (0,$imports.os)('我：门外不是走廊。很黑，四周是一块块方方正正的白色墙面。身后的电梯门合上了，然后就不见了。',4.5,$imports.OS_FORCE); }
+    if(typeof $imports.VoidCut!=='undefined'&&$imports.VoidCut.enter(ride&&ride.origin||1,say)) return;
+    say();
   }
 
   /* ---------- 死在迷宫里：自己的死因（复盘提示、调查记录、死亡档案）和墓志铭；演出在 maze-death.js ----------
