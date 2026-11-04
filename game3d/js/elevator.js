@@ -147,6 +147,7 @@ var Elevator={
   closeDoor:function(){
     var R=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room];
     if($imports.S.dead||!R||!Elevator.inCabin(R))return false;
+    if($imports.RT.elevatorRide&&GameModules.first('liftControls',$imports.RT.elevatorRide))return true;   /* 别的模块接管了按钮（比如按了没反应） */
     Elevator.close(R.host);return true;
   },
   /* 走廊里按呼梯键 */

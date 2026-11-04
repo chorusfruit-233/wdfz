@@ -68,7 +68,7 @@ class LiftCrowdTest(BrowserCase):
           const out={phase:c&&c.phase,room:S.room,pending:RT.elevatorRide.pending,dir:lift.dir,sub:document.getElementById('sub').innerText};
           walk(30);render(0);out.door=Elevator.doorAmount('teach',3);out.breath=document.getElementById('sub').innerText;
           out.fx=!!LiftCrowdFx.F.grp;out.ptK=[0.2,0.8].map(t=>{LiftCrowd.state().age=t;return lightState().ptK;});
-          tryInteract();out.panel=document.getElementById('sub').innerText;out.choose=!!UI.chooseOpen;
+          tryInteract();out.panel=document.getElementById('sub').innerText;out.choose=!!UI.chooseOpen;Elevator.closeDoor();walk(3);out.closeKey=Elevator.doorAmount('teach',3);
           faceOut(INTERIORS.teach3);walk(45,'w');
           out.after={state:LiftCrowd.state()&&LiftCrowd.state().phase,ride:RT.elevatorRide,a:local().a};
           walk(60);render(0);
@@ -83,6 +83,7 @@ class LiftCrowdTest(BrowserCase):
         self.assertLess(min(r['ptK']), 0.5)                      # 灯一闪一闪
         self.assertIn('没有反应', r['panel'])
         self.assertFalse(r['choose'])
+        self.assertEqual(r['closeKey'], 1)                      # 关门键也没反应
         self.assertEqual(r['after']['state'], 'gone')
         self.assertIsNone(r['after']['ride'])
         self.assertGreater(r['after']['a'], 0.45)
