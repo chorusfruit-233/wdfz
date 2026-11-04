@@ -144,6 +144,11 @@ var Elevator={
     var lift=Elevator.state(host);
     if(lift.door>0){lift.dir=-1;lift.hold=0;}
   },
+  closeDoor:function(){
+    var R=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room];
+    if($imports.S.dead||!R||!Elevator.inCabin(R))return false;
+    Elevator.close(R.host);return true;
+  },
   /* 走廊里按呼梯键 */
   interact:function(){
     if($imports.S.room==='lift_dream'){Elevator.leaveDream();return;}
@@ -282,7 +287,7 @@ var Elevator={
         if(blocked||(near&&!lift.nudged)){lift.dir=1;if(!blocked)lift.nudged=true;}   /* 门槛上有人、或关门时走到门口：重新打开（门口站着不动只开一次） */
         else{
           lift.door=Math.max(0,lift.door-dt/ELEVATOR_CONFIG.close);
-          if(lift.door<=0){lift.dir=0;var ride=$imports.RT.elevatorRide;
+          if(lift.door<=0){lift.dir=0;$imports.PatrolWorld.elevatorClosed(host,lift.floor);var ride=$imports.RT.elevatorRide;
             if(ride&&ride.host===host&&ride.phase==='cabin'&&ride.pending!==null&&ride.pending!==undefined&&Elevator.inCabin(R))Elevator.depart();}
         }
       }else if(lift.door>=1){

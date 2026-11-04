@@ -67,6 +67,23 @@ class NativeWebGPUTest(BrowserCase):
     # Uses actual GPUAdapter, GPUDevice, WGSL pipelines and texture readback, not a renderer mock.
     extra_browser_args=['--enable-unsafe-webgpu','--use-vulkan=swiftshader','--enable-features=Vulkan']
 
+    def test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers(self):
+        page=self.gpu(touch=True)
+        page.evaluate("S.day=2;S.tsec=700;SEARCH.on=true;Talent.begin('tech','selected');GameRandom.bind(()=>.9)")
+        for quality in (0,3,4):
+            with self.subTest(quality=quality):
+                self.set_quality(page,quality)
+                page.evaluate("Elevator.board('lab',1);const s=Elevator.state('lab');s.door=1;s.dir=0;s.hold=4;S.pitch=.17;render(0)")
+                self.assertTrue(page.locator('#lift-close').is_visible())
+                page.locator('#lift-close').tap()
+                self.assert_js(page,"Elevator.state('lab').dir===-1&&!UI.chooseOpen")
+                page.evaluate("Elevator.press(5);Elevator.tick(1);render(0)")
+                self.assert_js(page,"S.room==='lift_lab'&&S.pitch===.17")
+                self.check_gpu(page)
+                page.evaluate('Elevator.tick(6);Elevator.tick(.9);render(0)')
+                self.assert_js(page,"S.room==='lab5'&&Elevator.inCabin()&&Collision.depth(S.x,S.y,PRAD)<1e-7&&S.pitch===.17")
+                self.check_gpu(page)
+
     def gpu(self,touch=False):
         page=self.page(touch=touch,renderer='auto')
         state=page.evaluate('Engine.status()')

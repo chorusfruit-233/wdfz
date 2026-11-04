@@ -479,3 +479,10 @@ body:not(.cut) #opcap{display:none}
 #campus-terminal.term-compact textarea{height:40px;min-height:40px;box-sizing:border-box;resize:none}
 #campus-terminal.term-compact footer{margin-top:6px}
 @media(max-width:600px){#campus-terminal{width:96vw;padding:10px;max-height:94dvh}#campus-terminal form label{position:absolute;clip-path:inset(50%)}#campus-terminal pre{font-size:12px;max-height:38dvh}#campus-terminal footer button{min-height:36px;padding:4px 8px}#campus-terminal header b{font-size:13px}}
+
+.elevator-controls{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));z-index:24;display:flex;gap:6px;padding:7px;border:1px solid #74613e;border-radius:8px;background:rgba(10,14,14,.94);box-shadow:0 3px 16px #0008;}
+.elevator-controls[hidden]{display:none;}
+.elevator-controls button{min-width:56px;min-height:48px;margin:0;padding:8px;color:#d9d3bd;border:1px solid #665b43;border-radius:5px;background:#1b201e;font:inherit;touch-action:manipulation;}
+.elevator-controls #lift-close{color:#ffe2a0;border-color:#b09656;background:#393326;}
+.elevator-controls kbd{margin-left:5px;font-size:11px;opacity:.8;}.touch .elevator-controls kbd{display:none;}
+@media(max-height:450px){.elevator-controls{bottom:calc(85px + env(safe-area-inset-bottom));}}

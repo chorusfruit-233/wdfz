@@ -41,7 +41,7 @@
   {id:'portal', name:'传送门路线', desc:'传送门材料、图纸与隧道。',
     files:['game3d/js/portal.js'], exports:['PortalExploration']},
   {id:'elevator', name:'电梯', desc:'两栋楼的电梯：候梯、轿厢、运行；错误的电梯把人送进虚空迷宫（void-maze 模块）。',
-    files:['game3d/js/content/elevator-prefab-recipe.js','game3d/js/content/lift-recipe.js','game3d/js/model/lift.js','game3d/js/elevator.js'], exports:['Elevator','ELEVATOR_CONFIG']},
+    files:['game3d/js/content/elevator-prefab-recipe.js','game3d/js/content/lift-recipe.js','game3d/js/model/lift.js','game3d/js/elevator.js','game3d/js/ui/elevator-controls.js'], exports:['Elevator','ELEVATOR_CONFIG','ElevatorUI'],uses:['boot','frame','boundary','reset']},
   {id:'car-chase', name:'驾驶逃脱', desc:'车库驾驶追逐。',
     files:['game3d/js/car-chase.js','game3d/js/fx/car-chase-view.js'], exports:['CarChase']},
   {id:'presentation', name:'镜头与演出', desc:'第一人称的手、结局过场、开场 CG。',
