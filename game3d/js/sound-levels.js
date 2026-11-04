@@ -48,6 +48,7 @@ var SOUND_LEVELS={
   'death.hand':2.7,
   'death.lamps':-0.8,
   'death.laugh':7.9,
+  'death.liftdoor':-2.3,
   'death.loop':5.3,
   'death.names':13.2,
   'death.neck':2.2,

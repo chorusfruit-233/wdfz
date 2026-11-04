@@ -181,7 +181,7 @@ class DeathArchiveTest(BrowserCase):
         for d in '0000':
             page.locator(f'#devlock [data-k="{d}"]').click()
         page.locator('#devlock [data-k="ok"]').click()
-        self.assert_js(page, "DevLock.on&&document.getElementById('arCount').textContent==='已记录 0 / 18'")
+        self.assert_js(page, "DevLock.on&&document.getElementById('arCount').textContent==='已记录 0 / 19'")
         for d in page.evaluate('DEV_CODE'):
             page.locator(f'#devlock [data-k="{d}"]').click()
         page.locator('#devlock [data-k="ok"]').click()
@@ -194,16 +194,16 @@ class DeathArchiveTest(BrowserCase):
           grades:document.querySelectorAll('#arsec-grades .arcard.open').length,
           gradeMeta:document.querySelector('#arsec-grades .arcard[data-id="x.grade.SSS"] small').textContent,
           clears:localStorage.getItem('wdfz3d_clears_v1')})""")
-        self.assertEqual(r['deaths'], '已记录 18 / 18 · 隐藏 2')
+        self.assertEqual(r['deaths'], '已记录 19 / 19 · 隐藏 2')
         self.assertEqual(r['cuts'], '已解锁 5 / 5 · 隐藏 1')
-        self.assertEqual(r['open'], 35)                                    # 26 张死亡 / 演出 + 9 张结算画面
+        self.assertEqual(r['open'], 36)                                    # 27 张死亡 / 演出（加了没关上的门）+ 9 张结算画面
         self.assertEqual((r['grades'], r['gradeMeta']), (9, '直接解锁 · 没有亲历'))
         self.assertIsNone(r['clears'])                                    # 结算画面只是点亮，不伪造通关记录
         self.assertTrue(r['btn'] and r['maze'])
         self.assertEqual(r['beast'], '直接解锁 · 没有亲历')
         self.assertEqual(r['ends'], '{}')
         self.assertEqual((r['state']['unlocked'], r['state']['count']), ({}, {}))
-        self.assertEqual(len(r['state']['granted']), 34)                   # 开场在测试环境里已经看过，本来就开着；含 9 张结算画面
+        self.assertEqual(len(r['state']['granted']), 35)                   # 开场在测试环境里已经看过，本来就开着；含 9 张结算画面（加了没关上的门）
         # 之后真的死一次：照样是新记录、计次数
         r = page.evaluate("()=>{const e=DeathArchive.record('patrol','grip');DeathArchive.paint();return {fresh:!!e,meta:document.querySelector('#arcards .arcard[data-id=\"patrol\"] small').textContent};}")
         self.assertEqual(r, {'fresh': True, 'meta': '经历 1 次 · 最近'})

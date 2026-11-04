@@ -357,7 +357,8 @@ var DFX_EPI={
   twin:'他转过来的时候，你正在转过去。', lamps:'灯停在你站的那一格上。',
   neck:'他根本没打算绕路。', mirror:'镜子里那个，先动的手。',
   floor:'下面很宽敞。还有很多张课桌。', wall:'你比墙软。', vignette:'有人替你应了一声"到"。',
-  trash:'外面又敲了两下。这次更近了。'
+  trash:'外面又敲了两下。这次更近了。',
+  liftdoor:'门缝很窄。它的手指更窄。'
 };
 var DFX_SFX={laugh:'crack',shatter:'crack',grip:'slam',squeeze:'slam',bell:'bell',
   deep:'crack',freeze:'blink',voice:'blink',names:'blink',slit:'door',default:'blink'};
@@ -370,7 +371,8 @@ var DEATH_SOURCES={
   car_chase:{cause:'驾驶中的路障、岔路或追兵使这次逃离中断。',hint:'路口前看路牌并提前转向。可以向后拉摇杆或按 S 刹车；长时间停下会让追兵靠近。'},
   san:{cause:'你的理智已经耗尽；此前的危险与消耗累积到了极限。',hint:'留意呼吸和画面变化。恢复前先离开危险区域，再选择吃饭、药片或其他恢复活动。'},
   assimilation:{cause:'同化到达了极限。长期按要求坐着也有代价。',hint:'一直留在座位上会逐渐同化。安排离座探索，别只依赖上课恢复。'},
-  trash:{cause:'那个垃圾桶是陷阱，合上的桶盖没有通向外面。',hint:'垃圾桶不能带你逃离学校；找其他有证据支持的办法。'}
+  trash:{cause:'那个垃圾桶是陷阱，合上的桶盖没有通向外面。',hint:'垃圾桶不能带你逃离学校；找其他有证据支持的办法。'},
+  liftdoor:{cause:'它看着你进了电梯，门没在它碰到之前合上。',hint:'被它看着进电梯时，进门就按关门。'}
 };
 var DEATH_HINTS={
   grip:'灯按拍子闪，是它要来了。先找柜子躲好；被盯上后应绕过遮挡离开视线，普通追踪会跟丢；登记后缺席引起的永久追踪不会。',
@@ -383,7 +385,8 @@ var DEATH_HINTS={
   floor:'窗台上那只杯子掉下来，是对着我刚才站的地方。听见它掉，就换个地方，或者进楼。',
   names:'坐久了，椅子会留人。该站起来的时候，就站起来。',
   vignette:'撑不住的时候，吃药、吃饭、玩一会儿手机，都能缓过来一点。',
-  trash:'垃圾房里那个桶，不是出口。'
+  trash:'垃圾房里那个桶，不是出口。',
+  liftdoor:'被它看着进电梯时，进门就按关门。'
 };
 function deathLogRead(){ try{ return JSON.parse(localStorage.getItem(DEATH_LOG_KEY)||'{}')||{}; }catch(e){ return {}; } }
 function deathLogAdd(fx,source){

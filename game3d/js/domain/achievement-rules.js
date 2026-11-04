@@ -94,6 +94,7 @@ var AchievementRules=(function(){
       return ACH_EXPLORE_ANY.every(function(g){ return g.some(function(id){ return !!r[id]; }); });
     }),
     A('e.speedrun','e','once','计时','完成一次有效速通。','speedrun',function(f){ return f.status==='finished'; }),
+    A('e.liftdoor','e','once','它比门慢','被巡察者看着走进电梯，在它碰到门之前把门关上。','patrol',function(f){ return f.what==='door'; }),
     /* ---------- 史诗 ---------- */
     A('p.routes','p','cross','四条路','《闸门》《白名单》《门》《网安仙人》都达成过。','ending',function(f,v){
       return ACH_PUBLIC_ENDS.every(function(id){ return !!v.unlocked['e.end_'+id]; });
@@ -162,6 +163,7 @@ var AchievementRules=(function(){
     'e.notes':'桌肚里的纸条，我一张一张都记下了。',
     'e.explore':'这所学校的每一层，我都走过。',
     'e.speedrun':'表停下的那一刻，我还在跑。',
+    'e.liftdoor':'门合上的时候，门缝里是它伸到一半的手指。',
     'p.routes':'我从这所学校出去过很多次，每一次走的路都不一样。',
     'p.hard_routes':'在最深的梦里，那些路我都走通了。',
     'p.oneshot':'从头到尾，没有人替我挡过一下。',

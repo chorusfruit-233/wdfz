@@ -23,6 +23,7 @@ var DEATH_ARCHIVE=[
   {id:'san',          fx:'vignette', n:'那根弦',       d:'理智耗尽。一圈没有脸的高个子，从暗处一个接一个走出来。', stage:'teach1'},
   {id:'assimilation', fx:'names',    n:'合身的椅子',   d:'我在自己的位子上坐好了。这一次，不用再起来了。', stage:'teach1'},
   {id:'trash',        fx:'trash',    n:'桶盖',         d:'桶盖合上了。外面有人敲了两下，像在确认里面有没有人。', stage:'trash1'},
+  {id:'liftdoor',     fx:'liftdoor', n:'没关上的门',   d:'门只剩一掌宽的时候，四根手指伸了进来。楼层灯停在这一层，门合上，轿厢里没有人。', stage:'teach2'},
   {id:'an:rain',      fx:'drown',    n:'雨',           d:'雨灌进了肺里。我听见自己在身体里晃。', stage:'out'},
   {id:'an:moth',      fx:'swarm',    n:'蛾群',         d:'翅膀上的粉落进眼睛里，很痒。然后什么都不痒了。', stage:'out'},
   {id:'an:exercise',  fx:'follow',   n:'课间操',       d:'我开始跟着做操。手臂抬起来的时候才发现，早就停不下来了。', stage:'out'},

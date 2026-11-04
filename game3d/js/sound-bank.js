@@ -543,6 +543,18 @@ var SOUND_BANK={
     {t:'noise',f:900,to:2000,type:'bandpass',q:0.7,dur:1.8,g:0.25,atk:1.2},
     {t:'tone',f:160,to:40,dur:1.8,g:0.12},
     {t:'noise',f:120,type:'lowpass',dur:0.4,g:0.4,at:2.0}]},
+  /* 没关上的门（巡察者挡门，演出 fx/death-cg.js 的 liftdoor，时间点和画面对齐） */
+  'death.liftdoor':{cat:'death',name:'电梯门：门机嗡着往里合，门外的脚步越来越急；手指扣住门边，门被一下一下扒开；灯闪一下熄掉；很远一声「叮」，门合上',layers:[
+    {t:'tone',f:118,to:96,type:'sawtooth',lp:700,dur:1.15,g:0.07,atk:0.08,am:[[11,13],0.3]},                    /* 门机 */
+    {t:'noise',f:900,type:'bandpass',q:1.3,dur:0.06,g:function(o,i){ return 0.12+i*0.04; },n:5,every:0.26,accel:0.8,pan:0.2},   /* 门外的脚步越来越急 */
+    {t:'noise',f:260,type:'lowpass',dur:0.12,g:0.45,atk:0.002,at:1.17},                                          /* 手指扣住门边，门一顿 */
+    {t:'tone',f:70,to:48,dur:0.3,g:0.18,atk:0.002,at:1.17},
+    {t:'noise',f:[1600,1900],type:'bandpass',q:3,dur:0.3,g:0.16,atk:0.05,n:2,every:0.45,at:1.72,am:[[28,36],0.6,'square']},   /* 门被扒开，金属一下一下刮 */
+    {t:'tone',f:150,to:110,type:'sawtooth',lp:800,dur:0.9,g:0.06,atk:0.1,at:1.75},
+    {t:'noise',f:3000,type:'bandpass',q:5,dur:0.01,g:0.12,n:3,every:function(o,i){ return i===1?0.14:0.08; },at:2.9},   /* 灯：两短一长，熄掉 */
+    {t:'tone',f:49,to:40,dur:1.2,g:0.12,atk:0.5,at:2.6},
+    {t:'bell',f:1318.5,dur:2.2,g:0.03,partials:CHIME,at:3.65,wet:0.9},                                           /* 很远一声「叮」 */
+    {t:'noise',f:300,type:'lowpass',dur:0.25,g:0.2,atk:0.02,at:4.15}]},                                          /* 门合上 */
   /* 虚空迷宫里的两种死法（演出在 modules/void-maze/maze-death.js，时间点和画面对齐） */
   'death.void':{cat:'death',name:'异空间·迷失：停下以后身后又响一步；门合上，「叮」，门缝的光一格格熄掉',layers:[
     {t:'noise',f:[640,720],type:'bandpass',q:2.2,dur:0.06,g:function(o,i){ return i===2?0.5:0.4; },atk:0.0012,n:3,every:function(o,i){ return i?0.44:0.34; },at:0.08,pan:function(o,i){ return i===2?0.55:0; }},

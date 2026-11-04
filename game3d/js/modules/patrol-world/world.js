@@ -14,7 +14,7 @@ var PatrolWorld=(function(){
     Object.assign($imports.PAT,{version:1,state:'walk',room:'admin1',x:0,y:0,fy:0,behavior:'patrol',permanent:false,
       routeVersion:3,routeIndex:1,rejoin:false,cycle:0,lockerMemory:{},memoryVisit:null,transition:null,lock:0,locked:false,cited:false,lost:0,lastSeen:null,search:0,
       queue:[],investigation:null,wirelessSignal:null,regionSeq:0,lastRegion:null,respawn:0,safety:3.6,warning:0,near:false,
-      blinkCD:TRAVEL_CD,afterBlink:.22,step:0,stuck:0,diagnostic:null,mazeGateway:null});
+      blinkCD:TRAVEL_CD,afterBlink:.22,step:0,stuck:0,diagnostic:null,mazeGateway:null,doorRush:null});
     framePath=null;lastVisualRoom=null;approachCache=null;
     if($imports.INTERIORS.admin1&&typeof $imports.PATROL_ROUTE!=='undefined')put(spawn());
   }
@@ -174,6 +174,54 @@ var PatrolWorld=(function(){
     $imports.PAT.stuck=0;$imports.PAT.diagnostic=null;
     return $imports.PAT.room===goal.scene&&Math.hypot($imports.PAT.x-goal.x,$imports.PAT.y-goal.y,(($imports.PAT.fy||0)-(goal.fy||0))/$imports.U2M)<6;
   }
+  /* 挡门（计划《电梯直通、新天赋、新结局与恐怖氛围》1.3 节）：你在电梯门后的轿厢里、门没关上，它在同一层、从门前看得见门洞，
+     就用追击速度直奔门前。从开始走过来到碰到门至少留 2.2 秒；不够就是本来就追上了，按平常的抓捕算（不算挡门）。
+     门在它到之前合上，它被关在外面，在门口照常搜一会儿；门没合上它就到了，扒开门。它不进轿厢 */
+  var LIFT_RUSH_MIN=2.2,LIFT_REACH=7;
+  function liftFront(R){var w=$imports.Elevator.world(R,0.75,0);return $imports.PatrolNav.point(R.id,w.x,w.y);}
+  function liftDoor(){
+    var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null,rush=$imports.PAT.doorRush;
+    var cabin=!!(R&&R.host!=='lift'&&$imports.Elevator.frame(R)&&$imports.Elevator.inCabin(R));
+    var open=cabin?$imports.Elevator.doorAmount(R.host,R.floor):0,fp=cabin?liftFront(R):null;
+    var atDoor=cabin&&$imports.PAT.room===R.id&&!$imports.PAT.transition&&Math.hypot($imports.PAT.x-fp.x,$imports.PAT.y-fp.y)<LIFT_REACH;
+    if(rush){
+      if(!cabin||R.id!==rush.scene){$imports.PAT.doorRush=null;return false;}          /* 走出了电梯：回到平常的追逐 */
+      if(open<=0){
+        $imports.PAT.doorRush=null;$imports.PAT.locked=false;$imports.PAT.lock=0;$imports.PAT.search=3;$imports.PAT.lastSeen=fp;framePath=null;
+        (0,$imports.gameFact)('patrol',{what:'door'});(0,$imports.os)('〔门外〕脚步停在了门口。',3,$imports.OS_KEEP);
+        return false;
+      }
+      $imports.PAT.locked=true;$imports.PAT.lost=0;$imports.PAT.lastSeen=fp;
+      if(atDoor){(0,$imports.kill)('它比门快。','liftdoor','liftdoor');return true;}
+      return false;
+    }
+    if(!cabin||open<=0||$imports.PAT.state!=='walk'||$imports.PAT.transition||!same()||!hunting()||$imports.PAT.safety>0||localQuiet())return false;
+    /* 本来就追着你、到了门口：门开着就照平常抓 */
+    if($imports.PAT.locked&&atDoor){(0,$imports.kill)('一只手按住了你的头顶。它在点名。','grip','patrol');return true;}
+    /* 「看着你进电梯」：它正盯着你（刚看见过、还在追），或者视线从门洞穿进轿厢看得见你（站在轿厢侧壁边上就看不见） */
+    var watching=$imports.PAT.locked&&$imports.PAT.lost<1;
+    if(!watching){
+      var loc=$imports.Elevator.local(R,$imports.PAT.x,$imports.PAT.y),me=$imports.Elevator.local(R,$imports.S.x,$imports.S.y);
+      if(!loc||!me||loc.a<0.6||Math.hypot($imports.PAT.x-$imports.S.x,$imports.PAT.y-$imports.S.y)>$imports.PAT_SEE)return false;
+      var through=[$imports.LIFT_GEO.landing,$imports.LIFT_GEO.car].every(function(a0){
+        if(me.a>=a0)return true;var t=(a0-loc.a)/(me.a-loc.a);return Math.abs(loc.b+t*(me.b-loc.b))<$imports.LIFT_GEO.half-0.05;});
+      if(!through||!$imports.PatrolNav.los(position(),fp))return false;
+    }
+    var path=$imports.PatrolNav.path(position(),fp),dist=path&&path.length?$imports.PatrolNav.length(path):Math.hypot($imports.PAT.x-fp.x,$imports.PAT.y-fp.y);
+    var eta=Math.max(0,dist-LIFT_REACH)/$imports.PAT_CHASE;
+    if(!$imports.PAT.locked){
+      $imports.PAT.locked=true;$imports.PAT.lock=1;$imports.PAT.behavior='chase';
+      if(!$imports.PAT.permanent&&!$imports.PAT.cited){$imports.PAT.cited=true;(0,$imports.addViolation)(8,'patrol');}
+      (0,$imports.gameFact)('patrol',{what:'locked',permanent:!!$imports.PAT.permanent});
+    }
+    $imports.PAT.lost=0;$imports.PAT.lastSeen=fp;framePath=null;
+    if(eta>=LIFT_RUSH_MIN){
+      $imports.PAT.doorRush={host:R.host,floor:R.floor,scene:R.id,x:fp.x,y:fp.y,eta:eta};
+      $imports.PAT.warning=Math.min(3.6,eta);$imports.PAT.near=true;                 /* 门外的灯管按它的节奏闪 */
+      (0,$imports.os)('〔门外 · 正在靠近〕脚步加快。',2.4,$imports.OS_KEEP);
+    }
+    return false;
+  }
   function step(dt){
     var newRegion=region();if(newRegion!==$imports.PAT.lastRegion){$imports.PAT.lastRegion=newRegion;if(newRegion)enqueue(newRegion);}
     $imports.PAT.safety=Math.max(0,$imports.PAT.safety-dt);$imports.PAT.afterBlink=Math.max(0,$imports.PAT.afterBlink-dt);
@@ -196,6 +244,7 @@ var PatrolWorld=(function(){
     /* 到达检查现场才等待，远处的永久追踪实体仍继续走。 */
     if(localQuiet()){$imports.PAT.lock=0;$imports.VisualState.patrolRed=0;return;}
     if(!hunting())clearChase();
+    if(liftDoor())return;
     var hostile=hunting()&&$imports.PAT.safety<=0;
     if(hostile&&(visible||knownCabinet)){
       $imports.PAT.lastSeen=knownCabinet?cabinet:playerPoint();$imports.PAT.lost=0;
@@ -285,6 +334,8 @@ var PatrolWorld=(function(){
           locker:validLocker(signal.locker,signal.locker&&signal.locker.scene)&&signal.locker.scene===signal.point.scene?
             {scene:signal.locker.scene,c:signal.locker.c,r:signal.locker.r}:null}:null;
       $imports.PAT.lastRegion=zoneById(d.lastRegion)?d.lastRegion:null;
+      var dr=d.doorRush;$imports.PAT.doorRush=dr&&['teach','lab'].includes(dr.host)&&Number.isInteger(dr.floor)&&dr.floor>=1&&dr.floor<=5&&dr.scene===dr.host+dr.floor&&[dr.x,dr.y,dr.eta].every(Number.isFinite)?
+        {host:dr.host,floor:dr.floor,scene:dr.scene,x:dr.x,y:dr.y,eta:dr.eta}:null;
       $imports.PAT.queue=Array.isArray(d.queue)?d.queue.filter(function(e){return e&&zoneById(e.regionId)&&Number.isFinite(e.sequence)&&Number.isFinite(e.enteredAt);}).slice(0,$imports.PATROL_ZONES.length):[];
       $imports.PAT.investigation=d.investigation&&zoneById(d.investigation.regionId)?d.investigation:null;
       if($imports.PAT.investigation)$imports.PAT.investigation.remaining=Number.isFinite($imports.PAT.investigation.remaining)?(0,$imports.clamp)($imports.PAT.investigation.remaining,0,6):6;

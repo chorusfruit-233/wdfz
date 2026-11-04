@@ -60,6 +60,7 @@ var RunScore=(function(){
         }
         else if(f.what==='lost') add('校规与巡察','甩掉了巡察者',P.patrolLost,'patrol');
         else if(f.what==='locker') add('校规与巡察','躲在柜子里躲过',P.locker,'patrol');
+        else if(f.what==='door') add('校规与巡察','电梯门在它面前合上',P.locker,'patrol');      /* 挡门：和躲柜一样记一次「躲过」 */
         else if(f.what==='banish') try{ $imports.RunLog.event('patrol','符纸烧成了灰',0); }catch(e){}
         break;
       case 'protect': st.saved=1; add('保命与惊醒',f.by==='immune'?'天生免疫挡下一次':'不知名药丸挡下一次',P.protect,'protect'); break;

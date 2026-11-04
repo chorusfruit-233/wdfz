@@ -166,3 +166,75 @@ class ElevatorTest(BrowserCase):
         self.assertEqual(result['before'], result['after'])
         self.assertTrue(result['moved'])
         self.assertTrue(result['canSave'] and result['restored'] and result['returned'])
+
+    # —— 巡察者挡门（计划 1.3 节）——
+    PATROL = """(o)=>{
+      const R=INTERIORS.teach2;S.tsec=700;                       /* 第四节：巡察者在搜捕 */
+      SEARCH.on=true;DEV.fast=false;DEV.god=false;Achievements.run().debug=0;Achievements.run().mod=0;   /* 成就只在可信的局里记 */
+      callAndWait('teach',2);faceDoor(R);walk(50,'w');
+      if(o.side){const p=Elevator.world(R,-1.3,0.38);S.x=p.x;S.y=p.y;}
+      patReset();PatrolWorld.reset();
+      const w=Elevator.world(R,o.a,o.b),sp=PatrolNav.snap('teach2',PatrolNav.point('teach2',w.x,w.y));
+      Object.assign(PAT,{room:'teach2',x:sp.x,y:sp.y,fy:0,state:'walk',safety:0,warning:0,locked:!!o.locked,lock:o.locked?1:0,lost:0,
+        behavior:o.locked?'chase':'patrol',lastSeen:o.locked?PatrolNav.point('teach2',S.x,S.y):null,transition:null,afterBlink:0});
+      const r={inside:Elevator.inCabin(),hunting:PatrolWorld.hunting()};
+      for(let i=0;i<180&&!S.dead;i++){
+        update(1/30);
+        if(i===0)r.rush=PAT.doorRush&&+PAT.doorRush.eta.toFixed(2);
+        if(o.closeAt!==undefined&&i===o.closeAt)Elevator.close('teach');
+      }
+      r.dead=S.dead;r.death=S.death;r.search=PAT.search;r.door=Elevator.doorAmount('teach',2);
+      r.ach=!!Achievements.state().got['e.liftdoor'];
+      r.text=document.getElementById('sub').innerText;
+      return r;}"""
+
+    def test_patrol_watching_you_enter_comes_for_the_door_and_closing_in_time_beats_it(self):
+        page = self.game()
+        r = page.evaluate(self.PATROL, {'a': 2.5, 'b': -11, 'locked': True, 'closeAt': 3})
+        self.assertTrue(r['inside'] and r['hunting'])
+        self.assertGreaterEqual(r['rush'], 2.2)                     # 从开始走过来到碰到门至少 2.2 秒
+        self.assertFalse(r['dead'])
+        self.assertEqual(r['door'], 0)
+        self.assertGreater(r['search'], 0)                          # 被关在门外，在门口照常搜
+        self.assertTrue(r['ach'])                                   # 精英「它比门慢」
+
+    def test_patrol_reaches_an_open_door_and_pulls_it_open(self):
+        page = self.game()
+        r = page.evaluate(self.PATROL, {'a': 2.5, 'b': -11, 'locked': True})
+        self.assertGreaterEqual(r['rush'], 2.2)
+        self.assertTrue(r['dead'])
+        self.assertEqual(r['death'], 'liftdoor')
+        self.assertFalse(r['ach'])
+
+    def test_patrol_already_at_the_door_is_an_ordinary_catch_not_a_door_block(self):
+        page = self.game()
+        r = page.evaluate(self.PATROL, {'a': 2.2, 'b': 0.4, 'locked': True})
+        self.assertIsNone(r['rush'])                                # 不够 2.2 秒：本来就追上了，不算挡门
+        self.assertTrue(r['dead'])
+        self.assertEqual(r['death'], 'grip')
+
+    def test_unseen_inside_the_car_does_not_start_a_door_block(self):
+        page = self.game()
+        # 它没在追你，站在门外斜前方；你贴着轿厢侧壁，视线穿不过门洞
+        r = page.evaluate(self.PATROL, {'a': 2.5, 'b': -4, 'locked': False, 'side': True})
+        self.assertIsNone(r['rush'])
+        self.assertFalse(r['dead'])
+
+    def test_door_block_score_and_saved_rush(self):
+        page = self.game()
+        r = page.evaluate("""()=>{
+          const R=INTERIORS.teach2;S.tsec=700;callAndWait('teach',2);faceDoor(R);walk(50,'w');
+          patReset();PatrolWorld.reset();const w=Elevator.world(R,2.5,-11),sp=PatrolNav.snap('teach2',PatrolNav.point('teach2',w.x,w.y));
+          Object.assign(PAT,{room:'teach2',x:sp.x,y:sp.y,fy:0,state:'walk',safety:0,warning:0,locked:true,lock:1,lost:0,behavior:'chase',transition:null,afterBlink:0,
+            lastSeen:PatrolNav.point('teach2',S.x,S.y)});
+          update(1/30);const rush=JSON.stringify(PAT.doorRush);
+          saveGame();const saved=loadGame();freshState('hard');running=false;applySave(saved);
+          const restored=JSON.stringify(PAT.doorRush);
+          Elevator.close('teach');for(let i=0;i<45;i++)update(1/30);
+          const ev=RunLog.snapshot().events.filter(e=>e[2]==='电梯门在它面前合上');
+          return {rush,restored,dead:S.dead,door:Elevator.doorAmount('teach',2),score:ev.map(e=>e[3])};
+        }""")
+        self.assertEqual(r['rush'], r['restored'])                  # 挡门状态存档、读档不变
+        self.assertFalse(r['dead'])
+        self.assertEqual(r['door'], 0)
+        self.assertEqual(r['score'], [15])                         # 和躲柜一样，记一次「躲过」 +15
