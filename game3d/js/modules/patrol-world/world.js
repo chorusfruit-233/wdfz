@@ -24,7 +24,7 @@ var PatrolWorld=(function(){
   function approach(){
     if($imports.CarChase.active())return null;
     var a=playerPoint(),tr=$imports.PAT.transition,b=tr?tr.to:position();
-    var key=[a.scene,Math.round(a.x/4),Math.round(a.y/4),Math.round(a.fy*10),b.scene,Math.round(b.x/4),Math.round(b.y/4),Math.round((b.fy||0)*10),tr?Math.ceil(tr.remaining*2):0].join(':');
+    var key=[a.scene,Math.round(a.x/4),Math.round(a.y/4),Math.round(a.fy*10),b.scene,Math.round(b.x/4),Math.round(b.y/4),Math.round((b.fy||0)*10),tr?Math.ceil(tr.remaining*2):0,hearRange()].join(':');
     if(approachCache&&approachCache.key===key)return approachCache.value;
     var m=$imports.PatrolNav.approach(a,b,220*hearRange());if(m&&tr)m.distance+=tr.remaining*$imports.PAT_SPEED;
     approachCache={key:key,value:m};return m;

@@ -14,7 +14,7 @@
 'use strict';
 
 var SPEEDRUN_KEY='wdfz3d_speedrun_v1';
-var SPEEDRUN_RULES=4;                       /* 巡察连续步行与网络中心区域报警；旧成绩保留并按版本隔离。 */
+var SPEEDRUN_RULES=5;                       /* 顺风耳与七项天赋；旧成绩保留并按版本隔离。 */
 var SPEEDRUN_GAME='3d-2026.11';
 var RUN_MODE='normal';                      /* 'speedrun' 时存档写到单独的槽 */
 var SPEEDRUN_ROUTES={cyber:{n:'《网安仙人》'},car:{n:'《闸门》'},face:{n:'《白名单》'},portal:{n:'《门》'},beast:{n:'隐藏路线',secret:1}};
