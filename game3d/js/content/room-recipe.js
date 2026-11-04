@@ -428,7 +428,7 @@ function roomDecor(c,isRoof){
     if(teachFl){
       var nl=0;
       for(x=3;x<W-3;x+=9){ var near=Math.abs(CX(x))<10; ceilingLight(K,CX(x),CZ(18),1.8,0.24,0,near?(nl++===1?'dying':'on'):((x/9|0)%2?'dying':'off')); }
-      var cs=$imports.CLS_SPAN, ci, LIT={21:1,45:1};                       /* 一层四间，开着灯的是第二间和自己班那间 */
+      var cs=$imports.CLS_SPAN, ci, LIT={9:1,21:1,45:1};                  /* 一层四间，开着灯的是第一间、第二间和自己班那间（和点光源一一对应，见 scene-data.js） */
       for(ci=0;ci<cs.length;ci++) classroomLamps(c,ci,cs[ci][0],!!LIT[cs[ci][0]]);   /* 教室的护眼灯和黑板灯 */
     }else if(R.id!=='garage1'){
       var nk=0;
