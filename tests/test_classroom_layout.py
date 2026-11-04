@@ -20,6 +20,17 @@ class ClassroomLayoutTest(BrowserCase):
                 &&doors[1][0]-doors[0][0]===8;})
               &&R.grid.slice(1,r0).every(row=>row.every(ch=>ch==='#'));})""")
 
+    def test_wall_side_desks_are_reached_from_the_aisle(self):
+        page = self.page()
+        self.enter(page)
+        # 靠窗那组同桌的外侧那张贴着北墙：站在第 9 行的过道里、斜着瞄过去就能选中它（隔着同桌的桌子，不隔墙），靠走廊那组同理
+        self.assert_js(page, """(()=>{var R=INTERIORS.teach1,L=ClassroomLayout,c0=L.spans[0][0],ok=true;
+            [[c0+4,L.deskRows[0],L.deskRows[1]+1.2,-1],[c0+4,L.deskRows[5],L.deskRows[4]-0.2,1]].forEach(t=>{
+              S.mode='in';S.room='teach1';S.seated=false;S.x=R.ox+(t[0]+1.3)*R.tw;S.y=R.oy+t[2]*R.th;
+              S.ang=Math.atan2((t[1]+.5-t[2]),(t[0]+.5-(t[0]+1.3)));
+              var hit=nearWorld(24);ok=ok&&Collision.depth(S.x,S.y,PRAD)<1e-7&&!!hit&&hit.c===t[0]&&hit.r===t[1]&&hit.ch==='d';});
+            return ok;})()""")
+
     def test_every_classroom_has_42_seats_in_three_pair_groups(self):
         page = self.page()
         # 五层每间 42 个座位（三组同桌 × 七排）；能坐的那张（P）每层都在自己班那间的同一处（teachFloor 每层都摆）

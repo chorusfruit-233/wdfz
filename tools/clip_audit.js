@@ -381,13 +381,16 @@ var ClipAudit=(function(){
         var ch2=R.grid[r][c]; if(REACH_CH.indexOf(ch2)<0) continue;
         if(ch2==='S'&&((c>0&&R.grid[r][c-1]==='S')||(r>0&&R.grid[r-1][c]==='S'))) continue;   /* 楼梯按一组算，只查第一格 */
         var F=(R.foot&&R.foot[c+','+r])||null, cx=(c+0.5)*tw-halfW, cz=(r+0.5)*tw-halfH, ok=false;
+        /* 教学楼教室靠墙那组同桌的外侧那张（布局 4）：离墙只有 0.2 米，和真实教室一样只能从过道那边、隔着同桌的桌子够到。
+           游戏里交互半径 2.67 米、按朝向选格子，过道里斜着瞄得中（test_classroom_layout 有实测），这里放宽到 1.6 米 */
+        var lim=((ch2==='d'||ch2==='P')&&/^teach[1-5]$/.test(id)&&typeof ClassroomLayout!=='undefined'&&ClassroomLayout.isDesk(c,r))?1.6:1.2;
         if(ch2==='S'){ var si2=stairInfo(R,c,r); cx+=(si2.gw-1)*tw/2; cz+=(si2.gd-1)*tw/2; }
         var ri0=Math.max(0,Math.floor((c-2)*R.tw/step)), ri1=Math.min(W,Math.ceil((c+3)*R.tw/step)), rj0=Math.max(0,Math.floor((r-2)*R.th/step)), rj1=Math.min(H,Math.ceil((r+3)*R.th/step)), a, b;
         for(b=rj0;b<rj1&&!ok;b++) for(a=ri0;a<ri1&&!ok;a++){
           if(!seen[a+b*W]) continue;
           var pp=P(a,b), mx=(pp[0]-R.ox)*U2M-halfW, mz=(pp[1]-R.oy)*U2M-halfH, d=Math.hypot(mx-cx,mz-cz);
           if(F) F.forEach(function(q2){ d=Math.min(d,Math.hypot(Math.max(q2.x0-mx,0,mx-q2.x1),Math.max(q2.z0-mz,0,mz-q2.z1))+0.3); });
-          if(d<=1.2) ok=true;
+          if(d<=lim) ok=true;
         }
         if(!ok) out.push({type:'reach',room:id,a:ch2+'@'+c+','+r,at:[+cx.toFixed(2),0,+cz.toFixed(2)]});
       }
