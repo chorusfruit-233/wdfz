@@ -24,9 +24,9 @@ var PatrolWorld=(function(){
   function approach(){
     if($imports.CarChase.active())return null;
     var a=playerPoint(),tr=$imports.PAT.transition,b=tr?tr.to:position();
-    var key=[a.scene,Math.round(a.x/4),Math.round(a.y/4),Math.round(a.fy*10),b.scene,Math.round(b.x/4),Math.round(b.y/4),Math.round((b.fy||0)*10),tr?Math.ceil(tr.remaining*2):0].join(':');
+    var key=[a.scene,Math.round(a.x/4),Math.round(a.y/4),Math.round(a.fy*10),b.scene,Math.round(b.x/4),Math.round(b.y/4),Math.round((b.fy||0)*10),tr?Math.ceil(tr.remaining*2):0,$imports.Talent.modifier('sound.range')].join(':');
     if(approachCache&&approachCache.key===key)return approachCache.value;
-    var m=$imports.PatrolNav.approach(a,b,220);if(m&&tr)m.distance+=tr.remaining*$imports.PAT_SPEED;
+    var m=$imports.PatrolNav.approach(a,b,220*$imports.Talent.modifier('sound.range'));if(m&&tr)m.distance+=tr.remaining*$imports.PAT_SPEED;
     approachCache={key:key,value:m};return m;
   }
   function region(){
@@ -300,7 +300,13 @@ var PatrolWorld=(function(){
     $imports.VisualState.patrolRed=threat()?1:0;
     var t=3.6-$imports.PAT.warning,p=t%1.8;
     $imports.VisualState.patrolFlick=near&&$imports.PAT.warning>0&&(p<.15||p>.3&&p<.45||p>.75&&p<1.25)?.7:0;
-    if(near){$imports.PAT.step-=dt;if($imports.PAT.step<=0){$imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;$imports.SFX.patStep(Math.sin(rel)*.9,Math.pow(1-metric.distance/200,1.4),Math.cos(rel)<-.2,$imports.PAT.locked,{m:metric.distance*$imports.U2M,muffled:!same()||!$imports.PatrolNav.los(position(),playerPoint())});}}
+    var hearing=200*$imports.Talent.modifier('sound.range');
+    if(metric&&metric.distance<hearing){$imports.PAT.step-=dt;if($imports.PAT.step<=0){
+      $imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;
+      function level(p){var cfg=$imports.StairWorld.config(p.scene),id=cfg?cfg.rooms[Math.max(0,Math.min(cfg.rooms.length-1,Math.round((p.fy||0)/cfg.rise)))]:p.scene;
+        return id==='out'?0:($imports.INTERIORS[id]&&$imports.INTERIORS[id].floor)||1;}
+      $imports.SFX.patStep(Math.sin(rel)*.9,Math.pow(1-metric.distance/hearing,1.4),Math.cos(rel)<-.2,$imports.PAT.locked,
+        {m:metric.distance*$imports.U2M,level:level(position())-level(playerPoint()),muffled:!same()||!$imports.PatrolNav.los(position(),playerPoint())});}}
   }
   function tick(dt){if(!(dt>0)||$imports.S.dead||$imports.S.screen!=='play')return;if(!$imports.PAT.version)reset();
     var left=dt;while(left>1e-8&&!$imports.S.dead){var n=Math.min(left,.1,$imports.PAT.state==='idle'&&$imports.PAT.respawn>0?$imports.PAT.respawn:Infinity);step(n);left-=n;}

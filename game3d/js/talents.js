@@ -6,7 +6,7 @@
    规则版本：1 = 重构前效果；2 = 试验效果；3 = 移除铁胃。其余旧天赋保留原规则。 */
 'use strict';
 
-var TALENT_RULES=3;
+var TALENT_RULES=4;
 var TALENT_DEF={
   tech:{n:'科技党',pick:true,role:'随身带着一部旧手机。',does:'开局拥有满电手机。',v2:'',limit:'所有手机耗电永久翻倍；接入网络与服务器谜题仍需完成。',tags:['手机','服务器路线']},
   code:{n:'编程社',pick:true,role:'在电脑社团泡过三年。',
@@ -29,6 +29,9 @@ var TALENT_DEF={
     does:'每局一次：要命的事被绕开，能缓过气来，暂时摆脱过分的注意。',
     v2:'',
     limit:'只有一次，用掉不会再回来；身上有不知名药丸时先用药丸。',tags:['生存']},
+  hearing:{n:'顺风耳',pick:true,role:'宿舍里谁翻个身，你都会醒。',
+    does:'脚步、门轴和远处异响的可闻距离增加一半，分得出楼上楼下；声音字幕多一档「很远」。',
+    v2:'',limit:'假威胁的间隔缩短五分之一，不能分辨真假；静音时字幕保留同样的信息。',tags:['声音','巡察者']},
   /* 旧档里的六项：名字保留，目前没有额外作用，新局不会出现 */
   map:{n:'过目不忘',legacy:true}, hand:{n:'手稳',legacy:true}, thin:{n:'瘦小',legacy:true},
   cold:{n:'血冷',legacy:true}, known:{n:'熟人',legacy:true}, crowd:{n:'藏在人群里',legacy:true},
@@ -53,7 +56,7 @@ var Talent={
     var t=$imports.S.talentState;
     if(!t||typeof t!=='object'||Array.isArray(t)) t=$imports.S.talentState={};
     t.schemaVersion=1;
-    t.rulesVersion=([1,2,3].includes(t.rulesVersion))?t.rulesVersion:1;
+    t.rulesVersion=([1,2,3,4].includes(t.rulesVersion))?t.rulesVersion:1;
     t.origin=['selected','random','legacy','repair'].indexOf(t.origin)>=0?t.origin:'legacy';
     if(!t.consumed||typeof t.consumed!=='object'||Array.isArray(t.consumed)) t.consumed={};
     t.consumed={fatalProtection:!!t.consumed.fatalProtection,faceRemedy:!!t.consumed.faceRemedy};
@@ -102,6 +105,8 @@ var Talent={
   },
   /* 来源级修正量：无匹配返回中性值 */
   modifier:function(source){
+    if(source==='sound.range')return this.has('hearing')?1.5:1;
+    if(source==='dread.cooldown')return this.has('hearing')?.8:1;
     if(source==='danger.garage'||source==='danger.night') return this.has('night')?TALENT_CFG.darkMul:1;
     if(source==='anomaly.feast') return TALENT_CFG.feastNormal;
     if(source==='activity.eat') return $imports.SAN_ACTS.eat.san;

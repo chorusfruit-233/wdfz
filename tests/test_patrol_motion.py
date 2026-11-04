@@ -171,7 +171,7 @@ class PatrolMotionTest(BrowserCase):
         p = self.game()
         self.assert_js(p, """(()=>{const old={version:1,recent:[{runId:'old',rules:2,ms:60000,status:'finished'}],best:{}};
           old.best[Speedrun.key(2,'hard','car')]={ms:60000,runId:'old'};localStorage.setItem(SPEEDRUN_KEY,JSON.stringify(old));
-          const isolated=SPEEDRUN_RULES===4&&Speedrun.best('hard','car')===null;
+          const isolated=SPEEDRUN_RULES===5&&Speedrun.best('hard','car')===null;
           Speedrun.save({id:'new',rules:SPEEDRUN_RULES,diff:'hard',route:'car',ms:90000,status:'finished',game:SPEEDRUN_GAME});
           const d=Speedrun.read();return isolated&&Speedrun.best('hard','car')===90000&&d.recent.length===2&&
             d.best[Speedrun.key(2,'hard','car')].ms===60000;})()""")
