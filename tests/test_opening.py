@@ -24,6 +24,28 @@ class OpeningTest(BrowserCase):
         page.wait_for_function("CUT.on&&CUT.id==='opening'", timeout=60000)
         self.assert_js(page, "CUT.dur===11&&Opening.short")
 
+    def test_falling_asleep_leans_forward_onto_the_desk_not_sideways(self):
+        """第 4 段「你」趴到桌上：往自己面朝的方向（西边的课桌）倒，不往侧面倒；第 2 段老师点头也是前后点，不是左右歪头。
+        教室朝西以后，同一个物体上先设朝向（Y）再设前倾（X），默认欧拉顺序 XYZ 会绕世界东西轴转——要用 YXZ。"""
+        page = self.begin(first=True)
+        r = page.evaluate("""() => {running=false;
+          function tip(o){o.updateMatrixWorld(true);const top=new THREE.Vector3(0,1.2,0).applyMatrix4(o.matrixWorld),b=new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);return [top.x-b.x,top.z-b.z];}
+          CUT.t=CUT.dur*0.70;render(0.0001);const me=CUT.data.me,lean=tip(me);
+          const face=[Math.cos(ClassroomLayout.ownSeat.facing),Math.sin(ClassroomLayout.ownSeat.facing)];
+          let nod=null;for(const k of [0.30,0.31,0.32,0.33]){CUT.t=CUT.dur*k;render(0.0001);if(Math.abs(CUT.data.teacher.rotation.x)>0.01){nod=tip(CUT.data.teacher);break;}}
+          const t=CUT.data.teacher,tf=[Math.sin(t.rotation.y),Math.cos(t.rotation.y)];
+          cutSkip();
+          return {along:lean[0]*face[0]+lean[1]*face[1],side:Math.abs(lean[0]*face[1]-lean[1]*face[0]),
+            nodAlong:nod&&Math.abs(nod[0]*tf[0]+nod[1]*tf[1]),nodSide:nod&&Math.abs(nod[0]*tf[1]-nod[1]*tf[0]),
+            order:me.rotation.order,teacherBack:NC.teacher?NC.teacher.rotation.order:'XYZ'};
+        }""")
+        self.assertGreater(r['along'], 0.3)          # 头往前（面朝的方向）伸出去 0.3 米以上
+        self.assertLess(r['side'], 0.01)             # 没有侧向分量
+        self.assertIsNotNone(r['nodAlong'])
+        self.assertGreater(r['nodAlong'], r['nodSide'] * 3)
+        self.assertEqual(r['order'], 'YXZ')
+        self.assertEqual(r['teacherBack'], 'XYZ')    # 跳过以后教室里那位老师的欧拉顺序还原
+
     def test_skipping_at_any_shot_hands_over_the_same_start(self):
         results = []
         for k in (0.05, 0.3, 0.5, 0.7, 0.9, None):

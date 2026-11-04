@@ -52,13 +52,16 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
     d.cam4=[at(c0+5.1,mid-0.3),at(c0+4.45,mid+0.25)];                          /* 4 「你」身后、俯身靠近 */
     /* 老师：就用教室里站在讲台和黑板之间的那位（NC.teacher），不另造一个；没有时才自己摆一个在同一处。
        「你」——第三人称镜头里趴在座位上的那个人，和同学一样坐在椅子上 */
-    if($imports.NC.teacher){ d.teacher=$imports.NC.teacher; d.ncTeacher=true; }
+    if($imports.NC.teacher){ d.teacher=$imports.NC.teacher; d.ncTeacher=true; d.teacherOrder=d.teacher.rotation.order; }
     else{
       var ts=$imports.ClassroomLayout.teacherSpot(own.classId), t=(0,$imports.worldToScene)(R.ox+ts.x*R.tw,R.oy+ts.y*R.th,R);
       d.teacher=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.teacher.add((0,$imports.figMesh)('teacher',(0,$imports.cutBasic)(0x4a5560),1));
       d.teacher.position.set(t.x,0,t.z); d.teacher.rotation.y=$imports.PI/2;
     }
-    d.me=(0,$imports.cutAdd)(new $imports.THREE.Group());
+    /* 先转朝向、再在人自己的坐标里前倾 / 点头（欧拉顺序 YXZ）。默认的 XYZ 是绕世界的东西轴转：教室朝西以后，
+       「趴到桌上」就成了往侧面倒、老师点头成了左右歪头 */
+    d.teacher.rotation.order='YXZ';
+    d.me=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.me.rotation.order='YXZ';
     var me=(0,$imports.figMesh)('sit',(0,$imports.cutBasic)(0x55606a),1); me.rotation.y=Math.PI; d.me.add(me);
     var mp=(0,$imports.worldToScene)(R.ox+(ch.x+.02)*R.tw,R.oy+ch.y*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
     /* 阳光里的粉笔灰：讲台前一片小光点，正常时慢慢飘，第 3 段停住 */
@@ -131,7 +134,7 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
   },
   clean:function(d){
     openingCap('');
-    if(d.ncTeacher&&d.teacher){ d.teacher.visible=true; d.teacher.rotation.x=0; d.teacher.rotation.y=(d.teacher.userData&&d.teacher.userData.ty)||$imports.PI/2; }   /* 跳过时也把老师放回原样 */
+    if(d.ncTeacher&&d.teacher){ d.teacher.visible=true; d.teacher.rotation.x=0; d.teacher.rotation.y=(d.teacher.userData&&d.teacher.userData.ty)||$imports.PI/2; d.teacher.rotation.order=d.teacherOrder||'XYZ'; }   /* 跳过时也把老师放回原样 */
   }
 };
 
