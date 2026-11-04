@@ -1,0 +1,533 @@
+{
+  "modules": [
+    "test_controls",
+    "test_death_timeline",
+    "test_opening",
+    "test_modules",
+    "test_module_persistence",
+    "test_save_boundary",
+    "test_presentation_states"
+  ],
+  "tests": 171,
+  "seconds": 1195.6025942770066,
+  "success": false,
+  "records": {
+    "test_controls.ControlsTest.test_alt_frees_cursor_without_pausing_and_click_takes_it_back": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_ancestor_window_is_slowed_and_drop_requires_dialogue": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_anomaly_choice_uses_real_time_and_random_option": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_anomaly_does_not_repeat_and_prefers_new": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_assimilation_death_can_be_prevented_without_a_choice": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_auto_save_death_and_ending_history": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_bag_detail_buttons_use_hotbar_and_drop": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_bag_drop_refreshes_open_panel_and_hotbar": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_bell_platform_opening_clearance_and_collision": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_bell_tower_saves_restore_stairs_and_top": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_bell_tower_spiral_stairs_and_exam_mode": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_brightness_setting_survives_reload": {
+      "outcome": "failed",
+      "detail": "Traceback (most recent call last):\n  File \"/workspace/wdfz-webgpu/tests/test_controls.py\", line 1108, in test_brightness_setting_survives_reload\n    self.assert_js(page, \"SET.bright===60&&GLR.postMat.uniforms.uBright.value===0.6&&document.getElementById('mb').value==='60'\")\n  File \"/workspace/wdfz-webgpu/tests/browser_case.py\", line 100, in assert_js\n    self.assertTrue(page.evaluate(expression), message or expression)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/sync_api/_generated.py\", line 9385, in evaluate\n    self._sync(\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n           ^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_page.py\", line 472, in evaluate\n    return await self._main_frame.evaluate(expression, arg)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_frame.py\", line 345, in evaluate\n    await self._channel.send(\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 76, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 632, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.Error: Page.evaluate: TypeError: Cannot read properties of undefined (reading 'uniforms')\n    at eval (eval at evaluate (:311:30), <anonymous>:1:30)\n    at eval (<anonymous>)\n    at UtilityScript.evaluate (<anonymous>:311:30)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n"
+    },
+    "test_controls.ControlsTest.test_cancel_and_capture_loss_allow_next_gesture": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_chalk_and_pendulum_only_announce_difficult_anomalies": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_choice_number_keys_pick_option": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_coin_buys_meal_and_vending_items": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_coin_lures_the_garage_follower_then_expires": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_computer_modal_releases_pointer_and_has_touch_exit": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_computer_touch_dpad_exit_and_no_time_skip": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_continuous_days_and_cooldowns_across_time_skips": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_coordinate_jump_rebases_without_ending_drag": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_day_budget_protects_continuous_exploration_between_inspections": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_debug_panel_requires_password": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_duplicate_search_result_is_retained_and_saved": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_elixir_saves_once_and_seal_wards_patroller": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_ending_cutscene_plays_and_can_be_skipped": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_exam_ignores_non_exam_previews": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_exercise_includes_all_courts_and_night_dorm_accumulates_violations": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_fine_quality_shadows_window_shafts_and_light_pools": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_fixed_items_remain_after_full_or_duplicate_bag": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_footstep_surfaces_and_light_crackle": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_full_bag_does_not_consume_searchable_key_or_usb": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_full_violation_no_longer_kills_but_blocks_leave": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_fullscreen_enters_exits_and_updates_button": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_fullscreen_prefixed_api_and_external_exit": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_fullscreen_rejection_can_retry": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_fullscreen_unavailable_explains_and_standalone_is_detected": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_goggles_make_lab_rolls_better": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_guard_flashlight_can_be_retried_after_full_bag": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_guard_flashlight_enables_garage_escape": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_held_items_show_in_hands": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_homepage_and_legacy_3d_link": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_immune_talent_ends_a_lethal_anomaly": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_immune_talent_saves_once_and_persists": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_indoor_quality_switch_updates_shafts_without_reentering": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_journal_hides_when_replaced_by_pause": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_journal_tabs_share_one_panel_and_keys_switch_or_close": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_keyboard_actions_do_not_leak_into_panels_or_pause": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_leave_slip_excuses_schedule_and_patroller_then_expires": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_lifting_movement_finger_preserves_view_finger": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_light_and_cooldown_restore_and_old_save_defaults": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_lights_out_hud_debug_minutes_and_podium_text": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_lights_share_priority_and_follow_removed_items": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_locker_position_and_patrol_end_stay_hidden_until_exit": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_long_frame_has_bounded_catchup": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_mobile_menu_panels_scroll_and_real_scene_renders": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_monologue_changes_with_san": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_moth_swarm_closes_in_but_keeps_off_the_lens": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_mouse_and_touch_can_switch_after_pointer_lock": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_mouse_drag_fallback_remains_available_after_rejection": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_mouse_lock_modal_return_and_escape_pause": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_mouse_on_touch_joystick_does_not_start_touch_input": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_narrow_portrait_hotbar_is_visible_and_tappable": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_old_cooldown_timestamps_migrate_without_expiring_or_extending": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_older_save_without_new_state_loads_safely": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_only_hard_to_prevent_anomalies_are_forecast": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_outdoor_light_direction_survives_quality_downgrade": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_patroller_has_its_own_uniform": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_patroller_locks_on_hides_and_back_turn_is_not_an_escape": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_patroller_reaches_seen_locker_without_crossing_walls": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_phone_opens_from_inventory_on_mouse_and_touch": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_phone_paper_plane_app_restores_a_little_san": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_phone_reward_cooldown_survives_reload_and_old_saves": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_phone_yields_to_choice_anomaly_death_and_menu": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_pill_effect_survives_reload_and_old_saves_default_to_zero": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_pill_heals_over_time_snack_lasts_thirty_seconds_and_day_is_brighter": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_pointer_lock_error_does_not_cancel_touch_look": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_portal_delayed_prompt_does_not_interrupt_other_contexts": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_portal_materials_can_be_retried_after_full_bag_or_drop": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_portal_remains_accessible_after_assembly_and_reload": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_portal_true_ending_from_lab_parts": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_portrait_subtitle_uses_full_width": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_principal_office_keys_and_guard_has_none": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_prologue_only_advances_on_space_or_enter": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_rain_streaks_splashes_lightning_and_cleanup": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_reload_keeps_follower_and_previews_and_discards_old_hidden_choice": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_reload_restores_timed_anomaly_choice_and_indoor_effect": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_returned_menu_layout_on_short_and_touch_screens": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_roster_anomaly_choice_is_timed_and_restored": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_schedule_evening_until_ten_and_lights_out": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_search_job_is_cleared_when_quitting_or_starting_new_game": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_search_takes_time_and_dev_toggle": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_shoulder_smile_loss_uses_difficulty_and_can_be_fatal": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_shoulder_tap_smile_variant_small_loss_for_turning_round": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_skipped_time_fires_lights_out_and_first_day_story": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_skipping_a_cutscene_does_not_press_the_button_behind_it": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_slow_touch_action_still_fires_once": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_snack_and_world_time_keep_pace_at_low_frame_rates": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_snack_expires_while_hiding_but_not_while_game_is_paused": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_snack_sprint_and_exhausted_stamina_does_not_stutter": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_sprint_effect_and_exhaustion_survive_reload": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_tap_does_not_click_what_appears_under_the_finger": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_touch_action_button_shows_current_action_and_book_opens_journal": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_touch_action_with_slow_follow_up_still_fires_once": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_touch_buttons_fire_once_and_stick_runs_without_button": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_touch_can_take_over_from_locked_mouse": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_touch_capable_desktop_uses_locked_mouse_and_rotates_view": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_touch_pause_resume_panels_and_fullscreen_recover_look": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_touch_tap_never_locks_mouse_or_enters_fullscreen": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_trap_ideas_only_work_on_the_spot": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_trash_is_a_death_and_respects_survival_item": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_is_modeled_after_the_real_one": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move": {
+      "outcome": "failed",
+      "detail": "Traceback (most recent call last):\n  File \"/workspace/wdfz-webgpu/tests/test_controls.py\", line 1035, in test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move\n    page = self.page()\n           ^^^^^^^^^^^\n  File \"/workspace/wdfz-webgpu/tests/browser_case.py\", line 78, in page\n    page.goto(self.url, wait_until='load')\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/sync_api/_generated.py\", line 9875, in goto\n    self._sync(\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n           ^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_page.py\", line 560, in goto\n    return await self._main_frame.goto(**locals_to_params(locals()))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_frame.py\", line 156, in goto\n    await self._channel.send(\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 76, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 632, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"http://127.0.0.1:46499/\", waiting until \"load\"\n\n"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_only_falls_along_tall_outer_walls": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_survives_save_and_leaves_trace_outdoors": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_two_finger_move_and_look_have_separate_owners": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_walking_running_analog_input_and_blur_reset": {
+      "outcome": "passed"
+    },
+    "test_controls.ControlsTest.test_wiki_entry_spoilers_and_return_to_game": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_all_death_models_have_finite_transforms_during_playback": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_bin_preview_closes_lid_without_mutating_player": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_board_deaths_stand_in_front_of_the_view": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_camera_target_follows_death_lift": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_cutscene_skip_releases_resources_and_restores_visual_state": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_death_cinematic_can_be_skipped_once": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_death_cinematics_stay_within_a_draw_call_budget": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_death_moths_are_black_like_the_in_game_swarm": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_every_ending_storyboard_plays_through_and_finishes_once": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_every_reachable_death_has_its_own_sound": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_motion_depends_on_elapsed_time_not_frame_count": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_reachable_effects_have_preview_and_timeline": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_real_death_resources_are_released_once": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_real_storyboard_death_turns_camera_and_releases_once": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_stall_hand_rises_then_reaches_player": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_storyboarded_deaths_cover_every_reachable_type": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_storyboards_are_frame_rate_independent_and_move_through_phases": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_storyboards_respect_reduced_shake_and_cap_flash": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_tapping_through_a_death_does_not_press_the_menu_button": {
+      "outcome": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_warm_up_compiles_every_death_cinematic_shader_in_advance": {
+      "outcome": "passed"
+    },
+    "test_opening.OpeningTest.test_continue_does_not_replay_the_opening": {
+      "outcome": "passed"
+    },
+    "test_opening.OpeningTest.test_full_version_for_new_players_short_for_returning": {
+      "outcome": "passed"
+    },
+    "test_opening.OpeningTest.test_skipping_at_any_shot_hands_over_the_same_start": {
+      "outcome": "passed"
+    },
+    "test_opening.OpeningTest.test_speedrun_starts_only_after_the_handoff": {
+      "outcome": "passed"
+    },
+    "test_opening.OpeningTest.test_world_is_frozen_and_input_blocked_during_the_opening": {
+      "outcome": "passed"
+    },
+    "test_modules.ManifestStaticTest.test_declared_hooks_match_the_code": {
+      "outcome": "passed"
+    },
+    "test_modules.ManifestStaticTest.test_every_script_is_registered_once_and_index_uses_the_loader": {
+      "outcome": "passed"
+    },
+    "test_modules.ManifestStaticTest.test_feature_logic_files_do_not_touch_the_renderer": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_all_modules_load_and_verify_without_mods": {
+      "outcome": "failed",
+      "detail": "Traceback (most recent call last):\n  File \"/workspace/wdfz-webgpu/tests/test_modules.py\", line 96, in test_all_modules_load_and_verify_without_mods\n    self.assertTrue(result['panel'] and result['devTab'])\nAssertionError: False is not true\n"
+    },
+    "test_modules.ModuleBrowserTest.test_broken_mod_and_hook_errors_are_isolated": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_builtin_switch_and_upload_persist_across_reload": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_feature_modules_can_be_removed_from_the_manifest": {
+      "outcome": "failed",
+      "detail": "Traceback (most recent call last):\n  File \"/workspace/wdfz-webgpu/tests/test_modules.py\", line 179, in test_feature_modules_can_be_removed_from_the_manifest\n    result = page.evaluate(\"\"\"()=>{running=false;clearIntroTimers();S.intro=0;AN.active=false;AN.next=1e5;PAT.next=1e5;RT.inspection=null;\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/sync_api/_generated.py\", line 9385, in evaluate\n    self._sync(\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n           ^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_page.py\", line 472, in evaluate\n    return await self._main_frame.evaluate(expression, arg)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_frame.py\", line 345, in evaluate\n    await self._channel.send(\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 76, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 632, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.Error: Page.evaluate: TypeError: Cannot read properties of undefined (reading 'add')\n    at $imports.ThreeBackend.enterRoom (http://127.0.0.1:39199/game3d/js/engine/scene.js:146:22)\n    at Object.enterRoom (http://127.0.0.1:39199/game3d/js/engine/api.js:48:85)\n    at enterWorldRoom (http://127.0.0.1:39199/game3d/js/world.js:8:57)\n    at doEnterRoom (http://127.0.0.1:39199/game3d/js/world.js:255:3)\n    at eval (eval at evaluate (:311:30), <anonymous>:3:11)\n    at UtilityScript.evaluate (<anonymous>:318:18)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n"
+    },
+    "test_modules.ModuleBrowserTest.test_mod_panel_imports_a_file_from_the_pause_menu": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_module_state_is_saved_under_mods_and_reset_on_new_game": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_room_no_clock_contract_also_applies_outside_elevator": {
+      "outcome": "passed"
+    },
+    "test_modules.ModuleBrowserTest.test_url_mod_loads_and_safe_mode_skips_it": {
+      "outcome": "passed"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_callback_failure_preserves_last_serializable_state": {
+      "outcome": "passed"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_failed_init_unregisters_declared_and_api_persistence": {
+      "outcome": "passed"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_new_game_discards_unloaded_previous_game_data": {
+      "outcome": "passed"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_temporarily_unloaded_data_survives_saving_and_reenable": {
+      "outcome": "passed"
+    },
+    "test_save_boundary.SaveBoundaryBrowserTest.test_apply_save_does_not_reuse_input_objects_or_change_presentation": {
+      "outcome": "passed"
+    },
+    "test_save_boundary.SaveBoundaryBrowserTest.test_bad_save_never_resets_current_game_or_overwrites_original_bytes": {
+      "outcome": "passed"
+    },
+    "test_save_boundary.SaveBoundaryBrowserTest.test_invalid_direct_restore_rejects_before_writing_game_state": {
+      "outcome": "passed"
+    },
+    "test_save_boundary.SaveDataTest.test_current_event_and_elevator_save_retains_continuous_state": {
+      "outcome": "passed"
+    },
+    "test_save_boundary.SaveDataTest.test_handwritten_legacy_midnight_migrates_once_without_mutating_source": {
+      "outcome": "passed"
+    },
+    "test_save_boundary.SaveDataTest.test_invalid_required_fields_rejected_and_optional_collections_normalized": {
+      "outcome": "passed"
+    },
+    "test_save_boundary.SaveDataTest.test_storage_failure_preserves_previous_bytes_and_reports_operation": {
+      "outcome": "passed"
+    },
+    "test_presentation_states.PresentationStatesTest.test_fake_normal_lighting_crosses_threshold_smoothly": {
+      "outcome": "passed"
+    },
+    "test_presentation_states.PresentationStatesTest.test_fake_people_do_not_remain_in_old_room_after_scene_change": {
+      "outcome": "passed"
+    },
+    "test_presentation_states.PresentationStatesTest.test_prologue_normal_world_and_wake_restore_visual_state": {
+      "outcome": "passed"
+    },
+    "test_presentation_states.PresentationStatesTest.test_protected_fake_normal_death_does_not_leave_figures": {
+      "outcome": "passed"
+    },
+    "test_presentation_states.PresentationStatesTest.test_restarting_and_quitting_remove_fake_people_and_old_visual_state": {
+      "outcome": "passed"
+    }
+  }
+}

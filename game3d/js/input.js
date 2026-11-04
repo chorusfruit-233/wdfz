@@ -18,7 +18,7 @@ function devInputBlocked(){
 }
 /* 平台适配入口：策略只接收值，不读取 DOM 或持有这些系统。 */
 function gameInputContext(target,editing){
-  return {hidden:document.hidden,terminal:!!(typeof $imports.TerminalUI!=='undefined'&&$imports.TerminalUI.on),screen:$imports.S.screen,dead:!!$imports.S.dead,prologue:!!(typeof $imports.PRO!=='undefined'&&$imports.PRO.on),
+  return {hidden:document.hidden,rendererBusy:!$imports.Engine.ready(),terminal:!!(typeof $imports.TerminalUI!=='undefined'&&$imports.TerminalUI.on),screen:$imports.S.screen,dead:!!$imports.S.dead,prologue:!!(typeof $imports.PRO!=='undefined'&&$imports.PRO.on),
     paused:!!$imports.PAUSE.on,panelOpen:!!$imports.UI.anyOpen(),choice:!!$imports.UI.chooseOpen,
     computer:!!(typeof $imports.PC!=='undefined'&&$imports.PC.on),phone:!!(typeof $imports.PHONE!=='undefined'&&$imports.PHONE.on),
     lesson:!!(typeof $imports.LESSON!=='undefined'&&$imports.LESSON.on),

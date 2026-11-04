@@ -28,7 +28,7 @@ function shadeApplyQuality(){
   if(SHADE.shadows!==on){
     SHADE.shadows=on;
     $imports.GLR.renderer.shadowMap.enabled=on;
-    $imports.GLR.renderer.shadowMap.type=$imports.THREE.PCFSoftShadowMap;
+    $imports.GLR.renderer.shadowMap.type=$imports.THREE.PCFShadowMap;
     /* 打开 / 关掉阴影要重编着色器 */
     $imports.GLR.scene.traverse(function(o){ if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){ m.needsUpdate=true; }); } });
   }

@@ -7,7 +7,7 @@
 'use strict';
 
 [
-  {id:'lib', name:'第三方库', desc:'three.js r1xx 压缩版，只由引擎层直接使用。',
+  {id:'lib', name:'第三方库', desc:'Three.js r187 本地包；WebGPU 扩展仅在需要时按需加载，共用同一个核心。',
     files:['game3d/module-contracts.js','game3d/lib/three.min.js'], exports:['THREE']},
   {id:'core', name:'基础', desc:'常量、数学工具、时钟换算、物品表、课表。',
     files:['game3d/js/domain/random.js','game3d/js/adapters/random-source.js','game3d/js/core.js'], exports:['clamp','lerp','fmtClock','ITEMS','TTILE','EYE']},
@@ -24,7 +24,7 @@
   {id:'assets', name:'模型资源包', desc:'Blender 导出的模型包与贴图包的按需加载。',
     files:['game3d/js/model/assets.js'], exports:['Assets']},
   {id:'engine', name:'渲染引擎层', desc:'Engine 门面、three.js 后端、场景缓存、人物摆放；clearWorld / sceneBuilt 钩子在这里发。',
-    files:['game3d/js/engine/api.js','game3d/js/render.js','game3d/js/engine/three.js','game3d/js/engine/scene.js','game3d/js/engine/presentation.js'],
+    files:['game3d/js/engine/api.js','game3d/js/render.js','game3d/js/engine/device.js','game3d/js/engine/webgpu-post.js','game3d/js/engine/three.js','game3d/js/engine/scene.js','game3d/js/engine/presentation.js'],
     exports:['Engine','GLR','ThreeBackend','U2M'], emits:['clearWorld','sceneBuilt']},
   {id:'model', name:'建模', desc:'材质、Kit 建模工具、人物、房间/家具/楼/室外/传送门模型；房间可以带自己的 R.build。',
     files:['game3d/js/content/collision-assets.js','game3d/js/content/palette.js','game3d/js/content/spiral-data.js','game3d/js/content/patrol-zones.js','game3d/js/model/materials.js','game3d/js/model/kit.js','game3d/js/model/figure.js','game3d/js/content/scene-data.js',

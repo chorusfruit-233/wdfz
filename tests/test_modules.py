@@ -72,12 +72,13 @@ class ModuleBrowserTest(BrowserCase):
     def open(self, query='', script=None):
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)
-        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));")
+        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0,renderer:'webgl'}));")
         if script:
             context.add_init_script(script)
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url + query, wait_until='load')
+        page.wait_for_function('Engine.ready() && Assets.ready()', timeout=60000)
         page.evaluate("PHOTO_TRIED=true;running=false;if(typeof WUDA_KID_CFG!=='undefined')WUDA_KID_CFG.chance=0")
         return page
 
@@ -114,6 +115,7 @@ class ModuleBrowserTest(BrowserCase):
         self.assertEqual(good['id'], 'beep')
         page.evaluate("GameModules.setBuiltin('example-hello',true)")
         page.reload(wait_until='load')
+        page.wait_for_function('Engine.ready() && Assets.ready()', timeout=60000)
         page.evaluate("PHOTO_TRIED=true;running=false")
         result = page.evaluate("""()=>({mods:GameModules.mods().map(m=>m.id+':'+m.source+':'+m.status), beep:window.__beep,
           up:GameModules.uploaded().map(m=>m.id+':'+m.enabled)})""")
@@ -123,6 +125,7 @@ class ModuleBrowserTest(BrowserCase):
         self.assertEqual(result['up'], ['beep:true'])
         page.evaluate("GameModules.setUploaded('beep',false);GameModules.setBuiltin('example-hello',false)")
         page.reload(wait_until='load')
+        page.wait_for_function('Engine.ready() && Assets.ready()', timeout=60000)
         page.evaluate("PHOTO_TRIED=true;running=false")
         self.assert_js(page, "GameModules.mods().length===0&&GameModules.uploaded()[0].enabled===false")
         page.evaluate("GameModules.removeUploaded('beep')")
@@ -166,7 +169,7 @@ class ModuleBrowserTest(BrowserCase):
         """从清单里拿掉虚空迷宫（连同它的彩蛋）、粉笔记号、Mod 管理、隐藏天赋六个功能模块（含感官模块），游戏照常启动；电梯退回原来的白色空间。"""
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)
-        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0}));")
+        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0,renderer:'webgl'}));")
         src = (ROOT / 'game3d/manifest.js').read_text(encoding='utf-8')
         src = src.replace("].forEach(function(m){ GameModules.define(m); });",
                           "].filter(function(m){ return ['void-maze','void-maze-eggs','chalk-marks','mod-manager','wuda-kid','sensory'].indexOf(m.id)<0; }).forEach(function(m){ GameModules.define(m); });")
@@ -174,6 +177,7 @@ class ModuleBrowserTest(BrowserCase):
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
         page.goto(self.url, wait_until='load')
+        page.wait_for_function('Engine.ready() && Assets.ready()', timeout=60000)
         page.evaluate("PHOTO_TRIED=true;running=false;CUT.enabled=false;Game.start('hard')")
         page.wait_for_function("S.room==='teach1'")
         result = page.evaluate("""()=>{running=false;clearIntroTimers();S.intro=0;AN.active=false;AN.next=1e5;PAT.next=1e5;RT.inspection=null;

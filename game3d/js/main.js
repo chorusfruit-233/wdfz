@@ -8,7 +8,7 @@
 var lastT=0, accum=0, running=false,dtG=.016;
 function frame(t){
   requestAnimationFrame(frame);
-  if(!running) { lastT=t; return; }
+  if(!running||!$imports.Engine.ready()) { lastT=t; return; }
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
   $imports.Playtest.frame(dt);
@@ -20,7 +20,10 @@ function frame(t){
     try{ update(step);$imports.LESSON.fastForward(step); }catch(e){ try{ showErr('update: '+e.message); }catch(_e){} break; }
     accum-=step;
   }
-  try{ (0,$imports.render)(Math.min(dt,0.25)); }catch(e){ try{ showErr('render: '+e.message); }catch(_e){} }
+  try{ (0,$imports.render)(Math.min(dt,0.25)); }catch(e){
+    if($imports.Engine.status().backend==='webgpu')$imports.Engine.recover('gpu-render-error');
+    else try{showErr('render: '+e.message);}catch(_e){}
+  }
 }
 function update(dt){return $imports.AppSimulation.update(dt);}
 
@@ -67,7 +70,7 @@ try{
   });
 }catch(e){}
 
-function boot(){
+async function boot(){
   (0,$imports.loadSet)();
   try{ if($imports.IS_TOUCH&&document.body&&document.body.classList) document.body.classList.add('touch'); }catch(e){}
   try{ (0,$imports.initMobileShell)(); }catch(e){}
@@ -81,13 +84,16 @@ function boot(){
   }catch(e){}
   (0,$imports.buildInteriorData)();
   (0,$imports.buildRoomBounds)();
-  (0,$imports.initGL)();
+  var menu=document.getElementById('menu');if(menu)menu.inert=true;
+  try{await (0,$imports.initGL)();}
+  catch(e){$imports.RenderDevice.failed();$imports.RenderDevice.showError();document.getElementById('rendererLoading').hidden=true;return;}
   (0,$imports.applyBrightness)();
   try{ (0,$imports.shadeApplyQuality)(); }catch(e){}
   (0,$imports.initInput)();
   try{ (0,$imports.initPcTouch)(); }catch(e){}
   (0,$imports.paintMenuSave)();
   GameModules.emit('boot');                       /* 模块和 Mod：界面、渲染都已就绪 */
+  if(menu)menu.inert=false;document.getElementById('rendererLoading').hidden=true;
   requestAnimationFrame(frame);
   $imports.Lifecycle.scope('session').timeout($imports.captureMenuPhoto,420); /* 先让菜单画出来，再拍那张照片 */
 }
