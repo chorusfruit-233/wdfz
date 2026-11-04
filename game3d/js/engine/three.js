@@ -69,7 +69,7 @@ ThreeBackend.setup=function(renderer){
     uniforms:{
       tDiffuse:{value:rt.texture},tDepth:{value:rt.texture},tHands:{value:rt.texture},uHands:{value:0},uAO:{value:0},uNear:{value:cam.near},uFar:{value:cam.far},uAA:{value:0},
       uTime:{value:0}, uRes:{value:new $imports.THREE.Vector2(2,2)},
-      uWarp:{value:0},uEdge:{value:0},uFocus:{value:0},uSan:{value:1}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0}, uBloom:{value:0}, uGrain:{value:1}, uInvert:{value:0},
+      uWarp:{value:0},uTunnel:{value:0},uBlur:{value:0},uBlack:{value:0},uFocus:{value:0},uSan:{value:1},uDrain:{value:0},uHalo:{value:0},uBreath:{value:0},uPulse:{value:0},uGhost:{value:0},uGhostDir:{value:new $imports.THREE.Vector2(1,0)},uLite:{value:0}, uHurt:{value:0}, uFlash:{value:0}, uDm:{value:0}, uDt:{value:0}, uBright:{value:1.0}, uExpo:{value:1.0}, uRed:{value:0}, uGaze:{value:0}, uBloom:{value:0}, uGrain:{value:1}, uInvert:{value:0},
       uFx:{value:$imports.GLRTEST.nofx?1.0:0.0}
     },
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
@@ -78,7 +78,9 @@ ThreeBackend.setup=function(renderer){
 'uniform sampler2D tDiffuse;uniform float uTime;uniform vec2 uRes;',
 'uniform sampler2D tDepth;uniform float uAO;uniform float uNear;uniform float uFar;uniform float uAA;',
 'uniform sampler2D tHands;uniform float uHands;',
-'uniform float uWarp;uniform float uEdge;uniform float uFocus;uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;uniform float uBloom;uniform float uGrain;uniform float uInvert;',
+'uniform float uDrain;uniform float uHalo;uniform float uBreath;uniform float uPulse;uniform float uGhost;uniform vec2 uGhostDir;uniform float uLite;',
+'uniform float uTunnel;uniform float uBlur;uniform float uBlack;',
+'uniform float uWarp;uniform float uFocus;uniform float uSan;uniform float uHurt;uniform float uFlash;uniform float uFx;uniform float uDm;uniform float uDt;uniform float uBright;uniform float uExpo;uniform float uRed;uniform float uGaze;uniform float uBloom;uniform float uGrain;uniform float uInvert;',
 'varying vec2 vUv;',
 'float hash(vec2 p){',
 '  p = fract(p * vec2(443.8975, 397.2973));',
@@ -108,27 +110,54 @@ ThreeBackend.setup=function(renderer){
 '  vec3 l=vec3(0.299,0.587,0.114);float edge=max(abs(dot(n-s,l)),abs(dot(e-w,l)));',
 '  return mix(c,(n+s+e+w+c*4.0)/8.0,smoothstep(0.08,0.25,edge)*0.7);',
 '}',
+/* 视野模糊：黄金角圆盘采样（流畅档 6 点，其余 12 点），半径 r 已换算成 UV */
+'vec3 diskBlur(vec2 p,vec2 r){',
+'  vec3 s=vec3(0.0);float n=uLite>0.5?6.0:12.0;',
+'  for(int i=0;i<12;i++){if(float(i)>=n)break;float fi=float(i)+0.5;float rr=sqrt(fi/n);float th=fi*2.39996;',
+'    s+=texture2D(tDiffuse,clamp(p+vec2(cos(th),sin(th))*rr*r,vec2(0.001),vec2(0.999))).rgb;}',
+'  return s/n;',
+'}',
 'void main(){',
 '  vec2 uv=vUv;',
 '  float wob=clamp((0.75-uSan)/0.75,0.0,1.0);',
 '  vec2 dc=uv-vec2(0.5);',
-'  float edge=smoothstep(0.25,0.5,max(abs(dc.x),abs(dc.y)));',
-'  float breath=sin(uTime*1.8+dot(dc,dc)*9.0);',
-'  uv+=normalize(dc*uRes+vec2(0.00001))*edge*breath*uWarp*(10.0*min(uRes.x,uRes.y)/720.0)/uRes*(1.0-uFx);',
+'  float fx0=1.0-uFx;',
+/* SAN 视觉分级（计划 12.9 第二轮）。q：以屏幕中心为原点、宽高各归一到 ±1 的椭圆坐标，e=1 在四边中点，角上约 1.41 */
+'  vec2 q=dc*2.0;float e=length(q);',
+/* 画面扭曲（动态，跟「视野扭曲」设置）：整幅画面慢慢歪过去又歪回来、吸气时往里一压（uBreath 和呼吸声同相），
+   再叠一层缓慢流动的变形（720 高最多约 14 像素）；准星周围一小圈不流动，看到的东西和交互点对得上 */
+'  if(uWarp>0.001&&fx0>0.0){',
+'    vec2 asp=vec2(uRes.x/uRes.y,1.0);vec2 p=dc*asp;float r=length(p);',
+'    float a=0.045*uWarp*sin(uTime*0.31)*cos(uTime*0.13+1.7)*fx0;',
+'    p=vec2(p.x*cos(a)-p.y*sin(a),p.x*sin(a)+p.y*cos(a));',
+'    p*=1.0-0.04*uWarp*uBreath*fx0;',
+'    vec2 w=vec2(sin(p.y*6.0+uTime*0.9)+0.6*sin((p.x+p.y)*4.1-uTime*0.7),sin(p.x*5.2-uTime*0.8)+0.6*sin((p.x-p.y)*3.7+uTime*1.1));',
+'    p+=w*0.0125*uWarp*smoothstep(0.03,0.22,r)*fx0;',
+'    uv=p/asp+0.5;',
+'  }',
 '  uv=clamp(uv,vec2(0.001),vec2(0.999));',
-'  float ca=uFocus*edge*0.004*(1.0-uFx);',
+/* 视野模糊：边缘重、中心也糊（静态，720 高中心最多 3.2 像素、边缘 13 像素）；一阵阵对不上焦（uFocus，动态，再加 4.5 像素） */
+'  float bpx=(mix(3.2*uBlur*uBlur,13.0*uBlur,smoothstep(0.15,0.85,e))+4.5*uFocus)*fx0;',
 '  vec3 col=sceneColor(uv);',
-'  col.r=sceneColor(uv+dc*ca).r;col.b=sceneColor(uv-dc*ca).b;',
+'  if(bpx>=0.3){vec3 bl=diskBlur(uv,vec2(bpx*min(uRes.x,uRes.y)/720.0)/uRes);col=mix(col,bl,smoothstep(0.3,1.2,bpx));}',
+/* 重影：很低时一阵阵叠上一层错开、慢慢漂的淡影（720 高错开 10 像素），准星附近不叠 */
+'  if(uGhost>0.001){vec2 go=uGhostDir*(10.0*min(uRes.x,uRes.y)/720.0)/uRes;col=mix(col,sceneColor(clamp(uv+go,vec2(0.001),vec2(0.999))),0.5*uGhost*smoothstep(0.05,0.3,e)*fx0);}',
 '  col*=contactAO(uv);',
-'  col*=1.0-uEdge*smoothstep(0.18,0.7,distance(uv,vec2(0.5)));',
 '  if(uHands>0.5){vec4 hand=texture2D(tHands,vUv);col=mix(col,hand.rgb,hand.a);}',
 /* 「真实」档的辉光：灯管、手电光斑、亮窗周围晕开一圈（三圈采样，只取超过阈值的部分） */
+'  vec3 glow=vec3(0.0);',
 '  if(uBloom>0.0){vec3 bl=vec3(0.0);vec2 asp=vec2(uRes.y/uRes.x,1.0);',
 '    for(int i=0;i<12;i++){float a=float(i)*0.5236+0.26;vec2 o=vec2(cos(a),sin(a))*asp;',
 '      bl+=max(texture2D(tDiffuse,uv+o*0.007).rgb-0.62,0.0);',
 '      bl+=max(texture2D(tDiffuse,uv+o*0.017).rgb-0.62,0.0)*0.65;',
 '      bl+=max(texture2D(tDiffuse,uv+o*0.034).rgb-0.62,0.0)*0.35;}',
-'    col+=bl/12.0*uBloom;}',
+'    glow=bl/12.0*uBloom;col+=glow;}',
+/* 灯晕：亮处（灯管、亮窗）向外晕开，越低越大（线性颜色里加，色调映射之前）。流畅档只采内圈；和真实档的辉光加起来不超过 0.5 */
+'  if(uHalo>0.001){vec3 hl=vec3(0.0);vec2 asp2=vec2(uRes.y/uRes.x,1.0);',
+'    for(int i=0;i<6;i++){float a=float(i)*1.0472+0.5;vec2 o=vec2(cos(a),sin(a))*asp2;',
+'      hl+=max(texture2D(tDiffuse,uv+o*0.012).rgb-0.55,0.0)*(1.0+0.6*uLite);',
+'      if(uLite<0.5)hl+=max(texture2D(tDiffuse,uv+o*0.026).rgb-0.55,0.0)*0.6;}',
+'    col+=min(hl/6.0*uHalo*0.9*fx0,max(vec3(0.0),vec3(0.5)-glow));}',
 '  col=aces(col*uBright*uExpo*0.96);',
 '  float lum=dot(col,vec3(0.2126,0.7152,0.0722));',
 '  col=mix(vec3(lum),col,mix(0.46+0.49*uGaze,1.0,uFx));',
@@ -138,8 +167,17 @@ ThreeBackend.setup=function(renderer){
   '  col*=mix(tint, vec3(1.0), uFx);',
 '  col=col*col*(3.0-2.0*clamp(col,0.0,1.0))*0.28+col*0.72;',
 '  col=max(col-0.009*(1.0-uFx),0.0)*(1.0+0.009*(1.0-uFx));',
+/* 失色：在调色（暗部本来就偏青）之后整体往灰里走，亮度不变，所以高光和出口照样亮；最多去掉 70% 的颜色 */
+'  if(uDrain>0.001){float ld=dot(col,vec3(0.2126,0.7152,0.0722));col=mix(col,vec3(ld),0.7*uDrain*fx0);}',
 '  float vg=distance(uv,vec2(0.5,0.5));',
 '  col*=1.0-0.84*smoothstep(0.20,0.95,vg*1.28)*(1.0-uFx);',
+/* 视野变小（静态）：椭圆形的可见区随 SAN 往里收，外面接近全黑（最多 96%）；心跳时再收一下（uPulse 和心跳声同一拍）；
+   边界慢慢蠕动（动态，跟「视野扭曲」设置）。SAN 8 时中间约六成还看得清 */
+'  if(uTunnel>0.001){',
+'    float crawl=0.0;if(uWarp>0.001){float th=atan(q.y,q.x+0.000001);crawl=(0.05*sin(th*3.0+uTime*0.6)+0.035*sin(th*5.0-uTime*0.9))*uWarp;}',
+'    float R=1.6-1.15*uTunnel-0.09*uPulse;',
+'    col*=1.0-smoothstep(R-0.12,R+0.42,e+crawl)*min(1.0,uTunnel*2.2)*0.96*fx0;',
+'  }',
 '  col*=mix(vec3(1.0),vec3(1.0,0.32,0.27),uHurt*0.85);',
 '  col=mix(col,vec3(0.16,0.0,0.0),uHurt*0.55*smoothstep(0.28,0.95,vg*1.3));',
 '  col+=vec3(0.90,0.95,1.0)*uFlash*0.8;',
@@ -179,6 +217,8 @@ ThreeBackend.setup=function(renderer){
       '      if(pr>0.0&&pp<0.0016) col=mix(col,vec3(1.0),0.32*uDt);',
       '    }',
       '  }',
+/* 黑屏闪烁（眼前一黑）：模块排好时机，一次最多两下、两次至少隔 2.5 秒；「减少闪光」时最多压暗一半、慢慢暗。界面和字幕不在这一层 */
+'  col*=1.0-uBlack*fx0;',
 '  vec3 outc=toSRGB(col);',
 /* 颗粒加在显示空间、按 24 帧换一次：以前加在线性空间、每帧都换，暗部被伽马放大成满屏跳动的白点。
    暗处略多、亮处很少；SAN 越低颗粒越重一点（感知反馈的一部分） */
@@ -288,7 +328,7 @@ ThreeBackend.resize=function(){
   var u=$imports.GLR.postMat.uniforms;
   u.tDiffuse.value=$imports.GLR.rt.texture;u.tDepth.value=$imports.GLR.rt.depthTexture||$imports.GLR.rt.texture;
   u.uAO.value=ao?q.ao:0;u.uAA.value=q.samples&&!samples?1:0;
-  u.uBloom.value=q.bloom||0;ThreeBackend.grain();
+  u.uBloom.value=q.bloom||0;u.uLite.value=q.lodLow?1:0;ThreeBackend.grain();
   if(q.pbr&&!$imports.GLR.envTex)$imports.GLR.envTex=buildEnvTex();
   $imports.GLR.scene.environment=q.pbr?$imports.GLR.envTex:null;
   var RTS=($imports.GLRTEST&&$imports.GLRTEST.hq)?1:q.scale;
