@@ -289,6 +289,8 @@ var ClipAudit=(function(){
       if(R.foot){ var dc, dr; for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++) (R.foot[(c+dc)+','+(r+dr)]||[]).forEach(function(b){ col.push([b.x0,b.x1,b.z0,b.z1]); }); }
       else if(f!==undefined) col.push([cx-tw*f/2,cx+tw*f/2,cz-tw*f/2,cz+tw*f/2]);
       (R.propExtra||[]).forEach(function(b){ if(b.x1>cx-tw*2&&b.x0<cx+tw*2&&b.z1>cz-tw*2&&b.z0<cz+tw*2) col.push([b.x0,b.x1,b.z0,b.z1]); });
+      /* 会动的门（电梯层门、轿门）：门关着时挡人的那块（elevator.js 的 doorBoxes），门扇模型在里面 */
+      if(R.doorBoxes) R.doorBoxes().forEach(function(b){ if(b.x1>cx-tw*2&&b.x0<cx+tw*2&&b.z1>cz-tw*2&&b.z0<cz+tw*2) col.push([b.x0,b.x1,b.z0,b.z1]); });
       var worst=0, wq=null;
       byOwner[o].forEach(function(p){
         var b=aabb(p); if(b[1][1]<0.12||b[0][1]>1.85) return;          /* 脚边贴地的、头顶以上的不算 */

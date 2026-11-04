@@ -52,6 +52,8 @@ var FURN_SOLID={'d':0.78,'T':0.86,'t':0.76,'k':0.82,'f':0.78,'b':0.34,
 function solidAtInterior(R,wx,wy){
   if(R.stairwell)return $imports.StairWorld.depth(R.id,wx,wy,0,$imports.S.floorY)>0;
   var t=tileAt(R,wx,wy);
+  /* 楼层电梯门后那节轿厢在房间网格外面：不按「网格外是墙」算，按轿壁、门框和门的开度算 */
+  if(t==='#'&&R.annexAt&&(wx<R.ox||wy<R.oy||wx>=R.ox+R.w||wy>=R.oy+R.h)&&R.annexAt(wx,wy))t='.';
   if(t==='='){
     if($imports.Classmates.blocked(R.id,wx,wy)) return true;   /* 他们堵在门口 */
     return !(0,$imports.doorIsOpen)(R,wx,wy);

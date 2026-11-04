@@ -15,6 +15,7 @@
 'use strict';
 
 var LIFT_DOOR_Z=0.40;            /* 层门平面在门格局部坐标里的位置（墙面在 +0.5） */
+var LIFT_DOOR_HALF=0.47;         /* 门洞两侧门框之间的半宽（碰撞；门扇 0.9 米宽） */
 var LIFT_GLIMPSE={front:0.37, back:-1.05, top:2.20};   /* 门后看得见的那一节轿厢 */
 
 var LIFT_ON_WALL=/^(hall(Up|Down)|jambBolt|handrailBracket)/;
@@ -106,7 +107,9 @@ function liftLanding(c,x,y,cx,cz){
   liftOnWall(K,P,/^(displayFrame|displayPanel|seg_|dirUp|dirDn)/,0.03);
   liftOnWall(K,P,/^hallLantern/,0.03);
   K.unframe();
-  c.solid(cx,cz,c.tw,c.th);
+  /* 门格只留两侧门框挡人：门洞挡不挡由门的开度决定（elevator.js 的 doorDepth），门开着时可以直接走进门后的轿厢 */
+  liftSolid(c,cx,cz,rot,-0.5,-LIFT_DOOR_HALF,-0.5,0.5);
+  liftSolid(c,cx,cz,rot,LIFT_DOOR_HALF,0.5,-0.5,0.5);
   /* 两扇层门单独成网格：电梯到这一层时向两侧滑开（LiftDoors.tick） */
   if(c.view&&c.view.liftLeaves)c.view.liftLeaves(c,cx,cz,rot);
 }
@@ -117,6 +120,11 @@ function liftLanding(c,x,y,cx,cz){
 function liftCabinFrame(R,x,y){
   var d=liftOpenSide(R,x,y); if(!d) return null;
   return {rot:Math.atan2(-d[0],-d[1]), dz:-0.5-($imports.EV_SPEC.carCZ+$imports.EV_SPEC.carD/2), dy:-0.08};   /* 局部 +z 朝轿门外；前壁内侧落在门格内侧面 */
+}
+/* 楼层电梯门后的那节轿厢：和轿厢房间用同一个相对门格的位置（局部 +z 朝走廊），两边一模一样，换场景时看不出来 */
+function liftAnnexFrame(R,x,y){
+  var d=liftOpenSide(R,x,y); if(!d) return null;
+  return {rot:Math.atan2(d[0],d[1]), dz:-0.5-($imports.EV_SPEC.carCZ+$imports.EV_SPEC.carD/2), dy:-0.08};
 }
 function liftCabin(c,x,y,cx,cz){
   var K=c.K, s=$imports.EV_SPEC, F=liftCabinFrame(c.R,x,y);
@@ -131,8 +139,8 @@ function liftCabin(c,x,y,cx,cz){
   });
   K.unframe();
 }
-function liftCabinBody(c,x,y,cx,cz){
-  var K=c.K, s=$imports.EV_SPEC, F=liftCabinFrame(c.R,x,y); if(!F) return;
+function liftCabinBody(c,x,y,cx,cz,F,annex){
+  var K=c.K, s=$imports.EV_SPEC; F=F||liftCabinFrame(c.R,x,y); if(!F) return;
   var rot=F.rot, dz=F.dz, dy=F.dy;
   var P=(0,$imports.buildElevatorPrefab)({view:'car',label:'1F'});
   K.frame(cx,cz,rot);
@@ -154,24 +162,25 @@ function liftCabinBody(c,x,y,cx,cz){
   liftSolid(c,cx,cz,rot,-1.6,-hw,back-1,0);
   liftSolid(c,cx,cz,rot,hw,1.6,back-1,0);
   liftSolid(c,cx,cz,rot,-1.6,1.6,back-1,back);
-  liftSolid(c,cx,cz,rot,-1.6,1.6,fr,-0.5);
+  if(annex){                                                      /* 楼层门后那节：前壁中间留门洞 */
+    liftSolid(c,cx,cz,rot,-1.6,-LIFT_DOOR_HALF,fr,-0.5);
+    liftSolid(c,cx,cz,rot,LIFT_DOOR_HALF,1.6,fr,-0.5);
+  }else liftSolid(c,cx,cz,rot,-1.6,1.6,fr,-0.5);
 }
-/* 电梯厅门后、井道里的那一节轿厢（层门开着时看得见）：地面、两侧护板、后壁和被灯照亮的护板、吊顶灯、扶手 */
+/* 电梯厅门后：门洞里那一段（两侧护板、地面），再往里是整节轿厢（和轿厢房间里的一样，可以走进去）。
+   以前这里只画看得见的一节（LIFT_GLIMPSE），人进不去 */
 function liftShaft(c,x,y,cx,cz){
   var K=c.K, d=liftOpenSide(c.R,x,y); if(!d) return;
-  var G=LIFT_GLIMPSE, s=$imports.EV_SPEC, DTOP=s.doorH+0.02, gd=G.front-G.back, gz=(G.front+G.back)/2;
+  var G=LIFT_GLIMPSE, s=$imports.EV_SPEC, DTOP=s.doorH+0.02, F=liftAnnexFrame(c.R,x,y);
   K.frame(cx,cz,Math.atan2(d[0],d[1]));
-  K.box('plastic',0,0.006,gz,0.98,0.012,gd,$imports.EV_COL.rubber,0.9);
-  [-1,1].forEach(function(sx){                                    /* 两侧护板：墙格里那段到门顶，墙外那段到轿顶 */
+  K.box('plastic',0,0.006,(G.front-0.5)/2,0.98,0.012,G.front+0.5,$imports.EV_COL.rubber,0.9);          /* 门洞地面（两道门之间） */
+  [-1,1].forEach(function(sx){                                    /* 门洞两侧护板：墙格里那段到门顶 */
     K.box('metal',sx*0.488,DTOP/2,(G.front-0.5)/2,0.016,DTOP,G.front+0.5,$imports.EV_COL.steelHi,0.92);
-    K.box('metal',sx*0.488,G.top/2,(-0.5+G.back)/2,0.016,G.top,-0.5-G.back,$imports.EV_COL.steelHi,0.92);
   });
-  K.box('metal',0,G.top/2,G.back,1.0,G.top,0.03,$imports.EV_COL.steel,0.92);
-  K.g('emit').box(0,1.2,G.back+0.02,0.72,1.3,0.006,0x7f8b8c,1);
-  K.box('metal',0,G.top+0.02,(-0.5+G.back)/2,1.0,0.04,-0.5-G.back,$imports.EV_COL.steel,0.9);
-  K.g('emit').box(0,G.top-0.012,(-0.5+G.back)/2,0.5,0.01,0.34,$imports.EV_COL.lamp,1);
-  if(!liftLow()) K.rod('metal',-0.36,0.92,G.back+0.07,0.36,0.92,G.back+0.07,0.018,0.018,(0,$imports.lodSeg)(10,6),$imports.EV_COL.steelHi,0.98);
   K.unframe();
+  liftCabinBody(c,x,y,cx,cz,F,true);
+  /* 轿门：和层门一起开关（LiftDoors.tick） */
+  if(c.view&&c.view.liftCabinLeaves)c.view.liftCabinLeaves(c,cx,cz,F.rot,s.carCZ+s.carD/2+0.03+F.dz);
 }
 /* 门旁边墙上的外呼盒（上下两个按钮、灯圈） */
 function liftHallPlate(c,x,y,cx,cz){
@@ -196,6 +205,7 @@ function liftDecor(c){
 /* @module-exports */
 GameModules.publish("game3d/js/content/lift-recipe.js",{
 "LIFT_DOOR_Z":{get:function(){return LIFT_DOOR_Z;},set:function($value){LIFT_DOOR_Z=$value;}},
+"LIFT_DOOR_HALF":{get:function(){return LIFT_DOOR_HALF;},set:function($value){LIFT_DOOR_HALF=$value;}},
 "LIFT_GLIMPSE":{get:function(){return LIFT_GLIMPSE;},set:function($value){LIFT_GLIMPSE=$value;}},
 "LIFT_ON_WALL":{get:function(){return LIFT_ON_WALL;},set:function($value){LIFT_ON_WALL=$value;}},
 "LIFT_PANEL_BTN":{get:function(){return LIFT_PANEL_BTN;},set:function($value){LIFT_PANEL_BTN=$value;}},
@@ -210,6 +220,7 @@ GameModules.publish("game3d/js/content/lift-recipe.js",{
 "liftOnWall":{get:function(){return liftOnWall;},set:function($value){liftOnWall=$value;}},
 "liftLanding":{get:function(){return liftLanding;},set:function($value){liftLanding=$value;}},
 "liftCabinFrame":{get:function(){return liftCabinFrame;},set:function($value){liftCabinFrame=$value;}},
+"liftAnnexFrame":{get:function(){return liftAnnexFrame;},set:function($value){liftAnnexFrame=$value;}},
 "liftCabin":{get:function(){return liftCabin;},set:function($value){liftCabin=$value;}},
 "liftCabinBody":{get:function(){return liftCabinBody;},set:function($value){liftCabinBody=$value;}},
 "liftShaft":{get:function(){return liftShaft;},set:function($value){liftShaft=$value;}},

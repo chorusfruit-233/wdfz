@@ -15,7 +15,8 @@ var Collision={
     if(room||$imports.S.mode==='in'){
       var R=room||$imports.INTERIORS[$imports.S.room];if(!R)return Infinity;
       if(R.stairwell)return $imports.StairWorld.depth(R.id,x,y,r,$imports.S.floorY);
-      if(x-r<R.ox||y-r<R.oy||x+r>R.ox+R.w||y+r>R.oy+R.h)return Infinity;
+      /* 房间边界外一律算墙；楼层电梯门后那节轿厢（R.annexAt，电梯模块给）例外：门开着时可以走进去 */
+      if((x-r<R.ox||y-r<R.oy||x+r>R.ox+R.w||y+r>R.oy+R.h)&&!(R.annexAt&&R.annexAt(x,y)))return Infinity;
       var c0=Math.max(0,Math.floor((x-r-R.ox)/R.tw)),c1=Math.min(R.cols-1,Math.floor((x+r-R.ox)/R.tw));
       var r0=Math.max(0,Math.floor((y-r-R.oy)/R.th)),r1=Math.min(R.rows-1,Math.floor((y+r-R.oy)/R.th));
       for(var rr=r0;rr<=r1;rr++)for(var cc=c0;cc<=c1;cc++){
