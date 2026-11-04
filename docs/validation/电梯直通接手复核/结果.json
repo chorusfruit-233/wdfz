@@ -1,8 +1,8 @@
 {
   "baseline": "a92cfbc",
   "implementation": "5fa30e9",
-  "uniqueTests": 93,
-  "passed": 93,
+  "uniqueTests": 118,
+  "passed": 118,
   "failed": 0,
   "skipped": 0,
   "ids": [
@@ -14,6 +14,25 @@
     "test_architecture_core.ArchitectureCoreTest.test_presentation_ports_reject_nested_state_writes",
     "test_architecture_core.ArchitectureCoreTest.test_separate_random_sources_are_reproducible_and_replaceable",
     "test_architecture_core.ArchitectureCoreTest.test_world_collision_is_available_without_dom_webgl_or_assets_loader",
+    "test_archive_speedrun.DeathArchiveTest.test_archive_fits_short_landscape_screens",
+    "test_archive_speedrun.DeathArchiveTest.test_dream_wake_death_still_unlocks_and_toast_waits_for_the_cg",
+    "test_archive_speedrun.DeathArchiveTest.test_endings_and_opening_are_archived_and_replay_in_isolation",
+    "test_archive_speedrun.DeathArchiveTest.test_every_kill_call_maps_to_an_archive_entry",
+    "test_archive_speedrun.DeathArchiveTest.test_first_real_death_unlocks_once_and_repeats_only_count",
+    "test_archive_speedrun.DeathArchiveTest.test_legacy_log_migrates_only_sourced_records",
+    "test_archive_speedrun.DeathArchiveTest.test_menu_lists_locked_entries_without_spoilers_and_replays_in_isolation",
+    "test_archive_speedrun.DeathArchiveTest.test_protection_debug_and_preview_do_not_unlock",
+    "test_archive_speedrun.DeathArchiveTest.test_unlock_all_needs_the_debug_password_and_does_not_fake_progress",
+    "test_archive_speedrun.SpeedrunTest.test_clock_is_rta_and_survives_a_stalled_monotonic_clock",
+    "test_archive_speedrun.SpeedrunTest.test_debug_death_quit_and_continue_never_make_a_pb",
+    "test_archive_speedrun.SpeedrunTest.test_debug_switches_left_on_in_a_normal_game_do_not_carry_into_a_run",
+    "test_archive_speedrun.SpeedrunTest.test_dream_wake_keeps_the_clock_running",
+    "test_archive_speedrun.SpeedrunTest.test_finish_on_real_route_records_pb_once_and_not_on_direct_call",
+    "test_archive_speedrun.SpeedrunTest.test_menu_flow_arms_a_run_and_starts_on_first_control",
+    "test_archive_speedrun.SpeedrunTest.test_secret_route_stays_hidden_until_reached",
+    "test_archive_speedrun.TouchFlowTest.test_speedrun_clock_does_not_cover_touch_buttons",
+    "test_archive_speedrun.TouchFlowTest.test_touch_ending_a_replay_does_not_restart_it",
+    "test_archive_speedrun.TouchFlowTest.test_touch_skip_of_the_opening_then_one_tap_fires_once",
     "test_domain_rules.DomainRulesTest.test_calendar_matches_previous_boundary_and_cross_day_behavior",
     "test_domain_rules.DomainRulesTest.test_inventory_capacity_hotbar_and_consumption_without_ui",
     "test_domain_rules.DomainRulesTest.test_pressure_curve_is_continuous_and_capped",
@@ -96,8 +115,37 @@
     "test_save_boundary.SaveDataTest.test_handwritten_legacy_midnight_migrates_once_without_mutating_source",
     "test_save_boundary.SaveDataTest.test_invalid_required_fields_rejected_and_optional_collections_normalized",
     "test_save_boundary.SaveDataTest.test_storage_failure_preserves_previous_bytes_and_reports_operation",
+    "test_void_cut.VoidCutTest.test_archive_cards_are_hidden_until_seen_and_replay_in_isolation",
+    "test_void_cut.VoidCutTest.test_entering_plays_once_over_the_maze_without_drain_and_hands_back_at_the_spawn",
+    "test_void_cut.VoidCutTest.test_leaving_switches_scene_once_at_the_white_and_turns_back_to_the_door",
+    "test_void_cut.VoidCutTest.test_skipping_the_entry_still_finishes_once",
+    "test_void_cut.VoidCutTest.test_skipping_the_exit_before_the_white_still_arrives_once",
+    "test_void_cut.VoidCutTest.test_with_cutscenes_off_nothing_is_marked_seen",
     "test_webgpu.NativeWebGPUTest.test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers",
     "test_wiki_secrets.WikiSecretTest.test_wiki_does_not_count_all_endings",
     "test_wiki_secrets.WikiSecretTest.test_wiki_has_no_hidden_ending_names_times_or_clues"
+  ],
+  "integratedBase": "6f642b4 (includes upstream 0d17cf1)",
+  "historicalRuns": [
+    {
+      "log": "同步后33.log",
+      "tests": 33,
+      "passed": 32,
+      "errors": 1,
+      "cause": "Archive replay completion exceeded its 15 second wall-clock timeout under concurrent software rendering"
+    },
+    {
+      "log": "同步后界面14.log",
+      "tests": 14,
+      "passed": 14,
+      "errors": 0
+    },
+    {
+      "log": "收尾复测2.log",
+      "tests": 2,
+      "passed": 2,
+      "errors": 0,
+      "changes": "Avoid waiting out the full replay; assert real frame transitions at midpoint and endpoint. Also verify touch button bounds and non-overlap at 390x844, 844x390 and 667x320."
+    }
   ]
 }

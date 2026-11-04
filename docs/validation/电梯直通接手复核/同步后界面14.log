@@ -1,0 +1,21 @@
+test_declared_hooks_match_the_code (test_modules.ManifestStaticTest.test_declared_hooks_match_the_code) ... ok
+test_every_script_is_registered_once_and_index_uses_the_loader (test_modules.ManifestStaticTest.test_every_script_is_registered_once_and_index_uses_the_loader) ... ok
+test_feature_logic_files_do_not_touch_the_renderer (test_modules.ManifestStaticTest.test_feature_logic_files_do_not_touch_the_renderer)
+新模块把逻辑和画面分开：逻辑文件里不出现 THREE / GLR。 ... ok
+test_all_modules_load_and_verify_without_mods (test_modules.ModuleBrowserTest.test_all_modules_load_and_verify_without_mods) ... ok
+test_broken_mod_and_hook_errors_are_isolated (test_modules.ModuleBrowserTest.test_broken_mod_and_hook_errors_are_isolated) ... ok
+test_builtin_switch_and_upload_persist_across_reload (test_modules.ModuleBrowserTest.test_builtin_switch_and_upload_persist_across_reload) ... ok
+test_feature_modules_can_be_removed_from_the_manifest (test_modules.ModuleBrowserTest.test_feature_modules_can_be_removed_from_the_manifest)
+从清单里拿掉虚空迷宫（连同它的彩蛋）、粉笔记号、Mod 管理、隐藏天赋六个功能模块（含感官模块），游戏照常启动；电梯退回原来的白色空间。 ... ok
+test_mod_panel_imports_a_file_from_the_pause_menu (test_modules.ModuleBrowserTest.test_mod_panel_imports_a_file_from_the_pause_menu) ... ok
+test_module_state_is_saved_under_mods_and_reset_on_new_game (test_modules.ModuleBrowserTest.test_module_state_is_saved_under_mods_and_reset_on_new_game) ... ok
+test_room_no_clock_contract_also_applies_outside_elevator (test_modules.ModuleBrowserTest.test_room_no_clock_contract_also_applies_outside_elevator) ... ok
+test_url_mod_loads_and_safe_mode_skips_it (test_modules.ModuleBrowserTest.test_url_mod_loads_and_safe_mode_skips_it) ... ok
+test_wiki_does_not_count_all_endings (test_wiki_secrets.WikiSecretTest.test_wiki_does_not_count_all_endings) ... ok
+test_wiki_has_no_hidden_ending_names_times_or_clues (test_wiki_secrets.WikiSecretTest.test_wiki_has_no_hidden_ending_names_times_or_clues) ... ok
+test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers (test_webgpu.NativeWebGPUTest.test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 160.324s
+
+OK

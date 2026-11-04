@@ -1,0 +1,66 @@
+test_close_range_original_capture_also_honors_its_warning (test_elevator_review.ElevatorReviewTest.test_close_range_original_capture_also_honors_its_warning) ... ok
+test_existing_approach_warning_is_not_shortened_or_bypassed (test_elevator_review.ElevatorReviewTest.test_existing_approach_warning_is_not_shortened_or_bypassed) ... ok
+test_physical_v_respects_pause_and_does_not_depend_on_keyboard_layout (test_elevator_review.ElevatorReviewTest.test_physical_v_respects_pause_and_does_not_depend_on_keyboard_layout) ... ok
+test_queued_departure_settles_escape_before_changing_scene_exactly_once (test_elevator_review.ElevatorReviewTest.test_queued_departure_settles_escape_before_changing_scene_exactly_once) ... ok
+test_rescue_cancels_the_old_rush_without_awarding_an_escape (test_elevator_review.ElevatorReviewTest.test_rescue_cancels_the_old_rush_without_awarding_an_escape) ... ok
+test_saved_pending_departure_preserves_the_rush_and_awards_once (test_elevator_review.ElevatorReviewTest.test_saved_pending_departure_preserves_the_rush_and_awards_once) ... ok
+test_seal_still_banishes_the_patroller_when_it_sees_the_cabin (test_elevator_review.ElevatorReviewTest.test_seal_still_banishes_the_patroller_when_it_sees_the_cabin) ... ok
+test_touch_close_is_immediate_without_a_choice_in_both_orientations (test_elevator_review.ElevatorReviewTest.test_touch_close_is_immediate_without_a_choice_in_both_orientations) ... ok
+test_archive_cards_are_hidden_until_seen_and_replay_in_isolation (test_void_cut.VoidCutTest.test_archive_cards_are_hidden_until_seen_and_replay_in_isolation) ... ERROR
+test_entering_plays_once_over_the_maze_without_drain_and_hands_back_at_the_spawn (test_void_cut.VoidCutTest.test_entering_plays_once_over_the_maze_without_drain_and_hands_back_at_the_spawn) ... ok
+test_leaving_switches_scene_once_at_the_white_and_turns_back_to_the_door (test_void_cut.VoidCutTest.test_leaving_switches_scene_once_at_the_white_and_turns_back_to_the_door) ... ok
+test_skipping_the_entry_still_finishes_once (test_void_cut.VoidCutTest.test_skipping_the_entry_still_finishes_once) ... ok
+test_skipping_the_exit_before_the_white_still_arrives_once (test_void_cut.VoidCutTest.test_skipping_the_exit_before_the_white_still_arrives_once) ... ok
+test_with_cutscenes_off_nothing_is_marked_seen (test_void_cut.VoidCutTest.test_with_cutscenes_off_nothing_is_marked_seen) ... ok
+test_archive_fits_short_landscape_screens (test_archive_speedrun.DeathArchiveTest.test_archive_fits_short_landscape_screens)
+手机横屏矮屏：档案室整块在屏幕里，底部「全部解锁 / 返回」不用滚外层就点得到，卡片区自己滚。 ... ok
+test_dream_wake_death_still_unlocks_and_toast_waits_for_the_cg (test_archive_speedrun.DeathArchiveTest.test_dream_wake_death_still_unlocks_and_toast_waits_for_the_cg) ... ok
+test_endings_and_opening_are_archived_and_replay_in_isolation (test_archive_speedrun.DeathArchiveTest.test_endings_and_opening_are_archived_and_replay_in_isolation)
+档案室也收结局和开场的演出：达成过的结局（已见结局记录）、看过的开场可以重看；隐藏结局没达成就不出现。 ... ok
+test_every_kill_call_maps_to_an_archive_entry (test_archive_speedrun.DeathArchiveTest.test_every_kill_call_maps_to_an_archive_entry)
+静态审计：所有真实 kill() / anKill() 调用的死因都在注册表里（调试面板的除外）。 ... ok
+test_first_real_death_unlocks_once_and_repeats_only_count (test_archive_speedrun.DeathArchiveTest.test_first_real_death_unlocks_once_and_repeats_only_count) ... ok
+test_legacy_log_migrates_only_sourced_records (test_archive_speedrun.DeathArchiveTest.test_legacy_log_migrates_only_sourced_records) ... ok
+test_menu_lists_locked_entries_without_spoilers_and_replays_in_isolation (test_archive_speedrun.DeathArchiveTest.test_menu_lists_locked_entries_without_spoilers_and_replays_in_isolation) ... ok
+test_protection_debug_and_preview_do_not_unlock (test_archive_speedrun.DeathArchiveTest.test_protection_debug_and_preview_do_not_unlock) ... ok
+test_unlock_all_needs_the_debug_password_and_does_not_fake_progress (test_archive_speedrun.DeathArchiveTest.test_unlock_all_needs_the_debug_password_and_does_not_fake_progress)
+「全部解锁」：在页面里的数字键盘上输调试密码，死亡、演出（包括隐藏的）和结算画面全部打开，只记成「直接解锁」： ... ok
+test_clock_is_rta_and_survives_a_stalled_monotonic_clock (test_archive_speedrun.SpeedrunTest.test_clock_is_rta_and_survives_a_stalled_monotonic_clock) ... ok
+test_debug_death_quit_and_continue_never_make_a_pb (test_archive_speedrun.SpeedrunTest.test_debug_death_quit_and_continue_never_make_a_pb) ... ok
+test_debug_switches_left_on_in_a_normal_game_do_not_carry_into_a_run (test_archive_speedrun.SpeedrunTest.test_debug_switches_left_on_in_a_normal_game_do_not_carry_into_a_run)
+普通局里开的快跑 / 无敌 / 关读条，关面板、开新局都不复位：开速通时要清掉，带着它们不能记成绩。 ... ok
+test_dream_wake_keeps_the_clock_running (test_archive_speedrun.SpeedrunTest.test_dream_wake_keeps_the_clock_running) ... ok
+test_finish_on_real_route_records_pb_once_and_not_on_direct_call (test_archive_speedrun.SpeedrunTest.test_finish_on_real_route_records_pb_once_and_not_on_direct_call) ... ok
+test_menu_flow_arms_a_run_and_starts_on_first_control (test_archive_speedrun.SpeedrunTest.test_menu_flow_arms_a_run_and_starts_on_first_control) ... ok
+test_secret_route_stays_hidden_until_reached (test_archive_speedrun.SpeedrunTest.test_secret_route_stays_hidden_until_reached) ... ok
+test_speedrun_clock_does_not_cover_touch_buttons (test_archive_speedrun.TouchFlowTest.test_speedrun_clock_does_not_cover_touch_buttons) ... ok
+test_touch_ending_a_replay_does_not_restart_it (test_archive_speedrun.TouchFlowTest.test_touch_ending_a_replay_does_not_restart_it) ... ok
+test_touch_skip_of_the_opening_then_one_tap_fires_once (test_archive_speedrun.TouchFlowTest.test_touch_skip_of_the_opening_then_one_tap_fires_once) ... ok
+
+======================================================================
+ERROR: test_archive_cards_are_hidden_until_seen_and_replay_in_isolation (test_void_cut.VoidCutTest.test_archive_cards_are_hidden_until_seen_and_replay_in_isolation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/wdfz-pr41-current/tests/test_void_cut.py", line 133, in test_archive_cards_are_hidden_until_seen_and_replay_in_isolation
+    page.wait_for_function("!ArchiveReplay.on", timeout=15000)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/sync_api/_generated.py", line 12761, in wait_for_function
+    self._sync(
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_page.py", line 1151, in wait_for_function
+    return await self._main_frame.wait_for_function(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_frame.py", line 940, in wait_for_function
+    await self._channel.send("waitForFunction", self._timeout, params)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 15000ms exceeded.
+
+----------------------------------------------------------------------
+Ran 33 tests in 336.909s
+
+FAILED (errors=1)

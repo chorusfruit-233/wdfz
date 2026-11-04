@@ -485,4 +485,4 @@ body:not(.cut) #opcap{display:none}
 .elevator-controls button{min-width:56px;min-height:48px;margin:0;padding:8px;color:#d9d3bd;border:1px solid #665b43;border-radius:5px;background:#1b201e;font:inherit;touch-action:manipulation;}
 .elevator-controls #lift-close{color:#ffe2a0;border-color:#b09656;background:#393326;}
 .elevator-controls kbd{margin-left:5px;font-size:11px;opacity:.8;}.touch .elevator-controls kbd{display:none;}
-@media(max-height:450px){.elevator-controls{bottom:calc(85px + env(safe-area-inset-bottom));}}
+@media(max-height:520px) and (orientation:landscape){body.touch .elevator-controls{right:calc(136px + env(safe-area-inset-right));bottom:calc(58px + env(safe-area-inset-bottom));}}

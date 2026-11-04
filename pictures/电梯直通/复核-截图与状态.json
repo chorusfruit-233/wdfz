@@ -1,6 +1,6 @@
 {
   "kind": "Controlled screenshots of actual runtime, software GPU; not natural gameplay or physical-device verification",
-  "runtimeSHA256": "bd4a8cfc17c092e1330446aae5d196a630e723942dee9bf6e929314c930c1af5",
+  "runtimeSHA256": "baf5d6f7af4aec737a0e392a8c897769a160df96bbdbbbef58a685c40c6578cf",
   "chromium": "154.0.8037.57",
   "captures": [
     {

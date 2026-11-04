@@ -130,7 +130,10 @@ class VoidCutTest(BrowserCase):
         self.assert_js(page, "S.room==='lift_dream'&&document.getElementById('arReplay').querySelector('i').textContent==='过场 · 回放'")
         page.evaluate("CUT.t=0.5*CUT.dur;true;")
         page.wait_for_function("S.room==='teach2'", timeout=5000)
-        page.wait_for_function("!ArchiveReplay.on", timeout=15000)
+        # Let real animation frames perform both transitions, without requiring three seconds
+        # of simulation to fit a wall-clock deadline under concurrent software GPU rendering.
+        page.evaluate("CUT.t=CUT.dur-0.01;true;")
+        page.wait_for_function("!ArchiveReplay.on", timeout=5000)
         self.assert_js(page, "S.screen==='menu'&&!CUT.on&&RT.elevatorRide==null&&!DeathArchive.state().seen['cut:void_in']")
         # 「全部解锁」能打开进入那张
         page.evaluate("DeathArchive.unlockAll();true;")

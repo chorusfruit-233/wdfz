@@ -29,8 +29,26 @@ python tools/capture_elevator_controls.py
 
 ## 画面证据与限制
 
-[复核截图](../../../pictures/电梯直通/)中的 `复核-01…04` 使用实际游戏渲染，覆盖桌面、触屏竖屏/横屏和 WebGPU 关门中。脚本设定场景、关闭颗粒并推进门计时；没有补灯，没有修改模型。`复核-截图与状态.json` 保存源码 SHA-256、实际渲染后端、门开度、位置、碰撞深度和模块/生命周期错误。截图拍自 `5fa30e9` 的运行代码。
+[复核截图](../../../pictures/电梯直通/)中的 `复核-01…04` 使用实际游戏渲染，覆盖桌面、触屏竖屏/横屏和 WebGPU 关门中。脚本设定场景、关闭颗粒并推进门计时；没有补灯，没有修改模型。`复核-截图与状态.json` 保存源码 SHA-256、实际渲染后端、门开度、位置、碰撞深度和模块/生命周期错误。截图已在同步 M3a 并修正横屏布局后重拍，实际运行源码以该 JSON 的 SHA-256 为准。
 
 运行环境为 Linux、Python 3.12、Playwright 与系统 Chromium；GPU 是软件适配器，触屏为浏览器模拟。结果不代表手机真机、自然长局、实际音频听感或硬件性能测试。完整回归仍按计划放在全部里程碑完成后执行。
 
 独立关门按钮依据已有 Claude 方案补齐，视觉部分**等待 Claude 优化审核**；本轮未改死亡 CG。
+
+
+## 同步 M3a 后的复测与收尾
+
+在 `6f642b4` 合入远端 `0d17cf1` 的过场与隐藏档案成果，三个文档追加冲突均保留双方内容，未改远端 CG。再次验证关门、过场进出、档案/速通、模块与 Wiki、原生 WebGPU：
+
+- [同步后界面14](同步后界面14.log)：14 项全部通过。
+- [同步后33](同步后33.log)：32 项通过，档案回放收尾一项在并行软件渲染下超过原 15 秒墙钟期限；单独重跑原用例正常通过。收尾测试改为推进到结束时间点，仍让真实浏览器帧执行换场和结束回调，保留档案隔离、只收尾一次及回菜单断言，没有放宽超时。
+- 截图复核发现横屏新增按钮压住交互键；现将它放在交互键左侧、快捷格下方，并增加与摇杆、交互、手电、快捷格、小地图、顶部按钮及字幕不重叠的断言。覆盖 390×844、844×390、667×320，点击仍立即关门。
+- [收尾复测2](收尾复测2.log)：上述两项最终均通过。
+
+按每个用例的最新结果统计，本轮合计 **118 个不同用例通过，无跳过**；此前的超时原始日志保留，不能把这批结果称为全量回归。完整命令如下：
+
+```bash
+PYTHONPATH=tests python -m unittest test_elevator_review test_void_cut test_archive_speedrun -v
+PYTHONPATH=tests python -m unittest test_modules test_wiki_secrets test_webgpu.NativeWebGPUTest.test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers -v
+PYTHONPATH=tests python -m unittest test_elevator_review.ElevatorReviewTest.test_touch_close_is_immediate_without_a_choice_in_both_orientations test_void_cut.VoidCutTest.test_archive_cards_are_hidden_until_seen_and_replay_in_isolation -v
+```

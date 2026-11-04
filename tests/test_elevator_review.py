@@ -19,13 +19,19 @@ class ElevatorReviewTest(BrowserCase):
         }""", dict(b=b,locked=locked,warning=warning))
 
     def test_touch_close_is_immediate_without_a_choice_in_both_orientations(self):
-        for width,height in [(390,844),(844,390)]:
+        for width,height in [(390,844),(844,390),(667,320)]:
             with self.subTest(width=width,height=height):
                 page=self.game(touch=True);page.set_viewport_size(dict(width=width,height=height))
                 self.prepare(page);page.evaluate('render(0)')
                 button=page.locator('#lift-close');self.assertTrue(button.is_visible())
                 box=button.bounding_box();self.assertGreaterEqual(box['height'],44)
                 self.assertGreaterEqual(box['x'],0);self.assertLessEqual(box['y']+box['height'],height)
+                for other in page.locator('#stick,#tAct,#tTorch,#hot,#mini,#ttop,#sub').all():
+                    if not other.is_visible():continue
+                    rect=other.bounding_box()
+                    overlap_x=min(box['x']+box['width'],rect['x']+rect['width'])-max(box['x'],rect['x'])
+                    overlap_y=min(box['y']+box['height'],rect['y']+rect['height'])-max(box['y'],rect['y'])
+                    self.assertFalse(overlap_x>0 and overlap_y>0,other.get_attribute('id'))
                 button.tap()
                 self.assert_js(page,"Elevator.peek('teach').dir===-1&&!UI.chooseOpen")
                 page.evaluate('Elevator.tick(1)')
