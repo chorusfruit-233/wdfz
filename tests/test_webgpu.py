@@ -220,3 +220,31 @@ class NativeWebGPUTest(BrowserCase):
         self.assertGreater(result['variance'],0.05,result)
         self.assertTrue(all(abs(c)<.25 for c in result['correlations']),result)
         self.check_gpu(page)
+
+    def test_low_san_view_closes_in_drains_and_warps_on_the_native_pipeline(self):
+        # R3 第二轮：WGSL 那条后期和 WebGL 同一套 SAN 视觉（视野变小、褪色、扭曲、黑屏），不只是能编译
+        page=self.gpu()
+        result=page.evaluate("""async()=>{
+          const r=GLR.renderer,u=GLR.postMat.uniforms,W=96,H=54,out=ThreeBackend.target(W,H,{depthBuffer:false});
+          async function post(){r.setRenderTarget(out);r.render(GLR.postScene,GLR.postCam);await r.backend.device.queue.onSubmittedWorkDone();
+            const b=await r.readRenderTargetPixelsAsync(out,0,0,W,H);r.setRenderTarget(null);return Array.from(b);}
+          function stats(b){let inner=0,ni=0,outer=0,no=0,sat=0;
+            for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4,l=.2126*b[i]+.7152*b[i+1]+.0722*b[i+2],mx=Math.max(b[i],b[i+1],b[i+2]),mn=Math.min(b[i],b[i+1],b[i+2]);
+              sat+=mx>10?(mx-mn)/mx:0;const dx=Math.abs((x+.5)/W-.5),dy=Math.abs((y+.5)/H-.5);
+              if(dx<.2&&dy<.2){inner+=l;ni++;}else if(Math.max(dx,dy)>.38){outer+=l;no++;}}
+            return {inner:inner/ni,ratio:(outer/no)/Math.max(1e-6,inner/ni),sat:sat/(W*H)};}
+          async function shot(san,dist){SET.distortion=dist;S.san=san;Sensory.reset();Sensory.frame(1/60);render(0);u.uGrain.value=0;return post();}
+          const hi=stats(await shot(100,0)),lo=stats(await shot(8,0));
+          await shot(8,2);['uTunnel','uBlur','uFocus','uDrain','uHalo','uGhost','uPulse','uBreath'].forEach(k=>u[k].value=0);
+          u.uTime.value=1;const a=await post();u.uTime.value=3.7;const b=await post();
+          let moved=0;for(let i=0;i<a.length;i+=4)moved+=Math.abs(a[i]-b[i]);moved/=a.length/4;
+          u.uBlack.value=1;const dark=stats(await post());u.uBlack.value=0;
+          out.dispose();return {hi,lo,moved,dark};
+        }""")
+        hi,lo=result['hi'],result['lo']
+        self.assertGreater(lo['inner'],2,result)                       # 中间还看得见
+        self.assertLess(lo['ratio'],hi['ratio']*.6,result)             # 外圈比中心暗得多：视野变小
+        self.assertLess(lo['sat'],hi['sat'],result)                    # 褪色
+        self.assertGreater(result['moved'],1,result)                   # 扭曲：同一帧两个时刻不一样
+        self.assertLess(result['dark']['inner'],1.5,result)            # 黑屏
+        self.check_gpu(page)
