@@ -86,7 +86,7 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
     d.teacher.rotation.order='YXZ';
     /* 「你」——第三人称镜头里坐在自己座位上的那个人，和同学一样坐在椅子上 */
     d.me=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.me.rotation.order='YXZ';
-    var me=(0,$imports.figMesh)('sit',new $imports.THREE.MeshLambertMaterial({color:0x5d6873,fog:true}),1); me.rotation.y=Math.PI; d.me.add(me);
+    var me=(0,$imports.figMesh)('sit',new $imports.THREE.MeshLambertMaterial({color:0x74808c,fog:true}),1); me.rotation.y=Math.PI; d.me.add(me);   /* 比同学浅一点：镜头落到「你」身上时认得出来 */
     var mp=(0,$imports.worldToScene)(R.ox+(ch.x+.02)*R.tw,R.oy+ch.y*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
     /* 同学：记下原来的朝向和欧拉顺序，分配小动作（演完或跳过都还原） */
     d.mates=[];
