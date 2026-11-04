@@ -359,6 +359,14 @@ var SOUND_BANK={
   'threat.crowd':{cat:'threat',name:'身后很近，很多人在呼吸',lv:-6,layers:[
     {t:'vowel',f:[105,150],voice:0,breath:1,f1:[480,820],f2:[1200,1900],fq:4,dur:[0.8,1.3],g:0.11,atk:0.35,n:15,every:[0.3,0.48],pan:function(o,i){ return ((i*37)%11)/5.5-1; }},
     {t:'noise',f:650,type:'bandpass',q:0.5,dur:6.2,g:0.04,atk:1.6,hold:3.4}]},
+  /* 白天的校园底噪（氛围 A1，modules/atmosphere）：远处的鸟、车、操场的哨声，从第二天起一样一样消失 */
+  'campus.bird':{cat:'world',name:'远处的鸟叫（白天）',lv:-10,vary:{p:0.12,g:0.2},layers:[
+    {t:'tone',f:[2600,3400],to:[3200,4200],dur:0.09,g:0.03,n:[3,6],every:[0.12,0.3],wet:0.5}]},
+  'campus.car':{cat:'world',name:'校外远远开过去一辆车（白天）',lv:-10,vary:{p:0.06,g:0.2},layers:[
+    {t:'noise',f:280,to:420,type:'lowpass',q:0.7,dur:3.2,g:0.12,atk:1.3,wet:0.4},
+    {t:'tone',f:62,to:74,dur:3.0,g:0.04,atk:1.2}]},
+  'campus.whistle':{cat:'world',name:'操场上体育老师吹了两声哨（白天，很远）',lv:-10,vary:{p:0.03,g:0.2},layers:[
+    {t:'tone',f:2900,type:'square',lp:3600,dur:0.18,g:0.02,atk:0.01,n:2,every:0.32,am:[[38,46],0.5],wet:0.8}]},
   'event.liftOverload':{cat:'event',name:'电梯超载蜂鸣（三声）',layers:[
     {t:'tone',f:2350,type:'square',lp:4200,dur:0.2,g:0.05,atk:0.004,n:3,every:0.34}]},
   'dread.radio':{cat:'distant',name:'收音机的杂音和人声',layers:[

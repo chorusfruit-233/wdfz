@@ -11,7 +11,7 @@ var SoundCaptions=(function(){
     'foley.door':'门轴响了一声','foley.cupFall':'风里有尖细的哨音','foley.colaRattle':'上方有东西磕了一下',
     'threat.precursor':'耳边一阵低鸣','threat.smileBack':'身后传来压低的笑声','threat.smileJump':'耳边一声尖响',
     'threat.heartLow':'近处的心跳','threat.heartPat':'急促的心跳','world.crackle':'灯管噼啪作响',
-    'distant.slam':'远处一声门响','distant.tinnitus':'耳边一阵闷响','distant.aah':'远处有声音','distant.ball':'远处一声落地响','distant.giggle':'远处有声音'
+    'distant.slam':'远处一声门响','world.silence':'周围突然安静了','distant.tinnitus':'耳边一阵闷响','distant.aah':'远处有声音','distant.ball':'远处一声落地响','distant.giggle':'远处有声音'
   };
   function enabled(){return $imports.SET.soundCaptions===1||($imports.SET.soundCaptions===0&&($imports.SET.vol<=5||!$imports.SFX.available()));}
   function paint(){
@@ -25,7 +25,7 @@ var SoundCaptions=(function(){
     opt=opt||{};
     if($imports.S.screen!=='play'||$imports.S.dead||$imports.PRO.on||$imports.CUT.on||$imports.PAUSE.on||document.hidden)return null;
     if(opt.selfStep)return null;
-    var text=words[id],body=/^threat\.(heart|breath)/.test(id);
+    var text=opt.caption||(opt.place&&opt.place.caption)||words[id],body=/^threat\.(heart|breath)/.test(id);   /* 调用方可以给这一次换一句（例如走调的铃声） */
     if(opt.patrol)text='脚步声';
     if(!text)return null;
     if(body&&clock-bodyAt<20)return null;

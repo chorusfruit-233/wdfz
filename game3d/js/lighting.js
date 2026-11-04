@@ -178,7 +178,7 @@ function updateLighting(){
   var pf=$imports.GLR.patrolFlick||0, pr=$imports.GLR.patrolRed||0, sum=0;
   for(i=0;i<$imports.GLR.roomLights.length;i++){
     var base=$imports.GLR.roomLightBase[i]*s.ptK;
-    var flick=s.blackout?0:s.steady?1:roomFlicker(i,tt,s.day)*lampHealth(i)*(typeof $imports.dreadLampMul==='function'?(0,$imports.dreadLampMul)(i,tt):1);   /* steady：模块要的不闪的光（迷宫出口） */
+    var flick=s.blackout?0:s.steady?1:roomFlicker(i,tt,s.day)*lampHealth(i)*(typeof $imports.dreadLampMul==='function'?(0,$imports.dreadLampMul)(i,tt):1)*(typeof $imports.atmosLampMul==='function'?(0,$imports.atmosLampMul)(i):1);   /* steady：模块要的不闪的光（迷宫出口） */
     if(pf>0) flick*=1-pf*(1-patrolBeat(tt));            /* 巡察者要来了：所有灯一起按节拍闪 */
     lightCrackle(i,flick);
     sum+=flick;

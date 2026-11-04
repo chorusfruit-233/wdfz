@@ -423,7 +423,10 @@ var SFX=(function(){
   /* kind：'start' 上课铃、'end' 下课铃（默认）；v 响度，室外给 0.45 时同时发闷 */
   function schoolBell(v,kind){
     v=v===undefined?1:v;
-    return P(kind==='start'?'event.bellStart':'event.bellEnd',{k:v,lp:v<0.7?0.6:1});
+    var tune=null; try{ tune=GameModules.first('bellTune',kind||'end'); }catch(e){}   /* 模块可以让铃声走调（氛围 A5） */
+    var o={k:v,lp:v<0.7?0.6:1};
+    if(tune&&tune.pitch>0){ o.pitch=tune.pitch; if(tune.caption) o.caption=tune.caption; }
+    return P(kind==='start'?'event.bellStart':'event.bellEnd',o);
   }
   function deathKinds(){
     var out=[]; if(typeof $imports.SoundPlayer==='undefined') return out;
