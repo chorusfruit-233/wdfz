@@ -7,7 +7,7 @@ class WirelessSignalTest(BrowserCase):
         p = self.page(touch=touch)
         p.evaluate("""freshState('hard');running=false;PRO.on=false;S.intro=0;S.talent='none';
           S.tsec=700;AN.active=false;AN.next=1e6;
-          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,6));S.seated=false;
+          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,12));S.seated=false;
           addItem('phone');PhoneNetwork.startWireless();PhoneNetwork.device.wireless.target=180;""")
         return p
 
@@ -34,7 +34,7 @@ class WirelessSignalTest(BrowserCase):
           const dropped=!PAT.wirelessSignal&&PhoneNetwork.device.wireless.elapsed===14;
           addItem('phone');doEnterRoom('lab3',PatrolNav.tilePoint('lab3',5,4));PhoneNetwork.device.battery=0;PhoneNetwork.device.powered=false;
           PhoneNetwork.tick(40);const off=!PAT.wirelessSignal&&PhoneNetwork.device.wireless.elapsed===14;
-          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,6));PhoneNetwork.tick(15);
+          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,12));PhoneNetwork.tick(15);
           const boot=PhoneNetwork.device.powered&&!PAT.wirelessSignal;
           PhoneNetwork.tick(1);return paused&&dropped&&off&&boot&&!!PAT.wirelessSignal;})()""")
 
@@ -108,7 +108,7 @@ class WirelessSignalTest(BrowserCase):
         self.assert_js(p, """(()=>{PhoneNetwork.tick(15);saveGame();const d=loadGame();delete d.mods.patrolWorld.wirelessSignal;applySave(d);
           const legacy=!PAT.wirelessSignal;
           for(const signal of [{point:{scene:'missing',x:0,y:0},remaining:3},{point:{scene:'teach1',x:'bad',y:0},remaining:3},
-            {point:PatrolNav.tilePoint('teach1',48,6),remaining:99}]){
+            {point:PatrolNav.tilePoint('teach1',48,12),remaining:99}]){
             d.mods.patrolWorld.wirelessSignal=signal;applySave(d);if(PAT.wirelessSignal)return false;}
           PhoneNetwork.tick(15);const restored=!!PAT.wirelessSignal;Mechanics.dream();const dream=!PAT.wirelessSignal;
           freshState('hard');running=false;return legacy&&restored&&dream&&!PAT.wirelessSignal&&PhoneNetwork.device.wireless.elapsed===0;})()""")

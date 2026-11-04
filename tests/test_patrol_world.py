@@ -51,7 +51,7 @@ class PatrolWorldTest(BrowserCase):
         p=self.game()
         self.assert_js(p,"""(() => {PAT.room=S.room;PAT.x=S.x+80;PAT.y=S.y;PAT.locked=true;PAT.lastSeen=PatrolNav.point(S.room,S.x,S.y);PAT.safety=0;PAT.near=true;
           PAT.blinkCD=0;let oldX=PAT.x;S.ang=Math.PI;S.moving=false;PatrolWorld.tick(.8);let moved=PAT.x<oldX&&PAT.state==='walk';
-          let R=INTERIORS.teach1;S.x=R.ox+5.5*9;S.y=R.oy+4.5*9;let last=JSON.stringify(PAT.lastSeen);PatrolWorld.tick(.2);
+          let R=INTERIORS.teach1;S.x=R.ox+10.5*9;S.y=R.oy+9.5*9;let last=JSON.stringify(PAT.lastSeen);PatrolWorld.tick(.2);
           return moved&&JSON.stringify(PAT.lastSeen)===last;})()""")
     def test_permanent_investigation_does_not_use_remote_pressure_or_consume_seal(self):
         p=self.game()
