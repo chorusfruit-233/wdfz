@@ -21,11 +21,12 @@ var WebGPUPost={create:function(uniforms,multisampled){
     let l=vec3<f32>(0.299,0.587,0.114);let edge=max(abs(dot(n-s,l)),abs(dot(e-w,l)));
     return mix(c,(n+s+e+w+c*4.0)/8.0,smoothstep(0.08,0.25,edge)*0.7);
   }`);
-  var blur=N.wgslFn(`fn schoolBlur(tex:texture_2d<f32>,texSampler:sampler,p:vec2<f32>,r:vec2<f32>,lite:f32)->vec3<f32>{
-    // 视野模糊：黄金角圆盘采样（流畅档 6 点，其余 12 点）
+  var blur=N.wgslFn(`fn schoolBlur(tex:texture_2d<f32>,texSampler:sampler,p:vec2<f32>,r:vec2<f32>,lite:f32,rot:f32,lod:f32)->vec3<f32>{
+    // 视野模糊：黄金角圆盘采样（流畅档 6 点，其余 12 点）；每一点从和采样间距相当的 mipmap 层取，
+    // 每个像素再转一个固定的随机角度，亮灯不叠成分立的复制品
     var s=vec3<f32>(0.0);let n=select(12.0,6.0,lite>0.5);
-    for(var i=0;i<12;i++){if(f32(i)>=n){break;}let fi=f32(i)+0.5;let rr=sqrt(fi/n);let th=fi*2.39996;
-      s+=textureSampleLevel(tex,texSampler,clamp(p+vec2<f32>(cos(th),sin(th))*rr*r,vec2<f32>(0.001),vec2<f32>(0.999)),0.0).rgb;}
+    for(var i=0;i<12;i++){if(f32(i)>=n){break;}let fi=f32(i)+0.5;let rr=sqrt(fi/n);let th=fi*2.39996+rot;
+      s+=textureSampleLevel(tex,texSampler,clamp(p+vec2<f32>(cos(th),sin(th))*rr*r,vec2<f32>(0.001),vec2<f32>(0.999)),lod).rgb;}
     return s/n;
   }`);
   var depth=N.wgslFn(`fn schoolDepth(tex:${depthType},uv:vec2<f32>,near:f32,far:f32)->f32{
@@ -63,7 +64,9 @@ var WebGPUPost={create:function(uniforms,multisampled){
     // 视野模糊：边缘重、中心也糊（静态）；一阵阵对不上焦（uFocus，动态）
     let bpx=(mix(3.2*uBlur*uBlur,13.0*uBlur,smoothstep(0.15,0.85,e))+4.5*uFocus)*fx0;
     var col=schoolColor(tDiffuse,sceneSampler,uv,uRes,uAA);
-    if(bpx>=0.3){let bl=schoolBlur(tDiffuse,sceneSampler,uv,vec2<f32>(bpx*min(uRes.x,uRes.y)/720.0)/uRes,uLite);col=mix(col,bl,smoothstep(0.3,1.2,bpx));}
+    if(bpx>=0.3){let rpx=bpx*min(uRes.x,uRes.y)/720.0;
+      let bl=schoolBlur(tDiffuse,sceneSampler,uv,vec2<f32>(rpx)/uRes,uLite,schoolHash(pixel)*6.2832,log2(max(1.0,rpx*select(0.45,0.7,uLite>0.5))));
+      col=mix(col,bl,smoothstep(0.3,1.2,bpx));}
     // 重影：很低时一阵阵叠上一层错开、慢慢漂的淡影，准星附近不叠
     if(uGhost>0.001){let go=uGhostDir*(10.0*min(uRes.x,uRes.y)/720.0)/uRes;
       col=mix(col,schoolColor(tDiffuse,sceneSampler,clamp(uv+go,vec2<f32>(0.001),vec2<f32>(0.999)),uRes,uAA),0.5*uGhost*smoothstep(0.05,0.3,e)*fx0);}

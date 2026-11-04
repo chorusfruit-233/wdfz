@@ -17,6 +17,12 @@ ThreeBackend.configure=function(renderer){
 ThreeBackend.target=function(w,h,options){
   return $imports.RenderDevice.gpu()?new $imports.THREE.RenderTarget(w,h,options):new $imports.THREE.WebGLRenderTarget(w,h,options);
 };
+/* 场景画面的离屏目标：带完整的 mipmap。低 SAN 的视野模糊按采样间距取对应的层，糊得平滑、不叠成分立的复制品；
+   离屏目标不大于画布，正常采样仍落在第 0 层 */
+ThreeBackend.sceneTarget=function(){
+  return ThreeBackend.target(2,2,{minFilter:$imports.THREE.LinearMipmapLinearFilter,magFilter:$imports.THREE.LinearFilter,generateMipmaps:true,
+    format:$imports.THREE.RGBAFormat,depthBuffer:true,stencilBuffer:false});
+};
 ThreeBackend.setup=function(renderer){
   ThreeBackend.configure(renderer);
 
@@ -58,10 +64,7 @@ ThreeBackend.setup=function(renderer){
     scene.add(pl0); lampPool.push(pl0);
   }
 
-  var rt=ThreeBackend.target(2,2,{
-    minFilter:$imports.THREE.LinearFilter,magFilter:$imports.THREE.LinearFilter,
-    format:$imports.THREE.RGBAFormat,depthBuffer:true,stencilBuffer:false
-  });
+  var rt=ThreeBackend.sceneTarget();
 
   var postScene=new $imports.THREE.Scene();
   var postCam=new $imports.THREE.OrthographicCamera(-1,1,1,-1,0,1);
@@ -110,11 +113,12 @@ ThreeBackend.setup=function(renderer){
 '  vec3 l=vec3(0.299,0.587,0.114);float edge=max(abs(dot(n-s,l)),abs(dot(e-w,l)));',
 '  return mix(c,(n+s+e+w+c*4.0)/8.0,smoothstep(0.08,0.25,edge)*0.7);',
 '}',
-/* 视野模糊：黄金角圆盘采样（流畅档 6 点，其余 12 点），半径 r 已换算成 UV */
-'vec3 diskBlur(vec2 p,vec2 r){',
+/* 视野模糊：黄金角圆盘采样（流畅档 6 点，其余 12 点），半径 r 已换算成 UV。每一点从和采样间距相当的 mipmap 层取（lod），
+   点和点之间连成一片；每个像素再把圆盘转一个固定的随机角度（rot），亮灯不会叠成一串分立的复制品 */
+'vec3 diskBlur(vec2 p,vec2 r,float rot,float lod){',
 '  vec3 s=vec3(0.0);float n=uLite>0.5?6.0:12.0;',
-'  for(int i=0;i<12;i++){if(float(i)>=n)break;float fi=float(i)+0.5;float rr=sqrt(fi/n);float th=fi*2.39996;',
-'    s+=texture2D(tDiffuse,clamp(p+vec2(cos(th),sin(th))*rr*r,vec2(0.001),vec2(0.999))).rgb;}',
+'  for(int i=0;i<12;i++){if(float(i)>=n)break;float fi=float(i)+0.5;float rr=sqrt(fi/n);float th=fi*2.39996+rot;',
+'    s+=textureLod(tDiffuse,clamp(p+vec2(cos(th),sin(th))*rr*r,vec2(0.001),vec2(0.999)),lod).rgb;}',
 '  return s/n;',
 '}',
 'void main(){',
@@ -139,7 +143,8 @@ ThreeBackend.setup=function(renderer){
 /* 视野模糊：边缘重、中心也糊（静态，720 高中心最多 3.2 像素、边缘 13 像素）；一阵阵对不上焦（uFocus，动态，再加 4.5 像素） */
 '  float bpx=(mix(3.2*uBlur*uBlur,13.0*uBlur,smoothstep(0.15,0.85,e))+4.5*uFocus)*fx0;',
 '  vec3 col=sceneColor(uv);',
-'  if(bpx>=0.3){vec3 bl=diskBlur(uv,vec2(bpx*min(uRes.x,uRes.y)/720.0)/uRes);col=mix(col,bl,smoothstep(0.3,1.2,bpx));}',
+'  if(bpx>=0.3){float rpx=bpx*min(uRes.x,uRes.y)/720.0;',
+'    vec3 bl=diskBlur(uv,vec2(rpx)/uRes,hash(gl_FragCoord.xy)*6.2832,log2(max(1.0,rpx*(uLite>0.5?0.7:0.45))));col=mix(col,bl,smoothstep(0.3,1.2,bpx));}',
 /* 重影：很低时一阵阵叠上一层错开、慢慢漂的淡影（720 高错开 10 像素），准星附近不叠 */
 '  if(uGhost>0.001){vec2 go=uGhostDir*(10.0*min(uRes.x,uRes.y)/720.0)/uRes;col=mix(col,sceneColor(clamp(uv+go,vec2(0.001),vec2(0.999))),0.5*uGhost*smoothstep(0.05,0.3,e)*fx0);}',
 '  col*=contactAO(uv);',
@@ -270,7 +275,7 @@ ThreeBackend.boot=async function(){
 ThreeBackend.replaceRenderer=function(renderer){
   ThreeBackend.configure(renderer);$imports.GLR.renderer=renderer;
   if($imports.GLR.rt)$imports.GLR.rt.dispose();if($imports.GLR.handRT)$imports.GLR.handRT.dispose();
-  $imports.GLR.rt=ThreeBackend.target(2,2,{depthBuffer:true,stencilBuffer:false});$imports.GLR.handRT=null;
+  $imports.GLR.rt=ThreeBackend.sceneTarget();$imports.GLR.handRT=null;
   if($imports.GLR.postMat!==$imports.GLR.glPost)$imports.GLR.postMat.dispose();
   $imports.GLR.postMat=$imports.GLR.glPost;$imports.GLR.postScene.children[0].material=$imports.GLR.postMat;
   if($imports.GLR.envTarget)$imports.GLR.envTarget.dispose();else if($imports.GLR.envTex)$imports.GLR.envTex.dispose();
@@ -321,7 +326,7 @@ ThreeBackend.resize=function(){
   if($imports.GLR.rt.samples!==samples||!!$imports.GLR.rt.depthTexture!==depth){
     if($imports.GLR.rt.depthTexture)$imports.GLR.rt.depthTexture.dispose();
     $imports.GLR.rt.dispose();
-    $imports.GLR.rt=ThreeBackend.target(2,2,{minFilter:$imports.THREE.LinearFilter,magFilter:$imports.THREE.LinearFilter,depthBuffer:true,stencilBuffer:false});
+    $imports.GLR.rt=ThreeBackend.sceneTarget();
     $imports.GLR.rt.samples=samples;
     if(depth){$imports.GLR.rt.depthTexture=new $imports.THREE.DepthTexture(2,2,$imports.THREE.UnsignedIntType);if($imports.RenderDevice.gpu())$imports.GLR.rt.depthTexture.samples=samples;}
   }
