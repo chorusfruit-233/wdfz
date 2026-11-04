@@ -62,6 +62,9 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `itemUse` | `items.js` `useItem` 开头 | first | `id`；返回 `true` 表示已处理 |
 | `clockText` | `ui/hud.js` `updateHUD` | first | 返回要显示的时间文字 |
 | `mapBlocked` | `ui.js` 打开地图页、`ui/hud.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
+| `classmateScene` | `fx/classroom.js` 更新同学前 | first | `figure, dt`；返回 true 接管这名同学当帧表现，不能改玩家状态 |
+| `patrolZoneActive` | `patrol-world/world.js` 判断条件报警区 | first | `zone`；带 `when` 的区域仅返回 true 时启用 |
+| `patrolCamouflage` | `patrol-world/world.js` 感知和追踪前 | first | 返回 true 代表当前玩家由合法场景规则掩护（放学人群）；不改变巡察实体位置 |
 | `lightState` | `lighting.js` `lightState()` 末尾 | emit | `st`：可改 `amb/hemi/dir/ptK`；`st.steady=true` 灯不闪；`st.fog={r,g,b,density}` 改雾 |
 | `clearWorld` | `engine/scene.js` 换场景前 | emit | 撤掉模块自己加进场景的东西 |
 | `sceneBuilt` | `engine/scene.js` 房间 / 室外场景建好后 | emit | `roomId`（室外为 `null`） |

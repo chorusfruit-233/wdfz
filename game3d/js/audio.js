@@ -507,6 +507,7 @@ var SFX=(function(){
     bell:function(){ return P('event.bell'); },
     bigBell:function(v){ return P('event.bigBell',{k:v===undefined?1:v}); },
     schoolBell:schoolBell,
+    cue:function(id,opt){return P(id,opt);},
     vanish:function(){ return P('foley.vanish'); },                   /* 远处的人影不见了的那一下 */
     /* 结局演出：车库里点火；门那边装置充能的嗡声越来越高 */
     engine:function(){ return P('scene.engine'); },

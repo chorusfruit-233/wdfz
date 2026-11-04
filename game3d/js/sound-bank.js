@@ -36,6 +36,14 @@ var SAME_STEP=[
 ];
 
 var SOUND_BANK={
+  'event.dismissal':{cat:'event',name:'放学长铃 · 六十秒',lv:-5,layers:[
+    {t:'bell',f:523.25,dur:4,g:.11,every:4,n:15,partials:CHIME},
+    {t:'tone',f:392,dur:60,g:.009,atk:.5,type:'sine'}]},
+  'death.misread':{cat:'death',name:'念错了 · 回授与广播',layers:[
+    {t:'noise',f:850,type:'bandpass',q:3,dur:3.4,g:.13,atk:.5},
+    {t:'tone',f:220,to:146.83,dur:2.8,g:.1,atk:.3,type:'triangle'},
+    {t:'noise',f:180,type:'lowpass',dur:.25,g:.4,at:1.1},
+    {t:'noise',f:1200,type:'bandpass',q:1,dur:2,g:.11,atk:.7,at:1.4}]},
   /* ================= 界面 ================= */
   'ui.click':{cat:'ui',name:'按钮 / 确认',lv:-4,vary:{p:0.05,g:0.1},layers:[
     {t:'noise',f:3600,type:'bandpass',q:1.6,dur:0.014,g:0.5,atk:0.0008},

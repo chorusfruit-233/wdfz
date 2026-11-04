@@ -7,6 +7,7 @@ var SoundCaptions=(function(){
   var words={
     'dread.hum':'灯管的嗡声没有停','threat.breath':'呼吸声近了些','dread.knock':'轻轻的敲门声','dread.door':'门轴拖着长音','dread.steps':'缓慢的脚步声','dread.run':'一阵急促脚步',
     'dread.chair':'椅脚刮过地面','dread.desk':'桌椅轻响','dread.whisper':'模糊的低语','dread.radio':'喇叭里一阵杂音','dread.call':'远处有人声',
+    'event.dismissal':'放学长铃持续响着 · 跟随同学从北门离校','death.misread':'所有喇叭都在叫你留在原地',
     'event.bellStart':'急促的上课铃','event.bellEnd':'下课铃','event.thunder':'雷声炸响','event.thunderFar':'远处的闷雷',
     'foley.door':'门轴响了一声','foley.cupFall':'风里有尖细的哨音','foley.colaRattle':'上方有东西磕了一下',
     'threat.precursor':'耳边一阵低鸣','threat.smileBack':'身后传来压低的笑声','threat.smileJump':'耳边一声尖响',

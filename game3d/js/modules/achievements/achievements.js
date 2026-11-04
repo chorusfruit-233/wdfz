@@ -167,7 +167,8 @@ var Achievements=(function(){
     try{
       var ends=(0,$imports.endsSeen)();
       $imports.ACH_PUBLIC_ENDS.forEach(function(id){ if(ends[id]) give('e.end_'+id); });
-      if($imports.ACH_PUBLIC_ENDS.every(function(id){ return ends[id]; })) give('p.routes');
+      if($imports.ACH_ORIGINAL_ENDS.every(function(id){ return ends[id]; })) give('p.routes');
+      if($imports.ACH_PUBLIC_ENDS.every(function(id){return ends[id];}))give('p.five_routes');
       if(ends.beast) give('h.beast');
     }catch(e){}
     try{

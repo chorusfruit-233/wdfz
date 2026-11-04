@@ -22,6 +22,7 @@ function gameInputContext(target,editing){
     paused:!!$imports.PAUSE.on,panelOpen:!!$imports.UI.anyOpen(),choice:!!$imports.UI.chooseOpen,
     computer:!!(typeof $imports.PC!=='undefined'&&$imports.PC.on),phone:!!(typeof $imports.PHONE!=='undefined'&&$imports.PHONE.on),
     lesson:!!(typeof $imports.LESSON!=='undefined'&&$imports.LESSON.on),
+    broadcast:!!(typeof $imports.BroadcastUI!=='undefined'&&$imports.BroadcastUI.isOpen()),
     debugFrozen:!!(typeof $imports.DEV!=='undefined'&&(($imports.DEV.on&&$imports.DEV.freeze)||$imports.DEV.locking)),   /* 输调试密码时也冻结 */
     debugDragging:!!(typeof $imports.DEV!=='undefined'&&$imports.DEV.on&&$imports.DEV.drag),
     intro:$imports.S.intro>0,driving:!!(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active()),

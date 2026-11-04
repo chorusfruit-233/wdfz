@@ -14,10 +14,10 @@
 'use strict';
 
 var SPEEDRUN_KEY='wdfz3d_speedrun_v1';
-var SPEEDRUN_RULES=5;                       /* 顺风耳与七项天赋；旧成绩保留并按版本隔离。 */
+var SPEEDRUN_RULES=6;                       /* 广播站与第五条公开真结局；旧成绩保留并按版本隔离。 */
 var SPEEDRUN_GAME='3d-2026.11';
 var RUN_MODE='normal';                      /* 'speedrun' 时存档写到单独的槽 */
-var SPEEDRUN_ROUTES={cyber:{n:'《网安仙人》'},car:{n:'《闸门》'},face:{n:'《白名单》'},portal:{n:'《门》'},beast:{n:'隐藏路线',secret:1}};
+var SPEEDRUN_ROUTES={dismissal:{n:'《放学》'},cyber:{n:'《网安仙人》'},car:{n:'《闸门》'},face:{n:'《白名单》'},portal:{n:'《门》'},beast:{n:'隐藏路线',secret:1}};
 var SPEEDRUN_PUBLIC=['car','face','portal','cyber'];
 var DIFF_NAME={easy:'预知梦',hard:'梦魇'};
 

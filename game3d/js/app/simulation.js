@@ -11,7 +11,7 @@ var AppSimulation=(function(){
   world.use('placement',function(dt){(0,$imports.repairPlayerPlacement)(dt);$imports.Playtest.simulation(dt);});
   world.use('driving',function(dt){if($imports.CarChase.active()){$imports.Inspection.discardStale();$imports.CarChase.tick(dt);return stop;}});
   world.use('movement',function(dt){(0,$imports.updatePlayer)(dt);$imports.ExplorationMap.tick(dt);});
-  world.use('extensions',function(dt){GameModules.emit('tick',dt);if($imports.S.dead)return stop;});
+  world.use('extensions',function(dt){GameModules.emit('tick',dt);if($imports.S.dead||$imports.S.screen!=='play')return stop;});
   world.use('elevator',function(dt){
     if($imports.Elevator.inRide()){$imports.Inspection.discardStale();$imports.Elevator.tick(dt);(0,$imports.settleSan)();return stop;}
     $imports.Elevator.tick(dt);

@@ -207,6 +207,7 @@ function ncUpdate(dt){
   for(i=0;i<NC.list.length;i++){
     f=NC.list[i];
     var ud=f.userData||{};
+    if(GameModules.first('classmateScene',f,dt))continue;
     if(staring&&v<70){                                   /* 全体回头：一起转过来，快 */
       var wantS=Math.atan2(f.position.x-p.x,f.position.z-p.z);   /* 模型的脸朝 -z */
       var curS=f.rotation.y||0;

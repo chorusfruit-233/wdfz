@@ -16,6 +16,7 @@ var DEATH_ARCHIVE_KEY='wdfz3d_death_archive_v1';
    （目前是虚空迷宫里的两种死法，演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫；和电梯里的「满员」，演出由 lift-crowd 模块提供）。
    ext:1 表示演出由模块注册：模块拿掉了，这一份就不列出（见 DeathArchive.avail）。 */
 var DEATH_ARCHIVE=[
+  {id:'misread',fx:'misread',n:'念错了',d:'第二行开始，喇叭里已经不是我的声音。播音中的红灯熄了。',stage:'admin2',ext:1},
   {id:'patrol',       fx:'grip',     n:'点名',         d:'灯按拍子闪的时候，它就在这一层。一只手从后面按住了我的头顶。', stage:'teach1'},
   {id:'garage',       fx:'grip',     n:'车道中间',     d:'车库里没有灯。它一直站在车道中间，等我自己走过去。', stage:'garage1'},
   {id:'car_entry',    fx:'grip',     n:'后座',         d:'我拉开了车门。后视镜里，它就弯着腰站在后座上。', stage:'garage1'},
@@ -48,6 +49,7 @@ DEATH_ARCHIVE.forEach(function(e,i){ e.no=i+1; DEATH_ARCHIVE_BY_ID[e.id]=e; });
    车灯顺着车道照出去——真实结局里是玩家站在车旁的位置和朝向）；hour：回放时的天色（VisualState.stageHour，只影响画面，不改 S.tsec），
    开场固定在新局开始的 11:40（第四节），不跟着菜单里残留的上一局时刻变成夜里 */
 var ARCHIVE_CUTS=[
+  {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
   {id:'cut:opening', cut:'opening',            n:'开场 · 第四节', d:'粉笔灰停在半空，你趴到桌上。再睁开眼，教室里坐满了人，没有一个人在呼吸。', stage:'teach1', hour:700/60},
   {id:'end:car',     cut:'car',     end:'car',    n:'《闸门》',     d:'车灯闪了两下，光里站着它。冲出北门回头，黑影从门里追了出来。', stage:'garage1', at:{c:44.5,r:6.5,ang:Math.PI}},
   {id:'end:face',    cut:'face',    end:'face',   n:'《白名单》',   d:'闸机的红灯「嘀」地变白。走出门回头，门里一个接一个站满了目送的人。', stage:'teach1'},
