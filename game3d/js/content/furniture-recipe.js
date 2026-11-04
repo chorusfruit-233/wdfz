@@ -52,13 +52,13 @@ function deskPlace(c,x,y,cx,cz){
   return {dx:cx, dz:cz-0.10, chx:cx, chz:cz+0.30, rot:0};
 }
 /* 桌面上的东西（在课桌的局部坐标里，人在 +z）：高中生的桌子——前沿一排书立着（书立夹着），一摞练习册、卷子、水杯、笔。
-   流畅档少摆一些（书立、水杯照旧，一摞书和卷子减半） */
-function deskTop(K,x,y){
-  var hh=(0,$imports.hash2)(x*3+7,y*5+11), h2=(0,$imports.hash2)(y*7+3,x*11+5), top=0.7575, low=(0,$imports.lodLow)();
-  if(hh>0.15) (0,$imports.propBooksUpright)(K,(h2-0.5)*0.1+0.04,top,-0.175,0.26+hh*0.2,x*7+y*3,0);
+   流畅档少摆一些：一摞书和卷子减半；别的教室（不是自己班）只有两成桌子立着书、不放水杯——一层 192 张桌子，手机上顶点数要控制 */
+function deskTop(K,x,y,own){
+  var hh=(0,$imports.hash2)(x*3+7,y*5+11), h2=(0,$imports.hash2)(y*7+3,x*11+5), top=0.7575, low=(0,$imports.lodLow)(), sparse=low&&!own;
+  if(hh>(sparse?0.82:0.15)) (0,$imports.propBooksUpright)(K,(h2-0.5)*0.1+0.04,top,-0.175,0.26+hh*0.2,x*7+y*3,0);
   if(hh>0.42&&(!low||hh>0.71)) K.box('paper',(hh-0.7)*0.18,top+0.003,0.07,0.25,0.004,0.18,0xe6ece6,1.0);   /* 卷子 */
   if(h2>0.55&&(!low||h2>0.78)) (0,$imports.propBookPile)(K,0.22,top,0.06,2+((h2*10)|0)%3,x*7+y);
-  if(h2<0.35) (0,$imports.propBottle)(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
+  if(h2<0.35&&!sparse) (0,$imports.propBottle)(K,-0.30,top,-0.17,[0x8ab8d8,0xd8a8b8,0xa8d0a0,0xe0e0d8][(x+y)%4],0.20);
   if(hh<0.30&&!low) K.rod('plastic',-0.2,top+0.006,0.05,-0.05,top+0.006,0.08,0.006,0.006,6,0x2a4a8a);  /* 一支笔 */
 }
 
@@ -77,7 +77,8 @@ FURN.d=function(c,x,y,cx,cz){
   var p=deskPlace(c,x,y,cx,cz);
   K.frame(p.dx,p.dz,p.rot);
   K.asset('desk_student',0,0,0,0);                                               /* 木纹桌面、钢框、可调高的腿、铁皮桌斗、挂钩 */
-  deskTop(K,x,y);
+  var L=$imports.ClassroomLayout;
+  deskTop(K,x,y,c.R.host!=='teach'||(c.R.id===L.ownSeat.room&&L.classAt(x,y)===L.ownSeat.classId));
   K.unframe();
   chairModel(K,p.chx,p.chz,p.rot,0.44);
   c.ao((p.dx+p.chx)/2,(p.dz+p.chz)/2,p.rot?0.92:0.96,p.rot?0.82:0.70,1.0);   /* 桌子加椅子的接触阴影 */

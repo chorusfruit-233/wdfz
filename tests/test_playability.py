@@ -242,7 +242,8 @@ class PlayabilityTest(BrowserCase):
         self.assertEqual(info['disposed'],info['maps'])
         signs=page.evaluate("""(()=>{const out={};['teach1','lab2','admin2','lift_teach'].forEach(id=>{const g=buildRoomGeometry(INTERIORS[id]);out[id]=[];
           g.traverse(o=>{if(o.userData&&o.userData.wayfinding)out[id].push(o.userData.wayfinding);});ThreeBackend.disposeGroup(g);});return out;})()""")
-        self.assertEqual(sorted(signs['teach1']),sorted(['1F 楼梯','1F 楼梯','1F 电梯','移交单']))
+        doors=[n for n in ['高三（1）班','高三（2）班','高一（3）班','高二（3）班','高二（1）班','高二（2）班'] for _ in (0,1)]   # 每间前后门各一块门牌
+        self.assertEqual(sorted(signs['teach1']),sorted(['1F 楼梯','1F 楼梯','1F 电梯','移交单']+doors))
         self.assertIn('连廊',signs['lab2'])
         self.assertIn('2F 楼梯',signs['admin2'])
         self.assertEqual(signs['lift_teach'],[])

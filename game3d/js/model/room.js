@@ -396,12 +396,14 @@ function nameCardTex(){
 }
 function classroomSigns(c,put){
   var R=c.R, L=$imports.ClassroomLayout, CX=c.CX, CZ=c.CZ, tw=c.tw, th=c.th, i;
+  /* 教室里的陈设（班训、课程表、值日表、名牌）不算找路的牌子：记在 userData.decor 里；门牌上的班名才是 wayfinding */
+  function deco(mesh,px,py,pz,rot,text){ mesh.position.set(px,py,pz); mesh.rotation.y=rot; mesh.userData.decor=text; c.meshes.push(mesh); return mesh; }
   for(i=0;i<L.spans.length;i++){
     var c0=L.spans[i][0], wx=CX(c0)-tw/2, zb=CZ(L.boardRow), cls=className(R.floor||1,i), seed=(R.floor||1)*7+i;
     /* 前墙（西）：黑板上方的班训，北边课程表、南边值日表（避开空调、插座、喇叭和饮水机） */
-    put(signPlate(mottoTex(CLASS_MOTTO[seed%CLASS_MOTTO.length]),2.4,0.30,0.012,false),wx+0.008,2.62,zb,Math.PI/2,0,0,0,'班训');
-    put(signPlate(timetableTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,CZ(3),Math.PI/2,0,0,0,'课程表');
-    put(signPlate(dutyTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,CZ(11)+th*0.2,Math.PI/2,0,0,0,'值日表');
+    deco(signPlate(mottoTex(CLASS_MOTTO[seed%CLASS_MOTTO.length]),2.4,0.30,0.012,false),wx+0.008,2.62,zb,Math.PI/2,'班训');
+    deco(signPlate(timetableTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,CZ(3),Math.PI/2,'课程表');
+    deco(signPlate(dutyTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,CZ(11)+th*0.2,Math.PI/2,'值日表');
     /* 门牌：两扇门上（门牌模型的深蓝字条在门洞中心往西 0.1、离地 2.32、走廊那面） */
     L.doors(i).forEach(function(d){
       var pl=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.25,0.056),signMat(doorNameTex(cls)));
@@ -415,8 +417,7 @@ function classroomSigns(c,put){
     var mat=signMat(nameCardTex(),{side:$imports.THREE.DoubleSide});
     [-1,1].forEach(function(s){                                               /* 两片纸靠在一起，顶上合拢 */
       var m=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.12,0.062),mat);
-      m.position.set(dx+lz+s*0.009,0.7575+0.03,dz-lx); m.rotation.set(0,Math.PI/2,0); m.rotateX(-s*0.29);
-      m.userData.wayfinding='名牌'; c.meshes.push(m);
+      deco(m,dx+lz+s*0.009,0.7575+0.03,dz-lx,Math.PI/2,'名牌'); m.rotateX(-s*0.29);
     });
   }
 }

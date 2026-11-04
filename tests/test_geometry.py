@@ -76,9 +76,9 @@ class GeometryTest(BrowserCase):
         self.assertGreater(r['dx'], 25)
         self.assertFalse(r['hit'])
         self.assertGreaterEqual(r['wallGap'], 2.99)
-        # 课桌角：四个探测点之间斜着戳进来的角，以前会少算，现在圆形检测算得到
+        # 课桌角：四个探测点之间斜着戳进来的角，以前会少算，现在圆形检测算得到（取同桌里靠南那张，角外面是过道）
         page.evaluate("doEnterRoom('teach1');running=false")
-        self.assert_js(page, """(()=>{var R=INTERIORS.teach1;S.room='teach1';var F=R.foot['7,2'],q=F[0];
+        self.assert_js(page, """(()=>{var R=INTERIORS.teach1;S.room='teach1';var F=R.foot['7,3'],q=F[0];
             var cx=q.x1+0.2, cz=q.z1+0.2, wx=(cx+R.cols*0.5)*9+R.ox, wy=(cz+R.rows*0.5)*9+R.oy;
             return (Collision.depth(wx,wy,PRAD)>0)&&!solidAt(wx,wy)&&!solidAt(wx+PRAD,wy)&&!solidAt(wx,wy+PRAD);})()""")
 

@@ -586,7 +586,9 @@ function classroomLamps(c,i,c0,lit){
       (0,$imports.propHangLamp)(K,X(c0+dx),Z(t),1.2,0.22,$imports.WALLH,2.68,0,dying?'dying':(lit?'on':'off'));
     });
   });
-  [6.2,8.8].forEach(function(t){ (0,$imports.propHangLamp)(K,X(c0+0.75),Z(t),1.2,0.22,$imports.WALLH,2.68,Math.PI/2,lit?'on':'off'); });
+  /* 两盏黑板灯；流畅档只给自己班挂（一层 6 间，手机上顶点数要控制） */
+  if(!(0,$imports.lodLow)()||(c.R.id===$imports.ClassroomLayout.ownSeat.room&&i===$imports.ClassroomLayout.ownSeat.classId))
+    [6.2,8.8].forEach(function(t){ (0,$imports.propHangLamp)(K,X(c0+0.75),Z(t),1.2,0.22,$imports.WALLH,2.68,Math.PI/2,lit?'on':'off'); });
 }
 
 /* @module-exports */

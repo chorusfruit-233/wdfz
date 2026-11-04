@@ -188,15 +188,23 @@ function leaveSeat(){
   $imports.S.seated=false;$imports.S.seat=null;
   if(!R||canStand($imports.S.x,$imports.S.y))return true;
   var dirs=[facing+Math.PI/2,facing-Math.PI/2,facing+Math.PI];
-  for(var radius=6;radius<=10.5;radius+=.5)for(var k=0;k<dirs.length;k++){
-    var x=$imports.S.x+Math.cos(dirs[k])*radius,y=$imports.S.y+Math.sin(dirs[k])*radius;
-    if(!canStand(x,y))continue;
-    var clear=true;
+  function pathClear(x,y){
     for(var j=1;j<=8;j++){
       var px=$imports.S.x+(x-$imports.S.x)*j/8,py=$imports.S.y+(y-$imports.S.y)*j/8,ch=tileAt(R,px,py);
-      if(ch==='#'||ch==='S'||ch==='='&&!(0,$imports.doorIsOpen)(R,px,py)){clear=false;break;}
+      if(ch==='#'||ch==='S'||ch==='='&&!(0,$imports.doorIsOpen)(R,px,py))return false;
     }
-    if(clear){$imports.S.x=x;$imports.S.y=y;return true;}
+    return true;
+  }
+  for(var radius=6;radius<=10.5;radius+=.5)for(var k=0;k<dirs.length;k++){
+    var x=$imports.S.x+Math.cos(dirs[k])*radius,y=$imports.S.y+Math.sin(dirs[k])*radius;
+    if(!canStand(x,y)||!pathClear(x,y))continue;
+    /* 刚好站得下的那一点贴着桌沿，一迈步就卡在桌角上：再往过道里让一点（最多 3 个单位，一路都站得下才让） */
+    for(var extra=.5;extra<=3;extra+=.5){
+      var x2=$imports.S.x+Math.cos(dirs[k])*(radius+extra),y2=$imports.S.y+Math.sin(dirs[k])*(radius+extra);
+      if(!canStand(x2,y2)||!pathClear(x2,y2))break;
+      x=x2;y=y2;
+    }
+    $imports.S.x=x;$imports.S.y=y;return true;
   }
   return true;
 }
