@@ -242,7 +242,7 @@ class PlayabilityTest(BrowserCase):
         self.assertEqual(info['disposed'],info['maps'])
         signs=page.evaluate("""(()=>{const out={};['teach1','lab2','admin2','lift_teach'].forEach(id=>{const g=buildRoomGeometry(INTERIORS[id]);out[id]=[];
           g.traverse(o=>{if(o.userData&&o.userData.wayfinding)out[id].push(o.userData.wayfinding);});ThreeBackend.disposeGroup(g);});return out;})()""")
-        doors=[n for n in ['高三（1）班','高三（2）班','高一（3）班','高二（3）班','高二（1）班','高二（2）班'] for _ in (0,1)]   # 每间前后门各一块门牌
+        doors=[n for n in ['高三（1）班','高一（3）班','高二（1）班','高二（2）班'] for _ in (0,1)]   # 一楼四间，每间前后门各一块门牌
         self.assertEqual(sorted(signs['teach1']),sorted(['1F 楼梯','1F 楼梯','1F 电梯','移交单']+doors))
         self.assertIn('连廊',signs['lab2'])
         self.assertIn('2F 楼梯',signs['admin2'])
@@ -251,7 +251,7 @@ class PlayabilityTest(BrowserCase):
     def test_only_own_classroom_podium_holds_the_handover_slip(self):
         page=self.game()
         page.evaluate("""const R=INTERIORS.teach1;window.ts=[];for(let r=0;r<R.rows;r++)for(let c=0;c<R.cols;c++)if(R.grid[r][c]==='T')ts.push([c,r]);""")
-        self.assert_js(page,"ts.length===6&&ts.filter(t=>Investigation.isPodium(INTERIORS.teach1,t[0],t[1])).length===1&&JSON.stringify(Investigation.podium())===JSON.stringify(ClassroomLayout.podium(ClassroomLayout.ownSeat.classId))")
+        self.assert_js(page,"ts.length===4&&ts.filter(t=>Investigation.isPodium(INTERIORS.teach1,t[0],t[1])).length===1&&JSON.stringify(Investigation.podium())===JSON.stringify(ClassroomLayout.podium(ClassroomLayout.ownSeat.classId))")
         page.evaluate("""const R=INTERIORS.teach1,t=ts[0];S.seated=false;S.bag=[];S.x=R.ox+(t[0]+.5)*R.tw;S.y=R.oy+(t[1]+1.5)*R.th;S.ang=-Math.PI/2;S.pitch=0;
           window.hint=interactHint();tryInteract();""")
         self.assert_js(page,"hint==='拿粉笔'&&hasItem('chalk')&&!Investigation.state().entries.notice&&!UI.chooseOpen")

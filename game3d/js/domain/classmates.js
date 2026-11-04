@@ -2,7 +2,7 @@
 'use strict';
 var ClassmateRules=(function(){
   function eligible(room){return !!(room&&!room.stairwell&&room.host==='teach'&&room.floor>=1&&room.floor<=5);}
-  /* 谁坐在哪：L 是教室布局（ClassroomLayout，由调用方传进来）。自己班坐得满（本人座位和同桌那张空着），
+  /* 谁坐在哪：L 是教室布局（ClassroomLayout，由调用方传进来）。自己班坐得满（一间 42 个座位，最多坐 36 个；本人座位和同桌那张空着），
      别的教室稀一些；全层不超过 50 个。同一局（seed）每次进楼都一样 */
   function layout(room,seed,L){
     var seats=[],occupied={},h=2166136261,source=String(seed)+'|'+room.id;
@@ -20,7 +20,7 @@ var ClassmateRules=(function(){
     var order=[];for(var ci=0;ci<L.spans.length;ci++)order.push(ci);
     if(home>=0)order=[home].concat(order.filter(function(x){return x!==home;}));
     order.forEach(function(ci){
-      var tiles=L.seatTiles(ci),inClass=0,cap=ci===home?26:10,p=ci===home?.86:(home>=0?.16:.2);
+      var tiles=L.seatTiles(ci),inClass=0,cap=ci===home?36:10,p=ci===home?.86:(home>=0?.16:.2);
       tiles.sort(function(a,b){return a[1]-b[1]||a[0]-b[0];});
       tiles.forEach(function(t){
         var roll=next();

@@ -38,7 +38,7 @@ var PhoneNetwork={device:$imports.PhoneEnergy.fresh(),connection:null,page:'home
     if((0,$imports.hasItem)('phone')&&!this.device.initialized){this.device.initialized=true;this.device.deviceId=Mechanics.runSeed+':phone';Mechanics.dirty=true;}
   },
   available:function(){this.acquire();return (0,$imports.hasItem)('phone')&&this.device.initialized&&this.device.powered&&this.device.battery>0;},
-  originalClassroom:function(){var R=$imports.INTERIORS.teach1;if(!R||$imports.S.mode!=='in'||$imports.S.room!=='teach1')return false;var c=($imports.S.x-R.ox)/R.tw,r=($imports.S.y-R.oy)/R.th;return c>=45&&c<52&&r>=1&&r<15;},
+  originalClassroom:function(){var L=$imports.ClassroomLayout,R=$imports.INTERIORS[L.ownSeat.room];if(!R||$imports.S.mode!=='in'||$imports.S.room!==L.ownSeat.room)return false;return L.classAt(Math.floor(($imports.S.x-R.ox)/R.tw),Math.floor(($imports.S.y-R.oy)/R.th))===L.ownSeat.classId;},   /* 在自己班那间教室里（布局见 domain/classroom-layout.js） */
   connectedComputer:function(){
     var c=this.connection;
     if(c&&($imports.S.mode!=='in'||$imports.S.room!=='lab3'||!(0,$imports.hasItem)('phone')||Math.hypot($imports.S.x-c.x,$imports.S.y-c.y)>26)){this.connection=null;c=null;}

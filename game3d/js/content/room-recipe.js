@@ -428,7 +428,7 @@ function roomDecor(c,isRoof){
     if(teachFl){
       var nl=0;
       for(x=3;x<W-3;x+=9){ var near=Math.abs(CX(x))<10; ceilingLight(K,CX(x),CZ(18),1.8,0.24,0,near?(nl++===1?'dying':'on'):((x/9|0)%2?'dying':'off')); }
-      var cs=$imports.CLS_SPAN, ci, LIT={5:1,21:1,45:1};
+      var cs=$imports.CLS_SPAN, ci, LIT={21:1,45:1};                       /* 一层四间，开着灯的是第二间和自己班那间 */
       for(ci=0;ci<cs.length;ci++) classroomLamps(c,ci,cs[ci][0],!!LIT[cs[ci][0]]);   /* 教室的护眼灯和黑板灯 */
     }else if(R.id!=='garage1'){
       var nk=0;
@@ -540,55 +540,58 @@ function officePlants(c){
 function viewDetail(c){return !!c.view.decay;}
 
 /* ---- 教室（黑板在西墙）：纵向、横向的分区见 domain/classroom-layout.js ----
-   i 第几间，c0..c1 这一间的列。X(t)/Z(t)：格子坐标（可带小数）换成米 */
+   i 第几间，c0..c1 这一间的列。X(t)/Z(t)：格子坐标（可带小数）换成米。一间沿走廊 11 米、进深 8 米：
+   西墙（短墙）挂黑板，北墙开窗，东墙是后墙，南墙是走廊那面、开前后门 */
 function classroomWest(c,i,c0,c1){
-  var K=c.K, L=$imports.ClassroomLayout, seed=(c.R.floor||1)*7+i;
+  var K=c.K, L=$imports.ClassroomLayout, seed=(c.R.floor||1)*7+i, r0=L.rows[0], r1=L.rows[1];
   function X(t){ return t*c.tw-c.halfW; }
   function Z(t){ return t*c.th-c.halfH; }
-  var xw=X(c0), xe=X(c1+1), zn=Z(1), zs=Z(15), zb=Z(L.boardRow+0.5);
-  /* 前墙（西）：黑板（字由表现层贴）、广播喇叭、两个插座；西北角柜式空调，西南角（前门边）饮水机 */
+  var xw=X(c0), xe=X(c1+1), zn=Z(r0), zs=Z(r1+1), zb=Z(L.mid);
+  /* 前墙（西）：黑板居中（字由表现层贴）、广播喇叭、两个插座；西南角（前门边）饮水机 */
   K.asset('blackboard',xw,1.70,zb,Math.PI/2);                                                     /* 铝框、板面、粉笔槽、粉笔、板擦 */
   if(c.view.board){ var b=c.view.board(xw+0.082,1.70,zb,4.8,0.98,seed); b.rotation.y=Math.PI/2; c.meshes.push(b); }
-  K.asset('speaker_box',xw+0.02,2.55,zb+3.35,Math.PI/2);
+  K.asset('speaker_box',xw+0.02,2.55,zb+3.2,Math.PI/2);
   (0,$imports.propSocket)(K,xw+0.02,0.30,zb-2.95,Math.PI/2); (0,$imports.propSocket)(K,xw+0.02,0.30,zb+2.95,Math.PI/2);
-  (0,$imports.propACCabinet)(K,xw,Z(1.6),Math.PI/2); c.solid(xw+0.16,Z(1.6),0.32,0.52);
-  (0,$imports.propWaterDispenser)(K,xw+0.20,Z(14.55),Math.PI/2); c.solid(xw+0.20,Z(14.55),0.36,0.36);
-  /* 北墙（外墙）：三扇推拉窗，窗帘收在两边 */
-  [1.3,3.5,5.7].forEach(function(dx,k){
+  (0,$imports.propWaterDispenser)(K,xw+0.20,Z(r1+0.55),Math.PI/2); c.solid(xw+0.20,Z(r1+0.55),0.36,0.36);
+  /* 北墙（外墙）：三扇 2.4 米宽的推拉窗，窗帘收在两边 */
+  [1.9,5.5,9.1].forEach(function(dx,k){
     var wx=X(c0+dx);
-    wallWindow(K,wx,zn,0,1,1.5,1.0,2.25,2);
-    (0,$imports.propCurtains)(K,wx,zn,0,1.5,1.02,2.42,[0x5a7a9a,0x66788a,0x58708a][(i+k)%3],seed*3+k);
+    wallWindow(K,wx,zn,0,1,2.4,1.0,2.25,3);
+    (0,$imports.propCurtains)(K,wx,zn,0,2.4,1.02,2.42,[0x5a7a9a,0x66788a,0x58708a][(i+k)%3],seed*3+k);
   });
-  /* 后墙（东）：黑板报居中、上面挂钟，两边各一幅名言；东南角卫生角，旁边垃圾桶 */
+  /* 后墙（东）：黑板报居中、上面挂钟，两边各一幅名言；东北角（靠窗）柜式空调；东南角（后门边）卫生角和垃圾桶 */
   K.asset('board_news',xe,1.55,zb,-Math.PI/2);                                                    /* 彩色粉笔的大标题、两栏小字、角上的花 */
   K.asset('clock_wall',xe-0.02,2.58,zb,-Math.PI/2);
-  (0,$imports.propFrame)(K,xe,1.70,Z(4.2),-Math.PI/2,0.62,0.82,0xe8d8a8,0x3a3028,i*4+1);
-  (0,$imports.propFrame)(K,xe,1.70,Z(10.8),-Math.PI/2,0.62,0.82,0xc8d8e0,0x3a3028,i*4+2);
-  (0,$imports.propCleaning)(K,X(c0+6.5),zs,Math.PI); c.solid(X(c0+6.5),zs-0.21,0.94,0.42);       /* 水桶、拖把、扫把、簸箕，靠在南墙上 */
-  K.asset('bin_classroom',xe-0.27,0,Z(13.95),0); c.solid(xe-0.27,Z(13.95),0.42,0.42);             /* 垃圾桶（套着黑色垃圾袋） */
+  (0,$imports.propFrame)(K,xe,1.70,Z(L.mid-2.4),-Math.PI/2,0.62,0.82,0xe8d8a8,0x3a3028,i*4+1);
+  (0,$imports.propFrame)(K,xe,1.70,Z(L.mid+2.4),-Math.PI/2,0.62,0.82,0xc8d8e0,0x3a3028,i*4+2);
+  (0,$imports.propACCabinet)(K,xe,Z(r0+0.6),-Math.PI/2); c.solid(xe-0.16,Z(r0+0.6),0.32,0.52);
+  (0,$imports.propCleaning)(K,X(c1+0.5),zs,Math.PI); c.solid(X(c1+0.5),zs-0.21,0.94,0.42);       /* 水桶、拖把、扫把、簸箕，靠在南墙上 */
+  K.asset('bin_classroom',xe-0.27,0,Z(r1-0.05),0); c.solid(xe-0.27,Z(r1-0.05),0.42,0.42);         /* 垃圾桶（套着黑色垃圾袋） */
   /* 南墙（走廊那边）：前门边的开关，两扇门中间挂两幅班级公约 */
   (0,$imports.propSwitch)(K,X(c0+2.3),1.35,zs,Math.PI,3);
-  (0,$imports.propFrame)(K,X(c0+3.1),1.75,zs,Math.PI,0.62,0.82,0xe0d0c0,0x3a3028,i*4+3);
-  (0,$imports.propFrame)(K,X(c0+4.1),1.75,zs,Math.PI,0.62,0.82,0xe8d8a8,0x3a3028,i*4);
-  /* 顶上：两台吊扇、对着黑板的投影机、烟感（和灯错开，见 classroomLamps） */
-  (0,$imports.propCeilFan)(K,X(c0+4.1),Z(4.5),$imports.WALLH,i*3+1); (0,$imports.propCeilFan)(K,X(c0+4.1),Z(10.5),$imports.WALLH,i*3+2);
-  (0,$imports.propProjector)(K,X(c0+2.6),zb,$imports.WALLH,Math.PI/2);
-  (0,$imports.propSmoke)(K,X(c0+4.1),zb,$imports.WALLH);
+  (0,$imports.propFrame)(K,X(c0+4.6),1.75,zs,Math.PI,0.62,0.82,0xe0d0c0,0x3a3028,i*4+3);
+  (0,$imports.propFrame)(K,X(c0+6.4),1.75,zs,Math.PI,0.62,0.82,0xe8d8a8,0x3a3028,i*4);
+  /* 顶上：四台吊扇在两条过道上方，对着黑板的投影机，烟感（和灯错开，见 classroomLamps） */
+  [5.05,7.55].forEach(function(dx,a){ [L.deskRows[1]+1.5,L.deskRows[3]+1.5].forEach(function(t,b){
+    (0,$imports.propCeilFan)(K,X(c0+dx),Z(t),$imports.WALLH,i*5+a*2+b+1); }); });
+  (0,$imports.propProjector)(K,X(c0+2.4),zb,$imports.WALLH,Math.PI/2);
+  (0,$imports.propSmoke)(K,X(c0+5.05),zb,$imports.WALLH);
 }
-/* ---- 教室的灯：护眼灯顺着前后方向 4 × 2 盏，黑板前两盏黑板灯；lit 是开着灯的那几间（没开的全熄着，只剩一盏在抽） ---- */
+/* ---- 教室的灯：护眼灯顺着前后方向，三组同桌上方各一行、一行三盏；黑板前两盏黑板灯；
+   lit 是开着灯的那几间（没开的全熄着，只剩一盏在抽） ---- */
 function classroomLamps(c,i,c0,lit){
-  var K=c.K;
+  var K=c.K, L=$imports.ClassroomLayout;
   function X(t){ return t*c.tw-c.halfW; }
   function Z(t){ return t*c.th-c.halfH; }
-  [3.0,6.0,9.0,12.0].forEach(function(t,a){
-    [3.0,5.2].forEach(function(dx,b){
-      var dying=((a*2+b+i*3)%8)===5;
+  [L.deskRows[0]+1,L.deskRows[2]+1,L.deskRows[4]+1].forEach(function(t,a){
+    [3.8,6.3,8.8].forEach(function(dx,b){
+      var dying=((a*3+b+i*4)%9)===5;
       (0,$imports.propHangLamp)(K,X(c0+dx),Z(t),1.2,0.22,$imports.WALLH,2.68,0,dying?'dying':(lit?'on':'off'));
     });
   });
-  /* 两盏黑板灯；流畅档只给自己班挂（一层 6 间，手机上顶点数要控制） */
-  if(!(0,$imports.lodLow)()||(c.R.id===$imports.ClassroomLayout.ownSeat.room&&i===$imports.ClassroomLayout.ownSeat.classId))
-    [6.2,8.8].forEach(function(t){ (0,$imports.propHangLamp)(K,X(c0+0.75),Z(t),1.2,0.22,$imports.WALLH,2.68,Math.PI/2,lit?'on':'off'); });
+  /* 两盏黑板灯；流畅档只给自己班挂（手机上顶点数要控制） */
+  if(!(0,$imports.lodLow)()||(c.R.id===L.ownSeat.room&&i===L.ownSeat.classId))
+    [L.mid-1.5,L.mid+1.5].forEach(function(t){ (0,$imports.propHangLamp)(K,X(c0+0.75),Z(t),1.2,0.22,$imports.WALLH,2.68,Math.PI/2,lit?'on':'off'); });
 }
 
 /* @module-exports */

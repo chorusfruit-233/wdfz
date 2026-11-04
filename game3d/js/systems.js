@@ -11,8 +11,8 @@ function inClassroomHere(){
   var R=$imports.INTERIORS[$imports.S.room];
   if(!R||R.stairwell||R.host!=='teach') return false;
   if(R.floor<1||R.floor>5) return false;
-  var row=Math.floor(($imports.S.y-R.oy)/R.th);
-  return row>=1&&row<=14;
+  var row=Math.floor(($imports.S.y-R.oy)/R.th), L=$imports.ClassroomLayout;   /* 教室占的行见 domain/classroom-layout.js */
+  return row>=L.rows[0]&&row<=L.rows[1];
 }
 function inDorm(){
   if($imports.S.mode!=='in') return false;

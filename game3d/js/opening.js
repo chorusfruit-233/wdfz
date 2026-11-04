@@ -42,7 +42,14 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
     d.short=!!Opening.short;
     var sw=openingSeat(), own=$imports.ClassroomLayout.ownSeat, ch=$imports.ClassroomLayout.chairAt(own.col,own.row);
     d.seat=(0,$imports.worldToScene)(sw.x,sw.y,R);                              /* 醒来的第一人称：和开场后坐着的位置一样（椅子上） */
-    d.board=(0,$imports.cutCell)('teach1',44.55,7);
+    /* 机位都按自己班那间换算（布局见 domain/classroom-layout.js；cutCell 会加半格）。R2 开局 CG 重修时整体重排 */
+    var L=$imports.ClassroomLayout, c0=L.spans[own.classId][0], r0=L.rows[0], mid=L.mid;
+    function at(gx,gy){ return (0,$imports.cutCell)('teach1',gx-0.5,gy-0.5); }   /* 格子坐标（可带小数）→ 场景 */
+    d.board=at(c0+0.05,mid);
+    d.cam1=[at(c0+9.1,mid+2.9),at(c0+7.6,mid-1.1)];                          /* 1 后门那头往黑板推 */
+    d.cam2=[at(c0+1.3,mid-1.9),at(c0+1.8,mid-2.5)];                          /* 2 讲台北边看老师 */
+    d.cam3=at(c0+5.9,mid-1.1);                                                 /* 3 北边过道里转向「你」 */
+    d.cam4=[at(c0+5.1,mid-0.3),at(c0+4.45,mid+0.25)];                          /* 4 「你」身后、俯身靠近 */
     /* 老师：就用教室里站在讲台和黑板之间的那位（NC.teacher），不另造一个；没有时才自己摆一个在同一处。
        「你」——第三人称镜头里趴在座位上的那个人，和同学一样坐在椅子上 */
     if($imports.NC.teacher){ d.teacher=$imports.NC.teacher; d.ncTeacher=true; }
@@ -56,7 +63,7 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
     var mp=(0,$imports.worldToScene)(R.ox+(ch.x+.02)*R.tw,R.oy+ch.y*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
     /* 阳光里的粉笔灰：讲台前一片小光点，正常时慢慢飘，第 3 段停住 */
     var n=Math.max(60,Math.round(160*($imports.Quality.get().segments||1))), pos=new Float32Array(n*3), i;
-    var a=(0,$imports.cutCell)('teach1',45.6,0.8), b=(0,$imports.cutCell)('teach1',51.4,3.6);
+    var a=at(c0+1.1,r0+0.3), b=at(c0+6.9,r0+3.1);                              /* 靠窗、讲台前那一片 */
     d.dust=[];
     for(i=0;i<n;i++){
       var x=(0,$imports.cutLerp)(a.x,b.x,$imports.PresentationRandom.next()), z=(0,$imports.cutLerp)(a.z,b.z,$imports.PresentationRandom.next()), y=0.7+$imports.PresentationRandom.next()*1.9;
@@ -88,11 +95,11 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
     d.dustPts.visible=K<0.74;
     var shk=(typeof $imports.SHAKE_ON==='undefined'||$imports.SHAKE_ON)?1:0;
     if(K<0.24){                                                      /* 1 正常的第四节 */
-      var t1=(0,$imports.cutEase)(K/0.24), c0=(0,$imports.cutCell)('teach1',50.6,13.6), c1=(0,$imports.cutCell)('teach1',50.1,9.4);
+      var t1=(0,$imports.cutEase)(K/0.24), c0=d.cam1[0], c1=d.cam1[1];
       (0,$imports.cutLook)((0,$imports.cutLerp)(c0.x,c1.x,t1),(0,$imports.cutLerp)(2.5,2.05,t1),(0,$imports.cutLerp)(c0.z,c1.z,t1), d.board.x,1.45,d.board.z);
       (0,$imports.cutFade)(K<0.03?1-K/0.03:0);
     }else if(K<0.42){                                                /* 2 老师念到一半，从头再念 */
-      var t2=(0,$imports.cutEase)((K-0.24)/0.18), s0=(0,$imports.cutCell)('teach1',45.8,3.6), s1=(0,$imports.cutCell)('teach1',46.3,3.0);
+      var t2=(0,$imports.cutEase)((K-0.24)/0.18), s0=d.cam2[0], s1=d.cam2[1];
       var nod=Math.sin(K*90)*0.04;
       if(K>0.34&&K<0.36) nod=0;                                       /* 顿住 */
       d.teacher.rotation.x=nod; d.teacher.rotation.y=$imports.PI/2+(K>0.36?-0.18:0.18)*(1-t2*0.4);
@@ -100,12 +107,12 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
       if(K>0.37&&!d.hum){ d.hum=1; try{ $imports.SFX.crackle(0.6,0.5); }catch(e){} }
     }else if(K<0.58){                                                /* 3 时间停住，镜头转向「你」 */
       d.teacher.rotation.x=0; d.teacher.rotation.y=$imports.PI/2;
-      var t3=(0,$imports.cutEase)((K-0.42)/0.16), cam=(0,$imports.cutCell)('teach1',50.4,4.4);
+      var t3=(0,$imports.cutEase)((K-0.42)/0.16), cam=d.cam3;
       var lx=(0,$imports.cutLerp)(d.board.x,d.me.position.x,t3), lz=(0,$imports.cutLerp)(d.board.z+1.2,d.me.position.z,t3), ly=(0,$imports.cutLerp)(1.6,0.95,t3);
       (0,$imports.cutLook)(cam.x,1.55,cam.z, lx,ly,lz);
       $imports.VisualState.worldNorm=1-0.45*(0,$imports.cutPhase)(K,0.46,0.58);
     }else if(K<0.76){                                                /* 4 坠下去：颜色褪掉、趴下、闭眼 */
-      var t4=(0,$imports.cutEase)((K-0.58)/0.18), q0=(0,$imports.cutCell)('teach1',49.6,5.2), q1=(0,$imports.cutCell)('teach1',48.95,5.75);
+      var t4=(0,$imports.cutEase)((K-0.58)/0.18), q0=d.cam4[0], q1=d.cam4[1];
       d.me.visible=K<0.735; d.me.rotation.x=-0.32*(0,$imports.cutPhase)(K,0.6,0.68); d.teacher.visible=d.ncTeacher||K<0.72;   /* 教室里那位跟着全班一起变，不藏 */
       var fl=K<0.7?(0.06*Math.max(0,Math.sin(K*160))*shk):0;
       (0,$imports.cutLook)((0,$imports.cutLerp)(q0.x,q1.x,t4),(0,$imports.cutLerp)(1.42,1.18,t4)-fl,(0,$imports.cutLerp)(q0.z,q1.z,t4), d.me.position.x,0.9,d.me.position.z);

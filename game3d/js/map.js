@@ -14,24 +14,25 @@ function border(g,w,h,c){
   for(y=0;y<h;y++){ g[y][0]=c; g[y][w-1]=c; }
 }
 var CLS_SPAN=$imports.ClassroomLayout.spans;
-var CLS_NAME=['高三1班','高三2班','高一3班','高二3班','高二1班','高二2班'];
-var CLS_DOOR=[8,16,24,32,40,48];
+var CLS_NAME=['高三1班','高一3班','高二1班','高二2班'];                 /* 一楼四间的班名（门牌）；自己班是最后一间 */
+var CLS_DOOR=[8,16,24,32,40,48];                                  /* 布局 1 的双开门列（旧存档迁移用，现在的门见 ClassroomLayout.doors） */
 var MY_ROOM=$imports.ClassroomLayout.ownSeat.classId, MY_COL=$imports.ClassroomLayout.ownSeat.col, MY_ROW=$imports.ClassroomLayout.ownSeat.row;
 
 function teachFloor(f){
-  var W=$imports.TCOLS, H=22, g=blank(W,H,'.'), x, y, i;
+  var W=$imports.TCOLS, H=22, g=blank(W,H,'.'), x, y, i, L=$imports.ClassroomLayout, r0=L.rows[0], r1=L.rows[1];
   border(g,W,H,'#');
-  var sep=[4,12,20,28,36,44,52];
-  for(i=0;i<sep.length;i++) for(y=1;y<16;y++) g[y][sep[i]]='#';
-  for(x=1;x<W-1;x++) g[15][x]='#';
-  for(i=0;i<CLS_DOOR.length;i++)$imports.ClassroomLayout.doors(i).forEach(function(d){g[d[1]][d[0]]='=';});
+  /* 教室带（第 r0–r1 行）：四间教室，隔墙和两头不用的地方填实；北墙（r0-1 行，开窗）以北也填实 */
+  for(y=1;y<r0;y++) for(x=1;x<W-1;x++) g[y][x]='#';
+  for(y=r0;y<=r1;y++) for(x=1;x<W-1;x++) if(L.classAt(x,y)<0) g[y][x]='#';
+  for(x=1;x<W-1;x++) g[r1+1][x]='#';
+  for(i=0;i<L.spans.length;i++)L.doors(i).forEach(function(d){g[d[1]][d[0]]='=';});
   g[21][6]='S'; g[21][7]='S';
   g[21][56]='S'; g[21][57]='S';
   if(f===1){ g[21][30]='O'; g[21][31]='O'; }
-  /* 教室：讲台、四组同桌（布局和每张桌子的位置见 domain/classroom-layout.js） */
-  for(i=0;i<6;i++){
-    var pod=$imports.ClassroomLayout.podium(i);g[pod[1]][pod[0]]='T';
-    $imports.ClassroomLayout.seatTiles(i).forEach(function(t){g[t[1]][t[0]]='d';});
+  /* 教室：讲台、三组同桌七排（布局和每张桌子的位置见 domain/classroom-layout.js） */
+  for(i=0;i<L.spans.length;i++){
+    var pod=L.podium(i);g[pod[1]][pod[0]]='T';
+    L.seatTiles(i).forEach(function(t){g[t[1]][t[0]]='d';});
   }
   g[MY_ROW][MY_COL]='P';
   for(y=16;y<=20;y++) g[y][57]='#';

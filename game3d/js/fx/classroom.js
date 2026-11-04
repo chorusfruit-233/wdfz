@@ -74,7 +74,7 @@ function anwSpawn(){
     var wx=R.ox+(spot.c+0.5)*R.tw+nnx*R.tw*0.5;
     var wy=R.oy+(spot.r+0.5)*R.th+nnz*R.th*0.5;
     /* 写在教室黑板上（西墙、板面范围内）：要浮在板面前面（板面离墙 8 厘米），不然被黑板挡住；整行字不超出板面 */
-    var bc=$imports.ClassroomLayout.boardRow+0.5, ci=$imports.ClassroomLayout.classAt(spot.c+1,spot.r), bz=Math.abs(spot.r+0.5-bc);
+    var bc=$imports.ClassroomLayout.mid, ci=$imports.ClassroomLayout.classAt(spot.c+1,spot.r), bz=Math.abs(spot.r+0.5-bc);
     var teachBoard=(R.host==='teach'&&spot.nx===-1&&ci>=0&&spot.c+1===$imports.ClassroomLayout.spans[ci][0]&&bz<2.3);
     if(teachBoard) wy=R.oy+Math.max(bc-1.6,Math.min(bc+1.6,spot.r+0.5))*R.th;
     var sp=(0,$imports.worldToScene)(wx,wy,R);

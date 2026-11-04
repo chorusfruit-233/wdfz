@@ -101,8 +101,16 @@ FURN.P=function(c,x,y,cx,cz){
   chairModel(K,cx,cz,0,0.46);
   c.ao(cx,cz,0.5,0.5,0.7);
 };
-/* 讲台：木柜体（正面朝学生），老师那面开口；台上教案、粉笔盒、板擦 */
+/* 讲台：木柜体（正面朝学生），老师那面开口；台上教案、粉笔盒、板擦。
+   教学楼教室的讲台在中线上（ClassroomLayout.podiumAt），比格子中心往南半格，转 90° 对着全班 */
 FURN.T=function(c,x,y,cx,cz){
+  var L=$imports.ClassroomLayout, i=c.R.host==='teach'?L.classAt(x,y):-1;
+  if(i>=0){
+    var pa=L.podiumAt(i), px=cx+(pa.x-x-0.5)*c.tw, pz=cz+(pa.y-y-0.5)*c.th;
+    c.ao(px,pz,0.8,0.9,0.9);
+    c.K.asset('podium',px,0,pz,Math.PI/2);
+    return;
+  }
   c.ao(cx,cz,0.9,0.8,0.9);
   c.K.asset('podium',cx,0,cz,c.R.host==='teach'?Math.PI/2:0);
 };

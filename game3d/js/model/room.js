@@ -298,14 +298,15 @@ function roomSigns(c,G,isWall){
       K.rod('metal',px,top,pz+0.30,px,ceil,pz+0.30,0.005,0.005,4,0x8a8f93,1.0);
     }
   }
-  /* 自己教室的讲台上：那张停车单提到的钥匙移交单。讲台转了 90°（正面朝东边的学生），
+  /* 自己教室的讲台上：那张停车单提到的钥匙移交单。讲台转了 90°（正面朝东边的学生），模型画在中线上（ClassroomLayout.podiumAt）；
      台面上的位置按讲台自己的坐标（右手边、靠学生那侧）换算，字头朝黑板，从学生那边看是正的 */
   if(R.id==='teach1'&&typeof $imports.Investigation!=='undefined'){
     var pd=$imports.Investigation.podium();
     if(pd){
+      var pa=$imports.ClassroomLayout.podiumAt($imports.ClassroomLayout.ownSeat.classId), pcx=pa.x*c.tw-c.halfW, pcz=pa.y*c.th-c.halfH;
       var pr=Math.PI/2, lx=0.23, lz=0.04;
       var slip=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.15,0.2),signMat(slipTex()));
-      slip.position.set(CX(pd[0])+lx*Math.cos(pr)+lz*Math.sin(pr),0.9825,CZ(pd[1])-lx*Math.sin(pr)+lz*Math.cos(pr)); slip.rotation.set(-Math.PI/2,0,0.12+pr);
+      slip.position.set(pcx+lx*Math.cos(pr)+lz*Math.sin(pr),0.9825,pcz-lx*Math.sin(pr)+lz*Math.cos(pr)); slip.rotation.set(-Math.PI/2,0,0.12+pr);
       slip.userData.wayfinding='移交单'; c.meshes.push(slip);
     }
   }
@@ -399,11 +400,11 @@ function classroomSigns(c,put){
   /* 教室里的陈设（班训、课程表、值日表、名牌）不算找路的牌子：记在 userData.decor 里；门牌上的班名才是 wayfinding */
   function deco(mesh,px,py,pz,rot,text){ mesh.position.set(px,py,pz); mesh.rotation.y=rot; mesh.userData.decor=text; c.meshes.push(mesh); return mesh; }
   for(i=0;i<L.spans.length;i++){
-    var c0=L.spans[i][0], wx=CX(c0)-tw/2, zb=CZ(L.boardRow), cls=className(R.floor||1,i), seed=(R.floor||1)*7+i;
-    /* 前墙（西）：黑板上方的班训，北边课程表、南边值日表（避开空调、插座、喇叭和饮水机） */
+    var c0=L.spans[i][0], wx=CX(c0)-tw/2, zb=L.mid*th-c.halfH, cls=className(R.floor||1,i), seed=(R.floor||1)*7+i;
+    /* 前墙（西）：黑板上方的班训；黑板北边（靠窗）值日表，南边（前门那头）课程表（避开插座、喇叭和饮水机） */
     deco(signPlate(mottoTex(CLASS_MOTTO[seed%CLASS_MOTTO.length]),2.4,0.30,0.012,false),wx+0.008,2.62,zb,Math.PI/2,'班训');
-    deco(signPlate(timetableTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,CZ(3),Math.PI/2,'课程表');
-    deco(signPlate(dutyTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,CZ(11)+th*0.2,Math.PI/2,'值日表');
+    deco(signPlate(timetableTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,(L.rows[1]-0.05)*th-c.halfH,Math.PI/2,'课程表');
+    deco(signPlate(dutyTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,(L.rows[0]+0.75)*th-c.halfH,Math.PI/2,'值日表');
     /* 门牌：两扇门上（门牌模型的深蓝字条在门洞中心往西 0.1、离地 2.32、走廊那面） */
     L.doors(i).forEach(function(d){
       var pl=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.25,0.056),signMat(doorNameTex(cls)));
@@ -414,10 +415,12 @@ function classroomSigns(c,put){
   if(R.id===L.ownSeat.room){
     var own=L.ownSeat, dk=L.deskAt(own.col,own.row);
     var dx=CX(own.col)+(dk.x-own.col-0.5)*tw, dz=CZ(own.row)+(dk.y-own.row-0.5)*th, lx=0.17, lz=-0.15;
-    var mat=signMat(nameCardTex(),{side:$imports.THREE.DoubleSide});
+    /* 单面材质（和别的标识同一种着色器；双面的会多编一个变体，开局没看到它就不会预编，镜头一转才现编、卡一下）：
+       朝学生那片面朝东，朝黑板那片转过来面朝西；局部 X 轴跟着转了向，同一个 rotateX 就是两边对称地往里靠 */
+    var mat=signMat(nameCardTex());
     [-1,1].forEach(function(s){                                               /* 两片纸靠在一起，顶上合拢 */
       var m=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.12,0.062),mat);
-      deco(m,dx+lz+s*0.009,0.7575+0.03,dz-lx,Math.PI/2,'名牌'); m.rotateX(-s*0.29);
+      deco(m,dx+lz+s*0.009,0.7575+0.03,dz-lx,s>0?Math.PI/2:-Math.PI/2,'名牌'); m.rotateX(-0.29);
     });
   }
 }

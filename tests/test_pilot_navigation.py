@@ -124,9 +124,9 @@ class DoorwayNavigationTest(BrowserCase):
         page = self.page()
         # Reproduce the old recording's stuck location with a still-closed door.
         # Only the fixture setup writes state; the navigator uses normal inputs.
-        # R1 教室重修以后原来那一点摆了课桌：往南挪一格，落在后门边的后排过道（同一个角落）。
+        # R1 教室重修（布局 4：每间沿走廊 11 米、进深 8 米）以后原来那一点是课桌：起点放在自己班后门边的后排过道（同一个角落）。
         page.evaluate("""doEnterRoom('teach1');running=false;
-          S.x=1293.1947;S.y=1873.6978;S.seated=false;S.intro=0;
+          S.x=1329.18;S.y=1873.67;S.seated=false;S.intro=0;
           AN.active=false;PAT.locked=false;RT.inspection=null;
           window.pump=setInterval(()=>{dtG=.35;updatePlayer(.35);},350);""")
         for script in ('navigation.js', 'playthrough.js'):

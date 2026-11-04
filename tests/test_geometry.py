@@ -48,7 +48,7 @@ class GeometryTest(BrowserCase):
         page = self.page()
         page.evaluate("doEnterRoom('teach1');running=false")
         # 课桌的椅背伸出格子 0.02 米：以前的方块碰撞挡不住，现在挡得住
-        self.assert_js(page, """(()=>{var R=INTERIORS.teach1,c=7,r=2,F=R.foot[c+','+r];
+        self.assert_js(page, """(()=>{var R=INTERIORS.teach1,t=ClassroomLayout.seatTiles(0)[0],c=t[0],r=t[1],F=R.foot[c+','+r];
             if(!F) return false;
             var q=F.slice().sort(function(a,b){return b.x1-a.x1;})[0];         /* 伸得最远的那一块（椅背立杆） */
             var wx=R.ox+(q.x1-0.005+R.cols*0.5)/U2M, wy=R.oy+((q.z0+q.z1)/2+R.rows*0.5)/U2M;
@@ -76,9 +76,9 @@ class GeometryTest(BrowserCase):
         self.assertGreater(r['dx'], 25)
         self.assertFalse(r['hit'])
         self.assertGreaterEqual(r['wallGap'], 2.99)
-        # 课桌角：四个探测点之间斜着戳进来的角，以前会少算，现在圆形检测算得到（取同桌里靠南那张，角外面是过道）
+        # 课桌角：四个探测点之间斜着戳进来的角，以前会少算，现在圆形检测算得到（取第一间第一排、靠窗那组同桌里靠南那张，角外面是过道）
         page.evaluate("doEnterRoom('teach1');running=false")
-        self.assert_js(page, """(()=>{var R=INTERIORS.teach1;S.room='teach1';var F=R.foot['7,3'],q=F[0];
+        self.assert_js(page, """(()=>{var R=INTERIORS.teach1,L=ClassroomLayout;S.room='teach1';var F=R.foot[(L.spans[0][0]+L.deskCols[0])+','+L.deskRows[1]],q=F[0];
             var cx=q.x1+0.2, cz=q.z1+0.2, wx=(cx+R.cols*0.5)*9+R.ox, wy=(cz+R.rows*0.5)*9+R.oy;
             return (Collision.depth(wx,wy,PRAD)>0)&&!solidAt(wx,wy)&&!solidAt(wx+PRAD,wy)&&!solidAt(wx,wy+PRAD);})()""")
 
