@@ -143,7 +143,7 @@ function ncBuild(R){
   ncClear();
   if(!R||R.stairwell||R.host!=='teach'||R.floor<1||R.floor>5) return;
   NC.room=R.id;
-  NC.matN=new $imports.THREE.MeshBasicMaterial({color:0x39454f,fog:true});
+  NC.matN=new $imports.THREE.MeshLambertMaterial({color:0x5d6873,fog:true});   /* 正常世界的样子（只在开场变成影子之前）：受光、有明暗，不是平涂的剪影 */
   NC.matS=new $imports.THREE.MeshBasicMaterial({color:0x080b0d,fog:true});
   var shadow=(NC.done||(0,$imports.proSeen)());
   NC.normal=!shadow;
