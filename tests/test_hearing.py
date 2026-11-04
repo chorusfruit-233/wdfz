@@ -27,9 +27,9 @@ class HearingTest(BrowserCase):
           const ordinary=SoundCaptions.publish('dread.steps',{place:{m:28,floor:'down',pan:0}}).text;
           return {hearing,visible,ordinary};
         }""")
-        self.assertIn('楼下',result['ear']);self.assertIn('很远',result['ear']);self.assertIn('缓慢的脚步',result['visible'])
+        self.assertIn('楼下',result['hearing']);self.assertIn('很远',result['hearing']);self.assertIn('缓慢的脚步',result['visible'])
         self.assertNotIn('楼下',result['ordinary']);self.assertNotIn('很远',result['ordinary'])
-        self.assertNotIn('巡察',result['ear'])
+        self.assertNotIn('巡察',result['hearing'])
 
     def test_real_patroller_is_heard_farther_without_changing_its_chase(self):
         page=self.game()
