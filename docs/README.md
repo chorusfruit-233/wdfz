@@ -4,6 +4,8 @@
 
 最新规则变更与验证见[双计划实施](validation/双计划实施/README.md)：教室与真实楼梯、检查及假条规则、士力架、天赋兼容、感官反馈和声音字幕。
 
+2026-11-04 的渲染接入与验证见 [WebGPU 与 WebGL 渲染](WebGPU与WebGL渲染.md)及[验证记录](validation/WebGPU接入/README.md)：默认尝试 WebGPU、失败自动回退 WebGL 2，玩法与存档共用。
+
 这里收录《武大附中 · 里世界 3D》的产品、开发和测试文档。仓库根目录的 [README](../README.md) 是项目入口；面向玩家的 [游戏 Wiki](https://wd-fz.github.io/wiki/) 保持独立网页，游戏主菜单可以直接打开。
 
 第一次了解产品，建议先读[游戏设计与机制总览](https://wd-fz.github.io/docs/game-design-overview.html)，再按需查阅完整产品对齐文档。前者解释机制如何共同构成游戏，后者保留精确规则、边界、历史与验收口径。

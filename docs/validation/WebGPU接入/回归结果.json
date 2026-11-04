@@ -1,0 +1,1123 @@
+{
+  "date": "2026-11-04",
+  "base": "1b227c15210e7950edc43950f9a074f0e0c71fcb",
+  "implementation": "c9e26b12f3ca92c159ef98508c4083970aec0318",
+  "runtimeSHA256": "e1e31503f1d2a7a7f1398ffc54031e91a140e07395010978cab81338034518ee",
+  "scope": "Selected renderer, input, lifecycle, save, geometry and module regressions; grouped runs and necessary reruns, not the entire repository test suite. Later passing runs supersede earlier failures by test ID.",
+  "environment": {
+    "chromium": "154.0.8037.57",
+    "device": "SwiftShader/Vulkan software adapter, native WebGPU backend",
+    "touch": "Chromium emulation, no physical mobile device"
+  },
+  "uniqueTests": 264,
+  "finalCounts": {
+    "passed": 263,
+    "skipped": 1
+  },
+  "reports": [
+    {
+      "id": "gpu",
+      "report": "logs/gpu.json",
+      "invocations": 13,
+      "seconds": 315.79650366699207,
+      "success": true
+    },
+    {
+      "id": "render",
+      "report": "logs/render.json",
+      "invocations": 79,
+      "seconds": 1076.1446313269844,
+      "success": true
+    },
+    {
+      "id": "experience",
+      "report": "logs/experience.json",
+      "invocations": 171,
+      "seconds": 1195.6025942770066,
+      "success": false
+    },
+    {
+      "id": "fix",
+      "report": "logs/fix.json",
+      "invocations": 13,
+      "seconds": 63.905006055982085,
+      "success": true
+    },
+    {
+      "id": "effects",
+      "log": "logs/effects.log.gz",
+      "invocations": 1,
+      "success": true
+    },
+    {
+      "id": "grain",
+      "log": "logs/grain.log.gz",
+      "invocations": 2,
+      "success": true
+    }
+  ],
+  "records": {
+    "test_architecture_contracts.ArchitectureBrowserTest.test_all_room_collision_recipes_match_rendering_capture": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_contracts.ArchitectureBrowserTest.test_classmate_pressure_and_door_block_survive_missing_meshes": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_contracts.ArchitectureBrowserTest.test_inspection_cooldown_and_save_do_not_require_figures": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_contracts.ArchitectureBrowserTest.test_legacy_state_facade_and_live_ports_share_one_authority": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_contracts.ArchitectureBrowserTest.test_render_and_audio_do_not_consume_gameplay_random": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_contracts.ArchitectureBrowserTest.test_rendering_every_scene_preserves_game_state": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_ast_guard_detects_an_aliased_presentation_write": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_driving_rules_work_without_ui_and_keep_failure_checkpoints": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_loader_links_live_ports_and_rejects_unauthorized_replacement": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_optional_ambient_sound_uses_only_presentation_random": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_pipeline_always_settles_started_steps_once": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_presentation_ports_reject_nested_state_writes": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_separate_random_sources_are_reproducible_and_replaceable": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_architecture_core.ArchitectureCoreTest.test_world_collision_is_available_without_dom_webgl_or_assets_loader": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_asset_batching.AssetBatchingTest.test_outdoor_low_and_balanced_keep_draw_calls_bounded": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_asset_batching.AssetBatchingTest.test_sparse_batch_preserves_transform_tint_uv_and_transparency": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_assets.AssetLoadingTest.test_failed_quality_load_can_retry_without_accumulating_callbacks": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_assets.AssetLoadingTest.test_held_items_follow_loaded_quality_and_release_old_geometry": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_assets.AssetLoadingTest.test_missing_boot_pack_stays_in_menu_and_retry_restores_collision": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_assets.AssetLoadingTest.test_rapid_quality_changes_apply_a_delayed_pack_only_once": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_assets.AssetLoadingTest.test_touch_can_retry_a_missing_boot_pack": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_assets.AssetLoadingTest.test_touch_settings_without_quality_boot_the_selected_model_pack": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_assets.PackedAssetsTest.test_all_packs_decode_like_zlib_and_truncated_streams_fail": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_controls.ControlsTest.test_alt_frees_cursor_without_pausing_and_click_takes_it_back": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_ancestor_window_is_slowed_and_drop_requires_dialogue": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_anomaly_choice_uses_real_time_and_random_option": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_anomaly_does_not_repeat_and_prefers_new": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_assimilation_death_can_be_prevented_without_a_choice": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_auto_save_death_and_ending_history": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_bag_detail_buttons_use_hotbar_and_drop": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_bag_drop_refreshes_open_panel_and_hotbar": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_bell_platform_opening_clearance_and_collision": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_bell_tower_saves_restore_stairs_and_top": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_bell_tower_spiral_stairs_and_exam_mode": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_brightness_setting_survives_reload": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_controls.ControlsTest.test_cancel_and_capture_loss_allow_next_gesture": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_chalk_and_pendulum_only_announce_difficult_anomalies": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_choice_number_keys_pick_option": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_coin_buys_meal_and_vending_items": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_coin_lures_the_garage_follower_then_expires": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_computer_modal_releases_pointer_and_has_touch_exit": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_computer_touch_dpad_exit_and_no_time_skip": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_continuous_days_and_cooldowns_across_time_skips": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_coordinate_jump_rebases_without_ending_drag": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_day_budget_protects_continuous_exploration_between_inspections": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_debug_panel_requires_password": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_duplicate_search_result_is_retained_and_saved": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_elixir_saves_once_and_seal_wards_patroller": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_ending_cutscene_plays_and_can_be_skipped": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_exam_ignores_non_exam_previews": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_exercise_includes_all_courts_and_night_dorm_accumulates_violations": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_fine_quality_shadows_window_shafts_and_light_pools": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_fixed_items_remain_after_full_or_duplicate_bag": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_footstep_surfaces_and_light_crackle": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_full_bag_does_not_consume_searchable_key_or_usb": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_full_violation_no_longer_kills_but_blocks_leave": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_fullscreen_enters_exits_and_updates_button": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_fullscreen_prefixed_api_and_external_exit": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_fullscreen_rejection_can_retry": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_fullscreen_unavailable_explains_and_standalone_is_detected": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_goggles_make_lab_rolls_better": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_guard_flashlight_can_be_retried_after_full_bag": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_guard_flashlight_enables_garage_escape": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_held_items_show_in_hands": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_homepage_and_legacy_3d_link": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_immune_talent_ends_a_lethal_anomaly": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_immune_talent_saves_once_and_persists": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_indoor_quality_switch_updates_shafts_without_reentering": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_journal_hides_when_replaced_by_pause": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_journal_tabs_share_one_panel_and_keys_switch_or_close": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_keyboard_actions_do_not_leak_into_panels_or_pause": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_leave_slip_excuses_schedule_and_patroller_then_expires": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_lifting_movement_finger_preserves_view_finger": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_light_and_cooldown_restore_and_old_save_defaults": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_lights_out_hud_debug_minutes_and_podium_text": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_lights_share_priority_and_follow_removed_items": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_locker_position_and_patrol_end_stay_hidden_until_exit": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_long_frame_has_bounded_catchup": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_mobile_menu_panels_scroll_and_real_scene_renders": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_monologue_changes_with_san": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_moth_swarm_closes_in_but_keeps_off_the_lens": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_mouse_and_touch_can_switch_after_pointer_lock": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_mouse_drag_fallback_remains_available_after_rejection": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_mouse_lock_modal_return_and_escape_pause": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_mouse_on_touch_joystick_does_not_start_touch_input": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_narrow_portrait_hotbar_is_visible_and_tappable": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_new_games_exclude_unimplemented_talents_but_old_saves_keep_them": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_old_cooldown_timestamps_migrate_without_expiring_or_extending": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_older_save_without_new_state_loads_safely": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_only_hard_to_prevent_anomalies_are_forecast": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_outdoor_light_direction_survives_quality_downgrade": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_patroller_has_its_own_uniform": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_patroller_locks_on_hides_and_back_turn_is_not_an_escape": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_patroller_reaches_seen_locker_without_crossing_walls": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_phone_opens_from_inventory_on_mouse_and_touch": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_phone_paper_plane_app_restores_a_little_san": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_phone_reward_cooldown_survives_reload_and_old_saves": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_phone_yields_to_choice_anomaly_death_and_menu": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_pill_effect_survives_reload_and_old_saves_default_to_zero": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_pill_heals_over_time_snack_lasts_thirty_seconds_and_day_is_brighter": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_pointer_lock_error_does_not_cancel_touch_look": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_portal_delayed_prompt_does_not_interrupt_other_contexts": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_portal_materials_can_be_retried_after_full_bag_or_drop": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_portal_remains_accessible_after_assembly_and_reload": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_portal_true_ending_from_lab_parts": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_portrait_subtitle_uses_full_width": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_principal_office_keys_and_guard_has_none": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_prologue_only_advances_on_space_or_enter": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_rain_streaks_splashes_lightning_and_cleanup": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_reload_keeps_follower_and_previews_and_discards_old_hidden_choice": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_reload_restores_timed_anomaly_choice_and_indoor_effect": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_returned_menu_layout_on_short_and_touch_screens": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_roster_anomaly_choice_is_timed_and_restored": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_schedule_evening_until_ten_and_lights_out": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_search_job_is_cleared_when_quitting_or_starting_new_game": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_search_takes_time_and_dev_toggle": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_shoulder_smile_loss_uses_difficulty_and_can_be_fatal": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_shoulder_tap_smile_variant_small_loss_for_turning_round": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_skipped_time_fires_lights_out_and_first_day_story": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_skipping_a_cutscene_does_not_press_the_button_behind_it": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_slow_touch_action_still_fires_once": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_snack_and_world_time_keep_pace_at_low_frame_rates": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_snack_expires_while_hiding_but_not_while_game_is_paused": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_snack_sprint_and_exhausted_stamina_does_not_stutter": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_sprint_effect_and_exhaustion_survive_reload": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_tap_does_not_click_what_appears_under_the_finger": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_touch_action_button_shows_current_action_and_book_opens_journal": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_touch_action_with_slow_follow_up_still_fires_once": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_touch_buttons_fire_once_and_stick_runs_without_button": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_touch_can_take_over_from_locked_mouse": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_touch_capable_desktop_uses_locked_mouse_and_rotates_view": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_touch_pause_resume_panels_and_fullscreen_recover_look": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_touch_tap_never_locks_mouse_or_enters_fullscreen": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_trap_ideas_only_work_on_the_spot": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_trash_is_a_death_and_respects_survival_item": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_is_modeled_after_the_real_one": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_only_falls_along_tall_outer_walls": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_tsinghua_cup_survives_save_and_leaves_trace_outdoors": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_two_finger_move_and_look_have_separate_owners": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_walking_running_analog_input_and_blur_reset": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_controls.ControlsTest.test_wiki_entry_spoilers_and_return_to_game": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_all_death_models_have_finite_transforms_during_playback": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_bin_preview_closes_lid_without_mutating_player": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_board_deaths_stand_in_front_of_the_view": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_camera_target_follows_death_lift": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_cutscene_skip_releases_resources_and_restores_visual_state": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_death_cinematic_can_be_skipped_once": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_death_cinematics_stay_within_a_draw_call_budget": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_death_moths_are_black_like_the_in_game_swarm": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_every_ending_storyboard_plays_through_and_finishes_once": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_every_reachable_death_has_its_own_sound": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_motion_depends_on_elapsed_time_not_frame_count": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_reachable_effects_have_preview_and_timeline": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_real_death_resources_are_released_once": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_real_storyboard_death_turns_camera_and_releases_once": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_stall_hand_rises_then_reaches_player": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_storyboarded_deaths_cover_every_reachable_type": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_storyboards_are_frame_rate_independent_and_move_through_phases": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_storyboards_respect_reduced_shake_and_cap_flash": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_tapping_through_a_death_does_not_press_the_menu_button": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_death_timeline.DeathTimelineTest.test_warm_up_compiles_every_death_cinematic_shader_in_advance": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_domain_rules.DomainRulesTest.test_calendar_matches_previous_boundary_and_cross_day_behavior": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_domain_rules.DomainRulesTest.test_inventory_capacity_hotbar_and_consumption_without_ui": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_domain_rules.DomainRulesTest.test_pressure_curve_is_continuous_and_capped": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_domain_rules.DomainRulesTest.test_pressure_query_does_not_write_persistent_state": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_domain_rules.DomainRulesTest.test_real_time_slices_preserve_special_window_and_remainder": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_domain_rules.DomainRulesTest.test_stats_preserve_frame_settlement_and_state_replacement": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_domain_rules.DomainRulesTest.test_violation_exemption_keeps_inspection_exception": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_circle_collision_corners_sliding_and_large_steps": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_cup_quality_switch_updates_texture_without_restarting_effects": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_film_grain_is_subtle_in_dark_areas_and_can_be_turned_off": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_gameplay_modules_do_not_construct_renderer_objects": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_high_dpi_switch_resizes_targets_with_the_new_profile": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_local_file_start_with_network_disabled": {
+      "outcome": "skipped",
+      "reason": "此环境的 Chromium 管理策略禁止 file://；另有断网本地资源加载测试",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_outdoor_collision_is_identical_at_all_four_qualities": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_packaged_assets_boot_with_network_offline": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_quality_switch_preserves_live_story_and_actor_state": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_realistic_tier_rounds_every_box_and_uses_physical_rendering": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_sustained_low_fps_hint_requires_active_play_and_user_choice": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_ultra_real_render_and_resource_release": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_ultra_settings_persist_and_old_values_normalize": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_engine.EngineTest.test_ultrawide_camera_near_plane_stays_inside_body": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_camera_near_plane_cannot_reach_walls": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_clip_audit_ultra_modeling_is_clean_too": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_clip_audit_whole_school_is_clean": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_every_room_has_the_same_collision_in_all_five_qualities": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_every_room_is_reachable_with_new_collision": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_furniture_collision_follows_the_model_and_seat_is_solid": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_garage_actor_cannot_tunnel_through_a_thin_obstacle": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_hands_are_drawn_in_their_own_pass": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_patroller_paths_keep_body_clearance": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_player_can_leave_the_solid_starting_seat": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_geometry.GeometryTest.test_ultra_exact_circle_collision_slides_along_walls": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_module_boundaries.ModuleBoundariesTest.test_runtime_modules_respect_declared_boundaries": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_callback_failure_preserves_last_serializable_state": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_failed_init_unregisters_declared_and_api_persistence": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_new_game_discards_unloaded_previous_game_data": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_module_persistence.ModulePersistenceTest.test_temporarily_unloaded_data_survives_saving_and_reenable": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_modules.ManifestStaticTest.test_declared_hooks_match_the_code": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ManifestStaticTest.test_every_script_is_registered_once_and_index_uses_the_loader": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ManifestStaticTest.test_feature_logic_files_do_not_touch_the_renderer": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_all_modules_load_and_verify_without_mods": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_broken_mod_and_hook_errors_are_isolated": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_builtin_switch_and_upload_persist_across_reload": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_feature_modules_can_be_removed_from_the_manifest": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_mod_panel_imports_a_file_from_the_pause_menu": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_module_state_is_saved_under_mods_and_reset_on_new_game": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_room_no_clock_contract_also_applies_outside_elevator": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_modules.ModuleBrowserTest.test_url_mod_loads_and_safe_mode_skips_it": {
+      "outcome": "passed",
+      "source": "fix"
+    },
+    "test_opening.OpeningTest.test_continue_does_not_replay_the_opening": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_opening.OpeningTest.test_full_version_for_new_players_short_for_returning": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_opening.OpeningTest.test_skipping_at_any_shot_hands_over_the_same_start": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_opening.OpeningTest.test_speedrun_starts_only_after_the_handoff": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_opening.OpeningTest.test_world_is_frozen_and_input_blocked_during_the_opening": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_presentation_states.PresentationStatesTest.test_fake_normal_lighting_crosses_threshold_smoothly": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_presentation_states.PresentationStatesTest.test_fake_people_do_not_remain_in_old_room_after_scene_change": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_presentation_states.PresentationStatesTest.test_prologue_normal_world_and_wake_restore_visual_state": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_presentation_states.PresentationStatesTest.test_protected_fake_normal_death_does_not_leave_figures": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_presentation_states.PresentationStatesTest.test_restarting_and_quitting_remove_fake_people_and_old_visual_state": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_save_boundary.SaveBoundaryBrowserTest.test_apply_save_does_not_reuse_input_objects_or_change_presentation": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_save_boundary.SaveBoundaryBrowserTest.test_bad_save_never_resets_current_game_or_overwrites_original_bytes": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_save_boundary.SaveBoundaryBrowserTest.test_invalid_direct_restore_rejects_before_writing_game_state": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_save_boundary.SaveDataTest.test_current_event_and_elevator_save_retains_continuous_state": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_save_boundary.SaveDataTest.test_handwritten_legacy_midnight_migrates_once_without_mutating_source": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_save_boundary.SaveDataTest.test_invalid_required_fields_rejected_and_optional_collections_normalized": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_save_boundary.SaveDataTest.test_storage_failure_preserves_previous_bytes_and_reports_operation": {
+      "outcome": "passed",
+      "source": "experience"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_all_stair_flights_walk_both_directions_and_restore_midflight": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_every_stair_portal_can_be_crossed_on_foot": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_inspection_needs_own_seat_for_entire_check": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_interaction_target_survives_multiple_complete_turns": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_leave_settles_neutrally_once_and_does_not_cancel_other_tracking": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_old_layout_moves_overlap_and_splits_door_without_extending_leave": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_patrol_midflight_and_wireless_snapshot_survive_loading": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_snack_speed_boundary_timer_and_legacy_talent": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_stair_rail_and_floor_slabs_block_shortcuts": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_two_doors_independent_and_aimed_interaction": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_school_rebuild.SchoolRebuildTest.test_walk_into_stair_and_out_onto_next_floor_without_fade": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_bell_caption_runs_without_ambient_nodes_or_audio_output": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_caption_fits_small_mobile_landscape_and_large_text": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_muted_caption_is_same_dispatch_as_audio_and_has_no_secret_identity": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_off_distortion_keeps_shader_center_and_touch_aim_stable": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_old_settings_respect_reduced_motion_and_explicit_choice": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_patrol_steps_keep_wet_layers_and_observed_direction": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_phone_at_full_health_does_not_claim_recovery_or_heat": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_priority_merging_expiry_and_pause_clear": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_real_hazard_and_scene_change_cancel_scheduled_scare": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_reopening_door_cancels_its_delayed_response": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_results_hide_precise_state_without_changing_legacy_score": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_sensory.SensoryTest.test_smoothing_recovers_gradually_and_does_not_change_rules_or_random": {
+      "outcome": "passed",
+      "source": "render"
+    },
+    "test_webgpu.FallbackTest.test_both_apis_unavailable_provides_accessible_retry": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.FallbackTest.test_graphics_preference_is_separate_from_save_and_accepts_old_settings": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.FallbackTest.test_missing_api_uses_webgl_without_requesting_gpu_bundle": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.FallbackTest.test_missing_optional_library_falls_back": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.FallbackTest.test_null_adapter_and_denied_device_fall_back": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.NativeWebGPUTest.test_all_quality_tiers_and_real_stair_scene_keep_gpu_and_collision": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.NativeWebGPUTest.test_device_loss_preserves_session_camera_and_input_canvas": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.NativeWebGPUTest.test_explicit_compatibility_mode_never_loads_webgpu_extension": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.NativeWebGPUTest.test_native_backend_draws_scene_and_shares_core_types": {
+      "outcome": "passed",
+      "source": "grain"
+    },
+    "test_webgpu.NativeWebGPUTest.test_opening_weather_death_preview_and_held_item_use_native_pipelines": {
+      "outcome": "passed",
+      "source": "effects"
+    },
+    "test_webgpu.NativeWebGPUTest.test_post_hand_composition_and_inversion_change_real_pixels": {
+      "outcome": "passed",
+      "source": "grain"
+    },
+    "test_webgpu.NativeWebGPUTest.test_post_setup_failure_uses_fresh_webgl_scene": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.NativeWebGPUTest.test_timed_out_adapter_is_disposed_when_it_arrives_late": {
+      "outcome": "passed",
+      "source": "gpu"
+    },
+    "test_webgpu.NativeWebGPUTest.test_touch_look_works_immediately_after_device_loss": {
+      "outcome": "passed",
+      "source": "gpu"
+    }
+  },
+  "limits": [
+    "No physical GPU performance, power or thermal validation",
+    "No iOS, Safari, Firefox or physical touch device validation",
+    "No natural complete playthrough"
+  ]
+}

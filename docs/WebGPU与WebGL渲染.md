@@ -37,3 +37,5 @@ PYTHONPATH=tests python -m unittest -v test_engine test_sensory
 `test_webgpu` 的原生用例使用实际 GPUAdapter/GPUDevice、WGSL 管线、纹理读回和设备销毁事件；自动环境通过 Chromium + SwiftShader/Vulkan 执行。失败用例还会控制适配器、资源加载和设备申请，核对兼容分支。工作流「WebGPU and WebGL fallback」复核生成包并运行两类浏览器检查。
 
 软件设备验证功能和资源生命周期，不能据此判断实体 GPU 的速度、耗电、移动设备温升或所有浏览器的驱动兼容性。实机性能和听感验收应独立记录。
+
+本轮选定回归的逐项结果、截图、源码摘要与原始日志见[WebGPU 接入验证](validation/WebGPU接入/README.md)。

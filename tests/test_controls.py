@@ -1099,12 +1099,15 @@ class ControlsTest(BrowserCase):
         self.contexts.append(context)
         page = context.new_page()
         page.on('pageerror', lambda e: self.errors.append(str(e)))
-        page.goto(self.url, wait_until='load')
+        page.goto(self.url + '?renderer=webgl', wait_until='load')
+        page.wait_for_function('Engine.ready()', timeout=60000)
         page.evaluate('Settings.bright(150)')
         page.reload(wait_until='load')
+        page.wait_for_function('Engine.ready()', timeout=60000)
         self.assert_js(page, "SET.bright===150&&GLR.postMat.uniforms.uBright.value===1.5&&document.getElementById('mb').value==='150'")
         page.evaluate('Settings.bright(60)')
         page.reload(wait_until='load')
+        page.wait_for_function('Engine.ready()', timeout=60000)
         self.assert_js(page, "SET.bright===60&&GLR.postMat.uniforms.uBright.value===0.6&&document.getElementById('mb').value==='60'")
 
     def test_lights_share_priority_and_follow_removed_items(self):

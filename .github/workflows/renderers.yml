@@ -30,7 +30,8 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Native WebGPU, device loss and fallback regressions
         run: python -m unittest discover -s tests -p test_webgpu.py -v
-      - name: WebGL quality, offline and sensory regressions
+      - name: WebGL quality, offline, boot and sensory regressions
         run: |
           python -m unittest discover -s tests -p test_engine.py -v
           python -m unittest discover -s tests -p test_sensory.py -v
+          PYTHONPATH=tests python -m unittest -v test_modules test_controls.ControlsTest.test_brightness_setting_survives_reload

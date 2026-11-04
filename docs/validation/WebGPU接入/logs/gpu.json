@@ -1,0 +1,49 @@
+{
+  "modules": [
+    "test_webgpu"
+  ],
+  "tests": 13,
+  "seconds": 315.79650366699207,
+  "success": true,
+  "records": {
+    "test_webgpu.FallbackTest.test_both_apis_unavailable_provides_accessible_retry": {
+      "outcome": "passed"
+    },
+    "test_webgpu.FallbackTest.test_graphics_preference_is_separate_from_save_and_accepts_old_settings": {
+      "outcome": "passed"
+    },
+    "test_webgpu.FallbackTest.test_missing_api_uses_webgl_without_requesting_gpu_bundle": {
+      "outcome": "passed"
+    },
+    "test_webgpu.FallbackTest.test_missing_optional_library_falls_back": {
+      "outcome": "passed"
+    },
+    "test_webgpu.FallbackTest.test_null_adapter_and_denied_device_fall_back": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_all_quality_tiers_and_real_stair_scene_keep_gpu_and_collision": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_device_loss_preserves_session_camera_and_input_canvas": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_explicit_compatibility_mode_never_loads_webgpu_extension": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_native_backend_draws_scene_and_shares_core_types": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_post_hand_composition_and_inversion_change_real_pixels": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_post_setup_failure_uses_fresh_webgl_scene": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_timed_out_adapter_is_disposed_when_it_arrives_late": {
+      "outcome": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_touch_look_works_immediately_after_device_loss": {
+      "outcome": "passed"
+    }
+  }
+}
