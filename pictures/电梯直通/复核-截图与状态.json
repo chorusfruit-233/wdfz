@@ -1,0 +1,119 @@
+{
+  "kind": "Controlled screenshots of actual runtime, software GPU; not natural gameplay or physical-device verification",
+  "runtimeSHA256": "baf5d6f7af4aec737a0e392a8c897769a160df96bbdbbbef58a685c40c6578cf",
+  "chromium": "154.0.8037.57",
+  "captures": [
+    {
+      "renderer": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "room": "teach2",
+      "position": [
+        1023,
+        1955.525
+      ],
+      "angle": -1.5707963267948966,
+      "pitch": 0,
+      "door": 1,
+      "choice": false,
+      "buttonVisible": true,
+      "depth": 0,
+      "moduleErrors": [],
+      "lifecycleErrors": [],
+      "image": "复核-01-桌面关门快捷键.png",
+      "viewport": [
+        1000,
+        700
+      ]
+    },
+    {
+      "renderer": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "room": "teach2",
+      "position": [
+        1023,
+        1955.525
+      ],
+      "angle": -1.5707963267948966,
+      "pitch": 0,
+      "door": 1,
+      "choice": false,
+      "buttonVisible": true,
+      "depth": 0,
+      "moduleErrors": [],
+      "lifecycleErrors": [],
+      "image": "复核-02-触屏竖屏关门.png",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "renderer": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "room": "teach2",
+      "position": [
+        1023,
+        1955.525
+      ],
+      "angle": -1.5707963267948966,
+      "pitch": 0,
+      "door": 1,
+      "choice": false,
+      "buttonVisible": true,
+      "depth": 0,
+      "moduleErrors": [],
+      "lifecycleErrors": [],
+      "image": "复核-03-触屏横屏关门.png",
+      "viewport": [
+        844,
+        390
+      ]
+    },
+    {
+      "renderer": {
+        "phase": "ready",
+        "backend": "webgpu",
+        "requested": "auto",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "room": "teach2",
+      "position": [
+        1023,
+        1955.525
+      ],
+      "angle": -1.5707963267948966,
+      "pitch": 0,
+      "door": 0.5,
+      "choice": false,
+      "buttonVisible": true,
+      "depth": 0,
+      "moduleErrors": [],
+      "lifecycleErrors": [],
+      "image": "复核-04-WebGPU触屏关门中.png",
+      "viewport": [
+        390,
+        844
+      ]
+    }
+  ]
+}
