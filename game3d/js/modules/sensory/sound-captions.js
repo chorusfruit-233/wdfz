@@ -32,10 +32,11 @@ var SoundCaptions=(function(){
     if(body)bodyAt=clock;
     var p=opt.place,dir=[];
     if(p){
-      if($imports.Talent.has('hearing')&&Number.isFinite(p.level)&&p.level!==0)dir.push(p.level>0?'楼上':'楼下');
       if(Math.abs(p.pan||0)>.25)dir.push(p.pan<0?'左':'右');
-      if(p.behind!==undefined)dir.push(p.behind?'后方':'前方');
-      if(Number.isFinite(p.m))dir.push(p.m<5?'近处':$imports.Talent.has('hearing')&&p.m>=20?'很远':'远处');
+      var ears=$imports.Talent.capability('ears');                     /* 顺风耳：楼上楼下、「很远」一档 */
+      if(ears.ok&&(p.floor==='up'||p.floor==='down'))dir.push(p.floor==='up'?'楼上':'楼下');
+      else if(p.behind!==undefined)dir.push(p.behind?'后方':'前方');
+      if(Number.isFinite(p.m))dir.push(p.m<5?'近处':(ears.ok&&p.m>=ears.far?'很远':'远处'));
       if(p.muffled)dir.push('隔着墙');
     }
     var priority=opt.patrol||/^(event\.|foley\.(cupFall|colaRattle)|threat\.smile)/.test(id)?3:body?1:0;
