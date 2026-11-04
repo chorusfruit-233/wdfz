@@ -3,10 +3,10 @@
 /* 天赋：唯一的定义源和有限的能力接口（《天赋系统重构》M1）。
    名称、效果、限制、可选资格和试验数值都在这里；各模块只问「能不能 / 用什么方式 / 倍率多少」，不再各写一份 S.talent==='…'。
    S.talent 是当前 ID 的唯一来源；S.talentState 记规则版本、一次性消耗、计数和提醒去重，随存档保存。
-   规则版本：1 = 重构前效果；2 = 试验效果；3 = 移除铁胃。其余旧天赋保留原规则。 */
+   规则版本：1 = 重构前效果；2 = 试验效果；3 = 移除铁胃；4 = 加入顺风耳（2026-11-04）。其余旧天赋保留原规则。 */
 'use strict';
 
-var TALENT_RULES=3;
+var TALENT_RULES=4;
 var TALENT_DEF={
   tech:{n:'科技党',pick:true,role:'随身带着一部旧手机。',does:'开局拥有满电手机。',v2:'',limit:'所有手机耗电永久翻倍；接入网络与服务器谜题仍需完成。',tags:['手机','服务器路线']},
   code:{n:'编程社',pick:true,role:'在电脑社团泡过三年。',
@@ -29,6 +29,11 @@ var TALENT_DEF={
     does:'每局一次：要命的事被绕开，能缓过气来，暂时摆脱过分的注意。',
     v2:'',
     limit:'只有一次，用掉不会再回来；身上有不知名药丸时先用药丸。',tags:['生存']},
+  /* 顺风耳（2026-11-04，计划《电梯直通、新天赋、新结局与恐怖氛围》第 3 节）：补回铁胃删掉后的第 7 项 */
+  ear:{n:'顺风耳',pick:true,role:'宿舍里谁翻个身，你都会醒。',
+    does:'巡察者的脚步、门轴和远处的异响，在更远处就能听到（可闻距离 ×1.5），还分得出是楼上还是楼下；声音字幕多一档「很远」。',
+    v2:'',
+    limit:'假威胁也听得一清二楚：远处的动静来得更勤，大多什么也不会来。不分真假，不预告异象，不改变巡察者和异象的规则；关掉声音时，字幕给出同样多的信息。',tags:['声音','巡察者']},
   /* 旧档里的六项：名字保留，目前没有额外作用，新局不会出现 */
   map:{n:'过目不忘',legacy:true}, hand:{n:'手稳',legacy:true}, thin:{n:'瘦小',legacy:true},
   cold:{n:'血冷',legacy:true}, known:{n:'熟人',legacy:true}, crowd:{n:'藏在人群里',legacy:true},
@@ -42,7 +47,7 @@ Object.keys(TALENT_DEF).forEach(function(id){
   if(d.pick) TAL_KEYS.push(id);
 });
 /* 试验数值（规则版本 2 起生效） */
-var TALENT_CFG={hotwireSec:4.8,keySec:1.6,feastNormal:9,darkMul:0.55,watchLead:20};
+var TALENT_CFG={hotwireSec:4.8,keySec:1.6,feastNormal:9,darkMul:0.55,watchLead:20,earRange:1.5,earDread:0.8,earFar:18};
 
 var Talent={
   def:function(id){ return TALENT_DEF[id]||TALENT_DEF.none; },
@@ -53,7 +58,7 @@ var Talent={
     var t=$imports.S.talentState;
     if(!t||typeof t!=='object'||Array.isArray(t)) t=$imports.S.talentState={};
     t.schemaVersion=1;
-    t.rulesVersion=([1,2,3].includes(t.rulesVersion))?t.rulesVersion:1;
+    t.rulesVersion=([1,2,3,4].includes(t.rulesVersion))?t.rulesVersion:1;
     t.origin=['selected','random','legacy','repair'].indexOf(t.origin)>=0?t.origin:'legacy';
     if(!t.consumed||typeof t.consumed!=='object'||Array.isArray(t.consumed)) t.consumed={};
     t.consumed={fatalProtection:!!t.consumed.fatalProtection,faceRemedy:!!t.consumed.faceRemedy};
@@ -97,6 +102,7 @@ var Talent={
       return {ok:key||drive, via:key?'key':drive?'hotwire':null,
         sec:key?TALENT_CFG.keySec:(drive&&this.rules()>=2?TALENT_CFG.hotwireSec:TALENT_CFG.keySec)};
     }
+    if(ctx==='ears') return {ok:this.has('ear'), via:this.has('ear')?'talent':null, far:TALENT_CFG.earFar};   /* 楼上楼下、「很远」那一档 */
     if(ctx==='clock') return {ok:this.has('watch')||(0,$imports.hasItem)('watch'), via:(0,$imports.hasItem)('watch')?'item':this.has('watch')?'talent':null};
     return {ok:false,via:null};
   },
@@ -105,6 +111,8 @@ var Talent={
     if(source==='danger.garage'||source==='danger.night') return this.has('night')?TALENT_CFG.darkMul:1;
     if(source==='anomaly.feast') return TALENT_CFG.feastNormal;
     if(source==='activity.eat') return $imports.SAN_ACTS.eat.san;
+    if(source==='hear.range') return this.has('ear')?TALENT_CFG.earRange:1;          /* 顺风耳：可闻距离 */
+    if(source==='dread.cooldown') return this.has('ear')?TALENT_CFG.earDread:1;      /* 顺风耳的代价：假威胁更勤 */
     return 1;
   },
   /* 一次性保命：只决定能不能挡、消耗了什么；场景恢复和保存由外层结算 */

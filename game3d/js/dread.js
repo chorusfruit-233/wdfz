@@ -61,7 +61,8 @@ function dreadLineClear(x0,y0,x1,y1){
 function dreadPlace(wx,wy){
   var dx=wx-$imports.S.x,dy=wy-$imports.S.y,d=Math.hypot(dx,dy)*$imports.U2M;
   var rel=Math.atan2(dy,dx)-$imports.S.ang;
-  return {pan:(0,$imports.clamp)(Math.sin(rel),-1,1)*0.9,behind:Math.cos(rel)<-0.2,k:(0,$imports.clamp)(1-d/26,0.12,1),
+  var hear=26*$imports.Talent.modifier('hear.range');                 /* 顺风耳：同样的距离听得更清楚、更远的也听得到 */
+  return {pan:(0,$imports.clamp)(Math.sin(rel),-1,1)*0.9,behind:Math.cos(rel)<-0.2,k:(0,$imports.clamp)(1-d/hear,0.12,1),
     muffled:!dreadLineClear($imports.S.x,$imports.S.y,wx,wy),m:d};
 }
 /* 室内：离玩家 4–16 米的门或墙边；室外：12–30 米外的一点 */
@@ -116,7 +117,8 @@ var Dread={
     if(!Dread.allow(strength)) return false;
     var p=null, spot=null;
     if(kind!=='silence'){
-      spot=dreadSpot(kind==='whisper'?2:4,kind==='call'?40:16);
+      var far=$imports.Talent.modifier('hear.range');
+      spot=dreadSpot(kind==='whisper'?2:4,(kind==='call'?40:16)*(kind==='whisper'?1:far));
       if(!spot) return false;
       p=dreadPlace(spot.x,spot.y);
     }
@@ -176,7 +178,7 @@ var Dread={
     if(dreadBusy()||DREAD.slice) return;
     if(gameAge()<DREAD_CFG.safeStart) return;
     var t=dreadTension();
-    DREAD.nextAmb-=dt*(0.75+t*0.9);
+    DREAD.nextAmb-=dt*(0.75+t*0.9)/$imports.Talent.modifier('dread.cooldown');   /* 顺风耳的代价：冷却 ×0.8（来得更勤） */
     if(DREAD.nextAmb>0) return;
     DREAD.nextAmb=(0,$imports.rnd)(DREAD_CFG.ambMin,DREAD_CFG.ambMax);
     var kind=Dread.pickAmbient(), strength=(kind==='run')?2:1;

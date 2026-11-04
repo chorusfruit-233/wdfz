@@ -26,8 +26,19 @@ var PatrolWorld=(function(){
     var a=playerPoint(),tr=$imports.PAT.transition,b=tr?tr.to:position();
     var key=[a.scene,Math.round(a.x/4),Math.round(a.y/4),Math.round(a.fy*10),b.scene,Math.round(b.x/4),Math.round(b.y/4),Math.round((b.fy||0)*10),tr?Math.ceil(tr.remaining*2):0].join(':');
     if(approachCache&&approachCache.key===key)return approachCache.value;
-    var m=$imports.PatrolNav.approach(a,b,220);if(m&&tr)m.distance+=tr.remaining*$imports.PAT_SPEED;
+    var m=$imports.PatrolNav.approach(a,b,220*hearRange());if(m&&tr)m.distance+=tr.remaining*$imports.PAT_SPEED;
     approachCache={key:key,value:m};return m;
+  }
+  /* 顺风耳：脚步在更远处就能听到（200 → 300，约 22 → 33 米），分得出楼上楼下 */
+  function hearRange(){ try{ return $imports.Talent.modifier('hear.range'); }catch(e){ return 1; } }
+  function hearDistance(){ return 200*hearRange(); }
+  function floorDir(){
+    try{
+      if(!$imports.Talent.capability('ears').ok) return null;
+      var p=position(), A=$imports.INTERIORS[p.scene], B=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null;
+      if(!A||!B||!(A.floor>=1)||!(B.floor>=1)||A.floor===B.floor) return null;
+      return A.floor>B.floor?'up':'down';
+    }catch(e){ return null; }
   }
   function region(){
     if($imports.S.mode!=='in')return null;var R=$imports.INTERIORS[$imports.S.room];if(!R)return null;
@@ -293,14 +304,14 @@ var PatrolWorld=(function(){
   }
   function visuals(dt){
     if($imports.PAT.state==='idle'){var sp=spawn(),audible=sp.scene===(0,$imports.patRoomHere)()&&$imports.PAT.respawn<=3.6&&$imports.PatrolNav.length($imports.PatrolNav.path(playerPoint(),sp))<190;var rt=(3.6-$imports.PAT.respawn)%1.8;$imports.VisualState.patrolFlick=audible&&(rt<.15||rt>.3&&rt<.45||rt>.75&&rt<1.25)?.7:0;$imports.VisualState.patrolRed=0;return;}
-    var here=(0,$imports.patRoomHere)(),metric=approach(),near=metric&&metric.distance<200&&$imports.PAT.state==='walk';
+    var here=(0,$imports.patRoomHere)(),metric=approach(),near=metric&&metric.distance<hearDistance()&&$imports.PAT.state==='walk';
     if(lastVisualRoom!==here){lastVisualRoom=here;(0,$imports.patRemoveFig)();}
     if($imports.PAT.state==='walk'&&$imports.PAT.room===here&&!$imports.PAT.transition)(0,$imports.patEnsureFig)();
     if($imports.PAT.room!==here||$imports.PAT.state!=='walk'||$imports.PAT.transition)(0,$imports.patRemoveFig)();
     $imports.VisualState.patrolRed=threat()?1:0;
     var t=3.6-$imports.PAT.warning,p=t%1.8;
     $imports.VisualState.patrolFlick=near&&$imports.PAT.warning>0&&(p<.15||p>.3&&p<.45||p>.75&&p<1.25)?.7:0;
-    if(near){$imports.PAT.step-=dt;if($imports.PAT.step<=0){$imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;$imports.SFX.patStep(Math.sin(rel)*.9,Math.pow(1-metric.distance/200,1.4),Math.cos(rel)<-.2,$imports.PAT.locked,{m:metric.distance*$imports.U2M,muffled:!same()||!$imports.PatrolNav.los(position(),playerPoint())});}}
+    if(near){$imports.PAT.step-=dt;if($imports.PAT.step<=0){$imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;$imports.SFX.patStep(Math.sin(rel)*.9,Math.max(.06,Math.pow(Math.max(0,1-metric.distance/200),1.4)),Math.cos(rel)<-.2,$imports.PAT.locked,{m:metric.distance*$imports.U2M,muffled:!same()||!$imports.PatrolNav.los(position(),playerPoint()),floor:floorDir()});}}
   }
   function tick(dt){if(!(dt>0)||$imports.S.dead||$imports.S.screen!=='play')return;if(!$imports.PAT.version)reset();
     var left=dt;while(left>1e-8&&!$imports.S.dead){var n=Math.min(left,.1,$imports.PAT.state==='idle'&&$imports.PAT.respawn>0?$imports.PAT.respawn:Infinity);step(n);left-=n;}
@@ -371,6 +382,7 @@ var PatrolWorld=(function(){
     }
   });
   return {reset:reset,tick:tick,position:position,eligible:eligible,exempt:exempt,hunting:hunting,revealWireless:revealWireless,sees:sees,same:same,region:region,elevatorClosed:elevatorClosed,
+    hearDistance:hearDistance,floorDir:floorDir,
     localChase:function(){return threat()&&$imports.PAT.locked;},localThreat:function(){return threat()||hideThreat();},pressure:function(){return threat()?.35:hideThreat()?.18:0;},
     rescued:rescued,registeredAbsence:registeredAbsence,observeLocker:function(c,r){var f=(0,$imports.lockerFront)($imports.INTERIORS[$imports.S.room],c,r);$imports.PAT.lastSeen=$imports.PatrolNav.point($imports.S.room,f.x,f.y,$imports.S.floorY);$imports.PAT.lockerMemory[$imports.S.room]={c:c,r:r,cycle:-1};framePath=null;},banish:banish,clearChase:clearChase,locationLabel:locationLabel,enqueue:enqueue,spawn:spawn};
 })();
