@@ -78,7 +78,7 @@ class NativeWebGPUTest(BrowserCase):
                   BroadcastUI.open();BroadcastUI.paint();render(.01);""")
                 self.assertTrue(page.locator('#radio-read').is_visible())
                 page.evaluate("BroadcastUI.close();CUT.enabled=true;playCut('dismissal',()=>{S.screen='play';});")
-                for dt in (1,4,4,4):
+                for dt in (1,4,4,4,4):
                     page.evaluate('dt=>{cutTick(dt);render(0)}',dt)
                     self.check_gpu(page)
                 page.evaluate("cutSkip();deathFX('misread',{preview:true});anfxUpdate(2);render(0)")
