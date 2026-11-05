@@ -199,8 +199,8 @@ var GameModules=(function(){
 
   /* ---------- Mod ---------- */
   function mod(def){
-    if(!def||!def.id||!/^[a-z0-9][a-z0-9_-]{0,47}$/i.test(def.id)) throw new Error('Mod 需要 id（字母、数字、- 和 _）');
-    if(modById[def.id]) throw new Error('Mod id 重复：'+def.id);
+    if(!def||!def.id||!/^[a-z0-9][a-z0-9_-]{0,47}$/i.test(def.id)) throw new Error('DLC 需要 id（字母、数字、- 和 _）');
+    if(modById[def.id]) throw new Error('DLC id 重复：'+def.id);
     var m={id:def.id,name:def.name||def.id,version:def.version||'0.0.0',author:def.author||'',desc:def.desc||'',
       api:def.api||API_VERSION,source:mod.source||'code',status:'registered',def:def};
     mods.push(m); modById[m.id]=m;

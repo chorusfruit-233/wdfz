@@ -47,7 +47,7 @@ var PaperPlane=(function(){
     if(!cand.length) return false;
     var w=cand[Math.floor($imports.GameRandom.next()*cand.length)], land=landing(R); if(!land) return false;
     var s=st(); s.used=1;
-    s.ev={kind:kind,room:R.id,c:w.c,r:w.r,phase:'fly',t:0,lx:land.x,ly:land.y,text:kind==='danger'?DANGER_TEXT:TIPS[Math.floor($imports.GameRandom.next()*TIPS.length)],id:'p'+Math.round(now())};
+    s.ev={kind:kind,room:R.id,c:w.c,r:w.r,phase:'fly',t:0,lx:land.x,ly:land.y,text:(function(){ var t=GameModules.first('paperText',kind); return typeof t==='string'?t:kind==='danger'?DANGER_TEXT:TIPS[Math.floor($imports.GameRandom.next()*TIPS.length)]; })(),id:'p'+Math.round(now())};
     (0,$imports.gameFact)('paper',{what:'delivery',kind:kind});
     if(kind==='danger'){ try{ $imports.SoundCaptions.publish('foley.door',{caption:'窗那边 · 两下拍窗'}); }catch(e){} }
     else { try{ $imports.SoundCaptions.publish('foley.door',{caption:'纸擦过地面的轻响'}); }catch(e){} }
