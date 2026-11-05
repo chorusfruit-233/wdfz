@@ -91,6 +91,11 @@ class SensoryTest(BrowserCase):
                 self.assertGreaterEqual(r['y'],0);self.assertLess(r['y']+r['height'],height*.55)
                 self.assertEqual(p.locator('#soundcaptions div').count(),2)
                 self.assertLess(r['y']+r['height'],height/2-4,'字幕不能盖住准星')
+                card=p.locator('#status').bounding_box()
+                self.assertAlmostEqual(r['x'],card['x'],delta=2)                       # 和时间卡片左对齐
+                self.assertGreaterEqual(r['y'],card['y']+card['height'])               # 在「时间不明」那张卡片下面
+                self.assertLess(r['y'],card['y']+card['height']+16)
+                self.assertLess(r['x'],width*.25,'字幕不放在画面中央')
 
     def test_phone_at_full_health_does_not_claim_recovery_or_heat(self):
         p=self.game()

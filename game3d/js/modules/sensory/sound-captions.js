@@ -15,10 +15,20 @@ var SoundCaptions=(function(){
     'distant.slam':'远处一声门响','world.silence':'周围突然安静了','distant.tinnitus':'耳边一阵闷响','distant.aah':'远处有声音','distant.ball':'远处一声落地响','distant.giggle':'远处有声音'
   };
   function enabled(){return $imports.SET.soundCaptions===1||($imports.SET.soundCaptions===0&&($imports.SET.vol<=5||!$imports.SFX.available()));}
+  /* 字幕放在左上角时间卡片（「时间不明」那一栏）的正下方：量卡片底边，卡片变高（多了按钮、体力条）或窗口变化时跟着挪 */
+  var placed='';
+  function place(){
+    var st=document.getElementById('status');if(!root||!st)return;
+    var b=st.getBoundingClientRect(),k=Math.round(b.left)+','+Math.round(b.bottom);
+    if(!b.height||k===placed)return;placed=k;
+    root.style.setProperty('--cap-left',Math.round(b.left)+'px');root.style.setProperty('--cap-top',Math.round(b.bottom+6)+'px');
+  }
   function paint(){
-    if(!root){root=document.getElementById('soundcaptions');if(!root)return;}
+    if(!root){root=document.getElementById('soundcaptions');if(!root)return;
+      try{var st=document.getElementById('status');if(st&&typeof ResizeObserver!=='undefined')new ResizeObserver(place).observe(st);}catch(e){}
+      window.addEventListener('resize',place);}
     var a=enabled()?q.visible(clock):[],key=a.map(function(e){return e.id+':'+e.text;}).join('|');
-    if(key===last)return;last=key;
+    if(key===last)return;last=key;if(a.length)place();
     while(root.firstChild)root.removeChild(root.firstChild);
     a.forEach(function(e){var p=document.createElement('div');p.textContent='〔'+e.text+'〕';root.appendChild(p);});
   }
