@@ -274,7 +274,7 @@ class CampusLinkTest(BrowserCase):
           render(.016);render(.016);const same=JSON.stringify([S,RT,PAT])===before;GameRandom.bind(RandomRules.create(7).next);
           const outside=CampusDoor.views().outside,g=ThreeBackend.sharedRoom('teach1'),R=INTERIORS.teach1,s=TeachGallery.shift(R);
           const err=Math.hypot(g.position.x-(R.cx+s.x)*U2M,g.position.z-(R.cy+s.y)*U2M),gy=g.position.y,parent=g.parent===GLR.scene;
-          S.y=Q.y+600;render(.016);const farOut=CampusDoor.views().outside;
+          const fw=objWorld(objById('field'));S.x=fw.x+fw.w/2;S.y=fw.y+fw.h/2;render(.016);const farOut=CampusDoor.views().outside;   // 大操场中间：离哪道门都远（A3 以后教学楼南面是食堂的门）
           return {inside,lifted,lamp,farIn,outside,err,gy,parent,farOut,same,draws,errors:GameModules.errors().length};}""")
         self.assertEqual(r['inside'], 'teach1')                   # 屋里离门近：门外的校园挂进来
         self.assertAlmostEqual(r['lifted'], -0.01)                # 室外地面比室内低 1 厘米，地面不重叠
