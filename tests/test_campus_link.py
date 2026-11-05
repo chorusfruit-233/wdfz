@@ -289,6 +289,17 @@ class CampusLinkTest(BrowserCase):
         self.assertEqual(r['draws'], 0)
         self.assertEqual(r['errors'], 0)
 
+    def test_outside_preview_switches_to_the_door_you_walk_up_to(self):
+        page = self.ready()
+        r = page.evaluate("""()=>{const D=r=>CAMPUS_DOOR.doors.find(d=>d.room===r),at=r=>{const Q=CampusDoor.outPort(D(r));S.x=Q.x+Q.n[0]*45;S.y=Q.y+Q.n[1]*45;render(.016);return CampusDoor.views().outside;};
+          const Q=CampusDoor.outPort(D('guard1'));doExitRoom({x:Q.x,y:Q.y+45,ang:-Math.PI/2,seamless:true});running=false;render(.016);
+          const out=[CampusDoor.views().outside,at('gear1'),at('trash1'),at('bell1')];
+          const g=ThreeBackend.sharedRoom('bell1');return {out,parent:g.parent===GLR.scene,stale:['guard1','gear1','trash1'].map(id=>ThreeBackend.sharedRoom(id).parent===GLR.scene),errors:GameModules.errors().length};}""")
+        self.assertEqual(r['out'], ['guard1', 'gear1', 'trash1', 'bell1'])   # 连续校园 A3：走到哪道门跟前，就挂哪间（以前一直挂着第一间）
+        self.assertTrue(r['parent'])
+        self.assertEqual(r['stale'], [False, False, False])
+        self.assertEqual(r['errors'], 0)
+
     def test_every_continuous_building_door_walks_out_and_back(self):
         page = self.ready()
         r = page.evaluate("""()=>CAMPUS_DOOR.doors.map(d=>{const P=CampusDoor.port(d),s=TeachGallery.shift(INTERIORS[d.room]);
