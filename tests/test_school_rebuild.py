@@ -109,7 +109,7 @@ class SchoolRebuildTest(BrowserCase):
     def test_interaction_target_survives_multiple_complete_turns(self):
         p=self.game()
         v=p.evaluate("""()=>{
-          const R=INTERIORS.lab2,x=R.ox+2.5*R.tw,y=R.oy+16.5*R.th;
+          const R=INTERIORS.lab2,x=R.ox+7.5*R.tw,y=R.oy+18.5*R.th;   // 连续校园 A2：实验楼二楼南墙西头的连廊②入口吊牌
           doEnterRoom('lab2',{x:x+3.4,y:y+4,ang:0});S.seated=false;
           const yaw=Math.atan2(y-S.y,x-S.x),out=[];
           for(const turns of [-100,-5,0,5,100]){
@@ -119,7 +119,7 @@ class SchoolRebuildTest(BrowserCase):
           return out;
         }""")
         for result in v:
-            self.assertEqual(result['target'],['L',2,16],result)
+            self.assertEqual(result['target'],['L',7,18],result)
             self.assertEqual(result['hint'],'')          # 连续校园（campus-link）：连廊门洞直接走过去，入口吊牌不再提示按 E
             self.assertLess(result['delta'],1e-10)
 

@@ -28,7 +28,7 @@ class OutdoorStructureTest(BrowserCase):
                 if(Collision.depth((cs[i].x+cs[i+1].x)/2/U2M,cs[i].z/U2M,PRAD)<1e-7)out.betweenFree++;}}
             if(o.k==='link')linkPillars(px,pz,sw,sd).forEach(c=>{out.pillars++;if(Collision.depth(c.x/U2M,c.z/U2M,PRAD)<1e-7)out.pillarsInside++;});});
           return out;}""")
-        self.assertEqual((r['cols'], r['colsInside']), (42, 0))      # 连续校园 A1：教学楼外壳按室内加宽，柱廊多两根
+        self.assertEqual((r['cols'], r['colsInside']), (38, 0))      # 连续校园：教学楼（A1）按室内加宽、行政楼和实验楼（A2）按室内收窄，柱廊 38 根
         self.assertEqual((r['pillars'], r['pillarsInside']), (16, 0))
         self.assertGreater(r['between'], 0)
         self.assertEqual(r['betweenFree'], r['between'])              # 柱子之间照样能走
