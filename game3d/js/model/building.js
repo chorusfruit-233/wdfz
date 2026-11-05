@@ -325,15 +325,23 @@ function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name, seam){
    门那一面开门洞，比室内门洞每边宽 2 厘米（洞口侧面也埋进室内墙里），门洞上面留门头 */
 var SEAM_OUT=0.04;
 function seamWalls(K,mat,px,pz,sw,sd,h,col,seam,face){
-  var t=0.5, hw=seam.width/2+0.02, top=2.32, cx=px+(seam.dx||0);
-  [['s',pz+sd/2-t/2],['n',pz-sd/2+t/2]].forEach(function(wf){
-    var z=wf[1], a0=px-sw/2, a1=px+sw/2;
-    if(wf[0]!==face){ K.box(mat,px,h/2,z,sw,h,t,col,0.97); return; }
+  var t=0.5, hw=seam.width/2+0.02, top=2.32, off=seam.dx||0;
+  function wallX(z,cut){                                                               /* 南北两面：整面宽 */
+    var a0=px-sw/2, a1=px+sw/2, cx=px+off;
+    if(!cut){ K.box(mat,px,h/2,z,sw,h,t,col,0.97); return; }
     K.box(mat,(a0+cx-hw)/2,h/2,z,cx-hw-a0,h,t,col,0.97);
     K.box(mat,(cx+hw+a1)/2,h/2,z,a1-cx-hw,h,t,col,0.97);
-    K.box(mat,cx,(top+h)/2,z,hw*2,h-top,t,col,0.97);                                     /* 门头 */
-  });
-  [px+sw/2-t/2,px-sw/2+t/2].forEach(function(x){ K.box(mat,x,h/2,pz,t,h,sd-2*t,col,0.97); });
+    K.box(mat,cx,(top+h)/2,z,hw*2,h-top,t,col,0.97);                                   /* 门头 */
+  }
+  function wallZ(x,cut){                                                               /* 东西两面：夹在南北两面中间 */
+    var a0=pz-sd/2+t, a1=pz+sd/2-t, cz=pz+off;
+    if(!cut){ K.box(mat,x,h/2,pz,t,h,a1-a0,col,0.97); return; }
+    K.box(mat,x,h/2,(a0+cz-hw)/2,t,h,cz-hw-a0,col,0.97);
+    K.box(mat,x,h/2,(cz+hw+a1)/2,t,h,a1-cz-hw,col,0.97);
+    K.box(mat,x,(top+h)/2,cz,t,h-top,hw*2,col,0.97);
+  }
+  wallX(pz+sd/2-t/2,face==='s'); wallX(pz-sd/2+t/2,face==='n');
+  wallZ(px+sw/2-t/2,face==='e'); wallZ(px-sw/2+t/2,face==='w');
 }
 function addSmallDoor(K, px, pz, sw, sd, face, seam){
   face=face||'s';
@@ -566,9 +574,13 @@ function bldTeach(K,grp,o,px,pz,sw,sd){
 }
 /* ---- 宿舍：六层，阳台开在门的对面（贴着食堂的那段不画） ---- */
 function bldDorm(K,grp,o,px,pz,sw,sd){
-  var dh=OBLD_H[o.id], dn=Math.round(dh/3.0), dfl;
+  var dh=OBLD_H[o.id], dn=Math.round(dh/3.0), dfl, seam=o.seamDoor;
+  if(seam){ sw+=2*SEAM_OUT; sd+=2*SEAM_OUT; }
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,dh/2,pz,sw,dh,sd,$imports.BRICK,0.97);
+  if(seam){                                                                              /* 连续出入口（连续校园 A3）：一楼镂空（四面墙），屋里是挂进来的室内模型；二楼往上实心 */
+    seamWalls(K,'brick',px,pz,sw,sd,3.2,$imports.BRICK,seam,o.door||'s');
+    K.box('brick',px,(3.2+dh)/2,pz,sw,dh-3.2,sd,$imports.BRICK,0.97);
+  }else K.box('brick',px,dh/2,pz,sw,dh,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.7,0.10,$imports.BASE_GREY);                                 /* 以前 2.5 米高，一楼窗户整个埋在里面 */
   K.box('plaster',px,dh+0.16,pz,sw-0.02,0.32,sd-0.02,$imports.WHITEBAND,1.0);
   K.bevel('stone',px,dh+0.45,pz,sw+0.2,0.10,sd+0.2,0xd8d4cb,1.0,0.02);
@@ -579,7 +591,7 @@ function bldDorm(K,grp,o,px,pz,sw,sd){
     for(shx=px-sw/2+2.2;shx<px+sw/2-2;shx+=3.2) solarHeater(K,shx,dh+0.5,pz+sd*0.28,Math.PI);
   }
   downpipe(K,'e',px,pz,sw,sd,pz,dh+0.3); downpipe(K,'w',px,pz,sw,sd,pz,dh+0.3);
-  var bs=(o.door==='n')?1:-1, balFace=bs>0?'s':'n', doorFace=bs>0?'n':'s';
+  var bs=(o.door==='s')?-1:1, balFace=bs>0?'s':'n', doorFace=bs>0?'n':'s';            /* 阳台朝南（门朝南的那栋除外） */
   var spans=faceFreeSpans(o,balFace), sp2;
   for(dfl=1;dfl<=dn;dfl++){
     var dy=dfl*(dh/(dn+0.5));
@@ -607,7 +619,7 @@ function bldDorm(K,grp,o,px,pz,sw,sd){
       }
     }
   }
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id]);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id],seam);
 }
 /* ---- 钟楼：砖砌塔身、两道竖长窗、四面钟、四柱亭子、攒尖顶，里面吊着钟 ---- */
 function bldBell(K,grp,o,px,pz,sw,sd){
@@ -672,9 +684,11 @@ function bldBell(K,grp,o,px,pz,sw,sd){
 }
 /* ---- 食堂：两层，大窗 ---- */
 function bldCanteen(K,grp,o,px,pz,sw,sd){
-  var h=OBLD_H.canteen;
+  var h=OBLD_H.canteen, seam=o.seamDoor;
+  if(seam){ sw+=2*SEAM_OUT; sd+=2*SEAM_OUT; }
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,h/2,pz,sw,h,sd,$imports.BRICK,0.97);
+  if(seam) seamWalls(K,'brick',px,pz,sw,sd,h,$imports.BRICK,seam,o.door||'s');         /* 连续出入口：四面墙，屋里是室内模型 */
+  else K.box('brick',px,h/2,pz,sw,h,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.10,$imports.BASE_GREY);
   K.box('plaster',px,h+0.16,pz,sw-0.02,0.32,sd-0.02,$imports.WHITEBAND,1.0);
   K.bevel('stone',px,h+0.40,pz,sw+0.2,0.08,sd+0.2,0xd8d4cb,1.0,0.02);
@@ -691,7 +705,7 @@ function bldCanteen(K,grp,o,px,pz,sw,sd){
     K.bevel('metal',px+sw/2+0.4,h-1.0,pz+sd*0.25,0.8,1.2,1.2,0xb8bcbe,1.0,0.03);
     K.cyl('metal',px+sw/2+0.4,h-0.4,pz+sd*0.25,0.25,0.25,1.6,8,0x9aa0a4,1.0);
   }
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id]);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id],seam);
 }
 /* ---- 小平房：保安岗、器材室、垃圾站 ---- */
 function bldSmall(K,grp,o,px,pz,sw,sd){

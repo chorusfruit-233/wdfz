@@ -17,7 +17,11 @@ var CAMPUS_DOOR={version:1,width:3,annex:1.5,lift:0.01,near:12,far:15,doors:[
   {room:'guard1',host:'guard',edge:'s',at:5.5,width:2},
   {room:'gear1',host:'gear',edge:'s',at:9},
   {room:'trash1',host:'trash',edge:'s',at:5.5,width:2},
-  {room:'bell1',host:'bell',edge:'s',at:5}
+  {room:'bell1',host:'bell',edge:'s',at:5},
+  /* 南区：宿舍门在一楼走廊东头（第 7、8 行），食堂门在南墙正中（第 30、31 列） */
+  {room:'dorm1',host:'dormN',edge:'e',at:7.5,width:2},
+  {room:'dorm4',host:'dormS',edge:'e',at:7.5,width:2},
+  {room:'canteen1',host:'canteen',edge:'s',at:30.5,width:2}
 ]};
 var CampusDoor=(function(){
   var own={owner:'campus-link'}, NORMAL={n:[0,-1],s:[0,1],w:[-1,0],e:[1,0]}, inView=null, outView=null;
@@ -71,7 +75,8 @@ var CampusDoor=(function(){
       Object.defineProperty(o,'gaps',{configurable:true,enumerable:false,get:function(){ if(!gaps&&Number.isFinite(R.ox)) gaps=[gapOf(d)]; return gaps; }});
       /* 交给楼体模型：门洞宽、门中线离楼中线多远（米，沿立面）、一楼走廊从外墙到走廊北墙有几格（这一段镂空，门里看得见室内模型） */
       var hc=Math.floor(d.at), hollow=1; while(R.grid[R.rows-1-hollow]&&'#='.indexOf(R.grid[R.rows-1-hollow][hc])<0) hollow++;
-      o.seamDoor={width:wid(d),dx:((d.at+0.5)-R.cols/2)*R.tw*$imports.U2M,hollow:hollow};
+      var vert=d.edge==='e'||d.edge==='w';
+      o.seamDoor={width:wid(d),dx:vert?((d.at+0.5)-R.rows/2)*R.th*$imports.U2M:((d.at+0.5)-R.cols/2)*R.tw*$imports.U2M,hollow:hollow};
     });
   }
   /* 每一小步之后：身体中心越过门槛线就换场景 */

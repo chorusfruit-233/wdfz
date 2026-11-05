@@ -218,7 +218,7 @@ class CampusLinkTest(BrowserCase):
             fade:document.getElementById('fade').style.opacity||'0',banner:document.getElementById('banner').textContent===banner};
           for(let i=0;i<60;i++)updatePlayer(1/60);
           out.outside={mode:S.mode,y:S.y-Q.y,depth:Collision.depth(S.x,S.y,PRAD),hint:interactHint()};
-          S.ang=-Math.PI/2;hit=null;
+          S.ang=Math.atan2(-P.n[1],-P.n[0]);hit=null;
           for(let i=0;i<400&&!hit;i++){prev={m:S.mode,x:S.x,y:S.y};updatePlayer(1/60);if(S.mode!==prev.m)hit={m:S.mode,room:S.room,x:S.x,y:S.y};}
           KEY={};
           out.enter={hit:!!hit,room:S.room,step:hit&&Math.hypot(hit.x+s.x-prev.x,hit.y+s.y-prev.y),depth:Collision.depth(S.x,S.y,PRAD),
@@ -303,17 +303,17 @@ class CampusLinkTest(BrowserCase):
     def test_every_continuous_building_door_walks_out_and_back(self):
         page = self.ready()
         r = page.evaluate("""()=>CAMPUS_DOOR.doors.map(d=>{const P=CampusDoor.port(d),s=TeachGallery.shift(INTERIORS[d.room]);
-          doEnterRoom(d.room,{x:P.x,y:P.y-30,ang:Math.PI/2,seamless:true});running=false;S.screen='play';S.stam=100;S.tired=false;
+          doEnterRoom(d.room,{x:P.x-P.n[0]*30,y:P.y-P.n[1]*30,ang:Math.atan2(P.n[1],P.n[0]),seamless:true});running=false;S.screen='play';S.stam=100;S.tired=false;
           KEY={w:true};let prev=null,hit=null;
           for(let i=0;i<400&&!hit;i++){prev={m:S.mode,x:S.x,y:S.y};updatePlayer(1/60);if(S.mode!==prev.m)hit={m:S.mode,x:S.x,y:S.y};}
           const out={room:d.room,exit:!!hit,step:hit?Math.hypot(hit.x-s.x-prev.x,hit.y-s.y-prev.y):99};
           for(let i=0;i<60;i++)updatePlayer(1/60);out.outDepth=Collision.depth(S.x,S.y,PRAD);out.hint=interactHint();
-          S.ang=-Math.PI/2;hit=null;for(let i=0;i<400&&!hit;i++){prev={m:S.mode};updatePlayer(1/60);if(S.mode!==prev.m)hit={room:S.room};}
+          S.ang=Math.atan2(-P.n[1],-P.n[0]);hit=null;for(let i=0;i<400&&!hit;i++){prev={m:S.mode};updatePlayer(1/60);if(S.mode!==prev.m)hit={room:S.room};}
           KEY={};out.back=hit&&hit.room;out.inDepth=Collision.depth(S.x,S.y,PRAD);
-          const R=INTERIORS[d.room];const dw=d.width||CAMPUS_DOOR.width,c0=Math.round(d.at-(dw-1)/2);out.w=dw;out.cells=R.grid[R.rows-1].slice(c0-1,c0+dw+1).join('');
-          const o=objById(d.host),w=objWorld(o);out.centered=Math.abs((P.x+s.x)-(w.x+w.w/2))<R.tw;   // 门中线和楼中线最多差一格
+          const R=INTERIORS[d.room];const dw=d.width||CAMPUS_DOOR.width,c0=Math.round(d.at-(dw-1)/2);out.w=dw;const vert=d.edge==='e'||d.edge==='w',line=vert?R.grid.map(row=>row[d.edge==='e'?R.cols-1:0]):R.grid[d.edge==='s'?R.rows-1:0];out.cells=line.slice(c0-1,c0+dw+1).join('');
+          const o=objById(d.host),w=objWorld(o);out.centered=vert?Math.abs((P.y+s.y)-(w.y+w.h/2))<R.th:Math.abs((P.x+s.x)-(w.x+w.w/2))<R.tw;   // 门中线和楼中线最多差一格（宿舍门在东头，按南北方向比）
           return out;})""")
-        self.assertEqual([x['room'] for x in r], ['teach1', 'admin1', 'lab1', 'guard1', 'gear1', 'trash1', 'bell1'])   # C2：教学楼；A2：行政楼、实验楼；A3：四间小屋
+        self.assertEqual([x['room'] for x in r], ['teach1', 'admin1', 'lab1', 'guard1', 'gear1', 'trash1', 'bell1', 'dorm1', 'dorm4', 'canteen1'])   # C2：教学楼；A2：行政楼、实验楼；A3：四间小屋、宿舍、食堂
         for x in r:
             with self.subTest(room=x['room']):
                 self.assertTrue(x['exit'], x)
