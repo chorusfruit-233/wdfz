@@ -350,7 +350,8 @@ function addSmallDoor(K, px, pz, sw, sd, face, seam){
     K.frame(bx+(horz?0:(seam.dx||0)),bz+(horz?(seam.dx||0):0),Math.atan2(nx,nz));
     [-1,1].forEach(function(sx){ K.bevel('stone',sx*(hw+0.08),1.16,0.07,0.16,2.32,0.14,0xd8d4cc,1.05,0.02); });   /* 门垛 */
     K.bevel('stone',0,2.40,0.07,seam.width+0.32,0.16,0.14,0xd8d4cc,1.05,0.02);
-    K.bevel('metal',hw+0.16+0.55,1.06,0.10,1.10,2.06,0.05,0x39424a,1.02,0.01);            /* 推开的铁门 */
+    K.bevel('metal',hw+0.16+0.55,1.06,0.10,1.10,2.06,0.05,0x6a747c,1.02,0.01);            /* 推开的铁门（比门洞亮，不像第二个门洞） */
+    K.box('metal',hw+0.16+0.18,1.0,0.13,0.04,0.04,0.02,0xc8a24a,1.3);                      /* 门把手 */
     K.bevel('concrete',0,2.62,0.45,seam.width+0.8,0.10,0.9,0xc9c4bb,1.0,0.02);            /* 小雨棚 */
     K.box('stone',0,0.006,0.40,seam.width+0.5,0.012,0.8,0xb8b2a8,1.0);                     /* 门槛石 */
     K.unframe(); return;

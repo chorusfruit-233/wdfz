@@ -111,8 +111,8 @@ var CampusDoor=(function(){
     var inside=$imports.S.mode==='in', list=inside?doorsOf($imports.S.room):$imports.S.mode==='out'?CAMPUS_DOOR.doors:[], d=null, i, best=1e9;
     for(i=0;i<list.length;i++){ var m=near(list[i],$imports.S.x,$imports.S.y,inside); if(m<best){ best=m; d=list[i]; } }
     var cur=inside?inView:outView, lim=cur?CAMPUS_DOOR.far:CAMPUS_DOOR.near;
-    if(!d||best>lim){ if(cur) detachAll(); return; }
-    if(cur) return;
+    if(!d||best>lim||(cur&&cur.room!==d.room)){ if(cur) detachAll(); if(!d||best>CAMPUS_DOOR.near) return; }   /* 走到了另一道门跟前：换成那间 */
+    else if(cur) return;
     var R=$imports.INTERIORS[d.room], s=shift(d);
     if(inside){
       if($imports.TeachGallery.held&&$imports.TeachGallery.held()) return;           /* 外廊那几层自己挂着室外模型 */
