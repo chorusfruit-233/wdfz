@@ -1,0 +1,1681 @@
+{
+  "version": 1,
+  "method": "synchronized-render-completion-v1",
+  "createdAt": "2026-11-05T04:52:31.080Z",
+  "status": "complete",
+  "config": {
+    "quality": 0,
+    "width": 640,
+    "height": 360,
+    "sampleMs": 1000,
+    "warmMs": 500,
+    "rounds": 1,
+    "scenes": [
+      "classroom",
+      "stairs",
+      "outdoor"
+    ],
+    "seed": 1194
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "devicePixelRatio": 1,
+    "hardwareConcurrency": 3,
+    "secureContext": true
+  },
+  "unavailable": {},
+  "runs": [
+    {
+      "scene": "classroom",
+      "status": "ok",
+      "backend": "webgl",
+      "meta": {
+        "quality": 0,
+        "viewport": [
+          640,
+          360,
+          1
+        ],
+        "drawingBuffer": [
+          640,
+          360
+        ],
+        "target": [
+          352,
+          198
+        ],
+        "samples": 0,
+        "canvasSamples": 0,
+        "canvasAntialias": false,
+        "sceneFingerprint": "0e61a430",
+        "camera": {
+          "position": [
+            17.300000000000004,
+            1.65,
+            0.3899999999999988
+          ],
+          "quaternion": [
+            -0.021210021598267154,
+            0.7067886069991516,
+            0.021210021598267154,
+            0.7067886069991515
+          ],
+          "fov": 72,
+          "near": 0.08
+        },
+        "metrics": {
+          "geometries": 109,
+          "textures": 42,
+          "programs": 18,
+          "calls": 278
+        },
+        "adapter": {
+          "vendor": "Google Inc. (Google)",
+          "description": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        },
+        "backend": {
+          "phase": "ready",
+          "backend": "webgl",
+          "requested": "webgl",
+          "fallbackReason": null,
+          "diagnostic": null
+        }
+      },
+      "samples": [
+        {
+          "startMs": 2084.39999999851,
+          "submitMs": 7.899999998509884,
+          "completeMs": 7.899999998509884,
+          "calls": 278,
+          "intervalMs": null
+        },
+        {
+          "startMs": 2095.39999999851,
+          "submitMs": 3.199999999254942,
+          "completeMs": 3.300000000745058,
+          "calls": 278,
+          "intervalMs": 11
+        },
+        {
+          "startMs": 2103.39999999851,
+          "submitMs": 3.5,
+          "completeMs": 3.600000001490116,
+          "calls": 278,
+          "intervalMs": 8
+        },
+        {
+          "startMs": 2147.89999999851,
+          "submitMs": 3.399999998509884,
+          "completeMs": 3.399999998509884,
+          "calls": 278,
+          "intervalMs": 44.5
+        },
+        {
+          "startMs": 2153,
+          "submitMs": 2.699999999254942,
+          "completeMs": 2.7999999970197678,
+          "calls": 278,
+          "intervalMs": 5.100000001490116
+        },
+        {
+          "startMs": 2169.699999999255,
+          "submitMs": 3.199999999254942,
+          "completeMs": 3.300000000745058,
+          "calls": 278,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 2186.7999999970198,
+          "submitMs": 3.600000001490116,
+          "completeMs": 3.600000001490116,
+          "calls": 278,
+          "intervalMs": 17.099999997764826
+        },
+        {
+          "startMs": 2202.7999999970198,
+          "submitMs": 2.600000001490116,
+          "completeMs": 2.600000001490116,
+          "calls": 278,
+          "intervalMs": 16
+        },
+        {
+          "startMs": 2219.699999999255,
+          "submitMs": 2.399999998509884,
+          "completeMs": 2.399999998509884,
+          "calls": 278,
+          "intervalMs": 16.900000002235174
+        },
+        {
+          "startMs": 2247.89999999851,
+          "submitMs": 2.699999999254942,
+          "completeMs": 2.699999999254942,
+          "calls": 278,
+          "intervalMs": 28.199999999254942
+        },
+        {
+          "startMs": 2252.599999997765,
+          "submitMs": 1.9000000022351742,
+          "completeMs": 2,
+          "calls": 278,
+          "intervalMs": 4.699999999254942
+        },
+        {
+          "startMs": 2269.699999999255,
+          "submitMs": 1.8999999985098839,
+          "completeMs": 1.8999999985098839,
+          "calls": 278,
+          "intervalMs": 17.100000001490116
+        },
+        {
+          "startMs": 2286.599999997765,
+          "submitMs": 2.5,
+          "completeMs": 2.600000001490116,
+          "calls": 278,
+          "intervalMs": 16.899999998509884
+        },
+        {
+          "startMs": 2302.89999999851,
+          "submitMs": 2.300000000745058,
+          "completeMs": 2.300000000745058,
+          "calls": 278,
+          "intervalMs": 16.300000000745058
+        },
+        {
+          "startMs": 2354.5,
+          "submitMs": 5.599999997764826,
+          "completeMs": 5.599999997764826,
+          "calls": 278,
+          "intervalMs": 51.600000001490116
+        },
+        {
+          "startMs": 2360.89999999851,
+          "submitMs": 3,
+          "completeMs": 3.100000001490116,
+          "calls": 278,
+          "intervalMs": 6.399999998509884
+        },
+        {
+          "startMs": 2369.2999999970198,
+          "submitMs": 1.9000000022351742,
+          "completeMs": 2,
+          "calls": 278,
+          "intervalMs": 8.399999998509884
+        },
+        {
+          "startMs": 2386.7999999970198,
+          "submitMs": 2.400000002235174,
+          "completeMs": 2.400000002235174,
+          "calls": 278,
+          "intervalMs": 17.5
+        },
+        {
+          "startMs": 2403.099999997765,
+          "submitMs": 2.300000000745058,
+          "completeMs": 2.300000000745058,
+          "calls": 278,
+          "intervalMs": 16.300000000745058
+        },
+        {
+          "startMs": 2448.599999997765,
+          "submitMs": 2.800000000745058,
+          "completeMs": 2.900000002235174,
+          "calls": 278,
+          "intervalMs": 45.5
+        },
+        {
+          "startMs": 2452.5,
+          "submitMs": 1.5999999977648258,
+          "completeMs": 1.5999999977648258,
+          "calls": 278,
+          "intervalMs": 3.900000002235174
+        },
+        {
+          "startMs": 2469.699999999255,
+          "submitMs": 2.099999997764826,
+          "completeMs": 2.099999997764826,
+          "calls": 278,
+          "intervalMs": 17.199999999254942
+        },
+        {
+          "startMs": 2486.199999999255,
+          "submitMs": 2.599999997764826,
+          "completeMs": 2.599999997764826,
+          "calls": 278,
+          "intervalMs": 16.5
+        },
+        {
+          "startMs": 2503.2999999970198,
+          "submitMs": 4.400000002235174,
+          "completeMs": 4.5,
+          "calls": 278,
+          "intervalMs": 17.099999997764826
+        },
+        {
+          "startMs": 2548,
+          "submitMs": 9.899999998509884,
+          "completeMs": 9.899999998509884,
+          "calls": 278,
+          "intervalMs": 44.70000000298023
+        },
+        {
+          "startMs": 2559.099999997765,
+          "submitMs": 3.300000000745058,
+          "completeMs": 3.400000002235174,
+          "calls": 278,
+          "intervalMs": 11.099999997764826
+        },
+        {
+          "startMs": 2569.89999999851,
+          "submitMs": 4.199999999254942,
+          "completeMs": 4.199999999254942,
+          "calls": 278,
+          "intervalMs": 10.800000000745058
+        },
+        {
+          "startMs": 2586.2999999970198,
+          "submitMs": 3.900000002235174,
+          "completeMs": 3.900000002235174,
+          "calls": 278,
+          "intervalMs": 16.399999998509884
+        },
+        {
+          "startMs": 2603,
+          "submitMs": 3.699999999254942,
+          "completeMs": 3.699999999254942,
+          "calls": 278,
+          "intervalMs": 16.700000002980232
+        },
+        {
+          "startMs": 2654.5,
+          "submitMs": 3.399999998509884,
+          "completeMs": 3.399999998509884,
+          "calls": 278,
+          "intervalMs": 51.5
+        },
+        {
+          "startMs": 2669.699999999255,
+          "submitMs": 2.599999997764826,
+          "completeMs": 2.800000000745058,
+          "calls": 278,
+          "intervalMs": 15.199999999254942
+        },
+        {
+          "startMs": 2686.2999999970198,
+          "submitMs": 2,
+          "completeMs": 2,
+          "calls": 278,
+          "intervalMs": 16.599999997764826
+        },
+        {
+          "startMs": 2704.2999999970198,
+          "submitMs": 2.600000001490116,
+          "completeMs": 2.600000001490116,
+          "calls": 278,
+          "intervalMs": 18
+        },
+        {
+          "startMs": 2748.199999999255,
+          "submitMs": 6.399999998509884,
+          "completeMs": 6.399999998509884,
+          "calls": 278,
+          "intervalMs": 43.900000002235174
+        },
+        {
+          "startMs": 2755.699999999255,
+          "submitMs": 4.300000000745058,
+          "completeMs": 4.399999998509884,
+          "calls": 278,
+          "intervalMs": 7.5
+        },
+        {
+          "startMs": 2773.89999999851,
+          "submitMs": 2.300000000745058,
+          "completeMs": 2.300000000745058,
+          "calls": 278,
+          "intervalMs": 18.199999999254942
+        },
+        {
+          "startMs": 2786,
+          "submitMs": 2.699999999254942,
+          "completeMs": 2.699999999254942,
+          "calls": 278,
+          "intervalMs": 12.100000001490116
+        },
+        {
+          "startMs": 2805.599999997765,
+          "submitMs": 3,
+          "completeMs": 3,
+          "calls": 278,
+          "intervalMs": 19.599999997764826
+        },
+        {
+          "startMs": 2848,
+          "submitMs": 3.099999997764826,
+          "completeMs": 3.099999997764826,
+          "calls": 278,
+          "intervalMs": 42.400000002235174
+        },
+        {
+          "startMs": 2852.39999999851,
+          "submitMs": 1.699999999254942,
+          "completeMs": 1.699999999254942,
+          "calls": 278,
+          "intervalMs": 4.399999998509884
+        },
+        {
+          "startMs": 2869.5,
+          "submitMs": 5.299999997019768,
+          "completeMs": 5.299999997019768,
+          "calls": 278,
+          "intervalMs": 17.100000001490116
+        },
+        {
+          "startMs": 2887.599999997765,
+          "submitMs": 2.400000002235174,
+          "completeMs": 2.5,
+          "calls": 278,
+          "intervalMs": 18.099999997764826
+        },
+        {
+          "startMs": 2902.699999999255,
+          "submitMs": 2.300000000745058,
+          "completeMs": 2.300000000745058,
+          "calls": 278,
+          "intervalMs": 15.100000001490116
+        },
+        {
+          "startMs": 2920,
+          "submitMs": 29.5,
+          "completeMs": 29.599999997764826,
+          "calls": 278,
+          "intervalMs": 17.300000000745058
+        },
+        {
+          "startMs": 2950.5,
+          "submitMs": 1.699999999254942,
+          "completeMs": 1.699999999254942,
+          "calls": 278,
+          "intervalMs": 30.5
+        },
+        {
+          "startMs": 2953.89999999851,
+          "submitMs": 1.699999999254942,
+          "completeMs": 1.699999999254942,
+          "calls": 278,
+          "intervalMs": 3.399999998509884
+        },
+        {
+          "startMs": 2969.699999999255,
+          "submitMs": 3.599999997764826,
+          "completeMs": 3.599999997764826,
+          "calls": 278,
+          "intervalMs": 15.800000000745058
+        },
+        {
+          "startMs": 2986.099999997765,
+          "submitMs": 2.600000001490116,
+          "completeMs": 2.699999999254942,
+          "calls": 278,
+          "intervalMs": 16.399999998509884
+        },
+        {
+          "startMs": 3003.39999999851,
+          "submitMs": 3.600000001490116,
+          "completeMs": 3.600000001490116,
+          "calls": 278,
+          "intervalMs": 17.300000000745058
+        },
+        {
+          "startMs": 3047.89999999851,
+          "submitMs": 2.600000001490116,
+          "completeMs": 2.600000001490116,
+          "calls": 278,
+          "intervalMs": 44.5
+        },
+        {
+          "startMs": 3052.599999997765,
+          "submitMs": 2.100000001490116,
+          "completeMs": 2.100000001490116,
+          "calls": 278,
+          "intervalMs": 4.699999999254942
+        },
+        {
+          "startMs": 3069.5,
+          "submitMs": 2.5,
+          "completeMs": 2.5,
+          "calls": 278,
+          "intervalMs": 16.900000002235174
+        },
+        {
+          "startMs": 3086.099999997765,
+          "submitMs": 2.5,
+          "completeMs": 2.5,
+          "calls": 278,
+          "intervalMs": 16.599999997764826
+        }
+      ],
+      "round": 1
+    },
+    {
+      "scene": "stairs",
+      "status": "ok",
+      "backend": "webgl",
+      "meta": {
+        "quality": 0,
+        "viewport": [
+          640,
+          360,
+          1
+        ],
+        "drawingBuffer": [
+          640,
+          360
+        ],
+        "target": [
+          352,
+          198
+        ],
+        "samples": 0,
+        "canvasSamples": 0,
+        "canvasAntialias": false,
+        "sceneFingerprint": "e4c421eb",
+        "camera": {
+          "position": [
+            -1.25,
+            2.45,
+            3.199999999999994
+          ],
+          "quaternion": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "fov": 72,
+          "near": 0.08
+        },
+        "metrics": {
+          "geometries": 80,
+          "textures": 42,
+          "programs": 29,
+          "calls": 33
+        },
+        "adapter": {
+          "vendor": "Google Inc. (Google)",
+          "description": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        },
+        "backend": {
+          "phase": "ready",
+          "backend": "webgl",
+          "requested": "webgl",
+          "fallbackReason": null,
+          "diagnostic": null
+        }
+      },
+      "samples": [
+        {
+          "startMs": 14384.5,
+          "submitMs": 0.8999999985098839,
+          "completeMs": 2.099999997764826,
+          "calls": 33,
+          "intervalMs": null
+        },
+        {
+          "startMs": 14387.79999999702,
+          "submitMs": 0.4000000022351742,
+          "completeMs": 0.4000000022351742,
+          "calls": 33,
+          "intervalMs": 3.2999999970197678
+        },
+        {
+          "startMs": 14402.89999999851,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 15.100000001490116
+        },
+        {
+          "startMs": 14449.89999999851,
+          "submitMs": 0.8999999985098839,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 47
+        },
+        {
+          "startMs": 14453.699999999255,
+          "submitMs": 0.3999999985098839,
+          "completeMs": 0.3999999985098839,
+          "calls": 33,
+          "intervalMs": 3.800000000745058
+        },
+        {
+          "startMs": 14468.89999999851,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 33,
+          "intervalMs": 15.199999999254942
+        },
+        {
+          "startMs": 14485.29999999702,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 16.399999998509884
+        },
+        {
+          "startMs": 14502.5,
+          "submitMs": 0.8999999985098839,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 17.200000002980232
+        },
+        {
+          "startMs": 14553.89999999851,
+          "submitMs": 0.8999999985098839,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 51.399999998509884
+        },
+        {
+          "startMs": 14555.89999999851,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 2
+        },
+        {
+          "startMs": 14568.699999999255,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.6999999992549419,
+          "calls": 33,
+          "intervalMs": 12.800000000745058
+        },
+        {
+          "startMs": 14585.29999999702,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.9000000022351742,
+          "calls": 33,
+          "intervalMs": 16.599999997764826
+        },
+        {
+          "startMs": 14603.199999999255,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 17.900000002235174
+        },
+        {
+          "startMs": 14647.599999997765,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 33,
+          "intervalMs": 44.399999998509884
+        },
+        {
+          "startMs": 14653.099999997765,
+          "submitMs": 0.5,
+          "completeMs": 0.5,
+          "calls": 33,
+          "intervalMs": 5.5
+        },
+        {
+          "startMs": 14668.79999999702,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 15.699999999254942
+        },
+        {
+          "startMs": 14685.39999999851,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.6999999992549419,
+          "calls": 33,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 14702.099999997765,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 14747.89999999851,
+          "submitMs": 0.8999999985098839,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 45.80000000074506
+        },
+        {
+          "startMs": 14752.199999999255,
+          "submitMs": 0.5,
+          "completeMs": 0.5999999977648258,
+          "calls": 33,
+          "intervalMs": 4.300000000745058
+        },
+        {
+          "startMs": 14769,
+          "submitMs": 0.5999999977648258,
+          "completeMs": 0.5999999977648258,
+          "calls": 33,
+          "intervalMs": 16.800000000745058
+        },
+        {
+          "startMs": 14785.199999999255,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.6999999992549419,
+          "calls": 33,
+          "intervalMs": 16.199999999254942
+        },
+        {
+          "startMs": 14802,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.6999999992549419,
+          "calls": 33,
+          "intervalMs": 16.800000000745058
+        },
+        {
+          "startMs": 14819.099999997765,
+          "submitMs": 30.900000002235174,
+          "completeMs": 30.900000002235174,
+          "calls": 33,
+          "intervalMs": 17.099999997764826
+        },
+        {
+          "startMs": 14850.79999999702,
+          "submitMs": 0.6000000014901161,
+          "completeMs": 0.6000000014901161,
+          "calls": 33,
+          "intervalMs": 31.699999999254942
+        },
+        {
+          "startMs": 14858.89999999851,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 8.100000001490116
+        },
+        {
+          "startMs": 14868.89999999851,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 33,
+          "intervalMs": 10
+        },
+        {
+          "startMs": 14885.5,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.7999999970197678,
+          "calls": 33,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 14904.39999999851,
+          "submitMs": 0.5,
+          "completeMs": 0.5,
+          "calls": 33,
+          "intervalMs": 18.899999998509884
+        },
+        {
+          "startMs": 14949.89999999851,
+          "submitMs": 1.5,
+          "completeMs": 1.5,
+          "calls": 33,
+          "intervalMs": 45.5
+        },
+        {
+          "startMs": 14953.5,
+          "submitMs": 0.5,
+          "completeMs": 0.5,
+          "calls": 33,
+          "intervalMs": 3.600000001490116
+        },
+        {
+          "startMs": 14968.79999999702,
+          "submitMs": 0.6000000014901161,
+          "completeMs": 0.6000000014901161,
+          "calls": 33,
+          "intervalMs": 15.299999997019768
+        },
+        {
+          "startMs": 14985.5,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.6999999992549419,
+          "calls": 33,
+          "intervalMs": 16.700000002980232
+        },
+        {
+          "startMs": 15002.099999997765,
+          "submitMs": 0.5,
+          "completeMs": 0.5,
+          "calls": 33,
+          "intervalMs": 16.599999997764826
+        },
+        {
+          "startMs": 15048,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.199999999254942,
+          "calls": 33,
+          "intervalMs": 45.900000002235174
+        },
+        {
+          "startMs": 15052,
+          "submitMs": 0.7999999970197678,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 4
+        },
+        {
+          "startMs": 15069.29999999702,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 33,
+          "intervalMs": 17.299999997019768
+        },
+        {
+          "startMs": 15085.5,
+          "submitMs": 0.7999999970197678,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 16.200000002980232
+        },
+        {
+          "startMs": 15105.79999999702,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 20.299999997019768
+        },
+        {
+          "startMs": 15149.79999999702,
+          "submitMs": 4.200000002980232,
+          "completeMs": 4.300000000745058,
+          "calls": 33,
+          "intervalMs": 44
+        },
+        {
+          "startMs": 15154.699999999255,
+          "submitMs": 0.5,
+          "completeMs": 0.5,
+          "calls": 33,
+          "intervalMs": 4.900000002235174
+        },
+        {
+          "startMs": 15168.79999999702,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.9000000022351742,
+          "calls": 33,
+          "intervalMs": 14.099999997764826
+        },
+        {
+          "startMs": 15185.39999999851,
+          "submitMs": 0.8999999985098839,
+          "completeMs": 0.8999999985098839,
+          "calls": 33,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 15205.79999999702,
+          "submitMs": 1,
+          "completeMs": 1.1000000014901161,
+          "calls": 33,
+          "intervalMs": 20.399999998509884
+        },
+        {
+          "startMs": 15252,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.2999999970197678,
+          "calls": 33,
+          "intervalMs": 46.20000000298023
+        },
+        {
+          "startMs": 15268.599999997765,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 16.599999997764826
+        },
+        {
+          "startMs": 15285.39999999851,
+          "submitMs": 4.300000000745058,
+          "completeMs": 4.300000000745058,
+          "calls": 33,
+          "intervalMs": 16.800000000745058
+        },
+        {
+          "startMs": 15301.89999999851,
+          "submitMs": 0.6000000014901161,
+          "completeMs": 0.6000000014901161,
+          "calls": 33,
+          "intervalMs": 16.5
+        },
+        {
+          "startMs": 15347.699999999255,
+          "submitMs": 1,
+          "completeMs": 1,
+          "calls": 33,
+          "intervalMs": 45.80000000074506
+        },
+        {
+          "startMs": 15352.29999999702,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 33,
+          "intervalMs": 4.599999997764826
+        },
+        {
+          "startMs": 15368.79999999702,
+          "submitMs": 0.9000000022351742,
+          "completeMs": 0.9000000022351742,
+          "calls": 33,
+          "intervalMs": 16.5
+        },
+        {
+          "startMs": 15385.5,
+          "submitMs": 0.7999999970197678,
+          "completeMs": 0.7999999970197678,
+          "calls": 33,
+          "intervalMs": 16.700000002980232
+        }
+      ],
+      "round": 1
+    },
+    {
+      "scene": "outdoor",
+      "status": "ok",
+      "backend": "webgl",
+      "meta": {
+        "quality": 0,
+        "viewport": [
+          640,
+          360,
+          1
+        ],
+        "drawingBuffer": [
+          640,
+          360
+        ],
+        "target": [
+          352,
+          198
+        ],
+        "samples": 0,
+        "canvasSamples": 0,
+        "canvasAntialias": false,
+        "sceneFingerprint": "8d332f53",
+        "camera": {
+          "position": [
+            175.55555555555554,
+            1.65,
+            200
+          ],
+          "quaternion": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "fov": 72,
+          "near": 0.08
+        },
+        "metrics": {
+          "geometries": 113,
+          "textures": 50,
+          "programs": 38,
+          "calls": 112
+        },
+        "adapter": {
+          "vendor": "Google Inc. (Google)",
+          "description": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        },
+        "backend": {
+          "phase": "ready",
+          "backend": "webgl",
+          "requested": "webgl",
+          "fallbackReason": null,
+          "diagnostic": null
+        }
+      },
+      "samples": [
+        {
+          "startMs": 22683,
+          "submitMs": 1.2999999970197678,
+          "completeMs": 1.2999999970197678,
+          "calls": 112,
+          "intervalMs": null
+        },
+        {
+          "startMs": 22685.199999999255,
+          "submitMs": 0.6999999992549419,
+          "completeMs": 0.6999999992549419,
+          "calls": 112,
+          "intervalMs": 2.199999999254942
+        },
+        {
+          "startMs": 22701.699999999255,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 112,
+          "intervalMs": 16.5
+        },
+        {
+          "startMs": 22747.599999997765,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.300000000745058,
+          "calls": 112,
+          "intervalMs": 45.899999998509884
+        },
+        {
+          "startMs": 22751.5,
+          "submitMs": 0.7999999970197678,
+          "completeMs": 0.7999999970197678,
+          "calls": 112,
+          "intervalMs": 3.900000002235174
+        },
+        {
+          "startMs": 22768.39999999851,
+          "submitMs": 1,
+          "completeMs": 1,
+          "calls": 112,
+          "intervalMs": 16.899999998509884
+        },
+        {
+          "startMs": 22785.89999999851,
+          "submitMs": 4.100000001490116,
+          "completeMs": 4.100000001490116,
+          "calls": 112,
+          "intervalMs": 17.5
+        },
+        {
+          "startMs": 22801.699999999255,
+          "submitMs": 1,
+          "completeMs": 1,
+          "calls": 112,
+          "intervalMs": 15.800000000745058
+        },
+        {
+          "startMs": 22818.699999999255,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.3999999985098839,
+          "calls": 112,
+          "intervalMs": 17
+        },
+        {
+          "startMs": 22835.199999999255,
+          "submitMs": 1.300000000745058,
+          "completeMs": 1.300000000745058,
+          "calls": 112,
+          "intervalMs": 16.5
+        },
+        {
+          "startMs": 22851.79999999702,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.2000000029802322,
+          "calls": 112,
+          "intervalMs": 16.599999997764826
+        },
+        {
+          "startMs": 22868.39999999851,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 22885.099999997765,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 22901.89999999851,
+          "submitMs": 1.300000000745058,
+          "completeMs": 1.300000000745058,
+          "calls": 112,
+          "intervalMs": 16.800000000745058
+        },
+        {
+          "startMs": 22918.29999999702,
+          "submitMs": 1.300000000745058,
+          "completeMs": 1.300000000745058,
+          "calls": 112,
+          "intervalMs": 16.399999998509884
+        },
+        {
+          "startMs": 22935,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.700000002980232
+        },
+        {
+          "startMs": 22951.79999999702,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 112,
+          "intervalMs": 16.799999997019768
+        },
+        {
+          "startMs": 22968.39999999851,
+          "submitMs": 1.5,
+          "completeMs": 1.5,
+          "calls": 112,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 22985.199999999255,
+          "submitMs": 1.5999999977648258,
+          "completeMs": 1.5999999977648258,
+          "calls": 112,
+          "intervalMs": 16.800000000745058
+        },
+        {
+          "startMs": 23001.89999999851,
+          "submitMs": 1.3999999985098839,
+          "completeMs": 1.3999999985098839,
+          "calls": 112,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 23018.39999999851,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.300000000745058,
+          "calls": 112,
+          "intervalMs": 16.5
+        },
+        {
+          "startMs": 23035.199999999255,
+          "submitMs": 1.3999999985098839,
+          "completeMs": 1.3999999985098839,
+          "calls": 112,
+          "intervalMs": 16.800000000745058
+        },
+        {
+          "startMs": 23051.89999999851,
+          "submitMs": 1.3999999985098839,
+          "completeMs": 1.3999999985098839,
+          "calls": 112,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 23068.5,
+          "submitMs": 1.7999999970197678,
+          "completeMs": 1.7999999970197678,
+          "calls": 112,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 23085.099999997765,
+          "submitMs": 1.300000000745058,
+          "completeMs": 1.300000000745058,
+          "calls": 112,
+          "intervalMs": 16.599999997764826
+        },
+        {
+          "startMs": 23102,
+          "submitMs": 1.5,
+          "completeMs": 1.5999999977648258,
+          "calls": 112,
+          "intervalMs": 16.900000002235174
+        },
+        {
+          "startMs": 23118.199999999255,
+          "submitMs": 1.0999999977648258,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.199999999254942
+        },
+        {
+          "startMs": 23134.89999999851,
+          "submitMs": 1.800000000745058,
+          "completeMs": 1.800000000745058,
+          "calls": 112,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 23151.79999999702,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 112,
+          "intervalMs": 16.899999998509884
+        },
+        {
+          "startMs": 23169.79999999702,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 112,
+          "intervalMs": 18
+        },
+        {
+          "startMs": 23185,
+          "submitMs": 1.2999999970197678,
+          "completeMs": 1.2999999970197678,
+          "calls": 112,
+          "intervalMs": 15.200000002980232
+        },
+        {
+          "startMs": 23201.79999999702,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 112,
+          "intervalMs": 16.799999997019768
+        },
+        {
+          "startMs": 23222.699999999255,
+          "submitMs": 1.800000000745058,
+          "completeMs": 1.800000000745058,
+          "calls": 112,
+          "intervalMs": 20.900000002235174
+        },
+        {
+          "startMs": 23235,
+          "submitMs": 1.5,
+          "completeMs": 1.5,
+          "calls": 112,
+          "intervalMs": 12.300000000745058
+        },
+        {
+          "startMs": 23251.699999999255,
+          "submitMs": 1.3999999985098839,
+          "completeMs": 1.3999999985098839,
+          "calls": 112,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 23268.29999999702,
+          "submitMs": 1.4000000022351742,
+          "completeMs": 1.4000000022351742,
+          "calls": 112,
+          "intervalMs": 16.599999997764826
+        },
+        {
+          "startMs": 23285.199999999255,
+          "submitMs": 1.5,
+          "completeMs": 1.5,
+          "calls": 112,
+          "intervalMs": 16.900000002235174
+        },
+        {
+          "startMs": 23301.599999997765,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.399999998509884
+        },
+        {
+          "startMs": 23318.599999997765,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 17
+        },
+        {
+          "startMs": 23335.29999999702,
+          "submitMs": 1.4000000022351742,
+          "completeMs": 1.4000000022351742,
+          "calls": 112,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 23352.199999999255,
+          "submitMs": 6.5,
+          "completeMs": 6.599999997764826,
+          "calls": 112,
+          "intervalMs": 16.900000002235174
+        },
+        {
+          "startMs": 23368.29999999702,
+          "submitMs": 1.9000000022351742,
+          "completeMs": 1.9000000022351742,
+          "calls": 112,
+          "intervalMs": 16.099999997764826
+        },
+        {
+          "startMs": 23385.29999999702,
+          "submitMs": 4,
+          "completeMs": 4,
+          "calls": 112,
+          "intervalMs": 17
+        },
+        {
+          "startMs": 23401.79999999702,
+          "submitMs": 1.6000000014901161,
+          "completeMs": 1.7000000029802322,
+          "calls": 112,
+          "intervalMs": 16.5
+        },
+        {
+          "startMs": 23418.5,
+          "submitMs": 1.699999999254942,
+          "completeMs": 1.699999999254942,
+          "calls": 112,
+          "intervalMs": 16.700000002980232
+        },
+        {
+          "startMs": 23447.5,
+          "submitMs": 2.2999999970197678,
+          "completeMs": 2.2999999970197678,
+          "calls": 112,
+          "intervalMs": 29
+        },
+        {
+          "startMs": 23453.699999999255,
+          "submitMs": 1.8999999985098839,
+          "completeMs": 1.8999999985098839,
+          "calls": 112,
+          "intervalMs": 6.199999999254942
+        },
+        {
+          "startMs": 23468.29999999702,
+          "submitMs": 5.600000001490116,
+          "completeMs": 5.600000001490116,
+          "calls": 112,
+          "intervalMs": 14.599999997764826
+        },
+        {
+          "startMs": 23484.89999999851,
+          "submitMs": 0.8999999985098839,
+          "completeMs": 0.8999999985098839,
+          "calls": 112,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 23502.599999997765,
+          "submitMs": 1.1000000014901161,
+          "completeMs": 1.1000000014901161,
+          "calls": 112,
+          "intervalMs": 17.699999999254942
+        },
+        {
+          "startMs": 23547.39999999851,
+          "submitMs": 2.800000000745058,
+          "completeMs": 2.800000000745058,
+          "calls": 112,
+          "intervalMs": 44.80000000074506
+        },
+        {
+          "startMs": 23551.599999997765,
+          "submitMs": 0.8000000007450581,
+          "completeMs": 0.8000000007450581,
+          "calls": 112,
+          "intervalMs": 4.199999999254942
+        },
+        {
+          "startMs": 23568.39999999851,
+          "submitMs": 1.300000000745058,
+          "completeMs": 1.300000000745058,
+          "calls": 112,
+          "intervalMs": 16.800000000745058
+        },
+        {
+          "startMs": 23585,
+          "submitMs": 4.099999997764826,
+          "completeMs": 4.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.600000001490116
+        },
+        {
+          "startMs": 23601.699999999255,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.699999999254942
+        },
+        {
+          "startMs": 23647.5,
+          "submitMs": 3.2999999970197678,
+          "completeMs": 3.2999999970197678,
+          "calls": 112,
+          "intervalMs": 45.80000000074506
+        },
+        {
+          "startMs": 23652.199999999255,
+          "submitMs": 1,
+          "completeMs": 1,
+          "calls": 112,
+          "intervalMs": 4.699999999254942
+        },
+        {
+          "startMs": 23668.39999999851,
+          "submitMs": 2.899999998509884,
+          "completeMs": 2.899999998509884,
+          "calls": 112,
+          "intervalMs": 16.199999999254942
+        },
+        {
+          "startMs": 23685.199999999255,
+          "submitMs": 1.199999999254942,
+          "completeMs": 1.199999999254942,
+          "calls": 112,
+          "intervalMs": 16.800000000745058
+        }
+      ],
+      "round": 1
+    },
+    {
+      "scene": "classroom",
+      "status": "ok",
+      "backend": "webgpu",
+      "meta": {
+        "quality": 0,
+        "viewport": [
+          640,
+          360,
+          1
+        ],
+        "drawingBuffer": [
+          640,
+          360
+        ],
+        "target": [
+          352,
+          198
+        ],
+        "samples": 0,
+        "canvasSamples": 0,
+        "canvasAntialias": false,
+        "sceneFingerprint": "0e61a430",
+        "camera": {
+          "position": [
+            17.300000000000004,
+            1.65,
+            0.3899999999999988
+          ],
+          "quaternion": [
+            -0.021210021598267154,
+            0.7067886069991516,
+            0.021210021598267154,
+            0.7067886069991515
+          ],
+          "fov": 72,
+          "near": 0.08
+        },
+        "metrics": {
+          "geometries": 110,
+          "textures": 47,
+          "programs": 33,
+          "calls": 279
+        },
+        "adapter": {},
+        "backend": {
+          "phase": "ready",
+          "backend": "webgpu",
+          "requested": "auto",
+          "fallbackReason": null,
+          "diagnostic": null
+        }
+      },
+      "samples": [
+        {
+          "startMs": 7597,
+          "submitMs": 7.399999998509884,
+          "completeMs": 208.10000000149012,
+          "calls": 279,
+          "intervalMs": null
+        },
+        {
+          "startMs": 7813.699999999255,
+          "submitMs": 4.699999999254942,
+          "completeMs": 196.40000000223517,
+          "calls": 279,
+          "intervalMs": 216.69999999925494
+        },
+        {
+          "startMs": 8013.699999999255,
+          "submitMs": 3.400000002235174,
+          "completeMs": 280.19999999925494,
+          "calls": 279,
+          "intervalMs": 200
+        },
+        {
+          "startMs": 8297.199999999255,
+          "submitMs": 3.100000001490116,
+          "completeMs": 221.19999999925494,
+          "calls": 279,
+          "intervalMs": 283.5
+        },
+        {
+          "startMs": 8530.5,
+          "submitMs": 3.300000000745058,
+          "completeMs": 192.10000000149012,
+          "calls": 279,
+          "intervalMs": 233.30000000074506
+        }
+      ],
+      "round": 1
+    },
+    {
+      "scene": "stairs",
+      "status": "ok",
+      "backend": "webgpu",
+      "meta": {
+        "quality": 0,
+        "viewport": [
+          640,
+          360,
+          1
+        ],
+        "drawingBuffer": [
+          640,
+          360
+        ],
+        "target": [
+          352,
+          198
+        ],
+        "samples": 0,
+        "canvasSamples": 0,
+        "canvasAntialias": false,
+        "sceneFingerprint": "e4c421eb",
+        "camera": {
+          "position": [
+            -1.25,
+            2.45,
+            3.199999999999994
+          ],
+          "quaternion": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "fov": 72,
+          "near": 0.08
+        },
+        "metrics": {
+          "geometries": 81,
+          "textures": 47,
+          "programs": 37,
+          "calls": 34
+        },
+        "adapter": {},
+        "backend": {
+          "phase": "ready",
+          "backend": "webgpu",
+          "requested": "auto",
+          "fallbackReason": null,
+          "diagnostic": null
+        }
+      },
+      "samples": [
+        {
+          "startMs": 10113.699999999255,
+          "submitMs": 1.800000000745058,
+          "completeMs": 167.30000000074506,
+          "calls": 34,
+          "intervalMs": null
+        },
+        {
+          "startMs": 10297.10000000149,
+          "submitMs": 2.7999999970197678,
+          "completeMs": 164.39999999850988,
+          "calls": 34,
+          "intervalMs": 183.40000000223517
+        },
+        {
+          "startMs": 10463.5,
+          "submitMs": 1.6000000014901161,
+          "completeMs": 116.10000000149012,
+          "calls": 34,
+          "intervalMs": 166.39999999850988
+        },
+        {
+          "startMs": 10580.39999999851,
+          "submitMs": 3.800000000745058,
+          "completeMs": 124.20000000298023,
+          "calls": 34,
+          "intervalMs": 116.89999999850988
+        },
+        {
+          "startMs": 10714.39999999851,
+          "submitMs": 2.100000001490116,
+          "completeMs": 167.20000000298023,
+          "calls": 34,
+          "intervalMs": 134
+        },
+        {
+          "startMs": 10897.300000000745,
+          "submitMs": 3.399999998509884,
+          "completeMs": 184,
+          "calls": 34,
+          "intervalMs": 182.90000000223517
+        },
+        {
+          "startMs": 11097.699999999255,
+          "submitMs": 17.900000002235174,
+          "completeMs": 200.40000000223517,
+          "calls": 34,
+          "intervalMs": 200.39999999850988
+        }
+      ],
+      "round": 1
+    },
+    {
+      "scene": "outdoor",
+      "status": "ok",
+      "backend": "webgpu",
+      "meta": {
+        "quality": 0,
+        "viewport": [
+          640,
+          360,
+          1
+        ],
+        "drawingBuffer": [
+          640,
+          360
+        ],
+        "target": [
+          352,
+          198
+        ],
+        "samples": 0,
+        "canvasSamples": 0,
+        "canvasAntialias": false,
+        "sceneFingerprint": "8d332f53",
+        "camera": {
+          "position": [
+            175.55555555555554,
+            1.65,
+            200
+          ],
+          "quaternion": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "fov": 72,
+          "near": 0.08
+        },
+        "metrics": {
+          "geometries": 114,
+          "textures": 55,
+          "programs": 50,
+          "calls": 113
+        },
+        "adapter": {},
+        "backend": {
+          "phase": "ready",
+          "backend": "webgpu",
+          "requested": "auto",
+          "fallbackReason": null,
+          "diagnostic": null
+        }
+      },
+      "samples": [
+        {
+          "startMs": 13563.5,
+          "submitMs": 2.5,
+          "completeMs": 148,
+          "calls": 113,
+          "intervalMs": null
+        },
+        {
+          "startMs": 13713.5,
+          "submitMs": 2.300000000745058,
+          "completeMs": 187.89999999850988,
+          "calls": 113,
+          "intervalMs": 150
+        },
+        {
+          "startMs": 13913.5,
+          "submitMs": 3,
+          "completeMs": 181.10000000149012,
+          "calls": 113,
+          "intervalMs": 200
+        },
+        {
+          "startMs": 14096.89999999851,
+          "submitMs": 2.400000002235174,
+          "completeMs": 179.80000000074506,
+          "calls": 113,
+          "intervalMs": 183.39999999850988
+        },
+        {
+          "startMs": 14280.300000000745,
+          "submitMs": 2.199999999254942,
+          "completeMs": 145.59999999776483,
+          "calls": 113,
+          "intervalMs": 183.40000000223517
+        },
+        {
+          "startMs": 14430.199999999255,
+          "submitMs": 2.300000000745058,
+          "completeMs": 173.19999999925494,
+          "calls": 113,
+          "intervalMs": 149.89999999850988
+        }
+      ],
+      "round": 1
+    }
+  ],
+  "softwareRenderer": true,
+  "source": {
+    "indexFingerprint": "8082d777"
+  },
+  "capabilities": {
+    "webgpu": {
+      "available": true,
+      "actual": {
+        "phase": "ready",
+        "backend": "webgpu",
+        "requested": "auto",
+        "fallbackReason": null,
+        "diagnostic": null
+      }
+    },
+    "webgl": {
+      "available": true,
+      "actual": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      }
+    }
+  },
+  "finishedAt": "2026-11-05T04:53:18.541Z"
+}

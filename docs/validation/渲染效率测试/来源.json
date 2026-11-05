@@ -1,0 +1,20 @@
+{
+  "gameBase": "4bf8ce1600983b00db663cb44cbffc849766e137",
+  "featureSHA256": "762901d9c2a01fe432890da36872d7458d86309f62368b775c805994857c08d8",
+  "files": [
+    "benchmark/core.js",
+    "benchmark/index.html",
+    "benchmark/page.js",
+    "benchmark/runner.js",
+    "benchmark/style.css",
+    "index.html",
+    "game3d/css/ui.css",
+    "tests/test_renderer_benchmark.py",
+    ".github/workflows/renderers.yml"
+  ],
+  "localTests": 7,
+  "localPassed": 7,
+  "skipped": 0,
+  "softwareGpu": true,
+  "coverageNote": "Strict native WebGPU/WebGL on Q0, three scenes, two rounds; Q3/Q4 validate actual specifications and honest unavailability, not guaranteed native device startup."
+}

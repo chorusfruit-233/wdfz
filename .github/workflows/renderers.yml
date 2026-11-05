@@ -36,3 +36,6 @@ jobs:
           python -m unittest discover -s tests -p test_engine.py -v
           python -m unittest discover -s tests -p test_sensory.py -v
           PYTHONPATH=tests python -m unittest -v test_modules test_controls.ControlsTest.test_brightness_setting_survives_reload
+
+      - name: Renderer benchmark correctness (no performance threshold)
+        run: python -m unittest discover -s tests -p test_renderer_benchmark.py -v
