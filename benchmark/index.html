@@ -6,9 +6,9 @@
 <link rel="stylesheet" href="style.css"><script src="core.js" defer></script><script src="page.js" defer></script>
 </head>
 <body><main>
-<header><a href="../">← 返回游戏</a><p class="eyebrow">里世界 3D · 渲染测试</p><h1>WebGPU / WebGL</h1><p>用相同画质、分辨率和固定镜头，比较这台设备完成一帧的耗时。游戏存档、设置和成绩保持独立。</p></header>
+<header><a href="../">← 返回游戏</a><p class="eyebrow">里世界 3D · 渲染测试</p><h1>WebGPU / WebGL</h1><p>用相同画质、分辨率和固定镜头，比较这台设备连续渲染的吞吐与帧间隔。游戏存档、设置和成绩保持独立。</p></header>
 <form id="config">
-<div class="controls"><label>画质<select id="quality"><option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option><option value="4">真实</option></select></label>
+<div class="controls"><label>测试模式<select id="mode"><option value="continuous" selected>连续渲染</option><option value="sync">逐帧同步诊断</option></select></label><label>画质<select id="quality"><option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option><option value="4">真实</option></select></label>
 <label>画面尺寸<select id="size"><option value="640,360">640 × 360</option><option value="960,540" selected>960 × 540</option><option value="1280,720">1280 × 720</option></select></label>
 <label>每场景采样<select id="duration"><option value="3000">3 秒</option><option value="5000" selected>5 秒</option><option value="10000">10 秒</option><option value="20000">20 秒</option></select></label>
 <label>轮次<select id="rounds"><option value="1">1 轮 · 快速</option><option value="2" selected>2 轮 · 交替顺序</option><option value="4">4 轮 · 交替顺序</option></select></label></div>
@@ -17,6 +17,6 @@
 <div class="actions"><button id="start" type="submit">开始对比</button><button id="stop" type="button" disabled>停止</button><button id="download" type="button" disabled>导出 JSON</button></div>
 </form>
 <section aria-label="测试进度"><p id="status" role="status" aria-live="polite">尚未开始。WebGPU 需要浏览器支持，以及 HTTPS 或 localhost。</p><progress id="progress" value="0" max="1" aria-label="整体进度"></progress><div id="preview"><p>测试画面将在这里显示</p></div></section>
-<section aria-labelledby="results-heading"><h2 id="results-heading">结果</h2><p id="runconfig" class="note"></p><p id="environment" class="note"></p><p id="specs" class="note"></p><p class="mobile-note note">横向滑动表格可查看 P95、提交耗时及帧数。</p><div class="table-wrap"><table><thead><tr><th>场景 / 后端</th><th>完成均值 ↓</th><th>P95 ↓</th><th>提交均值 ↓</th><th>采样帧率</th><th>绘制次数</th><th>帧数</th></tr></thead><tbody id="results"><tr><td colspan="7">运行后显示结果，耗时单位为毫秒。</td></tr></tbody></table></div><p id="verdict"></p></section>
-<details><summary>这些数字怎样理解</summary><p>完成耗时包含 CPU 提交、GPU 执行及完成同步：WebGL 使用 finish，WebGPU 等待队列完成。它不是纯 GPU 计时，也不是正常游玩的帧耗时；同步会改变流水线行为。</p><p>提交耗时只测 JavaScript 渲染调用；WebGPU 的异步提交不能据此单独判优。采样帧率包含浏览器帧调度，可能受屏幕刷新率限制。P95 表示 95% 样本不超过该耗时。</p><p>测试冻结剧情、巡察、随机异象和镜头，不包含游戏逻辑、HUD、声音、加载与编译时间。实际分辨率、MSAA、场景指纹和原始帧写入导出报告；规格不同或样本过少时不判优。没有 WebGPU 或中途回退时不会冒充 WebGPU 成绩。</p><p>功耗、温度和真实 GPU 内存字节数未测。不同浏览器、驱动和设备的结果不能直接混比。<a href="https://github.com/wd-fz/wd-fz.github.io/blob/main/docs/渲染效率测试.md" target="_blank" rel="noopener">完整测试口径</a></p></details>
+<section aria-labelledby="results-heading"><h2 id="results-heading">结果</h2><p id="runconfig" class="note"></p><p id="environment" class="note"></p><p id="specs" class="note"></p><p class="mobile-note note">横向滑动表格可查看帧间隔、提交耗时及帧数。</p><div class="table-wrap"><table><thead><tr><th>场景 / 后端</th><th>连续吞吐 ↑</th><th>P95 帧间隔 ↓</th><th>提交均值 ↓</th><th>同步完成 ↓</th><th>绘制次数</th><th>帧数</th></tr></thead><tbody id="results"><tr><td colspan="7">运行后显示结果，吞吐单位为帧/秒，耗时单位为毫秒。</td></tr></tbody></table></div><p id="verdict"></p></section>
+<details><summary>这些数字怎样理解</summary><p>连续渲染允许 CPU 与 GPU 并行，最多有两帧尚未完成。吞吐将采样尾部的 GPU 等待也算入总时间，避免把排队提交误算为已经完成的帧。P95 帧间隔反映提交节奏；两项都受浏览器调度和屏幕刷新率影响。</p><p>逐帧同步诊断在每帧等待 GPU 完成，用来分析提交与完成等待的差异。它会打断渲染流水线，不能用其差值推算游戏帧率。两种模式都不是纯 GPU 时间，也不包含游戏逻辑、HUD 和声音。</p><p>测试冻结剧情、巡察、随机异象和镜头，不计加载与编译。实际分辨率、MSAA、场景指纹、显卡信息和原始帧写入导出报告；规格不同或样本过少时不判优。没有 WebGPU 或中途回退时不会冒充 WebGPU 成绩。</p><p>功耗、温度和真实 GPU 内存字节数未测。不同浏览器、驱动和设备的结果不能直接混比。<a href="https://github.com/wd-fz/wd-fz.github.io/blob/main/docs/渲染效率测试.md" target="_blank" rel="noopener">完整测试口径</a></p></details>
 </main></body></html>

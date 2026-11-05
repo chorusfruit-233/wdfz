@@ -46,7 +46,7 @@
     await bounded(GLR.renderer.backend.device.queue.onSubmittedWorkDone(),signal,15000,'GPU 完成帧超时');
   }
   function adapter(){
-    if(options.backend==='webgpu'){var a=GLR.renderer.backend.adapter,i=a&&a.info;return i?{vendor:i.vendor,architecture:i.architecture,device:i.device,description:i.description}:{};}
+    if(options.backend==='webgpu'){var i=GLR.renderer.backend.device.adapterInfo;return i?{vendor:i.vendor,architecture:i.architecture,device:i.device,description:i.description}:{description:'浏览器未提供适配器信息'};}
     var gl=GLR.renderer.getContext(),e=gl.getExtension('WEBGL_debug_renderer_info');return {vendor:e?gl.getParameter(e.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),description:e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};
   }
   function meta(){
@@ -91,7 +91,7 @@
       renderer.setRenderTarget(GLR.rt);
       await bounded(renderer.compileAsync(GLR.scene,GLR.cam),signal,90000,'场景管线准备超时');
       renderer.setRenderTarget(null);
-      await bounded(renderer.compileAsync(GLR.postScene,GLR.postCam),signal,90000,'后期管线准备超时');
+      await bounded(ThreeBackend.compilePost(),signal,90000,'后期管线准备超时');
     }finally{renderer.setRenderTarget(previous);}
     canceled(signal);
     var start=performance.now(),frames=0;
@@ -106,7 +106,9 @@
     return {startMs:start,submitMs:submit-start,completeMs:end-start,calls:Engine.metrics().calls};
   }
   async function measure(scene,signal,onProgress){
-    var m=await prepare(scene,signal),samples=[],start=performance.now(),last=null;
+    var m=await prepare(scene,signal);
+    if(options.mode!=='sync')return measureContinuous(scene,m,signal,onProgress);
+    var samples=[],start=performance.now(),last=null;
     while(performance.now()-start<options.sampleMs||samples.length<3){
       var sample=await frame(signal,samples.length);sample.intervalMs=last===null?null:sample.startMs-last;last=sample.startMs;samples.push(sample);
       if(onProgress)onProgress(Math.min(1,(performance.now()-start)/options.sampleMs));
@@ -114,7 +116,44 @@
     if(JSON.stringify(m)!==JSON.stringify(meta())){
       var end=meta();if(JSON.stringify([m.viewport,m.drawingBuffer,m.target,m.samples,m.canvasSamples,m.canvasAntialias,m.sceneFingerprint,m.camera])!==JSON.stringify([end.viewport,end.drawingBuffer,end.target,end.samples,end.canvasSamples,end.canvasAntialias,end.sceneFingerprint,end.camera]))throw new Error('采样期间场景或分辨率变化，本轮数据无效');
     }
-    return {scene:scene,status:'ok',backend:options.backend,meta:m,samples:samples};
+    return {scene:scene,status:'ok',mode:'sync',backend:options.backend,meta:m,samples:samples};
+  }
+  // Queue up to two frames. Poll completion without blocking the main thread; never call
+  // finish() or await GPU completion after every draw. Drain the tail before scoring throughput.
+  async function measureContinuous(scene,m,signal,onProgress){
+    var samples=[],pending=[],start=null,last=null,stop=0,submittedEnd=0,lastDone=0;
+    var gl=options.backend==='webgl'?GLR.renderer.getContext():null;
+    function poll(){
+      pending=pending.filter(function(job){
+        if(gl){var status=gl.clientWaitSync(job.fence,0,0);
+          if(status===gl.WAIT_FAILED)throw new Error('GPU 完成同步失败');
+          job.done=status===gl.ALREADY_SIGNALED||status===gl.CONDITION_SATISFIED;}
+        if(!job.done&&performance.now()-job.start>15000)throw new Error('GPU 完成帧超时');
+        if(job.error)throw job.error;
+        if(job.done){lastDone=Math.max(lastDone,job.end||performance.now());if(gl){gl.deleteSync(job.fence);job.fence=null;}}
+        return !job.done;
+      });
+    }
+    try{
+      while(start===null||performance.now()<stop||samples.length<3){
+        await nextFrame(signal);canceled(signal);check(options.backend);poll();
+        if(start!==null&&performance.now()>=stop&&samples.length>=3)break;
+        if(pending.length>=2)continue;
+        VisualState.time=12;GLR.dustT=12;syncCamera(0);
+        var now=performance.now();if(start===null){start=now;stop=start+options.sampleMs;}
+        Engine.draw(1/60);var end=performance.now();
+        samples.push({startMs:now,submitMs:end-now,completeMs:null,intervalMs:last===null?null:now-last,calls:Engine.metrics().calls});last=now;submittedEnd=end;
+        var job={start:now,done:false,error:null};pending.push(job);
+        if(gl){job.fence=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);if(!job.fence)throw new Error('无法创建 GPU 完成标记');gl.flush();}
+        else (function(j){GLR.renderer.backend.device.queue.onSubmittedWorkDone().then(function(){j.done=true;j.end=performance.now();},function(e){j.error=e;});})(job);
+        if(onProgress)onProgress(Math.min(1,(end-start)/options.sampleMs));
+      }
+      while(pending.length){canceled(signal);check(options.backend);poll();if(pending.length)await wait(1,signal);}
+      var endMeta=meta(),keys=['quality','viewport','drawingBuffer','target','samples','canvasSamples','canvasAntialias','sceneFingerprint','camera'];
+      if(keys.some(function(k){return JSON.stringify(m[k])!==JSON.stringify(endMeta[k]);}))throw new Error('采样期间场景或分辨率变化，本轮数据无效');
+      return {scene:scene,status:'ok',mode:'continuous',backend:options.backend,meta:m,samples:samples,
+        timing:{elapsedMs:Math.max(submittedEnd,lastDone)-start,drainMs:Math.max(0,lastDone-submittedEnd),maxInFlight:2}};
+    }finally{if(gl)pending.forEach(function(j){if(j.fence)gl.deleteSync(j.fence);});}
   }
   async function dispose(){
     if(typeof running!=='undefined')running=false;

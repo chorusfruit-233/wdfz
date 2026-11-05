@@ -13,6 +13,7 @@ ThreeBackend.configure=function(renderer){
   renderer.shadowMap.enabled=false;   /* 阴影每帧要额外整场景一遍，关掉 */
   renderer.shadowMap.type=$imports.THREE.PCFShadowMap;
   renderer.info.autoReset=false;
+  renderer.autoClear=true;
 };
 ThreeBackend.target=function(w,h,options){
   return $imports.RenderDevice.gpu()?new $imports.THREE.RenderTarget(w,h,options):new $imports.THREE.WebGLRenderTarget(w,h,options);
@@ -22,6 +23,28 @@ ThreeBackend.target=function(w,h,options){
 ThreeBackend.sceneTarget=function(){
   return ThreeBackend.target(2,2,{minFilter:$imports.THREE.LinearMipmapLinearFilter,magFilter:$imports.THREE.LinearFilter,generateMipmaps:true,
     format:$imports.THREE.RGBAFormat,depthBuffer:true,stencilBuffer:false});
+};
+/* Keep the allocated mip chain, but only rebuild it when the post pass can sample it.
+   Toggling mipmapsAutoUpdate does not recreate textures, bindings or pipelines. */
+ThreeBackend.updateSceneMipmaps=function(){
+  var u=$imports.GLR.postMat.uniforms;
+  $imports.GLR.rt.texture.mipmapsAutoUpdate=!!(u.uBlur.value>0||u.uFocus.value>0||
+    u.uWarp.value>0||u.uSan.value<0.75||u.uDm.value>0);
+};
+/* The game post shader already performs tone mapping and the sRGB transfer. Write
+   those encoded values directly to the canvas instead of another full-screen pass.
+   Restore output state so raw scene rendering, captures and fallback stay conventional. */
+ThreeBackend.drawPost=function(){
+  var r=$imports.GLR.renderer,u=$imports.GLR.postMat.uniforms,space=r.outputColorSpace;
+  if($imports.RenderDevice.gpu()){r.outputColorSpace=$imports.THREE.LinearSRGBColorSpace;u.uOutputSRGB.value=1;}
+  try{r.render($imports.GLR.postScene,$imports.GLR.postCam);}
+  finally{r.outputColorSpace=space;if(u.uOutputSRGB)u.uOutputSRGB.value=0;}
+};
+ThreeBackend.compilePost=async function(){
+  var r=$imports.GLR.renderer,space=r.outputColorSpace;
+  if($imports.RenderDevice.gpu())r.outputColorSpace=$imports.THREE.LinearSRGBColorSpace;
+  try{await r.compileAsync($imports.GLR.postScene,$imports.GLR.postCam);}
+  finally{r.outputColorSpace=space;}
 };
 ThreeBackend.setup=function(renderer){
   ThreeBackend.configure(renderer);
@@ -256,7 +279,7 @@ ThreeBackend.boot=async function(){
   try{
     ThreeBackend.setup(renderer);
     if($imports.RenderDevice.gpu()){
-      await $imports.RenderDevice.prepare(renderer.compileAsync($imports.GLR.postScene,$imports.GLR.postCam));
+      await $imports.RenderDevice.prepare(ThreeBackend.compilePost());
       await renderer.backend.device.queue.onSubmittedWorkDone();
       if($imports.RenderDevice.startupError())throw new Error($imports.RenderDevice.startupError());
     }

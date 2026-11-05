@@ -27,15 +27,15 @@
   function paint(){
     var body=el('results');body.replaceChildren();if(!report)return;
     var config=report.config;
-    text('runconfig','本次测试：'+['流畅','均衡','精细','超精细','真实'][config.quality]+' · '+config.width+'×'+config.height+' · '+config.rounds+' 轮 · 预热 '+config.warmMs/1000+' 秒 / 每场景采样 '+config.sampleMs/1000+' 秒');
+    text('runconfig','本次测试：'+(config.mode==='sync'?'逐帧同步诊断':'连续渲染')+' · '+['流畅','均衡','精细','超精细','真实'][config.quality]+' · '+config.width+'×'+config.height+' · '+config.rounds+' 轮 · 预热 '+config.warmMs/1000+' 秒 / 每场景采样 '+config.sampleMs/1000+' 秒');
     report.config.scenes.forEach(function(scene){['webgl','webgpu'].forEach(function(backend){
       var rows=report.runs.filter(function(r){return r.scene===scene&&r.backend===backend&&r.status==='ok';}),samples=rows.flatMap(function(r){return r.samples;}),s=C.summary(samples),tr=document.createElement('tr');
       var cells=[C.scenes[scene]+' / '+(backend==='webgl'?'WebGL 2':'WebGPU')];
       if(!samples.length)cells.push(report.unavailable[backend]?'不可用：'+report.unavailable[backend]:'等待采样','—','—','—','—','0');
-      else cells.push(value(s.complete.mean),value(s.complete.p95),value(s.submit.mean),value(s.cadenceFps,1),value(s.calls&&s.calls.mean,0),String(samples.length));
+      else cells.push(value(C.throughput(rows),1),value(s.interval&&s.interval.p95),value(s.submit.mean),value(s.complete&&s.complete.mean),value(s.calls&&s.calls.mean,0),String(samples.length));
       cells.forEach(function(t){var td=document.createElement('td');td.textContent=t;tr.appendChild(td);});body.appendChild(tr);
     });});
-    text('verdict',report.config.scenes.map(function(scene){var v=C.compare(report.runs,scene,report.config.rounds);return C.scenes[scene]+'：'+(v.comparable?(v.reductionPercent>=0?'WebGPU 完成均值低 ':'WebGL 完成均值低 ')+value(v.reductionPercent>=0?v.reductionPercent:(1-1/(1-v.reductionPercent/100))*100,1).replace('-','')+'%（仅本次同步测试）':v.reason+'。');}).join('\n'));
+    text('verdict',report.config.scenes.map(function(scene){var v=C.compare(report.runs,scene,report.config.rounds);return C.scenes[scene]+'：'+(v.comparable?(v.metric==='throughput'?'WebGL '+value(v.webglFps,1)+' / WebGPU '+value(v.webgpuFps,1)+' 帧/秒（包含尾部完成等待，受刷新率限制）':(v.reductionPercent>=0?'WebGPU 完成均值低 ':'WebGL 完成均值低 ')+value(v.reductionPercent>=0?v.reductionPercent:(1-1/(1-v.reductionPercent/100))*100,1).replace('-','')+'%（仅本次同步测试）'):v.reason+'。');}).join('\n'));
     var adapters=report.runs.filter(function(r){return r.meta;}).map(function(r){return r.meta.adapter.description||r.meta.adapter.vendor||'';}).filter(Boolean);
     var software=/swiftshader|llvmpipe|lavapipe|software/i.test(adapters.join(' '));report.softwareRenderer=software;
     var specs=['webgl','webgpu'].map(function(backend){var r=report.runs.find(function(x){return x.backend===backend&&x.meta;});return r?backend+'：画布 '+r.meta.drawingBuffer.join('×')+'，内部 '+r.meta.target.join('×')+'，场景 MSAA '+r.meta.samples+' / 画布 '+r.meta.canvasSamples:null;}).filter(Boolean);
@@ -46,7 +46,7 @@
     if(active)throw new Error('已有测试正在运行');
     var c=C.config(input);if(!c.scenes.length)throw new Error('至少选择一个场景');
     active=new AbortController();var signal=active.signal,plans=C.schedule(c),done=0,total=plans.length*c.scenes.length,lastPaint=0;
-    report={version:1,method:'synchronized-render-completion-v1',createdAt:new Date().toISOString(),status:'running',config:c,environment:{userAgent:navigator.userAgent,devicePixelRatio:devicePixelRatio,hardwareConcurrency:navigator.hardwareConcurrency,secureContext:window.isSecureContext},unavailable:{},runs:[]};
+    report={version:2,method:c.mode==='sync'?'synchronized-render-completion-v1':'bounded-continuous-render-v2',createdAt:new Date().toISOString(),status:'running',config:c,environment:{userAgent:navigator.userAgent,devicePixelRatio:devicePixelRatio,hardwareConcurrency:navigator.hardwareConcurrency,secureContext:window.isSecureContext},unavailable:{},runs:[]};
     el('start').disabled=true;el('stop').disabled=false;el('download').disabled=true;el('config').querySelectorAll('select,input').forEach(function(x){x.disabled=true;});el('progress').value=0;paint();
     function cancelHidden(){if(document.hidden){text('status','测试因页面切到后台而停止，请保持前台后重试。');active.abort();}}
     function cancelDpr(){if(devicePixelRatio!==report.environment.devicePixelRatio){active.abort();}}
@@ -76,12 +76,12 @@
         }
         await dispose();
       }
-      report.status='complete';el('progress').value=1;text('status','测试完成。完成耗时越低越好；请同时检查 P95、规格与样本数量。');
+      report.status='complete';el('progress').value=1;text('status','测试完成。请结合连续吞吐、P95 帧间隔、规格和样本数量判断。');
     }catch(e){try{report.diagnostic=api&&api.diagnostic();}catch(ignore){}report.status=signal.aborted?'canceled':'error';report.error=String(e.message||e);text('status',signal.aborted?'测试已停止，已完成的数据可导出；不完整轮次不判优。':'测试未完成：'+report.error);}
     finally{await dispose();document.removeEventListener('visibilitychange',cancelHidden);window.removeEventListener('resize',cancelDpr);report.finishedAt=new Date().toISOString();active=null;el('start').disabled=false;el('stop').disabled=true;el('download').disabled=false;el('config').querySelectorAll('select,input').forEach(function(x){x.disabled=false;});paint();}
     return report;
   }
-  el('config').addEventListener('submit',function(e){e.preventDefault();var size=el('size').value.split(',').map(Number);run({quality:+el('quality').value,width:size[0],height:size[1],sampleMs:+el('duration').value,rounds:+el('rounds').value,scenes:Array.from(document.querySelectorAll('input[name=scene]:checked')).map(function(x){return x.value;})}).catch(function(e){text('status',e.message);});});
+  el('config').addEventListener('submit',function(e){e.preventDefault();var size=el('size').value.split(',').map(Number);run({mode:el('mode').value,quality:+el('quality').value,width:size[0],height:size[1],sampleMs:+el('duration').value,rounds:+el('rounds').value,scenes:Array.from(document.querySelectorAll('input[name=scene]:checked')).map(function(x){return x.value;})}).catch(function(e){text('status',e.message);});});
   el('stop').addEventListener('click',function(){if(active)active.abort();});
   el('download').addEventListener('click',function(){if(!report)return;var url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='renderer-benchmark-'+report.createdAt.replace(/[:.]/g,'-')+'.json';a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);});
   window.addEventListener('resize',fit);window.addEventListener('pagehide',function(){if(active)active.abort();dispose();});

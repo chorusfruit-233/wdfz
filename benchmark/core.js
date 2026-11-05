@@ -7,6 +7,7 @@
     input=input||{};
     return {quality:Math.round(number(input.quality,1,0,4)),width:Math.round(number(input.width,960,320,1920)),height:Math.round(number(input.height,540,240,1080)),
       sampleMs:number(input.sampleMs,5000,250,20000),warmMs:number(input.warmMs,2000,0,10000),rounds:Math.round(number(input.rounds,2,1,4)),
+      mode:input.mode==='sync'?'sync':'continuous',
       scenes:Object.keys(SCENES).filter(function(s){return !Array.isArray(input.scenes)||input.scenes.includes(s);}),seed:1194};
   }
   function schedule(c){
@@ -24,8 +25,9 @@
   function summary(samples){
     var complete=stats(samples.map(function(s){return s.completeMs;})),submit=stats(samples.map(function(s){return s.submitMs;}));
     var intervals=samples.map(function(s){return s.intervalMs;}).filter(function(n){return Number.isFinite(n)&&n>0;});
-    return {complete:complete,submit:submit,cadenceFps:intervals.length?1000/ stats(intervals).mean:null,calls:stats(samples.map(function(s){return s.calls;}))};
+    return {complete:complete,submit:submit,interval:stats(intervals),cadenceFps:intervals.length?1000/ stats(intervals).mean:null,calls:stats(samples.map(function(s){return s.calls;}))};
   }
+  function throughput(rows){var frames=0,ms=0;rows.forEach(function(r){if(r.timing&&r.timing.elapsedMs>0){frames+=r.samples.length;ms+=r.timing.elapsedMs;}});return ms>0?frames*1000/ms:null;}
   function specification(meta){return JSON.stringify([meta.quality,meta.viewport,meta.drawingBuffer,meta.target,meta.samples,meta.canvasSamples,meta.canvasAntialias,meta.sceneFingerprint,meta.camera]);}
   function compare(rows,scene,rounds){
     var groups=['webgl','webgpu'].map(function(backend){return rows.filter(function(r){return r.backend===backend&&r.scene===scene&&r.status==='ok';});});
@@ -33,10 +35,17 @@
     var specs=groups.flat().map(function(r){return specification(r.meta);});
     if(new Set(specs).size!==1)return {comparable:false,reason:'实际分辨率、采样或场景规格不同'};
     var sums=groups.map(function(g){return summary(g.flatMap(function(r){return r.samples;}));});
-    if(sums.some(function(s){return !s.complete||s.complete.count<30;}))return {comparable:false,reason:'有效样本少于 30 帧，请延长测试时间'};
-    if(sums.some(function(s){return s.complete.mean<=0;}))return {comparable:false,reason:'计时精度不足'};
+    if(sums.some(function(s){return !s.submit||s.submit.count<30;}))return {comparable:false,reason:'有效样本少于 30 帧，请延长测试时间'};
+    var modes=new Set(groups.flat().map(function(r){return r.mode||'sync';}));
+    if(modes.size!==1)return {comparable:false,reason:'测试模式不同'};
+    if(modes.has('continuous')){
+      var rates=groups.map(throughput);
+      if(rates.some(function(x){return !x;}))return {comparable:false,reason:'连续采样计时不足'};
+      return {comparable:true,metric:'throughput',webglFps:rates[0],webgpuFps:rates[1],reductionPercent:(1-rates[0]/rates[1])*100};
+    }
+    if(sums.some(function(s){return !s.complete||s.complete.mean<=0;}))return {comparable:false,reason:'计时精度不足'};
     return {comparable:true,reductionPercent:(1-sums[1].complete.mean/sums[0].complete.mean)*100};
   }
-  var api=Object.freeze({scenes:SCENES,config:config,schedule:schedule,stats:stats,summary:summary,compare:compare,fingerprint:fingerprint});
+  var api=Object.freeze({scenes:SCENES,config:config,schedule:schedule,stats:stats,summary:summary,throughput:throughput,compare:compare,fingerprint:fingerprint});
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.RenderBenchmarkCore=api;
 })(globalThis);

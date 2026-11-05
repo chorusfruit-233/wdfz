@@ -1,0 +1,14 @@
+{
+  "base": "25a6b4e3bace9ac8287eff27c631ea14918e687b",
+  "files": {
+    "benchmark/core.js": "92039a22f0a17f021e7cfdc83326b26d1d1469c457f795e524b0356d34011e61",
+    "benchmark/page.js": "92a457e133a817cefb2b801279a34d9635b5d5bb8f374c4e34b51fcdfa71425f",
+    "benchmark/runner.js": "805587388d4adaef5159cbabc9eba0ce6c1cd7cd431974f0363c6687466a5210",
+    "game3d/js/engine/scene.js": "5d39bb5c372ebc3514ec82d8fd52deec4cd9d68159968337dcd0020c18f9a099",
+    "game3d/js/engine/three.js": "689357570b00f261e18701d3eb46e117dbb4b800101e02ddb1bbbef8bdb3e379",
+    "game3d/js/engine/webgpu-post.js": "01dd3d6d0b0a307e9a44aa1b1fc8e6a59fa923804dcd48610d67a07eeaaf73fc",
+    "game3d/js/model/room.js": "7e4806747263337623576051995b840e1424a120fa6419756ae19fe40836ebb3",
+    "game3d/js/model/outdoor.js": "574709e0224756e3046b812b9438f5eb35f428c40304d9cb67410346b194584a",
+    "tools/render_performance.py": "8295e6e107512404270d6f2c6465d0fb7fe18f23bc07b150ef34fc70facc0baa"
+  }
+}
