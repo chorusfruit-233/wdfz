@@ -1,0 +1,16 @@
+来源：https://github.com/wd-fz/wd-fz.github.io/actions/runs/41946213523
+提交：cb8f3062ae0587e0852fbf0eabfc42c5f226cfe5
+Job：126979015832（renderers，success）
+下列为原始日志摘录。本机 file:// 的环境跳过仍保留；该测试在 CI 实际执行通过。
+
+2026-11-05T01:10:17.4889785Z test_broadcast_panel_crowd_and_cinematics_remain_native (test_webgpu.NativeWebGPUTest.test_broadcast_panel_crowd_and_cinematics_remain_native) ... ok
+2026-11-05T01:11:25.0999008Z Ran 18 tests in 241.498s
+2026-11-05T01:11:25.0999222Z OK
+2026-11-05T01:12:08.0643732Z test_local_file_start_with_network_disabled (test_engine.EngineTest.test_local_file_start_with_network_disabled) ... ok
+2026-11-05T01:12:23.3290109Z test_packaged_assets_boot_with_network_offline (test_engine.EngineTest.test_packaged_assets_boot_with_network_offline) ... ok
+2026-11-05T01:13:00.2448600Z Ran 14 tests in 95.006s
+2026-11-05T01:13:00.2448797Z OK
+2026-11-05T01:13:32.9832493Z Ran 16 tests in 32.630s
+2026-11-05T01:13:32.9832652Z OK
+2026-11-05T01:13:58.0871382Z Ran 12 tests in 24.986s
+2026-11-05T01:13:58.0871715Z OK

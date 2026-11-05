@@ -1,0 +1,275 @@
+{
+  "kind": "受控真实 WebGL 帧；软件 GPU 与触屏模拟，不是自然通关、硬件性能或真机验收",
+  "chromium": "154.0.8037.57",
+  "sourceSHA256": "cb6965e3a4d9248a7d93fcef6e9283126581ed3332917aee9b98d7db9c228bba",
+  "cssSHA256": {
+    "game3d/css/game.css": "f3feed1be4087cf4ca5fe62b1401fb33e30d88ab4a9a6e67a0e796cc3c7a8c79",
+    "game3d/css/ui.css": "2f09737e63e2ade4a9531facec1746e66a889ed8c1499a4e25937163dfcd3d66"
+  },
+  "captures": [
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": null,
+      "time": 0,
+      "camera": [
+        -21,
+        1.65,
+        -6.10000000000001
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "01-广播站.png",
+      "phase": "受控广播站场景"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": null,
+      "time": 0,
+      "camera": [
+        -21,
+        1.65,
+        -6.10000000000001
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "02-话筒与稿纸.png",
+      "phase": "非暂停读稿界面"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 1.8,
+      "camera": [
+        1.5,
+        1.55,
+        2.1
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "03-广播.png",
+      "phase": "《放学》受控演出取样"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 5.5,
+      "camera": [
+        33,
+        2.1,
+        3.9
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "04-全班起身.png",
+      "phase": "《放学》受控演出取样"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 9.8,
+      "camera": [
+        59.6,
+        6.2,
+        7.6
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "05-楼梯人流.png",
+      "phase": "《放学》受控演出取样"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 12.5,
+      "camera": [
+        112.92222222222222,
+        1.6,
+        23.211111111111112
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "08-登记簿.png",
+      "phase": "《放学》受控演出取样"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 14.3,
+      "camera": [
+        118.97222222222221,
+        1.9,
+        10.277777777777777
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "06-校门.png",
+      "phase": "《放学》受控演出取样"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 16.2,
+      "camera": [
+        124.66666666666666,
+        8.5,
+        242.88888888888889
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "09-教学楼熄灯前.png",
+      "phase": "《放学》受控演出取样"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 17.1,
+      "camera": [
+        124.66666666666666,
+        8.5,
+        242.88888888888889
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "10-教学楼熄灯后.png",
+      "phase": "《放学》受控演出取样"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 1,
+      "scene": "admin2",
+      "cut": "dismissal",
+      "time": 17.1,
+      "camera": [
+        -21,
+        1.632214112919759,
+        -6.10000000000001
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "07-念错了.png",
+      "phase": "死亡预览，不改变玩家状态"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "scene": "admin2",
+      "cut": null,
+      "time": 0,
+      "camera": [
+        175.55555555555554,
+        1.65,
+        200
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "11-手机竖屏.png",
+      "phase": "触屏模拟"
+    },
+    {
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "scene": "admin2",
+      "cut": null,
+      "time": 0,
+      "camera": [
+        175.55555555555554,
+        1.65,
+        200
+      ],
+      "errors": [],
+      "lifecycle": [],
+      "image": "12-手机横屏.png",
+      "phase": "触屏模拟"
+    }
+  ]
+}

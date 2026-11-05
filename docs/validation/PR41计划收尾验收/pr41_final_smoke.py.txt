@@ -1,0 +1,15 @@
+import hashlib,json,sys,time,unittest
+from pathlib import Path
+root=Path.cwd();sys.path.insert(0,str(root/'tests'))
+paths=sorted((root/'game3d').rglob('*.js'))+[root/'game3d/css/game.css',root/'index.html']
+digest=hashlib.sha256(b''.join(str(p.relative_to(root)).encode()+b'\0'+p.read_bytes() for p in paths)).hexdigest()
+names=['test_death_timeline.DeathTimelineTest.test_all_death_models_have_finite_transforms_during_playback','test_death_timeline.DeathTimelineTest.test_warm_up_compiles_every_death_cinematic_shader_in_advance','test_patrol_zones.PatrolZonesTest.test_all_region_observation_points_are_navigable','test_void_cut.VoidCutTest.test_archive_cards_are_hidden_until_seen_and_replay_in_isolation','test_presentation_states.PresentationStatesTest.test_prologue_normal_world_and_wake_restore_visual_state','test_broadcast.BroadcastTest.test_all_ending_cg_shots_and_death_preview_preserve_player_state','test_broadcast.BroadcastTest.test_phone_panel_fits_portrait_and_landscape_and_touch_release_stops_reading','test_webgpu.NativeWebGPUTest.test_broadcast_panel_crowd_and_cinematics_remain_native']
+records={};start=time.time()
+class Result(unittest.TextTestResult):
+ def addSuccess(self,t):records[t.id()]={'status':'passed'};super().addSuccess(t)
+ def addFailure(self,t,e):records[t.id()]={'status':'failed','detail':self._exc_info_to_string(e,t)};super().addFailure(t,e)
+ def addError(self,t,e):records[t.id()]={'status':'error','detail':self._exc_info_to_string(e,t)};super().addError(t,e)
+ def addSkip(self,t,e):records[t.id()]={'status':'skipped','detail':str(e)};super().addSkip(t,e)
+r=unittest.TextTestRunner(verbosity=2,resultclass=Result).run(unittest.defaultTestLoader.loadTestsFromNames(names))
+Path('/tmp/pr41-final-smoke.json').write_text(json.dumps({'runtime':digest,'expected':8,'elapsed':round(time.time()-start,2),'complete':True,'records':records},ensure_ascii=False,indent=2)+'\n')
+sys.exit(not r.wasSuccessful())
