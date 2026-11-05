@@ -98,6 +98,7 @@
   <section class="sgroup" aria-labelledby="sgView"><h4 id="sgView">画面</h4>
   <div class="srow"><label for="sRenderer">图形模式</label><select id="sRenderer" onchange="Settings.renderer(this.value)"><option value="auto">自动（推荐）</option><option value="webgl">WebGL 兼容模式</option></select></div>
   <p class="shint" id="rendererCurrent">正在准备游戏画面</p>
+  <p class="shint"><a class="renderer-benchmark-link" href="benchmark/" target="_blank" rel="noopener">对比 WebGPU / WebGL 效率（新标签页）</a></p>
   <div class="srow"><span>亮度</span><input type="range" id="sBr" min="60" max="150" value="100" oninput="Settings.bright(this.value)" aria-label="亮度"><b id="sBrV">100</b></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
     <button onclick="Settings.q(0)">低</button><button onclick="Settings.q(1)">中</button><button onclick="Settings.q(2)">高</button><button onclick="Settings.q(3)">超精细</button><button onclick="Settings.q(4)">真实</button></div></div>
