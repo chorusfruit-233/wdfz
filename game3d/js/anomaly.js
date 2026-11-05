@@ -787,6 +787,7 @@ function anDrive(dt){
   if($imports.S.fn&&$imports.S.fn.on&&$imports.S.fn.v<72){ return; }
   if(!AN.active){
     if($imports.S.room==='portal_tunnel')return;
+    if($imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room]&&$imports.INTERIORS[$imports.S.room].noAnomaly)return;   /* 模块房间可以不刷异象（梦） */
     if(colaDrive(dt))return;
     if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.quiet())return;
     AN.next -= dt;

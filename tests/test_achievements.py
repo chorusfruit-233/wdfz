@@ -29,9 +29,9 @@ class AchievementTest(BrowserCase):
           return {n:L.length,t,ids:new Set(L.map(a=>a.id)).size,pub:AchievementRules.publicList().length,
             secretOk:L.every(a=>(a.t==='h')===!!a.secret),texts:L.every(a=>a.n&&a.how&&a.m),
             keys:[...new Set(L.flatMap(a=>Object.keys(a)))].sort()}}""")
-        self.assertEqual(r['n'], 62)                                  # M6 新增核对、《放学》与五条路；C10 明天再来
-        self.assertEqual(r['t'], {'n': 22, 'e': 19, 'p': 10, 'h': 11})
-        self.assertEqual(r['ids'], 62)
+        self.assertEqual(r['n'], 63)                                  # M6 新增核对、《放学》与五条路；C10 明天再来
+        self.assertEqual(r['t'], {'n': 22, 'e': 19, 'p': 10, 'h': 12})
+        self.assertEqual(r['ids'], 63)
         self.assertEqual(r['pub'], 51)
         self.assertTrue(r['secretOk'] and r['texts'])
         # 只有判定与显示用的字段：没有任何奖励、加成之类的东西

@@ -57,6 +57,7 @@ var ARCHIVE_CUTS=[
   {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
   {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
   {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1},
+  {id:'end:inception',cut:'inception',end:'inception',n:'《盗梦空间》',d:'走廊一层层往上退。课桌上的陀螺在转。醒来的房间里有阳光，桌上的陀螺还在转。', stage:'dorm1', secret:1},   /* 内部：modules/inception */
   /* 异色空间的进出过场（内部，2026-11-04）：演出由 void-maze 模块的 maze-cut.js 注册；解锁看 seen 记录（DeathArchive.markSeen），
      没经历过完全不出现、不计数；回放舞台都是迷宫（离开那段在白场时自己换到教学楼二楼的电梯厅） */
   {id:'cut:void_in', cut:'void_in', seen:1, n:'不存在的那一层', d:'楼层显示跳成一个不认识的符号，灯一排排灭了。门开，外面什么都没有，只有一块方地浮着。', stage:'lift_dream', secret:1},

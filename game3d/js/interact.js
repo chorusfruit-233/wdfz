@@ -191,6 +191,7 @@ function doSanAct(key){
   if($imports.S.actCool[key]&&clockNow<$imports.S.actCool[key]){
     (0,$imports.os)('我：刚做过。现在没那个心情。',2.4); return;
   }
+  if(GameModules.first('restAct',key)===true) return;       /* 模块可以接管这一次休息（睡不着、做梦）；不接管就照常结算 */
   var _before=$imports.S.tsec;
   (0,$imports.advanceGameTime)(a.min);
   var base=key==='eat'?$imports.Talent.modifier('activity.eat'):a.san;   /* 铁胃（规则 2）：正常吃饭多回一点 */

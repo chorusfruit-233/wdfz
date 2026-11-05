@@ -119,6 +119,7 @@ var AchievementRules=(function(){
     }),
     /* ---------- 隐藏（内部；解锁前不出现、不计数） ---------- */
     A('h.beast','h','once','《先辈》','跟着穿旧校服的人跑了出去。','ending',function(f){ return legit(f)&&f.id==='beast'; }),
+    A('h.inception','h','once','《盗梦空间》','在梦里转过陀螺，然后醒在一间真的房间里。','ending',function(f){ return legit(f)&&f.id==='inception'; },{needs:['inception']}),
     A('h.wrong_floor','h','once','不存在的楼层','电梯停在了一层不存在的楼。','maze',function(f){ return f.what==='enter'; },{needs:['void-maze']}),
     A('h.maze_exit','h','once','漏光的门','从那片白色的地方走了出来。','maze',function(f){ return f.what==='leave'; },{needs:['void-maze']}),
     A('h.maze_exits','h','cross','两扇出口','两扇门都推开过。','maze',function(f,v){ return size(v.sets.mazeExits)>=2; },{set:'mazeExits',goal:2,needs:['void-maze']}),
@@ -184,6 +185,7 @@ var AchievementRules=(function(){
     'p.fast':'铃还没响，我已经在外面了。',
     'p.all':'该做的都做完了。我可以毕业了。',
     'h.beast':'穿旧校服的人回头看了我一眼。',
+    'h.inception':'桌上的陀螺还在转。',
     'h.wrong_floor':'电梯停下来的那一层，楼层表上没有。',
     'h.maze_exit':'门缝里漏出来的光，是外面的光。',
     'h.maze_exits':'两扇门，我都推开过。',
