@@ -166,8 +166,9 @@ var PatrolNav=(function(){
         edge(a+':'+id,id+':north','stair-portal',true);edge(b+':'+id,id+':south','stair-portal',true);
       }else{
       node(id+':north',snap(id,tilePoint(id,2,1)));node(id+':south',snap(id,tilePoint(id,2,R.rows-2)));edge(id+':north',id+':south','walk',true);
-      node(a+':'+id,snap(a,tilePoint(a,v[3]?Ra.cols-3:2,a.startsWith('admin')?18:16)));
-      node(b+':'+id,snap(b,tilePoint(b,v[3]?Rb.cols-3:2,b.startsWith('teach')?18:16)));
+      /* 连廊入口的吊牌（连续校园 A2 起在楼的南／北墙边，和 interact.js 的 linksOf 一致） */
+      node(a+':'+id,snap(a,tilePoint(a,v[3]?47:7,v[3]?20:18)));
+      node(b+':'+id,snap(b,tilePoint(b,v[3]?47:6,1)));
       edge(a+':'+id,id+':north','bridge',true);edge(b+':'+id,id+':south','bridge',true);
       }
       edge(a+':stairs',a+':'+id,'walk',true);edge(b+':stairs',b+':'+id,'walk',true);

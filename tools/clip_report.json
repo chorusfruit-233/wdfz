@@ -4,9 +4,11 @@
   "quality": 3,
   "rooms": [
    "out",
-   "teach1",
+   "admin2",
+   "lab2",
    "teach2",
-   "teach4"
+   "link1",
+   "link2"
   ]
  },
  "counts": {},

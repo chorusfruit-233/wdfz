@@ -9,11 +9,12 @@
    · 连廊入口的吊牌和门垫（'L' 格）保留当指示，不再能按 E「走连廊」。拿掉本模块就回到原来按 E 换场景。 */
 'use strict';
 
-var CAMPUS_LINK={version:1,width:3,annex:1.5,pairs:[
-  [{room:'admin2',edge:'e',at:18},{room:'link1',edge:'n',at:2}],
-  [{room:'lab2',edge:'e',at:17},{room:'link1',edge:'s',at:2}],
-  [{room:'lab2',edge:'w',at:17},{room:'link2',edge:'n',at:2}],
-  [{room:'teach2',edge:'w',at:18},{room:'link2',edge:'s',at:2}]
+/* 版本 2（连续校园 A2）：连廊是楼端头的南北向直桥，从楼的南／北墙接进来（以前在东／西端墙上、要转 90°）；四对都只差一个平移 */
+var CAMPUS_LINK={version:2,width:3,annex:1.5,pairs:[
+  [{room:'admin2',edge:'s',at:47},{room:'link1',edge:'n',at:2}],
+  [{room:'lab2',edge:'n',at:47},{room:'link1',edge:'s',at:2}],
+  [{room:'lab2',edge:'s',at:7},{room:'link2',edge:'n',at:2}],
+  [{room:'teach2',edge:'n',at:6},{room:'link2',edge:'s',at:2}]
 ]};
 var CampusLink=(function(){
   var own={owner:'campus-link'}, NORMAL={n:[0,-1],s:[0,1],w:[-1,0],e:[1,0]};

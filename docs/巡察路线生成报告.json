@@ -4,6 +4,8 @@
   "weightDefinition": "静态合法路径长度/16 加显式连接时间；是全程步行的规划权重，不含端点容差、运行调度或室外长瞬移，totalSeconds 不是实跑计时，也不声明当前赶路规则下的最快路线",
   "nodes": [
     "admin1:stairs",
+    "admin1:east",
+    "admin1:stairs",
     "stair_admin:0",
     "stair_admin:1",
     "stair_admin:2",
@@ -26,6 +28,8 @@
     "stair_admin:1",
     "admin2:stairs",
     "stair_admin:1",
+    "admin2:stairs",
+    "admin2:east",
     "admin2:stairs",
     "admin2:link1",
     "link1:north",
@@ -51,14 +55,14 @@
     "lab3:stairs",
     "stair_lab:2",
     "stair_lab:1",
-    "lab2:stairs",
-    "stair_lab:1",
     "stair_lab:0",
     "lab1:stairs",
     "lab1:east",
     "lab1:stairs",
     "stair_lab:0",
     "stair_lab:1",
+    "lab2:stairs",
+    "lab2:east",
     "lab2:stairs",
     "lab2:link2",
     "link2:north",
@@ -70,6 +74,8 @@
     "stair_teach_e:1",
     "teach2:east-stairs",
     "teach2:east",
+    "teach2:stairs",
+    "stair_teach_w:1",
     "teach2:stairs",
     "stair_teach_w:1",
     "stair_teach_w:2",
@@ -96,59 +102,40 @@
     "teach1:east-stairs",
     "teach1:east",
     "teach1:stairs",
+    "stair_teach_w:0",
+    "stair_teach_w:1",
+    "stair_teach_w:0",
+    "teach1:stairs",
     "teach1:entry",
     "out:teach",
     "out:westgate",
     "out:garw",
-    "out:admin",
-    "out:lab",
-    "out:gear",
-    "out:playground",
-    "out:garage",
-    "out:guard",
-    "out:northgate",
-    "out:eastroad",
-    "out:trash",
-    "out:southgate",
-    "out:dormS",
-    "out:canteen",
-    "out:dormN",
-    "out:garden",
-    "out:bell",
+    "out:westgate",
     "out:teach",
-    "teach1:entry",
-    "teach1:stairs",
-    "stair_teach_w:0",
-    "stair_teach_w:1",
-    "teach2:stairs",
-    "teach2:link2",
-    "link2:south",
-    "link2:north",
-    "lab2:link2",
-    "lab2:stairs",
-    "lab2:east",
-    "lab2:stairs",
-    "lab2:link1",
-    "link1:south",
-    "link1:north",
-    "admin2:link1",
-    "admin2:stairs",
-    "admin2:east",
-    "admin2:stairs",
-    "stair_admin:1",
-    "stair_admin:0",
-    "admin1:stairs",
-    "admin1:east",
-    "admin1:stairs",
-    "admin1:entry",
+    "out:bell",
+    "out:garden",
+    "out:dormN",
+    "out:canteen",
+    "out:dormS",
+    "out:southgate",
+    "out:trash",
+    "out:eastroad",
+    "out:northgate",
+    "out:guard",
+    "out:garage",
+    "out:playground",
+    "out:gear",
+    "out:lab",
+    "out:admin",
+    "out:garw",
     "out:admin",
     "admin1:entry",
     "admin1:stairs"
   ],
-  "baseWeightSeconds": 1388.83274506264,
-  "matchingExtraSeconds": 520.5957905214223,
-  "totalSeconds": 1909.4285355840623,
-  "initialCandidateSeconds": 4205.2524154317925,
+  "baseWeightSeconds": 1386.6792548049702,
+  "matchingExtraSeconds": 520.5430104294271,
+  "totalSeconds": 1907.2222652343974,
+  "initialCandidateSeconds": 4348.112628177862,
   "coverage": {
     "requiredEdges": 88,
     "coveredEdges": 88,
@@ -187,11 +174,11 @@
   "matching": [
     [
       "admin1:east",
-      "out:admin"
+      "admin1:stairs"
     ],
     [
-      "admin1:stairs",
-      "admin2:east"
+      "admin2:east",
+      "stair_admin:3"
     ],
     [
       "admin2:stairs",
@@ -207,7 +194,7 @@
     ],
     [
       "lab1:east",
-      "stair_admin:3"
+      "stair_lab:2"
     ],
     [
       "lab2:east",
@@ -222,12 +209,12 @@
       "stair_lab:3"
     ],
     [
-      "out:teach",
-      "teach1:stairs"
+      "out:admin",
+      "out:teach"
     ],
     [
-      "stair_lab:2",
-      "stair_teach_e:1"
+      "stair_teach_e:1",
+      "teach1:stairs"
     ],
     [
       "stair_teach_e:2",
@@ -276,7 +263,7 @@
     {
       "a": "admin2:stairs",
       "b": "admin2:link1",
-      "seconds": 28.285612822087177,
+      "seconds": 25.157741475461023,
       "kind": "walk"
     },
     {
@@ -342,13 +329,13 @@
     {
       "a": "lab2:stairs",
       "b": "lab2:link1",
-      "seconds": 26.365117693252305,
+      "seconds": 32.96621346626152,
       "kind": "walk"
     },
     {
       "a": "lab2:stairs",
       "b": "lab2:link2",
-      "seconds": 2.798366475461015,
+      "seconds": 2.657741475461015,
       "kind": "walk"
     },
     {
@@ -432,13 +419,13 @@
     {
       "a": "out:admin",
       "b": "out:garw",
-      "seconds": 30.358441546018383,
+      "seconds": 25.68198051533946,
       "kind": "walk"
     },
     {
       "a": "out:admin",
       "b": "out:lab",
-      "seconds": 51.074431803688114,
+      "seconds": 45.95539770553217,
       "kind": "walk"
     },
     {
@@ -492,7 +479,7 @@
     {
       "a": "out:gear",
       "b": "out:lab",
-      "seconds": 54.44943180368812,
+      "seconds": 51.26745128834866,
       "kind": "walk"
     },
     {
@@ -696,7 +683,7 @@
     {
       "a": "teach2:stairs",
       "b": "teach2:link2",
-      "seconds": 4.71886160429588,
+      "seconds": 12.210247564417433,
       "kind": "walk"
     },
     {

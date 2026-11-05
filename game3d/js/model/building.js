@@ -353,8 +353,19 @@ function addGardenSign(grp){
 }
 
 /* ---- 教学楼 / 行政楼 / 实验楼：一层架空柱廊 + 四层教室 ---- */
+/* 接在这栋楼某一面上的连廊（连续校园 A2：楼端头的南北向直桥）：返回这一面上连廊占的那几段（米，沿墙的坐标） */
+function linkSpansOn(o,face){
+  var out=[];
+  $imports.OBJ.forEach(function(b){
+    if(b.k!=='link'||b.x+b.w<=o.x||b.x>=o.x+o.w) return;
+    var touch=face==='s'?Math.abs(b.y-(o.y+o.h))<1:face==='n'?Math.abs(b.y+b.h-o.y)<1:false;
+    if(touch) out.push([(0,$imports.M)(b.x),(0,$imports.M)(b.x+b.w)]);
+  });
+  return out;
+}
 function bldClassroom(K,grp,o,px,pz,sw,sd){
-  var total=16.0, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth;
+  var total=16.0, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth, links=linkSpansOn(o,'s');
+  var underLink=function(x,pad){ return links.some(function(l){ return x>l[0]-pad&&x<l[1]+pad; }); };
   facadeDoor(o,px,pz,sw,sd,'colonnade');
   K.box('brick',px,total/2,pz,sw,total,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));                 /* 底层浅灰：0.9 米高，以前 1.5 米把一楼窗户截掉半截 */
@@ -374,8 +385,14 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
     K.bevel('stone',c.x,0.16,c.z,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
     K.bevel('stone',c.x,g0-0.12,c.z,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
   });
-  if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',px,g0+0.14,pz+sd/2+dep/2,sw+0.4,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
-  K.box('concrete',px,g0-0.30,pz+sd/2+dep/2,sw+0.2,0.26,dep+0.3,$imports.BRICK_D,0.96);
+  /* 雨篷和梁：在南面连廊的桥下断开（连续校园 A2） */
+  var segs=[[px-sw/2-0.2,px+sw/2+0.2]];
+  links.forEach(function(l0){ var l=[l0[0]-0.3,l0[1]+0.3], nx=[]; segs.forEach(function(g){ if(l[1]<=g[0]||l[0]>=g[1]){ nx.push(g); return; } if(l[0]>g[0]) nx.push([g[0],l[0]]); if(l[1]<g[1]) nx.push([l[1],g[1]]); }); segs=nx; });   /* 桥两边立着落地柱，再让出 0.3 米 */
+  segs.forEach(function(g){
+    var cm=(g[0]+g[1])/2, cl=g[1]-g[0]; if(cl<0.05) return;
+    if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',cm,g0+0.14,pz+sd/2+dep/2,cl,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
+    K.box('concrete',cm,g0-0.30,pz+sd/2+dep/2,Math.max(0.05,cl-0.2),0.26,dep+0.3,$imports.BRICK_D,0.96);
+  });
   /* 首层：柱廊后面的窗 */
   var spans=faceFreeSpans(o,'s'), si;
   for(si=0;si<spans.length;si++) facadeWindows(K,'s',px,pz,sw,sd,(0,$imports.M)(spans[si][0])+2.4,(0,$imports.M)(spans[si][1])-2.4,1.7,1.8,1.2,4.2);
@@ -390,14 +407,20 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
     facadeWindows(K,'s',px,pz,sw,sd,px-sw/2+0.8,px+sw/2-0.8,fy,1.8,1.25,3.2,fl+30);
     /* 南面：一层层外走廊的栏板 + 红色栏杆 + 空调外机 */
     var sy=fy-0.77, rz=pz+sd/2+0.62;                                              /* 栏板顶比窗台低一点（以前窗台埋进栏板 6 厘米） */
-    K.box('concrete',px,sy,pz+sd/2+0.36,sw*0.98,0.14,0.72,0xd8d4cb,1.04);
-    K.box('plaster',px,sy-0.04,pz+sd/2+0.73,sw*0.98,0.24,0.04,$imports.WHITEBAND,1.0);
-    var rpn=Math.max(4,Math.round(sw/1.3)), rp;
-    for(rp=0;rp<=rpn;rp++){ var rx=px-sw*0.48+(sw*0.96/rpn)*rp; K.rod('metal',rx,sy+0.07,rz,rx,sy+1.05,rz,0.025,0.025,5,0x8b3a2e,1.0); }
-    K.rod('metal',px-sw*0.48,sy+1.05,rz,px+sw*0.48,sy+1.05,rz,0.04,0.04,6,0x8b3a2e,1.05);
-    K.rod('metal',px-sw*0.48,sy+0.55,rz,px+sw*0.48,sy+0.55,rz,0.018,0.018,4,0x8b3a2e,1.0);
+    /* 栏板和栏杆在连廊接过来的那一段断开（连续校园 A2） */
+    var bsegs=[[px-sw*0.49,px+sw*0.49]];
+    links.forEach(function(l0){ var l=[l0[0]-0.3,l0[1]+0.3], nx=[]; bsegs.forEach(function(g){ if(l[1]<=g[0]||l[0]>=g[1]){ nx.push(g); return; } if(l[0]>g[0]) nx.push([g[0],l[0]]); if(l[1]<g[1]) nx.push([l[1],g[1]]); }); bsegs=nx; });
+    bsegs.forEach(function(g){
+      var bm=(g[0]+g[1])/2, bl=g[1]-g[0]; if(bl<0.3) return;
+      K.box('concrete',bm,sy,pz+sd/2+0.36,bl,0.14,0.72,0xd8d4cb,1.04);
+      K.box('plaster',bm,sy-0.04,pz+sd/2+0.73,bl,0.24,0.04,$imports.WHITEBAND,1.0);
+      var r0=g[0]+0.1, r1=g[1]-0.1, rpn=Math.max(1,Math.round((r1-r0)/1.3)), rp;
+      for(rp=0;rp<=rpn;rp++){ var rx=r0+((r1-r0)/rpn)*rp; K.rod('metal',rx,sy+0.07,rz,rx,sy+1.05,rz,0.025,0.025,5,0x8b3a2e,1.0); }
+      K.rod('metal',r0,sy+1.05,rz,r1,sy+1.05,rz,0.04,0.04,6,0x8b3a2e,1.05);
+      K.rod('metal',r0,sy+0.55,rz,r1,sy+0.55,rz,0.018,0.018,4,0x8b3a2e,1.0);
+    });
     var acn=Math.max(2,Math.floor(sw/5.2)), ac;
-    for(ac=0;ac<acn;ac++) acUnit(K,px-sw*0.42+ac*(sw*0.84/(acn-1||1)),sy+0.31,pz+sd/2+0.28,'s');
+    for(ac=0;ac<acn;ac++){ var acx=px-sw*0.42+ac*(sw*0.84/(acn-1||1)); if(!underLink(acx,0.8)) acUnit(K,acx,sy+0.31,pz+sd/2+0.28,'s'); }   /* 连廊接过来的那一段不挂空调外机 */
   }
   addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id]);
 }
@@ -964,6 +987,7 @@ GameModules.publish("game3d/js/model/building.js",{
 "addEntrance":{get:function(){return addEntrance;},set:function($value){addEntrance=$value;}},
 "addSmallDoor":{get:function(){return addSmallDoor;},set:function($value){addSmallDoor=$value;}},
 "addGardenSign":{get:function(){return addGardenSign;},set:function($value){addGardenSign=$value;}},
+"linkSpansOn":{get:function(){return linkSpansOn;},set:function($value){linkSpansOn=$value;}},
 "bldClassroom":{get:function(){return bldClassroom;},set:function($value){bldClassroom=$value;}},
 "bldTeach":{get:function(){return bldTeach;},set:function($value){bldTeach=$value;}},
 "bldDorm":{get:function(){return bldDorm;},set:function($value){bldDorm=$value;}},

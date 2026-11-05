@@ -71,13 +71,14 @@ class CampusLinkTest(BrowserCase):
           placeAt('lab2','link1',40);KEY.w=true;KEY.shift=true;for(let i=0;i<240&&S.room==='lab2';i++)updatePlayer(1/60);
           KEY.w=false;KEY.shift=false;const run=S.room;
           // 门洞旁边的墙：沿墙外侧斜着推，换不了场景，也不会卡进墙里
-          const v=placeAt('teach2','link2',6),P=v.self;S.x=P.x-P.n[0]*15;S.y=P.y-18;   // 门洞北边那一格走廊（门洞占 17–19 行）
+          const v=placeAt('admin2','link1',6),P=v.self,lat=P.half+9;                 // 行政楼二楼走廊里、门洞旁边一格（门洞 3 格宽，侧向再让出一格）
+          S.x=P.x-P.n[0]*15-P.n[1]*lat;S.y=P.y-P.n[1]*15+P.n[0]*lat;
           for(let i=0;i<200;i++)moveBy(P.n[0]*.4,P.n[1]*.4,1/240);
           return {back,run,wall:S.room,depth:Collision.depth(S.x,S.y,PRAD)};
         }""")
         self.assertEqual(r['back'], 'link2')
         self.assertEqual(r['run'], 'link1')
-        self.assertEqual(r['wall'], 'teach2')
+        self.assertEqual(r['wall'], 'admin2')
         self.assertLess(r['depth'], 1e-7)
 
     def test_doorway_annex_only_allows_the_door_width(self):

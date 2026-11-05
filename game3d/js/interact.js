@@ -519,15 +519,14 @@ function useLink(R,c,r){
 function linksOf(host){
   if(host==='c1'){
     var A=$imports.INTERIORS['admin2'], L=$imports.INTERIORS['lab2'];
-    return {
-      north:{id:'admin2', c:A?A.cols-3:0, r:18},
-      south:{id:'lab2',  c:L?L.cols-3:0, r:16}
+    return {                                                     /* 连续校园 A2：连廊从楼的南／北墙接进来 */
+      north:{id:'admin2', c:47, r:20},
+      south:{id:'lab2',  c:47, r:1}
     };
   }
-  var L2=$imports.INTERIORS['lab2'], T=$imports.INTERIORS['teach2'];
   return {
-    north:{id:'lab2',  c:2, r:16},
-    south:{id:'teach2',c:2, r:18}
+    north:{id:'lab2',  c:7, r:18},
+    south:{id:'teach2',c:6, r:1}
   };
 }
 /* 楼梯：能上能下。以前行政楼 / 实验楼只能往上（顶层原地不动），南宿舍的楼梯直接把人送出楼外 */
