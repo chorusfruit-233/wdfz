@@ -32,6 +32,7 @@ var DEATH_ARCHIVE=[
   {id:'an:necker',    fx:'neck',     n:'围栏的缝',     d:'他没有绕到校门口。他把脖子从围栏的缝里伸了进来。', stage:'out'},
   {id:'an:twin',      fx:'twin',     n:'天台的另一头', d:'他走到了我面前。我们同时抬起手。他的手是热的。', stage:'teach6'},
   {id:'an:cup',       fx:'floor',    n:'窗台上的杯子', d:'一只白色的杯子，画着二校门。它比我想象的要重。', stage:'out'},
+  {id:'window_gaze', fx:'window_gaze', n:'窗户内的视线', d:'窗里那双眼睛一直没有眨。玻璃上的倒影先转了过来。', stage:'admin2', ext:1},
   {id:'mirror',       fx:'mirror',   n:'镜子',         d:'镜子里那个人先抬起了手。我还看着它，看了很久。', stage:'teach1'},
   {id:'laugh',        fx:'laugh',    n:'笑出了声',     d:'灯前看字字如旧。我笑得停不下来，笑了很久。', stage:'teach1'},
   {id:'trap_out',     fx:'slit',     n:'正门',         d:'我从门缝里挤了出去。路的尽头还是一扇校门。', stage:'out'},

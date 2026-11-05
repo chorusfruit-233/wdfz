@@ -39,6 +39,7 @@ var PHOTO={
   twin:{k:'figure',cap:'天台边上的那个人，也举着手机在拍我。'},
   raindots:{k:'text',cap:'地上的雨点拼成了两个字：「别拍」。',text:'别拍'},
   cup:{k:'hands',cap:'窗台上的杯子旁边，有一只手正要推它。'},
+  window_gaze:{k:'eyes',cap:'窗玻璃上那双眼睛，在照片里是闭着的。'},
   /* ---- 内部异象（照片内容只写内部材料，不进 Wiki） ---- */
   cola:{k:'figure',cap:'楼顶边上蹲着一个人，手里拿着一罐东西。',secret:1},
   crowd:{k:'crowd',cap:'电梯里挤满了人，全都面朝门。',secret:1}
@@ -50,6 +51,7 @@ var PhoneCamera=(function(){
   /* 现在镜头里的异象：正在发生的普通异象；电梯里的「满员」由它自己的模块报 */
   function subject(){
     try{ if(typeof $imports.LiftCrowd!=='undefined'&&$imports.LiftCrowd.active&&$imports.LiftCrowd.active()) return 'crowd'; }catch(e){}
+    try{ if(typeof $imports.WindowGaze!=='undefined'&&$imports.WindowGaze.active()) return 'window_gaze'; }catch(e){}
     return $imports.AN.active&&PHOTO[$imports.AN.id]?$imports.AN.id:null;
   }
   function placeName(){ try{ return (0,$imports.currentPlaceName)(); }catch(e){ return $imports.S.mode==='in'?(($imports.INTERIORS[$imports.S.room]||{}).name||''):'校园'; } }

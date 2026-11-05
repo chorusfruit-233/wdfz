@@ -120,6 +120,8 @@
     uses:['hint','interact','newGame','gameFact','frame','clearWorld','boundary','boot']},
   {id:'phone-camera', name:'手机相机', desc:'创意提案 C11：手机里的「相机」应用。拍照截当前画面一帧，正在发生的异象在照片里多出一样东西（每种异象各一张）；相册跟存档走，异象照片记进手册线索；闪光可关，开着闪光被巡察者看见会把它引过来；不额外耗电，不改异象规则。',
     files:['game3d/js/modules/phone-camera/camera.js'], exports:['PhoneCamera','PHOTO','PHOTO_CFG'], uses:['phoneApp','phoneCopy']},
+  {id:'window-gaze', name:'窗户内的视线', desc:'计划《规则怪谈、纸飞机与窗内视线》第 5 节：外墙真实窗格里的一双眼睛；直视被吸住、掉 SAN，低头、偏开或墙挡可以挣开；耗尽 SAN 是专属死法（演出在 gaze-death.js）。',
+    files:['game3d/js/modules/window-gaze/gaze.js','game3d/js/modules/window-gaze/gaze-death.js'], exports:['WindowGaze','WG'], uses:['tick','leaveRoom','newGame','frame','clearWorld','boundary']},
   {id:'inception', name:'隐藏结局《盗梦空间》（内部）', desc:'彩蛋：宿舍睡觉时有陀螺可能进梦（上课 20% 睡着×10%、不上课 5%，每天最多一次）；梦里转陀螺 50% 定分支，坠落或走出口通往隐藏结局，否则醒回宿舍按两倍睡觉结算。不进玩家 Wiki，可从清单拿掉。',
     files:['game3d/js/modules/inception/dream.js','game3d/js/modules/inception/dream-cut.js'], exports:['Inception','INCEPTION_CFG','INCEPTION_MAZE'], uses:['interiors','restAct','hint','interact','itemUse','clockText','mapBlocked','tick','frame','clearWorld','boundary','enterRoom']},
   {id:'mod-manager', name:'Mod 管理', desc:'调试面板里的「Mod」页：看模块状态、导入 / 开关 / 删除 Mod。',
