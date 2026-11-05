@@ -257,7 +257,7 @@ var TILE_HINT={
     return (0,$imports.hasItem)('coin')?'投币（售货机）':'售货机';
   },
   k:function(h,R){ return R.host==='guard'?'查看值班台':canteenHint(h,R); }, t:canteenHint,
-  L:'走连廊', Q:'看服务器终端', S:'沿楼梯行走', J:function(){return $imports.S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return $imports.Investigation.carHint(h);},
+  L:function(){ return GameModules.first('linkContinuous')?'':'走连廊'; },   /* 连续校园：门洞直接走过去，不再提示按 E */ Q:'看服务器终端', S:'沿楼梯行走', J:function(){return $imports.S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return $imports.Investigation.carHint(h);},
   T:function(h,R){
     if($imports.Investigation.isPodium(R,h.c,h.r)) return $imports.Investigation.visible('notice')?'再看移交单':'看移交单';
     return $imports.S.room==='teach1'?'拿粉笔':'看讲台';
@@ -490,6 +490,7 @@ function spawnAtTile(id,r2,c2){
   return {x:R.ox+(c2+0.5)*R.tw, y:R.oy+(r2+0.5)*R.th};
 }
 function useLink(R,c,r){
+  if(GameModules.first('linkContinuous')){ (0,$imports.os)('我：门洞开着，直接走过去就是连廊。',2.2); return; }   /* 连续校园：连廊不再换场景 */
   var id=R.id, host=R.host, f=R.floor;
   if(R.host==='c1'||R.host==='c2'){
     var to=linksOf(R.host);

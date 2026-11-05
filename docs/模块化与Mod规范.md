@@ -86,6 +86,8 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `frame` | `app/presentation-loop.js` `render()`，每个画面帧 | emit | `dt`；表现层自己的动画（彩蛋的反色、黑影淡入淡出） |
 | `soundscape` | `audio.js` 每帧 | first | 返回要用的整片环境声 ID（见第 4.1 节） |
 | `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |
+| `stepMoved` | `world.js` `moveBy` 每一小步之后（2026-11-05） | emit | 模块的门槛：越过就换场景（连续校园的连廊）；换场景时改了 `S.ang`，这一步剩下的位移会跟着转 |
+| `linkContinuous` | `interact.js` 连廊入口（`L` 格）的提示和按 E | first | 返回真：连廊已经连续（门洞直接走过去），不再按 E 换场景 |
 | `bellTune` | `audio.js` `schoolBell`（每一遍上下课铃，2026-11-04） | first | `kind`（`start` / `end`）；返回 `{pitch, caption}` 让这一遍走调（氛围 A5），不返回就照常 |
 | `liftBoard` | `elevator.js` `Elevator.enterCabin`，跨进轿厢、乘梯记录建好以后、存档之前（2026-11-04） | emit | `ride, host, floor`：别的模块在这一刻定自己的稀有事件（和错误的电梯互斥，写在 `ride` 上一起存档） |
 | `liftDepart` | `elevator.js` `Elevator.depart` 开头：门关上、要出发之前（关门后自动出发和门本来就关着时按楼层都走这里） | first | `ride, host`；返回 `true` 表示先不出发（模块接管这一次关门） |

@@ -127,7 +127,7 @@ function moveBy(dx,dy,dt){
     if(ax<1e-7||ax<before-1e-7){$imports.S.x=nx;before=ax;}
     var ay=$imports.Collision.depth($imports.S.x,ny,PRAD);
     if(ay<1e-7||ay<before-1e-7)$imports.S.y=ny;
-    var beforeAngle=$imports.S.ang;$imports.StairWorld.moved();
+    var beforeAngle=$imports.S.ang;$imports.StairWorld.moved();GameModules.emit('stepMoved');   /* 模块的门槛（连续校园的连廊）：越过就换场景，朝向变化下面一起转 */
     var da=$imports.S.ang-beforeAngle;if(da){var ndx=dx*Math.cos(da)-dy*Math.sin(da);dy=dx*Math.sin(da)+dy*Math.cos(da);dx=ndx;}
     (0,$imports.spiralUpdate)();
     MR=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null;

@@ -145,10 +145,10 @@
     "admin1:entry",
     "admin1:stairs"
   ],
-  "baseWeightSeconds": 1352.078757673055,
-  "matchingExtraSeconds": 517.0361618680486,
-  "totalSeconds": 1869.1149195411035,
-  "initialCandidateSeconds": 4115.103998241601,
+  "baseWeightSeconds": 1355.6383863264289,
+  "matchingExtraSeconds": 520.5957905214223,
+  "totalSeconds": 1876.2341768478511,
+  "initialCandidateSeconds": 4172.058056695581,
   "coverage": {
     "requiredEdges": 88,
     "coveredEdges": 88,
@@ -207,7 +207,7 @@
     ],
     [
       "lab1:east",
-      "stair_teach_e:1"
+      "stair_admin:3"
     ],
     [
       "lab2:east",
@@ -215,19 +215,19 @@
     ],
     [
       "lab3:east",
-      "stair_lab:2"
+      "lab4:east"
     ],
     [
-      "lab4:east",
-      "lab5:east"
+      "lab5:east",
+      "stair_lab:3"
     ],
     [
       "out:teach",
       "teach1:stairs"
     ],
     [
-      "stair_admin:3",
-      "stair_lab:3"
+      "stair_lab:2",
+      "stair_teach_e:1"
     ],
     [
       "stair_teach_e:2",
@@ -276,7 +276,7 @@
     {
       "a": "admin2:stairs",
       "b": "admin2:link1",
-      "seconds": 27.019987822087177,
+      "seconds": 28.285612822087177,
       "kind": "walk"
     },
     {
@@ -342,13 +342,13 @@
     {
       "a": "lab2:stairs",
       "b": "lab2:link1",
-      "seconds": 25.332487822087177,
+      "seconds": 26.365117693252305,
       "kind": "walk"
     },
     {
       "a": "lab2:stairs",
       "b": "lab2:link2",
-      "seconds": 2.0369926932522993,
+      "seconds": 2.798366475461015,
       "kind": "walk"
     },
     {
@@ -396,38 +396,38 @@
     {
       "a": "link1:north",
       "b": "admin2:link1",
-      "seconds": 1,
-      "kind": "bridge"
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "link1:north",
       "b": "link1:south",
-      "seconds": 11.8125,
+      "seconds": 13.359375,
       "kind": "walk"
     },
     {
       "a": "link1:south",
       "b": "lab2:link1",
-      "seconds": 1,
-      "kind": "bridge"
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "link2:north",
       "b": "lab2:link2",
-      "seconds": 1,
-      "kind": "bridge"
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "link2:north",
       "b": "link2:south",
-      "seconds": 11.8125,
+      "seconds": 13.359375,
       "kind": "walk"
     },
     {
       "a": "link2:south",
       "b": "teach2:link2",
-      "seconds": 1,
-      "kind": "bridge"
+      "seconds": 0,
+      "kind": "stair-portal"
     },
     {
       "a": "out:admin",
@@ -468,7 +468,7 @@
     {
       "a": "out:eastroad",
       "b": "out:northgate",
-      "seconds": 89.8937905398993,
+      "seconds": 89.89379053989931,
       "kind": "walk"
     },
     {
@@ -696,7 +696,7 @@
     {
       "a": "teach2:stairs",
       "b": "teach2:link2",
-      "seconds": 3.312611604295881,
+      "seconds": 4.71886160429588,
       "kind": "walk"
     },
     {
