@@ -8,7 +8,7 @@ class FallbackTest(BrowserCase):
     def boot_with(self, script='', block_library=False, corrupt_post=False):
         context=self.browser.new_context(viewport={'width':640,'height':480})
         self.contexts.append(context)
-        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,vol:0,amb:0}));"+script)
+        context.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,vol:0,amb:0,renderer:'auto',rv:1}));"+script)   # 回退用例测「自动」模式（2026-11-05 起默认 WebGL）
         if block_library:
             context.route('**/game3d/lib/three-webgpu.min.js',lambda route:route.abort())
         if corrupt_post:
@@ -46,11 +46,27 @@ class FallbackTest(BrowserCase):
         page,_=self.boot_with("Object.defineProperty(navigator,'gpu',{value:undefined});")
         result=page.evaluate("""()=>{
           localStorage.setItem('zw3d_save','unchanged');loadSet();const old=SET.renderer;
+          localStorage.setItem('zw3d_set',JSON.stringify({q:0,renderer:'auto'}));loadSet();const legacyAuto=SET.renderer;   // 旧设置里的「自动」是当时的默认
+          Settings.renderer('auto');loadSet();const chosenAuto=SET.renderer;                                                // 玩家自己选的「自动」照存
           Settings.renderer('webgl');loadSet();const chosen=SET.renderer;
           SET.renderer='unknown';normalizeComfort();
-          return {old,chosen,invalid:SET.renderer,save:localStorage.getItem('zw3d_save')};
+          return {old,legacyAuto,chosenAuto,chosen,invalid:SET.renderer,save:localStorage.getItem('zw3d_save')};
         }""")
-        self.assertEqual(result,dict(old='auto',chosen='webgl',invalid='auto',save='unchanged'))
+        self.assertEqual(result,dict(old='auto',legacyAuto='webgl',chosenAuto='auto',chosen='webgl',invalid='webgl',save='unchanged'))   # 2026-11-05 起默认 WebGL
+
+    def test_default_profile_uses_webgl_and_main_menu_opens_settings(self):
+        page,requests=self.boot_with("localStorage.removeItem('zw3d_set');")
+        self.assertEqual(page.evaluate('Engine.status().backend'),'webgl')
+        self.assertEqual(page.evaluate('Engine.status().requested'),'webgl')
+        self.assertFalse(any('three-webgpu' in u for u in requests))          # 默认不去下载 WebGPU 扩展
+        page.get_by_role('button',name='设置').first.click()
+        self.assert_js(page,"UI.openPanel==='set'&&getComputedStyle(document.getElementById('set')).display!=='none'&&document.getElementById('setResume').hidden")
+        self.assert_js(page,"(()=>{const r=document.getElementById('sRenderer').getBoundingClientRect();return document.getElementById('set').contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));})()")   # 盖在主菜单上面，点得到
+        self.assertEqual(page.locator('#sRenderer').input_value(),'webgl')
+        page.locator('#sRenderer').select_option('auto')
+        self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('zw3d_set')).renderer"),'auto')
+        page.keyboard.press('Escape')
+        self.assert_js(page,"UI.openPanel!=='set'&&!PAUSE.on&&S.screen==='menu'&&!Settings.fromMenu")
 
     def test_both_apis_unavailable_provides_accessible_retry(self):
         page,_=self.boot_with("""Object.defineProperty(navigator,'gpu',{value:undefined});

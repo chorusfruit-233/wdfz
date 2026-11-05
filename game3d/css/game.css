@@ -62,6 +62,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05040
 #menu .mctl label{display:flex;align-items:center;gap:9px}
 #menu .mwiki{display:inline-flex;align-items:center;gap:5px;min-height:36px;color:var(--ui-acc);text-decoration:none}
 #menu .mwiki:hover,#menu .mwiki:focus-visible{color:#f1e0b8;text-decoration:underline}
+#menu .mset{background:none;border:0;padding:0;width:auto;min-width:0;margin:0;font:inherit;letter-spacing:inherit;cursor:pointer}
 #menu .mctl select{background:rgba(14,12,11,.85);color:var(--paper);border:1px solid var(--ui-line2);border-radius:2px;
   font-family:inherit;font-size:11px;padding:5px 8px}
 #menu .mbr input{width:96px;accent-color:var(--ui-acc)}
@@ -74,6 +75,8 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05040
 #menu .mfoot{position:absolute;right:40px;bottom:30px;text-align:right;font:10px/2 var(--ui-mono);letter-spacing:2px;color:var(--ui-faint);pointer-events:none}
 #menu .mfoot span{display:block;font:13px var(--ui-serif);letter-spacing:3px;color:#b9b0a1;margin-bottom:4px}
 #menu .mfoot i{font-style:normal;opacity:.55}
+/* 矮屏桌面（如 1280×720）：左栏已经贴到底，键位提示挪到右下、页脚上面，不压住「画面／亮度／设置」那一行 */
+@media (min-width:701px) and (max-height:820px){#menu .mkeys{left:auto;right:40px;bottom:96px;text-align:right}}
 #menu h1{font-size:clamp(20px,3.4vw,34px);letter-spacing:10px;font-weight:400;color:#ece4d3}
 #menu .sub{font-size:12px;opacity:.5;letter-spacing:3px;margin-bottom:26px}
 #menu button{font-family:inherit;font-size:14px;letter-spacing:3px;padding:13px 46px;min-width:250px;

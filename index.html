@@ -96,8 +96,9 @@
 <div id="set"><div class="pbox setbox">
   <div class="ptitle">设置</div>
   <section class="sgroup" aria-labelledby="sgView"><h4 id="sgView">画面</h4>
-  <div class="srow"><label for="sRenderer">图形模式</label><select id="sRenderer" onchange="Settings.renderer(this.value)"><option value="auto">自动（推荐）</option><option value="webgl">WebGL 兼容模式</option></select></div>
+  <div class="srow"><label for="sRenderer">图形模式</label><select id="sRenderer" onchange="Settings.renderer(this.value)"><option value="webgl">WebGL（默认）</option><option value="auto">自动（先试 WebGPU）</option></select></div>
   <p class="shint" id="rendererCurrent">正在准备游戏画面</p>
+  <p class="shint"><button type="button" class="sreset" onclick="Settings.reload()">重新载入，马上换图形模式</button></p>
   <p class="shint"><a class="renderer-benchmark-link" href="benchmark/" target="_blank" rel="noopener">对比 WebGPU / WebGL 效率（新标签页）</a></p>
   <div class="srow"><span>亮度</span><input type="range" id="sBr" min="60" max="150" value="100" oninput="Settings.bright(this.value)" aria-label="亮度"><b id="sBrV">100</b></div>
   <div class="srow"><span>画质/细节</span><div class="seg" id="sQ">
@@ -136,8 +137,8 @@
   </details>
   <button type="button" class="sreset" onclick="Settings.resetComfort()">灵敏度、字号、触屏按键恢复默认</button>
   </section>
-  <div class="sfoot"><button class="primary" onclick="UI.close('set',false);UI.open('pause')">返回</button>
-  <button onclick="Game.resume()">返回游戏</button></div>
+  <div class="sfoot"><button class="primary" onclick="Settings.back()">返回</button>
+  <button id="setResume" onclick="Game.resume()">返回游戏</button></div>
 </div></div>
 <div id="die"><div class="t">你 死 了 。</div><div class="m" id="diem"></div>
   <div id="dieepi"></div><p id="diecause"></p><p id="diesr" hidden></p><button onclick="Game.quit()">回到主菜单</button></div>
@@ -170,6 +171,7 @@
       <label>画面 <select id="mq" onchange="Settings.q(+this.value)">
         <option value="0">流畅</option><option value="1" selected>均衡</option><option value="2">精细</option><option value="3">超精细</option><option value="4">真实</option></select></label>
       <label class="mbr">亮度 <input type="range" id="mb" min="60" max="150" value="100" oninput="Settings.bright(this.value)"></label>
+      <button type="button" class="mwiki mset" id="btnset" onclick="Settings.openFromMenu()" title="图形模式、画质、声音、字幕与操作">设置 <span aria-hidden="true">⚙</span></button>
       <a class="mwiki" href="wiki/index.html">游戏 Wiki <span aria-hidden="true">↗</span></a>
     </div>
   </div>
