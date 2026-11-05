@@ -864,6 +864,8 @@ var DeathCG=(function(){
         var mapped=(0,$imports.cupWarmMat)();g.add(new $imports.THREE.Mesh(box,mapped));
         /* Turning toward the classroom board during a cinematic can reveal this scene material for the first time. */
         g.add(new $imports.THREE.Mesh(box,new $imports.THREE.MeshLambertMaterial({map:mapped.map,fog:true})));
+        /* Broadcast placards use an opaque mapped material without fog. Warm that variant too. */
+        g.add(new $imports.THREE.Mesh(box,new $imports.THREE.MeshBasicMaterial({map:mapped.map,fog:false})));
       }
       g.position.copy($imports.GLR.cam.position); g.updateMatrixWorld(true);
       /* 只编这一小组（灯光、雾取当前场景的），不用把整个校园再走一遍 */
