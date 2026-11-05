@@ -30,7 +30,9 @@ function buildRoomBounds(){
     var o=(0,$imports.objById)(R.host);
     R.w=R.cols*R.tw; R.h=R.rows*R.th;
     if(o){
-      var hc={x:o.x*$imports.SC+o.w*$imports.SC/2, y:o.y*$imports.SC+o.h*$imports.SC/2};
+      /* o.ic：室内的中心（地图单位）。连续校园把楼体外壳挪去和室内对齐时，室内坐标保持不变（旧存档、巡察栅格都照旧），
+         室内与室外之间差一个固定平移，见 campusShift */
+      var hc=o.ic?{x:o.ic[0]*$imports.SC,y:o.ic[1]*$imports.SC}:{x:o.x*$imports.SC+o.w*$imports.SC/2, y:o.y*$imports.SC+o.h*$imports.SC/2};
       R.ox=hc.x-R.w/2; R.oy=hc.y-R.h/2;
     }else{ R.ox=0; R.oy=0; }
     R.cx=R.ox+R.w/2; R.cy=R.oy+R.h/2;
