@@ -20,6 +20,17 @@ function colonnadeColumns(px,pz,sw,sd){
   }
   return out;
 }
+/* 教学楼（连续校园 A1，按室内重建）：外壳就是室内 63×22 格（1 格 1 米），室内坐标只差一个平移（OBJ.ic）。
+   南侧二到五层是敞开的外廊：教室块的南墙退到走廊北墙后面（第 15.7 格，比室内墙面往里 0.3 米，从走廊里看不到两层墙打架）；
+   两部楼梯（室内第 6、55 列南墙）和电梯（第 20 列）的井道从南墙往外伸，是楼前的三座塔，碰撞和模型共用这里的尺寸（米）。 */
+var TEACH_SOUTH={cols:63,rows:22,gallery:15.7,east:57,stairs:[{col:6,top:19.6},{col:55,top:16.9}],lift:{col:20,top:17.6},
+  towerHalf:2.4,towerOut:9.6,liftHalf:1.15,liftOut:2.3};
+function teachSouth(px,pz,sw,sd){
+  var C=TEACH_SOUTH,t=sw/C.cols,x0=px-sw/2,z0=pz-sd/2,zs=pz+sd/2;
+  var towers=C.stairs.map(function(s){return {x:x0+(s.col+1)*t,z0:zs,z1:zs+C.towerOut,half:C.towerHalf,top:s.top,kind:'stair'};});
+  towers.push({x:x0+(C.lift.col+0.5)*t,z0:zs,z1:zs+C.liftOut,half:C.liftHalf,top:C.lift.top,kind:'lift'});
+  return {t:t,x0:x0,z0:z0,zs:zs,gz:z0+C.gallery*t,ge0:x0+t,ge1:x0+C.east*t,towers:towers};
+}
 /* 连廊两侧落地的砖柱 */
 function linkPillars(px,pz,sw,sd){
   var C=STRUCTURE_CFG.link,out=[],i;
@@ -46,6 +57,7 @@ function addStructureSolids(K,o,px,pz,sw,sd,scale){
   var C=STRUCTURE_CFG;
   if(o.k==='roof'&&o.open1f)colonnadeColumns(px,pz,sw,sd).forEach(function(c){K.solidM(c.x,c.z,C.colonnade.half,C.colonnade.half,scale);});
   if(o.k==='link')linkPillars(px,pz,sw,sd).forEach(function(c){K.solidM(c.x,c.z,C.link.half,C.link.half,scale);});
+  if(o.id==='teach')teachSouth(px,pz,sw,sd).towers.forEach(function(b){K.solidM(b.x,(b.z0+b.z1)/2,b.half,(b.z1-b.z0)/2,scale);});   /* 楼前的楼梯塔、电梯井 */
   if(o.id==='shed'){
     var L=shedLayout(px,pz,sw,sd);
     L.frames.forEach(function(z){L.colX.forEach(function(x){K.solidM(x,z,C.shed.frameHalf,C.shed.frameHalf,scale);});});
@@ -57,6 +69,8 @@ function addStructureSolids(K,o,px,pz,sw,sd,scale){
 GameModules.publish("game3d/js/content/structure-recipe.js",{
 "STRUCTURE_CFG":{get:function(){return STRUCTURE_CFG;},set:function($value){STRUCTURE_CFG=$value;}},
 "colonnadeColumns":{get:function(){return colonnadeColumns;},set:function($value){colonnadeColumns=$value;}},
+"TEACH_SOUTH":{get:function(){return TEACH_SOUTH;},set:function($value){TEACH_SOUTH=$value;}},
+"teachSouth":{get:function(){return teachSouth;},set:function($value){teachSouth=$value;}},
 "linkPillars":{get:function(){return linkPillars;},set:function($value){linkPillars=$value;}},
 "shedLayout":{get:function(){return shedLayout;},set:function($value){shedLayout=$value;}},
 "addStructureSolids":{get:function(){return addStructureSolids;},set:function($value){addStructureSolids=$value;}}

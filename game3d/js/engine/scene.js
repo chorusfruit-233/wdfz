@@ -157,6 +157,17 @@ $imports.ThreeBackend.enterRoom=function(roomId){
   try{ (0,$imports.skipClear)(); }catch(e){}
   GameModules.emit('sceneBuilt',roomId);              /* 模块在新场景里摆自己的东西 */
 };
+/* 室外模型的那一份缓存，借给别的场景（连续校园：教学楼外廊看出去）。在室内借用时不重设室外的灯表；没建过就现建一份放进缓存 */
+$imports.ThreeBackend.sharedOutdoor=function(){
+  sceneCacheCheck();
+  if(!SCENE_CACHE.out){
+    var oldLamps=$imports.OUT_LAMPS,oldOut=$imports.OUTX,g;
+    try{ g=(0,$imports.buildOutdoorGeometry)(); g.userData.__outworld=1; g.userData.layout={lamps:$imports.OUT_LAMPS}; }
+    finally{ $imports.OUT_LAMPS=oldLamps; $imports.OUTX=oldOut; }
+    SCENE_CACHE.out=g;
+  }
+  return SCENE_CACHE.out;
+};
 $imports.ThreeBackend.enterOutside=function(){
   (0,$imports.clearWorldMesh)();sceneCacheCheck();
   try{ (0,$imports.ncClear)(); }catch(e){}      /* 出去就没有同班同学了 */

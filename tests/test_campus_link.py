@@ -148,6 +148,59 @@ class CampusLinkTest(BrowserCase):
             self.assertLess(e['gap'], 4.0)                      # 门槛两侧各 0.5 单位；吸附到 0.25 米巡察栅格的格心后不到 0.45 米
         self.assertTrue(r['route'])
 
+    def test_teach_shell_is_rebuilt_to_the_interior_footprint(self):
+        page = self.ready()
+        r = page.evaluate("""()=>{
+          const o=objById('teach'),R=INTERIORS.teach1,b=objById('bell'),d=TeachGallery.shift(R);
+          const w=objWorld(o),px=(w.x+w.w/2)*U2M,pz=(w.y+w.h/2)*U2M,L=teachSouth(px,pz,w.w*U2M,w.h*U2M);
+          // 一楼南门（O 格）换到室外，应当落在楼体南墙正门的门洞里
+          let oc=[];R.grid.forEach((row,r)=>row.forEach((ch,c)=>{if(ch==='O')oc.push(c);}));
+          const doorX=R.ox+((oc[0]+oc[oc.length-1])/2+.5)*R.tw+d.x,door=doorWorld(o);
+          // 楼前三座塔有碰撞，西边那部楼梯的塔正对着室内的楼梯口
+          const towers=L.towers.map(t=>Collision.depth(t.x/U2M,(t.z0+t.z1)/2/U2M,PRAD,null)>0||!Number.isFinite(Collision.depth(t.x/U2M,(t.z0+t.z1)/2/U2M,PRAD,null)));
+          const s=STAIR_LAYOUT.find(s=>s.id==='stair_teach_w'),p=StairWorld.port(s,0);
+          return {w:o.w*SC-R.w,h:o.h*SC-R.h,inside:Math.abs((o.y+o.h/2)*SC-R.cy-d.y),doorDx:Math.abs(doorX-door.x),
+            stairDx:Math.abs((p.x+d.x)*U2M-L.towers[0].x),towers,bellClear:b.x+b.w<o.x};
+        }""")
+        self.assertEqual((r['w'], r['h']), (0, 0))                 # 外壳就是室内的大小
+        self.assertLess(r['inside'], 1e-6)
+        self.assertLess(r['doorDx'], 9)                             # 正门与室内南门对齐（1 米内）
+        self.assertLess(r['stairDx'], 1e-6)
+        self.assertEqual(r['towers'], [True, True, True])
+        self.assertTrue(r['bellClear'])
+
+    def test_upper_floors_open_onto_the_real_campus(self):
+        page = self.ready()
+        r = page.evaluate("""()=>{
+          const out={};
+          for(const f of [1,2,3,4,5]){
+            const id='teach'+f,R=INTERIORS[id];
+            doEnterRoom(id,{x:R.ox+30.5*R.tw,y:R.oy+19.5*R.th,ang:Math.PI/2,seamless:true});running=false;S.screen='play';
+            const held=TeachGallery.held(),o=objById('teach'),d=TeachGallery.shift(R);
+            // 室外的一个点（北宿舍西北角）在楼层场景里的位置，应当等于它换回室内坐标后的位置、再降一个楼层高
+            let err=null;
+            if(held){const dn=objById('dormN'),wx=dn.x*SC,wy=dn.y*SC,v=new THREE.Vector3(wx*U2M,0,wy*U2M);held.updateMatrixWorld(true);v.applyMatrix4(held.matrixWorld);
+              err=Math.hypot(v.x-(wx-d.x-R.cx)*U2M,v.z-(wy-d.y-R.cy)*U2M)+Math.abs(v.y+(f-1)*3.2);}
+            // 栏杆那一排：不画墙，但走不过去
+            for(let i=0;i<200;i++)moveBy(0,.3,1/240);
+            out[f]={held:!!held,err,open:!!(R.openWall&&R.openWall(30,R.rows-1)),openAir:!!GameModules.first('openAir',id),row:Math.floor((S.y-R.oy)/R.th),depth:Collision.depth(S.x,S.y,PRAD)};
+          }
+          const before=JSON.stringify([S,RT,PAT]);render(.016);const same=JSON.stringify([S,RT,PAT])===before;
+          const held=TeachGallery.held();doExitRoom();running=false;render(.016);
+          return {out,same,back:GLR.outMesh===held&&GLR.outMesh.position.length()===0,errors:GameModules.errors().length};
+        }""")
+        self.assertEqual(r['out']['1']['held'], False)
+        self.assertEqual(r['out']['1']['openAir'], False)
+        for f in ('2', '3', '4', '5'):
+            v = r['out'][f]
+            self.assertTrue(v['held'] and v['open'] and v['openAir'], (f, v))
+            self.assertLess(v['err'], .01)                          # 1 厘米以内
+            self.assertEqual(v['row'], 20)                          # 停在栏杆里面
+            self.assertLess(v['depth'], 1e-7)
+        self.assertTrue(r['same'])
+        self.assertTrue(r['back'])                                  # 回到室外，还是同一份模型、在原点
+        self.assertEqual(r['errors'], 0)
+
     def test_module_can_be_removed_and_links_fall_back_to_e(self):
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)
@@ -161,10 +214,11 @@ class CampusLinkTest(BrowserCase):
         page.goto(self.url, wait_until='load')
         page.evaluate("PHOTO_TRIED=true;" + SETUP)
         page.wait_for_function("S.room==='teach1'")
-        r = page.evaluate("""()=>{const R=INTERIORS.teach2;return {mod:typeof CampusLink,wall:R.grid[18][0],
+        r = page.evaluate("""()=>{const R=INTERIORS.teach2;return {mod:typeof CampusLink,wall:R.grid[18][0],open:!!R.openWall,
           kinds:PatrolNav.graph().edges.filter(e=>e.a.includes('link')||e.b.includes('link')).map(e=>e.kind).filter(k=>k!=='walk'),
           errors:GameModules.errors().length};}""")
         self.assertEqual(r['mod'], 'undefined')
         self.assertEqual(r['wall'], '#')
+        self.assertFalse(r['open'])                                  # 走廊南墙照旧
         self.assertEqual(sorted(set(r['kinds'])), ['bridge'])
         self.assertEqual(r['errors'], 0)

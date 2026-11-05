@@ -50,7 +50,7 @@ function buildRoomRecipe(R,K,view){
       }
     }
   })();
-  function isWall(x,y){ return G(y,x)==='#'&&!STAIR_CUT[x+','+y]; }
+  function isWall(x,y){ return G(y,x)==='#'&&!STAIR_CUT[x+','+y]&&!(R.openWall&&R.openWall(x,y)); }   /* R.openWall：只是不画（连续校园的外廊由室外模型画栏杆），碰撞仍按格子 */
 
   /* ---- 地面：每格一块，棋盘格深浅；教学楼走廊换水磨石 ---- */
   var fy, fx;

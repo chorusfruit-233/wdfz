@@ -389,6 +389,87 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
   }
   addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id]);
 }
+/* ---- 教学楼（连续校园 A1：按室内 63×22 格重建，砖墙、白腰线、红栏杆、柱廊和正门的样式不变） ----
+   五层每层 3.2 米（和楼梯一样）。北边是实心的教室块；南侧一楼是走廊外墙（窗、正门、柱廊），二到五层是敞开的外廊：
+   每层一块楼板（顶面比室内地面低 2 厘米、底面比室内吊顶高 2 厘米，从走廊里看都被室内挡住），外沿红栏杆，
+   里面是教室块的南墙（每间教室两扇门、高窗）。楼前三座塔：两部楼梯（西边那部上到天台）和电梯井。 */
+function bldTeach(K,grp,o,px,pz,sw,sd){
+  var L=(0,$imports.teachSouth)(px,pz,sw,sd), total=16.0, rise=3.2, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth;
+  var gz=L.gz, zs=L.zs, ge0=L.ge0, ge1=L.ge1, gw=ge1-ge0, gx=(ge0+ge1)/2, k;
+  facadeDoor(o,px,pz,sw,sd,'colonnade');
+  /* 教室块：北墙到走廊北墙 */
+  K.box('brick',px,total/2,(L.z0+gz)/2,sw,total,gz-L.z0,$imports.BRICK,0.97);
+  /* 东头厕所那一段、西头端墙：从教室块一直到南沿 */
+  K.box('brick',(ge1+L.x0+sw)/2,total/2,(gz+zs)/2,L.x0+sw-ge1,total,zs-gz,$imports.BRICK,0.97);
+  K.box('brick',(L.x0+ge0)/2,total/2,(gz+zs)/2,ge0-L.x0,total,zs-gz,$imports.BRICK,0.97);
+  /* 一楼：走廊外墙（室内第 21 格），二楼楼板以下 */
+  K.box('brick',gx,(g0-0.18)/2,zs-0.5*L.t,gw,g0-0.18,L.t,$imports.BRICK,0.97);
+  plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));
+  K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,$imports.WHITEBAND,1.0);
+  K.box('brick',px,total+0.78,pz,sw+0.12,0.80,sd+0.12,$imports.BRICK,0.99);
+  K.bevel('stone',px,total+1.22,pz,sw+0.24,0.10,sd+0.24,0xd8d4cb,1.05,0.02);
+  roofTop(K,px,total+1.27,(L.z0+gz)/2,sw,gz-L.z0,o.x);
+  lightningBelt(K,px,pz,sw+0.16,sd+0.16,total+1.27);
+  (function(){ var u0=px-sw/2+0.8, len=sw-1.6, nw=Math.max(1,Math.floor(len/3.2)), q;
+    for(q=1;q<4;q++){ var kk=Math.round(nw*q/4); if(kk>0&&kk<nw) downpipe(K,'n',px,pz,sw,sd,u0+kk*len/nw,total+0.9); } })();
+  /* 柱廊和雨篷（立柱位置和碰撞来自 content/structure-recipe.js；落在楼梯塔里的那几根被塔身包住） */
+  (0,$imports.colonnadeColumns)(px,pz,sw,sd).forEach(function(c){
+    K.bevel('brick',c.x,g0/2,c.z,0.46,g0,0.46,$imports.BRICK,1.02,0.03);
+    K.bevel('stone',c.x,0.16,c.z,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
+    K.bevel('stone',c.x,g0-0.12,c.z,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
+  });
+  if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',px,g0+0.14,zs+dep/2,sw+0.4,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
+  K.box('concrete',px,g0-0.30,zs+dep/2,sw+0.2,0.26,dep+0.3,$imports.BRICK_D,0.96);
+  /* 一楼南窗：避开楼梯塔、电梯井和正门 */
+  var cuts=L.towers.map(function(b){ return [b.x-b.half-0.6,b.x+b.half+0.6]; }).concat([[px-3.2,px+3.2]]).sort(function(a,b){return a[0]-b[0];});
+  var from=ge0+0.6, ci;
+  for(ci=0;ci<=cuts.length;ci++){
+    var to=ci<cuts.length?cuts[ci][0]:ge1-0.6;
+    if(to-from>2.4) facadeWindows(K,'s',px,pz,sw,sd,from+0.4,to-0.4,1.7,1.8,1.2,4.2);
+    if(ci<cuts.length) from=Math.max(from,cuts[ci][1]);
+  }
+  /* 北、东、西三面每层的窗，每层腰线 */
+  for(k=0;k<5;k++){
+    var fy=k*rise+1.75;
+    if(k>0) bandAround(K,px,pz,sw,sd,k*rise-0.09,0.18,0.06);
+    facadeWindows(K,'n',px,pz,sw,sd,px-sw/2+0.8,px+sw/2-0.8,fy,1.8,1.25,3.2,k);
+    facadeWindows(K,'e',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,fy,1.6,1.25,3.4,k+10);
+    facadeWindows(K,'w',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,fy,1.6,1.25,3.4,k+20);
+  }
+  /* 二到五层外廊 */
+  var doors=[10,18,22,30,34,42,46,54];
+  for(k=1;k<=5;k++){
+    var y=k*rise;
+    /* 楼板（五层上面那块是屋顶下的檐板） */
+    K.box('concrete',gx,y-0.10,(gz+zs)/2,gw,0.16,zs-gz,0xd8d4cb,1.04);
+    K.box('plaster',gx,y-0.06,zs+0.02,gw,0.24,0.04,$imports.WHITEBAND,1.0);                          /* 楼板外沿的白边 */
+    if(k===5) continue;
+    /* 教室块南墙上的门和高窗（外廊这一侧） */
+    doors.forEach(function(c){
+      var dx=L.x0+(c+0.5)*L.t;
+      K.box('wood',dx,y+1.02,gz+0.03,0.92,2.04,0.06,0x6a4a34,0.95);
+      K.box('plaster',dx,y+2.1,gz+0.03,1.06,0.10,0.07,$imports.WHITEBAND,1.0);
+    });
+    facadeWindows(K,'s',px,L.z0+(gz-L.z0)/2,sw,gz-L.z0,ge0+2.2,ge1-2.2,y+2.35,1.6,0.7,4.0,k+30);
+    /* 外沿：矮栏板 + 红栏杆（室内第 21 格的里沿，人走到这里正好挨着栏杆） */
+    var rz=zs-L.t+0.08, rpn=Math.max(4,Math.round(gw/1.3)), rp;
+    K.box('concrete',gx,y+0.08,rz,gw,0.16,0.18,0xd8d4cb,1.02);
+    for(rp=0;rp<=rpn;rp++){ var rx=ge0+(gw/rpn)*rp; K.rod('metal',rx,y+0.16,rz,rx,y+1.08,rz,0.025,0.025,5,0x8b3a2e,1.0); }
+    K.rod('metal',ge0,y+1.08,rz,ge1,y+1.08,rz,0.04,0.04,6,0x8b3a2e,1.05);
+    K.rod('metal',ge0,y+0.6,rz,ge1,y+0.6,rz,0.018,0.018,4,0x8b3a2e,1.0);
+    var acn=Math.max(2,Math.floor(gw/9)), ac;
+    for(ac=0;ac<acn;ac++) acUnit(K,ge0+2+ac*((gw-4)/(acn-1||1)),y+0.31,gz+0.3,'s');
+  }
+  /* 楼前三座塔：楼梯两座、电梯一座，砖墙、白顶，楼梯塔南面每个半层一扇窗 */
+  L.towers.forEach(function(b){
+    var d=b.z1-b.z0, cz=(b.z0+b.z1)/2;
+    K.box('brick',b.x,b.top/2,cz,b.half*2,b.top,d,$imports.BRICK,0.97);
+    K.box('plaster',b.x,b.top+0.15,cz,b.half*2+0.12,0.30,d+0.12,$imports.WHITEBAND,1.0);
+    plinthAround(K,b.x,cz,b.half*2,d,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));
+    if(b.kind==='stair'){ for(var h=1.6+rise/2;h<b.top-1;h+=rise) facadeWindows(K,'s',b.x,cz,b.half*2,d,b.x-0.9,b.x+0.9,h,1.2,1.1,1.8,(h*7)|0); }
+  });
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id]);
+}
 /* ---- 宿舍：六层，阳台开在门的对面（贴着食堂的那段不画） ---- */
 function bldDorm(K,grp,o,px,pz,sw,sd){
   var dh=OBLD_H[o.id], dn=Math.round(dh/3.0), dfl;
@@ -775,6 +856,7 @@ function gateModel(K,grp,wx,wy,wide,tallSign,vert,name){
 var BLD_BY_ID={
   garage:function(K,grp,o,px,pz,sw,sd){ garageRamp(K,px,pz,sw,sd); },
   garw:  function(K,grp,o,px,pz,sw,sd){ (0,$imports.garagePed)(K,px,pz,sw,sd); },
+  teach:  function(K,grp,o,px,pz,sw,sd){ bldTeach(K,grp,o,px,pz,sw,sd); },
   bell:   function(K,grp,o,px,pz,sw,sd){ bldBell(K,grp,o,px,pz,sw,sd); },
   dormN:  function(K,grp,o,px,pz,sw,sd){ bldDorm(K,grp,o,px,pz,sw,sd); },
   canteen:function(K,grp,o,px,pz,sw,sd){ bldCanteen(K,grp,o,px,pz,sw,sd); },
@@ -852,6 +934,7 @@ GameModules.publish("game3d/js/model/building.js",{
 "addSmallDoor":{get:function(){return addSmallDoor;},set:function($value){addSmallDoor=$value;}},
 "addGardenSign":{get:function(){return addGardenSign;},set:function($value){addGardenSign=$value;}},
 "bldClassroom":{get:function(){return bldClassroom;},set:function($value){bldClassroom=$value;}},
+"bldTeach":{get:function(){return bldTeach;},set:function($value){bldTeach=$value;}},
 "bldDorm":{get:function(){return bldDorm;},set:function($value){bldDorm=$value;}},
 "bldBell":{get:function(){return bldBell;},set:function($value){bldBell=$value;}},
 "bldCanteen":{get:function(){return bldCanteen;},set:function($value){bldCanteen=$value;}},

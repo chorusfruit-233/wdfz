@@ -145,10 +145,10 @@
     "admin1:entry",
     "admin1:stairs"
   ],
-  "baseWeightSeconds": 1378.1949204245848,
+  "baseWeightSeconds": 1388.83274506264,
   "matchingExtraSeconds": 520.5957905214223,
-  "totalSeconds": 1898.790710946007,
-  "initialCandidateSeconds": 4194.614590793737,
+  "totalSeconds": 1909.4285355840623,
+  "initialCandidateSeconds": 4205.2524154317925,
   "coverage": {
     "requiredEdges": 88,
     "coveredEdges": 88,
@@ -444,7 +444,7 @@
     {
       "a": "out:bell",
       "b": "out:garden",
-      "seconds": 28.02849025766973,
+      "seconds": 30.824431803688114,
       "kind": "walk"
     },
     {
@@ -480,7 +480,7 @@
     {
       "a": "out:garden",
       "b": "out:dormN",
-      "seconds": 18.44943180368812,
+      "seconds": 18.778936674853256,
       "kind": "walk"
     },
     {
@@ -522,13 +522,13 @@
     {
       "a": "out:teach",
       "b": "out:bell",
-      "seconds": 28.357995128834865,
+      "seconds": 31.61992693252298,
       "kind": "walk"
     },
     {
       "a": "out:teach",
       "b": "out:westgate",
-      "seconds": 72.64931002455977,
+      "seconds": 76.89975644174332,
       "kind": "walk"
     },
     {

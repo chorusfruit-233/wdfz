@@ -16,7 +16,7 @@ var ROADS=[
   [398,207,422,505],   /* 操场东侧 */
   [352,505,394,999],   /* 西侧 */
   [204,612,352,636],   /* 西小门 */
-  [352,987,718,999],   /* 教学楼前 */
+  [352,1021,718,1033], /* 教学楼前（连续校园 A1：让出楼前的楼梯塔，往南挪） */
   [375,999,398,1290],  /* 宿舍西侧，通南门 */
   [398,1148,548,1172], /* 两栋宿舍之间，到食堂西门 */
   [398,1234,718,1252], /* 南宿舍门前 */
@@ -214,7 +214,7 @@ function addOutdoorProps(K, x0, y0, x1, y1){
 
   /* ---- 花园：一座不锈钢雕塑（几根斜杆托着一个环）+ 校训牌 ---- */
   (function(){
-    var gx=M(535), gz=M(1040);
+    var gx=M(535), gz=M(1057.1);
     K.bevel('stone',gx,0.30,gz,24.0,0.60,3.0,0xb8b2a8,1.0,0.06);
     K.solidM(gx,gz,12.0,1.5,$imports.SC*$imports.U2M);
     var sx3=gx-12.0;
@@ -230,16 +230,16 @@ function addOutdoorProps(K, x0, y0, x1, y1){
     K.bevel('stone',gx,0.17,gz+1.6,11.6,0.34,0.9,0xa8a298,1.0,0.04);
     K.box('metal',gx,0.42,gz+1.6,11.4,0.10,0.16,0x9aa0a4,1.0);
     K.solidM(gx,gz+1.6,5.8,0.5,$imports.SC*$imports.U2M);
-    K.g('fpave').quad(M(400),M(1036), M(670),M(1036), M(670),M(1030), M(400),M(1030), 0.014, 0x9a948a);
-    K.g('fpave').quad(M(532),M(1078), M(538),M(1078), M(538),M(1000), M(532),M(1000), 0.014, 0x9a948a);
+    K.g('fpave').quad(M(400),M(1054.8), M(670),M(1054.8), M(670),M(1051.5), M(400),M(1051.5), 0.014, 0x9a948a);
+    K.g('fpave').quad(M(532),M(1078), M(538),M(1078), M(538),M(1035), M(532),M(1035), 0.014, 0x9a948a);
   })();
 
   /* ---- 花坛：砖砌一圈，土，一丛丛花 ---- */
-  var beds=[[440,1016],[630,1016],[440,1062],[630,1062],[462,1008],[608,1008],[740,560],[740,760],[330,560],[660,140],[440,145]];
+  var beds=[[440,1043.8],[630,1043.8],[440,1069.2],[630,1069.2],[470,1039.4],[600,1039.4],[740,560],[740,760],[330,560],[660,140],[440,145]];
   var flowerCols=[0xb24a4a,0xc8a24a,0xa85a8a,0xd8d4e8,0xc86a3a];
   for(i=0;i<beds.length;i++){
     var fmx=beds[i][0], fmy=beds[i][1];
-    var inGarden=inRect(fmx,fmy,[400,1000,670,1078],0);
+    var inGarden=inRect(fmx,fmy,[400,1035,670,1078],0);
     if(!inGarden&&(inObj(fmx,fmy,8,true)||!outFreeInLayout(fmx,fmy,4,3,K.solids))) continue;   /* 以前这里条件写反了：落在楼、车库坡道上的也照建 */
     if(onRoad(fmx,fmy,3)) continue;
     var fx0=M(fmx), fz0=M(fmy);
@@ -331,10 +331,10 @@ function addOutdoorProps(K, x0, y0, x1, y1){
   }
 
   /* ---- 长椅（板条 + 铸铁腿）+ 圆形垃圾桶 ---- */
-  var benchSpots=[[420,1020],[650,1020],[420,1070],[650,1070],[730,300],[730,640],[730,960],[380,700],[340,250],[600,1210]];
+  var benchSpots=[[418,1046.0],[652,1046.0],[418,1073.6],[652,1073.6],[730,300],[730,640],[730,960],[380,700],[340,250],[600,1210]];
   for(i=0;i<benchSpots.length;i++){
     var bmx=benchSpots[i][0], bmy=benchSpots[i][1];
-    var inGarden=inRect(bmx,bmy,[400,1000,670,1078],0);
+    var inGarden=inRect(bmx,bmy,[400,1035,670,1078],0);
     if(!inGarden&&!outFreeInLayout(bmx,bmy,3,1,K.solids)) continue;
     var px2=M(bmx), pz2=M(bmy), sl;
     if(!K.asset('bench_park',px2,0,pz2,0)){
