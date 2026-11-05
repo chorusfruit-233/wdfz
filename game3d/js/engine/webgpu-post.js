@@ -38,10 +38,13 @@ var WebGPUPost={create:function(uniforms,multisampled){
   var ao=N.wgslFn(`fn schoolAO(tex:${depthType},uv:vec2<f32>,res:vec2<f32>,strength:f32,near:f32,far:f32)->f32{
     if(strength<=0.0){return 1.0;}let z=schoolDepth(tex,uv,near,far);if(z>55.0){return 1.0;}
     let radius=clamp(res.y*0.16/max(z,0.2),2.0,32.0);var occ=0.0;
-    for(var i=0;i<8;i++){let a=f32(i)*0.785398;let d=vec2<f32>(cos(a),sin(a));
-      let dz=z-schoolDepth(tex,clamp(uv+d*radius/res,vec2<f32>(0.001),vec2<f32>(0.999)),near,far);
-      occ+=smoothstep(0.035,0.22,dz)*(1.0-smoothstep(0.35,1.2,dz));}
-    return 1.0-strength*occ/8.0;
+    // 和 WebGL 那条一致：四对相反方向，只有两边都更近才算遮挡；每像素旋转，去掉规则条纹
+    var hp=fract(floor(uv*res)*vec2<f32>(443.8975,397.2973));hp+=dot(hp,hp.yx+vec2<f32>(19.19));let rot=fract((hp.x+hp.y)*hp.x)*0.785398;
+    for(var i=0;i<4;i++){let a=f32(i)*0.785398+rot;let d=vec2<f32>(cos(a),sin(a))*radius/res;
+      let za=z-schoolDepth(tex,clamp(uv+d,vec2<f32>(0.001),vec2<f32>(0.999)),near,far);
+      let zb=z-schoolDepth(tex,clamp(uv-d,vec2<f32>(0.001),vec2<f32>(0.999)),near,far);
+      occ+=smoothstep(0.02,0.18,min(za,zb))*(1.0-smoothstep(0.35,1.2,max(za,zb)));}
+    return 1.0-strength*occ/4.0;
   }`,[depth]);
   var fn=N.wgslFn(`fn schoolPost(vUv:vec2<f32>,pixel:vec2<f32>,tDiffuse:texture_2d<f32>,sceneSampler:sampler,tDepth:${depthType},
     tHands:texture_2d<f32>,handSampler:sampler,uRes:vec2<f32>,uTime:f32,uWarp:f32,uTunnel:f32,uBlur:f32,uBlack:f32,uFocus:f32,uSan:f32,
@@ -129,6 +132,7 @@ var WebGPUPost={create:function(uniforms,multisampled){
     outc+=vec3<f32>(0.011)*(1.0-smoothstep(0.0,0.3,gLum))*(1.0-uFx);
     outc+=vec3<f32>(gn*(0.012+0.026*(1.0-smoothstep(0.03,0.45,gLum)))*(1.0+0.7*wob)*(1.0-uFx)*uGrain);
     outc=mix(outc,vec3<f32>(1.0)-clamp(outc,vec3<f32>(0.0),vec3<f32>(1.0)),uInvert);
+    outc+=vec3<f32>((schoolHash(pixel*1.37+vec2<f32>(3.1,7.7))-0.5)/255.0);   // 输出前抖动，去掉 8 位色带
     // Canvas output is already encoded; offscreen/diagnostic callers retain linear output.
     if(uOutputSRGB>0.5){return vec4<f32>(outc,1.0);}
     outc=max(outc,vec3<f32>(0.0));

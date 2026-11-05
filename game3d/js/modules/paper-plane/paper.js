@@ -24,6 +24,7 @@ var PaperPlane=(function(){
   var TIPS=['学生会十二点五十、五点五十各查一次座位。坐在自己的位子上就行。','食堂饭点以外，打饭窗口要一枚硬币。','熄灯以后别在走廊里待太久。巡察者夜里也在走。','听见窗后有呼吸声，就别往窗那边看。'];
   var DANGER_TEXT='他还在那扇窗后等。读完就折好，别留在手里。\n送回有缺角的那扇窗，转弯别碰墙。';
   function st(){ var s=$imports.RT.paper; if(!s||typeof s!=='object') s=$imports.RT.paper={roll:null,ev:null,used:0,calmUntil:0}; return s; }
+  function peek(){ return $imports.RT.paper||{ev:null}; }   /* 表现层／提示只读，不创建状态 */
   function now(){ return $imports.Mechanics?$imports.Mechanics.activePlaySeconds:0; }
   function room(){ return $imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null; }
   function windows(R){ return typeof $imports.WindowGaze!=='undefined'?$imports.WindowGaze.windows(R):[]; }
@@ -57,7 +58,7 @@ var PaperPlane=(function(){
     var s=st(), e=s.ev; if(!e) return; closeRead(); s.ev=null; if(why==='returned') s.calmUntil=now()+C.calm;
   }
   /* ---------- 操作所有权：读纸和飞的时候主角不动 ---------- */
-  GameModules.on('ownsPlayerInput',function(){ var e=st().ev; return e&&(e.phase==='read'||e.phase==='flight')&&$imports.S.mode==='in'&&$imports.S.room===e.room?true:undefined; },own);
+  GameModules.on('ownsPlayerInput',function(){ var e=peek().ev; return e&&(e.phase==='read'||e.phase==='flight')&&$imports.S.mode==='in'&&$imports.S.room===e.room?true:undefined; },own);
   var KEYS={l:0,r:0,u:0,d:0};
   function key(e,down){
     var ev=st().ev; if(!ev) return;
@@ -82,10 +83,10 @@ var PaperPlane=(function(){
   function closeRead(){ var el=document.getElementById('paperread'); if(el) el.hidden=true; }
   function fold(){ var e=st().ev; if(!e||e.phase!=='read') return; closeRead(); e.phase='aim'; e.t=0; (0,$imports.gameFact)('paper',{what:'read'}); (0,$imports.os)('我：我把纸按原来的折痕折好。那扇窗还开着一条缝。',3,$imports.OS_FORCE); }
   /* ---------- 捡、投 ---------- */
-  function nearPaper(){ var e=st().ev; return !!e&&(e.phase==='ground'||e.phase==='wait')&&$imports.S.mode==='in'&&$imports.S.room===e.room&&Math.hypot($imports.S.x-e.lx,$imports.S.y-e.ly)*$imports.U2M<1.3; }
+  function nearPaper(){ var e=peek().ev; return !!e&&(e.phase==='ground'||e.phase==='wait')&&$imports.S.mode==='in'&&$imports.S.room===e.room&&Math.hypot($imports.S.x-e.lx,$imports.S.y-e.ly)*$imports.U2M<1.3; }
   function facing(e,w){ var dx=w.x-$imports.S.x, dy=w.y-$imports.S.y, a=Math.atan2(dy,dx), d=Math.atan2(Math.sin(a-$imports.S.ang),Math.cos(a-$imports.S.ang)); return Math.abs(d)<0.45; }
   GameModules.on('hint',function(){
-    var e=st().ev; if(!e) return undefined;
+    var e=peek().ev; if(!e) return undefined;
     if(nearPaper()) return '地上的纸飞机';
     if(e.phase==='aim') return '对准那扇窗投出';
     return undefined;
@@ -193,7 +194,7 @@ var PaperPlane=(function(){
     F.pad.hidden=false;
   }
   function frame(){
-    var e=st().ev, here=e&&$imports.S.mode==='in'&&$imports.S.room===e.room&&$imports.GLR.scene&&$imports.GLR.roomMesh;
+    var e=peek().ev, here=e&&$imports.S.mode==='in'&&$imports.S.room===e.room&&$imports.GLR.scene&&$imports.GLR.roomMesh;
     pad(!!(here&&e.phase==='flight'&&document.body.classList.contains('touch')));
     if(e&&e.phase==='read'&&here){ var el=document.getElementById('paperread'); if(!el||el.hidden) openRead(); var bar=document.querySelector('#paperread .pp-bar i'); if(bar) bar.style.width=Math.max(0,100*(1-e.t/C.read))+'%'; }
     var key=here&&e.phase!=='hunt'?e.id+':'+$imports.GLR.roomMesh.uuid:'';
@@ -205,6 +206,7 @@ var PaperPlane=(function(){
       for(var i=0;i<4;i++){ var fg=new T.Mesh(new T.BoxGeometry(0.018,0.08,0.02),hm); fg.position.set(-0.033+i*0.022,0.09,0); F.hand.add(fg); }
       g.add(F.hand); $imports.GLR.scene.add(g); F.grp=g; F.key=key;
     }
+    if(!key||!F.grp) return;                                                   /* 没有事件：什么也不画（以前会接着读空的 e，每帧报错） */
     var R=$imports.INTERIORS[e.room], w=winOf(e); if(!w) return;
     var wp=(0,$imports.worldToScene)(w.x,w.y,R), lp=(0,$imports.worldToScene)(e.lx,e.ly,R);
     F.hand.visible=e.kind==='danger'&&e.phase!=='ground'; F.hand.position.set(wp.x+0.3,1.55,wp.z+w.nz*0.14);

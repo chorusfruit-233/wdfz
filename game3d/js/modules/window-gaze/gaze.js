@@ -69,7 +69,7 @@ var WindowGaze=(function(){
     s.ev=null; s.next=($imports.Mechanics?$imports.Mechanics.activePlaySeconds:0)+WG.gap[0]+$imports.GameRandom.next()*(WG.gap[1]-WG.gap[0]);
     if(why==='end') (0,$imports.os)('我：窗玻璃上留下一块雾。雾上没有掌纹。',3.2);
   }
-  function current(){ var e=st().ev, R=room(); if(!e||!R||R.id!==e.room) return null; var w=windows(R).filter(function(x){ return x.c===e.c&&x.r===e.r; })[0]; return w?{e:e,w:w,R:R}:null; }
+  function current(){ var e=($imports.RT.windowGaze||{}).ev, R=room(); if(!e||!R||R.id!==e.room) return null; var w=windows(R).filter(function(x){ return x.c===e.c&&x.r===e.r; })[0]; return w?{e:e,w:w,R:R}:null; }
   function tick(dt){
     if(!(dt>0)||$imports.S.dead||$imports.S.screen!=='play') return;
     var s=st(), R=room(), now=$imports.Mechanics?$imports.Mechanics.activePlaySeconds:0;

@@ -79,7 +79,7 @@ var Inception=(function(){
     return undefined;
   },own);
   /* ---------- 陀螺 ---------- */
-  function nearTop(){ var r=$imports.INTERIORS[C.topRoom]; return !!r&&$imports.S.mode==='in'&&$imports.S.room===C.topRoom&&!st().top&&Math.hypot($imports.S.x-(r.ox+(C.topCell.c+0.5)*r.tw),$imports.S.y-(r.oy+(C.topCell.r+0.5)*r.th))<1.5*r.tw; }
+  function nearTop(){ var r=$imports.INTERIORS[C.topRoom]; return !!r&&$imports.S.mode==='in'&&$imports.S.room===C.topRoom&&!($imports.RT.inception||{}).top&&Math.hypot($imports.S.x-(r.ox+(C.topCell.c+0.5)*r.tw),$imports.S.y-(r.oy+(C.topCell.r+0.5)*r.th))<1.5*r.tw; }
   GameModules.on('hint',function(){
     if(nearTop()) return '桌上的陀螺';
     if(inDream()){ var c=cellOf(); if(EXIT&&Math.abs(c.c-EXIT.c)+Math.abs(c.r-EXIT.r)<=1) return '那扇门'; }
@@ -179,10 +179,10 @@ var Inception=(function(){
     $imports.GLR.scene.add(g); F.grp=g; F.room=$imports.S.room;
   }
   function frame(dt){
-    var want=$imports.S.mode==='in'&&!!$imports.GLR.scene&&!!$imports.GLR.roomMesh&&$imports.S.screen!=='menu'&&(inDream()||($imports.S.room===C.topRoom&&!st().top));
+    var want=$imports.S.mode==='in'&&!!$imports.GLR.scene&&!!$imports.GLR.roomMesh&&$imports.S.screen!=='menu'&&(inDream()||($imports.S.room===C.topRoom&&!($imports.RT.inception||{}).top));
     if(!want){ if(F.grp) clear(); return; }
     if(!F.grp||!F.grp.parent||F.room!==$imports.S.room) { clear(); build(); }
-    var dr=st().dream;
+    var dr=($imports.RT.inception||{}).dream;
     if(F.spinner){
       F.spinner.visible=!!(dr&&dr.spin);
       if(dr&&dr.spin){ var fx=Math.cos($imports.S.ang), fy=Math.sin($imports.S.ang), p=(0,$imports.worldToScene)($imports.S.x+fx*9,$imports.S.y+fy*9,R());

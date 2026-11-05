@@ -14,7 +14,8 @@ var KNIFE_CFG={room:'gear1',cell:{c:6,r:1},window:1.0};
 var Knife=(function(){
   var own={owner:'knife'}, C=KNIFE_CFG;
   function st(){ var s=$imports.RT.knife; if(!s||typeof s!=='object') s=$imports.RT.knife={took:0,held:0,done:0,cap:null}; return s; }
-  function near(){ var R=$imports.INTERIORS[C.room]; return !!R&&$imports.S.mode==='in'&&$imports.S.room===C.room&&!st().took&&Math.hypot($imports.S.x-(R.ox+(C.cell.c+0.5)*R.tw),$imports.S.y-(R.oy+(C.cell.r+0.5)*R.th))<1.5*R.tw; }
+  function peek(){ return $imports.RT.knife||{}; }
+  function near(){ var R=$imports.INTERIORS[C.room]; return !!R&&$imports.S.mode==='in'&&$imports.S.room===C.room&&!peek().took&&Math.hypot($imports.S.x-(R.ox+(C.cell.c+0.5)*R.tw),$imports.S.y-(R.oy+(C.cell.r+0.5)*R.th))<1.5*R.tw; }
   GameModules.on('hint',function(){ return near()?'旧工具抽屉':undefined; },own);
   GameModules.on('interact',function(){
     if(!near()) return undefined;
@@ -31,8 +32,8 @@ var Knife=(function(){
     try{ $imports.SoundCaptions.publish('threat.heartPat',{caption:'一只手按住了你的头顶'}); }catch(e){}
     return true;
   },own);
-  GameModules.on('ownsPlayerInput',function(){ return st().cap?true:undefined; },own);
-  GameModules.on('keepSimulation',function(){ return st().cap?true:undefined; },own);
+  GameModules.on('ownsPlayerInput',function(){ return peek().cap?true:undefined; },own);
+  GameModules.on('keepSimulation',function(){ return peek().cap?true:undefined; },own);
   GameModules.on('tick',function(dt){
     var s=st(); if(!s.cap||!(dt>0)||$imports.S.dead) return;
     s.cap.t+=dt;

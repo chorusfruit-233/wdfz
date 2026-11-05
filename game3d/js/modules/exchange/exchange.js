@@ -24,6 +24,7 @@ var EXAM={
 var Exchange=(function(){
   var own={owner:'exchange'}, C=EXCHANGE_CFG;
   function st(){ var s=$imports.RT.exchange; if(!s||typeof s!=='object') s=$imports.RT.exchange={hit:0,phase:'none',tries:{de:0,fr:0},passed:{de:0,fr:0},warned:0,lag:0}; return s; }
+  function peek(){ return $imports.RT.exchange||{phase:'none'}; }
   function multi(){ return !!($imports.RT.multilingual&&$imports.RT.multilingual.active); }
   function now(){ return $imports.Mechanics?$imports.Mechanics.activePlaySeconds:0; }
   function gather(){ var a=$imports.OBJ.filter(function(o){ return o.id==='admin'; })[0]; return a?{x:(a.x+a.w/2)*$imports.SC,y:(a.y-10)*$imports.SC}:{x:1069,y:1010}; }
@@ -54,7 +55,7 @@ var Exchange=(function(){
     return {x:a[0]+(b[0]-a[0])*k,y:a[1]+(b[1]-a[1])*k,yaw:Math.atan2(b[1]-a[1],b[0]-a[0])};
   }
   function members(){                                       /* 带队老师在最前，三位访客跟在后面 */
-    var s=st(), base=s.phase==='escort'?s.prog:0, g=gather(), out=[];
+    var s=peek(), base=s.phase==='escort'?s.prog:0, g=gather(), out=[];
     if(s.phase==='escort'){ out.push(at(base)); C.gap.forEach(function(m){ out.push(at(base-m/$imports.U2M)); }); }
     else{ out.push({x:g.x,y:g.y,yaw:Math.PI/2}); C.gap.forEach(function(m,i){ out.push({x:g.x+(i-1)*12,y:g.y-14,yaw:Math.PI/2}); }); }
     return out;
@@ -66,8 +67,8 @@ var Exchange=(function(){
     return Math.min(best,Math.hypot($imports.S.x-t.x,$imports.S.y-t.y)*$imports.U2M);
   }
   /* ---------- 登记与考核 ---------- */
-  function nearLeader(){ var s=st(); if($imports.S.mode!=='out'||!(s.phase==='waiting'||s.phase==='qualified')) return false; var l=members()[0]; return Math.hypot($imports.S.x-l.x,$imports.S.y-l.y)*$imports.U2M<2.6; }
-  GameModules.on('hint',function(){ if(!nearLeader()) return undefined; return st().phase==='qualified'?'跟带队老师说：出发':'国际交流接待登记'; },own);
+  function nearLeader(){ var s=peek(); if($imports.S.mode!=='out'||!(s.phase==='waiting'||s.phase==='qualified')) return false; var l=members()[0]; return Math.hypot($imports.S.x-l.x,$imports.S.y-l.y)*$imports.U2M<2.6; }
+  GameModules.on('hint',function(){ if(!nearLeader()) return undefined; return peek().phase==='qualified'?'跟带队老师说：出发':'国际交流接待登记'; },own);
   GameModules.on('interact',function(){
     if(!nearLeader()) return undefined;
     var s=st();

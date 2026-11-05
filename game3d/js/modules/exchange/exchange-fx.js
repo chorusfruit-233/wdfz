@@ -25,6 +25,7 @@
       var leg=new T.Mesh(new T.BoxGeometry(0.06,1.2,0.06),new T.MeshLambertMaterial({color:0x555b5e})); leg.position.set(sp.x,0.6,sp.z+0.02); g.add(leg);
       $imports.GLR.scene.add(g); F.grp=g; F.key=key;
     }
+    if(!key||!F.grp) return;                                                   /* 没有交流团：什么也不画 */
     $imports.Exchange.members().forEach(function(m,i){ var p=(0,$imports.worldToScene)(m.x,m.y,null), f=F.people[i]; if(!f) return; f.position.set(p.x,0,p.z); f.rotation.y=Math.PI/2-m.yaw; });
     var ss=s.search||[]; F.search.forEach(function(h,i){ var q=ss[i]; h.visible=!!q&&s.phase==='escort'; if(!q) return; var p=(0,$imports.worldToScene)(q.x,q.y,null); h.position.set(p.x,0,p.z); h.rotation.y=Math.atan2(($imports.S.x-q.x),($imports.S.y-q.y)); });
   },own);

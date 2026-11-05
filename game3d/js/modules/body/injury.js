@@ -16,7 +16,8 @@ var BODY_CFG={vaultHold:0.6,vaultCost:8,linkInjury:45,fallRoof:1.3,fallLink:0.9,
 var Body=(function(){
   var own={owner:'body'}, C=BODY_CFG;
   function st(){ var s=$imports.RT.body; if(!s||typeof s!=='object') s=$imports.RT.body={injury:0,restT:0,treat:null,fall:null,medDay:{},hold:0}; s.medDay=s.medDay||{}; return s; }
-  function injury(){ return st().injury||0; }
+  function peek(){ return $imports.RT.body||{}; }
+  function injury(){ return peek().injury||0; }
   function hurt(n,why){
     var s=st(); s.injury=Math.max(0,Math.min(100,s.injury+n)); s.restT=0;
     try{ $imports.VisualState.hurt=Math.min(0.8,($imports.VisualState.hurt||0)+0.5); }catch(e){}
@@ -61,7 +62,7 @@ var Body=(function(){
   /* ---------- 移动的限制 ---------- */
   GameModules.on('moveSpeedMul',function(){ var n=injury(); for(var i=0;i<C.slow.length;i++) if(n>=C.slow[i][0]) return C.slow[i][1]; return undefined; },own);
   GameModules.on('runBlocked',function(){ return injury()>=C.noRun?true:undefined; },own);
-  GameModules.on('ownsPlayerInput',function(){ var s=st(); return s.fall||s.treat?true:undefined; },own);
+  GameModules.on('ownsPlayerInput',function(){ var s=peek(); return s.fall||s.treat?true:undefined; },own);
   /* ---------- 模拟步 ---------- */
   function landOutside(f){
     var R=$imports.INTERIORS[f.room], o=(R&&$imports.OBJ.filter(function(x){ return x.id===R.host; })[0])||null;
