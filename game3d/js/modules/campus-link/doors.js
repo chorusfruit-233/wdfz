@@ -12,15 +12,21 @@
 var CAMPUS_DOOR={version:1,width:3,annex:1.5,lift:0.01,near:12,far:15,doors:[
   {room:'teach1',host:'teach',edge:'s',at:31},
   {room:'admin1',host:'admin',edge:'s',at:26},     /* 连续校园 A2：行政楼一楼正门（25–27 列，正中） */
-  {room:'lab1',host:'lab',edge:'s',at:25}          /* 实验楼一楼正门（24–26 列；楼宽 50 格，门中线比楼中线偏东 0.5 米） */
+  {room:'lab1',host:'lab',edge:'s',at:25},         /* 实验楼一楼正门（24–26 列；楼宽 50 格，门中线比楼中线偏东 0.5 米） */
+  /* 连续校园 A3：小屋室内放大到外壳，门都在南面。宽 2 格的门 at 写成两格中间（5.5 = 第 5、6 列） */
+  {room:'guard1',host:'guard',edge:'s',at:5.5,width:2},
+  {room:'gear1',host:'gear',edge:'s',at:9},
+  {room:'trash1',host:'trash',edge:'s',at:5.5,width:2},
+  {room:'bell1',host:'bell',edge:'s',at:5}
 ]};
 var CampusDoor=(function(){
   var own={owner:'campus-link'}, NORMAL={n:[0,-1],s:[0,1],w:[-1,0],e:[1,0]}, inView=null, outView=null;
-  function half(){ return CAMPUS_DOOR.width*$imports.TTILE/2; }
+  function wid(d){ return d.width||CAMPUS_DOOR.width; }
+  function half(d){ return wid(d)*$imports.TTILE/2; }
   /* 门槛线（室内坐标，世界单位）：中点、朝外的法线、门洞占的格子 */
   function port(d){
     var R=$imports.INTERIORS[d.room]; if(!R) return null;
-    var n=NORMAL[d.edge], k=(CAMPUS_DOOR.width-1)/2, cells=[], i;
+    var n=NORMAL[d.edge], k=(wid(d)-1)/2, cells=[], i;
     var x=d.edge==='w'?R.ox:d.edge==='e'?R.ox+R.cols*R.tw:R.ox+(d.at+0.5)*R.tw;
     var y=d.edge==='n'?R.oy:d.edge==='s'?R.oy+R.rows*R.th:R.oy+(d.at+0.5)*R.th;
     for(i=-k;i<=k;i++){
@@ -38,15 +44,15 @@ var CampusDoor=(function(){
   function inAnnex(R,x,y){
     return doorsOf(R.id).some(function(d){
       var q=local(port(d),x,y);
-      return q.along>-$imports.TTILE&&q.along<=CAMPUS_DOOR.annex*$imports.TTILE&&Math.abs(q.lat)<=half()-$imports.PRAD;
+      return q.along>-$imports.TTILE&&q.along<=CAMPUS_DOOR.annex*$imports.TTILE&&Math.abs(q.lat)<=half(d)-$imports.PRAD;
     });
   }
   function openAt(R,x,y){
-    return doorsOf(R.id).some(function(d){ var q=local(port(d),x,y); return q.along>-$imports.TTILE&&q.along<=0&&Math.abs(q.lat)<half(); });
+    return doorsOf(R.id).some(function(d){ var q=local(port(d),x,y); return q.along>-$imports.TTILE&&q.along<=0&&Math.abs(q.lat)<half(d); });
   }
   /* 室外楼体在门口挖掉的缺口（世界单位）：门洞宽、往楼里 1.5 格 */
   function gapOf(d){
-    var P=outPort(d), h=half(), deep=CAMPUS_DOOR.annex*$imports.TTILE, n=P.n;
+    var P=outPort(d), h=half(d), deep=CAMPUS_DOOR.annex*$imports.TTILE, n=P.n;
     var ax=P.x-n[0]*deep, ay=P.y-n[1]*deep, ex=n[1]!==0?h:0, ey=n[0]!==0?h:0;
     return {x0:Math.min(ax,P.x)-ex,x1:Math.max(ax,P.x)+ex,y0:Math.min(ay,P.y)-ey,y1:Math.max(ay,P.y)+ey};
   }
@@ -64,8 +70,8 @@ var CampusDoor=(function(){
       var gaps=null;
       Object.defineProperty(o,'gaps',{configurable:true,enumerable:false,get:function(){ if(!gaps&&Number.isFinite(R.ox)) gaps=[gapOf(d)]; return gaps; }});
       /* 交给楼体模型：门洞宽、门中线离楼中线多远（米，沿立面）、一楼走廊从外墙到走廊北墙有几格（这一段镂空，门里看得见室内模型） */
-      var hollow=1; while(R.grid[R.rows-1-hollow]&&'#='.indexOf(R.grid[R.rows-1-hollow][d.at])<0) hollow++;
-      o.seamDoor={width:CAMPUS_DOOR.width,dx:((d.at+0.5)-R.cols/2)*R.tw*$imports.U2M,hollow:hollow};
+      var hc=Math.floor(d.at), hollow=1; while(R.grid[R.rows-1-hollow]&&'#='.indexOf(R.grid[R.rows-1-hollow][hc])<0) hollow++;
+      o.seamDoor={width:wid(d),dx:((d.at+0.5)-R.cols/2)*R.tw*$imports.U2M,hollow:hollow};
     });
   }
   /* 每一小步之后：身体中心越过门槛线就换场景 */
@@ -76,7 +82,7 @@ var CampusDoor=(function(){
     for(i=0;i<list.length;i++){
       var d=list[i], s=shift(d), inside=$imports.S.mode==='in', P=inside?port(d):outPort(d); if(!P) continue;
       var q=local(P,$imports.S.x,$imports.S.y);
-      if(Math.abs(q.lat)>=half()) continue;
+      if(Math.abs(q.lat)>=half(d)) continue;
       if(inside&&q.along>0){
         crossing=true;
         try{ (0,$imports.doExitRoom)({x:$imports.S.x+s.x,y:$imports.S.y+s.y,ang:$imports.S.ang,seamless:true}); (0,$imports.syncCamera)(0); (0,$imports.gameFact)('campusDoor',{from:d.room,to:'out'}); }

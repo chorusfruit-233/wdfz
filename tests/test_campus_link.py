@@ -299,10 +299,10 @@ class CampusLinkTest(BrowserCase):
           for(let i=0;i<60;i++)updatePlayer(1/60);out.outDepth=Collision.depth(S.x,S.y,PRAD);out.hint=interactHint();
           S.ang=-Math.PI/2;hit=null;for(let i=0;i<400&&!hit;i++){prev={m:S.mode};updatePlayer(1/60);if(S.mode!==prev.m)hit={room:S.room};}
           KEY={};out.back=hit&&hit.room;out.inDepth=Collision.depth(S.x,S.y,PRAD);
-          const R=INTERIORS[d.room];out.cells=R.grid[R.rows-1].slice(d.at-2,d.at+3).join('');
+          const R=INTERIORS[d.room];const dw=d.width||CAMPUS_DOOR.width,c0=Math.round(d.at-(dw-1)/2);out.w=dw;out.cells=R.grid[R.rows-1].slice(c0-1,c0+dw+1).join('');
           const o=objById(d.host),w=objWorld(o);out.centered=Math.abs((P.x+s.x)-(w.x+w.w/2))<R.tw;   // 门中线和楼中线最多差一格
           return out;})""")
-        self.assertEqual([x['room'] for x in r], ['teach1', 'admin1', 'lab1'])   # 连续校园 C2：教学楼；A2：行政楼、实验楼
+        self.assertEqual([x['room'] for x in r], ['teach1', 'admin1', 'lab1', 'guard1', 'gear1', 'trash1', 'bell1'])   # C2：教学楼；A2：行政楼、实验楼；A3：四间小屋
         for x in r:
             with self.subTest(room=x['room']):
                 self.assertTrue(x['exit'], x)
@@ -311,7 +311,7 @@ class CampusLinkTest(BrowserCase):
                 self.assertNotIn('进入', x['hint'])
                 self.assertEqual(x['back'], x['room'])
                 self.assertEqual(x['inDepth'], 0)
-                self.assertEqual(x['cells'], '#OOO#')
+                self.assertEqual(x['cells'], '#' + 'O' * x['w'] + '#')
                 self.assertTrue(x['centered'])
 
     def test_module_can_be_removed_and_links_fall_back_to_e(self):
