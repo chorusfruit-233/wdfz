@@ -464,7 +464,7 @@ function bldTeach(K,grp,o,px,pz,sw,sd){
       K.box('wood',dx,y+1.02,gz+0.03,0.92,2.04,0.06,0x6a4a34,0.95);
       K.box('plaster',dx,y+2.1,gz+0.03,1.06,0.10,0.07,$imports.WHITEBAND,1.0);
     });
-    facadeWindows(K,'s',px,L.z0+(gz-L.z0)/2,sw,gz-L.z0,ge0+2.2,ge1-2.2,y+2.35,1.6,0.7,4.0,k+30);
+    facadeWindows(K,'s',px,L.z0+(gz-L.z0)/2,sw,gz-L.z0,ge0+2.2,ge1-2.2,y+2.55,1.6,0.6,4.0,k+30);   /* 高窗在门头（2.15 米）以上、上一层楼板以下 */
     /* 外沿：矮栏板 + 红栏杆（室内第 21 格的里沿，人走到这里正好挨着栏杆） */
     var rz=zs-L.t+0.08, rpn=Math.max(4,Math.round(gw/1.3)), rp;
     K.box('concrete',gx,y+0.08,rz,gw,0.16,0.18,0xd8d4cb,1.02);

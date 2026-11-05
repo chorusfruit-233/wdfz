@@ -107,7 +107,7 @@ class EngineTest(BrowserCase):
             with self.subTest(scene=scene):
                 page = self.page()
                 page.evaluate("""kind => {
-                  S.x=560*SC;S.y=857*SC;enterWorldOut();
+                  S.x=560*SC;S.y=(objById('teach').y-8)*SC;enterWorldOut();
                   if(kind==='anomaly'){
                     AN.pre='cup';AN.locked=true;anStart();anTick(.1);anfxUpdate(.1);
                   }else if(kind==='trace'){

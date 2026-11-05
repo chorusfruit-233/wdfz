@@ -3,7 +3,7 @@
 from browser_case import BrowserCase
 
 
-NIGHT_OUT = """S.tsec=1350;S.mode='out';S.room=null;S.x=560*SC;S.y=857*SC;S.san=100;S.dead=false;
+NIGHT_OUT = """S.tsec=1350;S.mode='out';S.room=null;S.x=560*SC;S.y=(objById('teach').y-8)*SC;S.san=100;S.dead=false;
   AN.active=false;AN.id=null;AN.data={};AN.next=1e6;PAT.state='idle';PAT.next=1e6;"""
 
 
@@ -18,7 +18,7 @@ class CupTimingTest(BrowserCase):
     def test_short_wobble_still_leaves_time_to_step_aside(self):
         """前摇短了，但「看到它掉」以后仍有约 1.5 秒真实下坠，侧移 1.6 米能躲开。"""
         page = self.page()
-        page.evaluate("""S.diff='hard';S.x=560*SC;S.y=857*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
+        page.evaluate("""S.diff='hard';S.x=560*SC;S.y=(objById('teach').y-8)*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
             for(var i=0;i<40&&AN.data.phase<1;i++){ anTick(0.05); anfxUpdate(0.05); }""")
         self.assert_js(page, "AN.data.phase===1&&AN.t<0.5&&ANFX.cup.ring.visible")
         page.evaluate("S.y-=14;for(var i=0;i<120&&AN.active;i++){ anTick(0.05); anfxUpdate(0.05); }")
@@ -27,7 +27,7 @@ class CupTimingTest(BrowserCase):
 
 class ColaChainTest(BrowserCase):
     def cup(self, page):
-        page.evaluate("S.tsec=900;S.x=560*SC;S.y=857*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart()")
+        page.evaluate("S.tsec=900;S.x=560*SC;S.y=(objById('teach').y-8)*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart()")
 
     def run_until(self, page, cond, steps=600, dt=0.05):
         page.evaluate(f"""for(var i=0;i<{steps}&&!({cond});i++){{ anDrive({dt}); anfxUpdate({dt}); }}""")

@@ -20,9 +20,11 @@ class OutdoorStructureTest(BrowserCase):
         page = self.outside()
         r = page.evaluate("""()=>{const out={cols:0,colsInside:0,pillars:0,pillarsInside:0,between:0,betweenFree:0};
           OBJ.forEach(o=>{const w=objWorld(o),px=(w.x+w.w/2)*U2M,pz=(w.y+w.h/2)*U2M,sw=w.w*U2M,sd=w.h*U2M;
-            if(o.k==='roof'&&o.open1f){const cs=colonnadeColumns(px,pz,sw,sd);
+            if(o.k==='roof'&&o.open1f){const cs=colonnadeColumns(px,pz,sw,sd),tw=o.id==='teach'?teachSouth(px,pz,sw,sd).towers:[];
               cs.forEach(c=>{out.cols++;if(Collision.depth(c.x/U2M,c.z/U2M,PRAD)<1e-7)out.colsInside++;});
-              for(let i=0;i+1<cs.length;i++){if(Math.abs(cs[i+1].x-cs[i].x)>6)continue;out.between++;
+              for(let i=0;i+1<cs.length;i++){if(Math.abs(cs[i+1].x-cs[i].x)>6)continue;
+                const mx=(cs[i].x+cs[i+1].x)/2;if(tw.some(b=>Math.abs(mx-b.x)<b.half+PRAD*U2M&&cs[i].z<b.z1))continue;   /* 教学楼楼前的楼梯塔、电梯井本身是实心的 */
+                out.between++;
                 if(Collision.depth((cs[i].x+cs[i+1].x)/2/U2M,cs[i].z/U2M,PRAD)<1e-7)out.betweenFree++;}}
             if(o.k==='link')linkPillars(px,pz,sw,sd).forEach(c=>{out.pillars++;if(Collision.depth(c.x/U2M,c.z/U2M,PRAD)<1e-7)out.pillarsInside++;});});
           return out;}""")

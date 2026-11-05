@@ -1,7 +1,7 @@
 {
  "version": 1,
  "scope": {
-  "quality": 1,
+  "quality": 3,
   "rooms": [
    "out",
    "teach2",
