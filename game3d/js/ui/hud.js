@@ -74,6 +74,7 @@ function updateHUD(){
   pe.textContent=leave?('请假中 · 剩余 '+(0,$imports.leaveLeft)()+' 游戏分钟'):(examing?('考试 · '+p[2]):
     outing?('外出登记 · '+$imports.SchoolDay.returnLabel()):(p[2]+' · '+(p[3]==='教室'||p[3]==='操场'?'可探索，留意巡察':(0,$imports.needWhere)($imports.S.tsec))));
   if($imports.CarChase.active())pe.textContent='驾驶逃脱';
+  var _pt=GameModules.first('periodText'); if(_pt!==undefined&&!leave) pe.textContent=String(_pt);   /* 模块可以改写时段说明（体检日的第三节） */
   if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.active())pe.textContent='学生会检查 · 坐稳自己的座位';
   else if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.upcoming())pe.textContent=leave?'请假中 · 本次免检':'集合将至 · 请坐回自己的座位';
   if($imports.PAT.permanent)pe.textContent+=' · 持续追踪';

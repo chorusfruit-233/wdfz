@@ -112,9 +112,9 @@
     files:['game3d/js/modules/lift-crowd/crowd.js','game3d/js/modules/lift-crowd/crowd-fx.js','game3d/js/modules/lift-crowd/crowd-death.js'],
     exports:['LiftCrowd','LIFT_CROWD_CFG','LiftCrowdFx'],
     uses:['liftBoard','liftDepart','liftControls','tick','frame','clearWorld','lightState','boundary']},
-  {id:'campus-tales', name:'校园怪谈（创意提案第二、三批）', desc:'C4 值日表上的名字随同化档位改写（duty.js）；C3 巡察日志残页，内容截自真实巡察路线（notes.js）；C5 镜中慢半拍，按 SAN 四档，第四档盯着看 3 秒触发「镜子」死法（mirror.js）；C10 午夜食堂，熄灯后一碗饭换很多 SAN 和到天亮不回落的同化（canteen.js）。',
-    files:['game3d/js/modules/campus-tales/duty.js','game3d/js/modules/campus-tales/notes.js','game3d/js/modules/campus-tales/mirror.js','game3d/js/modules/campus-tales/canteen.js'],
-    exports:['DutyRoster','PatrolNotes','MirrorLag','MidnightCanteen'], uses:['frame','clearWorld','hint','interact','tick','boundary']},
+  {id:'campus-tales', name:'校园怪谈（创意提案第二、三批）', desc:'C4 值日表上的名字随同化档位改写（duty.js）；C3 巡察日志残页，内容截自真实巡察路线（notes.js）；C5 镜中慢半拍，按 SAN 四档，第四档盯着看 3 秒触发「镜子」死法（mirror.js）；C10 午夜食堂，熄灯后一碗饭换很多 SAN 和到天亮不回落的同化（canteen.js）；C9 体检日，第三节到行政楼一楼临时医务室体检，体检表数字不对、视力表最后一行是提示，缺席记违规（checkup.js）。',
+    files:['game3d/js/modules/campus-tales/duty.js','game3d/js/modules/campus-tales/notes.js','game3d/js/modules/campus-tales/mirror.js','game3d/js/modules/campus-tales/canteen.js','game3d/js/modules/campus-tales/checkup.js'],
+    exports:['DutyRoster','PatrolNotes','MirrorLag','MidnightCanteen','CheckupDay'], uses:['frame','clearWorld','hint','interact','tick','boundary','periodText']},
   {id:'last-life', name:'上一局的你', desc:'创意提案 C2：上一局死去的地方留一个粉笔 × 和时刻，保安岗失物招领箱里一张空照片的学生证；预知梦惊醒、调试、内部场景和隐藏死法不留；设置里可清除。',
     files:['game3d/js/modules/last-life/last-life.js'], exports:['LastLife','LAST_LIFE_KEY'],
     uses:['hint','interact','newGame','gameFact','frame','clearWorld','boundary','boot']},
@@ -150,5 +150,5 @@
   {id:'session', name:'会话', desc:'新局、继续、暂停、恢复、回菜单；Lifecycle.boundary 清掉上一局的定时器和回调。freshState 末尾调 GameModules.resetAll（发 reset）。',
     files:['game3d/js/app/session.js','game3d/js/app/mod-adapter.js'], exports:['Game','freshState','clearIntroTimers'], emits:['boundary','newGame']},
   {id:'main', name:'主循环与启动', desc:'主循环、HUD、启动（boot 末尾发 boot 钩子；每个模拟步发 tick）。必须最后加载。',
-    files:['game3d/js/app/world-events.js','game3d/js/app/intro.js','game3d/js/app/simulation.js','game3d/js/ui/hud.js','game3d/js/ui/menu-photo.js','game3d/js/app/presentation-loop.js','game3d/js/main.js'], exports:['boot','update'], emits:['boot','tick','frame','enterRoom','clockText','mapBlocked']}
+    files:['game3d/js/app/world-events.js','game3d/js/app/intro.js','game3d/js/app/simulation.js','game3d/js/ui/hud.js','game3d/js/ui/menu-photo.js','game3d/js/app/presentation-loop.js','game3d/js/main.js'], exports:['boot','update'], emits:['boot','tick','frame','enterRoom','clockText','periodText','mapBlocked']}
 ].forEach(function(m){ GameModules.define(m); });

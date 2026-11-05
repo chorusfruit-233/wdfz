@@ -61,6 +61,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `hint` | `interact.js` `interactHint` | first | 返回提示文字 |
 | `itemUse` | `items.js` `useItem` 开头 | first | `id`；返回 `true` 表示已处理 |
 | `clockText` | `ui/hud.js` `updateHUD` | first | 返回要显示的时间文字 |
+| `periodText` | `ui/hud.js` `updateHUD`，学生会检查的说明之前（2026-11-05，体检日） | first | 返回要显示的时段说明（请假中不改写；检查、集合的说明仍然优先） |
 | `mapBlocked` | `ui.js` 打开地图页、`ui/hud.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
 | `classmateScene` | `fx/classroom.js` 更新同学前 | first | `figure, dt`；返回 true 接管这名同学当帧表现，不能改玩家状态 |
 | `patrolZoneActive` | `patrol-world/world.js` 判断条件报警区 | first | `zone`；带 `when` 的区域仅返回 true 时启用 |
