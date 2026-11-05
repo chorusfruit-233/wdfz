@@ -289,6 +289,31 @@ class CampusLinkTest(BrowserCase):
         self.assertEqual(r['draws'], 0)
         self.assertEqual(r['errors'], 0)
 
+    def test_every_continuous_building_door_walks_out_and_back(self):
+        page = self.ready()
+        r = page.evaluate("""()=>CAMPUS_DOOR.doors.map(d=>{const P=CampusDoor.port(d),s=TeachGallery.shift(INTERIORS[d.room]);
+          doEnterRoom(d.room,{x:P.x,y:P.y-30,ang:Math.PI/2,seamless:true});running=false;S.screen='play';S.stam=100;S.tired=false;
+          KEY={w:true};let prev=null,hit=null;
+          for(let i=0;i<400&&!hit;i++){prev={m:S.mode,x:S.x,y:S.y};updatePlayer(1/60);if(S.mode!==prev.m)hit={m:S.mode,x:S.x,y:S.y};}
+          const out={room:d.room,exit:!!hit,step:hit?Math.hypot(hit.x-s.x-prev.x,hit.y-s.y-prev.y):99};
+          for(let i=0;i<60;i++)updatePlayer(1/60);out.outDepth=Collision.depth(S.x,S.y,PRAD);out.hint=interactHint();
+          S.ang=-Math.PI/2;hit=null;for(let i=0;i<400&&!hit;i++){prev={m:S.mode};updatePlayer(1/60);if(S.mode!==prev.m)hit={room:S.room};}
+          KEY={};out.back=hit&&hit.room;out.inDepth=Collision.depth(S.x,S.y,PRAD);
+          const R=INTERIORS[d.room];out.cells=R.grid[R.rows-1].slice(d.at-2,d.at+3).join('');
+          const o=objById(d.host),w=objWorld(o);out.centered=Math.abs((P.x+s.x)-(w.x+w.w/2))<R.tw;   // 门中线和楼中线最多差一格
+          return out;})""")
+        self.assertEqual([x['room'] for x in r], ['teach1', 'admin1', 'lab1'])   # 连续校园 C2：教学楼；A2：行政楼、实验楼
+        for x in r:
+            with self.subTest(room=x['room']):
+                self.assertTrue(x['exit'], x)
+                self.assertLess(x['step'], 1.2)
+                self.assertEqual(x['outDepth'], 0)
+                self.assertNotIn('进入', x['hint'])
+                self.assertEqual(x['back'], x['room'])
+                self.assertEqual(x['inDepth'], 0)
+                self.assertEqual(x['cells'], '#OOO#')
+                self.assertTrue(x['centered'])
+
     def test_module_can_be_removed_and_links_fall_back_to_e(self):
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)

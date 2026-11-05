@@ -132,10 +132,10 @@
     "admin1:entry",
     "admin1:stairs"
   ],
-  "baseWeightSeconds": 1386.6792548049702,
+  "baseWeightSeconds": 1386.1167548049702,
   "matchingExtraSeconds": 520.5430104294271,
-  "totalSeconds": 1907.2222652343974,
-  "initialCandidateSeconds": 4348.112628177862,
+  "totalSeconds": 1906.6597652343974,
+  "initialCandidateSeconds": 4346.425128177862,
   "coverage": {
     "requiredEdges": 88,
     "coveredEdges": 88,
@@ -245,7 +245,7 @@
     {
       "a": "admin1:stairs",
       "b": "admin1:entry",
-      "seconds": 12.913372564417433,
+      "seconds": 12.350872564417433,
       "kind": "walk"
     },
     {

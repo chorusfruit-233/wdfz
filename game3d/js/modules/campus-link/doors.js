@@ -10,7 +10,9 @@
    · 拿掉本模块：门洞、缺口、预览都没有，回到按 E 出入（门口是关着的玻璃门）。 */
 'use strict';
 var CAMPUS_DOOR={version:1,width:3,annex:1.5,lift:0.01,near:12,far:15,doors:[
-  {room:'teach1',host:'teach',edge:'s',at:31}
+  {room:'teach1',host:'teach',edge:'s',at:31},
+  {room:'admin1',host:'admin',edge:'s',at:26},     /* 连续校园 A2：行政楼一楼正门（25–27 列，正中） */
+  {room:'lab1',host:'lab',edge:'s',at:25}          /* 实验楼一楼正门（24–26 列；楼宽 50 格，门中线比楼中线偏东 0.5 米） */
 ]};
 var CampusDoor=(function(){
   var own={owner:'campus-link'}, NORMAL={n:[0,-1],s:[0,1],w:[-1,0],e:[1,0]}, inView=null, outView=null;
@@ -61,7 +63,9 @@ var CampusDoor=(function(){
       /* 房间坐标（R.ox）要等 world.js 的 buildRoomBounds 算好，所以缺口用到时才算，算一次 */
       var gaps=null;
       Object.defineProperty(o,'gaps',{configurable:true,enumerable:false,get:function(){ if(!gaps&&Number.isFinite(R.ox)) gaps=[gapOf(d)]; return gaps; }});
-      o.seamDoor={width:CAMPUS_DOOR.width};
+      /* 交给楼体模型：门洞宽、门中线离楼中线多远（米，沿立面）、一楼走廊从外墙到走廊北墙有几格（这一段镂空，门里看得见室内模型） */
+      var hollow=1; while(R.grid[R.rows-1-hollow]&&'#='.indexOf(R.grid[R.rows-1-hollow][d.at])<0) hollow++;
+      o.seamDoor={width:CAMPUS_DOOR.width,dx:((d.at+0.5)-R.cols/2)*R.tw*$imports.U2M,hollow:hollow};
     });
   }
   /* 每一小步之后：身体中心越过门槛线就换场景 */

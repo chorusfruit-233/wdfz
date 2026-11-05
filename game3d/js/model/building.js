@@ -279,6 +279,7 @@ function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name, seam){
   var en=(colonnade?'entrance_col_':'entrance_')+Math.round(dw*100);
   if(seam){                                      /* 连续出入口：门洞敞开（和室内门洞同宽），两扇玻璃门推开贴在两边墙上；门槛平铺，不做台阶 */
     var hw=seam.width/2;
+    K.unframe(); K.frame(bx+(horz?0:(seam.dx||0)),bz+(horz?(seam.dx||0):0),rot);   /* 门中线可以偏离楼中线（实验楼宽 50 格） */
     [-1,1].forEach(function(sx){
       K.bevel('stone',sx*(hw+0.09),1.2,0.11,0.18,2.40,0.22,0xd8d4cc,1.05,0.02);                 /* 门套 */
       K.bevel('metal',sx*(hw+0.85),1.12,0.135,1.30,2.18,0.05,0x2a3136,1.02,0.01);               /* 推开的门扇（贴在墙基外面） */
@@ -367,7 +368,19 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
   var total=16.0, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth, links=linkSpansOn(o,'s');
   var underLink=function(x,pad){ return links.some(function(l){ return x>l[0]-pad&&x<l[1]+pad; }); };
   facadeDoor(o,px,pz,sw,sd,'colonnade');
-  K.box('brick',px,total/2,pz,sw,total,sd,$imports.BRICK,0.97);
+  var seam=o.seamDoor;
+  if(seam&&(o.door||'s')==='s'){
+    /* 连续出入口（连续校园 A2，外壳和室内同尺寸）：一楼走廊那一段镂空，门里看得见室内模型。
+       北边的房间块整栋实心；走廊上方（二楼楼板往上）实心；一楼留东西两头的端墙和南外墙，外墙在正门那里开洞、留门头。
+       贴着室内墙面的那几面都往里退 4 厘米，室内模型挂进来时不重叠 */
+    var t=1.0, hz=seam.hollow*t, zc=pz+sd/2-hz, wh=g0-0.18, dxo=px+(seam.dx||0), dh=seam.width/2, iw=t-0.04;
+    K.box('brick',px,total/2,(pz-sd/2+zc-0.04)/2,sw,total,zc-0.04-(pz-sd/2),$imports.BRICK,0.97);   /* 房间块 */
+    K.box('brick',px,(wh+total)/2,(zc+pz+sd/2)/2,sw,total-wh,hz,$imports.BRICK,0.97);             /* 走廊上方 */
+    [-1,1].forEach(function(e){ K.box('brick',px+e*(sw/2-iw/2),wh/2,(zc+pz+sd/2)/2,iw,wh,hz,$imports.BRICK,0.97); });   /* 一楼两头的端墙 */
+    var wz1=pz+sd/2-iw/2;
+    [[px-sw/2+iw,dxo-dh-0.02],[dxo+dh+0.02,px+sw/2-iw]].forEach(function(g){ if(g[1]-g[0]>0.05) K.box('brick',(g[0]+g[1])/2,wh/2,wz1,g[1]-g[0],wh,iw,$imports.BRICK,0.97); });
+    K.box('brick',dxo,(2.32+wh)/2,wz1,dh*2+0.04,wh-2.32,iw,$imports.BRICK,0.97);                  /* 门头 */
+  }else K.box('brick',px,total/2,pz,sw,total,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));                 /* 底层浅灰：0.9 米高，以前 1.5 米把一楼窗户截掉半截 */
   /* 女儿墙（挑出的尺寸改成固定值：以前按楼宽的百分比，宽楼挑出半米，插进隔壁钟楼的柱子） */
   K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,$imports.WHITEBAND,1.0);
@@ -422,7 +435,7 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
     var acn=Math.max(2,Math.floor(sw/5.2)), ac;
     for(ac=0;ac<acn;ac++){ var acx=px-sw*0.42+ac*(sw*0.84/(acn-1||1)); if(!underLink(acx,0.8)) acUnit(K,acx,sy+0.31,pz+sd/2+0.28,'s'); }   /* 连廊接过来的那一段不挂空调外机 */
   }
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id]);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id],o.seamDoor);
 }
 /* ---- 教学楼（连续校园 A1：按室内 63×22 格重建，砖墙、白腰线、红栏杆、柱廊和正门的样式不变） ----
    五层每层 3.2 米（和楼梯一样）。北边是实心的教室块；南侧一楼是走廊外墙（窗、正门、柱廊），二到五层是敞开的外廊：
