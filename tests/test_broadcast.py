@@ -146,9 +146,11 @@ class BroadcastTest(BrowserCase):
           const before=JSON.stringify(S),old=VisualState.stageHour;playCut('dismissal',()=>{S.screen='play';});
           [1,4,4,4,4].forEach(dt=>cutTick(dt));cutSkip();
           const cutSame=JSON.stringify(S)===before&&VisualState.stageHour===old;
-          const preview=JSON.stringify(S);deathFX('misread',{preview:true});[.5,1,1,1].forEach(anfxUpdate);anfxClear();
-          return {cutSame,deathSame:JSON.stringify(S)===preview};}""")
-        self.assertEqual(result,dict(cutSame=True,deathSame=True))
+          const preview=JSON.stringify(S);let finite=true;deathFX('misread',{preview:true});
+          [.5,1,1,1].forEach(dt=>{anfxUpdate(dt);ANFX.grp.traverse(o=>{
+            finite=finite&&[...o.position.toArray(),...o.quaternion.toArray(),...o.scale.toArray()].every(Number.isFinite);
+          });});anfxClear();return {cutSame,deathSame:JSON.stringify(S)===preview,finite};}""")
+        self.assertEqual(result,dict(cutSame=True,deathSame=True,finite=True))
 
     def test_legitimate_exit_records_new_ending_score_and_archive(self):
         p = self.game()

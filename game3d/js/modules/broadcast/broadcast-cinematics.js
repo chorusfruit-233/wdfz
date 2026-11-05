@@ -73,7 +73,7 @@
       c.speakers=[];for(i=0;i<6;i++)c.speakers.push(c.box(.24,.2,.12,0x54625b,undefined,-1.35+(i%3)*1.35,2.35,1+(i>=3?1.4:0)));
       c.veil(0x020707);
     },update:function(c,t,view){
-      var close=U.ss(U.seg(t,.35,1.8));c.doors.forEach(function(m,i){m.position.x=-1.3+i*.86+(i%2?1:-1)*.3*(1-close);});
+      var close=U.ss(t,.35,1.8);c.doors.forEach(function(m,i){m.position.x=-1.3+i*.86+(i%2?1:-1)*.3*(1-close);});
       c.demand.visible=t>.8;c.sign.visible=t<3.3;c.speakers.forEach(function(m,i){m.scale.setScalar(1+.04*Math.sin(t*5+i));});
       c.cam(view,t,0,.03*c.shk*Math.sin(t*5),-.02*close);c.shade(t>3.3?Math.min(.92,(t-3.3)*1.4):.08);
     }
