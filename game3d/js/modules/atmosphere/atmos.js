@@ -30,7 +30,8 @@ var Atmos=(function(){
     ['stares','shift','seats','said'].forEach(function(k){ if(!a[k]||typeof a[k]!=='object') a[k]={}; }); return a; }
   function hash(s){ return (0,$imports.lhashStr)(String(s)+':'+(typeof $imports.Mechanics!=='undefined'?$imports.Mechanics.runSeed:'')); }
   function busy(){
-    if((0,$imports.dreadBusy)()) return true;
+    if((0,$imports.dreadBusy)()||$imports.DREAD.slice) return true;
+    if(typeof $imports.Broadcast!=='undefined'&&($imports.Broadcast.reading().held||$imports.Broadcast.state().phase==='bell'))return true;
     if($imports.AN.active) return true;
     if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.pending()) return true;
     if(typeof $imports.FN_P!=='undefined'&&$imports.FN_P.grp) return true;                  /* 假正常进行时 */
@@ -59,7 +60,7 @@ var Atmos=(function(){
   var CAMPUS=['whistle','car','bird'];                             /* 第二天少哨声，第三天少车，第四天起只剩偶尔的鸟 */
   function campusKinds(){ var d=Math.max(1,$imports.S.day|0); return CAMPUS.slice(Math.min(2,d-1)); }
   function campusTick(dt){
-    if($imports.S.tsec<420||$imports.S.tsec>=1080) return;                            /* 白天才有 */
+    if(A.hush>0||$imports.AN.active||busy()||$imports.S.tsec<420||$imports.S.tsec>=1080) return;                            /* 白天才有 */
     A.campusT-=dt; if(A.campusT>0) return;
     A.campusT=C.campusGap[0]+$imports.PresentationRandom.next()*(C.campusGap[1]-C.campusGap[0]);
     var kinds=campusKinds(); if(!kinds.length) return;
@@ -68,6 +69,7 @@ var Atmos=(function(){
     try{ $imports.SoundPlayer.play('campus.'+k,{pan:$imports.PresentationRandom.range(-0.8,0.8),k:indoor?0.45:0.85,lp:indoor?0.35:1}); }catch(e){}
   }
   function hushTick(){
+    if(!$imports.AN.active&&$imports.AN.next>0&&$imports.AN.next<=3&&A.preFor!==$imports.AN.next0&&!busy()){A.preFor=$imports.AN.next0;A.hush=3;$imports.SFX.duck(3);$imports.SoundCaptions.publish('world.silence',{source:'atmos-pre'});}
     if($imports.S.day<2||$imports.AN.active||!($imports.AN.next>0)) return;
     if($imports.AN.next>C.hushLead[1]||$imports.AN.next<C.hushLead[0]||A.hushFor===$imports.AN.next0) return;
     A.hushFor=$imports.AN.next0;
@@ -85,19 +87,31 @@ var Atmos=(function(){
     if(cls===A.lastCls) return;
     var prev=A.lastCls; A.lastCls=cls;
     if(!cls) return;
-    /* 回到刚离开过的教室：空座位多了一个（只在你不在的时候变；每间教室一天一次） */
-    var seatKey=$imports.S.day+':'+cls;
-    if($imports.S.day>=2&&a.left&&a.left[cls]&&!a.seats[seatKey]&&hash('seat:'+seatKey)<0.35&&!busy()) a.seats[seatKey]=1+Math.floor(hash('seatN:'+seatKey)*7);
-    if($imports.S.day<2||($imports.S.viol||0)>=35||busy()) return;
-    var key=$imports.S.day+':'+cls, today=Object.keys(a.stares).filter(function(k){ return k.indexOf($imports.S.day+':')===0; }).length;
-    if(a.stares[key]!==undefined||today>=C.stareMax) return;
-    if(hash('stare:'+key)>=C.stareChance){ a.stares[key]=0; return; }   /* 每间教室每天只抽一次（按天 + 教室定，读档一样） */
-    if(!$imports.Dread.allow(1,'in:'+cls)) return;                 /* 惊吓预算不够：这次不演，下次进门再看 */
-    a.stares[key]=1;
-    A.stare={cls:cls,t:0};
-    $imports.Dread.note('stare',1,{cls:cls});
-    try{ $imports.SFX.dread('chair',{pan:0,k:0.45,caption:'椅子一起轻响了一声'}); }catch(e){}
+    if($imports.S.day<2||($imports.S.viol||0)>=35||busy())return;
+    var key=$imports.S.day+':'+cls,today=Object.keys(a.stares).filter(function(k){return k.indexOf($imports.S.day+':')===0&&a.stares[k]>0;}).length;
+    if(a.stares[key]>0||today>=C.stareMax)return;
+    /* A return can change one other seat. It consumes the same daily and regional budget as turning. */
+    if(a.left&&a.left[cls]===$imports.S.day&&hash('seat:'+key)<.35){
+      if(!$imports.Dread.allow(1))return;
+      a.seats[key]=1+Math.floor(hash('seatN:'+key)*7);a.stares[key]=2;
+      $imports.Dread.note('vacancy',1,{cls:cls});clearRevisit();return;
+    }
+    if(a.stares[key]===0)return;
+    if(hash('stare:'+key)>=C.stareChance){a.stares[key]=0;return;}
+    var ci=+cls.split(':')[1],span=$imports.ClassroomLayout.spans[ci];
+    if(!span)return;
+    var x=R.ox+(span[0]+5)*R.tw,y=R.oy+11*R.th;
+    if(Math.cos(Math.atan2(y-$imports.S.y,x-$imports.S.x)-$imports.S.ang)<.15)return;
+    if(!$imports.Dread.allow(1))return;
+    a.stares[key]=1;A.stare={cls:cls,room:R.id,t:0};
+    $imports.Dread.note('stare',1,{cls:cls});clearRevisit();
+    $imports.SFX.dread('chair',{pan:0,k:.45,caption:'椅子一起轻响了一声'});
   }
+  function clearRevisit(){
+    $imports.DREAD.visitFx=null;$imports.DREAD.echo=false;$imports.DREAD.leftAt=0;
+    if(typeof $imports.DreadFx!=='undefined')$imports.DreadFx.clear();
+  }
+
   /* 离开教室时记一下：下次回来时才可能少一个人 */
   function leftTick(){
     var a=st(); if(!a.left) a.left={};
@@ -117,7 +131,8 @@ var Atmos=(function(){
     if(A.stare||$imports.S.tsec<420||busy()||(0,$imports.gameAge)()<90) return;
     var visit=($imports.RT.visits&&$imports.RT.visits[$imports.S.day+':'+R.id])||1;
     if(hash('win:'+$imports.S.day+':'+cls+':'+visit)>=C.windowChance||!$imports.Dread.allow(1)) return;
-    A.window={room:R.id,cls:cls,seed:hash('winP:'+$imports.S.day+':'+cls+':'+visit),seen:0,gone:false};
+    var target=(0,$imports.objWorld)((0,$imports.objById)('lab'));
+    A.window={room:R.id,cls:cls,seed:hash('winP:'+$imports.S.day+':'+cls+':'+visit),seen:0,gone:false,anchor:{x:target.x+target.w*.5,y:target.y+target.h*.5,height:16.2}};
     $imports.Dread.note('window',1);
   }
 
@@ -131,7 +146,10 @@ var Atmos=(function(){
     if(hash('shift:'+key)>=C.shiftChance){ a.shift[key]=0; return; }
     if(!$imports.Dread.allow(1)) return;
     /* 巡察者最近从这一层走过（它在这一层、或刚离开不久）：顺着走廊被推开；否则转过来对着你 */
-    var patrol=$imports.PAT.room===R.id||(A.patSeen&&A.patSeen.room===R.id&&(0,$imports.gameAge)()-A.patSeen.t<90);
+    var patrol=A.patSeen&&A.patSeen.room===R.id&&(0,$imports.gameAge)()-A.patSeen.t<8;
+    if(!a.shiftPose)a.shiftPose={};
+    var spot=$imports.AtmosFx.propWorld(),dx=patrol?A.patSeen.dx:$imports.S.x-spot.x,dy=patrol?A.patSeen.dy:$imports.S.y-spot.y,len=Math.hypot(dx,dy)||1;
+    a.shiftPose[key]={dx:dx/len,dy:dy/len,angle:Math.atan2(dx,dy)};
     a.shift[key]=patrol?'push':'face';
     $imports.Dread.note('shift',1,{kind:a.shift[key]});
     if(hash('shiftS:'+key)<0.5){
@@ -151,8 +169,14 @@ var Atmos=(function(){
   function tick(dt){
     if(!(dt>0)||$imports.S.screen!=='play'||$imports.S.dead) return;
     if(A.hush>0) A.hush=Math.max(0,A.hush-dt);
-    if($imports.PAT.state==='walk'&&$imports.PAT.room) A.patSeen={room:$imports.PAT.room,t:(0,$imports.gameAge)()};
-    campusTick(dt); hushTick(); leftTick(); stareTick(dt); windowTick(); shiftTick(); shiftNotice();
+    var old=A.patLast,spot=typeof $imports.AtmosFx!=='undefined'?$imports.AtmosFx.propWorld():null;
+    if(old&&spot&&$imports.PAT.state==='walk'&&$imports.PAT.room===$imports.S.room&&old.room===$imports.PAT.room&&Math.hypot($imports.PAT.x-spot.x,$imports.PAT.y-spot.y)<18){
+      var dx=$imports.PAT.x-old.x,dy=$imports.PAT.y-old.y;if(Math.hypot(dx,dy)>.001)A.patSeen={room:$imports.PAT.room,t:(0,$imports.gameAge)(),dx:dx,dy:dy};
+    }
+    A.patLast={room:$imports.PAT.room,x:$imports.PAT.x,y:$imports.PAT.y};
+    if(A.stare){A.stare.t+=dt;if(busy()||A.stare.room!==$imports.S.room||($imports.S.viol||0)>=35||A.stare.t>=2*C.stareTurn+C.stareHold)A.stare=null;}
+    if(A.window&&!A.window.gone){if(busy())A.window=null;else if(A.windowLook)A.window.seen+=dt;else if(A.window.seen>=.8)A.window.gone=true;}
+    campusTick(dt);hushTick(); leftTick(); stareTick(dt); windowTick(); shiftTick(); shiftNotice();
   }
 
   /* ---------- A5：铃声 ---------- */
@@ -162,17 +186,20 @@ var Atmos=(function(){
     var night=$imports.S.tsec>=C.nightBellAt, rate=1;
     if(night&&d>=2){ semi+=C.nightBellDrop; rate=0.9; }
     if(!(semi>0)) return undefined;
-    return {pitch:Math.pow(2,-semi/12)*rate, caption:night?'下课铃，拖得很长，最后一个音沉了下去':'下课铃，最后一个音低了一点'};
+    return {tail:Math.pow(2,-semi/12),tailLength:night&&d>=2?1.8:1,caption:night?'下课铃，拖得很长，最后一个音沉了下去':'下课铃，最后一个音低了一点'};
   }
 
   /* ---------- A7：天色 ---------- */
   function light(st2){
-    if(!($imports.S.day>=2)||$imports.S.screen==='menu') return;
+    if($imports.S.screen!=='play'||$imports.VisualState.stageHour!==null||$imports.S.room==='lift_dream'||$imports.S.room==='portal_tunnel')return;
     var h=(($imports.S.tsec%1440)+1440)%1440/60, k=Math.min(1,($imports.S.day-1)/2);
     var dusk=k*0.35*smooth(15.5,18,h)*(1-smooth(19.5,20.5,h));        /* 傍晚提前：下午三点半起就暗下去 */
     st2.day=Math.max(0,st2.day*(1-dusk));
     var cold=1-0.07*k;                                                  /* 整体更冷、更暗一点 */
-    st2.amb*=cold*(1-0.4*dusk); st2.hemi*=cold*(1-0.4*dusk);
+    st2.amb*=cold*(1-.4*dusk);st2.hemi*=cold*(1-.4*dusk);
+    var warm=.10*smooth(15,17,h)*(1-smooth(17.5,19,h)),cool=(.04*k+.10*smooth(17.5,21,h));
+    st2.atmosTint=[1+warm-cool,1-cool*.2,1-warm+cool];
+    st2.atmosFog=1+.10*smooth(16,22,h)+k*.07;
   }
   function smooth(a,b,x){ var t=(0,$imports.clamp)((x-a)/(b-a),0,1); return t*t*(3-2*t); }
 
@@ -180,13 +207,13 @@ var Atmos=(function(){
   GameModules.on('bellTune',bellTune,own);
   GameModules.on('lightState',light,own);
   GameModules.on('enterRoom',function(){ A.lastCls=null; A.lastWin=null; A.inCls=null; if(A.window&&(!$imports.S.room||A.window.room!==$imports.S.room)) A.window=null; },own);
-  GameModules.on('boundary',function(){ A.stare=null; A.window=null; A.hush=0; A.hushFor=null; A.lastCls=null; A.lastWin=null; A.inCls=null; A.shiftNew=null; A.patSeen=null; },own);
-  GameModules.on('reset',function(){ A.campusT=12; A.stare=null; A.window=null; A.hush=0; A.hushFor=null; A.lastCls=null; A.lastWin=null; A.inCls=null; A.shiftNew=null; A.patSeen=null; },own);
+  GameModules.on('boundary',function(){ A.stare=null; A.window=null; A.hush=0; A.hushFor=null;A.preFor=null; A.lastCls=null; A.lastWin=null; A.inCls=null; A.shiftNew=null;A.patSeen=null;A.patLast=null; },own);
+  GameModules.on('reset',function(){ A.campusT=12; A.stare=null; A.window=null; A.hush=0; A.hushFor=null;A.preFor=null; A.lastCls=null; A.lastWin=null; A.inCls=null; A.shiftNew=null;A.patSeen=null;A.patLast=null; },own);
 
   /* 表现层只读：没有记录时给一份空的，不往 RT 里写 */
-  var EMPTY={stares:{},shift:{},seats:{},said:{}};
-  function peek(){ var a=$imports.RT.atmos; return a&&typeof a==='object'?{stares:a.stares||{},shift:a.shift||{},seats:a.seats||{},said:a.said||{}}:EMPTY; }
-  return {A:A, cfg:C, state:st, peek:peek, hash:hash, classAt:classAt, inCorridor:inCorridor, campusKinds:campusKinds, bellTune:bellTune, busy:busy, floorRoom:floorRoom};
+  var EMPTY={stares:{},shift:{},seats:{},said:{},shiftPose:{}};
+  function peek(){ var a=$imports.RT.atmos; return a&&typeof a==='object'?{stares:a.stares||{},shift:a.shift||{},seats:a.seats||{},said:a.said||{},shiftPose:a.shiftPose||{}}:EMPTY; }
+  return {A:A,observeWindow:function(looking){A.windowLook=!!looking;},cfg:C, state:st, peek:peek, hash:hash, classAt:classAt, inCorridor:inCorridor, campusKinds:campusKinds, bellTune:bellTune, busy:busy, floorRoom:floorRoom};
 })();
 
 /* @module-exports */

@@ -9,6 +9,7 @@
   function person(g,kind,x,z){var f=new $imports.THREE.Group();block(f,.23,.3,.1,0x1b242b,0,1.1,.15);var mesh=(0,$imports.figMesh)(kind,new $imports.THREE.MeshBasicMaterial({color:0x465353,fog:false}),1);f.add(mesh);f.userData.body=mesh;f.position.set(x,0,z);g.add(f);return f;}
   $imports.CUT_DEF.dismissal={dur:18,setup:function(d){
     $imports.Engine.beginOutsideStage();d.hour=$imports.VisualState.stageHour;$imports.VisualState.stageHour=17.4;
+    d.caption=document.createElement('p');d.caption.className='broadcast-cut-caption';d.caption.setAttribute('aria-live','polite');document.body.appendChild(d.caption);
     d.stages=[];d.students=[];
     for(var i=0;i<3;i++){var g=new $imports.THREE.Group();g.position.x=i*28;(0,$imports.cutAdd)(g);d.stages.push(g);}
     var a=d.stages[0];room(a,5,5);block(a,2,.12,.7,0x564d3e,0,.88,0);block(a,.1,.42,.1,0x202c29,-.4,1.15,0);
@@ -19,9 +20,10 @@
       block(b,.9,.08,.55,0x655944,x,.76,z+.4);var chair=block(b,.42,.55,.08,0x605541,x,.64,z-.3);
       var student=person(b,'sit',x,z);student.rotation.y=Math.PI;d.students.push({fig:student,chair:chair,z:z});}
     var c=d.stages[2];room(c,7,10);
-    for(i=0;i<12;i++){block(c,1.5,(i+1)*.17,.28,0x737c75,-1,(i+1)*.17/2,2.5-i*.28);block(c,1.5,2.04+(i+1)*.17,.28,0x626d69,1,(2.04+(i+1)*.17)/2,-.58+i*.28);}
+    for(i=0;i<12;i++){block(c,1.5,(i+1)*.17,.28,0x737c75,-1,(i+1)*.17/2,2.5-i*.28);block(c,1.5,.13,.28,0x626d69,1,2.04+(i+1)*.17-.065,-.58+i*.28);}
     block(c,3.6,.12,1,0x7e8780,0,2.04,-1.1);
     d.line=[];for(i=0;i<10;i++)d.line.push(person(c,'person',-1,1.5));
+    block(c,.04,1.0,3.8,0x263c37,-1.8,2.65,.6);block(c,.04,1.0,3.8,0x263c37,1.8,3.3,.6);
     d.patrol=person(c,'tall',2.6,3.7);
     d.gate=(0,$imports.cutW2S)($imports.GATE_N.x,$imports.GATE_N.y);d.walkers=[];
     for(i=0;i<16;i++){var f=(0,$imports.cutAdd)((0,$imports.cutFigure)(0x3b4847,1));d.walkers.push(f);}
@@ -32,6 +34,7 @@
     d.said={};
   },frame:function(k,d){
     var t=k*18,stage=t<3.2?0:t<7.8?1:t<12?2:3;
+    var captions=['广播：放学。全体同学，从北门离校。\n你的声音从走廊尽头传回来，慢了半拍。','几十把椅子同时往后挪。同学们收好书包。','走廊尽头的高个子没有动。人流从它身边经过。','登记簿：放学 · 全体。'];d.caption.textContent=captions[stage];
     d.stages.forEach(function(g,i){g.visible=i===stage;});d.walkers.forEach(function(f){f.visible=stage===3;});d.ledger.visible=stage===3;
     if(stage===0){
       (0,$imports.cutLook)(1.5,1.55,2.1,0,1.25,-1.4);d.speakers.forEach(function(m,i){m.material.color.setHex(t>.25+i*.35?0x8b9d83:0x313b34);});
@@ -47,7 +50,7 @@
       if(!d.said.c){d.said.c=true;(0,$imports.os)('走廊尽头的高个子没有动。人流从它身边经过。',4,$imports.OS_FORCE);}
     }else{
       var v=(t-12)/6,g=d.gate;
-      d.walkers.forEach(function(f,i){f.position.set(g.x+(i%4-1.5)*.65,0,g.z+3.8-Math.floor(i/4)*.9-v*8);f.rotation.y=Math.PI;});
+      d.walkers.forEach(function(f,i){f.position.set(g.x+(i%4<2?-1.2-(i%2)*.65:1.2+(i%2)*.65),0,g.z+3.8-Math.floor(i/4)*.9-v*8);f.rotation.y=Math.PI;});
       if(v<.2)(0,$imports.cutLook)(g.x-1.3,1.6,g.z+2.1,g.x-1.3,1.1,g.z+1);
       else if(v<.6)(0,$imports.cutLook)(g.x,1.65,g.z+1-(v-.2)*18,g.x,1.6,g.z-10);
       else{var teachX=(d.building.x+d.building.w/2)*$imports.U2M,teachZ=(d.building.y+d.building.h/2)*$imports.U2M;(0,$imports.cutLook)(g.x,1.8,g.z-7,teachX,6,teachZ);}
@@ -56,7 +59,7 @@
     }
     var fades=[3.2,7.8,12],edge=0;fades.forEach(function(s){edge=Math.max(edge,Math.max(0,1-Math.abs(t-s)/.12));});
     (0,$imports.cutFade)(Math.max(edge,t>17.4?(t-17.4)/.6:0));
-  },clean:function(d){$imports.VisualState.stageHour=d.hour;}};
+  },clean:function(d){if(d.caption)d.caption.remove();$imports.VisualState.stageHour=d.hour;}};
 
   var U=$imports.DeathCG.kit;
   $imports.DeathCG.register('misread',{

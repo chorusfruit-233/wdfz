@@ -174,6 +174,8 @@ function updateLighting(){
       fog.density=(0,$imports.lerp)(($imports.Engine.sceneView().room==='garage1')?0.09:$imports.Engine.sceneView().room==='portal_tunnel'?0.04:(0.072+0.03*fn),0.024,nw);
     }
   }
+  if(fog&&s.atmosFog&&!s.fog)fog.density*=s.atmosFog;
+  if(s.atmosTint){var tint=s.atmosTint;[$imports.GLR.amb,$imports.GLR.hemi,$imports.GLR.moon].forEach(function(l){l.color.r*=tint[0];l.color.g*=tint[1];l.color.b*=tint[2];});}
   var tt=$imports.GLR.time||0;
   var pf=$imports.GLR.patrolFlick||0, pr=$imports.GLR.patrolRed||0, sum=0;
   for(i=0;i<$imports.GLR.roomLights.length;i++){
@@ -185,7 +187,7 @@ function updateLighting(){
     $imports.GLR.roomLights[i].intensity=base*Math.max(0.05,flick)*(1+0.3*pr)*gz;
     var bc=$imports.GLR.roomLightCol&&$imports.GLR.roomLightCol[i];
     if(bc){                                               /* 老灯管偏青绿；被它盯上：灯变红 */
-      var lr=bc.r*0.86, lg=bc.g*0.98, lb=bc.b*0.84;
+      var tint=s.atmosTint||[1,1,1],lr=bc.r*.86*tint[0],lg=bc.g*.98*tint[1],lb=bc.b*.84*tint[2];
       $imports.GLR.roomLights[i].color.setRGB(lr+(1-lr)*pr, lg*(1-0.92*pr), lb*(1-0.95*pr));
     }
   }

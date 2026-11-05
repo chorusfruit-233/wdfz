@@ -18,7 +18,7 @@ var BroadcastView=(function(){
     if(crowdGroup){$imports.GLR.scene.remove(crowdGroup);$imports.ThreeBackend.disposeGroup(crowdGroup);}crowdGroup=null;people=[];}
   function point(id,at){var R=$imports.INTERIORS[id];return (0,$imports.worldToScene)(R.ox+(at[0]+.5)*R.tw,R.oy+(at[1]+.5)*R.th,R);}
   function build(){
-    clear();if($imports.S.mode!=='in')return;room=$imports.S.room;group=new $imports.THREE.Group();group.name='broadcast-props';group.userData.worldPart=true;$imports.GLR.scene.add(group);
+    clear();if($imports.S.mode!=='in')return;room=$imports.S.room;group=new $imports.THREE.Group();group.name='broadcast-props';group.userData.fuseStatus=$imports.Broadcast.state().fuse;group.userData.worldPart=true;$imports.GLR.scene.add(group);
     var C=$imports.BROADCAST_CFG;
     if(room===C.room){
       C.doors.forEach(function(at){var p=point(room,at),sign=label('广播站\n钥匙：夜间保安岗',1.1,.45);sign.position.set(p.x,2.35,p.z+.54);group.add(sign);});
@@ -29,7 +29,7 @@ var BroadcastView=(function(){
       var mic=box(group,.07,.16,.07,0x1b2928,p.x-.2,1.36,p.z);
       for(var i=0;i<4;i++)box(group,.073,.008,.008,0x8d9b95,p.x-.2,1.31+i*.025,p.z+.038);
       var book=label('播音记录本\n第二天 · 第八节后',.43,.22);book.rotation.x=-Math.PI/2;book.position.set(p.x+.02,.98,p.z+.2);group.add(book);
-      var warning=label('功放保险丝已烧\n备用件：体育器材室',1.6,.45);warning.position.set(p.x,1.85,p.z-.6);group.add(warning);
+      var warning=label($imports.Broadcast.state().fuse?'功放已修复\n话筒：整理通知稿':'功放保险丝已烧\n备用件：体育器材室',1.6,.45);warning.position.set(p.x,1.85,p.z-.6);group.add(warning);
     }
     var src=C.sources.find(function(s){return s.room===room;});
     if(src){var q=point(room,src.at),tag=label(src.title,.85,.26);tag.position.set(q.x,1.8,q.z+.45);group.add(tag);}
@@ -38,7 +38,7 @@ var BroadcastView=(function(){
   }
   function scene(){if($imports.S.mode==='in'&&room!==$imports.S.room)build();else if($imports.S.mode==='out'&&room)clear();}
   function frame(){
-    scene();var p=$imports.Broadcast.crowd(),show=p&&$imports.S.mode==='out'&&$imports.S.screen==='play';
+    scene();if(group&&room===$imports.BROADCAST_CFG.room&&group.userData.fuseStatus!==$imports.Broadcast.state().fuse)build();var p=$imports.Broadcast.crowd(),show=p&&$imports.S.mode==='out'&&$imports.S.screen==='play';
     if(!show){if(crowdGroup)crowdGroup.visible=false;return;}
     if(!crowdGroup){crowdGroup=new $imports.THREE.Group();crowdGroup.name='departing-students';crowdGroup.userData.worldPart=true;$imports.GLR.scene.add(crowdGroup);
       var mat=material(0x303c3d);for(var i=0;i<16;i++){var g=new $imports.THREE.Group(),m=(0,$imports.figMesh)('person',mat,1);g.add(m);box(g,.23,.3,.1,0x1a232b,0,1.1,-.15);crowdGroup.add(g);people.push(g);}}

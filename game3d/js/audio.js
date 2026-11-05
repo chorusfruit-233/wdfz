@@ -425,7 +425,7 @@ var SFX=(function(){
     v=v===undefined?1:v;
     var tune=null; try{ tune=GameModules.first('bellTune',kind||'end'); }catch(e){}   /* 模块可以让铃声走调（氛围 A5） */
     var o={k:v,lp:v<0.7?0.6:1};
-    if(tune&&tune.pitch>0){ o.pitch=tune.pitch; if(tune.caption) o.caption=tune.caption; }
+    if(tune){if(tune.pitch>0)o.pitch=tune.pitch;if(tune.tail>0)o.tail=tune.tail;if(tune.tailLength>0)o.tailLength=tune.tailLength;if(tune.caption)o.caption=tune.caption;}
     return P(kind==='start'?'event.bellStart':'event.bellEnd',o);
   }
   function deathKinds(){
