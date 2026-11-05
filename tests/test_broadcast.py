@@ -20,6 +20,14 @@ class BroadcastTest(BrowserCase):
         r = p.evaluate("BroadcastRules.normalize({completed:99,phase:'bell',bell:Infinity,selected:'other',fakeSite:9,pianoFails:8,current:{id:1,room:'garbage'}})")
         self.assertEqual((r['completed'],r['phase'],r['selected'],r['fakeSite'],r['pianoFails'],r['current']), (3,'collect','notice1',None,3,None))
 
+    def test_false_paper_uses_persisted_run_seed_and_does_not_reroll(self):
+        p=self.game()
+        r=p.evaluate("""()=>{Mechanics.runSeed='broadcast-seed-one';Broadcast.state().fakeSite=null;
+          const first=Broadcast.ensure().fakeSite,expected=Math.floor(BroadcastRules.hash(Mechanics.runSeed,'false-notice')*4);
+          Mechanics.runSeed='another-seed';const kept=Broadcast.ensure().fakeSite;
+          saveGame();applySave(loadGame());return {correct:first===expected,kept:first===kept,saved:Broadcast.ensure().fakeSite===first};}""")
+        self.assertEqual(r,dict(correct=True,kept=True,saved=True))
+
     def test_sources_are_physical_and_inventory_failure_preserves_items(self):
         p = self.game()
         p.evaluate("atRadio('admin5',6,3.2);tryInteract()")
