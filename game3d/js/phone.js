@@ -13,7 +13,7 @@ function phoneEl(){
   el.innerHTML='<div class="phbody"><div class="phtop">校园手机</div><div id="phstatus"></div><nav id="phapps"></nav><div id="phtool"></div><canvas id="phcv" width="'+PH_W+'" height="'+PH_H+'"></canvas>'+
     '<div class="phhint" id="phhint"></div></div><button type="button" class="phx" aria-label="收起手机">✕ 收起</button>';
   document.body.appendChild(el);
-  var apps=[['home','主页'],['wireless','无线接入'],['location','巡察查询'],['sync','门禁同步'],['container','容器状态'],['plane','纸飞机']];
+  var apps=[['home','主页'],['wireless','无线接入'],['location','巡察查询'],['sync','门禁同步'],['container','容器状态'],['camera','相机'],['plane','纸飞机']];   /* 相机：modules/phone-camera（钩子 phoneApp / phoneCopy） */
   apps.forEach(function(a){var b=document.createElement('button');b.type='button';b.textContent=a[1];b.dataset.app=a[0];b.onclick=function(){PHONE.selectApp(a[0]);};el.querySelector('#phapps').appendChild(b);});
   var cv=el.querySelector('canvas');
   cv.addEventListener('pointerdown',function(e){ e.preventDefault(); PHONE.flap(); });
@@ -127,6 +127,7 @@ PHONE.selectApp=function(app){
   if(app==='wireless'){var b=document.createElement('button');b.type='button';b.dataset.action='wireless';b.onclick=function(){$imports.PhoneNetwork.toggleWireless();PHONE.paintApps();};tool.appendChild(b);}
   if(app==='container'){var dl=document.createElement('button');dl.type='button';dl.dataset.action='download';dl.onclick=function(){$imports.PhoneNetwork.toggleDownload();PHONE.paintApps();};tool.appendChild(dl);}
   if(app==='sync'){var sync=document.createElement('button');sync.type='button';sync.textContent='同步门禁数据';sync.onclick=function(){$imports.PhoneNetwork.sync();PHONE.paintApps();};tool.appendChild(sync);}
+  if(app!=='plane')GameModules.emit('phoneApp',app,tool);
   if(app==='plane')PHONE.draw();PHONE.paintApps();
 };
 PHONE.paintApps=function(){
@@ -152,6 +153,7 @@ PHONE.paintApps=function(){
       (d.download.status==='paused'?'安装已暂停 ':'容器安装 ')+Math.floor(d.download.elapsed/60*100)+'% · 剩余 '+Math.ceil(60-d.download.elapsed)+' 秒')+
       ($imports.Termination.state.status==='accepted'?'\n服务器停机剩余 '+Math.ceil($imports.Termination.state.remaining)+' 运行秒。':'');
     var dl=el.querySelector('[data-action="download"]');if(dl){dl.disabled=!['running','paused'].includes(d.download.status);text(dl,d.download.status==='running'?'暂停下载':d.download.status==='paused'?'继续下载':d.download.status==='complete'?'已安装':'等待联网');}}
+  var _mc=GameModules.first('phoneCopy',app); if(_mc!==undefined) copy=String(_mc);
   text(el.querySelector('[data-copy]'),copy);
 };
 

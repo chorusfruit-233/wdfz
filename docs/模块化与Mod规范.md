@@ -31,7 +31,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `emits` | 这个模块在代码里发出的钩子（`GameModules.emit/first`） |
 | `uses` | 这个模块监听的钩子 |
 
-当前 55 个功能模块（2026-11-03 完成文件级依赖收口时为 46 个，之后成就与积分评级新增 3 个）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，游戏事实 `facts`、成就 `achievements`、积分评级与通关记录 `run-record`，以及最后加载的主循环。已新增 `stairwell`（真实楼梯）、`sensory`（只读感官、声音字幕及环境片段）、`lift-crowd`、`atmosphere`、`broadcast` 和 `last-life`；具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
+当前 57 个功能模块（2026-11-03 完成文件级依赖收口时为 46 个，之后成就与积分评级新增 3 个；2026-11-05 校园怪谈创意提案新增「上一局的你」「校园怪谈」「手机相机」等）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，游戏事实 `facts`、成就 `achievements`、积分评级与通关记录 `run-record`，以及最后加载的主循环。已新增 `stairwell`（真实楼梯）、`sensory`（只读感官、声音字幕及环境片段）、`lift-crowd`、`atmosphere`、`broadcast` 和 `last-life`；具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
 
 **改功能的做法**：先在清单里找到模块 → 只读它登记的文件和它 `uses` / `emits` 的钩子 → 改完跑这个模块对应的测试（见第 6 节）。跨模块改动先看对方的 `exports` 是否需要变；导出名字改了，同时改清单。
 
@@ -62,6 +62,8 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `itemUse` | `items.js` `useItem` 开头 | first | `id`；返回 `true` 表示已处理 |
 | `clockText` | `ui/hud.js` `updateHUD` | first | 返回要显示的时间文字 |
 | `periodText` | `ui/hud.js` `updateHUD`，学生会检查的说明之前（2026-11-05，体检日） | first | 返回要显示的时段说明（请假中不改写；检查、集合的说明仍然优先） |
+| `phoneApp` | `phone.js` `PHONE.selectApp`（纸飞机以外的页） | emit | `app, tool`：往手机工具区加按钮（相机） |
+| `phoneCopy` | `phone.js` `PHONE.paintApps` | first | `app`；返回这一页的说明文字 |
 | `mapBlocked` | `ui.js` 打开地图页、`ui/hud.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
 | `classmateScene` | `fx/classroom.js` 更新同学前 | first | `figure, dt`；返回 true 接管这名同学当帧表现，不能改玩家状态 |
 | `patrolZoneActive` | `patrol-world/world.js` 判断条件报警区 | first | `zone`；带 `when` 的区域仅返回 true 时启用 |

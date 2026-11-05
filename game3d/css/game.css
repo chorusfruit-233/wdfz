@@ -496,3 +496,11 @@ body:not(.cut) #opcap{display:none}
 .rsreport{font-family:"Noto Serif SC",serif;line-height:1.9;padding:4px 2px}
 .rsreport p{margin:0}
 .rsreport i{display:block;text-align:right;opacity:.7;font-style:normal}
+/* 手机相机（C11）：相册小图和拍照的闪白 */
+#phtool .phalbum{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px;max-height:220px;overflow:auto}
+#phtool .phalbum figure{margin:0;background:#0b1413;border:1px solid #26403a;border-radius:4px;padding:4px}
+#phtool .phalbum img{display:block;width:100%;height:auto;image-rendering:auto;border-radius:2px}
+#phtool .phalbum figcaption{font-size:11px;line-height:1.5;color:#a9c4b9;margin-top:3px}
+#camflash{position:fixed;inset:0;background:#fffdf4;pointer-events:none;z-index:340;opacity:0;visibility:hidden}
+#camflash.go{visibility:visible;animation:camflash .45s ease-out forwards}
+@keyframes camflash{from{filter:none}to{opacity:0}}
