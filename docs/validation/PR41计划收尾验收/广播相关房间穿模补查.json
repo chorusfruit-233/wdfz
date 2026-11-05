@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "scope": {
+  "quality": 1,
+  "rooms": [
+   "admin1",
+   "admin2",
+   "teach6"
+  ]
+ },
+ "counts": {},
+ "issues": []
+}

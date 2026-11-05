@@ -33,7 +33,8 @@ class PresentationStatesTest(BrowserCase):
         self.assert_js(page,"PRO.on&&VisualState.worldNorm===1&&GLR.postMat.uniforms.uFx.value===1&&GLR.camLight.intensity>0")
         self.assert_js(page,'lightState().amb>worldBase*2')
         page.evaluate('proWake()')
-        page.wait_for_function('PRO.woke&&PRO.see&&VisualState.worldNorm===0',timeout=4000)
+        # Software GPU workers can delay scene construction beyond the prologue timer.
+        page.wait_for_function('PRO.woke&&PRO.see&&VisualState.worldNorm===0',timeout=20000)
         page.evaluate('render(.1)')
         self.assert_js(page,"GLR.postMat.uniforms.uFx.value===0&&GLR.camLight.intensity>0")
         page.evaluate('proEnd()')

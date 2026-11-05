@@ -1,0 +1,32 @@
+{
+  "runtime": "75c7418e498f367537961d21ca423ffa4b25b73fc436e2e2418205468d478d88",
+  "expected": 8,
+  "elapsed": 122.39,
+  "complete": true,
+  "records": {
+    "test_death_timeline.DeathTimelineTest.test_all_death_models_have_finite_transforms_during_playback": {
+      "status": "passed"
+    },
+    "test_death_timeline.DeathTimelineTest.test_warm_up_compiles_every_death_cinematic_shader_in_advance": {
+      "status": "passed"
+    },
+    "test_patrol_zones.PatrolZonesTest.test_all_region_observation_points_are_navigable": {
+      "status": "passed"
+    },
+    "test_void_cut.VoidCutTest.test_archive_cards_are_hidden_until_seen_and_replay_in_isolation": {
+      "status": "passed"
+    },
+    "test_presentation_states.PresentationStatesTest.test_prologue_normal_world_and_wake_restore_visual_state": {
+      "status": "passed"
+    },
+    "test_broadcast.BroadcastTest.test_all_ending_cg_shots_and_death_preview_preserve_player_state": {
+      "status": "passed"
+    },
+    "test_broadcast.BroadcastTest.test_phone_panel_fits_portrait_and_landscape_and_touch_release_stops_reading": {
+      "status": "passed"
+    },
+    "test_webgpu.NativeWebGPUTest.test_broadcast_panel_crowd_and_cinematics_remain_native": {
+      "status": "passed"
+    }
+  }
+}

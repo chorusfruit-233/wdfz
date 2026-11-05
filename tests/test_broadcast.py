@@ -166,11 +166,17 @@ class BroadcastTest(BrowserCase):
     def test_phone_panel_fits_portrait_and_landscape_and_touch_release_stops_reading(self):
         p = self.game(touch=True)
         p.evaluate("prepareRadio();BroadcastUI.open();BroadcastUI.paint()")
-        for width,height in ((390,844),(844,390)):
+        for width,height in ((390,844),(844,390),(667,320),(480,320)):
             p.set_viewport_size({'width':width,'height':height})
             b=p.locator('#broadcast-panel').bounding_box()
             self.assertGreaterEqual(b['x'],0);self.assertLessEqual(b['x']+b['width'],width+1)
             self.assertGreaterEqual(b['y'],0);self.assertLessEqual(b['y']+b['height'],height+1)
+            self.assert_js(p, """(()=>{const a=document.getElementById('radio-close').getBoundingClientRect(),
+              b=document.getElementById('fullscreen-toggle').getBoundingClientRect();
+              return a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top;})()""")
+            p.locator('#radio-close').tap()
+            self.assert_js(p, "!BroadcastUI.isOpen()")
+            p.evaluate('BroadcastUI.open();BroadcastUI.paint()')
         p.locator('#radio-read').dispatch_event('pointerdown',{'pointerId':4,'pointerType':'touch','button':0})
         self.assert_js(p,"Broadcast.reading().held")
         p.locator('#radio-read').dispatch_event('pointercancel',{'pointerId':4,'pointerType':'touch','button':0})
