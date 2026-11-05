@@ -49,12 +49,12 @@ DEATH_ARCHIVE.forEach(function(e,i){ e.no=i+1; DEATH_ARCHIVE_BY_ID[e.id]=e; });
    车灯顺着车道照出去——真实结局里是玩家站在车旁的位置和朝向）；hour：回放时的天色（VisualState.stageHour，只影响画面，不改 S.tsec），
    开场固定在新局开始的 11:40（第四节），不跟着菜单里残留的上一局时刻变成夜里 */
 var ARCHIVE_CUTS=[
-  {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
   {id:'cut:opening', cut:'opening',            n:'开场 · 第四节', d:'粉笔灰停在半空，你趴到桌上。再睁开眼，教室里坐满了人，没有一个人在呼吸。', stage:'teach1', hour:700/60},
   {id:'end:car',     cut:'car',     end:'car',    n:'《闸门》',     d:'车灯闪了两下，光里站着它。冲出北门回头，黑影从门里追了出来。', stage:'garage1', at:{c:44.5,r:6.5,ang:Math.PI}},
   {id:'end:face',    cut:'face',    end:'face',   n:'《白名单》',   d:'闸机的红灯「嘀」地变白。走出门回头，门里一个接一个站满了目送的人。', stage:'teach1'},
   {id:'end:portal',  cut:'portal',  end:'portal', n:'《门》',       d:'导轨一段段闭合，光圈撑开。退了半步，然后走了进去。', stage:'lab1'},
   {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
+  {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
   {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1},
   /* 异色空间的进出过场（内部，2026-11-04）：演出由 void-maze 模块的 maze-cut.js 注册；解锁看 seen 记录（DeathArchive.markSeen），
      没经历过完全不出现、不计数；回放舞台都是迷宫（离开那段在白场时自己换到教学楼二楼的电梯厅） */
