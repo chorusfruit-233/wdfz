@@ -67,6 +67,9 @@ var AchievementRules=(function(){
     A('n.chalk','n','once','记号','用粉笔画下一个记号。','chalk'),
     A('n.special','n','once','特别的一天','遇上一次校庆日或占课。','specialDay'),
     A('n.broadcast','n','once','核对','发现假广播并通过播音记录本核对。','broadcast',function(f){return f.what==='verified'&&f.real===false;},{needs:['broadcast']}),
+    A('n.vault','n','once','换一条路','翻过栏杆，落了地，还站得起来。','vault',function(f){ return f.what==='landed'; },{needs:['body']}),
+    A('n.first_aid','n','once','还能走','受了伤，自己包扎好。','treated',T,{needs:['body']}),
+    A('e.campus_fall','e','once','楼层之外','死于「中国人能飞」。','death',function(f){ return f.source==='campus_fall'; },{score:false,needs:['body']}),
     A('n.paper_received','n','once','窗口来信','捡起一架从窗口飞进来的纸飞机。','paper',function(f){ return f.what==='received'; },{needs:['paper-plane']}),
     A('e.paper_return','e','once','原路寄回','把危险的纸飞机读完、折好，从原来那扇窗送了回去。','paper',function(f){ return f.what==='returned'; },{needs:['paper-plane']}),
     A('e.paper_clean','e','once','没有第二道折痕','送回纸飞机的一路上没有擦到墙。','paper',function(f){ return f.what==='returned'&&f.clean; },{needs:['paper-plane']}),
@@ -140,6 +143,9 @@ var AchievementRules=(function(){
   /* 解锁后显示的一句话：只写发生了什么 */
   var MEMO={
     'n.broadcast':'记录本里没有刚才那一条。喇叭里还在啸叫。',
+    'n.vault':'我摔在地上，腿一阵剧痛，还能走。',
+    'n.first_aid':'包扎好了，还能走。',
+    'e.campus_fall':'手离开了栏杆。',
     'n.paper_received':'纸飞机里写着一行字。',
     'e.paper_return':'窗后那只手接住了它。',
     'e.paper_clean':'纸飞机钻进窗缝，一路没有碰到墙。',

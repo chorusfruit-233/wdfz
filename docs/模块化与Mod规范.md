@@ -68,6 +68,8 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `ownsPlayerInput` | `input.js` `gameInputContext`（2026-11-05） | first | 返回 `true` 表示模块正在接管操作（纸飞机的读纸、飞行），主角不移动、不转视角；暂停照常 |
 | `keepSimulation` | `input.js` `gameInputContext`（2026-11-05） | first | 返回 `true` 时打开面板不暂停世界（被抓住的那一秒里翻背包） |
 | `patrolCatch` | `patrol-world/world.js` 真正抓到、调用 `kill` 之前（2026-11-05） | first | `{msg, hide}`；返回 `true` 表示模块接管这一次抓取（之后由模块负责调用一次 `kill` 或给出别的结果） |
+| `moveSpeedMul` | `input.js` `updatePlayer`（2026-11-05） | first | 返回数字：步行／奔跑速度倍率（受伤） |
+| `runBlocked` | `input.js` `updatePlayer`（2026-11-05） | first | 返回 `true` 时不能奔跑（重伤） |
 | `mapBlocked` | `ui.js` 打开地图页、`ui/hud.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
 | `classmateScene` | `fx/classroom.js` 更新同学前 | first | `figure, dt`；返回 true 接管这名同学当帧表现，不能改玩家状态 |
 | `patrolZoneActive` | `patrol-world/world.js` 判断条件报警区 | first | `zone`；带 `when` 的区域仅返回 true 时启用 |

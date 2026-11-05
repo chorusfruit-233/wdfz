@@ -417,7 +417,7 @@ function updatePlayer(dt){
      马上又掉下去，按着疾跑（或手机摇杆推到底）时就一顿一顿地在跑和走之间来回切。 */
   if($imports.S.stam<=6)$imports.S.tired=true;
   else if($imports.S.stam>=STAM_BACK)$imports.S.tired=false;
-  $imports.S.run=wantRun&&(!$imports.S.tired||snack)&&(fw!==0||sd!==0);
+  $imports.S.run=wantRun&&(!$imports.S.tired||snack)&&(fw!==0||sd!==0)&&GameModules.first('runBlocked')!==true;   /* 模块可以禁止奔跑（重伤） */
   var mag=Math.hypot(fw,sd);
   if($imports.S.seated&&mag>.08)(0,$imports.leaveSeat)();
   $imports.S.moving=mag>.08&&!$imports.S.seated;
@@ -426,6 +426,7 @@ function updatePlayer(dt){
     var runAfter=wantRun&&!$imports.S.tired;
     if(snack&&dt>0)spd=((wantRun?SPD_RUN:SPD_WALK)*boosted*1.5+(runAfter?SPD_RUN:SPD_WALK)*(dt-boosted))/dt;
     if(typeof $imports.DEV!=='undefined'&&$imports.DEV.fast)spd*=2.6;
+    var _sm=GameModules.first('moveSpeedMul'); if(typeof _sm==='number'&&_sm>0)spd*=_sm;   /* 模块的速度倍率（受伤） */
     if(mag>1){fw/=mag;sd/=mag;}
     var ca=Math.cos($imports.S.ang),sa=Math.sin($imports.S.ang),x=$imports.S.x,y=$imports.S.y;
     (0,$imports.moveBy)((ca*fw-sa*sd)*spd*dt,(sa*fw+ca*sd)*spd*dt,dt);
