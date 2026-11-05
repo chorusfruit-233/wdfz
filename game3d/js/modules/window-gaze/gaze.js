@@ -51,6 +51,7 @@ var WindowGaze=(function(){
     if($imports.AN.active||$imports.CUT.on||$imports.PHONE.on||$imports.HIDE.on) return true;
     try{ if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.quiet()) return true; }catch(e){}
     try{ if($imports.PatrolWorld.localChase()) return true; }catch(e){}
+    try{ if(typeof $imports.PaperPlane!=='undefined'){ var ps=$imports.PaperPlane.state(); if(ps.ev||(ps.calmUntil&&($imports.Mechanics?$imports.Mechanics.activePlaySeconds:0)<ps.calmUntil)) return true; } }catch(e){}   /* 纸飞机事件中、送回后 20 秒内不出 */
     return false;
   }
   function start(R){

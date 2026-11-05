@@ -65,6 +65,9 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `phoneApp` | `phone.js` `PHONE.selectApp`（纸飞机以外的页） | emit | `app, tool`：往手机工具区加按钮（相机） |
 | `phoneCopy` | `phone.js` `PHONE.paintApps` | first | `app`；返回这一页的说明文字 |
 | `restAct` | `interact.js` `doSanAct`，冷却检查之后、推进时间之前（2026-11-05） | first | `key`（休息种类）；返回 `true` 表示这一次由模块处理（睡不着、做梦），不再照常结算 |
+| `ownsPlayerInput` | `input.js` `gameInputContext`（2026-11-05） | first | 返回 `true` 表示模块正在接管操作（纸飞机的读纸、飞行），主角不移动、不转视角；暂停照常 |
+| `keepSimulation` | `input.js` `gameInputContext`（2026-11-05） | first | 返回 `true` 时打开面板不暂停世界（被抓住的那一秒里翻背包） |
+| `patrolCatch` | `patrol-world/world.js` 真正抓到、调用 `kill` 之前（2026-11-05） | first | `{msg, hide}`；返回 `true` 表示模块接管这一次抓取（之后由模块负责调用一次 `kill` 或给出别的结果） |
 | `mapBlocked` | `ui.js` 打开地图页、`ui/hud.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
 | `classmateScene` | `fx/classroom.js` 更新同学前 | first | `figure, dt`；返回 true 接管这名同学当帧表现，不能改玩家状态 |
 | `patrolZoneActive` | `patrol-world/world.js` 判断条件报警区 | first | `zone`；带 `when` 的区域仅返回 true 时启用 |

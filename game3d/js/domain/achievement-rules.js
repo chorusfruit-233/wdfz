@@ -67,6 +67,9 @@ var AchievementRules=(function(){
     A('n.chalk','n','once','记号','用粉笔画下一个记号。','chalk'),
     A('n.special','n','once','特别的一天','遇上一次校庆日或占课。','specialDay'),
     A('n.broadcast','n','once','核对','发现假广播并通过播音记录本核对。','broadcast',function(f){return f.what==='verified'&&f.real===false;},{needs:['broadcast']}),
+    A('n.paper_received','n','once','窗口来信','捡起一架从窗口飞进来的纸飞机。','paper',function(f){ return f.what==='received'; },{needs:['paper-plane']}),
+    A('e.paper_return','e','once','原路寄回','把危险的纸飞机读完、折好，从原来那扇窗送了回去。','paper',function(f){ return f.what==='returned'; },{needs:['paper-plane']}),
+    A('e.paper_clean','e','once','没有第二道折痕','送回纸飞机的一路上没有擦到墙。','paper',function(f){ return f.what==='returned'&&f.clean; },{needs:['paper-plane']}),
     A('e.window_escape','e','once','别看里面','被窗里的眼睛吸住以后，自己挣开了。','gaze',function(f){ return f.what==='escape'; },{needs:['window-gaze']}),
     A('n.midnight','n','once','明天再来','熄灯后在食堂亮着的窗口吃了一碗。','midnightMeal',T,{needs:['campus-tales']}),
     /* ---------- 精英 ---------- */
@@ -121,6 +124,7 @@ var AchievementRules=(function(){
     /* ---------- 隐藏（内部；解锁前不出现、不计数） ---------- */
     A('h.beast','h','once','《先辈》','跟着穿旧校服的人跑了出去。','ending',function(f){ return legit(f)&&f.id==='beast'; }),
     A('h.window_reverse','h','once','里面的我','死于窗户内的视线。','death',function(f){ return f.source==='window_gaze'; },{score:false,needs:['window-gaze']}),
+    A('h.knife','h','once','《管制刀具》','被抓住的那一秒里，从背包拿出了小刀。','ending',function(f){ return legit(f)&&f.id==='knife'; },{needs:['knife'],score:false}),
     A('h.inception','h','once','《盗梦空间》','在梦里转过陀螺，然后醒在一间真的房间里。','ending',function(f){ return legit(f)&&f.id==='inception'; },{needs:['inception']}),
     A('h.wrong_floor','h','once','不存在的楼层','电梯停在了一层不存在的楼。','maze',function(f){ return f.what==='enter'; },{needs:['void-maze']}),
     A('h.maze_exit','h','once','漏光的门','从那片白色的地方走了出来。','maze',function(f){ return f.what==='leave'; },{needs:['void-maze']}),
@@ -136,6 +140,9 @@ var AchievementRules=(function(){
   /* 解锁后显示的一句话：只写发生了什么 */
   var MEMO={
     'n.broadcast':'记录本里没有刚才那一条。喇叭里还在啸叫。',
+    'n.paper_received':'纸飞机里写着一行字。',
+    'e.paper_return':'窗后那只手接住了它。',
+    'e.paper_clean':'纸飞机钻进窗缝，一路没有碰到墙。',
     'e.window_escape':'我低着头退开了，那双眼睛没有跟过来。',
     'h.window_reverse':'原来里面那个，一直是我。',
     'n.midnight':'那一碗是热的。打饭的人一直没有回头。',
@@ -189,6 +196,7 @@ var AchievementRules=(function(){
     'p.fast':'铃还没响，我已经在外面了。',
     'p.all':'该做的都做完了。我可以毕业了。',
     'h.beast':'穿旧校服的人回头看了我一眼。',
+    'h.knife':'东西被收走了。我还在这里。',
     'h.inception':'桌上的陀螺还在转。',
     'h.wrong_floor':'电梯停下来的那一层，楼层表上没有。',
     'h.maze_exit':'门缝里漏出来的光，是外面的光。',

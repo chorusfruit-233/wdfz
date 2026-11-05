@@ -83,6 +83,8 @@ function examTick(dt){
 function gameClock(){
   return $imports.GameTimeRules.continuous($imports.S.day,$imports.S.tsec,$imports.LIGHTS_OUT);
 }
+/* 假正常第二天出现的概率（《校园直通、翻越受伤与国际交流》第 7 节，用户确认 30%） */
+var FN_CHANCE=0.30;
 function advanceGameTime(minutes){
   if(typeof $imports.CampusPressure!=='undefined')$imports.CampusPressure.observe();
   var remaining=$imports.GameTimeRules.amount(minutes);
@@ -92,6 +94,7 @@ function advanceGameTime(minutes){
     if(typeof $imports.Inspection!=='undefined')$imports.Inspection.cross($imports.S.day,before,$imports.S.tsec);
     if($imports.S.day===1&&$imports.S.fn&&!$imports.S.fn.note&&$imports.S.tsec>=$imports.LIGHTS_OUT){
       $imports.S.fn.note=true;
+      if($imports.S.fn.roll===undefined) $imports.S.fn.roll=$imports.GameRandom.next()<FN_CHANCE?1:0;   /* 第二天的假正常：拿到纸条时抽一次 30%，跟存档走（Q：不再必出） */
       (0,$imports.os)('我：口袋里多了一张对折的纸。上面写着——灯前看字字如旧，月下认人人已非。　　　　　——笑时莫出声。',8);
     }
     if($imports.S.exam&&before<$imports.LIGHTS_OUT&&$imports.S.tsec>=$imports.LIGHTS_OUT){ examEnd(); (0,$imports.os)('我：熄灯了。今天的考试结束了。',3.4); }
@@ -100,7 +103,8 @@ function advanceGameTime(minutes){
       (0,$imports.gameFact)('day',{day:$imports.S.day});
       if($imports.S.day===2){
         (0,$imports.os)('我：……今天几号来着？我想不起来了。',4);
-        if($imports.S.fn&&$imports.S.fn.note&&!$imports.S.fn.on&&$imports.S.fn.n===0){
+        if($imports.S.fn&&$imports.S.fn.note&&$imports.S.fn.roll===undefined) $imports.S.fn.roll=0;   /* 旧档：已经过了拿纸条那一刻、没抽过的，不补抽 */
+        if($imports.S.fn&&$imports.S.fn.note&&$imports.S.fn.roll===1&&!$imports.S.fn.on&&$imports.S.fn.n===0){
           $imports.S.fn.on=true; $imports.S.fn.v=0; $imports.S.fn.next=10; $imports.S.fn.used={}; $imports.S.fn.n=0; $imports.S.fn.left=4; $imports.S.fn.done=false;
           try{ (0,$imports.fadeTo)(function(){}); }catch(e){}
           $imports.Lifecycle.scope('session').timeout(function(){ (0,$imports.os)('我：第二天。所有东西都回到了原来的位置，颜色也回来了。',5.5); },1200);
@@ -412,6 +416,7 @@ GameModules.publish("game3d/js/systems.js",{
 "examNow":{get:function(){return examNow;},set:function($value){examNow=$value;}},
 "examTick":{get:function(){return examTick;},set:function($value){examTick=$value;}},
 "gameClock":{get:function(){return gameClock;},set:function($value){gameClock=$value;}},
+"FN_CHANCE":{get:function(){return FN_CHANCE;},set:function($value){FN_CHANCE=$value;}},
 "advanceGameTime":{get:function(){return advanceGameTime;},set:function($value){advanceGameTime=$value;}},
 "rewindGameTime":{get:function(){return rewindGameTime;},set:function($value){rewindGameTime=$value;}},
 "NEED_RULE":{get:function(){return NEED_RULE;},set:function($value){NEED_RULE=$value;}},

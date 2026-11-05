@@ -32,6 +32,7 @@ var DEATH_ARCHIVE=[
   {id:'an:necker',    fx:'neck',     n:'围栏的缝',     d:'他没有绕到校门口。他把脖子从围栏的缝里伸了进来。', stage:'out'},
   {id:'an:twin',      fx:'twin',     n:'天台的另一头', d:'他走到了我面前。我们同时抬起手。他的手是热的。', stage:'teach6'},
   {id:'an:cup',       fx:'floor',    n:'窗台上的杯子', d:'一只白色的杯子，画着二校门。它比我想象的要重。', stage:'out'},
+  {id:'paper_sender', fx:'paper_sender', n:'飞纸飞机的人', d:'脚步停在门外。一架压扁的纸飞机从门缝底下塞进来，门开了。', stage:'admin2', ext:1},
   {id:'window_gaze', fx:'window_gaze', n:'窗户内的视线', d:'窗里那双眼睛一直没有眨。玻璃上的倒影先转了过来。', stage:'admin2', ext:1},
   {id:'mirror',       fx:'mirror',   n:'镜子',         d:'镜子里那个人先抬起了手。我还看着它，看了很久。', stage:'teach1'},
   {id:'laugh',        fx:'laugh',    n:'笑出了声',     d:'灯前看字字如旧。我笑得停不下来，笑了很久。', stage:'teach1'},
@@ -58,6 +59,7 @@ var ARCHIVE_CUTS=[
   {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
   {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
   {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1},
+  {id:'end:knife',   cut:'knife',   end:'knife',  n:'《管制刀具》', d:'压在头顶的手停住了。小刀装进透明袋子，登记单上早就填好了名字：留校。', stage:'teach1', secret:1},   /* 内部：modules/knife */
   {id:'end:inception',cut:'inception',end:'inception',n:'《盗梦空间》',d:'走廊一层层往上退。课桌上的陀螺在转。醒来的房间里有阳光，桌上的陀螺还在转。', stage:'dorm1', secret:1},   /* 内部：modules/inception */
   /* 异色空间的进出过场（内部，2026-11-04）：演出由 void-maze 模块的 maze-cut.js 注册；解锁看 seen 记录（DeathArchive.markSeen），
      没经历过完全不出现、不计数；回放舞台都是迷宫（离开那段在白场时自己换到教学楼二楼的电梯厅） */

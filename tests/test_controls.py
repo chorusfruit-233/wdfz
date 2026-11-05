@@ -48,7 +48,7 @@ class ControlsTest(BrowserCase):
                 self.assertFalse(spoiler.locator('table').is_visible())
                 spoiler.locator('summary').click()
                 self.assertTrue(spoiler.locator('table').is_visible())
-                self.assertEqual(spoiler.locator('tbody tr').count(), 25)
+                self.assertEqual(spoiler.locator('tbody tr').count(), 27)   # 加了窗口飞来的纸飞机、窗户内的视线
                 self.assertIn('模型加载失败', page.locator('#faq').inner_text())
                 self.assertIn('?nomod', page.locator('#faq').inner_text())           # Mod 入口与安全模式
                 self.assertIn('粉笔还能做记号', page.locator('#items').inner_text())  # 粉笔记号
@@ -1320,11 +1320,19 @@ class ControlsTest(BrowserCase):
 
     def test_skipped_time_fires_lights_out_and_first_day_story(self):
         page = self.page()
-        page.evaluate("""S.day=1;S.tsec=1339;S.fn={note:false,on:false,n:0};S.exam=true;
+        page.evaluate("""S.day=1;S.tsec=1339;S.fn={note:false,on:false,n:0,roll:1};S.exam=true;
             S.actCool={};doSanAct('wash');""")
         self.assert_js(page, 'S.tsec===1343&&S.day===1&&S.fn.note&&!S.exam')
         page.evaluate('advanceGameTime(8)')
         self.assert_js(page, 'S.tsec===1351&&S.day===2&&S.fn.on&&S.fn.left===4')
+
+    def test_fake_normal_is_a_single_thirty_percent_roll(self):
+        page = self.page()
+        r = page.evaluate("""()=>{const out=[];for(const u of [0.29,0.30,0.9]){S.day=1;S.tsec=1339;S.fn={note:false,on:false,n:0};S.exam=false;
+            GameRandom.bind(()=>u);advanceGameTime(4);const roll=S.fn.roll;GameRandom.bind(()=>0);advanceGameTime(8);out.push([roll,S.fn.on,S.day]);}
+          S.day=1;S.tsec=1345;S.fn={note:true,on:false,n:0};advanceGameTime(8);out.push([S.fn.roll,S.fn.on,S.day]);   /* 旧档：拿过纸条、没抽过，不补抽 */
+          return out;}""")
+        self.assertEqual(r, [[1, True, 2], [0, False, 2], [0, False, 2], [0, False, 2]])
 
     def test_old_cooldown_timestamps_migrate_without_expiring_or_extending(self):
         page = self.page()
