@@ -120,7 +120,7 @@ class SchoolRebuildTest(BrowserCase):
         }""")
         for result in v:
             self.assertEqual(result['target'],['L',2,16],result)
-            self.assertEqual(result['hint'],'走连廊')
+            self.assertEqual(result['hint'],'')          # 连续校园（campus-link）：连廊门洞直接走过去，入口吊牌不再提示按 E
             self.assertLess(result['delta'],1e-10)
 
     def test_patrol_midflight_and_wireless_snapshot_survive_loading(self):
