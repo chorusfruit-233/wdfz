@@ -222,11 +222,12 @@ function solarHeater(K,x,y,z,rot){
   K.unframe();
 }
 /* 一圈白色腰线 */
-function bandAround(K,px,pz,sw,sd,y,h,out,col){
+function bandAround(K,px,pz,sw,sd,y,h,out,col,skip){
   var F=[['s',px,pz+sd/2+out/2,sw+out*2,true],['n',px,pz-sd/2-out/2,sw+out*2,true],
          ['e',px+sw/2+out/2,pz,sd,false],['w',px-sw/2-out/2,pz,sd,false]], i, g=FAC.gap;
   for(i=0;i<4;i++){
     var f=F[i], len=f[3], c0=f[4]?f[1]:f[2], segs=[[c0-len/2,c0+len/2]];
+    if(skip&&skip.indexOf(f[0])>=0) continue;
     if(g&&g.face===f[0]&&y-h/2<g.top) segs=[[c0-len/2,g.c-g.wide],[g.c+g.wide,c0+len/2]];   /* 门头那一段断开 */
     segs.forEach(function(sg){
       var L=sg[1]-sg[0], m=(sg[0]+sg[1])/2; if(L<0.05) return;
@@ -405,21 +406,34 @@ function bldTeach(K,grp,o,px,pz,sw,sd){
   /* 一楼：走廊外墙（室内第 21 格），二楼楼板以下 */
   K.box('brick',gx,(g0-0.18)/2,zs-0.5*L.t,gw,g0-0.18,L.t,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));
+  /* 女儿墙和压顶：北、东、西三面挑出，南面和楼梯塔、电梯井贴齐（塔从南沿立起来，挑出去就插进塔身） */
   K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,$imports.WHITEBAND,1.0);
-  K.box('brick',px,total+0.78,pz,sw+0.12,0.80,sd+0.12,$imports.BRICK,0.99);
-  K.bevel('stone',px,total+1.22,pz,sw+0.24,0.10,sd+0.24,0xd8d4cb,1.05,0.02);
+  K.box('brick',px,total+0.78,pz-0.03,sw+0.12,0.80,sd+0.06,$imports.BRICK,0.99);
+  K.bevel('stone',px,total+1.22,pz-0.06,sw+0.24,0.10,sd+0.12,0xd8d4cb,1.05,0.02);
   roofTop(K,px,total+1.27,(L.z0+gz)/2,sw,gz-L.z0,o.x);
   lightningBelt(K,px,pz,sw+0.16,sd+0.16,total+1.27);
   (function(){ var u0=px-sw/2+0.8, len=sw-1.6, nw=Math.max(1,Math.floor(len/3.2)), q;
     for(q=1;q<4;q++){ var kk=Math.round(nw*q/4); if(kk>0&&kk<nw) downpipe(K,'n',px,pz,sw,sd,u0+kk*len/nw,total+0.9); } })();
-  /* 柱廊和雨篷（立柱位置和碰撞来自 content/structure-recipe.js；落在楼梯塔里的那几根被塔身包住） */
+  /* 柱廊和雨篷（立柱位置和碰撞来自 content/structure-recipe.js）。雨篷和下面的梁在楼梯塔、电梯井处断开；
+     落在塔里的立柱不画（塔身就是柱子）；立柱顶到梁底，梁托着雨篷 */
+  var beamY0=g0-0.43, inTower=function(x,pad){ return L.towers.some(function(b){ return Math.abs(x-b.x)<b.half+pad; }); };
   (0,$imports.colonnadeColumns)(px,pz,sw,sd).forEach(function(c){
-    K.bevel('brick',c.x,g0/2,c.z,0.46,g0,0.46,$imports.BRICK,1.02,0.03);
+    if(inTower(c.x,0.23)) return;
+    K.bevel('brick',c.x,beamY0/2,c.z,0.46,beamY0,0.46,$imports.BRICK,1.02,0.03);
     K.bevel('stone',c.x,0.16,c.z,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
-    K.bevel('stone',c.x,g0-0.12,c.z,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
+    K.bevel('stone',c.x,beamY0-0.06,c.z,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
   });
-  if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',px,g0+0.14,zs+dep/2,sw+0.4,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
-  K.box('concrete',px,g0-0.30,zs+dep/2,sw+0.2,0.26,dep+0.3,$imports.BRICK_D,0.96);
+  var cutsC=L.towers.map(function(b){ return [b.x-b.half,b.x+b.half]; }).sort(function(a,b){return a[0]-b[0];}), cx0=L.x0, si;
+  for(si=0;si<=cutsC.length;si++){
+    var cx1=si<cutsC.length?cutsC[si][0]:L.x0+sw;
+    if(cx1-cx0>0.05){
+      var cm=(cx0+cx1)/2, cl=cx1-cx0;
+      /* 从楼板外沿的白边外面起（白边厚 4 厘米） */
+      if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',cm,g0+0.14,zs+0.04+(dep+0.21)/2,cl,0.30,dep+0.21,$imports.WHITEBAND,1.02,0.04);
+      K.box('concrete',cm,(beamY0+g0-0.01)/2,zs+0.04+(dep+0.11)/2,cl,g0-0.01-beamY0,dep+0.11,$imports.BRICK_D,0.96);
+    }
+    if(si<cutsC.length) cx0=cutsC[si][1];
+  }
   /* 一楼南窗：避开楼梯塔、电梯井和正门 */
   var cuts=L.towers.map(function(b){ return [b.x-b.half-0.6,b.x+b.half+0.6]; }).concat([[px-3.2,px+3.2]]).sort(function(a,b){return a[0]-b[0];});
   var from=ge0+0.6, ci;
@@ -431,7 +445,7 @@ function bldTeach(K,grp,o,px,pz,sw,sd){
   /* 北、东、西三面每层的窗，每层腰线 */
   for(k=0;k<5;k++){
     var fy=k*rise+1.75;
-    if(k>0) bandAround(K,px,pz,sw,sd,k*rise-0.09,0.18,0.06);
+    if(k>0) bandAround(K,px,pz,sw,sd,k*rise-0.09,0.18,0.06,null,['s']);   /* 南面是外廊，楼板外沿的白边就是腰线 */
     facadeWindows(K,'n',px,pz,sw,sd,px-sw/2+0.8,px+sw/2-0.8,fy,1.8,1.25,3.2,k);
     facadeWindows(K,'e',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,fy,1.6,1.25,3.4,k+10);
     facadeWindows(K,'w',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,fy,1.6,1.25,3.4,k+20);
