@@ -188,11 +188,32 @@ function paintMenuSave(){
 }
 
 function migrateSchoolLayout(d){
-  if((d.layoutVersion||0)>=$imports.ClassroomLayout.version)return;
-  for(var f=1;f<=5;f++)$imports.CLS_DOOR.forEach(function(c,i){
-    var R=$imports.INTERIORS['teach'+f],old=R.id+':'+c+':15',other=R.id+':'+(c+1)+':15';
-    if($imports.OPENDOORS[old]||$imports.OPENDOORS[other])$imports.ClassroomLayout.doors(i).forEach(function(p){$imports.OPENDOORS[(0,$imports.doorKeyAt)(R,p[0],p[1])]=1;});
-  });
+  var L=$imports.ClassroomLayout;
+  if((d.layoutVersion||0)>=L.version)return;
+  /* 教室门：走廊那面墙（第 rows[1]+1 行）上记着开着、但现在已经不是门的格子（布局 1 的双开门、布局 2–3 的单门），
+     换成最近的那扇新门开着 */
+  var wallRow=L.rows[1]+1, doorCells=[];
+  for(var di=0;di<L.spans.length;di++)L.doors(di).forEach(function(p){doorCells.push(p);});
+  for(var f=1;f<=5;f++){
+    var TR=$imports.INTERIORS['teach'+f];
+    Object.keys($imports.OPENDOORS).forEach(function(k){
+      var m=/^teach[1-5]:(\d+):(\d+)$/.exec(k);
+      if(!m||k.indexOf(TR.id+':')!==0||+m[2]!==wallRow)return;
+      var col=+m[1];
+      if(TR.grid[wallRow]&&TR.grid[wallRow][col]==='=')return;
+      delete $imports.OPENDOORS[k];
+      var best=null;
+      doorCells.forEach(function(p){ if(!best||Math.abs(p[0]-col)<Math.abs(best[0]-col))best=p; });
+      if(best&&Math.abs(best[0]-col)<=6)$imports.OPENDOORS[(0,$imports.doorKeyAt)(TR,best[0],best[1])]=1;
+    });
+  }
+  /* 旧档坐在旧本人座位上的：坐到新教室里的本人座位 */
+  var own=L.ownSeat;
+  if(d.seated&&d.seat&&L.legacyOwnSeats.indexOf(d.seat.seatId)>=0&&$imports.S.mode==='in'&&$imports.S.room===own.room&&!$imports.HIDE.on){
+    var OR=$imports.INTERIORS[own.room],a=L.anchor(OR,own);
+    $imports.S.x=a.x;$imports.S.y=a.y;$imports.S.seated=true;$imports.S.seat=L.seat(own.room,own.col,own.row);
+    saveReport('layout','旧本人座位已换成新教室里的本人座位');
+  }
   var room=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room];
   if(room&&!room.stairwell&&!$imports.S.seated&&!$imports.HIDE.on){
     $imports.SpaceLayout.ensureRoom(room);

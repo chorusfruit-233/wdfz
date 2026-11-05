@@ -90,8 +90,8 @@ class SchoolRebuildTest(BrowserCase):
     def test_two_doors_independent_and_aimed_interaction(self):
         p=self.game()
         v=p.evaluate("""()=>{
-          let count=0;for(let f=1;f<=5;f++){let R=INTERIORS['teach'+f];for(let i=0;i<6;i++)for(let d of ClassroomLayout.doors(i))if(R.grid[d[1]][d[0]]==='=')count++;}
-          let R=INTERIORS.teach1,doors=ClassroomLayout.doors(5),front=doors[0],back=doors[1];
+          let count=0;for(let f=1;f<=5;f++){let R=INTERIORS['teach'+f];for(let i=0;i<ClassroomLayout.spans.length;i++)for(let d of ClassroomLayout.doors(i))if(R.grid[d[1]][d[0]]==='=')count++;}
+          let R=INTERIORS.teach1,doors=ClassroomLayout.doors(ClassroomLayout.ownSeat.classId),front=doors[0],back=doors[1];
           doEnterRoom('teach1',{x:R.ox+(front[0]+.5)*9,y:R.oy+17*9,ang:-Math.PI/2});tryInteract();
           const result={count,opened:!!OPENDOORS[doorKeyAt(R,...front)],other:!!OPENDOORS[doorKeyAt(R,...back)],hint:interactHint(),seated:S.seated};
           OPENDOORS[doorKeyAt(R,...back)]=1;
@@ -100,7 +100,7 @@ class SchoolRebuildTest(BrowserCase):
           result.frontBlocked=Collision.depth(f.x,f.y,PRAD)>0;result.backClear=Collision.depth(b.x,b.y,PRAD)<1e-7;
           return result;
         }""")
-        self.assertEqual(v['count'],60)
+        self.assertEqual(v['count'],40)                      # 每层四间、每间前后两扇
         self.assertTrue(v['opened'])
         self.assertFalse(v['other'])
         self.assertFalse(v['seated'])
@@ -137,17 +137,29 @@ class SchoolRebuildTest(BrowserCase):
 
     def test_old_layout_moves_overlap_and_splits_door_without_extending_leave(self):
         p=self.game()
+        # 布局 4 以前的档：站的地方（旧本人座位的椅子，现在是教室北边填实的地方）挪到附近空地；
+        # 布局 1 的双开门（第 48 列）、布局 3 的单门（第 50 列）记着开着，换成最近的新门开着；假条不延长
         v=p.evaluate("""()=>{
           const R=INTERIORS.teach1;doEnterRoom('teach1');S.seated=false;
-          S.x=R.ox+(ClassroomLayout.podium(5)[0]+.5)*R.tw;S.y=R.oy+7.5*R.th;
-          RT.leaveUntil=gameClock()+73;OPENDOORS['teach1:'+CLS_DOOR[5]+':15']=1;
+          S.x=R.ox+48.8*R.tw;S.y=R.oy+6.39*R.th;
+          RT.leaveUntil=gameClock()+73;OPENDOORS['teach1:'+CLS_DOOR[5]+':15']=1;OPENDOORS['teach2:50:15']=1;
           saveGame();const d=loadGame(),expiry=d.rt.leaveUntil;delete d.layoutVersion;
           d.snackT=999;d.talent='stomach';freshState('hard');running=false;applySave(d);
           return {safe:Collision.depth(S.x,S.y,PRAD)<1e-7,expiry:RT.leaveUntil===expiry,
-            doors:ClassroomLayout.doors(5).every(q=>OPENDOORS[doorKeyAt(INTERIORS.teach1,...q)]),
+            inClass:ClassroomLayout.classAt(Math.floor((S.x-R.ox)/R.tw),Math.floor((S.y-R.oy)/R.th))===ClassroomLayout.ownSeat.classId,
+            doors:!!OPENDOORS['teach1:46:15']&&!OPENDOORS['teach1:48:15']&&!OPENDOORS['teach2:50:15']&&!!OPENDOORS['teach2:46:15'],
             snack:S.snackT,talent:S.talent,seated:S.seated};
         }""")
-        self.assertEqual(v,dict(safe=True,expiry=True,doors=True,snack=30,talent='none',seated=False))
+        self.assertEqual(v,dict(safe=True,expiry=True,inClass=True,doors=True,snack=30,talent='none',seated=False))
+        # 坐在旧本人座位（teach1:48:6）上存的档：读进来坐到新本人座位上
+        v=p.evaluate("""()=>{
+          const R=INTERIORS.teach1;doEnterRoom('teach1');
+          S.x=R.ox+48.8*R.tw;S.y=R.oy+6.39*R.th;S.seated=true;S.seat={room:'teach1',seatId:'teach1:48:6',col:48,row:6,facing:Math.PI};
+          saveGame();const d=loadGame();delete d.layoutVersion;freshState('hard');running=false;applySave(d);
+          const a=ClassroomLayout.anchor(R,ClassroomLayout.ownSeat);
+          return {seated:S.seated,seat:S.seat&&S.seat.seatId,onChair:Math.hypot(S.x-a.x,S.y-a.y)<1e-6,mine:atMySeat()};
+        }""")
+        self.assertEqual(v,dict(seated=True,seat='teach1:48:11',onChair=True,mine=True))
 
     def test_stair_rail_and_floor_slabs_block_shortcuts(self):
         p=self.game()

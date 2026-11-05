@@ -52,6 +52,8 @@ var FURN_SOLID={'d':0.78,'T':0.86,'t':0.76,'k':0.82,'f':0.78,'b':0.34,
 function solidAtInterior(R,wx,wy){
   if(R.stairwell)return $imports.StairWorld.depth(R.id,wx,wy,0,$imports.S.floorY)>0;
   var t=tileAt(R,wx,wy);
+  /* 楼层电梯门后那节轿厢在房间网格外面：不按「网格外是墙」算，按轿壁、门框和门的开度算 */
+  if(t==='#'&&R.annexAt&&(wx<R.ox||wy<R.oy||wx>=R.ox+R.w||wy>=R.oy+R.h)&&R.annexAt(wx,wy))t='.';
   if(t==='='){
     if($imports.Classmates.blocked(R.id,wx,wy)) return true;   /* 他们堵在门口 */
     return !(0,$imports.doorIsOpen)(R,wx,wy);
@@ -94,7 +96,7 @@ function solidAtOutdoor(wx,wy){
   if(mx<$imports.BOUND.x0+4||my<$imports.BOUND.y0+4||mx>$imports.BOUND.x1-4||my>$imports.BOUND.y1-4) return true;
   for(i=0;i<$imports.OBJ.length;i++){
     var o=$imports.OBJ[i];
-    if(o.k!=='roof') continue;
+    if(o.k!=='roof'||o.open) continue;                       /* 开敞的棚子（车棚）按 OUT_SOLID 里的钢架和车挡人 */
     if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) return true;
   }
   for(i=0;i<$imports.OUT_SOLID.length;i++){
@@ -188,15 +190,23 @@ function leaveSeat(){
   $imports.S.seated=false;$imports.S.seat=null;
   if(!R||canStand($imports.S.x,$imports.S.y))return true;
   var dirs=[facing+Math.PI/2,facing-Math.PI/2,facing+Math.PI];
-  for(var radius=6;radius<=10.5;radius+=.5)for(var k=0;k<dirs.length;k++){
-    var x=$imports.S.x+Math.cos(dirs[k])*radius,y=$imports.S.y+Math.sin(dirs[k])*radius;
-    if(!canStand(x,y))continue;
-    var clear=true;
+  function pathClear(x,y){
     for(var j=1;j<=8;j++){
       var px=$imports.S.x+(x-$imports.S.x)*j/8,py=$imports.S.y+(y-$imports.S.y)*j/8,ch=tileAt(R,px,py);
-      if(ch==='#'||ch==='S'||ch==='='&&!(0,$imports.doorIsOpen)(R,px,py)){clear=false;break;}
+      if(ch==='#'||ch==='S'||ch==='='&&!(0,$imports.doorIsOpen)(R,px,py))return false;
     }
-    if(clear){$imports.S.x=x;$imports.S.y=y;return true;}
+    return true;
+  }
+  for(var radius=6;radius<=10.5;radius+=.5)for(var k=0;k<dirs.length;k++){
+    var x=$imports.S.x+Math.cos(dirs[k])*radius,y=$imports.S.y+Math.sin(dirs[k])*radius;
+    if(!canStand(x,y)||!pathClear(x,y))continue;
+    /* 刚好站得下的那一点贴着桌沿，一迈步就卡在桌角上：再往过道里让一点（最多 3 个单位，一路都站得下才让） */
+    for(var extra=.5;extra<=3;extra+=.5){
+      var x2=$imports.S.x+Math.cos(dirs[k])*(radius+extra),y2=$imports.S.y+Math.sin(dirs[k])*(radius+extra);
+      if(!canStand(x2,y2)||!pathClear(x2,y2))break;
+      x=x2;y=y2;
+    }
+    $imports.S.x=x;$imports.S.y=y;return true;
   }
   return true;
 }

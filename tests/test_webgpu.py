@@ -67,6 +67,44 @@ class NativeWebGPUTest(BrowserCase):
     # Uses actual GPUAdapter, GPUDevice, WGSL pipelines and texture readback, not a renderer mock.
     extra_browser_args=['--enable-unsafe-webgpu','--use-vulkan=swiftshader','--enable-features=Vulkan']
 
+    def test_broadcast_panel_crowd_and_cinematics_remain_native(self):
+        page=self.gpu(touch=True)
+        for quality in (0,3,4):
+            with self.subTest(quality=quality):
+                self.set_quality(page,quality)
+                page.evaluate("""S.day=2;S.tsec=1100;doEnterRoom('admin2');const R=INTERIORS.admin2;
+                  S.x=R.ox+5.5*R.tw;S.y=R.oy+4.9*R.th;S.seated=false;S.pitch=0;
+                  Broadcast.book();['notice1','notice2','notice3','notice4','broadcastfuse'].forEach(addItem);Broadcast.install();
+                  BroadcastUI.open();BroadcastUI.paint();render(.01);""")
+                self.assertTrue(page.locator('#radio-read').is_visible())
+                page.evaluate("BroadcastUI.close();CUT.enabled=true;playCut('dismissal',()=>{S.screen='play';});")
+                for dt in (1,4,4,4,4):
+                    page.evaluate('dt=>{cutTick(dt);render(0)}',dt)
+                    self.check_gpu(page)
+                page.evaluate("cutSkip();deathFX('misread',{preview:true});anfxUpdate(2);render(0)")
+                self.check_gpu(page)
+                page.evaluate("anfxClear();S.screen='play';CUT.enabled=false;Broadcast.hold(true);for(let i=0;i<4;i++)Broadcast.tick(20.1);doExitRoom();render(0)")
+                self.check_gpu(page)
+                self.assert_js(page,"BroadcastView.crowd()&&BroadcastView.crowd().children.length===16&&GameModules.errors().length===0")
+                page.evaluate("freshState('hard');S.screen='play';S.intro=0;PRO.on=false;running=false")
+
+    def test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers(self):
+        page=self.gpu(touch=True)
+        page.evaluate("S.day=2;S.tsec=700;SEARCH.on=true;Talent.begin('tech','selected');GameRandom.bind(()=>.9)")
+        for quality in (0,3,4):
+            with self.subTest(quality=quality):
+                self.set_quality(page,quality)
+                page.evaluate("Elevator.board('lab',1);const s=Elevator.state('lab');s.door=1;s.dir=0;s.hold=4;S.pitch=.17;render(0)")
+                self.assertTrue(page.locator('#lift-close').is_visible())
+                page.locator('#lift-close').tap()
+                self.assert_js(page,"Elevator.state('lab').dir===-1&&!UI.chooseOpen")
+                page.evaluate("Elevator.press(5);Elevator.tick(1);render(0)")
+                self.assert_js(page,"S.room==='lift_lab'&&S.pitch===.17")
+                self.check_gpu(page)
+                page.evaluate('Elevator.tick(6);Elevator.tick(.9);render(0)')
+                self.assert_js(page,"S.room==='lab5'&&Elevator.inCabin()&&Collision.depth(S.x,S.y,PRAD)<1e-7&&S.pitch===.17")
+                self.check_gpu(page)
+
     def gpu(self,touch=False):
         page=self.page(touch=touch,renderer='auto')
         state=page.evaluate('Engine.status()')
@@ -219,4 +257,32 @@ class NativeWebGPUTest(BrowserCase):
         }""")
         self.assertGreater(result['variance'],0.05,result)
         self.assertTrue(all(abs(c)<.25 for c in result['correlations']),result)
+        self.check_gpu(page)
+
+    def test_low_san_view_closes_in_drains_and_warps_on_the_native_pipeline(self):
+        # R3 第二轮：WGSL 那条后期和 WebGL 同一套 SAN 视觉（视野变小、褪色、扭曲、黑屏），不只是能编译
+        page=self.gpu()
+        result=page.evaluate("""async()=>{
+          const r=GLR.renderer,u=GLR.postMat.uniforms,W=96,H=54,out=ThreeBackend.target(W,H,{depthBuffer:false});
+          async function post(){r.setRenderTarget(out);r.render(GLR.postScene,GLR.postCam);await r.backend.device.queue.onSubmittedWorkDone();
+            const b=await r.readRenderTargetPixelsAsync(out,0,0,W,H);r.setRenderTarget(null);return Array.from(b);}
+          function stats(b){let inner=0,ni=0,outer=0,no=0,sat=0;
+            for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4,l=.2126*b[i]+.7152*b[i+1]+.0722*b[i+2],mx=Math.max(b[i],b[i+1],b[i+2]),mn=Math.min(b[i],b[i+1],b[i+2]);
+              sat+=mx>10?(mx-mn)/mx:0;const dx=Math.abs((x+.5)/W-.5),dy=Math.abs((y+.5)/H-.5);
+              if(dx<.2&&dy<.2){inner+=l;ni++;}else if(Math.max(dx,dy)>.38){outer+=l;no++;}}
+            return {inner:inner/ni,ratio:(outer/no)/Math.max(1e-6,inner/ni),sat:sat/(W*H)};}
+          async function shot(san,dist){SET.distortion=dist;S.san=san;Sensory.reset();Sensory.frame(1/60);render(0);u.uGrain.value=0;return post();}
+          const hi=stats(await shot(100,0)),lo=stats(await shot(8,0));
+          await shot(8,2);['uTunnel','uBlur','uFocus','uDrain','uHalo','uGhost','uPulse','uBreath'].forEach(k=>u[k].value=0);
+          u.uTime.value=1;const a=await post();u.uTime.value=3.7;const b=await post();
+          let moved=0;for(let i=0;i<a.length;i+=4)moved+=Math.abs(a[i]-b[i]);moved/=a.length/4;
+          u.uBlack.value=1;const dark=stats(await post());u.uBlack.value=0;
+          out.dispose();return {hi,lo,moved,dark};
+        }""")
+        hi,lo=result['hi'],result['lo']
+        self.assertGreater(lo['inner'],2,result)                       # 中间还看得见
+        self.assertLess(lo['ratio'],hi['ratio']*.6,result)             # 外圈比中心暗得多：视野变小
+        self.assertLess(lo['sat'],hi['sat'],result)                    # 褪色
+        self.assertGreater(result['moved'],1,result)                   # 扭曲：同一帧两个时刻不一样
+        self.assertLess(result['dark']['inner'],1.5,result)            # 黑屏
         self.check_gpu(page)

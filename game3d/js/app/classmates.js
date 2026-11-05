@@ -7,7 +7,7 @@ var Classmates={
   layout:function(room){
     if(!room)return {seats:[],occupied:{}};
     var seed=typeof $imports.Mechanics!=='undefined'?$imports.Mechanics.runSeed:'',key=room.id+':'+seed,cached=Classmates.cache[key];
-    if(!cached||cached.grid!==room.grid){cached=$imports.ClassmateRules.layout(room,seed);cached.grid=room.grid;Classmates.cache[key]=cached;}
+    if(!cached||cached.grid!==room.grid){cached=$imports.ClassmateRules.layout(room,seed,$imports.ClassroomLayout);cached.grid=room.grid;Classmates.cache[key]=cached;}
     return cached;
   },
   active:function(){return $imports.S.mode==='in'&&$imports.ClassmateRules.eligible($imports.INTERIORS[$imports.S.room]);},

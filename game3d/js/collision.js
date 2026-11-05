@@ -15,7 +15,8 @@ var Collision={
     if(room||$imports.S.mode==='in'){
       var R=room||$imports.INTERIORS[$imports.S.room];if(!R)return Infinity;
       if(R.stairwell)return $imports.StairWorld.depth(R.id,x,y,r,$imports.S.floorY);
-      if(x-r<R.ox||y-r<R.oy||x+r>R.ox+R.w||y+r>R.oy+R.h)return Infinity;
+      /* 房间边界外一律算墙；楼层电梯门后那节轿厢（R.annexAt，电梯模块给）例外：门开着时可以走进去 */
+      if((x-r<R.ox||y-r<R.oy||x+r>R.ox+R.w||y+r>R.oy+R.h)&&!(R.annexAt&&R.annexAt(x,y)))return Infinity;
       var c0=Math.max(0,Math.floor((x-r-R.ox)/R.tw)),c1=Math.min(R.cols-1,Math.floor((x+r-R.ox)/R.tw));
       var r0=Math.max(0,Math.floor((y-r-R.oy)/R.th)),r1=Math.min(R.rows-1,Math.floor((y+r-R.oy)/R.th));
       for(var rr=r0;rr<=r1;rr++)for(var cc=c0;cc<=c1;cc++){
@@ -42,7 +43,7 @@ var Collision={
     }else{
       var bx0=($imports.BOUND.x0+4)*$imports.SC,by0=($imports.BOUND.y0+4)*$imports.SC,bx1=($imports.BOUND.x1-4)*$imports.SC,by1=($imports.BOUND.y1-4)*$imports.SC;
       if(x-r<bx0||y-r<by0||x+r>bx1||y+r>by1)return Infinity;
-      $imports.OBJ.forEach(function(o){if(o.k==='roof')rect(o.x*$imports.SC,o.y*$imports.SC,(o.x+o.w)*$imports.SC,(o.y+o.h)*$imports.SC);});
+      $imports.OBJ.forEach(function(o){if(o.k==='roof'&&!o.open)rect(o.x*$imports.SC,o.y*$imports.SC,(o.x+o.w)*$imports.SC,(o.y+o.h)*$imports.SC);});
       $imports.OUT_SOLID.forEach(function(b){rect(b.x0*$imports.SC,b.y0*$imports.SC,b.x1*$imports.SC,b.y1*$imports.SC);});
     }
     return total;

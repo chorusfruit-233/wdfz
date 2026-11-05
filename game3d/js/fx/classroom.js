@@ -73,10 +73,13 @@ function anwSpawn(){
     var nnx=-spot.nx, nnz=-spot.nz;
     var wx=R.ox+(spot.c+0.5)*R.tw+nnx*R.tw*0.5;
     var wy=R.oy+(spot.r+0.5)*R.th+nnz*R.th*0.5;
+    /* 写在教室黑板上（西墙、板面范围内）：要浮在板面前面（板面离墙 8 厘米），不然被黑板挡住；整行字不超出板面 */
+    var bc=$imports.ClassroomLayout.mid, ci=$imports.ClassroomLayout.classAt(spot.c+1,spot.r), bz=Math.abs(spot.r+0.5-bc);
+    var teachBoard=(R.host==='teach'&&spot.nx===-1&&ci>=0&&spot.c+1===$imports.ClassroomLayout.spans[ci][0]&&bz<2.3);
+    if(teachBoard) wy=R.oy+Math.max(bc-1.6,Math.min(bc+1.6,spot.r+0.5))*R.th;
     var sp=(0,$imports.worldToScene)(wx,wy,R);
-    var teachBoard=(R.host==='teach'&&spot.r===0);
-    var deep=teachBoard?0.20:0.035;
-    var baseY=teachBoard?1.52:1.42;
+    var deep=teachBoard?0.095:0.035;
+    var baseY=teachBoard?1.55:1.42;
     var ux=0,uz=0;
     if(nnx!==0){ ux=0; uz=-nnx; } else { ux=nnz; uz=0; }
     plane={ox:sp.x+nnx*deep, oy:baseY, oz:sp.z+nnz*deep,
@@ -140,26 +143,27 @@ function ncBuild(R){
   ncClear();
   if(!R||R.stairwell||R.host!=='teach'||R.floor<1||R.floor>5) return;
   NC.room=R.id;
-  NC.matN=new $imports.THREE.MeshBasicMaterial({color:0x39454f,fog:true});
+  NC.matN=new $imports.THREE.MeshLambertMaterial({color:0x5d6873,fog:true});   /* 正常世界的样子（只在开场变成影子之前）：受光、有明暗，不是平涂的剪影 */
   NC.matS=new $imports.THREE.MeshBasicMaterial({color:0x080b0d,fog:true});
   var shadow=(NC.done||(0,$imports.proSeen)());
   NC.normal=!shadow;
   NC.grp=new $imports.THREE.Group();
   $imports.GLR.scene.add(NC.grp);
+  /* 同学坐在椅子上（位置和坐下时人在的地方一样，见 ClassroomLayout.chairAt），面朝西边的黑板 */
   $imports.Classmates.layout(R).seats.forEach(function(seat){
-    var wx=R.ox+(seat.c+.82)*R.tw,wy=R.oy+(seat.r+.5)*R.th,sp=(0,$imports.worldToScene)(wx,wy,R);
+    var ch=$imports.ClassroomLayout.chairAt(seat.c,seat.r),sp=(0,$imports.worldToScene)(R.ox+(ch.x+.02)*R.tw,R.oy+ch.y*R.th,R);
     var fig=ncSeatFigure(NC.normal?NC.matN:NC.matS,sp.x,0,sp.z,$imports.PI/2);
     NC.grp.add(fig);NC.list.push(fig);
   });
-  var tc=null,tr=null,cc,rr;
-  for(rr=1;rr<R.rows&&!tc;rr++) for(cc=1;cc<R.cols&&!tc;cc++) if(R.grid[rr][cc]==='T'){ tc=cc; tr=rr; }
-  if(tc!==null){
-    var tw=(0,$imports.worldToScene)(R.ox+(tc+1.1)*R.tw, R.oy+(tr+1.6)*R.th, R);
+  /* 自己班的老师：站在讲台和黑板之间，面朝全班（人形正面朝 +z，转 90° 朝 +x） */
+  NC.teacher=null;
+  if(R.id===$imports.ClassroomLayout.ownSeat.room){
+    var ts=$imports.ClassroomLayout.teacherSpot($imports.ClassroomLayout.ownSeat.classId),tw=(0,$imports.worldToScene)(R.ox+ts.x*R.tw,R.oy+ts.y*R.th,R);
     var tg=new $imports.THREE.Group();
-    tg.add((0,$imports.figMesh)('teacher',NC.matN,1));                         /* 讲台边的老师，面朝全班（+z） */
+    tg.add((0,$imports.figMesh)('teacher',NC.normal?NC.matN:NC.matS,1));
     tg.position.set(tw.x,0,tw.z);
     tg.rotation.y=$imports.PI/2;
-    tg.userData={hx:tw.x,hz:tw.z,ty:$imports.PI/2,standing:1};
+    tg.userData={hx:tw.x,hz:tw.z,ty:$imports.PI/2,standing:1,teacher:1};
     NC.grp.add(tg); NC.list.push(tg);
     NC.teacher=tg;
   }
@@ -203,6 +207,7 @@ function ncUpdate(dt){
   for(i=0;i<NC.list.length;i++){
     f=NC.list[i];
     var ud=f.userData||{};
+    if(GameModules.first('classmateScene',f,dt))continue;
     if(staring&&v<70){                                   /* 全体回头：一起转过来，快 */
       var wantS=Math.atan2(f.position.x-p.x,f.position.z-p.z);   /* 模型的脸朝 -z */
       var curS=f.rotation.y||0;

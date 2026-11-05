@@ -14,7 +14,7 @@ var PatrolWorld=(function(){
     Object.assign($imports.PAT,{version:1,state:'walk',room:'admin1',x:0,y:0,fy:0,behavior:'patrol',permanent:false,
       routeVersion:3,routeIndex:1,rejoin:false,cycle:0,lockerMemory:{},memoryVisit:null,transition:null,lock:0,locked:false,cited:false,lost:0,lastSeen:null,search:0,
       queue:[],investigation:null,wirelessSignal:null,regionSeq:0,lastRegion:null,respawn:0,safety:3.6,warning:0,near:false,
-      blinkCD:TRAVEL_CD,afterBlink:.22,step:0,stuck:0,diagnostic:null,mazeGateway:null});
+      blinkCD:TRAVEL_CD,afterBlink:.22,step:0,stuck:0,diagnostic:null,mazeGateway:null,doorRush:null});
     framePath=null;lastVisualRoom=null;approachCache=null;
     if($imports.INTERIORS.admin1&&typeof $imports.PATROL_ROUTE!=='undefined')put(spawn());
   }
@@ -24,15 +24,26 @@ var PatrolWorld=(function(){
   function approach(){
     if($imports.CarChase.active())return null;
     var a=playerPoint(),tr=$imports.PAT.transition,b=tr?tr.to:position();
-    var key=[a.scene,Math.round(a.x/4),Math.round(a.y/4),Math.round(a.fy*10),b.scene,Math.round(b.x/4),Math.round(b.y/4),Math.round((b.fy||0)*10),tr?Math.ceil(tr.remaining*2):0].join(':');
+    var key=[a.scene,Math.round(a.x/4),Math.round(a.y/4),Math.round(a.fy*10),b.scene,Math.round(b.x/4),Math.round(b.y/4),Math.round((b.fy||0)*10),tr?Math.ceil(tr.remaining*2):0,hearRange()].join(':');
     if(approachCache&&approachCache.key===key)return approachCache.value;
-    var m=$imports.PatrolNav.approach(a,b,220);if(m&&tr)m.distance+=tr.remaining*$imports.PAT_SPEED;
+    var m=$imports.PatrolNav.approach(a,b,220*hearRange());if(m&&tr)m.distance+=tr.remaining*$imports.PAT_SPEED;
     approachCache={key:key,value:m};return m;
+  }
+  /* 顺风耳：脚步在更远处就能听到（200 → 300，约 22 → 33 米），分得出楼上楼下 */
+  function hearRange(){ try{ return $imports.Talent.modifier('hear.range'); }catch(e){ return 1; } }
+  function hearDistance(){ return 200*hearRange(); }
+  function floorDir(){
+    try{
+      if(!$imports.Talent.capability('ears').ok) return null;
+      var p=position(), A=$imports.INTERIORS[p.scene], B=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null;
+      if(!A||!B||!(A.floor>=1)||!(B.floor>=1)||A.floor===B.floor) return null;
+      return A.floor>B.floor?'up':'down';
+    }catch(e){ return null; }
   }
   function region(){
     if($imports.S.mode!=='in')return null;var R=$imports.INTERIORS[$imports.S.room];if(!R)return null;
     var c=($imports.S.x-R.ox)/R.tw,r=($imports.S.y-R.oy)/R.th;
-    var zone=$imports.PATROL_ZONES.find(function(z){return z.scene===$imports.S.room&&c>=z.c0&&c<z.c1&&r>=z.r0&&r<z.r1;});
+    var zone=$imports.PATROL_ZONES.find(function(z){return z.scene===$imports.S.room&&c>=z.c0&&c<z.c1&&r>=z.r0&&r<z.r1&&(!z.when||GameModules.first('patrolZoneActive',z)===true);});
     return zone?zone.id:null;
   }
   function zoneById(id){return $imports.PATROL_ZONES.find(function(z){return z.id===id;});}
@@ -43,8 +54,9 @@ var PatrolWorld=(function(){
     var R=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room];return !!(R&&['teach','admin','lab'].includes(R.host)&&R.floor>=1&&R.floor<=5&&(0,$imports.needWhere)($imports.S.tsec)==='教室');
   }
   function exempt(){return ($imports.S.seated&&(0,$imports.atMySeat)())||(0,$imports.onLeave)()||($imports.SchoolDay.excused()&&!(0,$imports.isNight)()&&!region());}
-  function hunting(){return $imports.PAT.permanent||!!$imports.PAT.wirelessSignal||eligible()&&!exempt();}
-  function sees(){return $imports.PAT.state==='walk'&&same()&&!$imports.HIDE.on&&distance()<=$imports.PAT_SEE&&$imports.PatrolNav.los(position(),playerPoint());}
+  function camouflaged(){return GameModules.first('patrolCamouflage')===true;}
+  function hunting(){return !camouflaged()&&($imports.PAT.permanent||!!$imports.PAT.wirelessSignal||eligible()&&!exempt());}
+  function sees(){return !camouflaged()&&$imports.PAT.state==='walk'&&same()&&!$imports.HIDE.on&&distance()<=$imports.PAT_SEE&&$imports.PatrolNav.los(position(),playerPoint());}
   function localQuiet(){
     var st=$imports.RT.inspection,c=st&&st.current;
     return !!(same()&&distance()<190&&((c&&c.room===$imports.PAT.room)||(st&&st.calm>0&&st.calmRoom===$imports.PAT.room)));
@@ -56,17 +68,19 @@ var PatrolWorld=(function(){
     var f=(0,$imports.lockerFront)($imports.INTERIORS[$imports.S.room],$imports.HIDE.c,$imports.HIDE.r);return $imports.PatrolNav.point($imports.S.room,f.x,f.y,$imports.S.floorY);
   }
   function threat(){
+    if(camouflaged())return false;
     if($imports.PAT.state!=='walk'||!same()||$imports.PAT.safety>0||localQuiet()||distance()>$imports.PAT_SEE)return false;
     var cabinet=lockerTarget();
     if(cabinet)return $imports.PatrolNav.los(position(),cabinet)&&($imports.PAT.locked||$imports.PAT.permanent);
     return !$imports.HIDE.on&&($imports.PAT.locked||$imports.PAT.permanent)&&$imports.PatrolNav.los(position(),playerPoint());
   }
   function hideThreat(){return $imports.HIDE.on&&same()&&hunting()&&$imports.PAT.safety<=0&&!localQuiet()&&$imports.PAT.state==='walk'&&distance()<=$imports.PAT_SEE&&$imports.PatrolNav.los(position(),$imports.PatrolNav.point($imports.S.room,(0,$imports.lockerFront)($imports.INTERIORS[$imports.S.room],$imports.HIDE.c,$imports.HIDE.r).x,(0,$imports.lockerFront)($imports.INTERIORS[$imports.S.room],$imports.HIDE.c,$imports.HIDE.r).y,$imports.S.floorY));}
-  function clearChase(){var active=$imports.PAT.locked||$imports.PAT.lastSeen||$imports.PAT.search>0||$imports.PAT.cited;$imports.PAT.cited=false;$imports.PAT.lock=0;$imports.PAT.locked=false;$imports.PAT.lost=0;$imports.PAT.lastSeen=null;$imports.PAT.search=0;
+  function clearChase(){var active=$imports.PAT.locked||$imports.PAT.lastSeen||$imports.PAT.search>0||$imports.PAT.cited;$imports.PAT.doorRush=null;$imports.PAT.cited=false;$imports.PAT.lock=0;$imports.PAT.locked=false;$imports.PAT.lost=0;$imports.PAT.lastSeen=null;$imports.PAT.search=0;
     if(active){$imports.PAT.rejoin=true;$imports.PAT.behavior=$imports.PAT.investigation?'investigate':'return';framePath=null;}}
   function rescued(){$imports.HIDE.seen=false;$imports.PAT.permanent=false;$imports.PAT.wirelessSignal=null;clearChase();$imports.PAT.rejoin=true;$imports.PAT.safety=3.6;$imports.VisualState.patrolRed=0;$imports.Mechanics.dirty=true;}
   function registeredAbsence(id){$imports.PAT.permanent=true;$imports.PAT.absence=id;$imports.PAT.behavior='chase';framePath=null;(0,$imports.toast)('外出登记后未归：持续追踪已生效，重新登记和假条不能解除。');(0,$imports.gameFact)('patrol',{what:'permanent'});}
   function banish(){
+    $imports.PAT.doorRush=null;
     (0,$imports.gameFact)('patrol',{what:'banish'});
     $imports.PAT.state='idle';$imports.PAT.respawn=30;$imports.PAT.rejoin=true;$imports.PAT.locked=false;$imports.PAT.lock=0;$imports.PAT.lost=0;$imports.PAT.lastSeen=null;$imports.PAT.search=0;$imports.PAT.cited=false;$imports.HIDE.seen=false;$imports.PAT.transition=null;$imports.PAT.warning=0;$imports.PAT.near=false;framePath=null;(0,$imports.patRemoveFig)();
     $imports.VisualState.patrolFlick=0;$imports.VisualState.patrolRed=0;
@@ -94,7 +108,7 @@ var PatrolWorld=(function(){
     framePath=null;$imports.Mechanics.dirty=true;
   }
   function target(){
-    if($imports.PAT.permanent){$imports.PAT.behavior='chase';return permanentTarget();}
+    if($imports.PAT.permanent&&!camouflaged()){$imports.PAT.behavior='chase';return permanentTarget();}
     if($imports.PAT.locked||$imports.PAT.search>0){$imports.PAT.behavior=$imports.PAT.locked?'chase':'search';return $imports.PAT.lastSeen;}
     /* 保留原始快照；导航只把落脚点挪到邻近可行走处，避免搜查卡在椅子等碰撞内。 */
     if($imports.PAT.wirelessSignal){var p=$imports.PAT.wirelessSignal.point;$imports.PAT.behavior='investigate';return p.scene==='bell1'||p.scene==='lift_dream'||$imports.StairWorld.config(p.scene)?p:$imports.PatrolNav.snap(p.scene,p)||p;}
@@ -174,6 +188,64 @@ var PatrolWorld=(function(){
     $imports.PAT.stuck=0;$imports.PAT.diagnostic=null;
     return $imports.PAT.room===goal.scene&&Math.hypot($imports.PAT.x-goal.x,$imports.PAT.y-goal.y,(($imports.PAT.fy||0)-(goal.fy||0))/$imports.U2M)<6;
   }
+  /* 挡门（计划《电梯直通、新天赋、新结局与恐怖氛围》1.3 节）：你在电梯门后的轿厢里、门没关上，它在同一层、从门前看得见门洞，
+     就用追击速度直奔门前。从开始走过来到碰到门至少留 2.2 秒；不够就是本来就追上了，按平常的抓捕算（不算挡门）。
+     门在它到之前合上，它被关在外面，在门口照常搜一会儿；门没合上它就到了，扒开门。它不进轿厢 */
+  var LIFT_RUSH_MIN=2.2,LIFT_REACH=7;
+  function liftFront(R){var w=$imports.Elevator.world(R,0.75,0);return $imports.PatrolNav.point(R.id,w.x,w.y);}
+  /* Resolve before the closed-door scene transfer; patrol ticks may run after departure. */
+  function elevatorClosed(host,floor){
+    var rush=$imports.PAT.doorRush,R=$imports.INTERIORS[host+floor];
+    if(!rush||rush.host!==host||rush.floor!==floor||$imports.PAT.room!==rush.scene||$imports.PAT.state!=='walk'||$imports.PAT.transition||!hunting()||$imports.PAT.safety>0||localQuiet())return false;
+    if($imports.Elevator.doorAmount(host,floor)>0)return false;
+    var fp=liftFront(R);$imports.PAT.doorRush=null;$imports.PAT.locked=false;$imports.PAT.lock=0;
+    $imports.PAT.search=3;$imports.PAT.lastSeen=fp;framePath=null;
+    (0,$imports.gameFact)('patrol',{what:'door'});(0,$imports.os)('〔门外〕脚步停在了门口。',3,$imports.OS_KEEP);
+    (0,$imports.autoSave)();return true;
+  }
+  function liftDoor(){
+    var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null,rush=$imports.PAT.doorRush;
+    var cabin=!!(R&&R.host!=='lift'&&$imports.Elevator.frame(R)&&$imports.Elevator.inCabin(R));
+    var open=cabin?$imports.Elevator.doorAmount(R.host,R.floor):0,fp=cabin?liftFront(R):null;
+    var atDoor=cabin&&$imports.PAT.room===R.id&&!$imports.PAT.transition&&Math.hypot($imports.PAT.x-fp.x,$imports.PAT.y-fp.y)<LIFT_REACH;
+    if(rush){
+      if(!cabin||R.id!==rush.scene||!same()||!hunting()||$imports.PAT.state!=='walk'||$imports.PAT.safety>0){$imports.PAT.doorRush=null;return false;}
+      if(open<=0){
+        elevatorClosed(R.host,R.floor);
+        return false;
+      }
+      $imports.PAT.locked=true;$imports.PAT.lost=0;$imports.PAT.lastSeen=fp;
+      if(atDoor&&$imports.PAT.warning<=0&&$imports.PAT.afterBlink<=0){(0,$imports.kill)('它比门快。','liftdoor','liftdoor');return true;}
+      return false;
+    }
+    if(!cabin||open<=0||$imports.PAT.state!=='walk'||$imports.PAT.transition||!same()||!hunting()||$imports.PAT.safety>0||localQuiet())return false;
+    /* 本来就追着你、到了门口：门开着就照平常抓 */
+    if($imports.PAT.locked&&atDoor&&$imports.PAT.warning<=0&&$imports.PAT.afterBlink<=0){(0,$imports.kill)('一只手按住了你的头顶。它在点名。','grip','patrol');return true;}
+    /* 「看着你进电梯」：它正盯着你（刚看见过、还在追），或者视线从门洞穿进轿厢看得见你（站在轿厢侧壁边上就看不见） */
+    var watching=$imports.PAT.locked&&$imports.PAT.lost<1;
+    if(!watching){
+      var loc=$imports.Elevator.local(R,$imports.PAT.x,$imports.PAT.y),me=$imports.Elevator.local(R,$imports.S.x,$imports.S.y);
+      if(!loc||!me||loc.a<0.6||Math.hypot($imports.PAT.x-$imports.S.x,$imports.PAT.y-$imports.S.y)>$imports.PAT_SEE)return false;
+      var through=[$imports.LIFT_GEO.landing,$imports.LIFT_GEO.car].every(function(a0){
+        if(me.a>=a0)return true;var t=(a0-loc.a)/(me.a-loc.a);return Math.abs(loc.b+t*(me.b-loc.b))<$imports.LIFT_GEO.half-0.05;});
+      if(!through||!$imports.PatrolNav.los(position(),fp))return false;
+    }
+    var path=$imports.PatrolNav.path(position(),fp),dist=path&&path.length?$imports.PatrolNav.length(path):Math.hypot($imports.PAT.x-fp.x,$imports.PAT.y-fp.y);
+    var eta=Math.max(0,dist-LIFT_REACH)/$imports.PAT_CHASE;
+    if(!$imports.PAT.locked){
+      if((0,$imports.hasItem)('seal')){(0,$imports.removeItem)('seal');banish();return false;}
+      $imports.PAT.locked=true;$imports.PAT.lock=1;$imports.PAT.behavior='chase';
+      if(!$imports.PAT.permanent&&!$imports.PAT.cited){$imports.PAT.cited=true;(0,$imports.addViolation)(8,'patrol');}
+      (0,$imports.gameFact)('patrol',{what:'locked',permanent:!!$imports.PAT.permanent});
+    }
+    $imports.PAT.lost=0;$imports.PAT.lastSeen=fp;framePath=null;
+    if(eta>=LIFT_RUSH_MIN){
+      $imports.PAT.doorRush={host:R.host,floor:R.floor,scene:R.id,x:fp.x,y:fp.y,eta:eta};
+      $imports.PAT.warning=Math.max($imports.PAT.warning||0,Math.min(3.6,eta));$imports.PAT.near=true;
+      (0,$imports.os)('〔门外 · 正在靠近〕脚步加快。',2.4,$imports.OS_KEEP);
+    }
+    return false;
+  }
   function step(dt){
     var newRegion=region();if(newRegion!==$imports.PAT.lastRegion){$imports.PAT.lastRegion=newRegion;if(newRegion)enqueue(newRegion);}
     $imports.PAT.safety=Math.max(0,$imports.PAT.safety-dt);$imports.PAT.afterBlink=Math.max(0,$imports.PAT.afterBlink-dt);
@@ -194,8 +266,9 @@ var PatrolWorld=(function(){
     }
     var d=distance(),visible=sees(),cabinet=lockerTarget(),knownCabinet=!!(cabinet&&$imports.PatrolNav.los(position(),cabinet));
     /* 到达检查现场才等待，远处的永久追踪实体仍继续走。 */
-    if(localQuiet()){$imports.PAT.lock=0;$imports.VisualState.patrolRed=0;return;}
+    if(localQuiet()){$imports.PAT.doorRush=null;$imports.PAT.lock=0;$imports.VisualState.patrolRed=0;return;}
     if(!hunting())clearChase();
+    if(liftDoor())return;
     var hostile=hunting()&&$imports.PAT.safety<=0;
     if(hostile&&(visible||knownCabinet)){
       $imports.PAT.lastSeen=knownCabinet?cabinet:playerPoint();$imports.PAT.lost=0;
@@ -210,7 +283,7 @@ var PatrolWorld=(function(){
     }else if(!$imports.PAT.locked)$imports.PAT.lock=Math.max(0,$imports.PAT.lock-dt);
     var goal=target();$imports.PAT.blinkCD=Math.max(0,$imports.PAT.blinkCD-dt);
     if($imports.PAT.safety<=0){
-      var chase=$imports.PAT.permanent||$imports.PAT.locked;
+      var chase=hunting()&&($imports.PAT.permanent||$imports.PAT.locked);
       var arrived=navigate(goal,(chase?$imports.PAT_CHASE:$imports.PAT_SPEED)*dt);
       if(arrived){
         if($imports.PAT.behavior==='patrol'||$imports.PAT.behavior==='return'){$imports.PAT.behavior='patrol';$imports.PAT.routeIndex++;if($imports.PAT.routeIndex>=routeData().nodes.length){$imports.PAT.routeIndex=1;$imports.PAT.cycle++;}framePath=null;}
@@ -228,19 +301,19 @@ var PatrolWorld=(function(){
     }
     if($imports.PAT.investigation&&$imports.PAT.investigation.remaining<=0){$imports.PAT.investigation=null;$imports.PAT.rejoin=true;framePath=null;}
     if($imports.PAT.memoryVisit&&$imports.PAT.memoryVisit.remaining<=0){$imports.PAT.memoryVisit=null;$imports.PAT.rejoin=true;framePath=null;}
-    if($imports.PAT.locked&&hostile&&$imports.PAT.afterBlink<=0&&distance()<$imports.PAT_CATCH&&(sees()||cabinet&&$imports.PatrolNav.los(position(),cabinet))&&$imports.PAT.warning<=0)
+    if(!$imports.PAT.doorRush&&$imports.PAT.locked&&hostile&&$imports.PAT.afterBlink<=0&&distance()<$imports.PAT_CATCH&&(sees()||cabinet&&$imports.PatrolNav.los(position(),cabinet))&&$imports.PAT.warning<=0)
       (0,$imports.kill)($imports.HIDE.on?'柜门被拉开了。它一直知道你在这里。':'一只手按住了你的头顶。它在点名。','grip','patrol');
   }
   function visuals(dt){
     if($imports.PAT.state==='idle'){var sp=spawn(),audible=sp.scene===(0,$imports.patRoomHere)()&&$imports.PAT.respawn<=3.6&&$imports.PatrolNav.length($imports.PatrolNav.path(playerPoint(),sp))<190;var rt=(3.6-$imports.PAT.respawn)%1.8;$imports.VisualState.patrolFlick=audible&&(rt<.15||rt>.3&&rt<.45||rt>.75&&rt<1.25)?.7:0;$imports.VisualState.patrolRed=0;return;}
-    var here=(0,$imports.patRoomHere)(),metric=approach(),near=metric&&metric.distance<200&&$imports.PAT.state==='walk';
+    var here=(0,$imports.patRoomHere)(),metric=approach(),near=metric&&metric.distance<hearDistance()&&$imports.PAT.state==='walk';
     if(lastVisualRoom!==here){lastVisualRoom=here;(0,$imports.patRemoveFig)();}
     if($imports.PAT.state==='walk'&&$imports.PAT.room===here&&!$imports.PAT.transition)(0,$imports.patEnsureFig)();
     if($imports.PAT.room!==here||$imports.PAT.state!=='walk'||$imports.PAT.transition)(0,$imports.patRemoveFig)();
     $imports.VisualState.patrolRed=threat()?1:0;
     var t=3.6-$imports.PAT.warning,p=t%1.8;
     $imports.VisualState.patrolFlick=near&&$imports.PAT.warning>0&&(p<.15||p>.3&&p<.45||p>.75&&p<1.25)?.7:0;
-    if(near){$imports.PAT.step-=dt;if($imports.PAT.step<=0){$imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;$imports.SFX.patStep(Math.sin(rel)*.9,Math.pow(1-metric.distance/200,1.4),Math.cos(rel)<-.2,$imports.PAT.locked,{m:metric.distance*$imports.U2M,muffled:!same()||!$imports.PatrolNav.los(position(),playerPoint())});}}
+    if(near){$imports.PAT.step-=dt;if($imports.PAT.step<=0){$imports.PAT.step=$imports.PAT.locked?.32:.7;var from=metric.direction,rel=Math.atan2(from.y-$imports.S.y,from.x-$imports.S.x)-$imports.S.ang;$imports.SFX.patStep(Math.sin(rel)*.9,Math.max(.06,Math.pow(Math.max(0,1-metric.distance/200),1.4)),Math.cos(rel)<-.2,$imports.PAT.locked,{m:metric.distance*$imports.U2M,muffled:!same()||!$imports.PatrolNav.los(position(),playerPoint()),floor:floorDir()});}}
   }
   function tick(dt){if(!(dt>0)||$imports.S.dead||$imports.S.screen!=='play')return;if(!$imports.PAT.version)reset();
     var left=dt;while(left>1e-8&&!$imports.S.dead){var n=Math.min(left,.1,$imports.PAT.state==='idle'&&$imports.PAT.respawn>0?$imports.PAT.respawn:Infinity);step(n);left-=n;}
@@ -285,6 +358,8 @@ var PatrolWorld=(function(){
           locker:validLocker(signal.locker,signal.locker&&signal.locker.scene)&&signal.locker.scene===signal.point.scene?
             {scene:signal.locker.scene,c:signal.locker.c,r:signal.locker.r}:null}:null;
       $imports.PAT.lastRegion=zoneById(d.lastRegion)?d.lastRegion:null;
+      var dr=d.doorRush;$imports.PAT.doorRush=dr&&['teach','lab'].includes(dr.host)&&Number.isInteger(dr.floor)&&dr.floor>=1&&dr.floor<=5&&dr.scene===dr.host+dr.floor&&[dr.x,dr.y,dr.eta].every(Number.isFinite)?
+        {host:dr.host,floor:dr.floor,scene:dr.scene,x:dr.x,y:dr.y,eta:dr.eta}:null;
       $imports.PAT.queue=Array.isArray(d.queue)?d.queue.filter(function(e){return e&&zoneById(e.regionId)&&Number.isFinite(e.sequence)&&Number.isFinite(e.enteredAt);}).slice(0,$imports.PATROL_ZONES.length):[];
       $imports.PAT.investigation=d.investigation&&zoneById(d.investigation.regionId)?d.investigation:null;
       if($imports.PAT.investigation)$imports.PAT.investigation.remaining=Number.isFinite($imports.PAT.investigation.remaining)?(0,$imports.clamp)($imports.PAT.investigation.remaining,0,6):6;
@@ -308,7 +383,8 @@ var PatrolWorld=(function(){
       framePath=null;
     }
   });
-  return {reset:reset,tick:tick,position:position,eligible:eligible,exempt:exempt,hunting:hunting,revealWireless:revealWireless,sees:sees,same:same,region:region,
+  return {reset:reset,tick:tick,position:position,eligible:eligible,exempt:exempt,hunting:hunting,revealWireless:revealWireless,sees:sees,same:same,region:region,elevatorClosed:elevatorClosed,
+    hearDistance:hearDistance,floorDir:floorDir,
     localChase:function(){return threat()&&$imports.PAT.locked;},localThreat:function(){return threat()||hideThreat();},pressure:function(){return threat()?.35:hideThreat()?.18:0;},
     rescued:rescued,registeredAbsence:registeredAbsence,observeLocker:function(c,r){var f=(0,$imports.lockerFront)($imports.INTERIORS[$imports.S.room],c,r);$imports.PAT.lastSeen=$imports.PatrolNav.point($imports.S.room,f.x,f.y,$imports.S.floorY);$imports.PAT.lockerMemory[$imports.S.room]={c:c,r:r,cycle:-1};framePath=null;},banish:banish,clearChase:clearChase,locationLabel:locationLabel,enqueue:enqueue,spawn:spawn};
 })();

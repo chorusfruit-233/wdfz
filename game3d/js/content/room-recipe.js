@@ -383,12 +383,8 @@ function roomDecor(c,isRoof){
     /* 走廊顶上的梁 */
     var bmz=18.5*th-halfH, bmx;
     for(bmx=0;bmx<W;bmx+=7) K.box('concrete',CX(bmx),2.86,bmz,0.22,0.28,th*4.6,0xb4afa6,0.96);
-    /* 教室：黑板、高窗、后墙的钟和黑板报、讲台上方的广播 */
-    for(i=0;i<$imports.CLS_SPAN.length;i++){
-      var c0=$imports.CLS_SPAN[i][0], c1b=$imports.CLS_SPAN[i][1];
-      classroomWest(c,i,c0,c1b);
-
-    }
+    /* 教室：黑板在西墙，北墙开窗，后墙黑板报（布局见 domain/classroom-layout.js） */
+    for(i=0;i<$imports.CLS_SPAN.length;i++) classroomWest(c,i,$imports.CLS_SPAN[i][0],$imports.CLS_SPAN[i][1]);
     corridorExtras(c,zWallS,zWallN);
   }
 
@@ -432,14 +428,8 @@ function roomDecor(c,isRoof){
     if(teachFl){
       var nl=0;
       for(x=3;x<W-3;x+=9){ var near=Math.abs(CX(x))<10; ceilingLight(K,CX(x),CZ(18),1.8,0.24,0,near?(nl++===1?'dying':'on'):((x/9|0)%2?'dying':'off')); }
-      var cs=$imports.CLS_SPAN, ci, LIT={5:1,21:1,45:1};
-      for(ci=0;ci<cs.length;ci++){                       /* 教室：吊装的护眼灯，两排各三盏；没开灯的教室全熄着，只剩一盏在抽 */
-        var mx=(CX(cs[ci][0])+CX(cs[ci][1]))/2, lr, lc, lit=!!LIT[cs[ci][0]];
-        for(lr=0;lr<2;lr++) for(lc=-1;lc<=1;lc++){
-          var dying=((lr*3+lc+1+ci*2)%6)===4;
-          (0,$imports.propHangLamp)(K,mx+lc*2.2,CZ(lr?10:4),1.2,0.22,$imports.WALLH,2.68,Math.PI/2,dying?'dying':(lit?'on':'off'));
-        }
-      }
+      var cs=$imports.CLS_SPAN, ci, LIT={9:1,21:1,45:1};                  /* 一层四间，开着灯的是第一间、第二间和自己班那间（和点光源一一对应，见 scene-data.js） */
+      for(ci=0;ci<cs.length;ci++) classroomLamps(c,ci,cs[ci][0],!!LIT[cs[ci][0]]);   /* 教室的护眼灯和黑板灯 */
     }else if(R.id!=='garage1'){
       var nk=0;
       for(x=3;x<W-3;x+=9) ceilingLight(K,CX(x),CZ(Math.floor(H*0.5)),1.8,0.24,0,(nk++%3===2)?'dying':'on');
@@ -449,32 +439,6 @@ function roomDecor(c,isRoof){
   }
 }
 
-/* ---- 教室里的东西：吊扇、投影机、烟感、柜式空调、卫生角、垃圾桶、开关插座、墙上的标语框 ----
-   c0..c1b：这间教室的列；bcx：黑板中心；wz：前墙（黑板那面）内表面；zWallS：后墙内表面 */
-function classroomExtras(c,i,c0,c1b,bcx,wz,zWallS){
-  var K=c.K, CX=c.CX, CZ=c.CZ, xl=CX(c0)-0.5, xr=CX(c1b)+0.5, mx=(xl+xr)/2;
-  (0,$imports.propCeilFan)(K,mx-1.8,CZ(7),$imports.WALLH,i*3+1); (0,$imports.propCeilFan)(K,mx+1.8,CZ(7),$imports.WALLH,i*3+2);
-  if(c.view.board)c.meshes.push(c.view.board(bcx,1.70,wz+0.0815,(c1b-c0+1)*0.72*0.96,0.98,(c.R.floor||1)*7+i));
-  (0,$imports.propProjector)(K,mx,CZ(6),$imports.WALLH,0);
-  (0,$imports.propSmoke)(K,mx,CZ(8.5),$imports.WALLH);
-  /* 前面左边角上一台柜式空调 */
-  (0,$imports.propACCabinet)(K,xl+0.30,wz,0); c.solid(xl+0.30,wz+0.15,0.52,0.32);
-  /* 后面右边角：卫生角 + 垃圾桶 */
-  var cz2=zWallS;
-  (0,$imports.propCleaning)(K,xr-0.62,cz2,Math.PI); c.solid(xr-0.62,cz2-0.22,1.0,0.44);
-  K.asset('bin_classroom',xr-1.45,0,cz2-0.22,0);                                                  /* 垃圾桶（套着黑色垃圾袋） */
-  c.solid(xr-1.45,cz2-0.22,0.42,0.42);
-  /* 后门旁的开关、前墙下的插座 */
-  var dx=CX(c0+4)+0.5;
-  (0,$imports.propSwitch)(K,dx+0.28,1.35,zWallS,Math.PI,3);
-  (0,$imports.propSocket)(K,mx+2.9,0.30,wz,0); (0,$imports.propSocket)(K,mx-2.9,0.30,wz,0);
-  /* 两侧墙上的标语框（名人名言、课程表、班级公约） */
-  var papers=[0xe8d8a8,0xc8d8e0,0xe0d0c0], k;
-  for(k=0;k<2;k++){
-    (0,$imports.propFrame)(K,xl,1.75,CZ(5+k*5),Math.PI/2,0.62,0.82,papers[(i+k)%3],0x3a3028,i*4+k);
-    (0,$imports.propFrame)(K,xr,1.75,CZ(5+k*5),-Math.PI/2,0.62,0.82,papers[(i+k+1)%3],0x3a3028,i*4+k+2);
-  }
-}
 /* ---- 教学楼走廊：楼梯口和出口挂的安全出口灯、应急灯、饮水机、分类垃圾桶、监控、烟感 ---- */
 function corridorExtras(c,zWallS,zWallN){
   var K=c.K, R=c.R, CX=c.CX, CZ=c.CZ, W=c.W, H=c.H, x, k;
@@ -575,22 +539,59 @@ function officePlants(c){
 
 function viewDetail(c){return !!c.view.decay;}
 
+/* ---- 教室（黑板在西墙）：纵向、横向的分区见 domain/classroom-layout.js ----
+   i 第几间，c0..c1 这一间的列。X(t)/Z(t)：格子坐标（可带小数）换成米。一间沿走廊 11 米、进深 8 米：
+   西墙（短墙）挂黑板，北墙开窗，东墙是后墙，南墙是走廊那面、开前后门 */
 function classroomWest(c,i,c0,c1){
-  var K=c.K,CX=c.CX,CZ=c.CZ,xw=CX(c0)-.5,xe=CX(c1)+.5,zc=CZ(7),mid=(xw+xe)/2;
-  K.asset('blackboard',xw,1.70,zc,Math.PI/2);
-  K.asset('speaker_box',xw+.02,2.55,CZ(11),Math.PI/2);
-  if(c.view.board){var b=c.view.board(xw+.082,1.70,zc,4.8,.98,(c.R.floor||1)*7+i);b.rotation.y=Math.PI/2;c.meshes.push(b);}
-  K.asset('window_high',mid,2.63,CZ(0)+.5,0);K.noteShaft(mid,CZ(0)+.5,0,1,5.7,2.4,2.86);
-  K.asset('clock_wall',xe-.02,2.58,zc,-Math.PI/2);
-  K.asset('board_news',xe,1.55,CZ(3),-Math.PI/2);
-  (0,$imports.propCeilFan)(K,mid,CZ(4),$imports.WALLH,i*3+1);(0,$imports.propCeilFan)(K,mid,CZ(10),$imports.WALLH,i*3+2);
-  (0,$imports.propProjector)(K,mid,CZ(7),$imports.WALLH,Math.PI/2);(0,$imports.propSmoke)(K,mid+.8,CZ(8),$imports.WALLH);
-  (0,$imports.propACCabinet)(K,xw+.2,CZ(1),Math.PI/2);c.solid(xw+.35,CZ(1),.32,.52);
-  (0,$imports.propCleaning)(K,xe-.22,CZ(13.5),-Math.PI/2);c.solid(xe-.22,CZ(13.5),.44,1);
-  K.asset('bin_classroom',xe-.3,0,CZ(1),0);c.solid(xe-.3,CZ(1),.42,.42);
-  (0,$imports.propSwitch)(K,CX(c0+2),1.35,CZ(15)-.5,Math.PI,3);
-  (0,$imports.propSocket)(K,xw+.02,.30,CZ(3),Math.PI/2);
-  (0,$imports.propFrame)(K,mid,1.75,CZ(15)-.5,Math.PI,.62,.82,0xe8d8a8,0x3a3028,i);
+  var K=c.K, L=$imports.ClassroomLayout, seed=(c.R.floor||1)*7+i, r0=L.rows[0], r1=L.rows[1];
+  function X(t){ return t*c.tw-c.halfW; }
+  function Z(t){ return t*c.th-c.halfH; }
+  var xw=X(c0), xe=X(c1+1), zn=Z(r0), zs=Z(r1+1), zb=Z(L.mid);
+  /* 前墙（西）：黑板居中（字由表现层贴）、广播喇叭、两个插座；西南角（前门边）饮水机 */
+  K.asset('blackboard',xw,1.70,zb,Math.PI/2);                                                     /* 铝框、板面、粉笔槽、粉笔、板擦 */
+  if(c.view.board){ var b=c.view.board(xw+0.082,1.70,zb,4.8,0.98,seed); b.rotation.y=Math.PI/2; c.meshes.push(b); }
+  K.asset('speaker_box',xw+0.02,2.55,zb+3.2,Math.PI/2);
+  (0,$imports.propSocket)(K,xw+0.02,0.30,zb-2.95,Math.PI/2); (0,$imports.propSocket)(K,xw+0.02,0.30,zb+2.95,Math.PI/2);
+  (0,$imports.propWaterDispenser)(K,xw+0.20,Z(r1+0.55),Math.PI/2); c.solid(xw+0.20,Z(r1+0.55),0.36,0.36);
+  /* 北墙（外墙）：三扇 2.4 米宽的推拉窗，窗帘收在两边 */
+  [1.9,5.5,9.1].forEach(function(dx,k){
+    var wx=X(c0+dx);
+    wallWindow(K,wx,zn,0,1,2.4,1.0,2.25,3);
+    (0,$imports.propCurtains)(K,wx,zn,0,2.4,1.02,2.42,[0x5a7a9a,0x66788a,0x58708a][(i+k)%3],seed*3+k);
+  });
+  /* 后墙（东）：黑板报居中、上面挂钟，两边各一幅名言；东北角（靠窗）柜式空调；东南角（后门边）卫生角和垃圾桶 */
+  K.asset('board_news',xe,1.55,zb,-Math.PI/2);                                                    /* 彩色粉笔的大标题、两栏小字、角上的花 */
+  K.asset('clock_wall',xe-0.02,2.58,zb,-Math.PI/2);
+  (0,$imports.propFrame)(K,xe,1.70,Z(L.mid-2.4),-Math.PI/2,0.62,0.82,0xe8d8a8,0x3a3028,i*4+1);
+  (0,$imports.propFrame)(K,xe,1.70,Z(L.mid+2.4),-Math.PI/2,0.62,0.82,0xc8d8e0,0x3a3028,i*4+2);
+  (0,$imports.propACCabinet)(K,xe,Z(r0+0.6),-Math.PI/2); c.solid(xe-0.16,Z(r0+0.6),0.32,0.52);
+  (0,$imports.propCleaning)(K,X(c1+0.5),zs,Math.PI); c.solid(X(c1+0.5),zs-0.21,0.94,0.42);       /* 水桶、拖把、扫把、簸箕，靠在南墙上 */
+  K.asset('bin_classroom',xe-0.27,0,Z(r1-0.05),0); c.solid(xe-0.27,Z(r1-0.05),0.42,0.42);         /* 垃圾桶（套着黑色垃圾袋） */
+  /* 南墙（走廊那边）：前门边的开关，两扇门中间挂两幅班级公约 */
+  (0,$imports.propSwitch)(K,X(c0+2.3),1.35,zs,Math.PI,3);
+  (0,$imports.propFrame)(K,X(c0+4.6),1.75,zs,Math.PI,0.62,0.82,0xe0d0c0,0x3a3028,i*4+3);
+  (0,$imports.propFrame)(K,X(c0+6.4),1.75,zs,Math.PI,0.62,0.82,0xe8d8a8,0x3a3028,i*4);
+  /* 顶上：四台吊扇在两条过道上方，对着黑板的投影机，烟感（和灯错开，见 classroomLamps） */
+  [5.05,7.55].forEach(function(dx,a){ [L.deskRows[1]+1.5,L.deskRows[3]+1.5].forEach(function(t,b){
+    (0,$imports.propCeilFan)(K,X(c0+dx),Z(t),$imports.WALLH,i*5+a*2+b+1); }); });
+  (0,$imports.propProjector)(K,X(c0+2.4),zb,$imports.WALLH,Math.PI/2);
+  (0,$imports.propSmoke)(K,X(c0+5.05),zb,$imports.WALLH);
+}
+/* ---- 教室的灯：护眼灯顺着前后方向，三组同桌上方各一行、一行三盏；黑板前两盏黑板灯；
+   lit 是开着灯的那几间（没开的全熄着，只剩一盏在抽） ---- */
+function classroomLamps(c,i,c0,lit){
+  var K=c.K, L=$imports.ClassroomLayout;
+  function X(t){ return t*c.tw-c.halfW; }
+  function Z(t){ return t*c.th-c.halfH; }
+  [L.deskRows[0]+1,L.deskRows[2]+1,L.deskRows[4]+1].forEach(function(t,a){
+    [3.8,6.3,8.8].forEach(function(dx,b){
+      var dying=((a*3+b+i*4)%9)===5;
+      (0,$imports.propHangLamp)(K,X(c0+dx),Z(t),1.2,0.22,$imports.WALLH,2.68,0,dying?'dying':(lit?'on':'off'));
+    });
+  });
+  /* 两盏黑板灯；流畅档只给自己班挂（手机上顶点数要控制） */
+  if(!(0,$imports.lodLow)()||(c.R.id===L.ownSeat.room&&i===L.ownSeat.classId))
+    [L.mid-1.5,L.mid+1.5].forEach(function(t){ (0,$imports.propHangLamp)(K,X(c0+0.75),Z(t),1.2,0.22,$imports.WALLH,2.68,Math.PI/2,lit?'on':'off'); });
 }
 
 /* @module-exports */
@@ -605,11 +606,11 @@ GameModules.publish("game3d/js/content/room-recipe.js",{
 "wallWindow":{get:function(){return wallWindow;},set:function($value){wallWindow=$value;}},
 "ceilingLight":{get:function(){return ceilingLight;},set:function($value){ceilingLight=$value;}},
 "roomDecor":{get:function(){return roomDecor;},set:function($value){roomDecor=$value;}},
-"classroomExtras":{get:function(){return classroomExtras;},set:function($value){classroomExtras=$value;}},
 "corridorExtras":{get:function(){return corridorExtras;},set:function($value){corridorExtras=$value;}},
 "toiletTiles":{get:function(){return toiletTiles;},set:function($value){toiletTiles=$value;}},
 "officePlants":{get:function(){return officePlants;},set:function($value){officePlants=$value;}},
 "viewDetail":{get:function(){return viewDetail;},set:function($value){viewDetail=$value;}},
-"classroomWest":{get:function(){return classroomWest;},set:function($value){classroomWest=$value;}}
+"classroomWest":{get:function(){return classroomWest;},set:function($value){classroomWest=$value;}},
+"classroomLamps":{get:function(){return classroomLamps;},set:function($value){classroomLamps=$value;}}
 });
 })(GameModules.imports("game3d/js/content/room-recipe.js"));

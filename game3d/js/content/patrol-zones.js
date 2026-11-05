@@ -11,6 +11,8 @@ var PATROL_ZONES=(function(){
     c0:35,c1:49,r0:10,r1:15,observe:[41,13],marked:true});
   zones.push({id:'lab3:servers',scene:'lab3',label:'网络中心 · 核心机房',
     c0:35,c1:49,r0:1,r1:10,observe:[41,5],marked:true});
+  zones.push({id:'admin2:broadcast',scene:'admin2',label:'广播站 · 播音区',
+    c0:2,c1:9,r0:1,r1:16,observe:[5,13],marked:true,when:'broadcast'});
   return zones;
 })();
 

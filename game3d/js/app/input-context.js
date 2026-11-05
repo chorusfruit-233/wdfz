@@ -16,7 +16,7 @@ var GamePolicy={
     return this.presentationAllowed(c)&&!c.dead&&!c.paused&&!c.panelOpen&&!c.computer&&!c.intro;
   },
   playerAllowed:function(c){
-    return this.simulationAllowed(c)&&!c.phone&&!c.terminal&&!c.lesson&&!c.debugDragging&&!c.intro;
+    return this.simulationAllowed(c)&&!c.phone&&!c.terminal&&!c.lesson&&!c.broadcast&&!c.debugDragging&&!c.intro;
   },
   inputOwner:function(c){
     if(c.rendererBusy)return 'blocked';
@@ -33,6 +33,7 @@ var GamePolicy={
     if(c.phone)return 'phone';
     if(c.paused)return 'pause';
     if(c.choice)return 'choice';
+    if(c.broadcast)return 'broadcast';
     if(c.debugFrozen||c.debugDragging||c.intro)return 'blocked';
     if(c.driving)return 'driving';
     if(c.panelOpen)return 'panel';

@@ -289,6 +289,8 @@ var ClipAudit=(function(){
       if(R.foot){ var dc, dr; for(dr=-1;dr<=1;dr++) for(dc=-1;dc<=1;dc++) (R.foot[(c+dc)+','+(r+dr)]||[]).forEach(function(b){ col.push([b.x0,b.x1,b.z0,b.z1]); }); }
       else if(f!==undefined) col.push([cx-tw*f/2,cx+tw*f/2,cz-tw*f/2,cz+tw*f/2]);
       (R.propExtra||[]).forEach(function(b){ if(b.x1>cx-tw*2&&b.x0<cx+tw*2&&b.z1>cz-tw*2&&b.z0<cz+tw*2) col.push([b.x0,b.x1,b.z0,b.z1]); });
+      /* 会动的门（电梯层门、轿门）：门关着时挡人的那块（elevator.js 的 doorBoxes），门扇模型在里面 */
+      if(R.doorBoxes) R.doorBoxes().forEach(function(b){ if(b.x1>cx-tw*2&&b.x0<cx+tw*2&&b.z1>cz-tw*2&&b.z0<cz+tw*2) col.push([b.x0,b.x1,b.z0,b.z1]); });
       var worst=0, wq=null;
       byOwner[o].forEach(function(p){
         var b=aabb(p); if(b[1][1]<0.12||b[0][1]>1.85) return;          /* 脚边贴地的、头顶以上的不算 */
@@ -381,13 +383,16 @@ var ClipAudit=(function(){
         var ch2=R.grid[r][c]; if(REACH_CH.indexOf(ch2)<0) continue;
         if(ch2==='S'&&((c>0&&R.grid[r][c-1]==='S')||(r>0&&R.grid[r-1][c]==='S'))) continue;   /* 楼梯按一组算，只查第一格 */
         var F=(R.foot&&R.foot[c+','+r])||null, cx=(c+0.5)*tw-halfW, cz=(r+0.5)*tw-halfH, ok=false;
+        /* 教学楼教室靠墙那组同桌的外侧那张（布局 4）：离墙只有 0.2 米，和真实教室一样只能从过道那边、隔着同桌的桌子够到。
+           游戏里交互半径 2.67 米、按朝向选格子，过道里斜着瞄得中（test_classroom_layout 有实测），这里放宽到 1.6 米 */
+        var lim=((ch2==='d'||ch2==='P')&&/^teach[1-5]$/.test(id)&&typeof ClassroomLayout!=='undefined'&&ClassroomLayout.isDesk(c,r))?1.6:1.2;
         if(ch2==='S'){ var si2=stairInfo(R,c,r); cx+=(si2.gw-1)*tw/2; cz+=(si2.gd-1)*tw/2; }
         var ri0=Math.max(0,Math.floor((c-2)*R.tw/step)), ri1=Math.min(W,Math.ceil((c+3)*R.tw/step)), rj0=Math.max(0,Math.floor((r-2)*R.th/step)), rj1=Math.min(H,Math.ceil((r+3)*R.th/step)), a, b;
         for(b=rj0;b<rj1&&!ok;b++) for(a=ri0;a<ri1&&!ok;a++){
           if(!seen[a+b*W]) continue;
           var pp=P(a,b), mx=(pp[0]-R.ox)*U2M-halfW, mz=(pp[1]-R.oy)*U2M-halfH, d=Math.hypot(mx-cx,mz-cz);
           if(F) F.forEach(function(q2){ d=Math.min(d,Math.hypot(Math.max(q2.x0-mx,0,mx-q2.x1),Math.max(q2.z0-mz,0,mz-q2.z1))+0.3); });
-          if(d<=1.2) ok=true;
+          if(d<=lim) ok=true;
         }
         if(!ok) out.push({type:'reach',room:id,a:ch2+'@'+c+','+r,at:[+cx.toFixed(2),0,+cz.toFixed(2)]});
       }

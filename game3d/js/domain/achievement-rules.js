@@ -13,7 +13,8 @@ var ACH_TIERS={
   p:{name:'史诗',pts:100,order:2},
   h:{name:'隐藏',pts:60,order:3}
 };
-var ACH_PUBLIC_ENDS=['car','face','portal','cyber'];
+var ACH_ORIGINAL_ENDS=['car','face','portal','cyber'];
+var ACH_PUBLIC_ENDS=ACH_ORIGINAL_ENDS.concat(['dismissal']);
 /* 「踏遍校园」要走到的地方：三栋楼的每一层、食堂、南北宿舍各一层、车库、钟楼、保安岗、器材室、垃圾房（共 24 处） */
 var ACH_EXPLORE_ROOMS=['teach1','teach2','teach3','teach4','teach5','teach6','admin1','admin2','admin3','admin4','admin5',
   'lab1','lab2','lab3','lab4','lab5','canteen1','garage1','bell1','guard1','gear1','trash1'];
@@ -65,7 +66,9 @@ var AchievementRules=(function(){
     A('n.archive','n','once','第一份档案','死亡档案室记下第一份档案。','death',function(f){ return !!f.archiveNew; },{score:false}),
     A('n.chalk','n','once','记号','用粉笔画下一个记号。','chalk'),
     A('n.special','n','once','特别的一天','遇上一次校庆日或占课。','specialDay'),
+    A('n.broadcast','n','once','核对','发现假广播并通过播音记录本核对。','broadcast',function(f){return f.what==='verified'&&f.real===false;},{needs:['broadcast']}),
     /* ---------- 精英 ---------- */
+    A('e.end_dismissal','e','once','《放学》','达成《放学》。','ending',function(f){return legit(f)&&f.id==='dismissal';},{needs:['broadcast']}),
     A('e.end_car','e','once','《闸门》','达成《闸门》。','ending',function(f){ return legit(f)&&f.id==='car'; }),
     A('e.end_face','e','once','《白名单》','达成《白名单》。','ending',function(f){ return legit(f)&&f.id==='face'; }),
     A('e.end_portal','e','once','《门》','达成《门》。','ending',function(f){ return legit(f)&&f.id==='portal'; }),
@@ -94,11 +97,13 @@ var AchievementRules=(function(){
       return ACH_EXPLORE_ANY.every(function(g){ return g.some(function(id){ return !!r[id]; }); });
     }),
     A('e.speedrun','e','once','计时','完成一次有效速通。','speedrun',function(f){ return f.status==='finished'; }),
+    A('e.liftdoor','e','once','它比门慢','被巡察者看着走进电梯，在它碰到门之前把门关上。','patrol',function(f){ return f.what==='door'; }),
     /* ---------- 史诗 ---------- */
     A('p.routes','p','cross','四条路','《闸门》《白名单》《门》《网安仙人》都达成过。','ending',function(f,v){
-      return ACH_PUBLIC_ENDS.every(function(id){ return !!v.unlocked['e.end_'+id]; });
+      return ACH_ORIGINAL_ENDS.every(function(id){ return !!v.unlocked['e.end_'+id]; });
     }),
-    A('p.hard_routes','p','cross','梦魇里的四条路','在梦魇难度把这四个真结局都达成过。','ending',function(f,v){ return size(v.sets.hardEnds)>=4; },{set:'hardEnds',goal:4}),
+    A('p.five_routes','p','cross','五条路','五个公开真结局都达成过。','ending',function(f,v){return ACH_PUBLIC_ENDS.every(function(id){return !!v.unlocked['e.end_'+id];});},{needs:['broadcast']}),
+    A('p.hard_routes','p','cross','梦魇里的五条路','在梦魇难度把五个公开真结局都达成过。','ending',function(f,v){ return ACH_PUBLIC_ENDS.every(function(id){return !!v.sets.hardEnds[id];}); },{set:'hardEnds',goal:5}),
     A('p.oneshot','p','run','一命','梦魇难度达成真结局，这一局从没被药丸或免疫救过。','ending',function(f,v){ return publicEnd(f)&&v.diff==='hard'&&!v.run.saved&&!v.run.legacy; }),
     A('p.hard_day1','p','run','梦魇·当天','梦魇难度，第一天就达成真结局。','ending',function(f,v){ return publicEnd(f)&&v.diff==='hard'&&v.day===1; }),
     A('p.archive','p','cross','档案齐了','死亡档案室的公开档案全部亲历过。','death',function(f,v){ return v.archive.pub>=v.archive.pubTotal&&v.archive.pubTotal>0; },{goal:'archive'}),
@@ -121,10 +126,14 @@ var AchievementRules=(function(){
     A('h.shadows','h','cross','它们一直在','五处站着的人都见过了。','mazeEvent',function(f,v){ return size(v.sets.mazeShadows)>=5; },{set:'mazeShadows',goal:5,needs:['void-maze-eggs']}),
     A('h.wuda','h','once','武大子弟','开局时口袋里多了一支手电。','opening',function(f,v){ return !!v.wuda; },{needs:['wuda-kid']}),
     A('h.cola','h','once','天降可乐','那只杯子之后，夜里又掉下来一样东西。','anomaly',function(f){ return f.phase==='start'&&f.id==='cola'; }),
+    A('h.crowd','h','once','最后一个进来的人','电梯满员的时候，自己走了出去。','anomaly',function(f){ return f.phase==='end'&&f.id==='crowd'&&f.survived===true; },{needs:['lift-crowd']}),
     A('h.beast_run','h','once','追着旧校服','速通模式里，有效打通了那条隐藏路线。','speedrun',function(f){ return f.status==='finished'&&f.route==='beast'; })
   ];
   /* 解锁后显示的一句话：只写发生了什么 */
   var MEMO={
+    'n.broadcast':'记录本里没有刚才那一条。喇叭里还在啸叫。',
+    'e.end_dismissal':'长铃还在响。我和同学一起走出了北门。',
+    'p.five_routes':'最后一次，学校以为我只是放学回家。',
     'n.opening':'粉笔灰停在半空。我趴到桌上，又抬起了头。',
     'n.day2':'熄灯，换日。日历往后翻了一页。',
     'n.anomaly':'从那一刻起，我知道这所学校不对劲。',
@@ -162,6 +171,7 @@ var AchievementRules=(function(){
     'e.notes':'桌肚里的纸条，我一张一张都记下了。',
     'e.explore':'这所学校的每一层，我都走过。',
     'e.speedrun':'表停下的那一刻，我还在跑。',
+    'e.liftdoor':'门合上的时候，门缝里是它伸到一半的手指。',
     'p.routes':'我从这所学校出去过很多次，每一次走的路都不一样。',
     'p.hard_routes':'在最深的梦里，那些路我都走通了。',
     'p.oneshot':'从头到尾，没有人替我挡过一下。',
@@ -180,6 +190,7 @@ var AchievementRules=(function(){
     'h.shadows':'它们一直站在那里。我只是现在才看见。',
     'h.wuda':'口袋里多了一支手电，我不记得是谁给的。',
     'h.cola':'夜里，又有东西从上面掉了下来。',
+    'h.crowd':'门合上以前我走了出来。显示屏上还是「满员」。',
     'h.beast_run':'我追着那个背影，一路没有停。'
   };
   LIST.forEach(function(a){ a.m=MEMO[a.id]||''; });

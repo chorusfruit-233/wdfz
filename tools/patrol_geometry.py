@@ -21,12 +21,13 @@ BAKE = r'''() => {
  for(const [id,R] of Object.entries(INTERIORS)){
    if(R.build||R.host==='lift')continue;
    const group=buildRoomGeometry(R),rects=[];
-   for(let y=0;y<R.rows;y++)for(let x=0;x<R.cols;x++)if((isSolidCh(R.grid[y][x])&&!(R.grid[y][x]==='S'&&STAIR_LAYOUT.some(s=>s.rooms.includes(id))))||R.grid[y][x]==='O')rects.push([R.ox+x*R.tw,R.oy+y*R.th,R.ox+(x+1)*R.tw,R.oy+(y+1)*R.th]);
+   // 电梯门格（J）对玩家只有两侧门框挡人、门洞按门的开度挡；巡察者不进轿厢，所以对它整格算墙
+   for(let y=0;y<R.rows;y++)for(let x=0;x<R.cols;x++)if((isSolidCh(R.grid[y][x])&&!(R.grid[y][x]==='S'&&STAIR_LAYOUT.some(s=>s.rooms.includes(id))))||R.grid[y][x]==='O'||R.grid[y][x]==='J')rects.push([R.ox+x*R.tw,R.oy+y*R.th,R.ox+(x+1)*R.tw,R.oy+(y+1)*R.th]);
    Object.values(R.foot||{}).flat().concat(R.stairExtra||[],R.propExtra||[]).forEach(b=>rects.push([R.cx+b.x0/U2M,R.cy+b.z0/U2M,R.cx+b.x1/U2M,R.cy+b.z1/U2M]));
    out[id]=bake(R.cols*4,R.rows*4,R.tw/4,R.ox,R.oy,rects);ThreeBackend.disposeGroup(group);
  }
  const group=buildOutdoorGeometry(),r=[];
- OBJ.filter(o=>o.k==='roof').forEach(o=>r.push([o.x*SC,o.y*SC,(o.x+o.w)*SC,(o.y+o.h)*SC]));
+ OBJ.filter(o=>o.k==='roof'&&!o.open).forEach(o=>r.push([o.x*SC,o.y*SC,(o.x+o.w)*SC,(o.y+o.h)*SC]));
  OUT_SOLID.forEach(b=>r.push([b.x0*SC,b.y0*SC,b.x1*SC,b.y1*SC]));
  const step=9,ox=(BOUND.x0+4)*SC,oy=(BOUND.y0+4)*SC,W=Math.floor(((BOUND.x1-4)*SC-ox)/step),H=Math.floor(((BOUND.y1-4)*SC-oy)/step);
  out.out=bake(W,H,step,ox,oy,r);out.out.occluders=r;ThreeBackend.disposeGroup(group);

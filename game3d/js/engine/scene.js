@@ -296,9 +296,14 @@ $imports.ThreeBackend.draw=function(dt){
   u.uFlash.value=$imports.SET.reduceFlash?Math.min(.08,$imports.GLR.flash):$imports.GLR.flash;
   u.uExpo.value=($imports.GLR.dayExpo===undefined)?1:$imports.GLR.dayExpo;
   u.uRed.value=$imports.GLR.patrolRed||0;
-  var sense=typeof $imports.Sensory!=='undefined'?$imports.Sensory.view():{warp:0,edge:0,focus:0};
+  var sense=typeof $imports.Sensory!=='undefined'?$imports.Sensory.view():{warp:0,tunnel:0,focus:0};
   u.uSan.value=(0,$imports.clamp)($imports.S.san/100,0,1);
-  u.uWarp.value=sense.warp;u.uEdge.value=sense.edge;u.uFocus.value=sense.focus;
+  /* SAN 视觉分级（计划 12.9 第二轮）：扭曲、视野变小、模糊、对不上焦、失色、灯晕、呼吸（和呼吸声同相）、
+     心跳收缩（和心跳声同拍）、重影、黑屏闪烁 */
+  u.uWarp.value=sense.warp;u.uTunnel.value=sense.tunnel||0;u.uBlur.value=sense.blur||0;u.uFocus.value=sense.focus;
+  u.uDrain.value=sense.drain||0;u.uHalo.value=sense.halo||0;u.uBreath.value=sense.inhale||0;
+  u.uPulse.value=sense.pulse||0;u.uGhost.value=sense.ghost||0;u.uBlack.value=sense.black||0;
+  if(sense.ghostDir)u.uGhostDir.value.set(sense.ghostDir[0],sense.ghostDir[1]);
   if($imports.GLRTEST.nopost){
     $imports.GLR.renderer.setRenderTarget(null);
     $imports.GLR.renderer.render($imports.GLR.scene,$imports.GLR.cam);

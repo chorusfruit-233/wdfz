@@ -36,6 +36,14 @@ var SAME_STEP=[
 ];
 
 var SOUND_BANK={
+  'event.dismissal':{cat:'event',name:'放学长铃（一段 12 秒，响铃期间接着放，共六十秒）',lv:-5,layers:[
+    {t:'bell',f:523.25,dur:4,g:.11,every:4,n:3,partials:CHIME},
+    {t:'tone',f:392,dur:12.2,g:.009,atk:.5,type:'sine'}]},
+  'death.misread':{cat:'death',name:'念错了 · 回授与广播',layers:[
+    {t:'noise',f:850,type:'bandpass',q:3,dur:3.4,g:.13,atk:.5},
+    {t:'tone',f:220,to:146.83,dur:2.8,g:.1,atk:.3,type:'triangle'},
+    {t:'noise',f:180,type:'lowpass',dur:.25,g:.4,at:1.1},
+    {t:'noise',f:1200,type:'bandpass',q:1,dur:2,g:.11,atk:.7,at:1.4}]},
   /* ================= 界面 ================= */
   'ui.click':{cat:'ui',name:'按钮 / 确认',lv:-4,vary:{p:0.05,g:0.1},layers:[
     {t:'noise',f:3600,type:'bandpass',q:1.6,dur:0.014,g:0.5,atk:0.0008},
@@ -192,7 +200,7 @@ var SOUND_BANK={
     {t:'tone',f:5650,dur:2.7,hold:2.3,g:0.02,atk:0.01,am:[20,0.85,'square']},
     {t:'noise',f:3400,type:'bandpass',q:2,dur:2.5,hold:2.3,g:0.06,atk:0.01,am:[20,0.95,'square']}]},
   'event.bellEnd':{cat:'event',name:'下课铃（钟声）',lv:-7,wet:0.6,layers:[
-    {t:'bell',f:function(o,i){ return BELL_TUNE[i%8]; },n:8,every:function(o,i){ return i===3?1.1:0.62; },dur:2.4,g:0.1,partials:CHIME}]},
+    {t:'bell',f:function(o,i){ return BELL_TUNE[i%8]*(i%8===7?(o.tail||1):1); },n:8,every:function(o,i){ return i===3?1.1:0.62; },dur:function(o,i){return i%8===7?2.4*(o.tailLength||1):2.4;},g:0.1,partials:CHIME}]},
   'event.thunder':{cat:'event',name:'近雷：炸裂再滚',lv:2,wet:0.6,layers:[
     {t:'noise',f:2400,type:'lowpass',q:0.7,dur:0.4,g:0.4,atk:0.003},                    /* 炸 */
     {t:'noise',f:[150,190],type:'lowpass',q:0.8,dur:3.8,g:0.5,at:0.05,atk:0.2,am:[[2.5,5],0.55]},   /* 滚 */
@@ -355,6 +363,20 @@ var SOUND_BANK={
     {t:'noise',f:[280,330],type:'lowpass',q:2,dur:0.4,g:0.15,at:0.08,atk:0.1,am:[[12,18],0.5]}]},
   'dread.hum':{cat:'distant',name:'灯管留下的嗡声',lv:-10,layers:[{t:'tone',f:100,to:98,dur:3.4,g:.05,atk:.5},{t:'noise',f:240,type:'lowpass',dur:3.2,g:.015,atk:.5}]},
   'threat.breath':{cat:'threat',name:'近处呼吸',lv:-12,layers:[{t:'noise',f:600,type:'bandpass',q:.6,dur:1.5,g:.045,atk:.55}]},
+  /* 电梯里的稀有事件（内部，modules/lift-crowd）：身后很多人在呼吸，一口接一口、左右都有，持续 6 秒左右 */
+  'threat.crowd':{cat:'threat',name:'身后很近，很多人在呼吸',lv:-6,layers:[
+    {t:'vowel',f:[105,150],voice:0,breath:1,f1:[480,820],f2:[1200,1900],fq:4,dur:[0.8,1.3],g:0.11,atk:0.35,n:15,every:[0.3,0.48],pan:function(o,i){ return ((i*37)%11)/5.5-1; }},
+    {t:'noise',f:650,type:'bandpass',q:0.5,dur:6.2,g:0.04,atk:1.6,hold:3.4}]},
+  /* 白天的校园底噪（氛围 A1，modules/atmosphere）：远处的鸟、车、操场的哨声，从第二天起一样一样消失 */
+  'campus.bird':{cat:'world',name:'远处的鸟叫（白天）',lv:-10,vary:{p:0.12,g:0.2},layers:[
+    {t:'tone',f:[2600,3400],to:[3200,4200],dur:0.09,g:0.03,n:[3,6],every:[0.12,0.3],wet:0.5}]},
+  'campus.car':{cat:'world',name:'校外远远开过去一辆车（白天）',lv:-10,vary:{p:0.06,g:0.2},layers:[
+    {t:'noise',f:280,to:420,type:'lowpass',q:0.7,dur:3.2,g:0.12,atk:1.3,wet:0.4},
+    {t:'tone',f:62,to:74,dur:3.0,g:0.04,atk:1.2}]},
+  'campus.whistle':{cat:'world',name:'操场上体育老师吹了两声哨（白天，很远）',lv:-10,vary:{p:0.03,g:0.2},layers:[
+    {t:'tone',f:2900,type:'square',lp:3600,dur:0.18,g:0.02,atk:0.01,n:2,every:0.32,am:[[38,46],0.5],wet:0.8}]},
+  'event.liftOverload':{cat:'event',name:'电梯超载蜂鸣（三声）',layers:[
+    {t:'tone',f:2350,type:'square',lp:4200,dur:0.2,g:0.05,atk:0.004,n:3,every:0.34}]},
   'dread.radio':{cat:'distant',name:'收音机的杂音和人声',layers:[
     {t:'noise',f:1800,type:'bandpass',q:1.2,dur:1.8,g:0.25,atk:0.2,am:[[6,9],0.45]},
     {t:'vowel',f:150,f1:600,f2:1700,vib:[9,0.05],dur:1.6,g:0.12,at:0.2,lp:3200}]},
@@ -543,6 +565,27 @@ var SOUND_BANK={
     {t:'noise',f:900,to:2000,type:'bandpass',q:0.7,dur:1.8,g:0.25,atk:1.2},
     {t:'tone',f:160,to:40,dur:1.8,g:0.12},
     {t:'noise',f:120,type:'lowpass',dur:0.4,g:0.4,at:2.0}]},
+  /* 没关上的门（巡察者挡门，演出 fx/death-cg.js 的 liftdoor，时间点和画面对齐） */
+  'death.liftdoor':{cat:'death',name:'电梯门：门机嗡着往里合，门外的脚步越来越急；手指扣住门边，门被一下一下扒开；灯闪一下熄掉；很远一声「叮」，门合上',layers:[
+    {t:'tone',f:118,to:96,type:'sawtooth',lp:700,dur:1.15,g:0.07,atk:0.08,am:[[11,13],0.3]},                    /* 门机 */
+    {t:'noise',f:900,type:'bandpass',q:1.3,dur:0.06,g:function(o,i){ return 0.12+i*0.04; },n:5,every:0.26,accel:0.8,pan:0.2},   /* 门外的脚步越来越急 */
+    {t:'noise',f:260,type:'lowpass',dur:0.12,g:0.45,atk:0.002,at:1.17},                                          /* 手指扣住门边，门一顿 */
+    {t:'tone',f:70,to:48,dur:0.3,g:0.18,atk:0.002,at:1.17},
+    {t:'noise',f:[1600,1900],type:'bandpass',q:3,dur:0.3,g:0.16,atk:0.05,n:2,every:0.45,at:1.72,am:[[28,36],0.6,'square']},   /* 门被扒开，金属一下一下刮 */
+    {t:'tone',f:150,to:110,type:'sawtooth',lp:800,dur:0.9,g:0.06,atk:0.1,at:1.75},
+    {t:'noise',f:3000,type:'bandpass',q:5,dur:0.01,g:0.12,n:3,every:function(o,i){ return i===1?0.14:0.08; },at:2.9},   /* 灯：两短一长，熄掉 */
+    {t:'tone',f:49,to:40,dur:1.2,g:0.12,atk:0.5,at:2.6},
+    {t:'bell',f:1318.5,dur:2.2,g:0.03,partials:CHIME,at:3.65,wet:0.9},                                           /* 很远一声「叮」 */
+    {t:'noise',f:300,type:'lowpass',dur:0.25,g:0.2,atk:0.02,at:4.15}]},                                          /* 门合上 */
+  /* 满员（内部，演出在 modules/lift-crowd/crowd-death.js，时间点和画面对齐） */
+  'death.crowd':{cat:'death',name:'满员：蜂鸣突然停了；很多人的呼吸贴上来，衣服蹭着肩膀；楼层灯一格一格往上跳；门开了，很远一声「叮」',layers:[
+    {t:'tone',f:2350,type:'square',lp:4200,dur:0.12,g:0.05,atk:0.004},                                          /* 最后半声蜂鸣，断了 */
+    {t:'vowel',f:[105,150],voice:0,breath:1,f1:[480,820],f2:[1200,1900],fq:4,dur:[0.7,1.1],g:function(o,i){ return 0.05+i*0.012; },atk:0.3,n:9,every:0.2,at:0.85,pan:function(o,i){ return ((i*37)%11)/5.5-1; }},
+    {t:'noise',f:2400,type:'bandpass',q:0.9,dur:0.5,g:0.05,atk:0.15,n:4,every:0.36,at:1.1,pan:function(o,i){ return i%2?0.6:-0.6; }},   /* 衣服蹭着肩膀 */
+    {t:'tone',f:58,to:44,dur:2.0,g:0.12,atk:0.8,at:1.0},
+    {t:'tone',f:[1700,1800],type:'square',lp:3000,dur:0.03,g:0.03,n:6,every:0.17,at:2.2},                    /* 楼层灯一格一格往上跳 */
+    {t:'noise',f:300,type:'lowpass',dur:0.3,g:0.18,atk:0.03,at:3.3},                                           /* 门开 */
+    {t:'bell',f:1318.5,dur:2.2,g:0.03,partials:CHIME,at:3.45,wet:0.9}]},                                       /* 很远一声「叮」 */
   /* 虚空迷宫里的两种死法（演出在 modules/void-maze/maze-death.js，时间点和画面对齐） */
   'death.void':{cat:'death',name:'异空间·迷失：停下以后身后又响一步；门合上，「叮」，门缝的光一格格熄掉',layers:[
     {t:'noise',f:[640,720],type:'bandpass',q:2.2,dur:0.06,g:function(o,i){ return i===2?0.5:0.4; },atk:0.0012,n:3,every:function(o,i){ return i?0.44:0.34; },at:0.08,pan:function(o,i){ return i===2?0.55:0; }},

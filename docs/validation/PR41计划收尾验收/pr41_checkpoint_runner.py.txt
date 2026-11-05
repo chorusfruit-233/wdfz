@@ -1,0 +1,34 @@
+import hashlib,json,os,sys,time,unittest
+from pathlib import Path
+root=Path('/workspace/wdfz-pr41-current');sys.path.insert(0,str(root/'tests'))
+group=int(sys.argv[1]);dest=Path(f'/tmp/pr41-final-{group}.json');log=Path(f'/tmp/pr41-final-{group}.log')
+paths=sorted((root/'game3d').rglob('*.js'))+[root/'game3d/css/game.css',root/'index.html']
+runtime=hashlib.sha256(b''.join(str(p.relative_to(root)).encode()+b'\0'+p.read_bytes() for p in paths)).hexdigest()
+names=json.loads(Path(f'/tmp/pr41-tests-{group}.json').read_text())
+suite=unittest.defaultTestLoader.loadTestsFromNames(names)
+def flatten(s):
+ for t in s:
+  if isinstance(t,unittest.TestSuite):yield from flatten(t)
+  else:yield t
+cases=list(flatten(suite));records={};prior={}
+if dest.exists():
+ d=json.loads(dest.read_text())
+ if d.get('runtime')==runtime:records=d.get('records',{})
+pending=[t for t in cases if records.get(t.id(),{}).get('status')!='passed'];started=time.time()
+class Result(unittest.TextTestResult):
+ def persist(self,complete=False):
+  data={'runtime':runtime,'expected':len(cases),'complete':complete,'elapsed':round(time.time()-started,2),'records':records}
+  temp=dest.with_suffix('.tmp');temp.write_text(json.dumps(data,ensure_ascii=False,indent=2));temp.replace(dest)
+ def stopTest(self,test):
+  status='passed';detail=''
+  for key,rows in [('failed',self.failures),('error',self.errors),('skipped',self.skipped)]:
+   for t,why in rows:
+    if t is test or getattr(t,'test_case',None) is test:status=key;detail=why
+  records[test.id()]={'status':status,'detail':detail};self.persist();super().stopTest(test)
+ def addError(self,test,err):
+  super().addError(test,err)
+  if isinstance(test,unittest.suite._ErrorHolder):
+   records[test.id()]={'status':'error','detail':self.errors[-1][1]};self.persist()
+print('Runtime',runtime,'expected',len(cases),'resume passed',len(cases)-len(pending),flush=True)
+r=unittest.TextTestRunner(verbosity=2,resultclass=Result).run(unittest.TestSuite(pending));r.persist(True)
+sys.exit(not r.wasSuccessful())

@@ -106,7 +106,8 @@ var RecordsUI=(function(){
       '<div class="rpmain"><canvas id="rpcv"></canvas><ol id="rpEvents" class="rpevents"></ol></div>'+
       '<div class="rpctl"><button type="button" id="rpPlay">播放</button><button type="button" id="rpPrev" aria-label="上一个事件">◀ 事件</button><button type="button" id="rpNext" aria-label="下一个事件">事件 ▶</button>'+
       '<select id="rpSpeed" aria-label="倍速"><option value="1">1×</option><option value="4" selected>4×</option><option value="16">16×</option><option value="64">64×</option></select>'+
-      '<input type="range" id="rpTime" min="0" max="100" step="1" aria-label="时间"><span id="rpClock"></span></div>'+
+      '<input type="range" id="rpTime" min="0" max="100" step="1" aria-label="时间"><span id="rpClock"></span>'+
+      '<button type="button" id="rpPat" aria-pressed="false">当时它在哪</button></div>'+
       '<div class="tpfoot"><button type="button" id="rpBack">返回</button></div></div>';
     document.body.appendChild(box);
     el('rpBack').addEventListener('click',closeReplay);
@@ -114,6 +115,7 @@ var RecordsUI=(function(){
     el('rpPrev').addEventListener('click',function(){ jump(-1); });
     el('rpNext').addEventListener('click',function(){ jump(1); });
     el('rpTime').addEventListener('input',function(){ if(rp){ rp.t=+this.value; frame(true); } });
+    el('rpPat').addEventListener('click',function(){ if(!rp) return; rp.pat=!rp.pat; this.setAttribute('aria-pressed',String(rp.pat)); frame(true); });
     box.addEventListener('keydown',function(ev){
       if(!rp) return;
       if(ev.key===' '&&ev.target.tagName!=='BUTTON'&&ev.target.tagName!=='SELECT'){ ev.preventDefault(); el('rpPlay').click(); }
@@ -130,7 +132,8 @@ var RecordsUI=(function(){
   }
   function replay(id){
     var L=load(id); if(!L||!L.samples.length){ try{ (0,$imports.toast)('这条记录没有回放数据'); }catch(e){} return false; }
-    rp={L:L,t:0,end:L.end,playing:false,last:0,cache:{},scene:null,raf:0};
+    rp={L:L,t:0,end:L.end,playing:false,last:0,cache:{},scene:null,raf:0,pat:false};
+    el('rpPat').setAttribute('aria-pressed','false'); el('rpPat').hidden=!(L.data.pat&&L.data.pat.length);
     el('rpTime').max=String(L.end); el('rpTime').value='0'; el('rpPlay').textContent='播放';
     var ol=el('rpEvents'); ol.textContent='';
     L.events.forEach(function(e,i){ if(e[1]==='room') return; var li=document.createElement('li'); li.dataset.i=i; li.dataset.t=e[0];
@@ -167,6 +170,7 @@ var RecordsUI=(function(){
       L.samples.forEach(function(s){ if(s[0]>rp.t||s[0]<rp.t-600||L.data.scenes[s[1]]!==scene) { started=false; return; } var p=B.map(s[2]*2,s[3]*2); if(!started){ c.moveTo(p[0],p[1]); started=true; } else c.lineTo(p[0],p[1]); });
       c.stroke();
       L.events.forEach(function(e){ if(e[0]>rp.t||e[1]==='room'||L.data.scenes[e[4]]!==scene) return; var p=B.map(e[5]*2,e[6]*2); c.fillStyle=KIND_COL[e[1]]||'#d8cfbf'; c.beginPath(); c.arc(p[0],p[1],3.5,0,Math.PI*2); c.fill(); });
+      if(rp.pat) drawPat(c,B,L,scene,rp.t-600,rp.t,true);
       var me=B.map(pos[2]*2,pos[3]*2), ang=pos[4]/64*Math.PI*2;
       c.save(); c.translate(me[0],me[1]); c.rotate(ang); c.fillStyle='#f1eadc'; c.beginPath(); c.moveTo(9,0); c.lineTo(-6,5); c.lineTo(-3,0); c.lineTo(-6,-5); c.closePath(); c.fill(); c.restore();
     }
@@ -179,16 +183,29 @@ var RecordsUI=(function(){
     if(curLi&&curLi!==rp.curLi){ rp.curLi=curLi; for(var j=0;j<lis.length;j++) lis[j].classList.remove('cur'); curLi.classList.add('cur'); if(rp.playing||force) curLi.scrollIntoView({block:'nearest'}); }
   }
 
+  /* 「当时它在哪」（创意提案 C8）：巡察者的轨迹用另一种颜色画，离你越近线越粗；ring：在当前时刻的位置画一个空心圈 */
+  function drawPat(c,B,L,scene,t0,t1,ring){
+    var P=(L.data.pat||[]).filter(function(p){ return p[0]>=t0&&p[0]<=t1&&L.data.scenes[p[1]]===scene; });
+    for(var i=1;i<P.length;i++){
+      var a=P[i-1], b=P[i]; if(b[0]-a[0]>30) continue;
+      var me=$imports.RunTrack.at(L.samples,b[0]), d=me&&L.data.scenes[me[1]]===scene?Math.hypot(me[2]-b[2],me[3]-b[3])*2*$imports.U2M:99;
+      var w=d<6?6:d<12?4:d<22?2.5:1.4, p=B.map(a[2]*2,a[3]*2), q=B.map(b[2]*2,b[3]*2);
+      c.strokeStyle='rgba(150,120,230,'+(d<12?0.95:0.6)+')'; c.lineWidth=w; c.beginPath(); c.moveTo(p[0],p[1]); c.lineTo(q[0],q[1]); c.stroke();
+    }
+    if(ring&&P.length&&t1-P[P.length-1][0]<=20){ var z=P[P.length-1], r=B.map(z[2]*2,z[3]*2); c.strokeStyle='#b49cf0'; c.lineWidth=2; c.beginPath(); c.arc(r[0],r[1],7,0,Math.PI*2); c.stroke(); }
+  }
+
   /* ---------- 足迹图 ---------- */
   function mountFootprint(){
     var box=document.createElement('div'); box.id='footv'; box.className='mdialog'; box.hidden=true;
     box.setAttribute('role','dialog'); box.setAttribute('aria-modal','true'); box.setAttribute('aria-labelledby','fpTitle');
     box.innerHTML='<div class="mdbox wide rpbox"><div class="tphead"><b id="fpTitle">足迹图</b><i id="fpInfo"></i></div>'+
       '<div class="fptabs" id="fpTabs" role="tablist"></div><canvas id="fpcv"></canvas>'+
-      '<p class="rsnote">颜色从浅到深是时间先后；圆点越大，在那里停得越久。</p>'+
-      '<div class="tpfoot"><button type="button" id="fpSave">保存图片</button><button type="button" id="fpBack">返回</button></div></div>';
+      '<p class="rsnote">颜色从浅到深是时间先后；圆点越大，在那里停得越久。打开「当时它在哪」，紫色是巡察者走过的路，离你越近线越粗。</p>'+
+      '<div class="tpfoot"><button type="button" id="fpPat" aria-pressed="false">当时它在哪</button><button type="button" id="fpSave">保存图片</button><button type="button" id="fpBack">返回</button></div></div>';
     document.body.appendChild(box);
     el('fpBack').addEventListener('click',closeFoot);
+    el('fpPat').addEventListener('click',function(){ if(!fp) return; fp.pat=!fp.pat; this.setAttribute('aria-pressed',String(fp.pat)); drawFoot(); });
     el('fpSave').addEventListener('click',function(){
       try{ var a=document.createElement('a'); a.href=el('fpcv').toDataURL('image/png'); a.download='足迹图-'+(fp&&fp.scene||'')+'.png'; document.body.appendChild(a); a.click(); a.remove(); }catch(e){}
     });
@@ -201,7 +218,8 @@ var RecordsUI=(function(){
       var s=L.samples[i], sc=L.data.scenes[s[1]]; if(order.indexOf(sc)<0) order.push(sc);
       var nx=L.samples[i+1]; if(nx&&nx[1]===s[1]) time[sc]=(time[sc]||0)+(nx[0]-s[0]);
     }
-    fp={L:L,order:order,time:time,scene:order[0]};
+    fp={L:L,order:order,time:time,scene:order[0],pat:false};
+    el('fpPat').setAttribute('aria-pressed','false'); el('fpPat').hidden=!(L.data.pat&&L.data.pat.length);
     var tb=el('fpTabs'); tb.textContent='';
     order.forEach(function(sc){ var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab'); b.dataset.scene=sc;
       b.textContent=sceneName(sc)+' · '+fmt((time[sc]||0)/10); b.addEventListener('click',function(){ fp.scene=sc; drawFoot(); }); tb.appendChild(b); });
@@ -228,6 +246,7 @@ var RecordsUI=(function(){
       var dt=pts[j][0]-pts[j-1][0]; if(dt<50) continue;
       var m=B.map(pts[j-1][2]*2,pts[j-1][3]*2); c.fillStyle='rgba(217,180,106,.35)'; c.beginPath(); c.arc(m[0],m[1],Math.min(18,3+Math.sqrt(dt/10)),0,Math.PI*2); c.fill();
     }
+    if(fp.pat) drawPat(c,B,L,scene,-Infinity,Infinity,false);
     L.events.forEach(function(e){ if(e[1]==='room'||L.data.scenes[e[4]]!==scene) return; var p=B.map(e[5]*2,e[6]*2); c.fillStyle=KIND_COL[e[1]]||'#d8cfbf'; c.strokeStyle='#0b0a09'; c.lineWidth=1.5; c.beginPath(); c.arc(p[0],p[1],5,0,Math.PI*2); c.fill(); c.stroke(); });
   }
 

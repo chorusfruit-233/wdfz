@@ -447,8 +447,8 @@ body.touch #lessonOpen,body.touch #investigateOpen{min-height:44px;font-size:12p
 
 body.lesson-open #hud .bc,body.lesson-open #prompt{visibility:hidden}
 /* 开场 CG 的字幕：压在下面那条黑边上，不挡画面 */
-#opcap{position:fixed;left:50%;bottom:calc(11vh + 18px);z-index:43;transform:translateX(-50%);max-width:min(760px,88vw);padding:6px 14px;
-  font:15px/1.9 var(--ui-serif);letter-spacing:2px;text-align:center;color:#e9e1d1;text-shadow:0 1px 6px rgba(0,0,0,.9);
+#opcap{position:fixed;left:50%;bottom:calc(11vh + 18px);z-index:43;transform:translateX(-50%);max-width:min(1100px,88vw);padding:6px 14px;
+  font:clamp(15px,2.1vh,24px)/1.9 var(--ui-serif);letter-spacing:2px;text-align:center;color:#e9e1d1;text-shadow:0 1px 6px rgba(0,0,0,.9);
   opacity:0;transition:opacity .5s;pointer-events:none}
 #opcap.on{opacity:1}
 body:not(.cut) #opcap{display:none}
@@ -479,3 +479,20 @@ body:not(.cut) #opcap{display:none}
 #campus-terminal.term-compact textarea{height:40px;min-height:40px;box-sizing:border-box;resize:none}
 #campus-terminal.term-compact footer{margin-top:6px}
 @media(max-width:600px){#campus-terminal{width:96vw;padding:10px;max-height:94dvh}#campus-terminal form label{position:absolute;clip-path:inset(50%)}#campus-terminal pre{font-size:12px;max-height:38dvh}#campus-terminal footer button{min-height:36px;padding:4px 8px}#campus-terminal header b{font-size:13px}}
+
+.elevator-controls{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));z-index:24;display:flex;gap:6px;padding:7px;border:1px solid #74613e;border-radius:8px;background:rgba(10,14,14,.94);box-shadow:0 3px 16px #0008;}
+.elevator-controls[hidden]{display:none;}
+#broadcast-panel{box-sizing:border-box;position:fixed;z-index:28;right:max(12px,env(safe-area-inset-right));top:max(80px,env(safe-area-inset-top));width:min(360px,calc(100vw - 24px));max-height:calc(100dvh - 100px);overflow:auto;padding:14px;border:1px solid #8e7956;border-radius:8px;background:rgba(12,18,18,.96);color:#e0dacb;font:15px/1.55 var(--ui-font);box-shadow:0 6px 28px #000a;touch-action:pan-y}
+#broadcast-panel[hidden]{display:none}#broadcast-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}#broadcast-panel button,#broadcast-panel select{min-height:46px;border:1px solid #827052;border-radius:5px;background:#292d24;color:#fff0cf;padding:7px;font:inherit}#broadcast-panel p{margin:10px 0}#broadcast-panel select{display:block;width:100%;margin-top:5px}#broadcast-panel progress{width:100%;height:16px;accent-color:#cfb478}#radio-read{width:100%;margin:8px 0;touch-action:none;user-select:none}#broadcast-panel button:disabled{opacity:.5}#broadcast-panel small{display:block;font-size:12px;color:#bbb6a7}
+@media(orientation:portrait){body.touch #broadcast-panel{top:calc(128px + env(safe-area-inset-top));max-height:calc(100dvh - 148px - env(safe-area-inset-top))}}
+@media(max-height:520px) and (orientation:landscape){#broadcast-panel{top:8px;right:8px;max-height:calc(100dvh - 16px);width:min(350px,calc(100vw - 210px));padding:9px}#broadcast-panel p{margin:6px 0}#broadcast-panel small{font-size:11px}}
+.elevator-controls button{min-width:56px;min-height:48px;margin:0;padding:8px;color:#d9d3bd;border:1px solid #665b43;border-radius:5px;background:#1b201e;font:inherit;touch-action:manipulation;}
+.elevator-controls #lift-close{color:#ffe2a0;border-color:#b09656;background:#393326;}
+.elevator-controls kbd{margin-left:5px;font-size:11px;opacity:.8;}.touch .elevator-controls kbd{display:none;}
+@media(max-height:520px) and (orientation:landscape){body.touch .elevator-controls{right:calc(136px + env(safe-area-inset-right));bottom:calc(58px + env(safe-area-inset-bottom));}}
+
+.broadcast-cut-caption{position:fixed;z-index:65;left:8vw;right:8vw;bottom:max(12vh,56px);margin:0;text-align:center;white-space:pre-line;color:#e7e0cd;font:16px/1.7 var(--ui-serif);text-shadow:0 2px 5px #000;pointer-events:none}
+/* 成绩单（创意提案 C7） */
+.rsreport{font-family:"Noto Serif SC",serif;line-height:1.9;padding:4px 2px}
+.rsreport p{margin:0}
+.rsreport i{display:block;text-align:right;opacity:.7;font-style:normal}

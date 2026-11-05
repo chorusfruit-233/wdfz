@@ -1,0 +1,7 @@
+test_touch_close_is_immediate_without_a_choice_in_both_orientations (test_elevator_review.ElevatorReviewTest.test_touch_close_is_immediate_without_a_choice_in_both_orientations) ... ok
+test_archive_cards_are_hidden_until_seen_and_replay_in_isolation (test_void_cut.VoidCutTest.test_archive_cards_are_hidden_until_seen_and_replay_in_isolation) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 30.148s
+
+OK

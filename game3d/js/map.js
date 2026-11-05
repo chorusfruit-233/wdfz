@@ -14,26 +14,26 @@ function border(g,w,h,c){
   for(y=0;y<h;y++){ g[y][0]=c; g[y][w-1]=c; }
 }
 var CLS_SPAN=$imports.ClassroomLayout.spans;
-var CLS_NAME=['高三1班','高三2班','高一3班','高二3班','高二1班','高二2班'];
-var CLS_DOOR=[8,16,24,32,40,48];
+var CLS_NAME=['高三1班','高一3班','高二1班','高二2班'];                 /* 一楼四间的班名（门牌）；自己班是最后一间 */
+var CLS_DOOR=[8,16,24,32,40,48];                                  /* 布局 1 的双开门列（旧存档迁移用，现在的门见 ClassroomLayout.doors） */
 var MY_ROOM=$imports.ClassroomLayout.ownSeat.classId, MY_COL=$imports.ClassroomLayout.ownSeat.col, MY_ROW=$imports.ClassroomLayout.ownSeat.row;
 
 function teachFloor(f){
-  var W=$imports.TCOLS, H=22, g=blank(W,H,'.'), x, y, i;
+  var W=$imports.TCOLS, H=22, g=blank(W,H,'.'), x, y, i, L=$imports.ClassroomLayout, r0=L.rows[0], r1=L.rows[1];
   border(g,W,H,'#');
-  var sep=[4,12,20,28,36,44,52];
-  for(i=0;i<sep.length;i++) for(y=1;y<16;y++) g[y][sep[i]]='#';
-  for(x=1;x<W-1;x++) g[15][x]='#';
-  for(i=0;i<CLS_DOOR.length;i++)$imports.ClassroomLayout.doors(i).forEach(function(d){g[d[1]][d[0]]='=';});
+  /* 教室带（第 r0–r1 行）：四间教室，隔墙和两头不用的地方填实；北墙（r0-1 行，开窗）以北也填实 */
+  for(y=1;y<r0;y++) for(x=1;x<W-1;x++) g[y][x]='#';
+  for(y=r0;y<=r1;y++) for(x=1;x<W-1;x++) if(L.classAt(x,y)<0) g[y][x]='#';
+  for(x=1;x<W-1;x++) g[r1+1][x]='#';
+  for(i=0;i<L.spans.length;i++)L.doors(i).forEach(function(d){g[d[1]][d[0]]='=';});
   g[21][6]='S'; g[21][7]='S';
   g[21][56]='S'; g[21][57]='S';
   if(f===1){ g[21][30]='O'; g[21][31]='O'; }
-  for(i=0;i<6;i++){
-    var c0=CLS_SPAN[i][0], c1=CLS_SPAN[i][1];
-    var pod=$imports.ClassroomLayout.podium(i);g[pod[1]][pod[0]]='T';
-    for(y=2;y<=12;y+=2)for(x=c0+2;x<=c1;x+=2)g[y][x]='d';
+  /* 教室：讲台、三组同桌七排（布局和每张桌子的位置见 domain/classroom-layout.js） */
+  for(i=0;i<L.spans.length;i++){
+    var pod=L.podium(i);g[pod[1]][pod[0]]='T';
+    L.seatTiles(i).forEach(function(t){g[t[1]][t[0]]='d';});
   }
-  g[MY_ROW][MY_COL-1]='.';
   g[MY_ROW][MY_COL]='P';
   for(y=16;y<=20;y++) g[y][57]='#';
   g[19][57]='.';                                   /* 门洞 */
@@ -279,7 +279,7 @@ var OBJ=[
   {id:'courtB', n:'篮球场',         x:306,y:328,w:76, h:46, k:'court'},
   {id:'gear',   n:'体育器材室',     x:302,y:430,w:84, h:58, k:'roof'},
   {id:'court2', n:'篮球场',         x:435,y:220,w:130,h:160,k:'court'},
-  {id:'shed',   n:'电动车棚',       x:572,y:212,w:36, h:163,k:'roof'},
+  {id:'shed',   n:'电动车棚',       x:572,y:212,w:36, h:163,k:'roof', open:1},   /* 开敞的棚：碰撞不按整块屋顶，按棚下的钢架和车（content/structure-recipe.js） */
   {id:'bad3',   n:'三个羽毛球场',   x:425,y:405,w:183,h:95, k:'court'},
   {id:'garw',   n:'地下车库人行口', s:'人行口', x:300,y:527,w:32, h:24, k:'roof'},
   {id:'admin',  n:'行政楼',         x:400,y:515,w:270,h:90, k:'roof', open1f:1},

@@ -16,7 +16,7 @@ class TalentTest(BrowserCase):
         page.evaluate("S.screen='menu';document.getElementById('menu').style.display='block'")
         page.evaluate("localStorage.setItem('wdfz3d',JSON.stringify({keep:1}))")
         page.locator('#menu .mcard').first.click()
-        self.assert_js(page, "!document.getElementById('tpick').hidden&&document.querySelectorAll('#tpcards .tpcard').length===6&&document.getElementById('tpGo').disabled")
+        self.assert_js(page, "!document.getElementById('tpick').hidden&&document.querySelectorAll('#tpcards .tpcard').length===7&&document.getElementById('tpGo').disabled")
         self.assert_js(page, "S.screen==='menu'&&JSON.parse(localStorage.getItem('wdfz3d')).keep===1")
         self.assertIn('暗处适应', page.locator('#tpcards').inner_text())
         self.assertIn('限制', page.locator('#tpcards').inner_text())
@@ -27,7 +27,7 @@ class TalentTest(BrowserCase):
         self.assert_js(page, "!document.getElementById('tpGo').disabled&&S.screen==='menu'")
         page.locator('#tpGo').click()
         page.wait_for_function("S.screen==='play'&&S.room==='teach1'")
-        self.assert_js(page, "S.diff==='hard'&&S.talent==='watch'&&Talent.state().origin==='selected'&&Talent.rules()===3")
+        self.assert_js(page, "S.diff==='hard'&&S.talent==='watch'&&Talent.state().origin==='selected'&&Talent.rules()===4")
         page.evaluate("Game.quit&&Game.quit();S.screen='menu';document.getElementById('menu').style.display='block'")
         page.locator('#menu .mcard').first.click()
         page.locator('#tpRandom').click()
@@ -120,3 +120,45 @@ class TalentTest(BrowserCase):
         self.assertIn('天生免疫', text)
         self.assertIn('已经用掉了', text)
         self.assertIn('挡下了一次', text)
+
+    def test_sharp_ears_hear_farther_tell_floors_and_pay_with_more_false_alarms(self):
+        """顺风耳（2026-11-04）：可闻距离 ×1.5，字幕分楼上楼下、多一档「很远」，假威胁冷却 ×0.8；不改巡察者和异象的规则。"""
+        page = self.game('ear')
+        r = page.evaluate("""()=>{const out={};
+          out.mods=[Talent.modifier('hear.range'),Talent.modifier('dread.cooldown'),Talent.capability('ears').ok,Talent.capability('ears').far];
+          out.view=Talent.view('ear');out.rules=Talent.rules();out.pause=Talent.pauseText();
+          // 字幕：同一个声音，顺风耳多出楼上楼下和「很远」
+          S.screen='play';SoundCaptions.reset();
+          SoundCaptions.publish('dread.steps',{place:{pan:0,behind:true,m:24,floor:'down'}});
+          SoundCaptions.publish('dread.knock',{place:{pan:0.6,behind:false,m:10}});
+          out.ear=SoundCaptions.events().map(e=>e.text);
+          S.talent='watch';SoundCaptions.reset();
+          SoundCaptions.publish('dread.steps',{place:{pan:0,behind:true,m:24,floor:'down'}});
+          out.plain=SoundCaptions.events().map(e=>e.text);
+          out.plainMods=[Talent.modifier('hear.range'),Talent.modifier('dread.cooldown')];
+          // 假威胁：同样 10 秒，顺风耳的倒计时走得快 1/0.8 倍
+          function drain(t){S.talent=t;S.screen='play';S.dead=false;DREAD.started=true;DREAD.slice=null;DREAD.t=200;DREAD.nextAmb=100;Dread.tick(10);return 100-DREAD.nextAmb;}
+          out.ambPlain=drain('watch');out.ambEar=drain('ear');
+          S.talent='ear';const p1=dreadPlace(S.x+20/U2M,S.y);S.talent='watch';const p0=dreadPlace(S.x+20/U2M,S.y);out.k=[p0.k,p1.k];
+          return out;}""")
+        self.assertEqual(r['mods'], [1.5, 0.8, True, 18])
+        self.assertEqual((r['view']['name'], r['rules']), ('顺风耳', 4))
+        self.assertIn('可闻距离 ×1.5', r['view']['does'])
+        self.assertIn('不改变巡察者和异象的规则', r['view']['limit'])
+        self.assertIn('顺风耳', r['pause'])
+        self.assertEqual(r['ear'][0], '楼下 · 很远 · 缓慢的脚步声')
+        self.assertTrue(r['ear'][1].startswith('右 · 前方 · 远处'), r['ear'])
+        self.assertEqual(r['plain'], ['后方 · 远处 · 缓慢的脚步声'])
+        self.assertEqual(r['plainMods'], [1, 1])
+        self.assertGreater(r['ambPlain'], 0)
+        self.assertAlmostEqual(r['ambEar'] / r['ambPlain'], 1.25, places=3)
+        self.assertGreater(r['k'][1], r['k'][0])               # 同样 20 米，顺风耳听得更清楚
+
+    def test_sharp_ears_hear_the_patrol_from_farther_and_upstairs(self):
+        page = self.game('ear')
+        r = page.evaluate("""()=>{const out={ear:PatrolWorld.hearDistance()};
+          PAT.state='walk';PAT.room='teach3';PAT.x=INTERIORS.teach3.ox+40;PAT.y=INTERIORS.teach3.oy+40;PAT.fy=0;
+          out.floor=PatrolWorld.floorDir();S.talent='watch';out.plain=PatrolWorld.hearDistance();out.plainFloor=PatrolWorld.floorDir();return out;}""")
+        self.assertEqual((r['ear'], r['plain']), (300, 200))   # 约 33 米 / 22 米
+        self.assertIsNone(r['plainFloor'])
+        self.assertEqual(r['floor'], 'up')                     # 人在一楼，它在三楼

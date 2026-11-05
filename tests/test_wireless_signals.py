@@ -7,7 +7,7 @@ class WirelessSignalTest(BrowserCase):
         p = self.page(touch=touch)
         p.evaluate("""freshState('hard');running=false;PRO.on=false;S.intro=0;S.talent='none';
           S.tsec=700;AN.active=false;AN.next=1e6;
-          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,6));S.seated=false;
+          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,12));S.seated=false;
           addItem('phone');PhoneNetwork.startWireless();PhoneNetwork.device.wireless.target=180;""")
         return p
 
@@ -34,7 +34,7 @@ class WirelessSignalTest(BrowserCase):
           const dropped=!PAT.wirelessSignal&&PhoneNetwork.device.wireless.elapsed===14;
           addItem('phone');doEnterRoom('lab3',PatrolNav.tilePoint('lab3',5,4));PhoneNetwork.device.battery=0;PhoneNetwork.device.powered=false;
           PhoneNetwork.tick(40);const off=!PAT.wirelessSignal&&PhoneNetwork.device.wireless.elapsed===14;
-          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,6));PhoneNetwork.tick(15);
+          doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,12));PhoneNetwork.tick(15);
           const boot=PhoneNetwork.device.powered&&!PAT.wirelessSignal;
           PhoneNetwork.tick(1);return paused&&dropped&&off&&boot&&!!PAT.wirelessSignal;})()""")
 
@@ -72,10 +72,11 @@ class WirelessSignalTest(BrowserCase):
 
     def test_wireless_search_overrides_seat_leave_and_night_immunity_but_keeps_warning(self):
         p = self.game()
-        self.assert_js(p, """(()=>{const R=INTERIORS.teach1;S.x=R.ox+48.5*9;S.y=R.oy+6.5*9;
+        # 坐在自己的座位上（布局见 ClassroomLayout）；巡察者放在同一间教室、5 米外的过道里（第 12 行），中间没有墙
+        self.assert_js(p, """(()=>{const R=INTERIORS.teach1,L=ClassroomLayout,a=L.anchor(R,L.ownSeat);S.x=a.x;S.y=a.y;
           S.seated=true;S.tsec=1400;RT.leaveUntil=gameClock()+120;
           const immune=PatrolWorld.exempt()&&!PatrolWorld.eligible()&&!PatrolWorld.hunting();PhoneNetwork.tick(15);
-          Object.assign(PAT,{room:S.room,x:S.x,y:S.y+45,fy:0,transition:null,safety:0,near:false});
+          Object.assign(PAT,{room:S.room,x:S.x+45,y:R.oy+(L.deskRows[3]+1.5)*R.th,fy:0,transition:null,safety:0,near:false});
           PatrolWorld.tick(.1);const warning=PAT.warning>3&&!PAT.locked&&PatrolWorld.hunting();
           PatrolWorld.tick(3.4);const protectedByWarning=PAT.warning>0&&!S.dead&&!PAT.locked;
           PatrolWorld.tick(.8);return immune&&warning&&protectedByWarning&&PAT.locked&&S.dead&&!PAT.permanent;})()""")
@@ -107,7 +108,7 @@ class WirelessSignalTest(BrowserCase):
         self.assert_js(p, """(()=>{PhoneNetwork.tick(15);saveGame();const d=loadGame();delete d.mods.patrolWorld.wirelessSignal;applySave(d);
           const legacy=!PAT.wirelessSignal;
           for(const signal of [{point:{scene:'missing',x:0,y:0},remaining:3},{point:{scene:'teach1',x:'bad',y:0},remaining:3},
-            {point:PatrolNav.tilePoint('teach1',48,6),remaining:99}]){
+            {point:PatrolNav.tilePoint('teach1',48,12),remaining:99}]){
             d.mods.patrolWorld.wirelessSignal=signal;applySave(d);if(PAT.wirelessSignal)return false;}
           PhoneNetwork.tick(15);const restored=!!PAT.wirelessSignal;Mechanics.dream();const dream=!PAT.wirelessSignal;
           freshState('hard');running=false;return legacy&&restored&&dream&&!PAT.wirelessSignal&&PhoneNetwork.device.wireless.elapsed===0;})()""")

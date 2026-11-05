@@ -2,7 +2,7 @@
 from browser_case import BrowserCase
 
 PREPARE="""freshState('hard');running=false;S.intro=0;PRO.on=false;S.talent='none';AN.next=1e6;
-  doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,6));S.seated=false;S.tsec=700;"""
+  doEnterRoom('teach1',PatrolNav.tilePoint('teach1',48,12));S.seated=false;S.tsec=700;"""
 
 # 从玩家可读取的档案计算答案，不调用生成器的私有答案。
 SOLUTION=r"""() => {

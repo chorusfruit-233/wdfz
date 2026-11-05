@@ -61,7 +61,11 @@ var DeathCG=(function(){
       view.pitch=(0,$imports.clamp)((pitch||0)+(b.pitch||0)*(1-ss(k,0,0.4)),-1.45,1.45);
       view.eyeLift=this.lift;
       try{ (0,$imports.syncCamera)(0,view); }catch(e){}
-      if(this.veilMesh) this.veilMesh.position.set(0,this.camY(),0);
+      /* 暗场球跟着镜头的真实位置：眼高不一定是标准的（刚从座位上站起来时还在过渡），按标准眼高摆就会让镜头落在球外，暗场盖不住 */
+      if(this.veilMesh){
+        try{ this.F.updateMatrixWorld(true); this.veilMesh.position.copy(this.F.worldToLocal($imports.GLR.cam.getWorldPosition(new $imports.THREE.Vector3()))); }
+        catch(e){ this.veilMesh.position.set(0,this.camY(),0); }
+      }
     },
     shade:function(v){ if(this.veilMesh) this.veilMesh.material.opacity=Math.min(0.94,v); },
     /* 只闪一次，亮度封顶（不做连续频闪） */
@@ -132,6 +136,67 @@ var DeathCG=(function(){
       c.cue('k1',k,1.9,function(){ $imports.SFX.door(); });
       c.cue('k2',k,2.35,function(){ $imports.SFX.door(); });
       c.shade(0.55*ss(k,1.1,1.3)*(1-0.5*kn)+0.4*ss(k,3.0,3.5));
+    }
+  };
+
+  /* ---- liftdoor：没关上的门（巡察者挡门，计划《电梯直通、新天赋、新结局与恐怖氛围》1.3 节） ----
+     前兆：门合到只剩一掌宽，门外的脚步越来越急；接触：四根手指从门缝伸进来，门停住，被一下一下扒开；
+     临终视角：门口被它整个占满，轿厢的灯按它的节奏闪一下，熄掉；收束：从轿厢顶角往下看，楼层灯停在这一层，门合上，里面没有人。
+     布景自己搭（视线坐标：人在原点，+z 是门），不依赖死的那一刻朝哪 */
+  var LIFT_SEG={a:[0,0.045,0.05,0.01],b:[0.025,0.0225,0.01,0.045],c:[0.025,-0.0225,0.01,0.045],d:[0,-0.045,0.05,0.01],
+    e:[-0.025,-0.0225,0.01,0.045],f:[-0.025,0.0225,0.01,0.045],g:[0,0,0.05,0.01]};
+  var LIFT_DIGIT={1:'bc',2:'abged',3:'abgcd',4:'fgbc',5:'afgcd'};
+  CG.liftdoor={
+    build:function(c){
+      var i, D=1.15;                                                                     /* 门在前面 1.15 米（人站在轿厢靠里） */
+      c.hideWorld(); c.D=D;
+      var fl=c.mesh(new $imports.THREE.PlaneGeometry(1.6,1.6),mat(0x0e1112),0,0.002,D-0.8); fl.rotation.x=-Math.PI/2;
+      c.box(0.04,2.3,1.6,0x5e6766,undefined,-0.8,1.15,D-0.8); c.box(0.04,2.3,1.6,0x5e6766,undefined,0.8,1.15,D-0.8);   /* 轿壁 */
+      c.box(1.6,2.3,0.04,0x545c5b,undefined,0,1.15,D-1.6);
+      c.box(1.6,0.04,1.6,0x2c3231,undefined,0,2.32,D-0.8);
+      c.box(0.35,2.3,0.05,0x5e6766,undefined,-0.625,1.15,D+0.02); c.box(0.35,2.3,0.05,0x5e6766,undefined,0.625,1.15,D+0.02);   /* 前壁、门楣 */
+      c.box(0.9,0.2,0.05,0x5e6766,undefined,0,2.2,D+0.02);
+      c.box(0.9,0.02,0.1,0x464c4b,undefined,0,0.01,D+0.04);                                                         /* 地坎 */
+      c.lamp=c.box(0.6,0.012,0.4,0xd8ddd6,undefined,0,2.29,D-0.8,{fog:false});
+      c.box(0.04,0.82,0.19,0x262c2e,undefined,-0.77,1.42,D-0.4);                                                   /* 操纵盘 */
+      /* 楼层灯：门楣上一块黑屏，七段数码拼出这一层（视线坐标的 +x 在画面左边，所以左右对调） */
+      c.box(0.16,0.12,0.008,0x070808,undefined,0,2.2,D-0.008);
+      var R=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room], floor=R&&R.floor>=1&&R.floor<=5?R.floor:2, on=LIFT_DIGIT[floor];
+      Object.keys(LIFT_SEG).forEach(function(k){ if(on.indexOf(k)<0) return; var q=LIFT_SEG[k];
+        c.box(q[2],q[3],0.004,0xffb257,undefined,-q[0],2.2+q[1],D-0.013,{fog:false}); });
+      c.leafL=c.box(0.45,2.1,0.03,0x737b7a,undefined,0.225,1.05,D); c.leafR=c.box(0.45,2.1,0.03,0x737b7a,undefined,-0.225,1.05,D);
+      c.out=c.box(1.6,2.3,0.01,0xa9ad9f,undefined,0,1.15,D+0.9,{fog:false});                                     /* 门外走廊的光 */
+      c.it=c.fig('tall',0x020303,1,0,D+0.55); c.it.rotation.y=Math.PI;
+      c.fingers=[];
+      for(i=0;i<4;i++) c.fingers.push(c.box(0.13,0.016,0.022,0x6f6a63,undefined,0,1.27+i*0.042,D-0.03));
+      c.veil(0x000000);
+    },
+    update:function(c,k,view){
+      var D=c.D, end=k>=3.55, gap;
+      if(k<1.15) gap=0.16-0.07*ss(k,0,1.15);                                             /* 合到只剩一掌宽 */
+      else if(k<1.7) gap=0.09+0.004*Math.sin(k*47)*seg(k,1.2,1.6);                       /* 停住，在抖 */
+      else gap=0.09+0.81*(0.35*ss(k,1.7,1.95)+0.65*ss(k,2.15,2.7));                      /* 一下一下扒开 */
+      if(end) gap=0.9*(1-ss(k,3.6,4.2));                                                  /* 收束：门合上 */
+      var half=gap/2, reach=ss(k,1.15,1.4);
+      c.leafL.position.x=0.225+half; c.leafR.position.x=-0.225-half;                      /* 画面左边那扇是 +x */
+      c.fingers.forEach(function(f,i){
+        f.visible=!end&&k>1.15;
+        f.position.set(half+0.045*reach-0.004*i,1.27+i*0.042,D+0.06-0.085*reach);         /* 扣住左扇门的边，跟着门走 */
+      });
+      c.it.visible=!end;
+      c.it.position.z=D+0.55-0.4*ss(k,2.5,3.2); c.it.rotation.x=-0.18*ss(k,2.6,3.2);
+      var b=1-0.85*ss(k,2.0,2.8); c.out.material.color.setRGB(0.66*b,0.68*b,0.62*b);
+      c.out.visible=!end||gap>0.02;
+      /* 灯：按它「两短一长」的节奏闪一下，熄掉 */
+      c.lamp.visible=end?false:(k<2.9||(k>=2.98&&k<3.06)||(k>=3.12&&k<3.3));
+      if(!end){
+        var up=ss(k,2.3,3.0), jolt=seg(k,1.15,1.3)*(1-seg(k,1.3,1.6));
+        c.cam(view,k,0,-0.1+0.48*up+0.03*Math.sin(k*37)*c.shk*jolt,0);
+        c.shade(0.2+0.72*ss(k,3.25,3.5));
+      }else{
+        c.cam(view,k,-0.3,-0.6,0.62);                                                     /* 从上往下看：轿厢里没有人，门在合上 */
+        c.shade(0.94-0.45*ss(k,3.6,3.85)+0.45*ss(k,4.15,4.4));
+      }
     }
   };
 
@@ -799,6 +864,8 @@ var DeathCG=(function(){
         var mapped=(0,$imports.cupWarmMat)();g.add(new $imports.THREE.Mesh(box,mapped));
         /* Turning toward the classroom board during a cinematic can reveal this scene material for the first time. */
         g.add(new $imports.THREE.Mesh(box,new $imports.THREE.MeshLambertMaterial({map:mapped.map,fog:true})));
+        /* Broadcast placards use an opaque mapped material without fog. Warm that variant too. */
+        g.add(new $imports.THREE.Mesh(box,new $imports.THREE.MeshBasicMaterial({map:mapped.map,fog:false})));
       }
       g.position.copy($imports.GLR.cam.position); g.updateMatrixWorld(true);
       /* 只编这一小组（灯光、雾取当前场景的），不用把整个校园再走一遍 */

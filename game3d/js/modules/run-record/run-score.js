@@ -31,12 +31,13 @@ var RunScore=(function(){
     var P=$imports.SCORE_CFG.pts;
     switch(f.kind){
       case 'anomaly':
-        if(f.phase==='start'){ st.an=f.id; st.anHurt=0; try{ $imports.RunLog.event('anomaly','遭遇「'+anName(f.id)+'」',0); }catch(e){} }
+        if(f.phase==='start'){ st.an=f.id; st.anHurt=0; try{ $imports.RunLog.event('anomaly','遭遇「'+(f.name||anName(f.id))+'」',0); }catch(e){} }
         else if(f.phase==='hurt'){ if(st.an===f.id) st.anHurt=1; }
         else if(f.phase==='end'&&st.an===f.id){
           if(f.survived){
-            if(st.anHurt) add('应对 · 异象','「'+anName(f.id)+'」受伤后脱身',P.anomalyHurt,'anomaly');
-            else add('应对 · 异象','化解「'+anName(f.id)+'」',f.lethal?P.anomalyLethal:P.anomalyClean,'anomaly');
+            var nm=f.name||anName(f.id);                     /* 不在异象表里的（模块自己的稀有事件）带着自己的名字 */
+            if(st.anHurt) add('应对 · 异象','「'+nm+'」受伤后脱身',P.anomalyHurt,'anomaly');
+            else add('应对 · 异象','化解「'+nm+'」',f.lethal?P.anomalyLethal:P.anomalyClean,'anomaly');
           }
           st.an=null; st.anHurt=0;
         }
@@ -45,6 +46,7 @@ var RunScore=(function(){
         if(f.laugh===true) add('应对 · 选择','笑出了声',P.laugh,'choice');
         else if(f.laugh===false) add('应对 · 选择','忍住了没笑',P.noLaugh,'choice');
         break;
+      case 'broadcast':if(f.what==='verified'&&f.real===false)add('应对 · 选择','核对假广播',P.anomalyClean,'broadcast');break;
       case 'face': add('应对 · 选择',f.correct?'验证题答对':'验证题答错',f.correct?P.faceRight:P.faceWrong,'choice'); break;
       case 'lesson': if(f.correct) add('应对 · 选择','课桌任务答对',P.lesson,'choice'); else try{ $imports.RunLog.event('choice','课桌任务答错',0); }catch(e){} break;
       case 'exam': if(f.phase==='paper') add('应对 · 选择',f.pass?'考试合格交卷':'考试没坐住',f.pass?P.examPass:P.examFail,'exam');
@@ -60,6 +62,7 @@ var RunScore=(function(){
         }
         else if(f.what==='lost') add('校规与巡察','甩掉了巡察者',P.patrolLost,'patrol');
         else if(f.what==='locker') add('校规与巡察','躲在柜子里躲过',P.locker,'patrol');
+        else if(f.what==='door') add('校规与巡察','电梯门在它面前合上',P.locker,'patrol');      /* 挡门：和躲柜一样记一次「躲过」 */
         else if(f.what==='banish') try{ $imports.RunLog.event('patrol','符纸烧成了灰',0); }catch(e){}
         break;
       case 'protect': st.saved=1; add('保命与惊醒',f.by==='immune'?'天生免疫挡下一次':'不知名药丸挡下一次',P.protect,'protect'); break;
@@ -80,7 +83,7 @@ var RunScore=(function(){
       rooms.push(id);
       for(var y=0;y<R.rows;y++) for(var x=0;x<R.cols;x++) if(R.grid[y][x]!=='#') cells++;
     });
-    try{ $imports.OBJ.forEach(function(o){ if(o.k&&o.k!=='roof') zones.push(o.id||(o.k+zones.length)); }); }catch(e){}
+    try{ $imports.OBJ.forEach(function(o){ if(o.k&&(o.k!=='roof'||o.open)) zones.push(o.id||(o.k+zones.length)); });   /* 开敞的车棚也算一块场地 */ }catch(e){}
     Object.keys(gates()).forEach(function(k){ zones.push('gate'+k); });
     totalsCache={rooms:rooms,zones:zones,cells:cells};
     return totalsCache;
@@ -105,7 +108,7 @@ var RunScore=(function(){
   function zoneTick(){
     if($imports.S.mode!=='out') return;
     var mx=$imports.S.x/$imports.SC, my=$imports.S.y/$imports.SC;
-    try{ $imports.OBJ.forEach(function(o,i){ if(!o.k||o.k==='roof') return; if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) st.zones[o.id||(o.k+i)]=1; }); }catch(e){}
+    try{ $imports.OBJ.forEach(function(o,i){ if(!o.k||(o.k==='roof'&&!o.open)) return; if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) st.zones[o.id||(o.k+i)]=1; }); }catch(e){}
     var gs=gates(); Object.keys(gs).forEach(function(k){ var g=gs[k]; if(Math.hypot(mx-g.x,my-g.y)<14) st.zones['gate'+k]=1; });
   }
 

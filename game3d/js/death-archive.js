@@ -13,9 +13,10 @@
 
 var DEATH_ARCHIVE_KEY='wdfz3d_death_archive_v1';
 /* 注册表：死因 ID → 演出 → 档案标题、一句记录 → 回放舞台。secret:1 的条目在解锁前完全不出现，也不算进「已记录 x / y」的总数
-   （目前是虚空迷宫里的两种死法；演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫）。
+   （目前是虚空迷宫里的两种死法，演出由 void-maze 模块用 DeathCG.register 提供，回放舞台就是迷宫；和电梯里的「满员」，演出由 lift-crowd 模块提供）。
    ext:1 表示演出由模块注册：模块拿掉了，这一份就不列出（见 DeathArchive.avail）。 */
 var DEATH_ARCHIVE=[
+  {id:'misread',fx:'misread',n:'念错了',d:'第二行开始，喇叭里已经不是我的声音。播音中的红灯熄了。',stage:'admin2',ext:1},
   {id:'patrol',       fx:'grip',     n:'点名',         d:'灯按拍子闪的时候，它就在这一层。一只手从后面按住了我的头顶。', stage:'teach1'},
   {id:'garage',       fx:'grip',     n:'车道中间',     d:'车库里没有灯。它一直站在车道中间，等我自己走过去。', stage:'garage1'},
   {id:'car_entry',    fx:'grip',     n:'后座',         d:'我拉开了车门。后视镜里，它就弯着腰站在后座上。', stage:'garage1'},
@@ -23,6 +24,7 @@ var DEATH_ARCHIVE=[
   {id:'san',          fx:'vignette', n:'那根弦',       d:'理智耗尽。一圈没有脸的高个子，从暗处一个接一个走出来。', stage:'teach1'},
   {id:'assimilation', fx:'names',    n:'合身的椅子',   d:'我在自己的位子上坐好了。这一次，不用再起来了。', stage:'teach1'},
   {id:'trash',        fx:'trash',    n:'桶盖',         d:'桶盖合上了。外面有人敲了两下，像在确认里面有没有人。', stage:'trash1'},
+  {id:'liftdoor',     fx:'liftdoor', n:'没关上的门',   d:'门只剩一掌宽的时候，四根手指伸了进来。楼层灯停在这一层，门合上，轿厢里没有人。', stage:'teach2'},
   {id:'an:rain',      fx:'drown',    n:'雨',           d:'雨灌进了肺里。我听见自己在身体里晃。', stage:'out'},
   {id:'an:moth',      fx:'swarm',    n:'蛾群',         d:'翅膀上的粉落进眼睛里，很痒。然后什么都不痒了。', stage:'out'},
   {id:'an:exercise',  fx:'follow',   n:'课间操',       d:'我开始跟着做操。手臂抬起来的时候才发现，早就停不下来了。', stage:'out'},
@@ -35,6 +37,7 @@ var DEATH_ARCHIVE=[
   {id:'trap_wall',    fx:'squeeze',  n:'墙外的墙',     d:'墙外面还有一道墙。我一直翻，翻到手指不再是手指的形状。', stage:'out'},
   {id:'trap_beg',     fx:'face',     n:'路过的人',     d:'他慢慢转过头——没有脸，只有一个很大的、在笑的洞。', stage:'out'},
   {id:'void_lost',    fx:'void',     n:'哪一扇门',     d:'白墙上的门一扇扇裂开、亮起来，又一格一格暗下去。我想不起自己是从哪一扇进来的。', stage:'lift_dream', secret:1, ext:1},
+  {id:'crowd',        fx:'crowd',    n:'满员',         d:'门合上，蜂鸣停了。肩膀上搭上来的手越来越多，楼层灯一路往上跳。门再打开时，轿厢里只有一张学生证。', stage:'teach2', secret:1, ext:1},
   {id:'void_fall',    fx:'abyss',    n:'往下',         d:'我一直往下掉。下面那块画着斜线的白色方地上站着一个人，抬起手电照我。', stage:'lift_dream', secret:1, ext:1}
 ];
 var DEATH_ARCHIVE_BY_ID={};
@@ -51,7 +54,12 @@ var ARCHIVE_CUTS=[
   {id:'end:face',    cut:'face',    end:'face',   n:'《白名单》',   d:'闸机的红灯「嘀」地变白。走出门回头，门里一个接一个站满了目送的人。', stage:'teach1'},
   {id:'end:portal',  cut:'portal',  end:'portal', n:'《门》',       d:'导轨一段段闭合，光圈撑开。退了半步，然后走了进去。', stage:'lab1'},
   {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
-  {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1}
+  {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
+  {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1},
+  /* 异色空间的进出过场（内部，2026-11-04）：演出由 void-maze 模块的 maze-cut.js 注册；解锁看 seen 记录（DeathArchive.markSeen），
+     没经历过完全不出现、不计数；回放舞台都是迷宫（离开那段在白场时自己换到教学楼二楼的电梯厅） */
+  {id:'cut:void_in', cut:'void_in', seen:1, n:'不存在的那一层', d:'楼层显示跳成一个不认识的符号，灯一排排灭了。门开，外面什么都没有，只有一块方地浮着。', stage:'lift_dream', secret:1},
+  {id:'cut:void_out',cut:'void_out',seen:1, n:'回来',         d:'门缝里的蓝光涌进来，白色一点点退开。回头，是一扇普通的电梯门，指示灯一格一格暗了。', stage:'lift_dream', secret:1}
 ];
 ARCHIVE_CUTS.forEach(function(e,i){ e.no=i+1; });
 /* 档案室里全部条目（死亡 + 演出），按 ID 查 */
@@ -68,7 +76,7 @@ var KILL_CTX=null;
 
 var DeathArchive={
   /* granted：「全部解锁」直接打开的条目（死亡和演出都记在这里），和真的经历过分开：不计次数、不算「新记录」、不写结局记录 */
-  blank:function(){ return {version:1,unlocked:{},first:{},count:{},legacy:{},granted:{},pending:0,migrated:0}; },
+  blank:function(){ return {version:1,unlocked:{},first:{},count:{},legacy:{},granted:{},seen:{},pending:0,migrated:0}; },
   read:function(){
     var d=null;
     try{ d=JSON.parse(localStorage.getItem(DEATH_ARCHIVE_KEY)||'null'); }catch(e){ d=null; }
@@ -79,6 +87,7 @@ var DeathArchive={
       Object.keys(src).forEach(function(id){ if(DEATH_ARCHIVE_BY_ID[id]) out[k][id]=src[id]; });   /* 未知 ID 丢掉，不改成别的死法 */
     });
     if(d.granted&&typeof d.granted==='object') Object.keys(d.granted).forEach(function(id){ if((ARCHIVE_BY_ID[id]||/^x\.[A-Za-z0-9_.-]{1,40}$/.test(id))&&d.granted[id]) out.granted[id]=1; });
+    if(d.seen&&typeof d.seen==='object') Object.keys(d.seen).forEach(function(id){ var e=ARCHIVE_BY_ID[id]; if(e&&e.seen&&d.seen[id]) out.seen[id]=1; });
     out.pending=Number.isFinite(d.pending)?Math.max(0,d.pending|0):0;
     out.migrated=d.migrated?1:0;
     return out;
@@ -120,7 +129,7 @@ var DeathArchive={
   state:function(){ var d=DeathArchive.migrate(DeathArchive.read()); DeathArchive.write(d); return d; },
   /* 这一份档案打开了没有：真的经历过（死亡记录、达成的结局、看过的开场），或者「全部解锁」过 */
   real:function(e,d){
-    if(e.cut) return e.end?!!(0,$imports.endsSeen)()[e.end]:(0,$imports.proSeen)();
+    if(e.cut) return e.seen?!!(d&&d.seen&&d.seen[e.id]):(e.end?!!(0,$imports.endsSeen)()[e.end]:(0,$imports.proSeen)());
     return !!d.unlocked[e.id];
   },
   isOpen:function(e,d){ d=d||DeathArchive.state(); return !!d.granted[e.id]||DeathArchive.real(e,d); },
@@ -160,6 +169,13 @@ var DeathArchive={
     var first=document.querySelector('#arcuts .arcard.open button')||document.getElementById('arBack');
     if(first) first.focus({preventScroll:true});
     return n;
+  },
+  /* 过场看过了（异色空间进出这类只在游玩中出现一次的演出）：记进 seen；档案室回放不算。返回是不是第一次 */
+  markSeen:function(id){
+    var e=ARCHIVE_BY_ID[id]; if(!e||!e.seen) return false;
+    if(typeof ArchiveReplay!=='undefined'&&ArchiveReplay.on) return false;
+    var d=DeathArchive.state(); if(d.seen[id]) return false;
+    d.seen[id]=1; DeathArchive.write(d); return true;
   },
   /* 死亡演出放完以后提示一次（不在致死那一刻打断） */
   notify:function(entry){
@@ -256,7 +272,7 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
     document.getElementById('menu').style.display='none';
     document.body.classList.add('cut','replaying');
     var cap=document.getElementById('arReplay');
-    if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; cap.querySelector('i').textContent=e.cut?(e.end?'结局档案 · 回放':'开场 · 回放'):'死亡档案 · 回放'; }
+    if(cap){ cap.hidden=false; cap.querySelector('b').textContent=e.n; cap.querySelector('i').textContent=e.cut?(e.end?'结局档案 · 回放':(e.seen?'过场 · 回放':'开场 · 回放')):'死亡档案 · 回放'; }
     $imports.S.screen='replay'; $imports.S.dead=false; $imports.S.death=null; $imports.S.seated=false; $imports.S.pitch=0; $imports.S.eyeLift=0;
     if(e.hour!==undefined) $imports.VisualState.stageHour=e.hour;          /* 先定天色再搭场景：窗光、灯这些按搭建时的时刻 */
     try{

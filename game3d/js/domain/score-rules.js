@@ -17,7 +17,7 @@ var SCORE_CFG={
   sanLow:30, sanVeryLow:15,
   hardMult:1.2,
   /* 标准用时（秒）：《网安仙人》有无线接入与提交后 600 运行秒的固定等待；隐藏路线另设 */
-  par:{car:1080,face:1200,portal:1320,cyber:1680,beast:600},
+  par:{car:1080,face:1200,portal:1320,cyber:1680,dismissal:1800,beast:600},
   timeBase:400, timeMin:0.25, timeMax:1.5,
   explore:{place:0.5,sketch:0.3,clue:0.2}
 };

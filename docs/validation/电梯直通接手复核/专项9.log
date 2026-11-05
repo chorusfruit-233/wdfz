@@ -1,0 +1,14 @@
+test_close_range_original_capture_also_honors_its_warning (test_elevator_review.ElevatorReviewTest.test_close_range_original_capture_also_honors_its_warning) ... ok
+test_existing_approach_warning_is_not_shortened_or_bypassed (test_elevator_review.ElevatorReviewTest.test_existing_approach_warning_is_not_shortened_or_bypassed) ... ok
+test_physical_v_respects_pause_and_does_not_depend_on_keyboard_layout (test_elevator_review.ElevatorReviewTest.test_physical_v_respects_pause_and_does_not_depend_on_keyboard_layout) ... ok
+test_queued_departure_settles_escape_before_changing_scene_exactly_once (test_elevator_review.ElevatorReviewTest.test_queued_departure_settles_escape_before_changing_scene_exactly_once) ... ok
+test_rescue_cancels_the_old_rush_without_awarding_an_escape (test_elevator_review.ElevatorReviewTest.test_rescue_cancels_the_old_rush_without_awarding_an_escape) ... ok
+test_saved_pending_departure_preserves_the_rush_and_awards_once (test_elevator_review.ElevatorReviewTest.test_saved_pending_departure_preserves_the_rush_and_awards_once) ... ok
+test_seal_still_banishes_the_patroller_when_it_sees_the_cabin (test_elevator_review.ElevatorReviewTest.test_seal_still_banishes_the_patroller_when_it_sees_the_cabin) ... ok
+test_touch_close_is_immediate_without_a_choice_in_both_orientations (test_elevator_review.ElevatorReviewTest.test_touch_close_is_immediate_without_a_choice_in_both_orientations) ... ok
+test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers (test_webgpu.NativeWebGPUTest.test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 227.415s
+
+OK

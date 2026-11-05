@@ -70,7 +70,7 @@ class DoorwayNavigationTest(BrowserCase):
           if(!TerminalUI.on||hasItem('roomkey'))throw Error('普通学生机没有正常打开终端');
           document.querySelector('#campus-terminal [data-exit]').click();
           await PilotCyber.bridge(Pilot,'teach');await Pilot.floor(1);
-          const R=INTERIORS.teach1;await Pilot.go({x:R.ox+48.5*R.tw,y:R.oy+6.5*R.th},11);await Pilot.tap('e');
+          const R=INTERIORS.teach1,o=ClassroomLayout.ownSeat;await Pilot.go({x:R.ox+(o.col+.5)*R.tw,y:R.oy+(o.row+.5)*R.th},11);await Pilot.tap('e');
         })().then(()=>window.result={ok:true},e=>window.result={ok:false,error:String(e)});""")
         page.wait_for_function('window.result', timeout=180000)
         self.assertEqual(page.evaluate('window.result'), {'ok': True},
@@ -124,8 +124,9 @@ class DoorwayNavigationTest(BrowserCase):
         page = self.page()
         # Reproduce the old recording's stuck location with a still-closed door.
         # Only the fixture setup writes state; the navigator uses normal inputs.
+        # R1 教室重修（布局 4：每间沿走廊 11 米、进深 8 米）以后原来那一点是课桌：起点放在自己班后门边的后排过道（同一个角落）。
         page.evaluate("""doEnterRoom('teach1');running=false;
-          S.x=1293.1947;S.y=1864.6978;S.seated=false;S.intro=0;
+          S.x=1329.18;S.y=1873.67;S.seated=false;S.intro=0;
           AN.active=false;PAT.locked=false;RT.inspection=null;
           window.pump=setInterval(()=>{dtG=.35;updatePlayer(.35);},350);""")
         for script in ('navigation.js', 'playthrough.js'):

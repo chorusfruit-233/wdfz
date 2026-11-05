@@ -31,7 +31,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `emits` | 这个模块在代码里发出的钩子（`GameModules.emit/first`） |
 | `uses` | 这个模块监听的钩子 |
 
-当前 51 个功能模块（2026-11-03 完成文件级依赖收口时为 46 个，之后成就与积分评级新增 3 个）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，游戏事实 `facts`、成就 `achievements`、积分评级与通关记录 `run-record`，以及最后加载的主循环。本次新增 `stairwell`（真实楼梯）与 `sensory`（只读感官、声音字幕及环境片段）；具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
+当前 55 个功能模块（2026-11-03 完成文件级依赖收口时为 46 个，之后成就与积分评级新增 3 个）：原有代码分成的模块，main 模块化新增的「生命周期与输入策略」「纯规则」「会话」，功能模块「粉笔记号」「虚空迷宫」「虚空迷宫彩蛋（内部）」「Mod 管理」「声音试听」「隐藏天赋（内部）」，新增的常驻巡察世界与手机网络／服务器路线，游戏事实 `facts`、成就 `achievements`、积分评级与通关记录 `run-record`，以及最后加载的主循环。已新增 `stairwell`（真实楼梯）、`sensory`（只读感官、声音字幕及环境片段）、`lift-crowd`、`atmosphere`、`broadcast` 和 `last-life`；具体职责以清单为准。`tools/check_modules.py` 从清单展开实际加载顺序，检查每个脚本都被加载、启动依赖的先后、纯规则模块不碰浏览器和全局状态、四项核心数值只经 `PlayerStats` 写。
 
 **改功能的做法**：先在清单里找到模块 → 只读它登记的文件和它 `uses` / `emits` 的钩子 → 改完跑这个模块对应的测试（见第 6 节）。跨模块改动先看对方的 `exports` 是否需要变；导出名字改了，同时改清单。
 
@@ -62,6 +62,9 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `itemUse` | `items.js` `useItem` 开头 | first | `id`；返回 `true` 表示已处理 |
 | `clockText` | `ui/hud.js` `updateHUD` | first | 返回要显示的时间文字 |
 | `mapBlocked` | `ui.js` 打开地图页、`ui/hud.js` 小地图 | first | 返回字符串（独白）表示此处地图不能用 |
+| `classmateScene` | `fx/classroom.js` 更新同学前 | first | `figure, dt`；返回 true 接管这名同学当帧表现，不能改玩家状态 |
+| `patrolZoneActive` | `patrol-world/world.js` 判断条件报警区 | first | `zone`；带 `when` 的区域仅返回 true 时启用 |
+| `patrolCamouflage` | `patrol-world/world.js` 感知和追踪前 | first | 返回 true 代表当前玩家由合法场景规则掩护（放学人群）；不改变巡察实体位置 |
 | `lightState` | `lighting.js` `lightState()` 末尾 | emit | `st`：可改 `amb/hemi/dir/ptK`；`st.steady=true` 灯不闪；`st.fog={r,g,b,density}` 改雾 |
 | `clearWorld` | `engine/scene.js` 换场景前 | emit | 撤掉模块自己加进场景的东西 |
 | `sceneBuilt` | `engine/scene.js` 房间 / 室外场景建好后 | emit | `roomId`（室外为 `null`） |
@@ -71,6 +74,10 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `frame` | `app/presentation-loop.js` `render()`，每个画面帧 | emit | `dt`；表现层自己的动画（彩蛋的反色、黑影淡入淡出） |
 | `soundscape` | `audio.js` 每帧 | first | 返回要用的整片环境声 ID（见第 4.1 节） |
 | `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |
+| `bellTune` | `audio.js` `schoolBell`（每一遍上下课铃，2026-11-04） | first | `kind`（`start` / `end`）；返回 `{pitch, caption}` 让这一遍走调（氛围 A5），不返回就照常 |
+| `liftBoard` | `elevator.js` `Elevator.enterCabin`，跨进轿厢、乘梯记录建好以后、存档之前（2026-11-04） | emit | `ride, host, floor`：别的模块在这一刻定自己的稀有事件（和错误的电梯互斥，写在 `ride` 上一起存档） |
+| `liftDepart` | `elevator.js` `Elevator.depart` 开头：门关上、要出发之前（关门后自动出发和门本来就关着时按楼层都走这里） | first | `ride, host`；返回 `true` 表示先不出发（模块接管这一次关门） |
+| `liftControls` | `elevator.js` `Elevator.controls` 开头、`Elevator.closeDoor`（独立关门键）开头 | first | `ride`；返回 `true` 表示操纵盘已处理（不弹楼层选项） |
 | `mazeEvent` | `modules/void-maze-eggs/eggs.js`（内部彩蛋） | emit | `{kind, …}`：`invert / invertEnd / shadowShow / shadowHide` |
 | `gameFact` | `app/facts.js` 的 `gameFact(kind, data)`；各系统在事实成立的那一刻调一次（2026-11-03） | emit | `{kind, …}`：`opening`、`day`、`anomaly`（`phase` 为 `start / hurt / end`）、`patrol`（`what` 为 `locked / lost / locker / banish / permanent`）、`inspection`、`register`、`exam`、`lesson`、`rest`、`snake`、`fakeNormal`、`garage`、`face`、`protect`、`wake`、`death`、`ending`（带 `legit`）、`speedrun`、`chalk`、`specialDay`、`maze`，以及调试面板打开时的 `debug`。只读：成就、本局积分、回放都只听它，不改玩法；可信与否（调试局、回放）由监听方判断 |
 | `endingCard` | `story.js` 的 `showEndingCard`，结局卡加进页面以后（2026-11-03） | emit | `{el, id}`：往结局卡上加内容（成就的「本局新达成」、通关记录的「结算」按钮），插在「回到主菜单」之前 |
@@ -236,3 +243,10 @@ python tools/check_modules.py
 - `doorAction` 事实为 `{room,c,r,x,y,open}`，在真实开/关门后发送；环境片段只响应已完成的关闭，不改变门锁或物理碰撞。
 - 检查事实带 `result: present|absent|excused` 与 `excused`；成就、积分和责任系统对免检不加减分、不触发缺席。
 - 布局版本 2、天赋规则 3、机制规则 5、速通规则 4、巡察路线版本 3。旧档铁胃变无天赋；旧门开关迁移到两扇门；旧巡察路线重新归队但保留责任和静态情报。历史通关记录按原规则保存。
+
+
+### 广播站的命令和表现边界（PR #41）
+
+`broadcast` 模块将纯数据与存档裁剪放在 `domain/broadcast.js`；`broadcast.js` 拥有稿纸、功放、铃时和调查状态；`broadcast-ui.js` 发出朗读／停止命令，面板不暂停世界；`broadcast-view.js` 只绘制，`broadcast-cinematics.js` 注册隔离 CG。`mods.broadcast` 不存 DOM／Three.js 对象和回调；当前未播完的段落在恢复时重新开始。
+
+区域调查通过 `patrolZoneActive` 启用固定区域，掩护通过 `patrolCamouflage` 查询；它们不向巡察者提供移动中的玩家坐标。`classmateScene` 仅接管同学的当帧表现，不写占座或检查判定。

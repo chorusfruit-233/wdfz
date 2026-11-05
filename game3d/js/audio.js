@@ -423,7 +423,10 @@ var SFX=(function(){
   /* kind：'start' 上课铃、'end' 下课铃（默认）；v 响度，室外给 0.45 时同时发闷 */
   function schoolBell(v,kind){
     v=v===undefined?1:v;
-    return P(kind==='start'?'event.bellStart':'event.bellEnd',{k:v,lp:v<0.7?0.6:1});
+    var tune=null; try{ tune=GameModules.first('bellTune',kind||'end'); }catch(e){}   /* 模块可以让铃声走调（氛围 A5） */
+    var o={k:v,lp:v<0.7?0.6:1};
+    if(tune){if(tune.pitch>0)o.pitch=tune.pitch;if(tune.tail>0)o.tail=tune.tail;if(tune.tailLength>0)o.tailLength=tune.tailLength;if(tune.caption)o.caption=tune.caption;}
+    return P(kind==='start'?'event.bellStart':'event.bellEnd',o);
   }
   function deathKinds(){
     var out=[]; if(typeof $imports.SoundPlayer==='undefined') return out;
@@ -504,6 +507,7 @@ var SFX=(function(){
     bell:function(){ return P('event.bell'); },
     bigBell:function(v){ return P('event.bigBell',{k:v===undefined?1:v}); },
     schoolBell:schoolBell,
+    cue:function(id,opt){return P(id,opt);},
     vanish:function(){ return P('foley.vanish'); },                   /* 远处的人影不见了的那一下 */
     /* 结局演出：车库里点火；门那边装置充能的嗡声越来越高 */
     engine:function(){ return P('scene.engine'); },

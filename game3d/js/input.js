@@ -22,6 +22,7 @@ function gameInputContext(target,editing){
     paused:!!$imports.PAUSE.on,panelOpen:!!$imports.UI.anyOpen(),choice:!!$imports.UI.chooseOpen,
     computer:!!(typeof $imports.PC!=='undefined'&&$imports.PC.on),phone:!!(typeof $imports.PHONE!=='undefined'&&$imports.PHONE.on),
     lesson:!!(typeof $imports.LESSON!=='undefined'&&$imports.LESSON.on),
+    broadcast:!!(typeof $imports.BroadcastUI!=='undefined'&&$imports.BroadcastUI.isOpen()),
     debugFrozen:!!(typeof $imports.DEV!=='undefined'&&(($imports.DEV.on&&$imports.DEV.freeze)||$imports.DEV.locking)),   /* 输调试密码时也冻结 */
     debugDragging:!!(typeof $imports.DEV!=='undefined'&&$imports.DEV.on&&$imports.DEV.drag),
     intro:$imports.S.intro>0,driving:!!(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active()),
@@ -115,7 +116,7 @@ function updateInputUI(){
 }
 function physicalKey(e){
   var codes={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyF:'f',KeyG:'g',
-    KeyH:'h',KeyJ:'j',KeyM:'m',KeyR:'r',Digit1:'1',Digit2:'2',Digit3:'3',Backquote:'`'};
+    KeyH:'h',KeyJ:'j',KeyM:'m',KeyR:'r',KeyV:'v',Digit1:'1',Digit2:'2',Digit3:'3',Backquote:'`'};
   return codes[e.code]||e.key.toLowerCase();
 }
 function initTouchActivation(){
@@ -273,6 +274,7 @@ function initInput(){
     if(['w','a','s','d',' ','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0)e.preventDefault();
     KEY[k]=true;if(e.repeat)return;
     if(k==='e')(0,$imports.tryInteract)();
+    if(k==='v')$imports.Elevator.closeDoor();
     if(k==='r'&&!$imports.Investigation.openDesk())$imports.LESSON.open();
     if(k==='f')(0,$imports.toggleTorch)();
     if(k==='g')(0,$imports.dropSelected)();

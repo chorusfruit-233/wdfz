@@ -6,7 +6,7 @@ function buildRoomGeometry(R){
   if(R.build)return buildCustomRoom(R);
   var draft=Object.assign({},R),RWH=R.spiral?$imports.SPIRAL.wallH:$imports.WALLH;
   var K=new $imports.Kit({cull:R.host==='teach'&&R.floor===6?{floor:.002}:{floor:.002,ceil:RWH-.002},chunk:16,inst:1});
-  var c=(0,$imports.buildRoomRecipe)(draft,K,{meshes:true,board:chalkBoard,carPlate:function(x,y,px,py,pz){return carPlate($imports.Investigation.carName(x,y),px,py,pz);},decay:roomDecay,signs:roomSigns,liftLeaves:$imports.liftLandingLeaves});
+  var c=(0,$imports.buildRoomRecipe)(draft,K,{meshes:true,board:chalkBoard,carPlate:function(x,y,px,py,pz){return carPlate($imports.Investigation.carName(x,y),px,py,pz);},decay:roomDecay,signs:roomSigns,liftLeaves:$imports.liftLandingLeaves,liftCabinLeaves:$imports.liftCabinLeaves,liftNotice:$imports.liftNotice});
   R.shafts=draft.shafts;R.doorSpecs=draft.doorSpecs;
   var group=K.build();group.add(buildDoorLeaves(R));c.meshes.forEach(function(m){group.add(m);});return group;
 }
@@ -298,14 +298,130 @@ function roomSigns(c,G,isWall){
       K.rod('metal',px,top,pz+0.30,px,ceil,pz+0.30,0.005,0.005,4,0x8a8f93,1.0);
     }
   }
-  /* 自己教室的讲台上：那张停车单提到的钥匙移交单 */
+  /* 自己教室的讲台上：那张停车单提到的钥匙移交单。讲台转了 90°（正面朝东边的学生），模型画在中线上（ClassroomLayout.podiumAt）；
+     台面上的位置按讲台自己的坐标（右手边、靠学生那侧）换算，字头朝黑板，从学生那边看是正的 */
   if(R.id==='teach1'&&typeof $imports.Investigation!=='undefined'){
     var pd=$imports.Investigation.podium();
     if(pd){
+      var pa=$imports.ClassroomLayout.podiumAt($imports.ClassroomLayout.ownSeat.classId), pcx=pa.x*c.tw-c.halfW, pcz=pa.y*c.th-c.halfH;
+      var pr=Math.PI/2, lx=0.23, lz=0.04;
       var slip=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.15,0.2),signMat(slipTex()));
-      slip.position.set(CX(pd[0])+0.23,0.9825,CZ(pd[1])+0.04); slip.rotation.set(-Math.PI/2,0,0.12);
+      slip.position.set(pcx+lx*Math.cos(pr)+lz*Math.sin(pr),0.9825,pcz-lx*Math.sin(pr)+lz*Math.cos(pr)); slip.rotation.set(-Math.PI/2,0,0.12+pr);
       slip.userData.wayfinding='移交单'; c.meshes.push(slip);
     }
+  }
+  if(R.host==='teach'&&/^teach[1-5]$/.test(R.id)) classroomSigns(c,put);
+}
+/* ---- 教学楼教室里的字：前墙黑板上方的班训、左右两边的课程表和值日表，走廊那面门牌上的班名，自己课桌上的名牌 ---- */
+var CLASS_MOTTO=['勤学 · 慎思 · 笃行','天道酬勤','宁静致远','厚德载物 · 自强不息','学而不厌','静心 · 笃学 · 致远'];
+var TIMETABLE_SUBJ=['数学','英语','物理','化学','生物','政治','历史','地理','体育','数学','英语','自习'];
+var DUTY_NAMES=['王浩','李欣然','张一鸣','陈思雨','刘洋','赵子涵','周磊','吴佳怡','孙宇航','郑晓','黄俊杰','林雨桐','何静','高翔','马睿','许诺'];
+function className(floor,i){
+  if(floor===1){ var n=$imports.CLS_NAME[i]; return n.replace(/(\d+)班$/,'（$1）班'); }
+  var grade=['高一','高二','高三','高一'][(floor-2)%4], base=[4,4,3,10][(floor-2)%4];
+  return grade+'（'+(base+i)+'）班';
+}
+function mottoTex(text){
+  return signTex(1024,128,'motto:'+text,function(g,w,h,rnd){
+    g.fillStyle='#8f1d1b'; g.fillRect(0,0,w,h);
+    var sh=g.createLinearGradient(0,0,0,h); sh.addColorStop(0,'rgba(255,255,255,.08)'); sh.addColorStop(1,'rgba(0,0,0,.18)');
+    g.fillStyle=sh; g.fillRect(0,0,w,h);
+    g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#e9c25a'; g.font='700 74px '+SIGN_FONT; signSpace(g,text.length<6?36:14);
+    g.fillText(text,w/2,h/2+4,w-80); signSpace(g,0);
+    signGrime(g,w,h,rnd,'20,8,4',420);
+  });
+}
+function timetableTex(cls,seed){
+  return signTex(384,512,'timetable:'+cls,function(g,w,h,rnd){
+    g.fillStyle='#ece8dc'; g.fillRect(0,0,w,h);
+    g.fillStyle='#2b4f86'; g.fillRect(0,0,w,64);
+    g.fillStyle='#f1efe8'; g.textAlign='center'; g.textBaseline='middle'; g.font='700 30px '+SIGN_FONT; signSpace(g,6);
+    g.fillText(cls+' 课程表',w/2,33,w-24); signSpace(g,0);
+    var x0=18, y0=80, cw=(w-36)/6, ch=(h-y0-20)/9, days=['','一','二','三','四','五'], r, d;
+    g.strokeStyle='rgba(43,79,134,.55)'; g.lineWidth=1.2;
+    for(r=0;r<=9;r++){ g.beginPath(); g.moveTo(x0,y0+r*ch); g.lineTo(w-x0,y0+r*ch); g.stroke(); }
+    for(d=0;d<=6;d++){ g.beginPath(); g.moveTo(x0+d*cw,y0); g.lineTo(x0+d*cw,y0+9*ch); g.stroke(); }
+    g.font='600 19px '+SIGN_FONT; g.fillStyle='#2b4f86';
+    for(d=1;d<=5;d++) g.fillText(days[d],x0+(d+.5)*cw,y0+ch/2);
+    for(r=1;r<=8;r++){
+      g.fillStyle='#2b4f86'; g.fillText(String(r),x0+cw/2,y0+(r+.5)*ch);
+      for(d=1;d<=5;d++){
+        var s=r===4?'语文':TIMETABLE_SUBJ[Math.floor((seed*13+r*7+d*5+(r>4?3:0))%TIMETABLE_SUBJ.length)];   /* 第 4 节：每天都是语文 */
+        g.fillStyle=r===4?'#7a2a24':'#2a2d33'; g.font=(r===4?'700 ':'500 ')+'18px '+SIGN_FONT;
+        g.fillText(s,x0+(d+.5)*cw,y0+(r+.5)*ch);
+      }
+    }
+    g.strokeStyle='rgba(60,50,40,.12)'; g.lineWidth=2; g.beginPath(); g.moveTo(0,h*0.48); g.lineTo(w,h*0.5); g.stroke();   /* 折过的印子 */
+    signGrime(g,w,h,rnd,'70,60,40',500);
+  });
+}
+function dutyTex(cls,seed){
+  return signTex(384,512,'duty:'+cls,function(g,w,h,rnd){
+    g.fillStyle='#e7e2d3'; g.fillRect(0,0,w,h);
+    g.fillStyle='#3b6b47'; g.fillRect(0,0,w,64);
+    g.fillStyle='#eef0e6'; g.textAlign='center'; g.textBaseline='middle'; g.font='700 32px '+SIGN_FONT; signSpace(g,10);
+    g.fillText('值日表',w/2,33); signSpace(g,0);
+    var days=['周一','周二','周三','周四','周五'], jobs='扫地 · 拖地 · 擦黑板 · 倒垃圾', y=82, d, k;
+    g.font='500 15px '+SIGN_FONT; g.fillStyle='#4a5a4a'; g.fillText(jobs,w/2,y); y+=20;
+    for(d=0;d<5;d++){
+      var yy=y+d*78;
+      g.strokeStyle='rgba(59,107,71,.5)'; g.lineWidth=1.2; g.strokeRect(16,yy,w-32,70);
+      g.textAlign='left'; g.fillStyle='#3b6b47'; g.font='700 20px '+SIGN_FONT; g.fillText(days[d],26,yy+35);
+      g.fillStyle='rgba(28,34,70,.85)'; g.font='600 21px '+SIGN_HAND;
+      for(k=0;k<3;k++) g.fillText(DUTY_NAMES[(seed*5+d*3+k)%DUTY_NAMES.length],100+k*88+rnd()*6,yy+36+(rnd()-.5)*5,82);
+    }
+    signGrime(g,w,h,rnd,'70,60,40',480);
+  });
+}
+function doorNameTex(text){
+  return signTex(256,64,'doorname:'+text,function(g,w,h,rnd){
+    g.fillStyle='#2a3a4a'; g.fillRect(0,0,w,h);
+    g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#eef1f4'; g.font='700 40px '+SIGN_FONT;
+    g.fillText(text,w/2,h/2+2,w-16);
+    signGrime(g,w,h,rnd,'0,0,0',90);
+  });
+}
+/* 自己的名牌：对折立着的纸，手写的三个字——看得出是个名字，认不出是什么字（开场独白：「名牌上写的是我的名字」） */
+function nameCardTex(){
+  return signTex(256,128,'namecard',function(g,w,h,rnd){
+    g.fillStyle='#ece6d6'; g.fillRect(0,0,w,h);
+    g.strokeStyle='rgba(28,34,78,.82)'; g.lineWidth=2.6; g.lineCap='round'; g.lineJoin='round';
+    for(var k=0;k<3;k++){                                                      /* 每个字一团连笔：横、竖、撇、捺挤在一个方格里 */
+      var cx=w*(0.27+k*0.23), cy=h*0.52, n=6+Math.floor(rnd()*3);
+      g.beginPath(); g.moveTo(cx-18+rnd()*8,cy-16+rnd()*10);
+      for(var s=0;s<n;s++) g.quadraticCurveTo(cx+(rnd()-.5)*40,cy+(rnd()-.5)*40,cx+(rnd()-.5)*36,cy+(rnd()-.5)*34);
+      g.stroke();
+    }
+    signGrime(g,w,h,rnd,'90,80,60',220);
+  });
+}
+function classroomSigns(c,put){
+  var R=c.R, L=$imports.ClassroomLayout, CX=c.CX, CZ=c.CZ, tw=c.tw, th=c.th, i;
+  /* 教室里的陈设（班训、课程表、值日表、名牌）不算找路的牌子：记在 userData.decor 里；门牌上的班名才是 wayfinding */
+  function deco(mesh,px,py,pz,rot,text){ mesh.position.set(px,py,pz); mesh.rotation.y=rot; mesh.userData.decor=text; c.meshes.push(mesh); return mesh; }
+  for(i=0;i<L.spans.length;i++){
+    var c0=L.spans[i][0], wx=CX(c0)-tw/2, zb=L.mid*th-c.halfH, cls=className(R.floor||1,i), seed=(R.floor||1)*7+i;
+    /* 前墙（西）：黑板上方的班训；黑板北边（靠窗）值日表，南边（前门那头）课程表（避开插座、喇叭和饮水机） */
+    deco(signPlate(mottoTex(CLASS_MOTTO[seed%CLASS_MOTTO.length]),2.4,0.30,0.012,false),wx+0.008,2.62,zb,Math.PI/2,'班训');
+    deco(signPlate(timetableTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,(L.rows[1]-0.05)*th-c.halfH,Math.PI/2,'课程表');
+    deco(signPlate(dutyTex(cls,seed),0.48,0.64,0.004,false),wx+0.004,1.52,(L.rows[0]+0.75)*th-c.halfH,Math.PI/2,'值日表');
+    /* 门牌：两扇门上（门牌模型的深蓝字条在门洞中心往西 0.1、离地 2.32、走廊那面） */
+    L.doors(i).forEach(function(d){
+      var pl=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.25,0.056),signMat(doorNameTex(cls)));
+      put(pl,CX(d[0])-0.1,2.32,CZ(d[1])+th/2+0.0325,0,0,0,0,cls);
+    });
+  }
+  /* 自己的课桌：右前角立着一张对折的名牌（写着名字，看不清）。桌子的局部坐标里人在 +z，转 90° 以后局部 (x, z) 落到场景的 (z, −x) */
+  if(R.id===L.ownSeat.room){
+    var own=L.ownSeat, dk=L.deskAt(own.col,own.row);
+    var dx=CX(own.col)+(dk.x-own.col-0.5)*tw, dz=CZ(own.row)+(dk.y-own.row-0.5)*th, lx=0.17, lz=-0.15;
+    /* 单面材质（和别的标识同一种着色器；双面的会多编一个变体，开局没看到它就不会预编，镜头一转才现编、卡一下）：
+       朝学生那片面朝东，朝黑板那片转过来面朝西；局部 X 轴跟着转了向，同一个 rotateX 就是两边对称地往里靠 */
+    var mat=signMat(nameCardTex());
+    [-1,1].forEach(function(s){                                               /* 两片纸靠在一起，顶上合拢 */
+      var m=new $imports.THREE.Mesh(new $imports.THREE.PlaneGeometry(0.12,0.062),mat);
+      deco(m,dx+lz+s*0.009,0.7575+0.03,dz-lx,s>0?Math.PI/2:-Math.PI/2,'名牌'); m.rotateX(-0.29);
+    });
   }
 }
 
@@ -338,6 +454,16 @@ GameModules.publish("game3d/js/model/room.js",{
 "signPlate":{get:function(){return signPlate;},set:function($value){signPlate=$value;}},
 "floorName":{get:function(){return floorName;},set:function($value){floorName=$value;}},
 "carPlate":{get:function(){return carPlate;},set:function($value){carPlate=$value;}},
-"roomSigns":{get:function(){return roomSigns;},set:function($value){roomSigns=$value;}}
+"roomSigns":{get:function(){return roomSigns;},set:function($value){roomSigns=$value;}},
+"CLASS_MOTTO":{get:function(){return CLASS_MOTTO;},set:function($value){CLASS_MOTTO=$value;}},
+"TIMETABLE_SUBJ":{get:function(){return TIMETABLE_SUBJ;},set:function($value){TIMETABLE_SUBJ=$value;}},
+"DUTY_NAMES":{get:function(){return DUTY_NAMES;},set:function($value){DUTY_NAMES=$value;}},
+"className":{get:function(){return className;},set:function($value){className=$value;}},
+"mottoTex":{get:function(){return mottoTex;},set:function($value){mottoTex=$value;}},
+"timetableTex":{get:function(){return timetableTex;},set:function($value){timetableTex=$value;}},
+"dutyTex":{get:function(){return dutyTex;},set:function($value){dutyTex=$value;}},
+"doorNameTex":{get:function(){return doorNameTex;},set:function($value){doorNameTex=$value;}},
+"nameCardTex":{get:function(){return nameCardTex;},set:function($value){nameCardTex=$value;}},
+"classroomSigns":{get:function(){return classroomSigns;},set:function($value){classroomSigns=$value;}}
 });
 })(GameModules.imports("game3d/js/model/room.js"));

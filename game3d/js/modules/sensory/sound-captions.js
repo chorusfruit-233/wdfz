@@ -7,11 +7,12 @@ var SoundCaptions=(function(){
   var words={
     'dread.hum':'灯管的嗡声没有停','threat.breath':'呼吸声近了些','dread.knock':'轻轻的敲门声','dread.door':'门轴拖着长音','dread.steps':'缓慢的脚步声','dread.run':'一阵急促脚步',
     'dread.chair':'椅脚刮过地面','dread.desk':'桌椅轻响','dread.whisper':'模糊的低语','dread.radio':'喇叭里一阵杂音','dread.call':'远处有人声',
+    'event.dismissal':'放学长铃持续响着 · 跟随同学从北门离校','death.misread':'所有喇叭都在叫你留在原地',
     'event.bellStart':'急促的上课铃','event.bellEnd':'下课铃','event.thunder':'雷声炸响','event.thunderFar':'远处的闷雷',
     'foley.door':'门轴响了一声','foley.cupFall':'风里有尖细的哨音','foley.colaRattle':'上方有东西磕了一下',
     'threat.precursor':'耳边一阵低鸣','threat.smileBack':'身后传来压低的笑声','threat.smileJump':'耳边一声尖响',
     'threat.heartLow':'近处的心跳','threat.heartPat':'急促的心跳','world.crackle':'灯管噼啪作响',
-    'distant.slam':'远处一声门响','distant.tinnitus':'耳边一阵闷响','distant.aah':'远处有声音','distant.ball':'远处一声落地响','distant.giggle':'远处有声音'
+    'distant.slam':'远处一声门响','world.silence':'周围突然安静了','distant.tinnitus':'耳边一阵闷响','distant.aah':'远处有声音','distant.ball':'远处一声落地响','distant.giggle':'远处有声音'
   };
   function enabled(){return $imports.SET.soundCaptions===1||($imports.SET.soundCaptions===0&&($imports.SET.vol<=5||!$imports.SFX.available()));}
   function paint(){
@@ -25,7 +26,7 @@ var SoundCaptions=(function(){
     opt=opt||{};
     if($imports.S.screen!=='play'||$imports.S.dead||$imports.PRO.on||$imports.CUT.on||$imports.PAUSE.on||document.hidden)return null;
     if(opt.selfStep)return null;
-    var text=words[id],body=/^threat\.(heart|breath)/.test(id);
+    var text=opt.caption||(opt.place&&opt.place.caption)||words[id],body=/^threat\.(heart|breath)/.test(id);   /* 调用方可以给这一次换一句（例如走调的铃声） */
     if(opt.patrol)text='脚步声';
     if(!text)return null;
     if(body&&clock-bodyAt<20)return null;
@@ -33,8 +34,10 @@ var SoundCaptions=(function(){
     var p=opt.place,dir=[];
     if(p){
       if(Math.abs(p.pan||0)>.25)dir.push(p.pan<0?'左':'右');
-      if(p.behind!==undefined)dir.push(p.behind?'后方':'前方');
-      if(Number.isFinite(p.m))dir.push(p.m<5?'近处':'远处');
+      var ears=$imports.Talent.capability('ears');                     /* 顺风耳：楼上楼下、「很远」一档 */
+      if(ears.ok&&(p.floor==='up'||p.floor==='down'))dir.push(p.floor==='up'?'楼上':'楼下');
+      else if(p.behind!==undefined)dir.push(p.behind?'后方':'前方');
+      if(Number.isFinite(p.m))dir.push(p.m<5?'近处':(ears.ok&&p.m>=ears.far?'很远':'远处'));
       if(p.muffled)dir.push('隔着墙');
     }
     var priority=opt.patrol||/^(event\.|foley\.(cupFall|colaRattle)|threat\.smile)/.test(id)?3:body?1:0;

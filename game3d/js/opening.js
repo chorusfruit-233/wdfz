@@ -36,37 +36,89 @@ function openingCap(text){
   el._t=text; el.textContent=text||''; el.classList.toggle('on',!!text);
 }
 
+/* 粉笔灰的小圆点：中间亮、边上虚（没有贴图的点是方块，离镜头近了就是一块白方块） */
+function openingDot(){
+  var c=document.createElement('canvas'); c.width=c.height=64;
+  var g=c.getContext('2d'), gr=g.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.3,'rgba(255,255,255,.6)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,64,64);
+  return new $imports.THREE.CanvasTexture(c);
+}
+/* 同学的小动作：一、二段有的低头写字（一下一下往前点）、有的翻书（侧一下身）、有的不动；第三段时间停住时一起定格，
+   黑场里回到原来的姿势（之后变成影子，正式开局时坐得端端正正） */
+function openingMates(d,K){
+  if(!d.mates) return;
+  var t=Math.min(K,0.455)*OPENING_DUR.full, rest=K>=0.70;
+  d.mates.forEach(function(m){
+    var o=m.o;
+    if(rest||!m.amp){ o.rotation.x=0; o.rotation.y=m.ty; return; }
+    var w=Math.sin(t*m.f*6.2832+m.ph);
+    if(m.kind==='write'){ o.rotation.x=-m.amp*(0.55+0.45*w); o.rotation.y=m.ty; }
+    else { o.rotation.x=-0.02; o.rotation.y=m.ty+m.amp*w; }
+  });
+}
+
+/* 分镜（布局见 domain/classroom-layout.js；自己班起始列 c0、第一行 r0、中线 mid）。机位都在过道或讲台前的空地上，
+   离课桌、同学、吊扇和灯都有余量；cutLook 的高度是米。计划《电梯直通、新天赋、新结局与恐怖氛围》12.8 节 */
 $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
   setup:function(d){
-    var R=$imports.INTERIORS.teach1;
+    var R=$imports.INTERIORS.teach1, L=$imports.ClassroomLayout, own=L.ownSeat, i;
     d.short=!!Opening.short;
-    d.seat=(0,$imports.cutCell)('teach1',$imports.MY_COL,$imports.MY_ROW);
-    d.board=(0,$imports.cutCell)('teach1',44.55,7);
-    /* 讲台边的老师（面朝全班），和「你」——第三人称镜头里趴在座位上的那个人 */
-    var mat=(0,$imports.cutBasic)(0x4a5560);
-    var t=(0,$imports.cutCell)('teach1',45.6,8.6);                           /* 讲台右手边的空地：前排课桌在第 2 行，不会站到桌子上 */
-    d.teacher=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.teacher.add((0,$imports.figMesh)('teacher',mat,1)); d.teacher.position.set(t.x,0,t.z);
-    d.me=(0,$imports.cutAdd)(new $imports.THREE.Group());
-    var me=(0,$imports.figMesh)('sit',(0,$imports.cutBasic)(0x55606a),1); me.rotation.y=Math.PI; d.me.add(me);
-    var mp=(0,$imports.worldToScene)(R.ox+($imports.MY_COL+.5)*R.tw,R.oy+($imports.MY_ROW+.5)*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
-    /* 阳光里的粉笔灰：讲台前一片小光点，正常时慢慢飘，第 3 段停住 */
-    var n=Math.max(60,Math.round(160*($imports.Quality.get().segments||1))), pos=new Float32Array(n*3), i;
-    var a=(0,$imports.cutCell)('teach1',45.6,0.8), b=(0,$imports.cutCell)('teach1',51.4,3.6);
+    var sw=openingSeat(), ch=L.chairAt(own.col,own.row), c0=L.spans[own.classId][0], r0=L.rows[0], mid=L.mid;
+    function at(gx,gy){ return (0,$imports.cutCell)('teach1',gx-0.5,gy-0.5); }   /* 格子坐标（可带小数）→ 场景 */
+    d.seat=(0,$imports.worldToScene)(sw.x,sw.y,R);                              /* 醒来的第一人称：和开场后坐着的位置一样（椅子上） */
+    d.board=at(c0+0.05,mid);
+    var aisleN=L.deskRows[1]+1.5, aisleS=L.deskRows[3]+1.5;                    /* 两条组间过道的中线（第 9、12 行） */
+    d.cam1=[at(c0+10.0,aisleN),at(c0+6.8,aisleN)];                             /* 1 后排靠窗那条过道，往讲台推 */
+    d.cam2=[at(c0+1.75,r0+1.0),at(c0+1.55,r0+1.45)];                           /* 2 讲台北边、前排和黑板之间，侧面看老师 */
+    d.cam3=[at(c0+6.1,aisleN-0.05),at(c0+5.3,aisleN+0.05)];                    /* 3 北边过道里：先看窗光里的粉笔灰，再转到「你」 */
+    d.dust3=at(c0+5.5,r0+0.7);                                                  /*   中间那扇窗的光 */
+    d.cam4=[at(c0+4.6,aisleS+0.25),at(c0+4.05,aisleS+0.1)];                    /* 4 南边过道里，侧面看「你」趴到桌上 */
+    /* 老师：就用教室里站在讲台和黑板之间的那位（NC.teacher），不另造一个；没有时才自己摆一个在同一处 */
+    if($imports.NC.teacher){ d.teacher=$imports.NC.teacher; d.ncTeacher=true; d.teacherOrder=d.teacher.rotation.order; }
+    else{
+      var ts=L.teacherSpot(own.classId), t=(0,$imports.worldToScene)(R.ox+ts.x*R.tw,R.oy+ts.y*R.th,R);
+      d.teacher=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.teacher.add((0,$imports.figMesh)('teacher',(0,$imports.cutBasic)(0x4a5560),1));
+      d.teacher.position.set(t.x,0,t.z); d.teacher.rotation.y=$imports.PI/2;
+    }
+    /* 先转朝向、再在人自己的坐标里前倾 / 点头（欧拉顺序 YXZ）。默认的 XYZ 是绕世界的东西轴转：教室朝西以后，
+       「趴到桌上」就成了往侧面倒、老师点头成了左右歪头 */
+    d.teacher.rotation.order='YXZ';
+    /* 「你」——第三人称镜头里坐在自己座位上的那个人，和同学一样坐在椅子上 */
+    d.me=(0,$imports.cutAdd)(new $imports.THREE.Group()); d.me.rotation.order='YXZ';
+    var me=(0,$imports.figMesh)('sit',new $imports.THREE.MeshLambertMaterial({color:0x74808c,fog:true}),1); me.rotation.y=Math.PI; d.me.add(me);   /* 比同学浅一点：镜头落到「你」身上时认得出来 */
+    var mp=(0,$imports.worldToScene)(R.ox+(ch.x+.02)*R.tw,R.oy+ch.y*R.th,R); d.me.position.set(mp.x,0,mp.z);d.me.rotation.y=$imports.PI/2;
+    /* 同学：记下原来的朝向和欧拉顺序，分配小动作（演完或跳过都还原） */
+    d.mates=[];
+    ($imports.NC.list||[]).forEach(function(o){
+      if(!o||!o.rotation||(o.userData&&o.userData.teacher)) return;
+      var r=$imports.PresentationRandom.next(), kind=r<0.5?'write':(r<0.78?'turn':'still');
+      d.mates.push({o:o,ty:(o.userData&&o.userData.ty!==undefined)?o.userData.ty:o.rotation.y,order:o.rotation.order,kind:kind,
+        amp:kind==='still'?0:(kind==='write'?0.05:0.06)+0.05*$imports.PresentationRandom.next(),
+        f:0.35+0.55*$imports.PresentationRandom.next(),ph:$imports.PresentationRandom.next()*6.2832});
+      o.rotation.order='YXZ';
+    });
+    /* 粉笔灰：三扇北窗照进来的光里各一团，黑板前（老师写字那片）一团；正常时慢慢飘、往下沉，第三段停在半空 */
+    var n=Math.max(90,Math.round(220*($imports.Quality.get().segments||1))), pos=new Float32Array(n*3);
+    var boxes=[[c0+0.9,c0+2.9,r0+0.35,r0+1.6,1.05,2.35],[c0+4.5,c0+6.5,r0+0.35,r0+1.6,1.05,2.35],[c0+8.1,c0+10.1,r0+0.35,r0+1.6,1.05,2.35],
+               [c0+0.35,c0+1.0,mid-1.6,mid+1.6,1.3,2.2]];                       /* 离墙留 0.35 米：飘动的幅度有 0.12 米 */
     d.dust=[];
     for(i=0;i<n;i++){
-      var x=(0,$imports.cutLerp)(a.x,b.x,$imports.PresentationRandom.next()), z=(0,$imports.cutLerp)(a.z,b.z,$imports.PresentationRandom.next()), y=0.7+$imports.PresentationRandom.next()*1.9;
-      pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
-      d.dust.push({x:x,y:y,z:z,ph:$imports.PresentationRandom.next()*6.283,sp:0.25+$imports.PresentationRandom.next()*0.5});
+      var bx=boxes[i%10<3?0:i%10<6?1:i%10<8?2:3], R1=$imports.PresentationRandom;
+      var q=at((0,$imports.cutLerp)(bx[0],bx[1],R1.next()),(0,$imports.cutLerp)(bx[2],bx[3],R1.next())), y=(0,$imports.cutLerp)(bx[4],bx[5],R1.next());
+      pos[i*3]=q.x; pos[i*3+1]=y; pos[i*3+2]=q.z;
+      d.dust.push({x:q.x,y:y,z:q.z,ph:R1.next()*6.283,sp:0.25+R1.next()*0.5});
     }
     var g=new $imports.THREE.BufferGeometry(); g.setAttribute('position',new $imports.THREE.BufferAttribute(pos,3));
-    d.dustPts=(0,$imports.cutAdd)(new $imports.THREE.Points(g,new $imports.THREE.PointsMaterial({color:0xfff1d2,size:0.016,transparent:true,opacity:0.8,depthWrite:false,fog:true})));
+    d.dustPts=(0,$imports.cutAdd)(new $imports.THREE.Points(g,new $imports.THREE.PointsMaterial({map:openingDot(),color:0xfff3dc,size:0.024,sizeAttenuation:true,
+      transparent:true,opacity:0.85,alphaTest:0.02,depthWrite:false,fog:true})));
     d.flow=0;
     $imports.VisualState.worldNorm=d.short?0.55:1;
     try{ if(!d.short) $imports.SFX.resume(); }catch(e){}
   },
   frame:function(k,d){
     var K=d.short?OPENING_SHORT_FROM+(1-OPENING_SHORT_FROM)*k:k;
-    var R=$imports.INTERIORS.teach1, i, line='';
+    var i, line='';
     for(i=0;i<OPENING_LINES.length;i++) if(K>=OPENING_LINES[i][0]&&K<OPENING_LINES[i][1]) line=OPENING_LINES[i][2];
     openingCap(line);
     /* 粉笔灰：0.46 以前在飘，之后停住 */
@@ -81,42 +133,51 @@ $imports.CUT_DEF.opening={dur:OPENING_DUR.full,
     }
     d.dustPts.geometry.attributes.position.needsUpdate=true;
     d.dustPts.visible=K<0.74;
-    var shk=(typeof $imports.SHAKE_ON==='undefined'||$imports.SHAKE_ON)?1:0;
-    if(K<0.24){                                                      /* 1 正常的第四节 */
-      var t1=(0,$imports.cutEase)(K/0.24), c0=(0,$imports.cutCell)('teach1',50.6,13.6), c1=(0,$imports.cutCell)('teach1',50.1,9.4);
-      (0,$imports.cutLook)((0,$imports.cutLerp)(c0.x,c1.x,t1),(0,$imports.cutLerp)(2.5,2.05,t1),(0,$imports.cutLerp)(c0.z,c1.z,t1), d.board.x,1.45,d.board.z);
+    openingMates(d,K);
+    var shk=(typeof $imports.SHAKE_ON==='undefined'||$imports.SHAKE_ON)?1:0, th=d.teacher.position;
+    if(K<0.24){                                                      /* 1 正常的第四节：后排靠窗那条过道往讲台推 */
+      var t1=(0,$imports.cutEase)(K/0.24), a1=d.cam1[0], b1=d.cam1[1];
+      (0,$imports.cutLook)((0,$imports.cutLerp)(a1.x,b1.x,t1),(0,$imports.cutLerp)(1.62,1.5,t1),(0,$imports.cutLerp)(a1.z,b1.z,t1),
+        (0,$imports.cutLerp)(d.board.x,th.x,t1),1.45,(0,$imports.cutLerp)(d.board.z,th.z,t1));
       (0,$imports.cutFade)(K<0.03?1-K/0.03:0);
-    }else if(K<0.42){                                                /* 2 老师念到一半，从头再念 */
-      var t2=(0,$imports.cutEase)((K-0.24)/0.18), s0=(0,$imports.cutCell)('teach1',45.8,3.6), s1=(0,$imports.cutCell)('teach1',46.3,3.0);
-      var nod=Math.sin(K*90)*0.04;
+    }else if(K<0.42){                                                /* 2 老师念到一半，顿住，又从头念：侧面看老师 */
+      var t2=(0,$imports.cutEase)((K-0.24)/0.18), a2=d.cam2[0], b2=d.cam2[1];
+      var nod=Math.sin(K*90)*0.05;
       if(K>0.34&&K<0.36) nod=0;                                       /* 顿住 */
-      d.teacher.rotation.x=nod; d.teacher.rotation.y=$imports.PI/2+(K>0.36?-0.18:0.18)*(1-t2*0.4);
-      (0,$imports.cutLook)((0,$imports.cutLerp)(s0.x,s1.x,t2),1.5,(0,$imports.cutLerp)(s0.z,s1.z,t2), d.teacher.position.x,1.45,d.teacher.position.z);
+      d.teacher.rotation.x=nod; d.teacher.rotation.y=$imports.PI/2+(K>0.36?-0.16:0.12)*(1-t2*0.4);
+      (0,$imports.cutLook)((0,$imports.cutLerp)(a2.x,b2.x,t2),(0,$imports.cutLerp)(1.55,1.5,t2),(0,$imports.cutLerp)(a2.z,b2.z,t2), th.x,1.5,th.z);
       if(K>0.37&&!d.hum){ d.hum=1; try{ $imports.SFX.crackle(0.6,0.5); }catch(e){} }
-    }else if(K<0.58){                                                /* 3 时间停住，镜头转向「你」 */
-      var t3=(0,$imports.cutEase)((K-0.42)/0.16), cam=(0,$imports.cutCell)('teach1',50.4,4.4);
-      var lx=(0,$imports.cutLerp)(d.board.x,d.me.position.x,t3), lz=(0,$imports.cutLerp)(d.board.z+1.2,d.me.position.z,t3), ly=(0,$imports.cutLerp)(1.6,0.95,t3);
-      (0,$imports.cutLook)(cam.x,1.55,cam.z, lx,ly,lz);
+    }else if(K<0.58){                                                /* 3 时间停住：先看窗光里停住的粉笔灰，再转到「你」（中间隔着同桌那张空座位） */
+      d.teacher.rotation.x=0; d.teacher.rotation.y=$imports.PI/2;
+      var t3=(0,$imports.cutEase)((K-0.42)/0.16), a3=d.cam3[0], b3=d.cam3[1], m3=d.me.position;
+      (0,$imports.cutLook)((0,$imports.cutLerp)(a3.x,b3.x,t3),(0,$imports.cutLerp)(1.55,1.45,t3),(0,$imports.cutLerp)(a3.z,b3.z,t3),
+        (0,$imports.cutLerp)(d.dust3.x,m3.x,t3),(0,$imports.cutLerp)(1.75,1.0,t3),(0,$imports.cutLerp)(d.dust3.z,m3.z,t3));
       $imports.VisualState.worldNorm=1-0.45*(0,$imports.cutPhase)(K,0.46,0.58);
-    }else if(K<0.76){                                                /* 4 坠下去：颜色褪掉、趴下、闭眼 */
-      var t4=(0,$imports.cutEase)((K-0.58)/0.18), q0=(0,$imports.cutCell)('teach1',49.6,5.2), q1=(0,$imports.cutCell)('teach1',48.95,5.75);
-      d.me.visible=K<0.735; d.me.rotation.x=-0.32*(0,$imports.cutPhase)(K,0.6,0.68); d.teacher.visible=K<0.72;
-      var fl=K<0.7?(0.06*Math.max(0,Math.sin(K*160))*shk):0;
-      (0,$imports.cutLook)((0,$imports.cutLerp)(q0.x,q1.x,t4),(0,$imports.cutLerp)(1.42,1.18,t4)-fl,(0,$imports.cutLerp)(q0.z,q1.z,t4), d.me.position.x,0.9,d.me.position.z);
+    }else if(K<0.76){                                                /* 4 坠下去：颜色褪掉，「你」往前趴到桌上，闭眼 */
+      var t4=(0,$imports.cutEase)((K-0.58)/0.18), a4=d.cam4[0], b4=d.cam4[1], m4=d.me.position;
+      d.me.visible=K<0.735; d.me.rotation.x=-0.42*(0,$imports.cutPhase)(K,0.6,0.68); d.teacher.visible=d.ncTeacher||K<0.72;   /* 教室里那位跟着全班一起变，不藏 */
+      var fl=K<0.7?(0.04*Math.max(0,Math.sin(K*160))*shk):0;
+      (0,$imports.cutLook)((0,$imports.cutLerp)(a4.x,b4.x,t4),(0,$imports.cutLerp)(1.35,1.2,t4)-fl,(0,$imports.cutLerp)(a4.z,b4.z,t4), m4.x-0.15,0.95,m4.z);
       $imports.VisualState.worldNorm=0.55*(1-(0,$imports.cutPhase)(K,0.6,0.7));
       (0,$imports.cutFade)((0,$imports.cutPhase)(K,0.69,0.73));
       if(K>=0.72&&!d.flip){ d.flip=1; try{ (0,$imports.ncFlip)(); }catch(e){} try{ $imports.SFX.blink(); }catch(e){} }
       if(d.short&&k<0.04) (0,$imports.cutFade)(1-k/0.04);
-    }else{                                                           /* 5、6 第一人称醒来，停在开局的视角 */
-      var t5=(0,$imports.cutEase)((K-0.78)/0.14), y=(0,$imports.cutLerp)(0.84,1.12,t5), pitch=(0,$imports.cutLerp)(-0.95,0,t5), ang=$imports.ClassroomLayout.ownSeat.facing;
-      d.me.visible=false; d.teacher.visible=false; $imports.VisualState.worldNorm=0;
+    }else{                                                           /* 5、6 第一人称醒来：从桌上抬起头，停在开局的视角 */
+      var t5=(0,$imports.cutEase)((K-0.78)/0.14), ang=$imports.ClassroomLayout.ownSeat.facing;
+      var ex=d.seat.x+Math.cos(ang)*0.28*(1-t5), ez=d.seat.z+Math.sin(ang)*0.28*(1-t5);   /* 趴着时头在桌子上方，坐起来回到椅子上 */
+      var y=(0,$imports.cutLerp)(0.93,1.12,t5), pitch=(0,$imports.cutLerp)(-0.62,0,t5);
+      d.me.visible=false; d.teacher.visible=!!d.ncTeacher; $imports.VisualState.worldNorm=0;
       if(!d.flip){ d.flip=1; try{ (0,$imports.ncFlip)(); }catch(e){} }
-      (0,$imports.cutLook)(d.seat.x,y,d.seat.z, d.seat.x+Math.cos(ang)*Math.cos(pitch),y+Math.sin(pitch),d.seat.z+Math.sin(ang)*Math.cos(pitch));
+      (0,$imports.cutLook)(ex,y,ez, ex+Math.cos(ang)*Math.cos(pitch),y+Math.sin(pitch),ez+Math.sin(ang)*Math.cos(pitch));
       (0,$imports.cutFade)(K<0.82?1-(K-0.76)/0.06:0);
       if(K>0.78&&!d.wake){ d.wake=1; try{ $imports.SFX.wake&&$imports.SFX.wake(); }catch(e){} }
     }
   },
-  clean:function(d){ openingCap(''); }
+  clean:function(d){
+    openingCap('');
+    if(d.ncTeacher&&d.teacher){ d.teacher.visible=true; d.teacher.rotation.x=0; d.teacher.rotation.y=(d.teacher.userData&&d.teacher.userData.ty)||$imports.PI/2; d.teacher.rotation.order=d.teacherOrder||'XYZ'; }   /* 跳过时也把老师放回原样 */
+    (d.mates||[]).forEach(function(m){ m.o.rotation.x=0; m.o.rotation.y=m.ty; m.o.rotation.order=m.order||'XYZ'; });   /* 同学的姿势和欧拉顺序也还原 */
+  }
 };
 
 var Opening={on:false,short:false,handed:true,waitT:0,
@@ -143,6 +204,7 @@ var Opening={on:false,short:false,handed:true,waitT:0,
     Opening.handed=true; Opening.on=false; clearInterval(Opening.waitT); Opening.waitT=0;
     var seat=openingSeat();
     $imports.S.mode='in'; $imports.S.room='teach1'; $imports.S.x=seat.x; $imports.S.y=seat.y; $imports.S.ang=seat.ang; $imports.S.pitch=0; $imports.S.seated=true;$imports.S.seat=$imports.ClassroomLayout.seat('teach1',$imports.MY_COL,$imports.MY_ROW); $imports.S.eyeLift=0;
+    if($imports.VisualState.camera) $imports.VisualState.camera.eyeH=1.12;      /* 坐姿眼高直接给到：以前从站姿 1.65 平滑降下来，交接后视线会往下沉一下 */
     $imports.S.screen='play'; $imports.PRO.on=false;
     $imports.VisualState.worldNorm=0; $imports.GLR.flash=0; (0,$imports.cutFade)(0); openingCap('');
     try{ if($imports.NC.normal) (0,$imports.ncFlip)(); }catch(e){}
@@ -169,6 +231,8 @@ GameModules.publish("game3d/js/opening.js",{
 "OPENING_LINES":{get:function(){return OPENING_LINES;},set:function($value){OPENING_LINES=$value;}},
 "openingSeat":{get:function(){return openingSeat;},set:function($value){openingSeat=$value;}},
 "openingCap":{get:function(){return openingCap;},set:function($value){openingCap=$value;}},
+"openingDot":{get:function(){return openingDot;},set:function($value){openingDot=$value;}},
+"openingMates":{get:function(){return openingMates;},set:function($value){openingMates=$value;}},
 "Opening":{get:function(){return Opening;},set:function($value){Opening=$value;}}
 });
 })(GameModules.imports("game3d/js/opening.js"));

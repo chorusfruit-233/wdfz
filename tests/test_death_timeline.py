@@ -277,15 +277,17 @@ class DeathTimelineTest(BrowserCase):
 
     def test_death_cinematics_stay_within_a_draw_call_budget(self):
         """性能：每种死亡演出在场景之外最多再加 30 次绘制（手机上每次绘制都有开销）。
-        以前名单墙每个小方块单独画，一帧多出 126 次；蛾群、雨、碎片、冰锥各 30–45 次。"""
+        以前名单墙每个小方块单独画，一帧多出 126 次；蛾群、雨、碎片、冰锥各 30–45 次。
+        同一个镜头下比「演出组显示」和「演出组藏起来」两次的绘制次数：演出会转镜头，拿开局那一帧当底数的话，
+        镜头里多看到（或少看到）的墙后网格也会算进来（2026-11-04 教室重修后开局那一帧变轻，旧量法就把转过去多看到的教室算到了演出头上）。"""
         page = self.page()
         result = page.evaluate("""() => {
-          doEnterRoom('teach1');syncCamera(0);GLR.renderer.info.autoReset=false;
-          GLR.renderer.info.reset();render(0.016);const base=GLR.renderer.info.render.calls;const over={};
+          doEnterRoom('teach1');syncCamera(0);GLR.renderer.info.autoReset=false;const over={};
           for(const [,id] of DEV_DEATH){
             deathFX(id,{preview:true});for(let i=0;i<40;i++)anfxUpdate(DeathTimeline.duration(id)/60);
-            GLR.renderer.info.reset();render(0.016);const extra=GLR.renderer.info.render.calls-base;
-            if(extra>30)over[id]=extra;anfxClear();
+            GLR.renderer.info.reset();render(0.016);const all=GLR.renderer.info.render.calls;
+            ANFX.grp.visible=false;GLR.renderer.info.reset();render(0.016);const scene=GLR.renderer.info.render.calls;ANFX.grp.visible=true;
+            const extra=all-scene;if(extra>30)over[id]=extra;anfxClear();
           }
           GLR.renderer.info.autoReset=true;return over;
         }""")

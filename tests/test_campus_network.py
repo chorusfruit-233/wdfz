@@ -5,7 +5,7 @@ class CampusNetworkTest(BrowserCase):
     def game(self,touch=False):
         p=self.page(touch=touch)
         p.evaluate("""freshState('hard');running=false;PRO.on=false;S.intro=0;S.talent='none';S.tsec=700;
-          const R=INTERIORS.teach1;doEnterRoom('teach1',{x:R.ox+48.5*9,y:R.oy+6.5*9,seated:true});AN.next=1e6;""")
+          const R=INTERIORS.teach1;doEnterRoom('teach1',Object.assign(ClassroomLayout.anchor(R,ClassroomLayout.ownSeat),{seated:true}));AN.next=1e6;""")
         return p
 
     def test_day_one_no_permit_then_independent_duty_and_missing_penalty(self):
@@ -116,7 +116,7 @@ class CampusNetworkTest(BrowserCase):
           CUT.enabled=true;const tsec=S.tsec;let done=0;
           playCut('cyber',()=>{done++;});const d=CUT.data;
           function at(t){CUT.t=t-0.05;cutTick(0.05);render(0);}
-          function on(i){const m=new THREE.Matrix4(),q=new THREE.Vector3(),r=new THREE.Quaternion(),s=new THREE.Vector3();d.ledOn.getMatrixAt(i,m);m.decompose(q,r,s);return s.x;}
+          function on(i){const m=new THREE.Matrix4();d.ledOn.getMatrixAt(i,m);return new THREE.Vector3().setFromMatrixColumn(m,0).length();}   /* r187 的 decompose 遇到缩放 0 返回 1，直接量第一列 */
           const out={lights:0};CUT.grp.traverse(o=>{if(o.isLight)out.lights++;});
           at(0.3);out.a0={A:d.A.visible,B:d.B.visible,C:d.C.visible,stage:VisualState.stage.mesh.visible,lit:d.leds.filter((l,i)=>on(i)>0).length,hour:hourNow()};
           const programs=GLR.renderer.info.programs.length;                // 第一帧之后（基础场景的着色器此时都已编好）

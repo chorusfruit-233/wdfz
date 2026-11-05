@@ -4,6 +4,7 @@
 
 最新规则变更与验证见[双计划实施](validation/双计划实施/README.md)：教室与真实楼梯、检查及假条规则、士力架、天赋兼容、感官反馈和声音字幕。
 
+2026-11-05 PR #41 完成教室、开场与感官重修、电梯直通、顺风耳、氛围 A1–A7、广播站与《放学》；实现与完整回归记录见[计划收尾验收](validation/PR41计划收尾验收/README.md)，状态统一见[计划目录](plan/README.md)。
 2026-11-04 的渲染接入与验证见 [WebGPU 与 WebGL 渲染](WebGPU与WebGL渲染.md)及[验证记录](validation/WebGPU接入/README.md)：默认尝试 WebGPU、失败自动回退 WebGL 2，玩法与存档共用。
 
 这里收录《武大附中 · 里世界 3D》的产品、开发和测试文档。仓库根目录的 [README](../README.md) 是项目入口；面向玩家的 [游戏 Wiki](https://wd-fz.github.io/wiki/) 保持独立网页，游戏主菜单可以直接打开。

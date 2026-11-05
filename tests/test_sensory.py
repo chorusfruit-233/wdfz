@@ -163,3 +163,158 @@ class SensoryTest(BrowserCase):
           return {text,repeated,paused};
         }""")
         self.assertIn('上课铃',v['text']);self.assertEqual((v['repeated'],v['paused']),(0,0))
+
+    # —— R3 SAN 视觉效果重做（计划《电梯直通、新天赋、新结局与恐怖氛围》12.9 第二轮）——
+    # 用户 2026-11-04：低 SAN 时画面越扭曲、视野越小、黑屏闪烁、视野模糊
+    def test_san_visual_channels_follow_body_and_comfort_settings(self):
+        p=self.game()
+        v=p.evaluate("""()=>{
+          const R=SensoryRules,bodies=[60,45,30,22,8].map(s=>R.target(s)),
+            keys=['warp','tunnel','blur','focus','drain','halo','pulseK','ghostMax','flickerK'];
+          const at=o=>bodies.map(b=>{const x=R.view(b,Object.assign({time:1},o));return Object.fromEntries(keys.map(k=>[k,x[k]]));});
+          return {std:at({distortion:2}),half:at({distortion:1}),off:at({distortion:0}),soft:at({distortion:2,reduceFlash:1}),
+            threat:at({distortion:2,threat:true}),take:at({distortion:2,takeover:true})};
+        }""")
+        std,half,off,soft,threat,take=v['std'],v['half'],v['off'],v['soft'],v['threat'],v['take']
+        for k in ('tunnel','blur','drain','halo'):
+            seq=[x[k] for x in std]
+            # 静态通道（视野变小、模糊、失色、灯晕）SAN ≥ 60 为 0，往下单调变强
+            self.assertEqual(seq[0],0,k);self.assertTrue(all(a<b for a,b in zip(seq,seq[1:])),(k,seq))
+            # 不跟「视野扭曲」设置：关掉晃动、关掉声音也看得出状态
+            self.assertEqual([x[k] for x in off],seq,k);self.assertEqual([x[k] for x in half],seq,k)
+        warp=[x['warp'] for x in std]
+        self.assertTrue(all(a<b for a,b in zip(warp,warp[1:])),warp)
+        for k in ('warp','focus','pulseK','ghostMax'):
+            # 动态通道（扭曲、对不上焦、心跳收缩、重影）跟「视野扭曲」：减弱 35%，关闭为 0
+            for a,b,c in zip(off,half,std):
+                self.assertEqual(a[k],0,k);self.assertAlmostEqual(b[k],c[k]*.35,9)
+        # 黑屏闪烁：SAN 约 39 以上没有，往下变强；不跟「视野扭曲」，跟「减少闪光」（最多一半）
+        flick=[x['flickerK'] for x in std]
+        self.assertEqual(flick[:2],[0,0]);self.assertTrue(0<flick[2]<flick[3]<=flick[4]==1,flick)
+        self.assertEqual([x['flickerK'] for x in off],flick)
+        for a,b in zip(soft,std):self.assertAlmostEqual(a['flickerK'],b['flickerK']*.5,9)
+        # 心跳收缩只在有心跳声的档位（身体强度 > 0.35）
+        self.assertEqual([x['pulseK'] for x in std],[0,0,1,1,1])
+        # 真实危险时都减到 35%，接管（手机、过场、驾驶……）时全为 0
+        for a,b in zip(threat,std):
+            for k in a:self.assertAlmostEqual(a[k],b[k]*.35,9)
+        self.assertTrue(all(x[k]==0 for x in take for k in x),take)
+
+    def test_heartbeat_and_breath_on_screen_match_their_sounds(self):
+        p=self.game()
+        v=p.evaluate("""()=>{
+          S.san=8;SET.distortion=2;Sensory.reset();
+          const heard=[],orig=SFX.bodySound;SFX.bodySound=kind=>{heard.push(kind);return null;};
+          const rows=[];
+          for(let i=0;i<380;i++){heard.length=0;Sensory.frame(1/60);const s=Sensory.view();
+            rows.push({heart:heard.includes('heart'),breath:heard.includes('breath'),pulse:s.pulse,inhale:s.inhale});}
+          SFX.bodySound=orig;render(1/60);
+          const u=GLR.postMat.uniforms,s=Sensory.view(),L=SOUND_BANK['threat.breath'].layers[0];
+          return {rows,atk:L.atk,dur:L.dur,wired:[u.uPulse.value===s.pulse,u.uBreath.value===s.inhale,u.uDrain.value===s.drain,
+            u.uHalo.value===s.halo,u.uGhost.value===s.ghost,u.uTunnel.value===s.tunnel,u.uBlur.value===s.blur,
+            u.uFocus.value===s.focus,u.uBlack.value===s.black,u.uWarp.value===s.warp]};
+        }""")
+        rows=v['rows'];hearts=[i for i,r in enumerate(rows) if r['heart']];breaths=[i for i,r in enumerate(rows) if r['breath']]
+        self.assertGreaterEqual(len(hearts),10);self.assertEqual(len(breaths),2)
+        peak=max(r['pulse'] for r in rows);self.assertAlmostEqual(peak,1,9)
+        for i in hearts:
+            # 心跳声响起的那一帧，视野收得最紧；0.2 秒后已经放开
+            self.assertAlmostEqual(rows[i]['pulse'],peak,9)
+            if i+12<len(rows):
+                self.assertFalse(any(rows[j]['heart'] for j in range(i+1,i+13)))
+                self.assertLess(rows[i+12]['pulse'],.4*peak)
+        for i in breaths:
+            # 画面和呼吸声同时起，呼吸声最响（起音结束）时压得最深，声音落完时回来
+            seg=[r['inhale'] for r in rows[i:i+int(v['dur']*60)+12]]
+            top=max(range(len(seg)),key=lambda k:seg[k])
+            self.assertEqual(seg[0],0);self.assertAlmostEqual(seg[top],1,6)
+            self.assertLessEqual(abs(top/60-v['atk']),1/60+1e-9)
+            self.assertEqual(seg[-1],0)
+        self.assertTrue(all(v['wired']),v['wired'])
+
+    def test_blackouts_are_brief_spaced_and_respect_reduce_flash(self):
+        p=self.game()
+        v=p.evaluate("""()=>{
+          let draws=0;GameRandom.bind(()=>{draws++;return .5});SoundPlayer.play=()=>null;
+          const before=JSON.stringify([S,RT,PAT]);
+          function run(san,o,secs){
+            S.san=san;SET.distortion=o.dist===undefined?2:o.dist;SET.reduceFlash=o.soft?1:0;AN.active=!!o.threat;Sensory.reset();
+            const xs=[];for(let i=0;i<secs*60;i++){Sensory.frame(1/60);xs.push(Sensory.view().black);}
+            AN.active=false;return xs;
+          }
+          const out={low:run(8,{},120),off:run(8,{dist:0},60),mid:run(30,{},60),high:run(45,{},60),soft:run(8,{soft:1},90),threat:run(8,{threat:1},60)};
+          S.san=100;SET.reduceFlash=0;SET.distortion=2;Sensory.reset();
+          out.draws=draws;out.unchanged=JSON.stringify([S,RT,PAT])===before;
+          return out;
+        }""")
+        low=v['low']
+        dark=[x>=.5 for x in low]
+        starts=[i for i in range(1,len(dark)) if dark[i] and not dark[i-1]]
+        events=[];last=-999
+        for i in starts:
+            if i-last>18:events.append([i])
+            else:events[-1].append(i)
+            last=i
+        # 很低时（SAN 8）两分钟里黑十来次；开局、读档后头 6 秒不黑
+        self.assertGreaterEqual(len(events),10,len(events));self.assertGreaterEqual(starts[0],6*60-1)
+        # 一次最多两下，两次之间至少 2.5 秒；任意一秒内暗下去不超过 3 次（不是持续频闪）
+        self.assertTrue(all(len(e)<=2 for e in events))
+        self.assertGreaterEqual(min(b[0]-a[-1] for a,b in zip(events,events[1:])),int(2.5*60))
+        self.assertLessEqual(max(sum(1 for s in starts if w<=s<w+60) for w in range(len(low))),3)
+        runs=[];n=0
+        for x in low+[0]:
+            if x>=.999:n+=1
+            elif n:runs.append(n);n=0
+        self.assertLessEqual(max(runs),37)                     # 最长的一次「眼前一黑」全黑不超过 0.6 秒，再用 0.4 秒亮回来
+        self.assertEqual(max(low),1)
+        # 不跟「视野扭曲」；SAN 30 时只暗六成；SAN 45 没有
+        self.assertEqual(max(v['off']),1)
+        self.assertTrue(0<max(v['mid'])<=.6+1e-9,max(v['mid']));self.assertEqual(max(v['high']),0)
+        # 「减少闪光」：最多压暗一半，而且慢慢暗、慢慢亮，没有硬切
+        soft=v['soft'];self.assertTrue(0<max(soft)<=.5,max(soft))
+        self.assertLess(max(abs(a-b) for a,b in zip(soft,soft[1:])),.08)
+        # 真实危险时减到 35%
+        self.assertTrue(0<max(v['threat'])<=.35+1e-9,max(v['threat']))
+        # 只是表现：不抽玩法随机，不改状态
+        self.assertEqual(v['draws'],0);self.assertTrue(v['unchanged'])
+
+    def test_screen_closes_in_blurs_drains_and_warps_with_san(self):
+        p=self.game()
+        v=p.evaluate("""()=>{
+          const R=INTERIORS.teach1,L=ClassroomLayout,u=GLR.postMat.uniforms,r=GLR.renderer;
+          const W=GLR.rt.width,H=GLR.rt.height,out=ThreeBackend.target(W,H,{depthBuffer:false}),buf=new Uint8Array(W*H*4);
+          function place(){S.mode='in';S.room='teach1';S.seated=false;S.x=R.ox+(L.spans[3][1]-0.4)*R.tw;S.y=R.oy+(L.mid+1.5)*R.th;S.ang=Math.PI;S.pitch=-.04;}
+          function post(){r.setRenderTarget(out);r.render(GLR.postScene,GLR.postCam);r.readRenderTargetPixels(out,0,0,W,H,buf);r.setRenderTarget(null);return buf.slice();}
+          function shot(san,dist){SET.distortion=dist;S.san=san;Sensory.reset();Sensory.frame(1/60);place();syncCamera(0);render(0);u.uGrain.value=0;return post();}
+          function stats(b){
+            let sat=0,n=0,inner=0,ni=0,outer=0,no=0,sharp=0,ns=0;
+            const lum=i=>.2126*b[i]+.7152*b[i+1]+.0722*b[i+2];
+            for(let y=0;y<H-1;y+=2)for(let x=0;x<W-1;x+=2){
+              const i=(y*W+x)*4,mx=Math.max(b[i],b[i+1],b[i+2]),mn=Math.min(b[i],b[i+1],b[i+2]),l=lum(i);
+              sat+=mx>10?(mx-mn)/mx:0;n++;
+              const dx=Math.abs((x+.5)/W-.5),dy=Math.abs((y+.5)/H-.5);
+              if(dx<.2&&dy<.2){inner+=l;ni++;sharp+=Math.abs(l-lum(i+4))+Math.abs(l-lum(i+W*4));ns++;}
+              else if(Math.max(dx,dy)>.38){outer+=l;no++;}
+            }
+            return {sat:sat/n,ratio:(outer/no)/(inner/ni),sharp:sharp/ns};
+          }
+          const levels=[100,45,30,22,8].map(s=>stats(shot(s,0)));
+          // 扭曲：只开扭曲，同一帧画面在两个时刻比——外圈在流动，准星一小圈不动；关掉扭曲则完全不动
+          shot(8,2);['uTunnel','uBlur','uFocus','uDrain','uHalo','uGhost','uBlack','uPulse','uBreath','uGrain'].forEach(k=>u[k].value=0);
+          function moved(){u.uTime.value=1;const a=post();u.uTime.value=3.7;const b=post();let c=0,cn=0,o=0,on=0;
+            for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4,rr=Math.hypot((x+.5-W/2)/H,(y+.5-H/2)/H);
+              const d=(Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]))/3;
+              if(rr<.02){c+=d;cn++;}else if(rr>.25&&rr<.45){o+=d;on++;}}
+            return {center:c/cn,ring:o/on};}
+          const warped=moved();u.uWarp.value=0;const still=moved();
+          out.dispose();
+          return {levels,warped,still};
+        }""")
+        lv=v['levels'];sat=[x['sat'] for x in lv];ratio=[x['ratio'] for x in lv];sharp=[x['sharp'] for x in lv]
+        # 同一机位（扭曲关闭，只看静态通道）：越低颜色越少、外圈越黑（视野越小）、中心越糊
+        self.assertTrue(all(a>b for a,b in zip(sat,sat[1:])),sat);self.assertLess(sat[-1],sat[0]*.4,sat)
+        self.assertTrue(all(a>b for a,b in zip(ratio,ratio[1:])),ratio);self.assertLess(ratio[-1],ratio[0]*.5,ratio)
+        self.assertTrue(all(a>b for a,b in zip(sharp,sharp[1:])),sharp);self.assertLess(sharp[-1],sharp[0]*.75,sharp)
+        # 扭曲：外圈明显在流动，准星附近基本不动；关掉扭曲就一动不动
+        self.assertGreater(v['warped']['ring'],8,v['warped']);self.assertLess(v['warped']['center'],1,v['warped'])
+        self.assertLess(v['still']['ring'],.01,v['still'])

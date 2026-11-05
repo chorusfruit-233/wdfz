@@ -76,7 +76,8 @@ class PatrolZonesTest(BrowserCase):
         rows = p.evaluate("""()=>PATROL_ZONES.map(z=>{const a=PatrolNav.entry(z.scene,'S'),
           b=PatrolNav.snap(z.scene,PatrolNav.tilePoint(z.scene,...z.observe)),path=PatrolNav.path(a,b);
           return {id:z.id,ok:!!path&&path.length>0};})""")
-        self.assertEqual(len(rows), 8)
+        self.assertEqual(len(rows), 9)
+        self.assertEqual(sum(r['id']=='admin2:broadcast' for r in rows), 1)
         self.assertTrue(all(r['ok'] for r in rows), rows)
 
     def test_registration_does_not_exempt_alarm_zone_and_night_keeps_indoor_rule(self):

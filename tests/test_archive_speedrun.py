@@ -128,8 +128,8 @@ class DeathArchiveTest(BrowserCase):
         page = self.page()
         page.evaluate("localStorage.setItem('wdfz3d',JSON.stringify({keep:1}))")
         self.archive_menu(page, ends='{"car":1}')
-        self.assertEqual(self.cut_cards(page), ['cut:opening+', 'end:car+', 'end:face-', 'end:portal-', 'end:cyber-'])
-        self.assert_js(page, "document.getElementById('arCutCount').textContent==='已解锁 2 / 5'")
+        self.assertEqual(self.cut_cards(page), ['cut:opening+', 'end:car+', 'end:face-', 'end:portal-', 'end:cyber-', 'end:dismissal-'])
+        self.assert_js(page, "document.getElementById('arCutCount').textContent==='已解锁 2 / 6'")
         html = page.locator('#archive').inner_html()
         self.assertNotIn('先辈', html)                       # 隐藏结局：没达成过就完全不出现
         self.assertIn('尚未达成', page.locator('#arcuts').inner_text())
@@ -181,7 +181,7 @@ class DeathArchiveTest(BrowserCase):
         for d in '0000':
             page.locator(f'#devlock [data-k="{d}"]').click()
         page.locator('#devlock [data-k="ok"]').click()
-        self.assert_js(page, "DevLock.on&&document.getElementById('arCount').textContent==='已记录 0 / 18'")
+        self.assert_js(page, "DevLock.on&&document.getElementById('arCount').textContent==='已记录 0 / 20'")
         for d in page.evaluate('DEV_CODE'):
             page.locator(f'#devlock [data-k="{d}"]').click()
         page.locator('#devlock [data-k="ok"]').click()
@@ -194,16 +194,16 @@ class DeathArchiveTest(BrowserCase):
           grades:document.querySelectorAll('#arsec-grades .arcard.open').length,
           gradeMeta:document.querySelector('#arsec-grades .arcard[data-id="x.grade.SSS"] small').textContent,
           clears:localStorage.getItem('wdfz3d_clears_v1')})""")
-        self.assertEqual(r['deaths'], '已记录 18 / 18 · 隐藏 2')
-        self.assertEqual(r['cuts'], '已解锁 5 / 5 · 隐藏 1')
-        self.assertEqual(r['open'], 35)                                    # 26 张死亡 / 演出 + 9 张结算画面
+        self.assertEqual(r['deaths'], '已记录 20 / 20 · 隐藏 3')       # 加了念错了；隐藏：迷宫两种 + 满员（内部）
+        self.assertEqual(r['cuts'], '已解锁 6 / 6 · 隐藏 3')          # 加了《放学》；隐藏：《先辈》＋异色空间进出两张（内部）
+        self.assertEqual(r['open'], 41)                                    # 32 张死亡 / 演出（加了没关上的门、异色空间进出两张、满员、念错了、《放学》）+ 9 张结算画面
         self.assertEqual((r['grades'], r['gradeMeta']), (9, '直接解锁 · 没有亲历'))
         self.assertIsNone(r['clears'])                                    # 结算画面只是点亮，不伪造通关记录
         self.assertTrue(r['btn'] and r['maze'])
         self.assertEqual(r['beast'], '直接解锁 · 没有亲历')
         self.assertEqual(r['ends'], '{}')
         self.assertEqual((r['state']['unlocked'], r['state']['count']), ({}, {}))
-        self.assertEqual(len(r['state']['granted']), 34)                   # 开场在测试环境里已经看过，本来就开着；含 9 张结算画面
+        self.assertEqual(len(r['state']['granted']), 40)                   # 开场在测试环境里已经看过，本来就开着；含 9 张结算画面（加了没关上的门、异色空间进出两张、满员、念错了、《放学》）
         # 之后真的死一次：照样是新记录、计次数
         r = page.evaluate("()=>{const e=DeathArchive.record('patrol','grip');DeathArchive.paint();return {fresh:!!e,meta:document.querySelector('#arcards .arcard[data-id=\"patrol\"] small').textContent};}")
         self.assertEqual(r, {'fresh': True, 'meta': '经历 1 次 · 最近'})
