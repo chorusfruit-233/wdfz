@@ -3,7 +3,7 @@
 /* Public broadcast station and the five-stage school-dismissal route. Application owns all state. */
 'use strict';
 var Broadcast=(function(){
-  var C=$imports.BROADCAST_CFG,B=$imports.BroadcastRules.normalize(),held=false,progress=0,origin=null,session=0,crowdPath=null,bellSound=null,bellStarted=false;
+  var C=$imports.BROADCAST_CFG,B=$imports.BroadcastRules.normalize(),held=false,progress=0,origin=null,session=0,crowdPath=null,bellSound=null,bellStarted=false,bellNext=0;   /* 长铃一段 12 秒（声音库单段不超过 20 秒），响铃期间一段接一段 */
   var own={owner:'broadcast'};
   function state(){return B;}
   function silence(){bellStarted=false;if(bellSound)$imports.SoundPlayer.fade(bellSound);bellSound=null;}
@@ -78,7 +78,7 @@ var Broadcast=(function(){
     {label:'核对最近广播',fn:verify},{label:'整理通知稿／朗读',fn:function(){$imports.BroadcastUI.open();}},{label:'离开广播台',fn:function(){}}]);}
   function startBell(){
     stop();B.phase='bell';B.bell=C.bellSeconds;B.attemptDay=$imports.S.day;
-    silence();crowdPath=null;bellSound=$imports.SFX.cue('event.dismissal');bellStarted=true;
+    silence();crowdPath=null;bellNext=12;bellSound=$imports.SFX.cue('event.dismissal');bellStarted=true;
     (0,$imports.os)('广播：「放学。全体同学从北门离校。」\n长铃只响六十秒。跟紧同学，铃声结束以前走出北门。',6,$imports.OS_FORCE);(0,$imports.autoSave)();
   }
   function crowd(){
@@ -108,7 +108,8 @@ var Broadcast=(function(){
     if($imports.S.screen!=='play'||$imports.S.dead)return;
     ensure();B.clock+=dt;
     if(B.phase==='bell'){
-      if(!bellStarted){bellSound=$imports.SFX.cue('event.dismissal');bellStarted=true;}
+      var rung=C.bellSeconds-B.bell;if(!bellStarted){bellNext=Math.floor(rung/12)*12;bellStarted=true;}
+      if(rung>=bellNext&&B.bell>0.5){bellSound=$imports.SFX.cue('event.dismissal');bellNext+=12;}
       B.bell=Math.max(0,B.bell-dt);if(B.bell<=0){silence();B.phase='collect';B.completed=0;B.selected='notice1';crowdPath=null;(0,$imports.os)('长铃停了。同学们转身往教室走。通知稿还在，明天的放学时段可以再试。',5,$imports.OS_FORCE);(0,$imports.autoSave)();}
       else tryExit();return;
     }

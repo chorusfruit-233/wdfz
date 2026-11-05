@@ -43,7 +43,7 @@ class SoundBankTest(BrowserCase):
             self.assertIn('dread.' + kind, ids)
         for sf in ('tile', 'stair', 'garage', 'roof', 'grass', 'track', 'court', 'road', 'void', 'wet', 'squeak'):
             self.assertIn('step.' + sf, ids)
-        self.assertEqual(len(r['kinds']), 32)                     # 28 种 + 虚空迷宫的迷失、坠落 + 电梯门（没关上的门）+ 满员（内部）
+        self.assertEqual(len(r['kinds']), 33)                     # 28 种 + 虚空迷宫的迷失、坠落 + 电梯门（没关上的门）+ 满员（内部）+ 念错了
         # 游戏里调用的 SFX.xxx 都存在（以前 SFX.chalk、SFX.deep、SFX.stopDeath 调了却不存在，被 try 吞掉没声音）
         calls = set()
         for text in src.values():

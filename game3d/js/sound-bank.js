@@ -36,9 +36,9 @@ var SAME_STEP=[
 ];
 
 var SOUND_BANK={
-  'event.dismissal':{cat:'event',name:'放学长铃 · 六十秒',lv:-5,layers:[
-    {t:'bell',f:523.25,dur:4,g:.11,every:4,n:15,partials:CHIME},
-    {t:'tone',f:392,dur:60,g:.009,atk:.5,type:'sine'}]},
+  'event.dismissal':{cat:'event',name:'放学长铃（一段 12 秒，响铃期间接着放，共六十秒）',lv:-5,layers:[
+    {t:'bell',f:523.25,dur:4,g:.11,every:4,n:3,partials:CHIME},
+    {t:'tone',f:392,dur:12.2,g:.009,atk:.5,type:'sine'}]},
   'death.misread':{cat:'death',name:'念错了 · 回授与广播',layers:[
     {t:'noise',f:850,type:'bandpass',q:3,dur:3.4,g:.13,atk:.5},
     {t:'tone',f:220,to:146.83,dur:2.8,g:.1,atk:.3,type:'triangle'},

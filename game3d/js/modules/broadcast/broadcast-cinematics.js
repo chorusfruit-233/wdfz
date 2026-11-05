@@ -42,14 +42,14 @@
         if(u>.45)o.fig.userData.body.geometry=(0,$imports.figGeo)('person');o.fig.position.z=o.z+Math.max(0,u-.65)*.8;});
       if(!d.said.b){d.said.b=true;(0,$imports.os)('几十把椅子同时往后挪。没有人说话。',4,$imports.OS_FORCE);$imports.SoundPlayer.play('dread.chair',{k:.6});}
     }else if(stage===2){
-      var u=(t-7.8)/4.2;(0,$imports.cutLook)(59.8,4.8,5.1,55.8,1.8,-.3);
+      var u=(t-7.8)/4.2;(0,$imports.cutLook)(59.6,6.2,7.6,55.6,1.4,.4);   /* 楼梯井斜上方往下看：看得见两段楼梯的人流和走廊尽头的高个子 */
       d.line.forEach(function(f,i){var p=(u*.7+i*.08)%1;if(p<.5){f.position.set(-1,2.04*(1-p*2),-.9+p*6.7);}else{f.position.set(1,4.08-(p-.5)*4.08,2.5-(p-.5)*6.7);}f.rotation.y=p<.5?0:Math.PI;});
       if(!d.said.c){d.said.c=true;(0,$imports.os)('走廊尽头的高个子没有动。人流从它身边经过。',4,$imports.OS_FORCE);}
     }else{
       var v=(t-12)/6,g=d.gate;
       d.walkers.forEach(function(f,i){f.position.set(g.x+(i%4-1.5)*.65,0,g.z+3.8-Math.floor(i/4)*.9-v*8);f.rotation.y=Math.PI;});
       if(v<.2)(0,$imports.cutLook)(g.x-1.3,1.6,g.z+2.1,g.x-1.3,1.1,g.z+1);
-      else if(v<.6)(0,$imports.cutLook)(g.x,1.65,g.z+1-(v-.2)*18,g.x,1.6,g.z-10);
+      else if(v<.6)(0,$imports.cutLook)(g.x+1.6,1.6,g.z-6-(v-.2)*4,g.x,1.4,g.z+3);   /* 站在门外回看：人流从校门里走出来（以前对着校外的空地，整屏灰） */
       else{var teachX=(d.building.x+d.building.w/2)*$imports.U2M,teachZ=(d.building.y+d.building.h/2)*$imports.U2M;(0,$imports.cutLook)(g.x,1.8,g.z-7,teachX,6,teachZ);}
       d.windows.forEach(function(m,i){m.visible=v>.6+i*.065;});$imports.GLR.worldNorm=.8;
       if(!d.said.d){d.said.d=true;(0,$imports.os)('登记簿翻到了新的一页：放学 · 全体。',4,$imports.OS_FORCE);}
