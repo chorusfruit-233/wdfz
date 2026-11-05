@@ -73,7 +73,7 @@
   {id:'story', name:'剧情、死亡与结局', desc:'线索点、念头、死亡、结局；结局卡、死亡界面出现时发 endingCard / deathScreen 钩子。',
     files:['game3d/js/story.js'], exports:['kill','ENDINGS'], emits:['endingCard','deathScreen']},
   {id:'interact', name:'交互', desc:'按 E 交互和提示文字；interact / hint 钩子先于默认交互。',
-    files:['game3d/js/interact.js'], exports:['tryInteract','interactHint','nearWorld'], emits:['interact','hint','doorAction','restAct','linkContinuous']},
+    files:['game3d/js/interact.js'], exports:['tryInteract','interactHint','nearWorld'], emits:['interact','hint','doorAction','restAct','linkContinuous','doorContinuous']},
   {id:'audio', name:'声音', desc:'全部现场合成：一次性音效写成配方（sound-bank.js），按类别校准响度（sound-levels.js，tools/sound_levels.py 生成），由 SoundPlayer（fx/sound-player.js）播放；SFX 是游戏里调用的接口和持续的环境层。SFX.scape 登记整片环境声（soundscape 钩子选用），stepSurface 钩子换脚下的材质，SoundPlayer.add 给模块和 Mod 加音效。',
     files:['game3d/js/sound-bank.js','game3d/js/sound-levels.js','game3d/js/audio.js','game3d/js/fx/sound-player.js'],
     exports:['SFX','SoundPlayer','SOUND_BANK','SOUND_CATS','SOUND_LEVELS'], emits:['soundscape','stepSurface','bellTune'], uses:['boundary']},

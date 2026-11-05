@@ -266,7 +266,27 @@ window.Pilot = (() => {
     event('decision',{text:document.getElementById('choices').innerText,option:n});
     await sleep(1400);await tap(String(n));await sleep(650);
   }
+  /* 连续校园的门槛（连廊端口、楼门）：走到门洞里面一格，再顺着 n 直走，越过门槛线就换了场景（不按 E） */
+  async function through(P){
+    const scene=S.mode+':'+S.room;
+    await go({x:P.x-P.n[0]*9,y:P.y-P.n[1]*9},2);
+    const target={x:P.x+P.n[0]*12,y:P.y+P.n[1]*12},frames=new PilotNavigation.FrameWindow(),end=performance.now()+20000;
+    try{
+      while(S.mode+':'+S.room===scene){
+        alive();if(performance.now()>end)throw Error('穿过门槛超时');
+        await defense();if(S.mode+':'+S.room!==scene)break;
+        if(!playerInputAllowed()){stop();await sleep(80);continue;}
+        const yaw=Math.atan2(target.y-S.y,target.x-S.x);look(yaw);
+        move(Math.abs(angle(yaw-S.ang))<.12?PilotNavigation.throttle(Math.max(4,distance(target)),SPD_WALK,frames.update(performance.now(),dtG)):0);
+        await sleep(50);
+      }
+    }finally{stop();}
+    event('threshold',{from:scene,to:S.mode+':'+S.room});
+  }
+  function seamDoor(){ return typeof CampusDoor!=='undefined'&&S.mode==='in'?CampusDoor.CFG.doors.find(d=>d.room===S.room):null; }
   async function interact(target,radius=11){
+    const R=S.mode==='in'?INTERIORS[S.room]:null,door=seamDoor();
+    if(target&&target.ch==='O'&&door&&R.openExitAt&&R.openExitAt(target.x,target.y)){await through(CampusDoor.port(door));event('interact',target);return;}   /* 敞开的楼门：直接走出去 */
     let interacted=false;
     for(let attempt=0;attempt<4;attempt++){
       await go(target,Math.max(4,radius-attempt*2));const roster=nearRoster();
@@ -286,6 +306,8 @@ window.Pilot = (() => {
   async function nearest(chars,radius=11){const list=cells(chars).sort((a,b)=>distance(a)-distance(b));for(const p of list){try{plan(p,radius);return await interact(p,radius);}catch(e){if(!e.message.startsWith('没有可行'))throw e;}}throw Error('找不到可接近的 '+chars);}
   async function building(id){
     const o=OBJ.find(o=>o.id===id&&o.k==='roof');if(!o)throw Error('没有建筑 '+id);
+    const d=typeof CampusDoor!=='undefined'&&GameModules.first('doorContinuous',id)?CampusDoor.CFG.doors.find(x=>x.host===id):null;
+    if(d){const Q=CampusDoor.outPort(d);await through({x:Q.x,y:Q.y,n:[-Q.n[0],-Q.n[1]]});event('building',id);return;}   /* 敞开的楼门：直接走进去 */
     await go(doorWorld(o),20);await tap('e');await sleep(1800);event('building',id);
   }
   async function stairs(up){
@@ -500,9 +522,9 @@ window.Pilot = (() => {
     started=performance.now();const label=document.createElement('div');label.id='pilot-label';
     label.style.cssText='position:fixed;right:12px;top:76px;z-index:50000;background:#101718dd;color:#d9e2da;padding:6px 10px;border-radius:3px;font:12px sans-serif;pointer-events:none;max-width:48%';
     document.body.appendChild(label);
-    (async()=>{await opening();if(route==='cyber')await PilotCyber.run({sleep,chapter,event,stop,tap,look,alive,defense,go,cells,interact,nearest,building,floor,officeKey,choose,bagAction,finishEnding,leaveSeat});
+    (async()=>{await opening();if(route==='cyber')await PilotCyber.run({sleep,chapter,event,stop,tap,look,alive,defense,go,cells,interact,nearest,building,floor,officeKey,choose,bagAction,finishEnding,leaveSeat,through});
       else await ({car:carRoute,face:faceRoute,portal:portalRoute}[route])();})()
       .catch(e=>{stop();failed=e.stack||String(e);event('failure',failed);});
   }
-  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event,defense,leaveSeat};
+  return {start,snapshot,log,cells,plan,go,interact,nearest,building,stairs,floor,face,tap,choose,stop,garageExit,sleep,event,defense,leaveSeat,through};
 })();
