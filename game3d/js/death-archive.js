@@ -59,6 +59,7 @@ var ARCHIVE_CUTS=[
   {id:'end:portal',  cut:'portal',  end:'portal', n:'《门》',       d:'导轨一段段闭合，光圈撑开。退了半步，然后走了进去。', stage:'lab1'},
   {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
   {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
+  {id:'end:international',cut:'international',end:'international',n:'《外国语学生》',d:'队尾的人回头看了一眼。门卫核对的是接待名单，门外的颜色和声音都很平常。',stage:'teach1'},
   {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1},
   {id:'end:knife',   cut:'knife',   end:'knife',  n:'《管制刀具》', d:'压在头顶的手停住了。小刀装进透明袋子，登记单上早就填好了名字：留校。', stage:'teach1', secret:1},   /* 内部：modules/knife */
   {id:'end:inception',cut:'inception',end:'inception',n:'《盗梦空间》',d:'走廊一层层往上退。课桌上的陀螺在转。醒来的房间里有阳光，桌上的陀螺还在转。', stage:'dorm1', secret:1},   /* 内部：modules/inception */

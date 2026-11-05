@@ -126,6 +126,8 @@
     files:['game3d/js/modules/paper-plane/paper.js','game3d/js/modules/paper-plane/paper-death.js'], exports:['PaperPlane','PAPER_CFG'], uses:['ownsPlayerInput','hint','interact','tick','newGame','frame','clearWorld','boundary']},
   {id:'body', name:'翻越、受伤与校园坠落', desc:'计划《校园直通、翻越受伤与国际交流》第 6 节：天台女儿墙与连廊栏杆可以翻（外侧悬空，按住空格 0.6 秒或 E 确认）；伤势四档、急救包、行政楼医务室药柜；天台坠落是死法「中国人能飞」（演出在 fall-death.js）。',
     files:['game3d/js/modules/body/injury.js','game3d/js/modules/body/fall-death.js'], exports:['Body','BODY_CFG'], uses:['hint','interact','moveSpeedMul','runBlocked','ownsPlayerInput','tick','itemUse','frame','clearWorld','boundary','newGame']},
+  {id:'exchange', name:'国际交流与《外国语学生》', desc:'计划《校园直通、翻越受伤与国际交流》第 8–9 节：5% 的国际交流（第二天白天）、隐藏天赋多语言 15%（内部）、德法资格考核、跟随离校、全校搜查（最多 3 名搜查员）与公开真结局《外国语学生》（exchange-fx.js 表现、exchange-cut.js 演出）。',
+    files:['game3d/js/modules/exchange/exchange.js','game3d/js/modules/exchange/exchange-fx.js','game3d/js/modules/exchange/exchange-cut.js'], exports:['Exchange','EXCHANGE_CFG','EXAM'], uses:['newGame','hint','interact','tick','gameFact','frame','clearWorld','boundary']},
   {id:'knife', name:'小刀与隐藏假结局（内部）', desc:'彩蛋：器材室的小刀；被巡察者抓住后 1 秒内从背包拿出并使用，触发隐藏假结局（过场在 knife-cut.js），次日座位醒来。不进玩家 Wiki，可从清单拿掉。',
     files:['game3d/js/modules/knife/knife.js','game3d/js/modules/knife/knife-cut.js'], exports:['Knife','KNIFE_CFG'], uses:['hint','interact','patrolCatch','ownsPlayerInput','keepSimulation','tick','itemUse','endingCard','newGame']},
   {id:'inception', name:'隐藏结局《盗梦空间》（内部）', desc:'彩蛋：宿舍睡觉时有陀螺可能进梦（上课 20% 睡着×10%、不上课 5%，每天最多一次）；梦里转陀螺 50% 定分支，坠落或走出口通往隐藏结局，否则醒回宿舍按两倍睡觉结算。不进玩家 Wiki，可从清单拿掉。',

@@ -209,7 +209,7 @@ class ModuleBrowserTest(BrowserCase):
                             "replay:ArchiveReplay.play('void_lost'),cuts:DeathArchive.visibleCuts(d).length}}")
         self.assertFalse({'void_lost', 'void_fall'} & set(arc['ids'] + arc['granted']))
         self.assertFalse(arc['replay'])
-        self.assertEqual(arc['cuts'], 9)                           # 结局与开场都还在（包括全部解锁后的隐藏结局和广播站模块的《放学》）
+        self.assertEqual(arc['cuts'], 10)                           # 结局与开场都还在（包括全部解锁后的隐藏结局和广播站模块的《放学》）
         self.assertFalse({'cut:void_in', 'cut:void_out'} & set(arc['granted']))   # 异色空间进出的过场随模块拿掉
 
     def test_room_no_clock_contract_also_applies_outside_elevator(self):
