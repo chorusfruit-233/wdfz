@@ -9,7 +9,7 @@
      把这间房的模型挂进室外场景。室内地面比室外地面高 1 厘米，两边的地面不会重叠闪烁。
    · 拿掉本模块：门洞、缺口、预览都没有，回到按 E 出入（门口是关着的玻璃门）。 */
 'use strict';
-var CAMPUS_DOOR={version:1,width:3,annex:1.5,lift:0.01,near:16,far:20,doors:[
+var CAMPUS_DOOR={version:1,width:3,annex:1.5,lift:0.01,near:12,far:15,doors:[
   {room:'teach1',host:'teach',edge:'s',at:31}
 ]};
 var CampusDoor=(function(){
@@ -97,7 +97,7 @@ var CampusDoor=(function(){
     if(inView){ inView.mesh.position.set(0,0,0); } inView=null; outView=null;
   }
   function frame(){
-    if(!$imports.GLR.scene||$imports.S.screen!=='play') return;
+    if(!$imports.GLR.scene||$imports.S.screen!=='play'||$imports.PRO.on||($imports.Opening&&$imports.Opening.on)) return;   /* 开场演出前后不挂（第一次挂室外模型要现建一份） */
     var inside=$imports.S.mode==='in', list=inside?doorsOf($imports.S.room):$imports.S.mode==='out'?CAMPUS_DOOR.doors:[], d=null, i, best=1e9;
     for(i=0;i<list.length;i++){ var m=near(list[i],$imports.S.x,$imports.S.y,inside); if(m<best){ best=m; d=list[i]; } }
     var cur=inside?inView:outView, lim=cur?CAMPUS_DOOR.far:CAMPUS_DOOR.near;
