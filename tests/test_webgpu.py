@@ -67,6 +67,27 @@ class NativeWebGPUTest(BrowserCase):
     # Uses actual GPUAdapter, GPUDevice, WGSL pipelines and texture readback, not a renderer mock.
     extra_browser_args=['--enable-unsafe-webgpu','--use-vulkan=swiftshader','--enable-features=Vulkan']
 
+    def test_broadcast_panel_crowd_and_cinematics_remain_native(self):
+        page=self.gpu(touch=True)
+        for quality in (0,3,4):
+            with self.subTest(quality=quality):
+                self.set_quality(page,quality)
+                page.evaluate("""S.day=2;S.tsec=1100;doEnterRoom('admin2');const R=INTERIORS.admin2;
+                  S.x=R.ox+5.5*R.tw;S.y=R.oy+4.9*R.th;S.seated=false;S.pitch=0;
+                  Broadcast.book();['notice1','notice2','notice3','notice4','broadcastfuse'].forEach(addItem);Broadcast.install();
+                  BroadcastUI.open();BroadcastUI.paint();render(.01);""")
+                self.assertTrue(page.locator('#radio-read').is_visible())
+                page.evaluate("BroadcastUI.close();CUT.enabled=true;playCut('dismissal',()=>{S.screen='play';});")
+                for dt in (1,4,4,4):
+                    page.evaluate('dt=>{cutTick(dt);render(0)}',dt)
+                    self.check_gpu(page)
+                page.evaluate("cutSkip();deathFX('misread',{preview:true});anfxUpdate(2);render(0)")
+                self.check_gpu(page)
+                page.evaluate("anfxClear();S.screen='play';CUT.enabled=false;Broadcast.hold(true);for(let i=0;i<4;i++)Broadcast.tick(20.1);doExitRoom();render(0)")
+                self.check_gpu(page)
+                self.assert_js(page,"BroadcastView.crowd()&&BroadcastView.crowd().children.length===16&&GameModules.errors().length===0")
+                page.evaluate("freshState('hard');S.screen='play';S.intro=0;PRO.on=false;running=false")
+
     def test_direct_elevator_and_touch_close_remain_native_in_three_quality_tiers(self):
         page=self.gpu(touch=True)
         page.evaluate("S.day=2;S.tsec=700;SEARCH.on=true;Talent.begin('tech','selected');GameRandom.bind(()=>.9)")

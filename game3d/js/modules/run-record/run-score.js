@@ -46,6 +46,7 @@ var RunScore=(function(){
         if(f.laugh===true) add('应对 · 选择','笑出了声',P.laugh,'choice');
         else if(f.laugh===false) add('应对 · 选择','忍住了没笑',P.noLaugh,'choice');
         break;
+      case 'broadcast':if(f.what==='verified'&&f.real===false)add('应对 · 选择','核对假广播',P.anomalyClean,'broadcast');break;
       case 'face': add('应对 · 选择',f.correct?'验证题答对':'验证题答错',f.correct?P.faceRight:P.faceWrong,'choice'); break;
       case 'lesson': if(f.correct) add('应对 · 选择','课桌任务答对',P.lesson,'choice'); else try{ $imports.RunLog.event('choice','课桌任务答错',0); }catch(e){} break;
       case 'exam': if(f.phase==='paper') add('应对 · 选择',f.pass?'考试合格交卷':'考试没坐住',f.pass?P.examPass:P.examFail,'exam');

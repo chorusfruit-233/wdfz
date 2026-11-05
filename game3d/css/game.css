@@ -489,3 +489,5 @@ body:not(.cut) #opcap{display:none}
 .elevator-controls #lift-close{color:#ffe2a0;border-color:#b09656;background:#393326;}
 .elevator-controls kbd{margin-left:5px;font-size:11px;opacity:.8;}.touch .elevator-controls kbd{display:none;}
 @media(max-height:520px) and (orientation:landscape){body.touch .elevator-controls{right:calc(136px + env(safe-area-inset-right));bottom:calc(58px + env(safe-area-inset-bottom));}}
+
+.broadcast-cut-caption{position:fixed;z-index:65;left:8vw;right:8vw;bottom:max(12vh,56px);margin:0;text-align:center;white-space:pre-line;color:#e7e0cd;font:16px/1.7 var(--ui-serif);text-shadow:0 2px 5px #000;pointer-events:none}

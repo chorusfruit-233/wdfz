@@ -18,7 +18,15 @@ class BroadcastTest(BrowserCase):
         p = self.game()
         self.assert_js(p, "!BroadcastRules.window(1,1100)&&!BroadcastRules.window(2,1039)&&BroadcastRules.window(2,1040)&&!BroadcastRules.window(2,1340)")
         r = p.evaluate("BroadcastRules.normalize({completed:99,phase:'bell',bell:Infinity,selected:'other',fakeSite:9,pianoFails:8,current:{id:1,room:'garbage'}})")
-        self.assertEqual((r['completed'],r['phase'],r['selected'],r['fakeSite'],r['pianoFails'],r['current']), (4,'collect','notice1',None,3,None))
+        self.assertEqual((r['completed'],r['phase'],r['selected'],r['fakeSite'],r['pianoFails'],r['current']), (3,'collect','notice1',None,3,None))
+
+    def test_false_paper_uses_persisted_run_seed_and_does_not_reroll(self):
+        p=self.game()
+        r=p.evaluate("""()=>{Mechanics.runSeed='broadcast-seed-one';Broadcast.state().fakeSite=null;
+          const first=Broadcast.ensure().fakeSite,expected=Math.floor(BroadcastRules.hash(Mechanics.runSeed,'false-notice')*4);
+          Mechanics.runSeed='another-seed';const kept=Broadcast.ensure().fakeSite;
+          saveGame();applySave(loadGame());return {correct:first===expected,kept:first===kept,saved:Broadcast.ensure().fakeSite===first};}""")
+        self.assertEqual(r,dict(correct=True,kept=True,saved=True))
 
     def test_sources_are_physical_and_inventory_failure_preserves_items(self):
         p = self.game()
@@ -29,7 +37,7 @@ class BroadcastTest(BrowserCase):
         p.locator('#choices button').first.click()
         self.assert_js(p, "hasItem('notice1')")
         p.evaluate("atRadio('gear1',3,2.5);tryInteract()")
-        self.assert_js(p, "hasItem('broadcastfuse')")
+        self.assert_js(p, "hasItem('broadcastfuse')&&hasItem('snack')&&Broadcast.state().boxSnack")
 
     def test_guard_register_requires_night_and_gives_key_then_paper(self):
         p = self.game()
@@ -85,7 +93,16 @@ class BroadcastTest(BrowserCase):
         self.assert_js(p,"!Broadcast.reading().held&&Broadcast.state().completed===1")
         p.evaluate("BroadcastUI.open();Broadcast.hold(true);window.dispatchEvent(new Event('blur'))")
         self.assert_js(p,"!Broadcast.reading().held")
-        p.evaluate("const old=Inspection.pending;Inspection.pending=()=>true;Broadcast.hold(true);Inspection.pending=old;true")
+
+    def test_world_clock_and_patroller_continue_while_holding_microphone(self):
+        p = self.game()
+        r = p.evaluate("""()=>{prepareRadio();BroadcastUI.open();Broadcast.hold(true);patReset();PatrolWorld.reset();
+          PAT.state='idle';PAT.respawn=100;const clock=S.tsec,pat=PAT.respawn;
+          for(let i=0;i<10;i++)update(.1);
+          return {clock:S.tsec>clock,patrol:PAT.respawn<pat,reading:Broadcast.reading().held,progress:Broadcast.reading().progress};}""")
+        self.assertTrue(r['clock'] and r['patrol'] and r['reading'])
+        self.assertGreater(r['progress'],.9)
+        p.evaluate("const old=Inspection.pending;Inspection.pending=()=>true;Broadcast.hold(true);Broadcast.tick(.1);Inspection.pending=old;true")
         self.assert_js(p,"!Broadcast.reading().held")
 
     def test_real_and_false_broadcasts_can_be_verified_and_false_one_allows_escape(self):
@@ -118,6 +135,22 @@ class BroadcastTest(BrowserCase):
         self.assert_js(p,"!Broadcast.cover()")
         p.evaluate("Broadcast.tick(61)")
         self.assert_js(p,"Broadcast.state().phase==='collect'&&Broadcast.state().completed===0&&Broadcast.ready()&&hasItem('notice4')")
+        p.evaluate("atRadio('admin2',5,4.4)")
+        self.assert_js(p,"!Broadcast.hold(true)")
+        p.evaluate("S.day++;S.tsec=1100")
+        self.assert_js(p,"Broadcast.hold(true)")
+
+    def test_all_ending_cg_shots_and_death_preview_preserve_player_state(self):
+        p = self.game()
+        result=p.evaluate("""()=>{prepareRadio();CUT.enabled=true;
+          const before=JSON.stringify(S),old=VisualState.stageHour;playCut('dismissal',()=>{S.screen='play';});
+          [1,4,4,4,4].forEach(dt=>cutTick(dt));cutSkip();
+          const cutSame=JSON.stringify(S)===before&&VisualState.stageHour===old;
+          const preview=JSON.stringify(S);let finite=true;deathFX('misread',{preview:true});
+          [.5,1,1,1].forEach(dt=>{anfxUpdate(dt);ANFX.grp.traverse(o=>{
+            finite=finite&&[...o.position.toArray(),...o.quaternion.toArray(),...o.scale.toArray()].every(Number.isFinite);
+          });});anfxClear();return {cutSame,deathSame:JSON.stringify(S)===preview,finite};}""")
+        self.assertEqual(result,dict(cutSame=True,deathSame=True,finite=True))
 
     def test_legitimate_exit_records_new_ending_score_and_archive(self):
         p = self.game()

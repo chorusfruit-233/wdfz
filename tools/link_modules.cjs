@@ -31,7 +31,7 @@ function unpack(source){
 function manifest(root){const out=[];vm.runInNewContext(fs.readFileSync(path.join(root,'game3d/manifest.js'),'utf8'),{GameModules:{define:m=>out.push(m)}});return out;}
 function standalone(file){return file.startsWith('game3d/js/domain/')||['game3d/js/app/lifecycle.js','game3d/js/app/input-context.js','game3d/js/adapters/storage.js'].includes(file);}
 function layer(file){
-  if(/\/broadcast-(view|ui|cinematics)\.js$/.test(file))return 'presentation';
+  if(/\/(?:broadcast-(?:view|ui|cinematics)|atmos-fx)\.js$/.test(file))return 'presentation';
   if(file.startsWith('game3d/js/domain/'))return 'domain';
   if(file.startsWith('game3d/js/content/'))return 'content';
   if(/\/(?:marks-fx|maze-model|maze-sound|maze-death|eggs-fx)\.js$/.test(file)||file==='game3d/js/modules/cyber-route/ending.js')return 'presentation';

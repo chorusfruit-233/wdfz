@@ -200,7 +200,7 @@ var SOUND_BANK={
     {t:'tone',f:5650,dur:2.7,hold:2.3,g:0.02,atk:0.01,am:[20,0.85,'square']},
     {t:'noise',f:3400,type:'bandpass',q:2,dur:2.5,hold:2.3,g:0.06,atk:0.01,am:[20,0.95,'square']}]},
   'event.bellEnd':{cat:'event',name:'下课铃（钟声）',lv:-7,wet:0.6,layers:[
-    {t:'bell',f:function(o,i){ return BELL_TUNE[i%8]; },n:8,every:function(o,i){ return i===3?1.1:0.62; },dur:2.4,g:0.1,partials:CHIME}]},
+    {t:'bell',f:function(o,i){ return BELL_TUNE[i%8]*(i%8===7?(o.tail||1):1); },n:8,every:function(o,i){ return i===3?1.1:0.62; },dur:function(o,i){return i%8===7?2.4*(o.tailLength||1):2.4;},g:0.1,partials:CHIME}]},
   'event.thunder':{cat:'event',name:'近雷：炸裂再滚',lv:2,wet:0.6,layers:[
     {t:'noise',f:2400,type:'lowpass',q:0.7,dur:0.4,g:0.4,atk:0.003},                    /* 炸 */
     {t:'noise',f:[150,190],type:'lowpass',q:0.8,dur:3.8,g:0.5,at:0.05,atk:0.2,am:[[2.5,5],0.55]},   /* 滚 */

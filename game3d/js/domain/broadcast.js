@@ -19,7 +19,7 @@ var BroadcastRules={
     text:fake?'第 0 天。请读到这里的同学留在原地。其他同学不要回头。':BROADCAST_CFG.pages[index]};},
   window:function(day,time){return day>=2&&time>=BROADCAST_CFG.from&&time<BROADCAST_CFG.to;},
   normalize:function(value){
-    var v=value&&typeof value==='object'?value:{},o={version:1,book:!!v.book,fuse:!!v.fuse,archiveOpen:!!v.archiveOpen,
+    var v=value&&typeof value==='object'?value:{},o={version:1,book:!!v.book,fuse:!!v.fuse,archiveOpen:!!v.archiveOpen,boxSnack:!!v.boxSnack,
       fakeSite:Number.isInteger(v.fakeSite)&&v.fakeSite>=0&&v.fakeSite<4?v.fakeSite:null,
       completed:Math.max(0,Math.min(4,Number.isInteger(v.completed)?v.completed:0)),phase:'collect',bell:0,attemptDay:Math.max(0,v.attemptDay|0),
       selected:/^(notice[1-4]|notice_fake)$/.test(v.selected)?v.selected:'notice1',piano:Array.isArray(v.piano)?v.piano.filter(Number.isInteger).slice(0,4):[],
@@ -27,6 +27,7 @@ var BroadcastRules={
       verified:Array.isArray(v.verified)?v.verified.filter(Number.isInteger).slice(-30):[],clock:Number.isFinite(v.clock)?Math.max(0,v.clock):0,
       nextCall:Number.isFinite(v.nextCall)?Math.max(0,v.nextCall):180,callSeq:Math.max(0,v.callSeq|0),calls:[],current:null};
     if(v.phase==='bell'&&o.completed===4&&o.book&&o.fuse&&Number.isFinite(v.bell)&&v.bell>0){o.phase='bell';o.bell=Math.min(60,v.bell);}
+    if(o.phase!=='bell'&&o.completed===4)o.completed=3;
     if(Array.isArray(v.calls))o.calls=v.calls.filter(function(c){return c&&Number.isInteger(c.id)&&typeof c.text==='string'&&['lab2','lab4'].includes(c.room);}).slice(-20);
     if(v.current&&Number.isInteger(v.current.id)&&['lab2','lab4'].includes(v.current.room))o.current={id:v.current.id,room:v.current.room,text:String(v.current.text||''),
       real:!!v.current.real,done:!!v.current.done,arrived:!!v.current.arrived,age:Number.isFinite(v.current.age)?Math.max(0,v.current.age):0};

@@ -3,21 +3,22 @@
 /* Public broadcast station and the five-stage school-dismissal route. Application owns all state. */
 'use strict';
 var Broadcast=(function(){
-  var C=$imports.BROADCAST_CFG,B=$imports.BroadcastRules.normalize(),held=false,progress=0,origin=null,session=0,crowdPath=null,bellSound=null,bellStarted=false,bellNext=0;   /* 长铃一段 12 秒（声音库单段不超过 20 秒），响铃期间一段接一段 */
+  var C=$imports.BROADCAST_CFG,B=$imports.BroadcastRules.normalize(),held=false,progress=0,origin=null,session=0,crowdPath=null,bellSound=null,bellStarted=false,bellNext=0;
   var own={owner:'broadcast'};
   function state(){return B;}
   function silence(){bellStarted=false;if(bellSound)$imports.SoundPlayer.fade(bellSound);bellSound=null;}
   function reset(){silence();crowdPath=null;B=$imports.BroadcastRules.normalize();held=false;progress=0;origin=null;session++;}
   function save(){return JSON.parse(JSON.stringify(B));}
   function near(room,at,distance){var R=$imports.INTERIORS[room];return !!R&&$imports.S.mode==='in'&&$imports.S.room===room&&Math.hypot($imports.S.x-(R.ox+(at[0]+.5)*R.tw),$imports.S.y-(R.oy+(at[1]+.5)*R.th))<=(distance||14);}
-  function ensure(){if(B.fakeSite===null)B.fakeSite=Math.floor($imports.BroadcastRules.hash($imports.RT.runSeed,'false-notice')*4);return B;}
+  function ensure(){if(B.fakeSite===null)B.fakeSite=Math.floor($imports.BroadcastRules.hash($imports.Mechanics.runSeed,'false-notice')*4);return B;}
   function collect(id){if((0,$imports.hasItem)(id))return true;if(!(0,$imports.addItem)(id))return false;(0,$imports.autoSave)();return true;}
   function nearStation(){return near(C.room,C.station,19);}
   function assembled(){return [1,2,3,4].every(function(n){return (0,$imports.hasItem)('notice'+n);});}
   function powered(){return !($imports.AN.active&&$imports.AN.id==='blackout');}
-  function available(){return $imports.BroadcastRules.window($imports.S.day,$imports.S.tsec)&&powered()&&!$imports.Inspection.pending();}
+  function available(){return B.attemptDay<$imports.S.day&&$imports.BroadcastRules.window($imports.S.day,$imports.S.tsec)&&powered()&&!$imports.Inspection.pending();}
   function ready(){return B.book&&B.fuse&&assembled();}
   function reason(){
+    if(B.attemptDay>=$imports.S.day)return '今天的长铃已经停了。通知稿还在，明天第八节下课后再试。';
     if(!B.book)return '先读播音记录本。';if(!B.fuse)return '功放保险丝已烧，备用件在体育器材室。';
     if(!assembled())return '通知稿还缺残页。';if($imports.Inspection.pending())return '学生会正在检查，先停播。';
     if(!powered())return '停电了，功放没有反应。';if(!$imports.BroadcastRules.window($imports.S.day,$imports.S.tsec))return '记录本：第二天起，第八节下课后、熄灯前播出。';return '';
@@ -32,12 +33,13 @@ var Broadcast=(function(){
   }
   function book(){
     B.book=true;$imports.Investigation.record('broadcastBook','行政楼二楼广播站：放学通知被撕成四页，蓝黑墨水、日期「第二天」。第二天起，第八节下课后至熄灯前播出。教导处文件柜、琴凳、保安岗登记簿、天台喇叭箱各有一页。','线索','播音记录本');
-    (0,$imports.os)('播音记录本：「未播出：放学通知。第二天，第八节下课以后，熄灯以前。四页，蓝黑墨水。功放保险丝已烧，备用件在器材室。」',7,$imports.OS_FORCE);(0,$imports.autoSave)();
+    (0,$imports.os)('播音记录本：「未播出：放学通知。第二天，第八节下课以后，熄灯以前。四页，蓝黑墨水。功放保险丝已烧，备用件和一份补给在器材室。长铃只响六十秒，提前确认北门路线，准备疾跑。」',7,$imports.OS_FORCE);(0,$imports.autoSave)();
   }
   function page(index){
-    var p=$imports.BroadcastRules.paper(index,false),options=[{label:'收好 · '+p.ink+' · '+p.date,fn:function(){if(collect(p.id))$imports.Investigation.record(p.id,p.text,'线索',C.sources[index].title);}}];
+    var p=$imports.BroadcastRules.paper(index,false),options=[{label:'收好 · '+p.ink+' · '+p.date,fn:function(){if(collect(p.id)){$imports.Investigation.record(p.id,p.text,'线索',C.sources[index].title);(0,$imports.autoSave)();}}}];
     if(ensure().fakeSite===index){var f=$imports.BroadcastRules.paper(index,true);options.push({label:'收好另一张 · '+f.ink+' · '+f.date,fn:function(){collect(f.id);}});}
-    options.push({label:'先不拿',fn:function(){}});$imports.UI.choice(C.sources[index].title+'里夹着通知稿。字迹、墨水和日期都看得清。\n'+p.ink+' · '+p.date+'：「'+p.text+'」'+(options.length>2?'\n另一张是红笔写的，日期是「第 0 天」。':''),options);
+    if(index===2)options.push({label:'柜台备用手电／停车记录',fn:$imports.guardSupplies});
+    options.push({label:'先不拿',fn:function(){}});$imports.UI.choice(C.sources[index].title+'里夹着通知稿。字迹、墨水和日期都看得清。\n'+p.ink+' · '+p.date+'：「'+p.text+'」'+(ensure().fakeSite===index?'\n另一张是红笔写的，日期是「第 0 天」。':''),options);
   }
   function takePage(index){
     var place=C.sources[index];if(!place||!near(place.room,place.at))return false;
@@ -76,9 +78,10 @@ var Broadcast=(function(){
   function menu(){if(!nearStation())return;$imports.UI.choice('广播站 · 功放与播音记录本',[
     {label:'翻看播音记录本',fn:book},{label:B.fuse?'功放已修复':'更换保险丝',fn:install},
     {label:'核对最近广播',fn:verify},{label:'整理通知稿／朗读',fn:function(){$imports.BroadcastUI.open();}},{label:'离开广播台',fn:function(){}}]);}
+  function ringBell(){if(bellSound)$imports.SoundPlayer.fade(bellSound);bellSound=$imports.SFX.cue('event.dismissal');bellStarted=true;bellNext=B.bell-12;}
   function startBell(){
     stop();B.phase='bell';B.bell=C.bellSeconds;B.attemptDay=$imports.S.day;
-    silence();crowdPath=null;bellNext=12;bellSound=$imports.SFX.cue('event.dismissal');bellStarted=true;
+    silence();crowdPath=null;ringBell();
     (0,$imports.os)('广播：「放学。全体同学从北门离校。」\n长铃只响六十秒。跟紧同学，铃声结束以前走出北门。',6,$imports.OS_FORCE);(0,$imports.autoSave)();
   }
   function crowd(){
@@ -97,7 +100,7 @@ var Broadcast=(function(){
   var CALLS=[{room:'lab4',at:[7,1],name:'实验楼四楼地理实验室'},{room:'lab2',at:[7,1],name:'实验楼二楼化学实验室'}];
   function announce(real,choice){
     if($imports.Inspection.quiet()||$imports.AN.active||B.phase==='bell'||held)return false;
-    var spec=CALLS[choice===undefined?(Math.floor($imports.BroadcastRules.hash($imports.RT.runSeed,'call'+B.callSeq)*CALLS.length)):choice%CALLS.length];
+    var spec=CALLS[choice===undefined?(Math.floor($imports.BroadcastRules.hash($imports.Mechanics.runSeed,'call'+B.callSeq)*CALLS.length)):choice%CALLS.length];
     B.callSeq++;B.current={id:B.callSeq,room:spec.room,text:'请高二（二）班同学到'+spec.name+'来一趟。',real:real!==false,done:false,arrived:false,age:0};
     if(B.current.real)B.calls.push({id:B.callSeq,room:spec.room,text:B.current.text,time:$imports.S.tsec});
     B.calls=B.calls.slice(-20);(0,$imports.os)('广播：「'+B.current.text+'」'+(B.current.real?'':'喇叭里有轻微的回授啸叫。'),5,$imports.OS_FORCE);
@@ -108,8 +111,7 @@ var Broadcast=(function(){
     if($imports.S.screen!=='play'||$imports.S.dead)return;
     ensure();B.clock+=dt;
     if(B.phase==='bell'){
-      var rung=C.bellSeconds-B.bell;if(!bellStarted){bellNext=Math.floor(rung/12)*12;bellStarted=true;}
-      if(rung>=bellNext&&B.bell>0.5){bellSound=$imports.SFX.cue('event.dismissal');bellNext+=12;}
+      if(!bellStarted||B.bell<=bellNext||bellSound&&bellSound.end<=$imports.SFX.synth().now())ringBell();
       B.bell=Math.max(0,B.bell-dt);if(B.bell<=0){silence();B.phase='collect';B.completed=0;B.selected='notice1';crowdPath=null;(0,$imports.os)('长铃停了。同学们转身往教室走。通知稿还在，明天的放学时段可以再试。',5,$imports.OS_FORCE);(0,$imports.autoSave)();}
       else tryExit();return;
     }
@@ -129,21 +131,26 @@ var Broadcast=(function(){
       else{call.age+=dt;if(call.age>=8)(0,$imports.sanDrain)(1.5,dt,'false-broadcast');}
     }else if(call&&call.arrived&&!call.real&&$imports.S.room!==call.room){call.done=true;}
     if(B.clock>=B.nextCall&&!$imports.DREAD.slice&&!(0,$imports.dreadBusy)()&&$imports.Dread.allow(1)){
-      if(announce($imports.BroadcastRules.hash($imports.RT.runSeed,'real-call'+B.callSeq)>.5))$imports.Dread.note('broadcast-call',1);
-      B.nextCall=B.clock+180+$imports.BroadcastRules.hash($imports.RT.runSeed,'next-call'+B.callSeq)*80;
+      if(announce($imports.BroadcastRules.hash($imports.Mechanics.runSeed,'real-call'+B.callSeq)>.5))$imports.Dread.note('broadcast-call',1);
+      B.nextCall=B.clock+180+$imports.BroadcastRules.hash($imports.Mechanics.runSeed,'next-call'+B.callSeq)*80;
     }
   }
   function interact(){
     if($imports.S.mode==='out'){
       if(tryExit())return true;
-      var n=(0,$imports.nearWorld)(0);if(n&&n.obj.id==='guard'&&!(0,$imports.isNight)()){(0,$imports.os)('保安岗的门牌写着：「熄灯以后，夜间值班。」',3);return true;}return;
+      var n=(0,$imports.nearWorld)(0);if(n&&n.obj.id==='guard'&&!(0,$imports.isNight)()){$imports.UI.choice('保安岗的门牌：熄灯以后，夜间值班。白天可在值班窗口领取旧的备用物资。',[{label:'领取备用手电／查看停车记录',fn:$imports.guardSupplies},{label:'离开',fn:function(){}}]);return true;}return;
     }
     var hit=(0,$imports.nearWorld)(24);
     if($imports.S.room===C.room&&hit&&hit.ch==='='&&C.doors.some(function(p){return p[0]===hit.c&&p[1]===hit.r;})&&!(0,$imports.hasItem)('broadcastkey')&&!$imports.OPENDOORS[C.room+':'+hit.c+':'+hit.r]){(0,$imports.os)('广播站锁着。门牌上写着：钥匙在夜间保安岗登记簿。',4);return true;}
     if(nearStation()){menu();return true;}
     if(near(C.archiveKey.room,C.archiveKey.at)){if(!B.archiveOpen)collect('archivekey');else (0,$imports.os)('这把钥匙已经开过教导处的文件柜。',2);return true;}
-    if(near(C.fuse.room,C.fuse.at)){if(!B.fuse)collect('broadcastfuse');else (0,$imports.os)('备用保险丝已经装进广播站的功放。',2);return true;}
-    for(var i=0;i<C.sources.length;i++)if(near(C.sources[i].room,C.sources[i].at)){takePage(i);return true;}
+    if(near(C.fuse.room,C.fuse.at)){
+      if(!B.fuse)collect('broadcastfuse');
+      if(!B.boxSnack&&(B.fuse||(0,$imports.hasItem)('broadcastfuse'))&&(0,$imports.addItem)('snack')){B.boxSnack=true;(0,$imports.os)('备用件旁还有一块士力架。放学铃只有六十秒，先记好北门的路。',4);(0,$imports.autoSave)();}
+      else if(B.fuse)(0,$imports.os)('备用保险丝已经装进广播站的功放。',2);
+      return true;
+    }
+    for(var i=0;i<C.sources.length;i++)if(near(C.sources[i].room,C.sources[i].at)){if(i===2&&!(0,$imports.isNight)())return;takePage(i);return true;}
   }
   function hint(){if($imports.S.mode==='out'&&B.phase==='bell')return cover()?'随人群走向北门':'追上离校的同学';
     if(nearStation())return '播音记录本／广播台';

@@ -66,9 +66,9 @@ var AchievementRules=(function(){
     A('n.archive','n','once','第一份档案','死亡档案室记下第一份档案。','death',function(f){ return !!f.archiveNew; },{score:false}),
     A('n.chalk','n','once','记号','用粉笔画下一个记号。','chalk'),
     A('n.special','n','once','特别的一天','遇上一次校庆日或占课。','specialDay'),
-    A('n.broadcast','n','once','核对','发现假广播并通过播音记录本核对。','broadcast',function(f){return f.what==='verified'&&f.real===false;}),
+    A('n.broadcast','n','once','核对','发现假广播并通过播音记录本核对。','broadcast',function(f){return f.what==='verified'&&f.real===false;},{needs:['broadcast']}),
     /* ---------- 精英 ---------- */
-    A('e.end_dismissal','e','once','《放学》','达成《放学》。','ending',function(f){return legit(f)&&f.id==='dismissal';}),
+    A('e.end_dismissal','e','once','《放学》','达成《放学》。','ending',function(f){return legit(f)&&f.id==='dismissal';},{needs:['broadcast']}),
     A('e.end_car','e','once','《闸门》','达成《闸门》。','ending',function(f){ return legit(f)&&f.id==='car'; }),
     A('e.end_face','e','once','《白名单》','达成《白名单》。','ending',function(f){ return legit(f)&&f.id==='face'; }),
     A('e.end_portal','e','once','《门》','达成《门》。','ending',function(f){ return legit(f)&&f.id==='portal'; }),
@@ -102,7 +102,7 @@ var AchievementRules=(function(){
     A('p.routes','p','cross','四条路','《闸门》《白名单》《门》《网安仙人》都达成过。','ending',function(f,v){
       return ACH_ORIGINAL_ENDS.every(function(id){ return !!v.unlocked['e.end_'+id]; });
     }),
-    A('p.five_routes','p','cross','五条路','五个公开真结局都达成过。','ending',function(f,v){return ACH_PUBLIC_ENDS.every(function(id){return !!v.unlocked['e.end_'+id];});}),
+    A('p.five_routes','p','cross','五条路','五个公开真结局都达成过。','ending',function(f,v){return ACH_PUBLIC_ENDS.every(function(id){return !!v.unlocked['e.end_'+id];});},{needs:['broadcast']}),
     A('p.hard_routes','p','cross','梦魇里的五条路','在梦魇难度把五个公开真结局都达成过。','ending',function(f,v){ return ACH_PUBLIC_ENDS.every(function(id){return !!v.sets.hardEnds[id];}); },{set:'hardEnds',goal:5}),
     A('p.oneshot','p','run','一命','梦魇难度达成真结局，这一局从没被药丸或免疫救过。','ending',function(f,v){ return publicEnd(f)&&v.diff==='hard'&&!v.run.saved&&!v.run.legacy; }),
     A('p.hard_day1','p','run','梦魇·当天','梦魇难度，第一天就达成真结局。','ending',function(f,v){ return publicEnd(f)&&v.diff==='hard'&&v.day===1; }),

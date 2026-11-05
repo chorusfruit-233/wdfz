@@ -19,10 +19,10 @@ var AtmosFx=(function(){
   function scene(R,wx,wy){ return (0,$imports.worldToScene)(wx,wy,R); }
   function toWorld(R,x,z){ var half=R.cols*R.tw*$imports.U2M*0.5, hz=R.rows*R.th*$imports.U2M*0.5; return {x:R.ox+(x+half)/$imports.U2M, y:R.oy+(z+hz)/$imports.U2M}; }
   function lastDoorRow(R){ var d=-1; for(var y=0;y<R.rows;y++) if(R.grid[y].indexOf('=')>=0) d=y; return d; }
-  function darkFloor(R){ return hash('dark:'+R.id)<0.5; }
+  function darkFloor(R){return !!R&&['teach','admin','lab'].includes(R.host)&&R.floor>=1&&R.floor<=5&&!R.stairwell;}
   function clear(){
     if(F.grp){ if(F.grp.parent) F.grp.parent.remove(F.grp); try{ $imports.ThreeBackend.disposeGroup(F.grp); }catch(e){} }
-    F.grp=null; F.room=null; F.props=null; F.fig=null; F.signs=[];
+    restoreStare();F.grp=null;F.room=null;F.props=null;F.fig=null;F.signs=[];F.winPos=null;F.winKey=null;
   }
   function mat(col,emit){ return emit?new $imports.THREE.MeshBasicMaterial({color:col,fog:true}):new $imports.THREE.MeshLambertMaterial({color:col}); }
   /* 应急指示牌：绿底白色小人和箭头（画在画布上） */
@@ -70,9 +70,10 @@ var AtmosFx=(function(){
   function applyShift(R){
     var g=F.props; if(!g) return;
     var k=$imports.Atmos.peek().shift[$imports.S.day+':'+R.id], h=g.userData.home;
-    g.rotation.set(0,0,0); g.position.set(h.x,0,h.z);
-    if(k==='push'){ var dir=hash('push:'+$imports.S.day+':'+R.id)<0.5?-1:1; g.position.x=h.x+dir*0.9; g.position.z=h.z+0.55; g.rotation.y=dir*0.7; g.children[0].rotation.z=1.2; }
-    else if(k==='face'){ g.position.z=h.z+1.4; g.userData.face=true; }
+    g.rotation.set(0,0,0);g.position.set(h.x,0,h.z);g.children[0].rotation.z=.18;g.userData.face=false;
+    var pose=$imports.Atmos.peek().shiftPose[$imports.S.day+':'+R.id];
+    if(k==='push'){var dx=pose?pose.dx:1,dz=pose?pose.dy:0;g.position.x=h.x+dx*.55;g.position.z=h.z+dz*.55;g.rotation.y=pose?pose.angle:.7;g.children[0].rotation.z=1.2;}
+    else if(k==='face'){g.position.z=h.z+.4;if(pose)g.rotation.y=pose.angle;else g.userData.face=true;}
     g.userData.k=k||null;
   }
   function inView(px,pz,cone){
@@ -92,22 +93,20 @@ var AtmosFx=(function(){
     return Math.hypot(g.position.x-$imports.GLR.cam.position.x,g.position.z-$imports.GLR.cam.position.z)<9&&inView(g.position.x,g.position.z,0.35);
   }
   /* A3：一起转头 */
-  function stareFrame(dt){
-    var st=$imports.Atmos.A.stare; if(!st||typeof $imports.NC==='undefined'||!$imports.NC.list||!$imports.NC.list.length){ return; }
-    var R=$imports.INTERIORS[$imports.S.room]; if(!R){ $imports.Atmos.A.stare=null; return; }
-    if(!st.figs){
-      st.figs=$imports.NC.list.filter(function(f){ var u=f.userData||{}; if(u.teacher) return false; var w=toWorld(R,u.hx,u.hz); return $imports.Atmos.classAt(R,Math.floor((w.x-R.ox)/R.tw),Math.floor((w.y-R.oy)/R.th))===st.cls; });
-      st.figs.forEach(function(f){ f.userData.stareBase=f.rotation.y||0; });
+  function restoreStare(){
+    if(F.stareFigs)F.stareFigs.forEach(function(f){f.rotation.y=f.userData.stareBase;});
+    F.stareFigs=null;F.stareKey=null;
+  }
+  function stareFrame(){
+    var st=$imports.Atmos.A.stare;
+    if(!st||$imports.Atmos.busy()||!$imports.NC.list.length){restoreStare();return;}
+    var R=$imports.INTERIORS[$imports.S.room];if(!R)return;
+    if(F.stareKey!==st){restoreStare();F.stareKey=st;
+      F.stareFigs=$imports.NC.list.filter(function(f){var u=f.userData||{};if(u.teacher)return false;var w=toWorld(R,u.hx,u.hz);return $imports.Atmos.classAt(R,Math.floor((w.x-R.ox)/R.tw),Math.floor((w.y-R.oy)/R.th))===st.cls;});
+      F.stareFigs.forEach(function(f){f.userData.stareBase=f.rotation.y||0;});
     }
-    st.t+=dt;
-    var T=$imports.ATMOS_CFG.stareTurn, H=$imports.ATMOS_CFG.stareHold, k=st.t<T?st.t/T:st.t<T+H?1:Math.max(0,1-(st.t-T-H)/T), e=k*k*(3-2*k);
-    var p=(0,$imports.anfxW2S)($imports.S.x,$imports.S.y);
-    st.figs.forEach(function(f){
-      var base=f.userData.stareBase, want=Math.atan2(f.position.x-p.x,f.position.z-p.z);
-      var d=((want-base+Math.PI*3)%(Math.PI*2))-Math.PI;
-      f.rotation.y=base+d*e*0.85;                                            /* 上半身跟着转，转不到正后方 */
-    });
-    if(st.t>=2*T+H){ st.figs.forEach(function(f){ f.rotation.y=f.userData.stareBase; }); $imports.Atmos.A.stare=null; }
+    var T=$imports.ATMOS_CFG.stareTurn,H=$imports.ATMOS_CFG.stareHold,k=st.t<T?st.t/T:st.t<T+H?1:Math.max(0,1-(st.t-T-H)/T),e=k*k*(3-2*k),p=(0,$imports.anfxW2S)($imports.S.x,$imports.S.y);
+    F.stareFigs.forEach(function(f){var base=f.userData.stareBase,want=Math.atan2(f.position.x-p.x,f.position.z-p.z),d=((want-base+Math.PI*3)%(Math.PI*2))-Math.PI;f.rotation.y=base+d*e*.85;});
   }
   /* A3：空座位多了一个 */
   function seatFrame(){
@@ -117,7 +116,7 @@ var AtmosFx=(function(){
       var w=toWorld(R,u.hx,u.hz), cls=$imports.Atmos.classAt(R,Math.floor((w.x-R.ox)/R.tw),Math.floor((w.y-R.oy)/R.th)); if(!cls) return;
       (by[cls]=by[cls]||[]).push(f); });
     Object.keys(by).forEach(function(cls){
-      var n=seats[$imports.S.day+':'+cls], list=by[cls];
+      var n=seats[$imports.S.day+':'+cls],list=by[cls];if($imports.Atmos.busy()||$imports.S.viol>=35)n=0;
       list.forEach(function(f,i){ f.visible=!(n&&i===(n%list.length)); });
     });
   }
@@ -129,17 +128,18 @@ var AtmosFx=(function(){
       var g=new $imports.THREE.Group(), m=(0,$imports.figMesh)('person',new $imports.THREE.MeshBasicMaterial({color:0x101315,fog:false,transparent:true,opacity:0.82,depthWrite:false}),1); m.scale.z=0.05; g.add(m); g.scale.setScalar(0.12);
       F.fig=g; F.grp&&F.grp.add(g);
     }
-    if(!w.pos){
+    if(F.winKey!==w||!F.winPos){F.winKey=w;
       /* 教室北墙的窗是磨砂的：人影画成贴在玻璃上的一小块剪影（30 米外一个人看上去就这么大），在这间教室的窗下沿附近 */
       var r0=R.rows, c0=R.cols, c1=0, x, y;
       for(y=1;y<R.rows;y++) for(x=1;x<R.cols;x++) if(R.grid[y][x]!=='#'&&$imports.Atmos.classAt(R,x,y)===w.cls){ r0=Math.min(r0,y); c0=Math.min(c0,x); c1=Math.max(c1,x); }
       var cx=R.ox+(c0+(c1-c0+1)*(0.25+0.5*w.seed))*R.tw, face=(0,$imports.worldToScene)(cx,R.oy+r0*R.th,R);
-      w.pos={x:face.x,y:1.18,z:face.z+0.035};
+      F.winPos={x:face.x,y:1.18,z:face.z+.035};
+      if(w.anchor){var cam=$imports.GLR.cam.position,far=(0,$imports.worldToScene)(w.anchor.x,w.anchor.y,R),dz=far.z-cam.z,t=(face.z-cam.z)/(dz||-1);
+        if(t>0&&t<1){F.winPos.x=Math.max((c0-R.cols/2+.7),Math.min(c1-R.cols/2+.3,cam.x+(far.x-cam.x)*t));F.winPos.y=Math.max(1.18,Math.min(2.3,cam.y+(w.anchor.height-(R.floor-1)*3.2-cam.y)*t));}}
     }
-    var f=F.fig; f.visible=true; f.position.set(w.pos.x,w.pos.y,w.pos.z);
+    var pos=F.winPos,f=F.fig;f.visible=true;f.position.set(pos.x,pos.y,pos.z);
     f.rotation.y=0;                                                        /* 正对着教室（面朝 +z） */
-    var looking=inView(w.pos.x,w.pos.z,0.22);
-    if(looking) w.seen+=dt; else if(w.seen>=0.8){ w.gone=true; f.visible=false; }
+    var looking=inView(pos.x,pos.z,.22);$imports.Atmos.observeWindow(looking);
   }
   function frame(dt){
     var R=$imports.Atmos.floorRoom();
@@ -147,19 +147,20 @@ var AtmosFx=(function(){
     if(F.room!==R.id||!F.grp||!F.grp.parent) build(R);
     if(F.props&&F.props.userData.k!==($imports.Atmos.peek().shift[$imports.S.day+':'+R.id]||null)) applyShift(R);
     if(F.props&&F.props.userData.face&&$imports.GLR.cam){ var g=F.props; g.rotation.y=Math.atan2($imports.GLR.cam.position.x-g.position.x,$imports.GLR.cam.position.z-g.position.z); g.userData.face=false; }
-    stareFrame(dt||0); seatFrame(); windowFrame(dt||0);
+    stareFrame();if(!(typeof $imports.Broadcast!=='undefined'&&$imports.Broadcast.state().phase==='bell'))seatFrame();windowFrame(dt||0);
     var R2=$imports.INTERIORS[$imports.S.room]; if(R2&&!ATMOS_DARK[R2.id]&&darkFloor(R2)&&$imports.GLR.roomLights&&$imports.GLR.roomLights.length) markDark(R2);
   }
   /* 走廊里那几盏（门那一排以南的灯）记下序号，lighting.js 乘 0.35 */
   function markDark(R){
     var door=lastDoorRow(R), H=R.rows*R.th*$imports.U2M*0.5, set={};
-    $imports.GLR.roomLights.forEach(function(L,i){ var r=Math.floor((L.position.z+H)/(R.th*$imports.U2M)); if(r>door&&r<R.rows-1) set[i]=1; });
+    $imports.GLR.roomLights.forEach(function(L,i){ var r=Math.floor((L.position.z+H)/(R.th*$imports.U2M)); if(r>door&&r<R.rows-1)set[i]=1; });
+    var keys=Object.keys(set);if(keys.length>1){var keep=Math.floor(hash('dark-section:'+R.id)*keys.length);keys.forEach(function(k,j){if(j!==keep&&(j+1)%3!==keep%3)delete set[k];});}
     ATMOS_DARK[R.id]=set;
   }
   GameModules.on('frame',frame,own);
   GameModules.on('clearWorld',function(){ clear(); Object.keys(ATMOS_DARK).forEach(function(k){ delete ATMOS_DARK[k]; }); },own);
   GameModules.on('boundary',clear,own);
-  return {F:F, canShift:canShift, seesShifted:seesShifted, darkFloor:darkFloor, clear:clear};
+  return {F:F,propWorld:function(){return F.props&&$imports.INTERIORS[F.room]?toWorld($imports.INTERIORS[F.room],F.props.position.x,F.props.position.z):null;},canShift:canShift, seesShifted:seesShifted, darkFloor:darkFloor, clear:clear};
 })();
 
 /* @module-exports */
