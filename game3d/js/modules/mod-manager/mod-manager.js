@@ -74,7 +74,7 @@ var ModManager={
     css.textContent='.mod-tools h5{margin:10px 0 4px;font-size:12px;letter-spacing:1px;color:var(--ui-dim,#bbb)}'+
       '.mm-list{list-style:none;margin:0 0 8px;padding:0}.mm-list li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--ui-line,#333)}'+
       '.mm-list li span{display:flex;flex-direction:column;min-width:0}.mm-list small{color:var(--ui-faint,#888);font-size:11px;overflow-wrap:anywhere}'+
-      '.mm-btns{flex-direction:row!important;gap:6px}.mm-btns button{min-height:44px!important;padding:2px 10px!important}'+
+      '.mm-list li>span:first-child{flex:1 1 auto}.mm-btns{flex-direction:row!important;gap:6px;flex-shrink:0}.mm-btns button{min-height:44px!important;padding:2px 10px!important}'+
       '.mm-pick{display:block;padding:8px 10px;border:1px dashed var(--ui-line,#555);cursor:pointer;text-align:center}.mm-pick input{display:block;margin:6px auto 0;max-width:100%}'+
       '.mm-msg{min-height:1em;color:var(--ui-acc,#d8c48a)!important}.mm-err{margin:0;padding-left:16px;color:#e0857a;font-size:11px}'+
       '.mm-mods summary{cursor:pointer;margin:4px 0;color:var(--ui-dim,#bbb)}.mod-tools code{font-size:11px}';
