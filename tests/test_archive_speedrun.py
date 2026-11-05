@@ -181,7 +181,7 @@ class DeathArchiveTest(BrowserCase):
         for d in '0000':
             page.locator(f'#devlock [data-k="{d}"]').click()
         page.locator('#devlock [data-k="ok"]').click()
-        self.assert_js(page, "DevLock.on&&document.getElementById('arCount').textContent==='已记录 0 / 20'")
+        self.assert_js(page, "DevLock.on&&document.getElementById('arCount').textContent==='已记录 0 / 21'")
         for d in page.evaluate('DEV_CODE'):
             page.locator(f'#devlock [data-k="{d}"]').click()
         page.locator('#devlock [data-k="ok"]').click()
@@ -194,16 +194,16 @@ class DeathArchiveTest(BrowserCase):
           grades:document.querySelectorAll('#arsec-grades .arcard.open').length,
           gradeMeta:document.querySelector('#arsec-grades .arcard[data-id="x.grade.SSS"] small').textContent,
           clears:localStorage.getItem('wdfz3d_clears_v1')})""")
-        self.assertEqual(r['deaths'], '已记录 20 / 20 · 隐藏 3')       # 加了念错了；隐藏：迷宫两种 + 满员（内部）
+        self.assertEqual(r['deaths'], '已记录 21 / 21 · 隐藏 3')       # 加了念错了、镜子；隐藏：迷宫两种 + 满员（内部）
         self.assertEqual(r['cuts'], '已解锁 6 / 6 · 隐藏 3')          # 加了《放学》；隐藏：《先辈》＋异色空间进出两张（内部）
-        self.assertEqual(r['open'], 41)                                    # 32 张死亡 / 演出（加了没关上的门、异色空间进出两张、满员、念错了、《放学》）+ 9 张结算画面
+        self.assertEqual(r['open'], 42)                                    # 32 张死亡 / 演出（加了没关上的门、异色空间进出两张、满员、念错了、《放学》）+ 9 张结算画面
         self.assertEqual((r['grades'], r['gradeMeta']), (9, '直接解锁 · 没有亲历'))
         self.assertIsNone(r['clears'])                                    # 结算画面只是点亮，不伪造通关记录
         self.assertTrue(r['btn'] and r['maze'])
         self.assertEqual(r['beast'], '直接解锁 · 没有亲历')
         self.assertEqual(r['ends'], '{}')
         self.assertEqual((r['state']['unlocked'], r['state']['count']), ({}, {}))
-        self.assertEqual(len(r['state']['granted']), 40)                   # 开场在测试环境里已经看过，本来就开着；含 9 张结算画面（加了没关上的门、异色空间进出两张、满员、念错了、《放学》）
+        self.assertEqual(len(r['state']['granted']), 41)                   # 开场在测试环境里已经看过，本来就开着；含 9 张结算画面（加了没关上的门、异色空间进出两张、满员、念错了、《放学》）
         # 之后真的死一次：照样是新记录、计次数
         r = page.evaluate("()=>{const e=DeathArchive.record('patrol','grip');DeathArchive.paint();return {fresh:!!e,meta:document.querySelector('#arcards .arcard[data-id=\"patrol\"] small').textContent};}")
         self.assertEqual(r, {'fresh': True, 'meta': '经历 1 次 · 最近'})
