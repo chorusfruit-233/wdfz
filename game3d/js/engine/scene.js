@@ -310,12 +310,12 @@ $imports.ThreeBackend.draw=function(dt){
     $imports.ThreeBackend.drawHands();
     return;
   }
+  $imports.ThreeBackend.updateSceneMipmaps();
   $imports.GLR.renderer.setRenderTarget($imports.GLR.rt);
-  $imports.GLR.renderer.clear();
   $imports.GLR.renderer.render($imports.GLR.scene,$imports.GLR.cam);
   $imports.ThreeBackend.drawHands();
   $imports.GLR.renderer.setRenderTarget(null);
-  $imports.GLR.renderer.render($imports.GLR.postScene,$imports.GLR.postCam);
+  $imports.ThreeBackend.drawPost();
 };
 /* 手持物使用独立目标，保留世界深度供 AO 读取，再在后期合成。 */
 $imports.ThreeBackend.drawHands=function(){
@@ -330,7 +330,7 @@ $imports.ThreeBackend.drawHands=function(){
   }
   var color=r.getClearColor(new $imports.THREE.Color()),alpha=r.getClearAlpha();
   r.setRenderTarget($imports.GLR.handRT);r.setClearColor(0x000000,0);
-  r.clear();r.render($imports.GLR.handScene,$imports.GLR.cam);
+  r.render($imports.GLR.handScene,$imports.GLR.cam);
   r.setClearColor(color,alpha);r.setRenderTarget($imports.GLR.rt);
 };
 
@@ -343,11 +343,11 @@ $imports.ThreeBackend.captureMenu=function(){
     c.lookAt(66.7+Math.cos(yaw)*12, 6.4, 133.3+Math.sin(yaw)*12);
     var u=$imports.GLR.postMat.uniforms;
     u.uTime.value=0.6; u.uHurt.value=0; u.uFlash.value=0; u.uSan.value=0.62;u.uHands.value=0;
+    $imports.ThreeBackend.updateSceneMipmaps();
     $imports.GLR.renderer.setRenderTarget($imports.GLR.rt);
-    $imports.GLR.renderer.clear();
     $imports.GLR.renderer.render($imports.GLR.scene,c);
     $imports.GLR.renderer.setRenderTarget(null);
-    $imports.GLR.renderer.render($imports.GLR.postScene,$imports.GLR.postCam);
+    $imports.ThreeBackend.drawPost();
     return cv.toDataURL('image/jpeg',0.84);
 };
 

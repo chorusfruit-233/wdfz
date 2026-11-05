@@ -5,7 +5,7 @@
 function buildRoomGeometry(R){
   if(R.build)return buildCustomRoom(R);
   var draft=Object.assign({},R),RWH=R.spiral?$imports.SPIRAL.wallH:$imports.WALLH;
-  var K=new $imports.Kit({cull:R.host==='teach'&&R.floor===6?{floor:.002}:{floor:.002,ceil:RWH-.002},chunk:16,inst:1});
+  var K=new $imports.Kit({cull:R.host==='teach'&&R.floor===6?{floor:.002}:{floor:.002,ceil:RWH-.002},chunk:16,inst:1,sparse:4});
   var c=(0,$imports.buildRoomRecipe)(draft,K,{meshes:true,board:chalkBoard,carPlate:function(x,y,px,py,pz){return carPlate($imports.Investigation.carName(x,y),px,py,pz);},decay:roomDecay,signs:roomSigns,liftLeaves:$imports.liftLandingLeaves,liftCabinLeaves:$imports.liftCabinLeaves,liftNotice:$imports.liftNotice});
   R.shafts=draft.shafts;R.doorSpecs=draft.doorSpecs;
   var group=K.build();group.add(buildDoorLeaves(R));c.meshes.forEach(function(m){group.add(m);});return group;

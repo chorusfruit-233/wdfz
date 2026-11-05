@@ -21,7 +21,7 @@ function addGrass(grp){
   var mat=new $imports.THREE.MeshLambertMaterial({vertexColors:true});
   var im=new $imports.THREE.InstancedMesh(geo,mat,N);
   var m4=new $imports.THREE.Matrix4(), qq=new $imports.THREE.Quaternion(), sv=new $imports.THREE.Vector3(), pv=new $imports.THREE.Vector3(), up=new $imports.THREE.Vector3(0,1,0);
-  var col=new $imports.THREE.Color(), n=0, tries=0;
+  var col=new $imports.THREE.Color(), n=0, tries=0, cells=new Map();
   while(n<N&&tries<N*4){
     tries++;
     var mx=$imports.BOUND.x0+6+$imports.PresentationRandom.next()*($imports.BOUND.x1-$imports.BOUND.x0-12), my=$imports.BOUND.y0+6+$imports.PresentationRandom.next()*($imports.BOUND.y1-$imports.BOUND.y0-12);
@@ -36,13 +36,24 @@ function addGrass(grp){
     im.setMatrixAt(n,m4);
     col.setRGB(0.40+$imports.PresentationRandom.next()*0.14,0.52+$imports.PresentationRandom.next()*0.14,0.30+$imports.PresentationRandom.next()*0.08);
     im.setColorAt(n,col);
+    var cell=Math.floor(pv.x/32)+','+Math.floor(pv.z/32);
+    if(!cells.has(cell))cells.set(cell,[]);
+    cells.get(cell).push(n);
     n++;
   }
-  im.count=n;
-  im.instanceMatrix.needsUpdate=true;
-  if(im.instanceColor) im.instanceColor.needsUpdate=true;
-  im.frustumCulled=false;
-  grp.add(im);
+  // Spatial batches retain every blade and its color. Each cell gets a conservative
+  // sphere so camera and shadow frusta can reject off-screen grass independently.
+  cells.forEach(function(indices,key){
+    var batch=new $imports.THREE.InstancedMesh(geo,mat,indices.length);
+    indices.forEach(function(index,j){
+      batch.instanceMatrix.array.set(im.instanceMatrix.array.subarray(index*16,index*16+16),j*16);
+      im.getColorAt(index,col);batch.setColorAt(j,col);
+    });
+    batch.instanceMatrix.needsUpdate=true;batch.instanceColor.needsUpdate=true;
+    batch.computeBoundingSphere();batch.userData.grassCell=key;grp.add(batch);
+  });
+  im.dispose();
+  if(!cells.size){geo.dispose();mat.dispose();}
 }
 
 /* @module-exports */
