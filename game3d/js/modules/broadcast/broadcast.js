@@ -10,7 +10,7 @@ var Broadcast=(function(){
   function reset(){silence();crowdPath=null;B=$imports.BroadcastRules.normalize();held=false;progress=0;origin=null;session++;}
   function save(){return JSON.parse(JSON.stringify(B));}
   function near(room,at,distance){var R=$imports.INTERIORS[room];return !!R&&$imports.S.mode==='in'&&$imports.S.room===room&&Math.hypot($imports.S.x-(R.ox+(at[0]+.5)*R.tw),$imports.S.y-(R.oy+(at[1]+.5)*R.th))<=(distance||14);}
-  function ensure(){if(B.fakeSite===null)B.fakeSite=Math.floor($imports.BroadcastRules.hash($imports.RT.runSeed,'false-notice')*4);return B;}
+  function ensure(){if(B.fakeSite===null)B.fakeSite=Math.floor($imports.BroadcastRules.hash($imports.Mechanics.runSeed,'false-notice')*4);return B;}
   function collect(id){if((0,$imports.hasItem)(id))return true;if(!(0,$imports.addItem)(id))return false;(0,$imports.autoSave)();return true;}
   function nearStation(){return near(C.room,C.station,19);}
   function assembled(){return [1,2,3,4].every(function(n){return (0,$imports.hasItem)('notice'+n);});}
@@ -39,7 +39,7 @@ var Broadcast=(function(){
     var p=$imports.BroadcastRules.paper(index,false),options=[{label:'收好 · '+p.ink+' · '+p.date,fn:function(){if(collect(p.id)){$imports.Investigation.record(p.id,p.text,'线索',C.sources[index].title);(0,$imports.autoSave)();}}}];
     if(ensure().fakeSite===index){var f=$imports.BroadcastRules.paper(index,true);options.push({label:'收好另一张 · '+f.ink+' · '+f.date,fn:function(){collect(f.id);}});}
     if(index===2)options.push({label:'柜台备用手电／停车记录',fn:$imports.guardSupplies});
-    options.push({label:'先不拿',fn:function(){}});$imports.UI.choice(C.sources[index].title+'里夹着通知稿。字迹、墨水和日期都看得清。\n'+p.ink+' · '+p.date+'：「'+p.text+'」'+(options.length>2?'\n另一张是红笔写的，日期是「第 0 天」。':''),options);
+    options.push({label:'先不拿',fn:function(){}});$imports.UI.choice(C.sources[index].title+'里夹着通知稿。字迹、墨水和日期都看得清。\n'+p.ink+' · '+p.date+'：「'+p.text+'」'+(ensure().fakeSite===index?'\n另一张是红笔写的，日期是「第 0 天」。':''),options);
   }
   function takePage(index){
     var place=C.sources[index];if(!place||!near(place.room,place.at))return false;
@@ -100,7 +100,7 @@ var Broadcast=(function(){
   var CALLS=[{room:'lab4',at:[7,1],name:'实验楼四楼地理实验室'},{room:'lab2',at:[7,1],name:'实验楼二楼化学实验室'}];
   function announce(real,choice){
     if($imports.Inspection.quiet()||$imports.AN.active||B.phase==='bell'||held)return false;
-    var spec=CALLS[choice===undefined?(Math.floor($imports.BroadcastRules.hash($imports.RT.runSeed,'call'+B.callSeq)*CALLS.length)):choice%CALLS.length];
+    var spec=CALLS[choice===undefined?(Math.floor($imports.BroadcastRules.hash($imports.Mechanics.runSeed,'call'+B.callSeq)*CALLS.length)):choice%CALLS.length];
     B.callSeq++;B.current={id:B.callSeq,room:spec.room,text:'请高二（二）班同学到'+spec.name+'来一趟。',real:real!==false,done:false,arrived:false,age:0};
     if(B.current.real)B.calls.push({id:B.callSeq,room:spec.room,text:B.current.text,time:$imports.S.tsec});
     B.calls=B.calls.slice(-20);(0,$imports.os)('广播：「'+B.current.text+'」'+(B.current.real?'':'喇叭里有轻微的回授啸叫。'),5,$imports.OS_FORCE);
@@ -131,8 +131,8 @@ var Broadcast=(function(){
       else{call.age+=dt;if(call.age>=8)(0,$imports.sanDrain)(1.5,dt,'false-broadcast');}
     }else if(call&&call.arrived&&!call.real&&$imports.S.room!==call.room){call.done=true;}
     if(B.clock>=B.nextCall&&!$imports.DREAD.slice&&!(0,$imports.dreadBusy)()&&$imports.Dread.allow(1)){
-      if(announce($imports.BroadcastRules.hash($imports.RT.runSeed,'real-call'+B.callSeq)>.5))$imports.Dread.note('broadcast-call',1);
-      B.nextCall=B.clock+180+$imports.BroadcastRules.hash($imports.RT.runSeed,'next-call'+B.callSeq)*80;
+      if(announce($imports.BroadcastRules.hash($imports.Mechanics.runSeed,'real-call'+B.callSeq)>.5))$imports.Dread.note('broadcast-call',1);
+      B.nextCall=B.clock+180+$imports.BroadcastRules.hash($imports.Mechanics.runSeed,'next-call'+B.callSeq)*80;
     }
   }
   function interact(){
@@ -144,7 +144,12 @@ var Broadcast=(function(){
     if($imports.S.room===C.room&&hit&&hit.ch==='='&&C.doors.some(function(p){return p[0]===hit.c&&p[1]===hit.r;})&&!(0,$imports.hasItem)('broadcastkey')&&!$imports.OPENDOORS[C.room+':'+hit.c+':'+hit.r]){(0,$imports.os)('广播站锁着。门牌上写着：钥匙在夜间保安岗登记簿。',4);return true;}
     if(nearStation()){menu();return true;}
     if(near(C.archiveKey.room,C.archiveKey.at)){if(!B.archiveOpen)collect('archivekey');else (0,$imports.os)('这把钥匙已经开过教导处的文件柜。',2);return true;}
-    if(near(C.fuse.room,C.fuse.at)){if(!B.fuse)collect('broadcastfuse');if(!B.boxSnack&&(0,$imports.addItem)('snack')){B.boxSnack=true;(0,$imports.os)('备用件旁还有一块士力架。放学铃只有六十秒，先记好北门的路。',4);(0,$imports.autoSave)();}else (0,$imports.os)('备用保险丝已经装进广播站的功放。',2);return true;}
+    if(near(C.fuse.room,C.fuse.at)){
+      if(!B.fuse)collect('broadcastfuse');
+      if(!B.boxSnack&&(B.fuse||(0,$imports.hasItem)('broadcastfuse'))&&(0,$imports.addItem)('snack')){B.boxSnack=true;(0,$imports.os)('备用件旁还有一块士力架。放学铃只有六十秒，先记好北门的路。',4);(0,$imports.autoSave)();}
+      else if(B.fuse)(0,$imports.os)('备用保险丝已经装进广播站的功放。',2);
+      return true;
+    }
     for(var i=0;i<C.sources.length;i++)if(near(C.sources[i].room,C.sources[i].at)){if(i===2&&!(0,$imports.isNight)())return;takePage(i);return true;}
   }
   function hint(){if($imports.S.mode==='out'&&B.phase==='bell')return cover()?'随人群走向北门':'追上离校的同学';
