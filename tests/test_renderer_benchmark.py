@@ -33,6 +33,17 @@ class BenchmarkRulesTest(unittest.TestCase):
         self.assertFalse(r['canvas']['comparable'])
         self.assertFalse(r['partial']['comparable'])
 
+    def test_continuous_throughput_counts_tail_drain_and_rejects_mixed_modes(self):
+        r=self.node("""const rows=['webgl','webgpu'].map(backend=>({mode:'continuous',scene:'classroom',backend,status:'ok',meta:{},
+          samples:Array.from({length:30},()=>({submitMs:1,completeMs:null,intervalMs:16})),timing:{elapsedMs:backend==='webgl'?500:1000}}));
+          const same=C.compare(rows,'classroom',1),fps=C.throughput([rows[1]]);rows[1].mode='sync';
+          console.log(JSON.stringify({same,fps,mixed:C.compare(rows,'classroom',1),mode:C.config({}).mode}));""")
+        self.assertEqual(r['mode'],'continuous')
+        self.assertEqual(r['fps'],30)
+        self.assertEqual(r['same']['webglFps'],60)
+        self.assertEqual(r['same']['webgpuFps'],30)
+        self.assertFalse(r['mixed']['comparable'])
+
 
 class BenchmarkHarness:
     def bench(self, unavailable=False, touch=False):
@@ -45,7 +56,7 @@ class BenchmarkHarness:
         return p
 
     def quick(self, **kwargs):
-        return dict(quality=0,width=640,height=360,warmMs=0,sampleMs=250,rounds=1,scenes=['classroom'],**kwargs)
+        return dict(mode='sync',quality=0,width=640,height=360,warmMs=0,sampleMs=250,rounds=1,scenes=['classroom'],**kwargs)
 
 
 class BenchmarkBrowserTest(BenchmarkHarness, BrowserCase):
@@ -107,6 +118,22 @@ class BenchmarkNativeTest(BenchmarkHarness, BrowserCase):
                 for key in ('quality','viewport','drawingBuffer','target','samples','canvasSamples','canvasAntialias','sceneFingerprint','camera'):
                     self.assertEqual(rows[0]['meta'][key],row['meta'][key],(scene,key))
                 self.assertTrue(all(s['completeMs']>=s['submitMs']>=0 for s in row['samples']))
+
+    def test_continuous_mode_drains_gpu_work_and_reports_adapter(self):
+        p=self.bench()
+        r=p.evaluate('config=>RenderBenchmark.run(config)',dict(self.quick(),mode='continuous',sampleMs=700))
+        self.assertEqual(r['status'],'complete',r)
+        self.assertEqual(r['unavailable'],{})
+        self.assertEqual(r['method'],'bounded-continuous-render-v2')
+        for row in r['runs']:
+            self.assertEqual(row['mode'],'continuous')
+            self.assertGreaterEqual(len(row['samples']),3)
+            self.assertTrue(all(s['completeMs'] is None for s in row['samples']))
+            last=row['samples'][-1]
+            self.assertGreaterEqual(row['timing']['elapsedMs']+0.01,last['startMs']-row['samples'][0]['startMs']+last['submitMs'])
+            self.assertGreaterEqual(row['timing']['drainMs'],0)
+            self.assertTrue(row['meta']['adapter'].get('vendor') or row['meta']['adapter'].get('description'))
+        self.assertTrue(r['softwareRenderer'])
 
     def test_z_high_quality_reports_actual_specification_and_never_mislabels_fallback(self):
         p=self.bench()

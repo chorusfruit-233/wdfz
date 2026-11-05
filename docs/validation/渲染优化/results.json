@@ -1,0 +1,606 @@
+{
+  "environment": "Chromium SwiftShader software GPU; synchronized diagnostic timings; ABBA order",
+  "chromium": "154.0.8037.57",
+  "rows": [
+    {
+      "variant": "baseline",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 12,
+        "passes": 0
+      },
+      "metrics": {
+        "geometries": 109,
+        "textures": 42,
+        "programs": 18,
+        "calls": 277
+      },
+      "meshes": 215,
+      "vertices": 66617,
+      "rows": [
+        {
+          "submitMs": 5.5,
+          "completeMs": 5.5
+        },
+        {
+          "submitMs": 2.899999998509884,
+          "completeMs": 2.899999998509884
+        },
+        {
+          "submitMs": 7.199999999254942,
+          "completeMs": 7.199999999254942
+        },
+        {
+          "submitMs": 2.800000000745058,
+          "completeMs": 2.899999998509884
+        },
+        {
+          "submitMs": 2.800000000745058,
+          "completeMs": 2.800000000745058
+        },
+        {
+          "submitMs": 3.899999998509884,
+          "completeMs": 3.899999998509884
+        },
+        {
+          "submitMs": 2.199999999254942,
+          "completeMs": 2.300000000745058
+        },
+        {
+          "submitMs": 2.399999998509884,
+          "completeMs": 2.399999998509884
+        },
+        {
+          "submitMs": 2.399999998509884,
+          "completeMs": 2.5
+        },
+        {
+          "submitMs": 5,
+          "completeMs": 5
+        },
+        {
+          "submitMs": 2.899999998509884,
+          "completeMs": 2.899999998509884
+        },
+        {
+          "submitMs": 2.400000002235174,
+          "completeMs": 2.5
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgl-q0-baseline.png"
+    },
+    {
+      "variant": "optimized",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 0,
+        "passes": 0
+      },
+      "metrics": {
+        "geometries": 117,
+        "textures": 42,
+        "programs": 18,
+        "calls": 216
+      },
+      "meshes": 130,
+      "vertices": 75313,
+      "rows": [
+        {
+          "submitMs": 3,
+          "completeMs": 3.099999997764826
+        },
+        {
+          "submitMs": 2.900000002235174,
+          "completeMs": 2.900000002235174
+        },
+        {
+          "submitMs": 2.5,
+          "completeMs": 2.5
+        },
+        {
+          "submitMs": 3.099999997764826,
+          "completeMs": 3.099999997764826
+        },
+        {
+          "submitMs": 3.199999999254942,
+          "completeMs": 3.300000000745058
+        },
+        {
+          "submitMs": 2.800000000745058,
+          "completeMs": 2.900000002235174
+        },
+        {
+          "submitMs": 2.600000001490116,
+          "completeMs": 2.600000001490116
+        },
+        {
+          "submitMs": 2.400000002235174,
+          "completeMs": 2.5
+        },
+        {
+          "submitMs": 2.5,
+          "completeMs": 2.5
+        },
+        {
+          "submitMs": 3.800000000745058,
+          "completeMs": 3.800000000745058
+        },
+        {
+          "submitMs": 8.5,
+          "completeMs": 8.5
+        },
+        {
+          "submitMs": 6.699999999254942,
+          "completeMs": 6.699999999254942
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgl-q0-optimized.png"
+    },
+    {
+      "variant": "optimized",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 0,
+        "passes": 0
+      },
+      "metrics": {
+        "geometries": 117,
+        "textures": 42,
+        "programs": 18,
+        "calls": 216
+      },
+      "meshes": 130,
+      "vertices": 75313,
+      "rows": [
+        {
+          "submitMs": 2.399999998509884,
+          "completeMs": 2.399999998509884
+        },
+        {
+          "submitMs": 4.800000000745058,
+          "completeMs": 4.900000002235174
+        },
+        {
+          "submitMs": 4.299999997019768,
+          "completeMs": 7.099999997764826
+        },
+        {
+          "submitMs": 1.9000000022351742,
+          "completeMs": 1.9000000022351742
+        },
+        {
+          "submitMs": 3.600000001490116,
+          "completeMs": 3.699999999254942
+        },
+        {
+          "submitMs": 7.300000000745058,
+          "completeMs": 7.400000002235174
+        },
+        {
+          "submitMs": 6.600000001490116,
+          "completeMs": 6.600000001490116
+        },
+        {
+          "submitMs": 2.900000002235174,
+          "completeMs": 2.900000002235174
+        },
+        {
+          "submitMs": 4.899999998509884,
+          "completeMs": 4.899999998509884
+        },
+        {
+          "submitMs": 4.399999998509884,
+          "completeMs": 6
+        },
+        {
+          "submitMs": 1.9000000022351742,
+          "completeMs": 1.9000000022351742
+        },
+        {
+          "submitMs": 6.600000001490116,
+          "completeMs": 6.600000001490116
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgl-q0-optimized.png"
+    },
+    {
+      "variant": "baseline",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgl",
+        "requested": "webgl",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 12,
+        "passes": 0
+      },
+      "metrics": {
+        "geometries": 109,
+        "textures": 42,
+        "programs": 18,
+        "calls": 277
+      },
+      "meshes": 215,
+      "vertices": 66617,
+      "rows": [
+        {
+          "submitMs": 2.899999998509884,
+          "completeMs": 2.899999998509884
+        },
+        {
+          "submitMs": 2.300000000745058,
+          "completeMs": 2.300000000745058
+        },
+        {
+          "submitMs": 2.5,
+          "completeMs": 2.5
+        },
+        {
+          "submitMs": 2.100000001490116,
+          "completeMs": 2.100000001490116
+        },
+        {
+          "submitMs": 1.5,
+          "completeMs": 1.5
+        },
+        {
+          "submitMs": 7.399999998509884,
+          "completeMs": 7.399999998509884
+        },
+        {
+          "submitMs": 2.899999998509884,
+          "completeMs": 2.899999998509884
+        },
+        {
+          "submitMs": 4.800000000745058,
+          "completeMs": 4.800000000745058
+        },
+        {
+          "submitMs": 35.899999998509884,
+          "completeMs": 35.899999998509884
+        },
+        {
+          "submitMs": 2.599999997764826,
+          "completeMs": 2.699999999254942
+        },
+        {
+          "submitMs": 7.5,
+          "completeMs": 7.5
+        },
+        {
+          "submitMs": 2.300000000745058,
+          "completeMs": 2.300000000745058
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgl-q0-baseline.png"
+    },
+    {
+      "variant": "baseline",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgpu",
+        "requested": "auto",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 12,
+        "passes": 156
+      },
+      "metrics": {
+        "geometries": 110,
+        "textures": 47,
+        "programs": 33,
+        "calls": 278
+      },
+      "meshes": 215,
+      "vertices": 66617,
+      "rows": [
+        {
+          "submitMs": 7.5,
+          "completeMs": 684
+        },
+        {
+          "submitMs": 3.7999999970197678,
+          "completeMs": 656.2999999970198
+        },
+        {
+          "submitMs": 3.699999999254942,
+          "completeMs": 633
+        },
+        {
+          "submitMs": 3.300000000745058,
+          "completeMs": 751.7000000029802
+        },
+        {
+          "submitMs": 3.199999999254942,
+          "completeMs": 695.3000000007451
+        },
+        {
+          "submitMs": 3.600000001490116,
+          "completeMs": 697
+        },
+        {
+          "submitMs": 3.099999997764826,
+          "completeMs": 729.8000000007451
+        },
+        {
+          "submitMs": 3.699999999254942,
+          "completeMs": 740.0999999977648
+        },
+        {
+          "submitMs": 3.099999997764826,
+          "completeMs": 757.5999999977648
+        },
+        {
+          "submitMs": 2.899999998509884,
+          "completeMs": 684.6999999992549
+        },
+        {
+          "submitMs": 3.300000000745058,
+          "completeMs": 616.9000000022352
+        },
+        {
+          "submitMs": 2.899999998509884,
+          "completeMs": 695
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgpu-q0-baseline.png"
+    },
+    {
+      "variant": "optimized",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgpu",
+        "requested": "auto",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 0,
+        "passes": 24
+      },
+      "metrics": {
+        "geometries": 118,
+        "textures": 47,
+        "programs": 44,
+        "calls": 216
+      },
+      "meshes": 130,
+      "vertices": 75313,
+      "rows": [
+        {
+          "submitMs": 4.5,
+          "completeMs": 611
+        },
+        {
+          "submitMs": 5.800000000745058,
+          "completeMs": 630.9000000022352
+        },
+        {
+          "submitMs": 2.699999999254942,
+          "completeMs": 708.3999999985099
+        },
+        {
+          "submitMs": 2.399999998509884,
+          "completeMs": 584.8999999985099
+        },
+        {
+          "submitMs": 3.099999997764826,
+          "completeMs": 677.1999999992549
+        },
+        {
+          "submitMs": 3,
+          "completeMs": 687.6999999992549
+        },
+        {
+          "submitMs": 3.400000002235174,
+          "completeMs": 596.4000000022352
+        },
+        {
+          "submitMs": 2.600000001490116,
+          "completeMs": 678
+        },
+        {
+          "submitMs": 2.5,
+          "completeMs": 752.7999999970198
+        },
+        {
+          "submitMs": 2.699999999254942,
+          "completeMs": 731.6999999992549
+        },
+        {
+          "submitMs": 3.5,
+          "completeMs": 646.3999999985099
+        },
+        {
+          "submitMs": 2.800000000745058,
+          "completeMs": 634.6999999992549
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgpu-q0-optimized.png"
+    },
+    {
+      "variant": "optimized",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgpu",
+        "requested": "auto",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 0,
+        "passes": 24
+      },
+      "metrics": {
+        "geometries": 118,
+        "textures": 47,
+        "programs": 44,
+        "calls": 216
+      },
+      "meshes": 130,
+      "vertices": 75313,
+      "rows": [
+        {
+          "submitMs": 4.199999999254942,
+          "completeMs": 643.3000000007451
+        },
+        {
+          "submitMs": 2.699999999254942,
+          "completeMs": 774
+        },
+        {
+          "submitMs": 2.599999997764826,
+          "completeMs": 759.5
+        },
+        {
+          "submitMs": 2.800000000745058,
+          "completeMs": 632.8999999985099
+        },
+        {
+          "submitMs": 3,
+          "completeMs": 807.8000000007451
+        },
+        {
+          "submitMs": 3,
+          "completeMs": 780.5
+        },
+        {
+          "submitMs": 2.800000000745058,
+          "completeMs": 768.5
+        },
+        {
+          "submitMs": 4.199999999254942,
+          "completeMs": 798.1999999992549
+        },
+        {
+          "submitMs": 35.100000001490116,
+          "completeMs": 771.3000000007451
+        },
+        {
+          "submitMs": 3.600000001490116,
+          "completeMs": 808.1999999992549
+        },
+        {
+          "submitMs": 2.400000002235174,
+          "completeMs": 739.1999999992549
+        },
+        {
+          "submitMs": 2.599999997764826,
+          "completeMs": 635.5999999977648
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgpu-q0-optimized.png"
+    },
+    {
+      "variant": "baseline",
+      "backend": {
+        "phase": "ready",
+        "backend": "webgpu",
+        "requested": "auto",
+        "fallbackReason": null,
+        "diagnostic": null
+      },
+      "quality": 0,
+      "counts": {
+        "mipmaps": 12,
+        "passes": 156
+      },
+      "metrics": {
+        "geometries": 110,
+        "textures": 47,
+        "programs": 44,
+        "calls": 278
+      },
+      "meshes": 215,
+      "vertices": 66617,
+      "rows": [
+        {
+          "submitMs": 3.300000000745058,
+          "completeMs": 635.6000000014901
+        },
+        {
+          "submitMs": 11.600000001490116,
+          "completeMs": 753.8000000007451
+        },
+        {
+          "submitMs": 3.899999998509884,
+          "completeMs": 592.8999999985099
+        },
+        {
+          "submitMs": 4,
+          "completeMs": 599.0999999977648
+        },
+        {
+          "submitMs": 6.099999997764826,
+          "completeMs": 610.8999999985099
+        },
+        {
+          "submitMs": 4,
+          "completeMs": 593.1000000014901
+        },
+        {
+          "submitMs": 4.100000001490116,
+          "completeMs": 709.3999999985099
+        },
+        {
+          "submitMs": 3.199999999254942,
+          "completeMs": 768.8000000007451
+        },
+        {
+          "submitMs": 4.099999997764826,
+          "completeMs": 807.0999999977648
+        },
+        {
+          "submitMs": 3.7000000029802322,
+          "completeMs": 706.3000000007451
+        },
+        {
+          "submitMs": 3.100000001490116,
+          "completeMs": 634.1000000014901
+        },
+        {
+          "submitMs": 3.600000001490116,
+          "completeMs": 651.5
+        }
+      ],
+      "physicsSHA256": "2aeab417c5ba79a6718b2a0a3b9d500600d7445c4166ada2ff94e8a882a406fd",
+      "image": "webgpu-q0-baseline.png"
+    }
+  ]
+}

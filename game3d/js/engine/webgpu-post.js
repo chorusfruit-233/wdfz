@@ -4,6 +4,7 @@
 'use strict';
 var WebGPUPost={create:function(uniforms,multisampled){
   var N=$imports.RenderDevice.library();
+  if(!uniforms.uOutputSRGB)uniforms.uOutputSRGB={value:0};
   var depthType=multisampled?'texture_depth_multisampled_2d':'texture_depth_2d';
   var hash=N.wgslFn(`fn schoolHash(p:vec2<f32>)->f32{
     // Float products lose fractional precision as the pixel/time offset grows, creating bands.
@@ -46,7 +47,7 @@ var WebGPUPost={create:function(uniforms,multisampled){
     tHands:texture_2d<f32>,handSampler:sampler,uRes:vec2<f32>,uTime:f32,uWarp:f32,uTunnel:f32,uBlur:f32,uBlack:f32,uFocus:f32,uSan:f32,
     uDrain:f32,uHalo:f32,uBreath:f32,uPulse:f32,uGhost:f32,uGhostDir:vec2<f32>,uLite:f32,
     uHurt:f32,uFlash:f32,uFx:f32,uDm:f32,uDt:f32,uBright:f32,uExpo:f32,uRed:f32,uGaze:f32,uBloom:f32,uGrain:f32,
-    uInvert:f32,uAO:f32,uNear:f32,uFar:f32,uAA:f32,uHands:f32)->vec4<f32>{
+    uInvert:f32,uAO:f32,uNear:f32,uFar:f32,uAA:f32,uHands:f32,uOutputSRGB:f32)->vec4<f32>{
     // SAN 视觉分级（计划 12.9 第二轮），和 WebGL 那条一致。q：中心为原点、宽高各归一到 ±1 的椭圆坐标
     var uv=vUv;let wob=clamp((0.75-uSan)/0.75,0.0,1.0);let dc=uv-vec2<f32>(0.5);let fx0=1.0-uFx;
     let q=dc*2.0;let e=length(q);
@@ -128,7 +129,8 @@ var WebGPUPost={create:function(uniforms,multisampled){
     outc+=vec3<f32>(0.011)*(1.0-smoothstep(0.0,0.3,gLum))*(1.0-uFx);
     outc+=vec3<f32>(gn*(0.012+0.026*(1.0-smoothstep(0.03,0.45,gLum)))*(1.0+0.7*wob)*(1.0-uFx)*uGrain);
     outc=mix(outc,vec3<f32>(1.0)-clamp(outc,vec3<f32>(0.0),vec3<f32>(1.0)),uInvert);
-    // Node output performs the final sRGB transfer; return working-space values to avoid a second transfer.
+    // Canvas output is already encoded; offscreen/diagnostic callers retain linear output.
+    if(uOutputSRGB>0.5){return vec4<f32>(outc,1.0);}
     outc=max(outc,vec3<f32>(0.0));
     let linear=select(outc/12.92,pow((outc+vec3<f32>(0.055))/1.055,vec3<f32>(2.4)),outc>vec3<f32>(0.04045));
     return vec4<f32>(linear,1.0);
