@@ -50,14 +50,14 @@
       if(!d.said.c){d.said.c=true;(0,$imports.os)('走廊尽头的高个子没有动。人流从它身边经过。',4,$imports.OS_FORCE);}
     }else{
       var v=(t-12)/6,g=d.gate;
-      d.walkers.forEach(function(f,i){f.position.set(g.x+(i%4<2?-1.2-(i%2)*.65:1.2+(i%2)*.65),0,g.z+3.8-Math.floor(i/4)*.9-v*8);f.rotation.y=Math.PI;});
+      d.walkers.forEach(function(f,i){f.position.set(g.x+5.35,0,g.z+3.8-i*.65-v*8);f.rotation.y=Math.PI;});
       if(v<.2)(0,$imports.cutLook)(g.x-1.3,1.6,g.z+2.1,g.x-1.3,1.1,g.z+1);
-      else if(v<.6)(0,$imports.cutLook)(g.x+1.6,1.6,g.z-6-(v-.2)*4,g.x,1.4,g.z+3);   /* 站在门外回看：人流从校门里走出来（以前对着校外的空地，整屏灰） */
-      else{var teachX=(d.building.x+d.building.w/2)*$imports.U2M,teachZ=(d.building.y+d.building.h/2)*$imports.U2M;(0,$imports.cutLook)(g.x,1.8,g.z-7,teachX,6,teachZ);}
-      d.windows.forEach(function(m,i){m.visible=v>.6+i*.065;});$imports.GLR.worldNorm=.8;
+      else if(v<.6)(0,$imports.cutLook)(g.x+4.75,1.9,g.z-9-(v-.2)*10,g.x+5.35,1.4,g.z+3);   /* 站在门外回看：人流从校门里走出来（以前对着校外的空地，整屏灰） */
+      else{var teachX=(d.building.x+d.building.w/2)*$imports.U2M,teachZ=(d.building.y+d.building.h/2)*$imports.U2M;var front=(0,$imports.teachFrontZ)();(0,$imports.cutLook)(teachX,8.5,front+24,teachX,8,front);d.caption.textContent='你回过头。教学楼的灯，一层一层熄灭。';}
+      d.windows.forEach(function(m,i){m.visible=v>=.6;m.material.color.setHex(v>.68+i*.055?0x050909:0xaba17c);});$imports.GLR.worldNorm=.8;
       if(!d.said.d){d.said.d=true;(0,$imports.os)('登记簿翻到了新的一页：放学 · 全体。',4,$imports.OS_FORCE);}
     }
-    var fades=[3.2,7.8,12],edge=0;fades.forEach(function(s){edge=Math.max(edge,Math.max(0,1-Math.abs(t-s)/.12));});
+    var fades=[3.2,7.8,12,13.2,15.6],edge=0;fades.forEach(function(s){edge=Math.max(edge,Math.max(0,1-Math.abs(t-s)/.12));});
     (0,$imports.cutFade)(Math.max(edge,t>17.4?(t-17.4)/.6:0));
   },clean:function(d){if(d.caption)d.caption.remove();$imports.VisualState.stageHour=d.hour;}};
 

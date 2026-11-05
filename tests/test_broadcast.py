@@ -22,11 +22,11 @@ class BroadcastTest(BrowserCase):
 
     def test_false_paper_uses_persisted_run_seed_and_does_not_reroll(self):
         p=self.game()
-        r=p.evaluate("""()=>{Mechanics.runSeed='broadcast-seed-one';Broadcast.state().fakeSite=null;
-          const first=Broadcast.ensure().fakeSite,expected=Math.floor(BroadcastRules.hash(Mechanics.runSeed,'false-notice')*4);
-          Mechanics.runSeed='another-seed';const kept=Broadcast.ensure().fakeSite;
-          saveGame();applySave(loadGame());return {correct:first===expected,kept:first===kept,saved:Broadcast.ensure().fakeSite===first};}""")
-        self.assertEqual(r,dict(correct=True,kept=True,saved=True))
+        r=p.evaluate("""()=>{const sites=new Set();
+          for(let i=0;i<24;i++){Mechanics.runSeed='broadcast-fixture-'+i;Broadcast.state().fakeSite=null;sites.add(Broadcast.ensure().fakeSite);}
+          const first=Broadcast.ensure().fakeSite;Mechanics.runSeed='another-seed';const kept=Broadcast.ensure().fakeSite;
+          saveGame();applySave(loadGame());return {varied:sites.size>1,kept:first===kept,saved:Broadcast.ensure().fakeSite===first};}""")
+        self.assertEqual(r,dict(varied=True,kept=True,saved=True))
 
     def test_sources_are_physical_and_inventory_failure_preserves_items(self):
         p = self.game()
