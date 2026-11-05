@@ -67,11 +67,12 @@ function toggleTorch(){
   (0,$imports.toast)(USE.torch?'手电：开':'手电：关');
   $imports.SFX.click();
 }
+var USE_SOURCE='bag';
 function useHot(i){
   var id=$imports.S.hot[i];
   if(!id){ (0,$imports.toast)('快捷栏 '+(i+1)+' 是空的 —— 打开手册背包，选中物品后点「放到快捷栏 '+(i+1)+'」'); return; }
   if(!hasItem(id)){ $imports.S.hot[i]=null; var el=document.getElementById('hot'); if(el) el._sig=''; (0,$imports.toast)('「'+$imports.ITEMS[id].n+'」已经不在了'); $imports.UI.renderHot(); return; }
-  useItem(id);
+  USE_SOURCE='hot'; try{ useItem(id); }finally{ USE_SOURCE='bag'; }   /* 模块要分清是快捷栏还是背包里用的 */
 }
 /* 每种东西拿在手上「用」一下做什么。没写在这里的：能看的就看一眼说明，其余用不上 */
 function useMaterial(id,nm){ (0,$imports.os)('我：'+nm+'。'+$imports.ITEMS[id].d+(0,$imports.portalNeedText)(),3.6); }
@@ -255,6 +256,7 @@ GameModules.publish("game3d/js/items.js",{
 "inventoryRemove":{get:function(){return inventoryRemove;},set:function($value){inventoryRemove=$value;}},
 "bagChanged":{get:function(){return bagChanged;},set:function($value){bagChanged=$value;}},
 "toggleTorch":{get:function(){return toggleTorch;},set:function($value){toggleTorch=$value;}},
+"USE_SOURCE":{get:function(){return USE_SOURCE;},set:function($value){USE_SOURCE=$value;}},
 "useHot":{get:function(){return useHot;},set:function($value){useHot=$value;}},
 "useMaterial":{get:function(){return useMaterial;},set:function($value){useMaterial=$value;}},
 "ITEM_USE":{get:function(){return ITEM_USE;},set:function($value){ITEM_USE=$value;}},

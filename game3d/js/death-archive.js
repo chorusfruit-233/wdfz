@@ -32,6 +32,10 @@ var DEATH_ARCHIVE=[
   {id:'an:necker',    fx:'neck',     n:'围栏的缝',     d:'他没有绕到校门口。他把脖子从围栏的缝里伸了进来。', stage:'out'},
   {id:'an:twin',      fx:'twin',     n:'天台的另一头', d:'他走到了我面前。我们同时抬起手。他的手是热的。', stage:'teach6'},
   {id:'an:cup',       fx:'floor',    n:'窗台上的杯子', d:'一只白色的杯子，画着二校门。它比我想象的要重。', stage:'out'},
+  {id:'campus_fall', fx:'campus_fall', n:'中国人能飞', d:'手离开了栏杆。一排排窗框从身边往上掠过，地面的影子迎了上来。', stage:'teach6', ext:1},
+  {id:'paper_sender', fx:'paper_sender', n:'飞纸飞机的人', d:'脚步停在门外。一架压扁的纸飞机从门缝底下塞进来，门开了。', stage:'admin2', ext:1},
+  {id:'window_gaze', fx:'window_gaze', n:'窗户内的视线', d:'窗里那双眼睛一直没有眨。玻璃上的倒影先转了过来。', stage:'admin2', ext:1},
+  {id:'mirror',       fx:'mirror',   n:'镜子',         d:'镜子里那个人先抬起了手。我还看着它，看了很久。', stage:'teach1'},
   {id:'laugh',        fx:'laugh',    n:'笑出了声',     d:'灯前看字字如旧。我笑得停不下来，笑了很久。', stage:'teach1'},
   {id:'trap_out',     fx:'slit',     n:'正门',         d:'我从门缝里挤了出去。路的尽头还是一扇校门。', stage:'out'},
   {id:'trap_wall',    fx:'squeeze',  n:'墙外的墙',     d:'墙外面还有一道墙。我一直翻，翻到手指不再是手指的形状。', stage:'out'},
@@ -55,7 +59,10 @@ var ARCHIVE_CUTS=[
   {id:'end:portal',  cut:'portal',  end:'portal', n:'《门》',       d:'导轨一段段闭合，光圈撑开。退了半步，然后走了进去。', stage:'lab1'},
   {id:'end:cyber',   cut:'cyber',   end:'cyber',  n:'《网安仙人》', d:'机柜一架架熄灭，走廊里的高个子不再动。档案对照完，天亮了。', stage:'teach1'},
   {id:'end:dismissal',cut:'dismissal',end:'dismissal',n:'《放学》',d:'几十把椅子同时挪开，长铃里的人流从北门离校。登记簿上写着：放学 · 全体。',stage:'teach1'},
+  {id:'end:international',cut:'international',end:'international',n:'《外国语学生》',d:'队尾的人回头看了一眼。门卫核对的是接待名单，门外的颜色和声音都很平常。',stage:'teach1'},
   {id:'end:beast',   cut:'beast',   end:'beast',  n:'《先辈》',     d:'隔间的门缝里漏出光。穿旧校服的人看了你一眼就往外跑，你跟了出去，学校有了颜色。', stage:'teach1', secret:1},
+  {id:'end:knife',   cut:'knife',   end:'knife',  n:'《管制刀具》', d:'压在头顶的手停住了。小刀装进透明袋子，登记单上早就填好了名字：留校。', stage:'teach1', secret:1},   /* 内部：modules/knife */
+  {id:'end:inception',cut:'inception',end:'inception',n:'《盗梦空间》',d:'走廊一层层往上退。课桌上的陀螺在转。醒来的房间里有阳光，桌上的陀螺还在转。', stage:'dorm1', secret:1},   /* 内部：modules/inception */
   /* 异色空间的进出过场（内部，2026-11-04）：演出由 void-maze 模块的 maze-cut.js 注册；解锁看 seen 记录（DeathArchive.markSeen），
      没经历过完全不出现、不计数；回放舞台都是迷宫（离开那段在白场时自己换到教学楼二楼的电梯厅） */
   {id:'cut:void_in', cut:'void_in', seen:1, n:'不存在的那一层', d:'楼层显示跳成一个不认识的符号，灯一排排灭了。门开，外面什么都没有，只有一块方地浮着。', stage:'lift_dream', secret:1},

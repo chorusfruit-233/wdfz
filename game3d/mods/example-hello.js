@@ -10,8 +10,8 @@ GameModules.mod({
   desc:'每进一个没去过的地方提示一次地名；加一件「示例纸条」（调试面板物品页可以拿）。',
   init:function(api){
     var seen={};
-    api.addItem('mod_note',{name:'示例纸条',desc:'一张 Mod 加进来的纸条。',glyph:'✉',color:'#d8c48a',
-      use:function(){ api.say('我：纸条上写着：「这一行字是 Mod 写的。」'); }});
+    api.addItem('mod_note',{name:'示例纸条',desc:'一张 DLC 加进来的纸条。',glyph:'✉',color:'#d8c48a',
+      use:function(){ api.say('我：纸条上写着：「这一行字是 DLC 写的。」'); }});
     api.store({
       save:function(){ return {seen:seen}; },
       load:function(d){ seen=(d&&d.seen)||{}; },
@@ -21,7 +21,7 @@ GameModules.mod({
       if(restoring||seen[id]) return;
       seen[id]=1;
       var R=INTERIORS[id];
-      api.toast('【示例 Mod】第一次来到：'+(R?R.name:id));
+      api.toast('【示例 DLC】第一次来到：'+(R?R.name:id));
     });
   }
 });

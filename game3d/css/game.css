@@ -496,3 +496,20 @@ body:not(.cut) #opcap{display:none}
 .rsreport{font-family:"Noto Serif SC",serif;line-height:1.9;padding:4px 2px}
 .rsreport p{margin:0}
 .rsreport i{display:block;text-align:right;opacity:.7;font-style:normal}
+/* 手机相机（C11）：相册小图和拍照的闪白 */
+#phtool .phalbum{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px;max-height:220px;overflow:auto}
+#phtool .phalbum figure{margin:0;background:#0b1413;border:1px solid #26403a;border-radius:4px;padding:4px}
+#phtool .phalbum img{display:block;width:100%;height:auto;image-rendering:auto;border-radius:2px}
+#phtool .phalbum figcaption{font-size:11px;line-height:1.5;color:#a9c4b9;margin-top:3px}
+#camflash{position:fixed;inset:0;background:#fffdf4;pointer-events:none;z-index:340;opacity:0;visibility:hidden}
+#camflash.go{visibility:visible;animation:camflash .45s ease-out forwards}
+@keyframes camflash{from{filter:none}to{opacity:0}}
+/* 纸飞机：读纸面板（大字、倒计时条）与飞行时的触屏方向键 */
+#paperread{position:fixed;inset:0;z-index:335;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);pointer-events:auto}
+#paperread[hidden]{display:none}
+#paperread .pp-paper{width:min(440px,88vw);background:#efebde;color:#222;padding:22px 24px 16px;border-radius:3px;box-shadow:0 18px 60px #000a;transform:rotate(-1deg)}
+#paperread .pp-text{margin:0 0 14px;white-space:pre-line;font:calc(19px * var(--read-scale,1))/1.75 var(--ui-serif)}
+#paperread .pp-bar{height:4px;background:#d2ccb8;margin-bottom:12px}#paperread .pp-bar i{display:block;height:100%;background:#7a5a3a;width:100%}
+#paperread .pp-btns{display:flex;gap:10px}#paperread button{min-height:44px;flex:1;border:1px solid #6c5c48;background:#f7f3e8;color:#2a241c;border-radius:4px;font-size:15px}
+#paperpad{position:fixed;right:calc(18px + var(--sr));bottom:calc(18px + var(--sb));z-index:336;display:grid;grid-template-columns:repeat(4,56px);gap:8px}
+#paperpad[hidden]{display:none}#paperpad button{height:56px;font-size:20px;background:rgba(20,24,26,.8);color:#eee;border:1px solid #5b6a66;border-radius:8px;touch-action:none}

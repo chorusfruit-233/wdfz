@@ -6,13 +6,17 @@
                         一次性扣除、恢复、上限和 SAN 归零照旧；一局最多一次。教学楼正面挂横幅，早上有广播。
      占课 occupied   —— 音乐课、信息课被主科占了：琴房当天不开、机房暂停游戏活动；课桌上的短互动答对多回一点 SAN。
                         不加集合、不收外出登记、不改课表，也不动每天 1200 秒的连续探索预算。
+     体检 checkup    —— 《校园怪谈创意提案》C9：第三节课（10:20–11:05）到行政楼一楼临时医务室体检，缺席和学生会检查缺席一样记违规；
+                        一局最多一次，第三天起才会有（第二天高危期不叠加，实施取值）。玩法在 modules/campus-tales/checkup.js。
+                        概率接在原来两种后面（u 落在 [0.40, 0.54)），原有种子抽到的校庆、占课不变。
    「当天」按上学的那一段算：07:20 到熄灯后 22:30 换日为止；前一晚的宿舍时间不算。第一天（11:40 开局的半天）不会是特殊日。
    概率、首个可能的日子和占课的具体内容都是实施取值，不是用户定下的数，集中在 DAY_EVENT_CFG。 */
 'use strict';
 
 var DAY_EVENT_CFG={
   firstDay:2,
-  p:{anniversary:0.18, occupied:0.22},
+  p:{anniversary:0.18, occupied:0.22, checkup:0.14},
+  checkupFirstDay:3,
   drain:{anniversary:0.5},
   occupied:{closed:['piano','pc'], lessonBonus:2}
 };
@@ -22,7 +26,9 @@ var DAY_EVENT_DEF={
   occupied:{n:'占课', tag:'占课',
     say:'广播：「今天的音乐课、信息课改上数学，琴房暂停开放，机房暂停游戏活动，维护终端照常可用。」——教室里响起一片很轻的叹气。',
     closed:{piano:'我：琴房的门锁着。门上贴着一张纸：「今天的音乐课改上数学。」',
-            pc:'我：今天机房暂停游戏活动。接线与维护终端仍可使用。'}}
+            pc:'我：今天机房暂停游戏活动。接线与维护终端仍可使用。'}},
+  checkup:{n:'体检', tag:'体检日',
+    say:'广播：「今天上午第三节课体检。各班同学十点二十到行政楼一楼医务室排队，不要缺席。」——喇叭里的声音很平。'}
 };
 function dayHash(seed,day){
   var h=(seed^Math.imul((day|0)+0x9e37,0x85ebca6b))>>>0;
@@ -40,6 +46,7 @@ var DayEvents={
     var u=dayHash(DayEvents.seed(),day), p=DAY_EVENT_CFG.p, ev=$imports.RT.dayEvents||{};
     if(u<p.anniversary) return DayEvents.had('anniversary')?'none':'anniversary';
     if(u<p.anniversary+p.occupied) return ev[day-1]==='occupied'?'none':'occupied';   /* 不连着两天占课 */
+    if(u<p.anniversary+p.occupied+(p.checkup||0)) return day<DAY_EVENT_CFG.checkupFirstDay||DayEvents.had('checkup')?'none':'checkup';
     return 'none';
   },
   /* 当天还没定就定下来（只定一次） */

@@ -24,7 +24,7 @@ var AchievementsUI=(function(){
     box.id='achieve'; box.className='mdialog'; box.hidden=true;
     box.setAttribute('role','dialog'); box.setAttribute('aria-modal','true'); box.setAttribute('aria-labelledby','acTitle');
     box.innerHTML='<div class="mdbox wide"><div class="tphead"><b id="acTitle">成就</b><i id="acCount"></i></div>'+
-      '<p class="tplead">只是记录，没有任何加成。怎样才算达成，要自己去发现。打开过调试面板的那一局、启用了自制 Mod 的那一局都不算；记录只存在这台设备的浏览器里。</p>'+
+      '<p class="tplead">只是记录，没有任何加成。怎样才算达成，要自己去发现。打开过调试面板的那一局、启用了自制 DLC 的那一局都不算；记录只存在这台设备的浏览器里。</p>'+
       '<div class="actabs" id="actabs" role="tablist"></div>'+
       '<div class="arscroll"><div class="accards" id="accards"></div></div>'+
       '<div class="tpfoot"><button type="button" id="acBack">返回</button></div></div>';

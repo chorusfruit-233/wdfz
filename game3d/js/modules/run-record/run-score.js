@@ -122,7 +122,7 @@ var RunScore=(function(){
   }
   function onEnding(f){
     result=null;
-    var publicEnd=$imports.ACH_PUBLIC_ENDS.indexOf(f.id)>=0, ok=f.legit&&(publicEnd||f.id==='beast');
+    var publicEnd=$imports.ACH_PUBLIC_ENDS.indexOf(f.id)>=0, ok=f.legit&&(publicEnd||f.id==='international'||f.id==='beast'||f.id==='inception');
     var ctx=context({ending:ok,endingName:'通关 · '+routeName(f.id)});
     var sum=$imports.ScoreRules.total(st.ledger,ctx);
     var sr=(typeof $imports.Speedrun!=='undefined')?$imports.Speedrun.lastResult:null, rta=sr&&sr.rec&&sr.rec.ms>0?sr.rec.ms:null;

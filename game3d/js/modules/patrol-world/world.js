@@ -56,6 +56,8 @@ var PatrolWorld=(function(){
   function exempt(){return ($imports.S.seated&&(0,$imports.atMySeat)())||(0,$imports.onLeave)()||($imports.SchoolDay.excused()&&!(0,$imports.isNight)()&&!region());}
   function camouflaged(){return GameModules.first('patrolCamouflage')===true;}
   function hunting(){return !camouflaged()&&($imports.PAT.permanent||!!$imports.PAT.wirelessSignal||eligible()&&!exempt());}
+  /* 真正抓到：先问模块（被抓住的那一瞬间可能还有事要做）；没人接管才照原样死 */
+  function grip(msg){ if(GameModules.first('patrolCatch',{msg:msg,hide:!!$imports.HIDE.on})===true) return; (0,$imports.kill)(msg,'grip','patrol'); }
   function sees(){return !camouflaged()&&$imports.PAT.state==='walk'&&same()&&!$imports.HIDE.on&&distance()<=$imports.PAT_SEE&&$imports.PatrolNav.los(position(),playerPoint());}
   function localQuiet(){
     var st=$imports.RT.inspection,c=st&&st.current;
@@ -220,7 +222,7 @@ var PatrolWorld=(function(){
     }
     if(!cabin||open<=0||$imports.PAT.state!=='walk'||$imports.PAT.transition||!same()||!hunting()||$imports.PAT.safety>0||localQuiet())return false;
     /* 本来就追着你、到了门口：门开着就照平常抓 */
-    if($imports.PAT.locked&&atDoor&&$imports.PAT.warning<=0&&$imports.PAT.afterBlink<=0){(0,$imports.kill)('一只手按住了你的头顶。它在点名。','grip','patrol');return true;}
+    if($imports.PAT.locked&&atDoor&&$imports.PAT.warning<=0&&$imports.PAT.afterBlink<=0){grip('一只手按住了你的头顶。它在点名。');return true;}
     /* 「看着你进电梯」：它正盯着你（刚看见过、还在追），或者视线从门洞穿进轿厢看得见你（站在轿厢侧壁边上就看不见） */
     var watching=$imports.PAT.locked&&$imports.PAT.lost<1;
     if(!watching){
@@ -302,7 +304,7 @@ var PatrolWorld=(function(){
     if($imports.PAT.investigation&&$imports.PAT.investigation.remaining<=0){$imports.PAT.investigation=null;$imports.PAT.rejoin=true;framePath=null;}
     if($imports.PAT.memoryVisit&&$imports.PAT.memoryVisit.remaining<=0){$imports.PAT.memoryVisit=null;$imports.PAT.rejoin=true;framePath=null;}
     if(!$imports.PAT.doorRush&&$imports.PAT.locked&&hostile&&$imports.PAT.afterBlink<=0&&distance()<$imports.PAT_CATCH&&(sees()||cabinet&&$imports.PatrolNav.los(position(),cabinet))&&$imports.PAT.warning<=0)
-      (0,$imports.kill)($imports.HIDE.on?'柜门被拉开了。它一直知道你在这里。':'一只手按住了你的头顶。它在点名。','grip','patrol');
+      grip($imports.HIDE.on?'柜门被拉开了。它一直知道你在这里。':'一只手按住了你的头顶。它在点名。');
   }
   function visuals(dt){
     if($imports.PAT.state==='idle'){var sp=spawn(),audible=sp.scene===(0,$imports.patRoomHere)()&&$imports.PAT.respawn<=3.6&&$imports.PatrolNav.length($imports.PatrolNav.path(playerPoint(),sp))<190;var rt=(3.6-$imports.PAT.respawn)%1.8;$imports.VisualState.patrolFlick=audible&&(rt<.15||rt>.3&&rt<.45||rt>.75&&rt<1.25)?.7:0;$imports.VisualState.patrolRed=0;return;}

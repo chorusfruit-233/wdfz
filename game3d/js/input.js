@@ -27,6 +27,8 @@ function gameInputContext(target,editing){
     debugDragging:!!(typeof $imports.DEV!=='undefined'&&$imports.DEV.on&&$imports.DEV.drag),
     intro:$imports.S.intro>0,driving:!!(typeof $imports.CarChase!=='undefined'&&$imports.CarChase.active()),
     deathPending:!!(typeof $imports.DEATH_PENDING!=='undefined'&&$imports.DEATH_PENDING),
+    moduleInput:GameModules.first('ownsPlayerInput')===true,
+    keepSimulation:GameModules.first('keepSimulation')===true,                   /* 模块要求打开面板时世界照走（被抓住的那一秒） */                     /* 模块接管了操作（纸飞机的阅读和飞行） */
     targetDebug:devOwnsInput(target),editing:!!editing};
 }
 function playerInputAllowed(){
@@ -415,7 +417,7 @@ function updatePlayer(dt){
      马上又掉下去，按着疾跑（或手机摇杆推到底）时就一顿一顿地在跑和走之间来回切。 */
   if($imports.S.stam<=6)$imports.S.tired=true;
   else if($imports.S.stam>=STAM_BACK)$imports.S.tired=false;
-  $imports.S.run=wantRun&&(!$imports.S.tired||snack)&&(fw!==0||sd!==0);
+  $imports.S.run=wantRun&&(!$imports.S.tired||snack)&&(fw!==0||sd!==0)&&GameModules.first('runBlocked')!==true;   /* 模块可以禁止奔跑（重伤） */
   var mag=Math.hypot(fw,sd);
   if($imports.S.seated&&mag>.08)(0,$imports.leaveSeat)();
   $imports.S.moving=mag>.08&&!$imports.S.seated;
@@ -424,6 +426,7 @@ function updatePlayer(dt){
     var runAfter=wantRun&&!$imports.S.tired;
     if(snack&&dt>0)spd=((wantRun?SPD_RUN:SPD_WALK)*boosted*1.5+(runAfter?SPD_RUN:SPD_WALK)*(dt-boosted))/dt;
     if(typeof $imports.DEV!=='undefined'&&$imports.DEV.fast)spd*=2.6;
+    var _sm=GameModules.first('moveSpeedMul'); if(typeof _sm==='number'&&_sm>0)spd*=_sm;   /* 模块的速度倍率（受伤） */
     if(mag>1){fw/=mag;sd/=mag;}
     var ca=Math.cos($imports.S.ang),sa=Math.sin($imports.S.ang),x=$imports.S.x,y=$imports.S.y;
     (0,$imports.moveBy)((ca*fw-sa*sd)*spd*dt,(sa*fw+ca*sd)*spd*dt,dt);
@@ -434,14 +437,15 @@ function updatePlayer(dt){
     if($imports.S.stepT<=0){$imports.S.stepT=($imports.S.run?.30:.46)/(snack?1.5:1);$imports.SFX.step();}
   }else $imports.S.stepT=0;
   if($imports.S.run&&$imports.S.moving){
-    if(!$imports.S.tired)$imports.PlayerStats.changeStamina(-17*Math.max(0,dt-boosted),'running',{min:0});
-    else (0,$imports.restoreStamina)(11*Math.max(0,dt-boosted));
+    if(!$imports.S.tired)$imports.PlayerStats.changeStamina(-STAM_RUN*Math.max(0,dt-boosted),'running',{min:0});
+    else (0,$imports.restoreStamina)(STAM_REST*Math.max(0,dt-boosted));
   }
-  else (0,$imports.restoreStamina)(11*dt);
+  else (0,$imports.restoreStamina)(STAM_REST*dt);
   if($imports.S.enterCool>0)$imports.S.enterCool-=dt;
   (0,$imports.syncCamera)(dt);
 }
-var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=30,STAM_BACK=35;
+/* 体力（《校园直通、翻越受伤与国际交流》Q5 真人确认，2026-11-05）：跑 8／运行秒、不跑恢复 12／运行秒、跑空后回到 30 才能再跑 */
+var SPD_WALK=21,SPD_RUN=36.4,SNACK_SEC=30,STAM_BACK=30,STAM_RUN=8,STAM_REST=12;
 
 /* @module-exports */
 GameModules.publish("game3d/js/input.js",{
@@ -473,6 +477,8 @@ GameModules.publish("game3d/js/input.js",{
 "SPD_WALK":{get:function(){return SPD_WALK;},set:function($value){SPD_WALK=$value;}},
 "SPD_RUN":{get:function(){return SPD_RUN;},set:function($value){SPD_RUN=$value;}},
 "SNACK_SEC":{get:function(){return SNACK_SEC;},set:function($value){SNACK_SEC=$value;}},
-"STAM_BACK":{get:function(){return STAM_BACK;},set:function($value){STAM_BACK=$value;}}
+"STAM_BACK":{get:function(){return STAM_BACK;},set:function($value){STAM_BACK=$value;}},
+"STAM_RUN":{get:function(){return STAM_RUN;},set:function($value){STAM_RUN=$value;}},
+"STAM_REST":{get:function(){return STAM_REST;},set:function($value){STAM_REST=$value;}}
 });
 })(GameModules.imports("game3d/js/input.js"));

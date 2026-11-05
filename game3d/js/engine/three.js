@@ -122,10 +122,15 @@ ThreeBackend.setup=function(renderer){
 '  if(uAO<=0.0)return 1.0;',
 '  float z=viewDepth(uv);if(z>55.0)return 1.0;',
 '  float radius=clamp(uRes.y*0.16/max(z,0.2),2.0,32.0);float occ=0.0;',
-'  for(int i=0;i<8;i++){float a=float(i)*0.785398;vec2 d=vec2(cos(a),sin(a));',
-'    float dz=z-viewDepth(clamp(uv+d*radius/uRes,vec2(0.001),vec2(0.999)));',
-'    occ+=smoothstep(0.035,0.22,dz)*(1.0-smoothstep(0.35,1.2,dz));}',
-'  return 1.0-uAO*occ/8.0;',
+/* 2026-11-05 高画质条纹排查：以前八个固定方向各取一点，斜看的平地／墙面一边近一边远，深度梯度被当成遮挡，
+   形成跟着屏幕走的一道道条纹。现在四对相反方向成对取样，只有两边都更近（真正的凹角）才算遮挡；
+   方向每个像素转一个随机角度，不再排成规则图案。取样总数不变（8 次）。 */
+'  float rot=hash(floor(uv*uRes))*0.785398;',
+'  for(int i=0;i<4;i++){float a=float(i)*0.785398+rot;vec2 d=vec2(cos(a),sin(a))*radius/uRes;',
+'    float za=z-viewDepth(clamp(uv+d,vec2(0.001),vec2(0.999)));',
+'    float zb=z-viewDepth(clamp(uv-d,vec2(0.001),vec2(0.999)));',
+'    occ+=smoothstep(0.02,0.18,min(za,zb))*(1.0-smoothstep(0.35,1.2,max(za,zb)));}',
+'  return 1.0-uAO*occ/4.0;',
 '}',
 /* 无多重采样支持时的边缘平滑；只有超精细开启。 */
 'vec3 sceneColor(vec2 uv){',
@@ -257,6 +262,8 @@ ThreeBackend.setup=function(renderer){
 '  outc+=gn*(0.012+0.026*(1.0-smoothstep(0.03,0.45,gLum)))*(1.0+0.7*wob)*(1.0-uFx)*uGrain;',
 /* 反色（表现层的彩蛋用；0 = 正常，1 = 完全反色）：只作用于 3D 画面，界面和字幕不受影响 */
 '  outc=mix(outc,vec3(1.0)-clamp(outc,0.0,1.0),uInvert);',
+/* 输出前 ±0.5/255 的抖动（和颗粒开关无关，三通道同值不出彩色噪点）：暗部和辉光的渐变不再在 8 位输出里断成一圈圈色带 */
+'  outc+=vec3((hash(gl_FragCoord.xy*1.37+vec2(3.1,7.7))-0.5)/255.0);',
 '  gl_FragColor=vec4(outc,1.0);',
 '}',
     ].join('\n'),
