@@ -168,6 +168,13 @@ $imports.ThreeBackend.sharedOutdoor=function(){
   }
   return SCENE_CACHE.out;
 };
+/* 某个房间的模型缓存，借给室外场景（连续校园：站在楼门外看得见楼里）。没建过就现建一份放进缓存；进这个房间时直接用它 */
+$imports.ThreeBackend.sharedRoom=function(id){
+  sceneCacheCheck();
+  var R=$imports.INTERIORS[id], g=SCENE_CACHE.rooms[id]; if(!R) return null;
+  if(!g||g.userData.roomData!==R){ g=(0,$imports.buildRoomGeometry)(R); g.userData.roomId=id; g.userData.roomData=R; sceneCacheRoom(id,g); }
+  return g;
+};
 $imports.ThreeBackend.enterOutside=function(){
   (0,$imports.clearWorldMesh)();sceneCacheCheck();
   try{ (0,$imports.ncClear)(); }catch(e){}      /* 出去就没有同班同学了 */

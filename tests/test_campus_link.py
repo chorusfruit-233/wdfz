@@ -201,6 +201,93 @@ class CampusLinkTest(BrowserCase):
         self.assertTrue(r['back'])                                  # 回到室外，还是同一份模型、在原点
         self.assertEqual(r['errors'], 0)
 
+    # ---------- C2：教学楼一楼南门 ----------
+    DOOR = """window.doorAt=(back,lat)=>{const d=CAMPUS_DOOR.doors[0],P=CampusDoor.port(d);
+      doEnterRoom('teach1',{x:P.x+(lat||0),y:P.y-back,ang:Math.PI/2,seamless:true});running=false;S.screen='play';S.stam=100;S.tired=false;
+      return {P,Q:CampusDoor.outPort(d),d};};0"""
+
+    def test_south_door_walks_out_and_back_in_without_a_jump(self):
+        page = self.ready()
+        page.evaluate(self.DOOR)
+        r = page.evaluate("""()=>{
+          const {P,Q,d}=doorAt(30,0),s=TeachGallery.shift(INTERIORS.teach1),banner=document.getElementById('banner').textContent,out={};
+          KEY={w:true};let prev=null,hit=null;
+          for(let i=0;i<400&&!hit;i++){prev={m:S.mode,x:S.x,y:S.y};updatePlayer(1/60);if(S.mode!==prev.m)hit={m:S.mode,room:S.room,x:S.x,y:S.y};}
+          out.exit={hit:!!hit,mode:S.mode,dx:hit&&hit.x-(prev.x+s.x),step:hit&&Math.hypot(hit.x-s.x-prev.x,hit.y-s.y-prev.y),depth:Collision.depth(S.x,S.y,PRAD),
+            fade:document.getElementById('fade').style.opacity||'0',banner:document.getElementById('banner').textContent===banner};
+          for(let i=0;i<60;i++)updatePlayer(1/60);
+          out.outside={mode:S.mode,y:S.y-Q.y,depth:Collision.depth(S.x,S.y,PRAD),hint:interactHint()};
+          S.ang=-Math.PI/2;hit=null;
+          for(let i=0;i<400&&!hit;i++){prev={m:S.mode,x:S.x,y:S.y};updatePlayer(1/60);if(S.mode!==prev.m)hit={m:S.mode,room:S.room,x:S.x,y:S.y};}
+          KEY={};
+          out.enter={hit:!!hit,room:S.room,step:hit&&Math.hypot(hit.x+s.x-prev.x,hit.y+s.y-prev.y),depth:Collision.depth(S.x,S.y,PRAD),
+            hint:interactHint(),errors:GameModules.errors().length};
+          return out;}""")
+        self.assertTrue(r['exit']['hit'] and r['exit']['mode'] == 'out', r)
+        self.assertLess(r['exit']['step'], 1.2)                   # 门槛两侧只差一个平移：落点就在上一帧位置前面
+        self.assertLess(abs(r['exit']['dx']), 1e-6)
+        self.assertEqual(r['exit']['depth'], 0)
+        self.assertEqual(r['exit']['fade'], '0')
+        self.assertTrue(r['exit']['banner'])                      # 不出「武大附中 · 校园」横幅
+        self.assertEqual(r['outside']['mode'], 'out')
+        self.assertGreater(r['outside']['y'], 9)                  # 走出去一米多，站在柱廊下
+        self.assertEqual(r['outside']['depth'], 0)
+        self.assertNotIn('进入', r['outside']['hint'])             # 不再提示按 E 进楼
+        self.assertTrue(r['enter']['hit'] and r['enter']['room'] == 'teach1', r)
+        self.assertLess(r['enter']['step'], 1.2)
+        self.assertEqual(r['enter']['depth'], 0)
+        self.assertEqual(r['enter']['hint'], '')                  # 门洞那几格不提示「出去」
+        self.assertEqual(r['enter']['errors'], 0)
+
+    def test_south_door_opening_is_only_the_door_width_outside_and_inside(self):
+        page = self.ready()
+        page.evaluate(self.DOOR)
+        r = page.evaluate("""()=>{
+          const {P,Q}=doorAt(30,0),h=CAMPUS_DOOR.width*TTILE/2,R=INTERIORS.teach1;
+          const inside=[0,h-PRAD-.5,h+PRAD+.5].map(l=>Collision.depth(P.x+l,P.y-2,PRAD,R));
+          doExitRoom({x:Q.x,y:Q.y+20,ang:-Math.PI/2,seamless:true});running=false;
+          const outside=[0,h-PRAD-.5,h+PRAD+.5,-(h+PRAD+.5)].map(l=>Collision.depth(Q.x+l,Q.y-2,PRAD));
+          const deep=Collision.depth(Q.x,Q.y-CAMPUS_DOOR.annex*TTILE-PRAD-1,PRAD);
+          const solid=[solidAtOutdoor(Q.x,Q.y-3),solidAtOutdoor(Q.x+h+2,Q.y-3)];
+          return {inside,outside,deep,solid,cells:R.grid[21].slice(29,34).join('')};}""")
+        self.assertEqual(r['cells'], '#OOO#')                     # 门洞三格，正对正门
+        self.assertEqual(r['inside'][:2], [0, 0])
+        self.assertGreater(r['inside'][2], 0)                     # 门洞旁边的墙照旧挡人
+        self.assertEqual(r['outside'][:2], [0, 0])
+        self.assertGreater(r['outside'][2], 0)
+        self.assertGreater(r['outside'][3], 0)
+        self.assertGreater(r['deep'], 0)                          # 缺口只挖进楼里 1.5 格
+        self.assertEqual(r['solid'], [False, True])
+
+    def test_south_door_shows_each_side_and_rendering_changes_nothing(self):
+        page = self.ready()
+        page.evaluate(self.DOOR)
+        r = page.evaluate("""()=>{
+          const {P,Q}=doorAt(40,0);render(.016);
+          const inside=CampusDoor.views().inside,outMesh=ThreeBackend.sharedOutdoor(),lifted=outMesh.position.y;
+          const lamp=!!GLR.scene.getObjectByName('campus-door-lamp');
+          doEnterRoom('teach1',{x:P.x,y:P.y-300,ang:0,seamless:true});running=false;render(.016);
+          const farIn=CampusDoor.views().inside;
+          doExitRoom({x:Q.x,y:Q.y+40,ang:-Math.PI/2,seamless:true});running=false;
+          const before=JSON.stringify([S,RT,PAT]);let draws=0;GameRandom.bind(()=>{draws++;return .5;});
+          render(.016);render(.016);const same=JSON.stringify([S,RT,PAT])===before;GameRandom.bind(RandomRules.create(7).next);
+          const outside=CampusDoor.views().outside,g=ThreeBackend.sharedRoom('teach1'),R=INTERIORS.teach1,s=TeachGallery.shift(R);
+          const err=Math.hypot(g.position.x-(R.cx+s.x)*U2M,g.position.z-(R.cy+s.y)*U2M),gy=g.position.y,parent=g.parent===GLR.scene;
+          S.y=Q.y+600;render(.016);const farOut=CampusDoor.views().outside;
+          return {inside,lifted,lamp,farIn,outside,err,gy,parent,farOut,same,draws,errors:GameModules.errors().length};}""")
+        self.assertEqual(r['inside'], 'teach1')                   # 屋里离门近：门外的校园挂进来
+        self.assertAlmostEqual(r['lifted'], -0.01)                # 室外地面比室内低 1 厘米，地面不重叠
+        self.assertTrue(r['lamp'])
+        self.assertIsNone(r['farIn'])                              # 走远了摘下来
+        self.assertEqual(r['outside'], 'teach1')                  # 楼外离门近：楼里挂进来
+        self.assertTrue(r['parent'])
+        self.assertLess(r['err'], .01)
+        self.assertAlmostEqual(r['gy'], 0.01)
+        self.assertIsNone(r['farOut'])
+        self.assertTrue(r['same'])
+        self.assertEqual(r['draws'], 0)
+        self.assertEqual(r['errors'], 0)
+
     def test_module_can_be_removed_and_links_fall_back_to_e(self):
         context = self.browser.new_context(viewport={'width': 1000, 'height': 700})
         self.contexts.append(context)
@@ -220,5 +307,8 @@ class CampusLinkTest(BrowserCase):
         self.assertEqual(r['mod'], 'undefined')
         self.assertEqual(r['wall'], '#')
         self.assertFalse(r['open'])                                  # 走廊南墙照旧
+        door = page.evaluate("""()=>{const R=INTERIORS.teach1,o=objById('teach');
+          return {cells:R.grid[21].slice(30,33).join(''),gaps:!!(o.gaps&&o.gaps.length),seam:!!o.seamDoor,exitAt:!!R.openExitAt};}""")
+        self.assertEqual(door, {'cells': 'OO#', 'gaps': False, 'seam': False, 'exitAt': False})   # 一楼南门照旧：两格玻璃门、按 E
         self.assertEqual(sorted(set(r['kinds'])), ['bridge'])
         self.assertEqual(r['errors'], 0)

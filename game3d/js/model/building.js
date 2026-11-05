@@ -264,7 +264,7 @@ function roofTop(K,px,top,pz,sw,sd,seed){
 }
 
 /* ---- 大门口：门洞暗腔、双开门、门套、雨棚（有柱廊的楼不要雨棚）、台阶、门牌 ---- */
-function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name){
+function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name, seam){
   face=face||'s';
   var horz=(face==='e'||face==='w');
   var along=horz?sd:sw;
@@ -277,7 +277,18 @@ function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name){
   var rot=Math.atan2(nx,nz);
   K.frame(bx,bz,rot);                           /* 局部：+z 朝外 */
   var en=(colonnade?'entrance_col_':'entrance_')+Math.round(dw*100);
-  if(K.asset(en,0,0,0,0)){}                      /* 门斗、地弹门、台阶、雨棚是模型（exterior.py） */
+  if(seam){                                      /* 连续出入口：门洞敞开（和室内门洞同宽），两扇玻璃门推开贴在两边墙上；门槛平铺，不做台阶 */
+    var hw=seam.width/2;
+    [-1,1].forEach(function(sx){
+      K.bevel('stone',sx*(hw+0.09),1.2,0.11,0.18,2.40,0.22,0xd8d4cc,1.05,0.02);                 /* 门套 */
+      K.bevel('metal',sx*(hw+0.85),1.12,0.135,1.30,2.18,0.05,0x2a3136,1.02,0.01);               /* 推开的门扇（贴在墙基外面） */
+      K.box('glass',sx*(hw+0.85),1.25,0.165,1.06,1.70,0.01,0x5a7080,1.0);
+    });
+    K.bevel('stone',0,2.39,0.11,seam.width+0.36,0.18,0.22,0xd8d4cc,1.05,0.02);                  /* 门头线 */
+    K.box('emit',hw*0.6,2.20,0.13,0.30,0.14,0.04,0x2fae6a,1.0);                                /* 安全出口灯 */
+    K.box('stone',0,0.006,0.55,seam.width+0.6,0.012,1.1,0xb8b2a8,1.0);                          /* 门槛石 */
+  }
+  else if(K.asset(en,0,0,0,0)){}                      /* 门斗、地弹门、台阶、雨棚是模型（exterior.py） */
   else{
   K.box('dark',0,dh/2,dep*0.5,dw+0.5,dh,dep,0x0e1316,1.0);                     /* 门洞暗腔 */
   K.bevel('metal',-dw*0.25,dh/2-0.05,dep*0.95,dw*0.48,dh-0.1,0.08,0x2a3136,1.02,0.01);   /* 双开门 */
@@ -403,8 +414,14 @@ function bldTeach(K,grp,o,px,pz,sw,sd){
   /* 东头厕所那一段、西头端墙：从教室块一直到南沿 */
   K.box('brick',(ge1+L.x0+sw)/2,total/2,(gz+zs)/2,L.x0+sw-ge1,total,zs-gz,$imports.BRICK,0.97);
   K.box('brick',(L.x0+ge0)/2,total/2,(gz+zs)/2,ge0-L.x0,total,zs-gz,$imports.BRICK,0.97);
-  /* 一楼：走廊外墙（室内第 21 格），二楼楼板以下 */
-  K.box('brick',gx,(g0-0.18)/2,zs-0.5*L.t,gw,g0-0.18,L.t,$imports.BRICK,0.97);
+  /* 一楼：走廊外墙（室内第 21 格），二楼楼板以下。里面那层退进 4 厘米：门里看得见室内模型时两面墙不重叠。
+     连续出入口（o.seamDoor，连续校园模块给）：正门那 3 米墙开敞，只留门头 */
+  var w1=L.t-0.04, wz=zs-w1/2, wh=g0-0.18, dh=o.seamDoor?o.seamDoor.width/2:0;
+  if(dh){
+    /* 墙段、门头都比室内门洞让开 2 厘米：室内模型挂进来时两边的门边、门头底面不在同一个平面上 */
+    [[ge0,px-dh-0.02],[px+dh+0.02,ge1]].forEach(function(sg){ K.box('brick',(sg[0]+sg[1])/2,wh/2,wz,sg[1]-sg[0],wh,w1,$imports.BRICK,0.97); });
+    K.box('brick',px,(2.32+wh)/2,wz,dh*2+0.04,wh-2.32,w1,$imports.BRICK,0.97);                  /* 门头 */
+  }else K.box('brick',gx,wh/2,wz,gw,wh,w1,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));
   /* 女儿墙和压顶：北、东、西三面挑出，南面和楼梯塔、电梯井贴齐（塔从南沿立起来，挑出去就插进塔身） */
   K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,$imports.WHITEBAND,1.0);
@@ -482,7 +499,7 @@ function bldTeach(K,grp,o,px,pz,sw,sd){
     plinthAround(K,b.x,cz,b.half*2,d,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));
     if(b.kind==='stair'){ for(var h=1.6+rise/2;h<b.top-1;h+=rise) facadeWindows(K,'s',b.x,cz,b.half*2,d,b.x-0.9,b.x+0.9,h,1.2,1.1,1.8,(h*7)|0); }
   });
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id]);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id],o.seamDoor);
 }
 /* ---- 宿舍：六层，阳台开在门的对面（贴着食堂的那段不画） ---- */
 function bldDorm(K,grp,o,px,pz,sw,sd){

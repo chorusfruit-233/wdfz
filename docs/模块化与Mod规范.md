@@ -88,6 +88,7 @@ game3d/mods/                    随游戏发布、默认关闭的 Mod；index.js
 | `stepSurface` | `audio.js` 每次脚步（自己、巡察者） | first | 返回脚下材质名，声音库里要有 `step.<名>`（例如异空间的 `void`）；没有就按原来的规则判断 |
 | `stepMoved` | `world.js` `moveBy` 每一小步之后（2026-11-05） | emit | 模块的门槛：越过就换场景（连续校园的连廊）；换场景时改了 `S.ang`，这一步剩下的位移会跟着转 |
 | `linkContinuous` | `interact.js` 连廊入口（`L` 格）的提示和按 E | first | 返回真：连廊已经连续（门洞直接走过去），不再按 E 换场景 |
+| `doorContinuous` | `interact.js` 室外楼门的提示和按 E（2026-11-05） | first | 参数是楼的 id（`teach` 等）或房间 id；返回真：这道楼门已经连续（门洞直接走进走出），不再按 E 换场景 |
 | `openAir` | `lighting.js` `lightState`（2026-11-05） | first | 参数是当前室内场景 id；返回真：这个场景按室外打光（连续校园：教学楼二到五层的敞开外廊，和天台一样） |
 | `bellTune` | `audio.js` `schoolBell`（每一遍上下课铃，2026-11-04） | first | `kind`（`start` / `end`）；返回 `{pitch, caption}` 让这一遍走调（氛围 A5），不返回就照常 |
 | `liftBoard` | `elevator.js` `Elevator.enterCabin`，跨进轿厢、乘梯记录建好以后、存档之前（2026-11-04） | emit | `ride, host, floor`：别的模块在这一刻定自己的稀有事件（和错误的电梯互斥，写在 `ride` 上一起存档） |
