@@ -36,6 +36,27 @@ var ResultsUI=(function(){
     if(!s||s.parentNode!==tools){ if(s) s.remove(); s=document.createElement('span'); s.id='mapExplore'; s.className='mapcount'; tools.appendChild(s); }
     try{ s.textContent='本局探索度 '+$imports.RunScore.explore().pct+'%'; }catch(e){ s.textContent=''; }
   }
+  /* 成绩单（创意提案 C7）：班主任按这一局真实发生的事写评语，最多三句，口吻平静。只读积分明细和回放事件；
+     内部内容（隐藏结局、隐藏异常、迷宫）一律不写（REPORT_SECRET，保密测试覆盖） */
+  var REPORT_SECRET=['满员','可乐','？？？','先辈','迷宫'];
+  function reportCard(m){
+    var items=(m&&m.score&&m.score.items)||[], out=[], ev=[], clock=[];
+    try{ var d=m.id&&$imports.RunRecords.replay(m.id); if(d){ ev=d.events||[]; clock=d.clock||[]; } }catch(e){}
+    function at(t){ var k=null; clock.forEach(function(c){ if(c[0]<=t) k=c; }); return k?(0,$imports.fmtClock)(k[2]):''; }
+    function find(re){ return items.filter(function(it){ return re.test(it.text)&&!REPORT_SECRET.some(function(w){ return it.text.indexOf(w)>=0; }); }); }
+    var an=find(/^化解「/)[0];
+    if(an){ var nm=an.text.replace(/^化解「|」$/g,''), e=ev.filter(function(x){ return x[1]==='anomaly'&&x[2].indexOf(nm)>=0; })[0], t=e?at(e[0]):'';
+      out.push('该生'+(t?' '+t+' ':'')+'在「'+nm+'」里没有回头。'); }
+    var insp=find(/^学生会检查 · 在教室/)[0];
+    if(insp) out.push((insp.n||1)>1?'该生 '+(insp.n||1)+' 次检查都在座位上。':'该生检查的时候在座位上。');
+    else if(find(/^学生会检查 · 缺席/)[0]) out.push('检查的时候，该生的座位是空的。');
+    var hide=find(/躲在柜子里躲过/)[0];
+    if(hide) out.push((hide.n||1)>1?'该生在柜子里待了很久，不止一次。':'该生在柜子里待了很久。');
+    if(find(/电梯门在它面前合上/)[0]) out.push('该生关电梯门的手很快。');
+    if(find(/挡下一次$|^预知梦惊醒/)[0]) out.push('该生有一次差点没有回来。');
+    if(!out.length) out.push('该生第 '+(m.day||1)+' 天离开了学校。没有人看见是怎么走的。');
+    return out.filter(function(t){ return !REPORT_SECRET.some(function(w){ return t.indexOf(w)>=0; }); }).slice(0,3);
+  }
   function section(title,html){ return '<section class="rssec"><h4>'+title+'</h4>'+html+'</section>'; }
   function body(m){
     var out=[], cats={};
@@ -49,6 +70,7 @@ var ResultsUI=(function(){
     }).join('');
     var mult=m.score.mult>1?'<p class="rsnote">梦魇难度：合计 '+m.score.sum+' × '+m.score.mult+' = '+m.score.total+'</p>':'';
     out.push(section('积分 '+m.score.total,rows+mult));
+    out.push(section('成绩单','<div class="rsreport"><p>'+reportCard(m).map(esc).join('</p><p>')+'</p><i>—— 班主任</i></div>'));
     out.push(section('探索度 '+m.explore.pct+'%','<p>到过的地点 '+m.explore.place+'% · 楼层草图 '+m.explore.sketch+'% · 线索 '+m.explore.clue+'%</p>'));
     var ach=(m.ach&&m.ach.run||[]).map(function(id){ var a=$imports.AchievementRules.get(id); if(!a) return '';
       var fresh=(m.ach.newly||[]).indexOf(id)>=0; return '<span class="t-'+a.t+(fresh?' new':'')+'">'+$imports.ACH_TIERS[a.t].name+' · '+esc(a.n)+(fresh?' · 新':'')+'</span>'; }).join('');
@@ -105,7 +127,7 @@ var ResultsUI=(function(){
     c.el.insertBefore(p,c.el.querySelector('button'));
   },{owner:'run-record'});
   GameModules.on('boundary',function(reason){ if(reason==='menu') close(); },{owner:'run-record'});
-  return {mount:mount,open:open,close:close,paintExplore:paintExplore,body:body};
+  return {mount:mount,open:open,close:close,paintExplore:paintExplore,body:body,reportCard:reportCard,REPORT_SECRET:REPORT_SECRET};
 })();
 
 /* @module-exports */

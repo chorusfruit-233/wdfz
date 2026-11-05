@@ -491,3 +491,7 @@ body:not(.cut) #opcap{display:none}
 @media(max-height:520px) and (orientation:landscape){body.touch .elevator-controls{right:calc(136px + env(safe-area-inset-right));bottom:calc(58px + env(safe-area-inset-bottom));}}
 
 .broadcast-cut-caption{position:fixed;z-index:65;left:8vw;right:8vw;bottom:max(12vh,56px);margin:0;text-align:center;white-space:pre-line;color:#e7e0cd;font:16px/1.7 var(--ui-serif);text-shadow:0 2px 5px #000;pointer-events:none}
+/* 成绩单（创意提案 C7） */
+.rsreport{font-family:"Noto Serif SC",serif;line-height:1.9;padding:4px 2px}
+.rsreport p{margin:0}
+.rsreport i{display:block;text-align:right;opacity:.7;font-style:normal}

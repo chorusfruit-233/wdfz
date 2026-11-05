@@ -10,8 +10,8 @@ var RUNLOG_KEY='wdfz3d_runlog_cur';
 var RUNLOG_MAX_EVENTS=600;
 
 var RunLog=(function(){
-  var L=blank(), acc=0, saveAcc=0, clockAcc=0, last=null, achSeen=0;
-  function blank(){ return {v:1,run:'',scenes:[],samples:[],clock:[],events:[],start:Date.now(),partial:0}; }
+  var L=blank(), acc=0, saveAcc=0, clockAcc=0, patAcc=0, last=null, achSeen=0;
+  function blank(){ return {v:1,run:'',scenes:[],samples:[],pat:[],clock:[],events:[],start:Date.now(),partial:0}; }
   function now(){ return typeof $imports.Mechanics!=='undefined'?$imports.Mechanics.activePlaySeconds:0; }
   function sceneId(){ return $imports.S.mode==='in'?$imports.S.room:'out'; }
   function sceneIdx(id){ var i=L.scenes.indexOf(id); if(i<0){ L.scenes.push(id); i=L.scenes.length-1; } return i; }
@@ -21,6 +21,15 @@ var RunLog=(function(){
     var a=((Math.round($imports.S.ang/(Math.PI*2)*64)%64)+64)%64, p=last;
     if(!force&&p&&p[1]===sc&&Math.abs(p[2]-x)<2&&Math.abs(p[3]-y)<2&&Math.min(Math.abs(p[4]-a),64-Math.abs(p[4]-a))<2) return;
     last=[t,sc,x,y,a]; L.samples.push(last);
+  }
+  /* 巡察者的位置（创意提案 C8）：每秒一个点，只在它和玩家在同一栋楼（同一片室外）时记；游戏里不显示，通关后的回放和足迹图里才能打开 */
+  function building(id){ if(!id||id==='out') return 'out'; var R=$imports.INTERIORS[id]; return R?(R.host||id):id; }
+  function patPoint(){
+    if(typeof $imports.PAT==='undefined'||$imports.PAT.state!=='walk'||!$imports.PAT.room) return;
+    var pr=$imports.PAT.room; if(building(pr)!==building(sceneId())) return;
+    var R=$imports.INTERIORS[pr]; if(R&&R.noMap) return;
+    if(L.pat.length>=7200) L.pat.shift();
+    L.pat.push([Math.round(now()*10),sceneIdx(pr),Math.round($imports.PAT.x/2),Math.round($imports.PAT.y/2)]);
   }
   /* 事件超出上限时，先丢进出场景这类次要的 */
   function trim(){
@@ -33,7 +42,7 @@ var RunLog=(function(){
     L.events.push([Math.round(now()*10),String(kind),String(text),pts|0,sceneIdx(sceneId()),Math.round($imports.S.x/2),Math.round($imports.S.y/2)]);
   }
   function pack(){
-    return {v:1,run:L.run,scenes:L.scenes.slice(),track:$imports.RunTrack.encode(L.samples),clock:L.clock.slice(),events:L.events.slice(),start:L.start,partial:L.partial,
+    return {v:1,run:L.run,scenes:L.scenes.slice(),track:$imports.RunTrack.encode(L.samples),pat:L.pat.slice(),clock:L.clock.slice(),events:L.events.slice(),start:L.start,partial:L.partial,
       sketch:(typeof $imports.RT!=='undefined'&&$imports.RT.exploration)?JSON.parse(JSON.stringify($imports.RT.exploration)):{}};
   }
   function persist(){ if(!L.run) return; try{ $imports.GameStorage.write(RUNLOG_KEY,JSON.stringify(pack())); }catch(e){} }
@@ -43,7 +52,7 @@ var RunLog=(function(){
       var r=$imports.GameStorage.read(RUNLOG_KEY), d=r&&r.value?JSON.parse(r.value):null;
       if(d&&d.v===1&&d.run===runId&&runId){
         L.run=d.run; L.scenes=Array.isArray(d.scenes)?d.scenes:[]; L.samples=$imports.RunTrack.decode(d.track);
-        L.clock=Array.isArray(d.clock)?d.clock:[]; L.events=Array.isArray(d.events)?d.events:[]; L.start=+d.start||Date.now(); L.partial=d.partial?1:0;
+        L.pat=Array.isArray(d.pat)?d.pat:[]; L.clock=Array.isArray(d.clock)?d.clock:[]; L.events=Array.isArray(d.events)?d.events:[]; L.start=+d.start||Date.now(); L.partial=d.partial?1:0;
         last=L.samples.length?L.samples[L.samples.length-1]:null;
         return;
       }
@@ -54,8 +63,9 @@ var RunLog=(function(){
   function tick(dt){
     if(typeof $imports.S==='undefined'||$imports.S.screen!=='play'||$imports.S.dead) return;
     if(!L.run){ var id=(typeof $imports.RunScore!=='undefined')?$imports.RunScore.run():''; restore(id); }
-    acc+=dt; saveAcc+=dt; clockAcc+=dt;
+    acc+=dt; saveAcc+=dt; clockAcc+=dt; patAcc+=dt;
     if(acc>=0.5){ acc=0; point(false); }
+    if(patAcc>=1){ patAcc=0; patPoint(); }
     if(clockAcc>=10){ clockAcc=0; L.clock.push([Math.round(now()*10),$imports.S.day,Math.round($imports.S.tsec)]); }
     try{
       var fresh=(typeof $imports.Achievements!=='undefined')?$imports.Achievements.run().fresh:[];
