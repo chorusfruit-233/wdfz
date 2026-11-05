@@ -67,6 +67,7 @@ var AchievementRules=(function(){
     A('n.chalk','n','once','记号','用粉笔画下一个记号。','chalk'),
     A('n.special','n','once','特别的一天','遇上一次校庆日或占课。','specialDay'),
     A('n.broadcast','n','once','核对','发现假广播并通过播音记录本核对。','broadcast',function(f){return f.what==='verified'&&f.real===false;},{needs:['broadcast']}),
+    A('n.midnight','n','once','明天再来','熄灯后在食堂亮着的窗口吃了一碗。','midnightMeal',T,{needs:['campus-tales']}),
     /* ---------- 精英 ---------- */
     A('e.end_dismissal','e','once','《放学》','达成《放学》。','ending',function(f){return legit(f)&&f.id==='dismissal';},{needs:['broadcast']}),
     A('e.end_car','e','once','《闸门》','达成《闸门》。','ending',function(f){ return legit(f)&&f.id==='car'; }),
@@ -132,6 +133,7 @@ var AchievementRules=(function(){
   /* 解锁后显示的一句话：只写发生了什么 */
   var MEMO={
     'n.broadcast':'记录本里没有刚才那一条。喇叭里还在啸叫。',
+    'n.midnight':'那一碗是热的。打饭的人一直没有回头。',
     'e.end_dismissal':'长铃还在响。我和同学一起走出了北门。',
     'p.five_routes':'最后一次，学校以为我只是放学回家。',
     'n.opening':'粉笔灰停在半空。我趴到桌上，又抬起了头。',

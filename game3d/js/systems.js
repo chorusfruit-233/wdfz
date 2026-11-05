@@ -218,7 +218,7 @@ function ttTick(dt,nw){
   if(typeof $imports.Inspection!=='undefined'&&$imports.Inspection.active())return;
   if($imports.S.seated&&nw==='教室') $imports.PlayerStats.changeAssimilation(TT_CFG.seat*dt,'classroom');
   else if(inDorm()&&$imports.S.tsec>=$imports.EVENING) $imports.PlayerStats.changeAssimilation(TT_CFG.dorm*dt,'dorm');
-  else $imports.PlayerStats.changeAssimilation(-TT_CFG.decay*dt,'decay',{min:0});
+  else if(!($imports.RT.midnightMeal&&gameClock()<$imports.RT.midnightMeal.until)) $imports.PlayerStats.changeAssimilation(-TT_CFG.decay*dt,'decay',{min:0});   /* 午夜食堂吃过一碗：到天亮前不回落 */
   $imports.PlayerStats.setAssimilation($imports.S.tt,'settle',{min:0,max:100});
   if($imports.S.tt>=100){
     resolveAssimilation();return;

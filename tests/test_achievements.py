@@ -29,10 +29,10 @@ class AchievementTest(BrowserCase):
           return {n:L.length,t,ids:new Set(L.map(a=>a.id)).size,pub:AchievementRules.publicList().length,
             secretOk:L.every(a=>(a.t==='h')===!!a.secret),texts:L.every(a=>a.n&&a.how&&a.m),
             keys:[...new Set(L.flatMap(a=>Object.keys(a)))].sort()}}""")
-        self.assertEqual(r['n'], 61)                                  # M6 新增核对、《放学》与五条路
-        self.assertEqual(r['t'], {'n': 21, 'e': 19, 'p': 10, 'h': 11})
-        self.assertEqual(r['ids'], 61)
-        self.assertEqual(r['pub'], 50)
+        self.assertEqual(r['n'], 62)                                  # M6 新增核对、《放学》与五条路；C10 明天再来
+        self.assertEqual(r['t'], {'n': 22, 'e': 19, 'p': 10, 'h': 11})
+        self.assertEqual(r['ids'], 62)
+        self.assertEqual(r['pub'], 51)
         self.assertTrue(r['secretOk'] and r['texts'])
         # 只有判定与显示用的字段：没有任何奖励、加成之类的东西
         self.assertEqual(r['keys'], ['goal', 'how', 'id', 'm', 'n', 'needs', 'on', 'scope', 'score', 'secret', 'set', 't', 'test'])
@@ -142,8 +142,8 @@ class AchievementTest(BrowserCase):
             how:AchievementRules.list().filter(a=>html.indexOf(a.how)>=0).map(a=>a.id),
             hidden:AchievementRules.list().filter(a=>a.secret&&html.indexOf(a.n)>=0).map(a=>a.id),
             locked:[...box.querySelectorAll('.accard:not(.got)')].every(c=>!c.querySelector('i')&&c.querySelector('small').textContent==='未达成')}}""")
-        self.assertEqual(r['count'], '已达成 0 / 50')
-        self.assertEqual(r['cards'], 50)
+        self.assertEqual(r['count'], '已达成 0 / 51')
+        self.assertEqual(r['cards'], 51)
         self.assertEqual(r['tabs'], ['全部', '普通', '精英', '史诗'])
         self.assertEqual(r['how'], [])                             # 达成方法一条都不写
         self.assertEqual(r['hidden'], [])                          # 隐藏成就没解锁不在 DOM 里
@@ -154,7 +154,7 @@ class AchievementTest(BrowserCase):
         page.locator('#btnach').click()
         r = page.evaluate("""()=>({count:document.getElementById('acCount').textContent,tabs:[...document.querySelectorAll('#actabs button')].map(b=>b.textContent),
           text:document.querySelector('#accards [data-id="h.cola"] i').textContent,how:AchievementRules.get('h.cola').how})""")
-        self.assertEqual(r['count'], '已达成 1 / 50 · 隐藏 1')
+        self.assertEqual(r['count'], '已达成 1 / 51 · 隐藏 1')
         self.assertIn('隐藏', r['tabs'])
         self.assertNotEqual(r['text'], r['how'])
 
