@@ -53,7 +53,8 @@ class LiftCrowdTest(BrowserCase):
         for room in ['teach2', 'lab3']:
             page.evaluate(f"doEnterRoom('{room}')")
             page.wait_for_function(f"GLR.roomMesh&&GLR.roomMesh.userData.roomData===INTERIORS['{room}']")
-            n = page.evaluate("()=>{let n=0,t='';GLR.roomMesh.traverse(o=>{if(o.userData&&o.userData.liftNotice){n++;t=o.userData.text;}});return [n,t]}")
+            # 只数这一层自己的：连廊对面那栋楼的预览（campus-link-preview）里有它自己的电梯告示
+            n = page.evaluate("()=>{let n=0,t='';const own=o=>{for(let p=o;p&&p!==GLR.roomMesh;p=p.parent)if(/^campus-link-preview/.test(p.name||''))return false;return true;};GLR.roomMesh.traverse(o=>{if(o.userData&&o.userData.liftNotice&&own(o)){n++;t=o.userData.text;}});return [n,t]}")
             self.assertEqual(n, [1, '超载时，请最后进入的乘客离开。'], room)
         # 运行中的轿厢房间里也有
         page.evaluate("Elevator.board('teach',2);Elevator.press(4)")

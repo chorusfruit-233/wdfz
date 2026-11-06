@@ -8,7 +8,7 @@
   Object.defineProperty(window,'localStorage',{value:memory(),configurable:true});
   Object.defineProperty(window,'sessionStorage',{value:memory(),configurable:true});
   localStorage.setItem('wdfz_pro','1');
-  localStorage.setItem('zw3d_set',JSON.stringify({q:0,renderer:options.backend==='webgl'?'webgl':'auto',vol:0,amb:0,grain:0,shake:0,distortion:0,reduceFlash:1}));
+  localStorage.setItem('zw3d_set',JSON.stringify({q:0,renderer:options.backend==='webgl'?'webgl':'auto',rv:1,vol:0,amb:0,grain:0,shake:0,distortion:0,reduceFlash:1}));
   // Equalize output-canvas MSAA. Scene render-target MSAA still follows the game quality.
   var context=HTMLCanvasElement.prototype.getContext;
   HTMLCanvasElement.prototype.getContext=function(type,attributes){

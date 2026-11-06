@@ -18,7 +18,7 @@ class ClassroomLayoutTest(BrowserCase):
               var doors=L.doors(i);
               return ok&&doors.length===2&&doors.every(d=>d[1]===r1+1&&R.grid[d[1]][d[0]]==='='&&R.grid[d[1]-1][d[0]]==='.'&&R.grid[d[1]+1][d[0]]==='.')
                 &&doors[1][0]-doors[0][0]===8;})
-              &&R.grid.slice(1,r0).every(row=>row.every(ch=>ch==='#'));})""")
+              &&R.grid.slice(1,r0).every(row=>row.every((ch,c)=>ch==='#'||(id==='teach2'&&c>=5&&c<=7)));})""")   # 教学楼二楼西头 5–7 列是通连廊②的过道（连续校园 A2）
 
     def test_wall_side_desks_are_reached_from_the_aisle(self):
         page = self.page()

@@ -38,17 +38,16 @@ var Atmos=(function(){
     return false;
   }
   function floorRoom(){ var R=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null; return R&&(R.host==='teach'||R.host==='lab')&&R.floor>=1&&R.floor<=5&&!R.stairwell?R:null; }
-  /* 当前所在格：教学楼的教室按列分成四间（和 ClassroomLayout 的分法一致：被 # 隔开的列段） */
+  /* 当前所在格：教学楼的教室按列分成四间（直接用 ClassroomLayout 的分法） */
   function cell(R){ return {c:Math.floor(($imports.S.x-R.ox)/R.tw), r:Math.floor(($imports.S.y-R.oy)/R.th)}; }
   function classAt(R,c,r){
     if(!R||R.host!=='teach') return null;
     var row=R.grid[r]; if(!row) return null;
     var ch=row[c]; if(ch==='#'||ch==='='||ch===undefined) return null;
     /* 门格那一排（=）以上是教室 */
-    var doorRow=-1; for(var y=0;y<R.rows;y++){ if(R.grid[y].indexOf('=')>=0){ doorRow=y; break; } }
-    if(doorRow<0||r>=doorRow) return null;
-    var k=0; for(var x=0;x<=c;x++){ if(row[x]==='#'&&x>0&&row[x-1]!=='#'&&x<c) k++; }
-    return R.id+':'+k;
+    /* 按 ClassroomLayout 的教室列范围认（以前数「被 # 隔开的列段」：教学楼二楼西头为连廊②打通的过道被当成了第 0 间，后面全错一位） */
+    var k=$imports.ClassroomLayout.classAt(c,r);
+    return k>=0?R.id+':'+k:null;
   }
   function inCorridor(R){
     var p=cell(R), doorRow=-1;

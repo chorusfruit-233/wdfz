@@ -66,7 +66,7 @@ class BrowserCase(unittest.TestCase):
         self.contexts.append(context)
         context.add_init_script("""
             localStorage.setItem('wdfz_pro','1');
-            localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0,renderer:%s}));
+            localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0,renderer:%s,rv:1}));   // rv:1：设置版本，没有它的「自动」会按旧设置迁移成 WebGL
         """ % json.dumps(renderer))
         if hybrid:
             context.add_init_script("""
