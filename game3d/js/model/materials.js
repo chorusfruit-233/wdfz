@@ -78,7 +78,7 @@ function texPackWant(){
   var res=texPackRes();
   if(TEXP.packs[res]||TEXP.loading[res]||texPackBest()>=res||typeof document==='undefined') return;
   TEXP.loading[res]=1;
-  var s=document.createElement('script'); s.src=$imports.ASSETS_BASE+'textures_'+res+'.js'; s.async=true;
+  var s=document.createElement('script'); s.src=GameModules.src($imports.ASSETS_BASE+'textures_'+res+'.js'); s.async=true;
   s.onerror=function(){ delete TEXP.loading[res]; };
   document.head.appendChild(s);
 }
@@ -305,7 +305,7 @@ function matUV(key){ var d=MAT_DEF[key]; return d?d[1]:2.4; }
   if(typeof document==='undefined'||!document.write) return;
   var res=$imports.Quality.get((0,$imports.bootQuality)()).texture>512?1024:512;
   TEXP.loading[res]=1;
-  document.write('<script src="'+$imports.ASSETS_BASE+'textures_'+res+'.js" onerror="texBootFinished('+res+')" onload="texBootFinished('+res+')"><\/script>');
+  document.write('<script src="'+GameModules.src($imports.ASSETS_BASE+'textures_'+res+'.js')+'" onerror="texBootFinished('+res+')" onload="texBootFinished('+res+')"><\/script>');
 })();
 
 /* @module-exports */

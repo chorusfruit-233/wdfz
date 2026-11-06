@@ -28,7 +28,7 @@ var RenderDevice=(function(){
     if(library)return Promise.resolve(library);
     if(loading)return loading;
     loading=new Promise(function(resolve,reject){
-      var script=document.createElement('script');script.src=new URL('game3d/lib/three-webgpu.min.js',document.baseURI).href;
+      var script=document.createElement('script');var gpuSrc=GameModules.src('game3d/lib/three-webgpu.min.js');script.src=gpuSrc.indexOf('blob:')===0?gpuSrc:new URL(gpuSrc,document.baseURI).href;   /* 单文件版是 blob 地址 */
       script.onload=function(){
         var lib=window.WdfzWebGPU;
         if(!lib||!lib.WebGPURenderer){reject(new Error('gpu-library-invalid'));return;}
