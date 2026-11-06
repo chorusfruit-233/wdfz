@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
+import android.util.Log;
+import android.animation.ValueAnimator;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
@@ -44,7 +47,11 @@ import org.mozilla.geckoview.GeckoView;
  *   点一下屏幕：签名／黑场直接跳到门；门那段页面已画出来就直接进游戏
  * · 横屏：默认横屏（左右都行）；游戏设置关掉「自动横屏」时，页面请求本机服务 /__app/orientation 改成跟随系统。
  *   App 自己记住页面上次的选择（SharedPreferences），启动时、回到前台时都按它重新锁一次，不只靠 Manifest
- * · 声音：允许页面自动播放（主菜单一打开就有 BGM）
+ * · 声音：允许页面自动播放（主菜单一打开就有 BGM）：GeckoView 配置文件把 media.autoplay.default 设成允许，PermissionDelegate 也放行；
+ *   启动层（签名 → 黑场 → 门）放 App 自己的原生音乐 res/raw/splash_music.wav，游戏画面出来时渐弱，接上游戏的 BGM；
+ *   页面通过 /__app/audio 告诉 App 音乐开关和音量，App 记住，下次启动照这个放
+ * · 设备诊断：页面的报告和报错通过 /__app/log 写进系统日志（标签 WDFZ）；启动参数 --es query diag=1 时打开 GeckoView 控制台输出，
+ *   页面自动跑诊断路线（CI 的安卓模拟器用，tools/android_diag.sh）
  * · 页面地址带 ?app=android：游戏据此隐藏「进入全屏」按钮（App 本来就全屏）
  */
 public class MainActivity extends Activity {
@@ -68,6 +75,8 @@ public class MainActivity extends Activity {
     private int phase;                                                 // 0 签名  1 黑场  2 门
     private boolean splashGone, painted;
     private boolean landscape = true;                                  // 游戏设置「自动横屏」（默认开）
+    private MediaPlayer music;
+    private String extraQuery = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,11 +89,29 @@ public class MainActivity extends Activity {
         immersive();
         startSplash();
 
-        server = new LocalServer(getAssets(), want -> runOnUiThread(() -> {
-            if (want != landscape) prefs().edit().putBoolean("landscape", want).apply();
-            landscape = want;
-            applyOrientation();
-        }));
+        String q = getIntent() != null ? getIntent().getStringExtra("query") : null;
+        if (q != null && q.matches("[A-Za-z0-9=&_.-]{1,200}")) extraQuery = "&" + q;
+        startMusic();
+        server = new LocalServer(getAssets(), new LocalServer.Listener() {
+            @Override
+            public void onOrientation(boolean want) {
+                runOnUiThread(() -> {
+                    if (want != landscape) prefs().edit().putBoolean("landscape", want).apply();
+                    landscape = want;
+                    applyOrientation();
+                });
+            }
+
+            @Override
+            public void onAudio(boolean on, int volume) {
+                prefs().edit().putBoolean("music", on).putInt("volume", volume).apply();
+            }
+
+            @Override
+            public void onLog(String message) {
+                for (int i = 0; i < message.length(); i += 3000) Log.i("WDFZ", message.substring(i, Math.min(message.length(), i + 3000)));
+            }
+        });
         if (!server.start()) {
             Toast.makeText(this, R.string.server_failed, Toast.LENGTH_LONG).show();
             finish();
@@ -94,6 +121,8 @@ public class MainActivity extends Activity {
             GeckoRuntimeSettings settings = new GeckoRuntimeSettings.Builder()
                     .javaScriptEnabled(true)
                     .remoteDebuggingEnabled(false)
+                    .consoleOutput(extraQuery.contains("diag=1"))      // 诊断时页面的 console 进系统日志（标签 GeckoConsole）
+                    .configFilePath(writeGeckoConfig())
                     .build();
             runtime = GeckoRuntime.create(getApplicationContext(), settings);
         }
@@ -113,7 +142,59 @@ public class MainActivity extends Activity {
         session.setPermissionDelegate(new Permissions());
         session.open(runtime);
         view.setSession(session);
-        session.loadUri(server.url() + "?app=android");
+        session.loadUri(server.url() + "?app=android" + extraQuery);
+    }
+
+    /* GeckoView 的配置文件：允许页面自动出声（Web Audio 和媒体），不用先等一下点击 */
+    private String writeGeckoConfig() {
+        java.io.File f = new java.io.File(getFilesDir(), "geckoview-config.yaml");
+        String yaml = "prefs:\n"
+                + "  media.autoplay.default: 0\n"
+                + "  media.autoplay.blocking_policy: 0\n"
+                + "  media.autoplay.block-webaudio: false\n"
+                + "  media.autoplay.block-event.enabled: false\n";
+        try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
+            out.write(yaml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (java.io.IOException e) {
+            Log.w("WDFZ", "gecko config: " + e);
+        }
+        return f.getAbsolutePath();
+    }
+
+    /* 启动层的原生音乐：签名开始就有，跟着签名 → 黑场 → 门的时间轴；游戏页面出来时渐弱 */
+    private void startMusic() {
+        SharedPreferences p = prefs();
+        if (!p.getBoolean("music", true)) return;
+        float v = Math.max(0f, Math.min(1f, p.getInt("volume", 70) / 100f));
+        if (v <= 0f) return;
+        try {
+            music = MediaPlayer.create(this, R.raw.splash_music);
+            if (music == null) return;
+            music.setVolume(v, v);
+            music.setOnCompletionListener(mp -> stopMusic(0));
+            music.start();
+        } catch (Exception e) {
+            Log.w("WDFZ", "splash music: " + e);
+            music = null;
+        }
+    }
+
+    private void stopMusic(long fadeMs) {
+        final MediaPlayer mp = music;
+        if (mp == null) return;
+        music = null;
+        if (fadeMs <= 0) { try { mp.release(); } catch (Exception ignored) { } return; }
+        final float v0 = Math.max(0f, Math.min(1f, prefs().getInt("volume", 70) / 100f));
+        ValueAnimator a = ValueAnimator.ofFloat(1f, 0f);
+        a.setDuration(fadeMs);
+        a.addUpdateListener(an -> { try { float k = (float) an.getAnimatedValue(); mp.setVolume(v0 * k, v0 * k); } catch (Exception ignored) { } });
+        a.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                try { mp.stop(); mp.release(); } catch (Exception ignored) { }
+            }
+        });
+        a.start();
     }
 
     private SharedPreferences prefs() {
@@ -267,6 +348,7 @@ public class MainActivity extends Activity {
             }
             splashGone = true;
             ui.removeCallbacksAndMessages(null);
+            stopMusic(2200);                                             // 渐弱，接上游戏自己的 BGM
             if (sign != null) sign.skip();
             splashBar.animate().scaleX(1f).setDuration(200).start();
             splash.animate().alpha(0f).setStartDelay(120).setDuration(SPLASH_FADE_MS)
@@ -352,6 +434,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (music != null) try { music.pause(); } catch (Exception ignored) { }
         if (session != null) session.setActive(false);                   // 页面收到「切到后台」：游戏自己会暂停
     }
 
@@ -359,6 +442,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (session != null) session.setActive(true);
+        if (music != null && !splashGone) try { music.start(); } catch (Exception ignored) { }
         applyOrientation();
         immersive();
     }
@@ -366,6 +450,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         ui.removeCallbacksAndMessages(null);
+        stopMusic(0);
         if (session != null) session.close();
         if (server != null) server.stop();
         super.onDestroy();

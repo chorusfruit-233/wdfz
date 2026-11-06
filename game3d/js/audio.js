@@ -465,7 +465,8 @@ var SFX=(function(){
   return {
     moonlight: moonlight,
     available:function(){return !!(ac&&ac.state==='running');},
-    bgmLevel:function(){ return L?L.padG.gain.value:0; },                       /* 只读：铺底现在的音量（测试主菜单 BGM 用） */
+    bgmLevel:function(){ return L?L.padG.gain.value:0; },
+    state:function(){ return ac?ac.state:'none'; },                               /* 只读：AudioContext 的状态（设备诊断用） */                       /* 只读：铺底现在的音量（测试主菜单 BGM 用） */
     bodySound:function(kind,k){return P(kind==='chase'?'threat.heartPat':kind==='muffled'?'distant.tinnitus':kind==='breath'?'threat.breath':'threat.heartLow',{k:k||.5});},
     resume:function(){ ctx(); },
     ambient:function(){ var a=ctx(); if(!a) return; try{ buildLayers(); }catch(e){} bgOn=true; },

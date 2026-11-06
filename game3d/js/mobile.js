@@ -7,6 +7,14 @@
 var APP_SHELL=(function(){ try{ return /[?&]app=android(?:&|$)/.test(location.search)?'android':''; }catch(e){ return ''; } })();
 /* 自动横屏（设置「操作」，默认开）：安卓版发给 App 内的本机服务（/__app/orientation），由原生锁成横屏或跟随系统；
    网页版只在手机上、全屏时试着锁（浏览器不支持就算了） */
+/* 安卓版：把音乐开关和音量告诉 App，下次打开时签名动画的音乐照这个来（App 自己记住） */
+var APP_AUDIO_SENT='';
+function applyAppAudio(){
+  if(APP_SHELL!=='android') return;
+  var S=$imports.SET||{}, q='music='+(S.amb===0||S.amb===false?0:1)+'&vol='+Math.round(+S.vol||0);
+  if(q===APP_AUDIO_SENT) return; APP_AUDIO_SENT=q;
+  try{ fetch('/__app/audio?'+q,{cache:'no-store'}).catch(function(){}); }catch(e){}
+}
 function applyOrientation(){
   var want=!($imports.SET&&$imports.SET.autoLand===0);
   if(APP_SHELL==='android'){
@@ -116,6 +124,7 @@ function initMobileShell(){
   syncFullscreenUI();
   if(APP_SHELL) document.body.classList.add('app-'+APP_SHELL);
   applyOrientation();                                           /* 安卓版：按设置告诉 App 锁横屏还是跟随系统 */
+  applyAppAudio();
 }
 function updateTouchUI(){
   var el=document.getElementById('touch');if(!el)return;
@@ -203,6 +212,8 @@ var TouchLayout={rects:{},
 /* @module-exports */
 GameModules.publish("game3d/js/mobile.js",{
 "APP_SHELL":{get:function(){return APP_SHELL;},set:function($value){APP_SHELL=$value;}},
+"APP_AUDIO_SENT":{get:function(){return APP_AUDIO_SENT;},set:function($value){APP_AUDIO_SENT=$value;}},
+"applyAppAudio":{get:function(){return applyAppAudio;},set:function($value){applyAppAudio=$value;}},
 "applyOrientation":{get:function(){return applyOrientation;},set:function($value){applyOrientation=$value;}},
 "IS_TOUCH":{get:function(){return IS_TOUCH;},set:function($value){IS_TOUCH=$value;}},
 "FULLSCREEN":{get:function(){return FULLSCREEN;},set:function($value){FULLSCREEN=$value;}},

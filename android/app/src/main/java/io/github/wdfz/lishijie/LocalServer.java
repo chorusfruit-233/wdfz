@@ -19,7 +19,10 @@ import java.util.concurrent.Executors;
  * 只监听 127.0.0.1 的小 HTTP 服务：把 APK 里的单文件页面（assets/wdfz.html，由 tools/build_single_html.cjs 生成）交给 GeckoView。
  * 用固定端口，页面的来源（http://127.0.0.1:端口）每次都一样，浏览器存储（存档、设置、成就、档案）才能留住；
  * 端口被占用时依次试后面几个（换了端口，存档会是另一份）。
- * 另有一个给页面用的小接口：GET /__app/orientation?mode=landscape|any（游戏设置「自动横屏」），回 204。
+ * 另有几个给页面用的小接口，都回 204：
+ *   GET /__app/orientation?mode=landscape|any  游戏设置「自动横屏」
+ *   GET /__app/audio?music=0|1&vol=0..100     音乐开关和音量（下次启动时签名动画的音乐照这个来）
+ *   GET /__app/log?m=…                        设备诊断：页面的报告和报错写进系统日志（标签 WDFZ）
  */
 final class LocalServer implements Runnable {
     static final int BASE_PORT = 47831;
@@ -27,6 +30,10 @@ final class LocalServer implements Runnable {
 
     interface Listener {
         void onOrientation(boolean landscape);
+
+        void onAudio(boolean music, int volume);
+
+        void onLog(String message);
     }
 
     private final AssetManager assets;
@@ -90,7 +97,7 @@ final class LocalServer implements Runnable {
         while ((c = in.read()) != -1) {
             if (c == '\n') break;
             if (c != '\r') sb.append((char) c);
-            if (sb.length() > 8192) throw new IOException("header too long");
+            if (sb.length() > 32768) throw new IOException("header too long");
         }
         return (c == -1 && sb.length() == 0) ? null : sb.toString();
     }
@@ -121,6 +128,20 @@ final class LocalServer implements Runnable {
             } else if ("/__app/orientation".equals(path)) {
                 String mode = param(query, "mode");
                 if (listener != null && mode != null) listener.onOrientation("landscape".equals(mode));
+                status(out, "204 No Content", "text/plain; charset=utf-8", 0);
+            } else if ("/__app/audio".equals(path)) {
+                String music = param(query, "music"), vol = param(query, "vol");
+                if (listener != null && music != null) {
+                    int v = 70;
+                    try { v = Math.max(0, Math.min(100, Integer.parseInt(vol))); } catch (Exception ignored) { }
+                    listener.onAudio(!"0".equals(music), v);
+                }
+                status(out, "204 No Content", "text/plain; charset=utf-8", 0);
+            } else if ("/__app/log".equals(path)) {
+                String m = param(query, "m");
+                if (listener != null && m != null) {
+                    try { listener.onLog(java.net.URLDecoder.decode(m, "UTF-8")); } catch (Exception e) { listener.onLog(m); }
+                }
                 status(out, "204 No Content", "text/plain; charset=utf-8", 0);
             } else if ("/favicon.ico".equals(path)) {
                 status(out, "204 No Content", "text/plain; charset=utf-8", 0);
