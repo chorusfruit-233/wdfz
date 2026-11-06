@@ -20,10 +20,13 @@ function stairwellRecipe(K,s){
       if(d<0){var t=za;za=zb;zb=t;t=sa;sa=sb;sb=t;}
       K.prism('plaster',0,0,0,[[za,sa],[zb,sb],[zb,h-.03],[za,h-.03]],p.x1-p.x0,0x8c8f88,.95);
     }
-    /* 两侧的侧梁：一整块斜板，盖住每一级的侧面，上沿高出斜线 6 厘米 */
+    /* 两侧的侧梁：顺着斜线的一条板，盖住每一级的侧面，上沿高出斜线 6 厘米；按级分段（连成一条，包围盒贴着梁，扶手不算穿模） */
     [p.x0,p.x1].forEach(function(x){
       var q=K.sub(x,0,-Math.PI/2,0);
-      K.prism('plaster',0,0,0,[[p.z0,p.h0-T],[p.z1,p.h1-T],[p.z1,p.h1+.06],[p.z0,p.h0+.06]],.05,0x80847c,.9);
+      for(var k=0;k<n;k++){
+        var a=p.z0+k*d,b=a+d,ha=$imports.StairGeometry.height(p,a),hb=$imports.StairGeometry.height(p,b);
+        K.prism('plaster',0,0,0,[[a,ha-T],[b,hb-T],[b,hb+.06],[a,ha+.06]],.05,0x80847c,.9);
+      }
       K.restore(q);
     });
     K.restore(o);
@@ -34,7 +37,7 @@ function stairwellRecipe(K,s){
     }
     [p.x0,p.x1].forEach(function(x){
       K.rod('metal',x,p.h0+.95,p.z0,x,p.h1+.95,p.z1,.035,.035,6,0x6a6c61,1);
-      for(var j=0;j<=6;j++){var z=p.z0+(p.z1-p.z0)*j/6,h=$imports.StairGeometry.height(p,z);K.rod('metal',x,h,z,x,h+.95,z,.018,.018,5,0x52594e,1);}
+      for(var j=0;j<=6;j++){var z=p.z0+(p.z1-p.z0)*j/6,h=$imports.StairGeometry.height(p,z);K.rod('metal',x,h+.06,z,x,h+.95,z,.018,.018,5,0x52594e,1);}   /* 立在侧梁上 */
     });
   });
   /* 一楼：楼梯底下铺满地面；第二段梯段下面（走不进去的那块）用一道墙封起来，像个楼梯底下的储物间 */
