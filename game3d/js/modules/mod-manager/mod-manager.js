@@ -105,6 +105,7 @@ var ModManager={
       '.mm-msg{min-height:1em;color:var(--ui-acc,#d8c48a)!important}.mm-err{margin:0;padding-left:16px;color:#e0857a;font-size:11px}'+
       '.mm-mods summary{cursor:pointer;margin:4px 0;color:var(--ui-dim,#bbb)}.mod-tools code{font-size:11px}'+
       '.dlcmenu{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,5,5,.72)}.dlcmenu[hidden]{display:none}'+
+      '.dlcbox .pt-row{display:flex;margin:10px 0 0}.dlcbox .pt-row button{flex:1;min-height:44px}.dlcbox .mm-file{margin-top:6px}'+
       '.dlcbox{width:min(560px,100%);max-height:calc(100dvh - 32px);overflow-y:auto}.dlcintro{font-size:12px;line-height:1.8;color:var(--ui-dim,#bbb)}.dlcintro a{color:var(--ui-acc,#d8c48a)}';
     document.head.appendChild(css);
     var pt=document.querySelector('.playtest-tools');
