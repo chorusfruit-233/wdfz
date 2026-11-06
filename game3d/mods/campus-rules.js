@@ -6,7 +6,7 @@
      R05 宿舍敲门：熄灯后在宿舍，门外敲三下、问「在吗？查寝。」——应声会死（rules_knock「门外有你的名字」）；不出声就过去了。
      R06 多出来的餐券：饭点在食堂，托盘上多一张餐券——收下扣 5 SAN；原样放回没事；饭点过后托盘收走了，后半句不成立。
      R10 借用名字：上课时有人点你的名字，不是老师的声音——答应扣 5 SAN；不答应没事（但这句话管不了学生会检查）。
-   · 记录：DLC 自己的记录存在本机（wdfz3d_rules_records_v1），不混进本体成就；本体成就照「启用 DLC 的局」规则处理。
+   · 记录：DLC 自己的模式成就（rules.*，带规则版本）存在本机（wdfz3d_rules_records_v1），不混进本体成就；本体成就照「启用 DLC 的局」规则处理。
    内部答案（真假）只写在计划和这份代码里，不进玩家 Wiki。 */
 GameModules.mod({
   id:'campus-rules',
@@ -63,7 +63,7 @@ GameModules.mod({
     function bundle(){ var b=S_().bundle; return BUNDLES[b]?b:'A'; }
     function inBundle(id){ var x=ruleById(id)||null, rid=x?id:((EVID.filter(function(e){ return e.id===id; })[0]||{}).rule); return !!rid&&BUNDLES[bundle()].indexOf(rid)>=0; }
     var st=null;
-    function fresh(){ return {on:0,v:2,bundle:'A',read:{},marks:{},knock:{},ticket:{},name:{},nameAt:null}; }
+    function fresh(){ return {on:0,v:2,bundle:'A',read:{},marks:{},knock:{},ticket:{},name:{},nameAt:null,tainted:0,run:{}}; }
     function S_(){ if(!st) st=fresh(); return st; }
     api.store({ save:function(){ return st; }, load:function(d){ st=d&&typeof d==='object'?Object.assign(fresh(),d):fresh(); if(!d||!d.bundle) st.bundle='A'; }, reset:function(){ st=fresh(); } });   /* 旧存档（1.0.0）没有组号：按 A 组 */
     api.on('newGame',function(){
@@ -73,7 +73,40 @@ GameModules.mod({
       RT.rulesMode={v:1,ver:'1.1.0',bundle:st.bundle};
     });
     function on(){ return !!(S_().on||(RT.rulesMode&&RT.rulesMode.v)); }
-    function rec(k){ try{ var r=JSON.parse(localStorage.getItem(REC_KEY)||'{}'); if(!r[k]){ r[k]=Date.now(); localStorage.setItem(REC_KEY,JSON.stringify(r)); toast('【规则怪谈】记录：'+({knock:'没有人答应',reply:'门外的声音',sources:'字写在哪里',ticket:'原样放回'}[k]||k)); } }catch(e){} }
+    /* ---------- 模式成就（计划第 11、15.2 节）：独立命名空间，存在 DLC 自己的记录里，每条带规则版本；只记录、不给加成 ---------- */
+    var ACH=[
+      {id:'rules.n.ticket',name:'原样放回',tier:'普通'},
+      {id:'rules.e.paper_return',name:'回信',tier:'精英'},
+      {id:'rules.e.clauses',name:'只信前半句',tier:'精英'},
+      {id:'rules.e.sources',name:'字写在哪里',tier:'精英'},
+      {id:'rules.e.knock',name:'没有人答应',tier:'精英'},
+      {id:'rules.p.survive',name:'读到最后',tier:'史诗'},
+      {id:'rules.h.reply',name:'门外的声音',tier:'隐藏',hidden:true}
+    ];
+    var OLD_KEYS={knock:'rules.e.knock',reply:'rules.h.reply',sources:'rules.e.sources',ticket:'rules.n.ticket'};   /* 1.0.0 的记录键 */
+    function records(){
+      var r={}; try{ r=JSON.parse(localStorage.getItem(REC_KEY)||'{}')||{}; }catch(e){ r={}; }
+      var moved=false;
+      Object.keys(OLD_KEYS).forEach(function(k){ if(r[k]!==undefined){ if(!r[OLD_KEYS[k]]) r[OLD_KEYS[k]]={at:+r[k]||Date.now(),ver:'1.0.0'}; delete r[k]; moved=true; } });
+      if(moved){ try{ localStorage.setItem(REC_KEY,JSON.stringify(r)); }catch(e){} }
+      return r;
+    }
+    /* 可信：不是调试局、不在档案馆回放里、除了本 DLC 没有别的 DLC／上传 Mod；一旦这一局不可信，就一直不可信（跟存档走） */
+    function trustedNow(){
+      if(typeof DEV!=='undefined'&&DEV.on) return false;
+      if(typeof Dev!=='undefined'&&Dev.modifiersActive&&Dev.modifiersActive()) return false;
+      if(typeof ArchiveReplay!=='undefined'&&ArchiveReplay.on) return false;
+      try{ return GameModules.mods().every(function(m){ return m.status!=='active'||m.source==='code'||m.id==='campus-rules'; }); }catch(e){ return false; }
+    }
+    function trusted(){ var s=S_(); if(!trustedNow()) s.tainted=1; return !s.tainted; }
+    function grant(id){
+      if(!on()||!trusted()) return false;
+      var r=records(), a=ACH.filter(function(x){ return x.id===id; })[0]; if(!a||r[id]) return false;
+      r[id]={at:Date.now(),ver:'1.1.0',bundle:bundle()};
+      try{ localStorage.setItem(REC_KEY,JSON.stringify(r)); }catch(e){ return false; }
+      toast('【规则怪谈】记录：'+a.name); return true;
+    }
+    function readKinds(){ var s=S_(), k={}; Object.keys(s.read).forEach(function(id){ var x=ruleById(id); if(x) k[x.t]=1; }); return k; }
     function toast(t){ try{ api.toast(t); }catch(e){} }
     /* ---------- 载体的位置 ---------- */
     var POS={};
@@ -95,7 +128,7 @@ GameModules.mod({
       var isEv=!!x.rule;
       try{ Investigation.record('rule_'+x.id,(isEv?'':x.carrier+'：')+'「'+x.text.replace(/\n/g,'')+'」',isEv?'线索':'规则',(INTERIORS[S.room]||{}).name||''); }catch(e){}
       try{ gameFact('ruleObserved',{id:x.id,evidence:isEv}); }catch(e){}
-      if(Object.keys(s.read).filter(function(k){ return k[0]==='R'; }).length>=5) rec('sources');
+      if(Object.keys(s.read).filter(function(k){ return k[0]==='R'; }).length>=5&&Object.keys(s.read).some(function(k){ return k[0]==='E'; })) grant('rules.e.sources');   /* 五种不同载体＋至少一处证据 */
       if(isEv){ os('我：'+x.text,4.4,OS_FORCE); return; }
       UI.choice(x.carrier+'上写着：\n「'+x.text+'」'+(s.marks[x.id]?'\n（我标过：'+s.marks[x.id]+'）':''),[
         {label:'记为可信',fn:function(){ UI.closeChoice(); s.marks[x.id]='可信'; }},
@@ -130,14 +163,14 @@ GameModules.mod({
         if(S.dead||S.screen!=='play') return;
         os('（第三下。）',1.4,OS_FORCE);
         UI.choice('门外有人问：「在吗？查寝。」',[
-          {label:'应一声「在」',fn:function(){ UI.closeChoice(); rec('reply'); try{ gameFact('ruleResolved',{id:'R05',ok:false}); }catch(e){} kill('门外的人用我的声音，又说了一遍「在」。','rules_knock','rules_knock'); }},
-          {label:'不出声',fn:function(){ UI.closeChoice(); rec('knock'); try{ gameFact('ruleResolved',{id:'R05',ok:true}); }catch(e){} os('我：我没有出声。敲门声停了。过了很久，走廊里也没有脚步声。',4); }}
+          {label:'应一声「在」',fn:function(){ UI.closeChoice(); try{ gameFact('ruleResolved',{id:'R05',ok:false}); }catch(e){} kill('门外的人用我的声音，又说了一遍「在」。','rules_knock','rules_knock'); }},
+          {label:'不出声',fn:function(){ UI.closeChoice(); grant('rules.e.knock'); try{ gameFact('ruleResolved',{id:'R05',ok:true}); }catch(e){} os('我：我没有出声。敲门声停了。过了很久，走廊里也没有脚步声。',4); }}
         ]);
       },3600);
     }
     function ticket(){
       UI.choice('托盘上多了一张餐券。没人看着这边。',[
-        {label:'原样放回托盘',fn:function(){ UI.closeChoice(); rec('ticket'); try{ gameFact('ruleResolved',{id:'R06',ok:true}); }catch(e){} os('我：我把餐券放回去。窗口里的人看了一眼，把它收走了。',3); }},
+        {label:'原样放回托盘',fn:function(){ UI.closeChoice(); grant('rules.n.ticket'); try{ gameFact('ruleResolved',{id:'R06',ok:true}); }catch(e){} os('我：我把餐券放回去。窗口里的人看了一眼，把它收走了。',3); }},
         {label:'收下',fn:function(){ UI.closeChoice(); PlayerStats.changeSan(-5,'rules',{min:0}); try{ gameFact('ruleResolved',{id:'R06',ok:false}); }catch(e){} os('我：我把餐券塞进口袋。口袋里一下子沉了，像装了一块湿的东西。',3.6); }}
       ]);
     }
@@ -147,6 +180,16 @@ GameModules.mod({
         {label:'不答应',fn:function(){ UI.closeChoice(); try{ gameFact('ruleResolved',{id:'R10',ok:true}); }catch(e){} os('我：我没有出声。那个声音又念了一遍，然后念了下一个名字。',3.4); }}
       ]);
     }
+    /* 本局经历：目光、返航、死亡、结局（事实流水 gameFact，计划第 11 节） */
+    api.on('gameFact',function(f){
+      if(!f||!on()) return;
+      var s=S_(), run=s.run||(s.run={});
+      if(f.kind==='paper'&&f.what==='returned'){ run.paper=1; grant('rules.e.paper_return'); }
+      else if(f.kind==='gaze'&&f.what==='contact') run.gaze=1;
+      else if(f.kind==='gaze'&&f.what==='escape'){ if(s.read.R03&&s.read.E03&&s.read.R02) grant('rules.e.clauses'); }   /* 两条反证读过以后，没有回头去确认，自己挣开了 */
+      else if(f.kind==='death'&&f.source==='rules_knock') grant('rules.h.reply');
+      else if(f.kind==='ending'&&f.legit&&!f.fake){ var k=readKinds(); if(run.gaze&&run.paper&&k['true']&&k['false']&&k.half) grant('rules.p.survive'); }
+    });
     /* ---------- 表现：载体上的小纸片（只读） ---------- */
     var F={grp:null,key:''};
     function clearFx(){ if(F.grp){ if(F.grp.parent) F.grp.parent.remove(F.grp); try{ ThreeBackend.disposeGroup(F.grp); }catch(e){} } F.grp=null; F.key=''; }
@@ -184,6 +227,6 @@ GameModules.mod({
     }
     if(typeof DEATH_SOURCES!=='undefined') DEATH_SOURCES.rules_knock={cause:'熄灯后门外敲了三下，我应了一声。',hint:'规则怪谈：门外的敲门声，不一定是来查寝的。'};
     if(typeof DEATH_HINTS!=='undefined') DEATH_HINTS.rules_knock='别替门外的人答应。';
-    window.CampusRules={RULES:RULES,EVID:EVID,BUNDLES:BUNDLES,REFUTE:REFUTE,validBundle:validBundle,pickBundle:pickBundle,bundle:bundle,inBundle:inBundle,state:S_,on:on,near:near,spots:spots,knock:knock,ticket:ticket,borrowed:borrowed};
+    window.CampusRules={RULES:RULES,EVID:EVID,BUNDLES:BUNDLES,REFUTE:REFUTE,validBundle:validBundle,pickBundle:pickBundle,bundle:bundle,inBundle:inBundle,ACH:ACH,records:records,trusted:trusted,grant:grant,state:S_,on:on,near:near,spots:spots,knock:knock,ticket:ticket,borrowed:borrowed};
   }
 });

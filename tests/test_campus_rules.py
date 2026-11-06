@@ -50,8 +50,9 @@ class CampusRulesTest(BrowserCase):
         r = page.evaluate("()=>({dead:S.dead,cg:DeathCG.has('rules_knock'),rec:JSON.parse(localStorage.getItem('wdfz3d_rules_records_v1')||'{}')})")
         self.assertTrue(r['dead'])
         self.assertTrue(r['cg'])
-        self.assertIn('knock', r['rec'])
-        self.assertIn('reply', r['rec'])
+        self.assertIn('rules.e.knock', r['rec'])               # 不出声度过一轮
+        self.assertIn('rules.h.reply', r['rec'])               # 真的死于门外的声音（死亡事实里记）
+        self.assertEqual(r['rec']['rules.e.knock']['ver'], '1.1.0')
 
     def test_ticket_and_borrowed_name_cost_five_san_only_if_you_take_or_answer(self):
         page = self.game()
@@ -98,4 +99,37 @@ class CampusRulesTest(BrowserCase):
           doEnterRoom('canteen1');S.tsec=760;const meal=mealNow();for(let i=0;i<3;i++)GameModules.emit('tick',1);
           return {r06:ids.indexOf('R06')>=0,r09:ids.indexOf('R09')>=0,r04:ids.indexOf('R04')>=0,e04:ids.indexOf('E04')>=0,meal,ticket:UI.chooseOpen&&document.getElementById('choices').innerText.indexOf('餐券')>=0};}""")
         self.assertEqual(r, {'r06': False, 'r09': False, 'r04': True, 'e04': True, 'meal': True, 'ticket': False})
+
+    # ---------- T4：模式成就（计划第 11、15.2 节） ----------
+    def test_old_record_keys_are_migrated_to_the_rules_namespace(self):
+        page = self.game()
+        r = page.evaluate("""()=>{localStorage.setItem('wdfz3d_rules_records_v1',JSON.stringify({knock:123,sources:456,ticket:789}));
+          const rec=CampusRules.records();return {keys:Object.keys(rec).sort(),knock:rec['rules.e.knock'],stored:Object.keys(JSON.parse(localStorage.getItem('wdfz3d_rules_records_v1'))).sort()};}""")
+        self.assertEqual(r['keys'], ['rules.e.knock', 'rules.e.sources', 'rules.n.ticket'])
+        self.assertEqual(r['knock'], {'at': 123, 'ver': '1.0.0'})
+        self.assertEqual(r['stored'], r['keys'])
+
+    def test_mode_achievements_follow_what_actually_happened_this_run(self):
+        page = self.game()
+        r = page.evaluate("""()=>{const C=CampusRules,got=()=>Object.keys(C.records()).sort(),s=C.state(),out={};
+          gameFact('gaze',{what:'escape'});out.escapeUnread=got();                       // 没读过反证就挣开：不算
+          s.read.R03=1;s.read.E03=1;s.read.R02=1;gameFact('gaze',{what:'escape'});out.clauses=got();
+          gameFact('ending',{id:'car',legit:true,fake:false});out.endEarly=got();         // 没被吸住、没送回纸飞机：不算读到最后
+          gameFact('gaze',{what:'contact'});gameFact('paper',{what:'returned',clean:false});out.paper=got();
+          s.read.R04=1;gameFact('ending',{id:'car',legit:true,fake:true});out.fake=got();
+          gameFact('ending',{id:'car',legit:true,fake:false});out.survive=got();
+          return out;}""")
+        self.assertEqual(r['escapeUnread'], [])
+        self.assertEqual(r['clauses'], ['rules.e.clauses'])
+        self.assertEqual(r['endEarly'], ['rules.e.clauses'])
+        self.assertEqual(r['paper'], ['rules.e.clauses', 'rules.e.paper_return'])
+        self.assertEqual(r['fake'], r['paper'])                                            # 假结局不算
+        self.assertEqual(r['survive'], ['rules.e.clauses', 'rules.e.paper_return', 'rules.p.survive'])
+
+    def test_debug_runs_never_record_and_stay_untrusted(self):
+        page = self.game()
+        r = page.evaluate("""()=>{const C=CampusRules;DEV.on=true;const a=C.grant('rules.e.knock');DEV.on=false;
+          const b=C.grant('rules.e.knock');saveGame();const d=loadGame();GameModules.loadAll(d.mods);
+          return {a,b,trusted:C.trusted(),rec:Object.keys(C.records())};}""")
+        self.assertEqual(r, {'a': False, 'b': False, 'trusted': False, 'rec': []})        # 标过调试的局一直不记，读档也一样
 
