@@ -4,7 +4,9 @@ from browser_case import BrowserCase
 
 class CampusRulesTest(BrowserCase):
     def game(self, on=True, bundle='A'):
-        page = self.browser.new_context(viewport={'width': 1000, 'height': 700}).new_page()
+        ctx = self.browser.new_context(viewport={'width': 1000, 'height': 700})
+        self.contexts.append(ctx)                              # 测完由 BrowserCase 关掉（以前一直开着，越往后越慢）
+        page = ctx.new_page()
         page.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0,renderer:'webgl'}));localStorage.removeItem('wdfz3d_rules_records_v1');")
         self.errs = []
         page.on('pageerror', lambda e: self.errs.append(str(e)))
@@ -133,3 +135,53 @@ class CampusRulesTest(BrowserCase):
           return {a,b,trusted:C.trusted(),rec:Object.keys(C.records())};}""")
         self.assertEqual(r, {'a': False, 'b': False, 'trusted': False, 'rec': []})        # 标过调试的局一直不记，读档也一样
 
+
+    # ---------- T1：读档守卫与独立普通槽（计划第 4.1、15.2 节） ----------
+    def menu(self, page, q=''):
+        page.goto(self.url + q, wait_until='load')
+        page.wait_for_function("typeof Game!=='undefined'&&document.getElementById('menu')&&Assets.ready()")
+
+    def labels(self, page):
+        page.wait_for_function("UI.chooseOpen", timeout=8000)
+        return page.evaluate("[...document.querySelectorAll('#choices button')].map(b=>b.textContent.replace(/^\\d/,''))")
+
+    def test_a_rules_save_cannot_be_continued_without_the_dlc_and_a_plain_game_keeps_it(self):
+        page = self.game()
+        page.evaluate("()=>{S.day=3;saveGame();}")
+        rules_save = page.evaluate("localStorage.getItem('wdfz3d')")
+        self.menu(page)                                                           # DLC 关着回来
+        page.evaluate("Game.continue_()")
+        opts = self.labels(page)
+        self.assertEqual(page.evaluate("S.screen"), 'menu')                      # 没有读档
+        self.assertTrue(any('打开「规则怪谈」' in o for o in opts), opts)
+        self.assertTrue(any('另开普通局' in o for o in opts), opts)
+        self.assertFalse(any('普通存档槽里' in o for o in opts), opts)          # 普通槽还是空的
+        self.assertTrue(page.evaluate("getComputedStyle(document.getElementById('choices')).zIndex>getComputedStyle(document.getElementById('menu')).zIndex"))
+        page.evaluate("[...document.querySelectorAll('#choices button')].find(b=>b.textContent.indexOf('另开普通局')>=0).click()")
+        page.evaluate("Game.start('easy',{talent:'watch'})")
+        page.wait_for_function("S.room==='teach1'&&GLR.roomMesh")
+        r = page.evaluate("()=>{saveGame();const p=JSON.parse(localStorage.getItem('wdfz3d_plain'));return {plain:SaveSlots.plain(),main:localStorage.getItem('wdfz3d'),rulesInPlain:!!(p.rt&&p.rt.rulesMode)};}")
+        self.assertTrue(r['plain'])
+        self.assertEqual(r['main'], rules_save)                                  # 规则存档原样留着
+        self.assertFalse(r['rulesInPlain'])
+        self.menu(page)                                                           # 再回来：可以接着玩普通槽那一局
+        page.evaluate("Game.continue_()")
+        opts = self.labels(page)
+        self.assertTrue(any('普通存档槽里' in o for o in opts), opts)
+        page.evaluate("[...document.querySelectorAll('#choices button')].find(b=>b.textContent.indexOf('普通存档槽里')>=0).click()")
+        page.wait_for_function("S.screen==='play'&&GLR.roomMesh")
+        self.assertEqual(page.evaluate("[!!RT.rulesMode,SaveSlots.plain()]"), [False, True])
+
+    def test_safe_mode_offers_no_dlc_and_the_dlc_reads_its_own_save(self):
+        page = self.game()
+        page.evaluate("()=>{S.day=3;saveGame();}")
+        self.menu(page, '?nomod')
+        page.evaluate("Game.continue_()")
+        opts = self.labels(page)
+        self.assertFalse(any('打开「规则怪谈」' in o for o in opts), opts)     # 安全模式：只能另开普通局或回菜单
+        page.evaluate("[...document.querySelectorAll('#choices button')].find(b=>b.textContent.indexOf('回主菜单')>=0).click()")
+        self.assertEqual(page.evaluate("[UI.chooseOpen,S.screen,document.body.classList.contains('menuchoice')]"), [False, 'menu', False])
+        self.menu(page, '?mod=campus-rules')                                     # DLC 开着：直接读
+        page.evaluate("Game.continue_()")
+        page.wait_for_function("S.screen==='play'&&GLR.roomMesh")
+        self.assertEqual(page.evaluate("[RT.rulesMode.v,CampusRules.on(),S.day,SaveSlots.plain()]"), [1, True, 3, False])

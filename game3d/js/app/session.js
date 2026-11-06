@@ -61,6 +61,17 @@ function waitForGameAssets(start){
   }));
   return true;
 }
+/* 读档守卫（规则怪谈计划第 4.1、15.2 节）：主存档是规则怪谈局，这次 DLC 没加载 */
+function rulesGuard(){
+  var safe=GameModules.safeMode&&GameModules.safeMode(), hasPlain=!!$imports.SaveSlots.peek($imports.SaveSlots.PLAIN), opts=[];
+  function done(){ $imports.UI.closeChoice(); document.body.classList.remove('menuchoice'); }
+  if(!safe) opts.push({label:'打开「规则怪谈」DLC 并重新载入',fn:function(){ done(); try{ GameModules.setBuiltin('campus-rules',true); }catch(e){} location.reload(); }});
+  if(hasPlain) opts.push({label:'继续普通存档槽里的那一局',fn:function(){ done(); $imports.SaveSlots.usePlain(true); Game.continue_(); }});
+  opts.push({label:'另开普通局（规则怪谈的存档留着）',fn:function(){ done(); $imports.SaveSlots.usePlain(true); (0,$imports.toast)('选个难度开新局；这一局存进普通存档槽'); }});
+  opts.push({label:'回主菜单',fn:function(){ done(); }});
+  document.body.classList.add('menuchoice');
+  $imports.UI.choice('这份存档是「规则怪谈」的局'+(safe?'。现在是安全模式（?nomod），DLC 不会加载，':'，「规则怪谈」DLC 现在关着，')+'不能在这种状态下接着玩——关掉 DLC 不会让规则失效。',opts);
+}
 var Game={
   /* 选完难度先选天赋（《天赋系统重构》5.1）：只有点「开始」才初始化新局、覆盖旧存档 */
   pickTalent:function(diff,mode){ $imports.TalentPick.open(diff,mode||'normal'); },
@@ -70,6 +81,10 @@ var Game={
     FRESH_TALENT=opt&&opt.talent?{id:opt.talent,origin:opt.origin||'selected'}:null;
     if(opt&&opt.mode==='speedrun'){ if(!$imports.Speedrun.active()) $imports.Speedrun.arm(diff); $imports.Dev.clearModifiers(); }   /* 普通局留下的快跑 / 无敌 / 关读条不带进速通 */
     else $imports.Speedrun.disarm();                                    /* 普通新局：回到普通存档槽 */
+    if(!(opt&&opt.mode==='speedrun')){                                  /* 规则怪谈：主存档是规则局而 DLC 没加载，新局写进独立普通槽，不覆盖规则存档 */
+      if($imports.SaveSlots.mainLocked()){ if(!$imports.SaveSlots.plain()) (0,$imports.toast)('规则怪谈的存档留着；这一局存进普通存档槽'); $imports.SaveSlots.usePlain(true); }
+      else if($imports.SaveSlots.rulesLoaded()) $imports.SaveSlots.usePlain(false);
+    }
     freshState(diff);
     GameModules.emit('newGame',{diff:diff,mode:opt&&opt.mode==='speedrun'?'speedrun':'normal'});   /* 模块：只在新开局（不含读档）时做的事 */
     $imports.Playtest.event('开始新局',diff);
@@ -90,6 +105,7 @@ var Game={
   continue_:function(){
     if(waitForGameAssets(function(){Game.continue_();}))return;
     $imports.Speedrun.disarm();                                         /* 速通不能读档接着跑；「继续上次」只读普通存档 */
+    if(!$imports.SaveSlots.plain()&&$imports.SaveSlots.mainLocked()){ rulesGuard(); return; }   /* 规则怪谈的存档：DLC 没加载时不能接着玩 */
     var d=(0,$imports.loadGame)();
     if(!d){ (0,$imports.toast)('没有存档'); return; }
     clearIntroTimers();
@@ -197,6 +213,7 @@ GameModules.publish("game3d/js/app/session.js",{
 "freshState":{get:function(){return freshState;},set:function($value){freshState=$value;}},
 "pendingAssetStart":{get:function(){return pendingAssetStart;},set:function($value){pendingAssetStart=$value;}},
 "waitForGameAssets":{get:function(){return waitForGameAssets;},set:function($value){waitForGameAssets=$value;}},
+"rulesGuard":{get:function(){return rulesGuard;},set:function($value){rulesGuard=$value;}},
 "Game":{get:function(){return Game;},set:function($value){Game=$value;}}
 });
 })(GameModules.imports("game3d/js/app/session.js"));
