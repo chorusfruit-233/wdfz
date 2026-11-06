@@ -1,0 +1,725 @@
+11-06 14:38:13.883  1000  4385 D NetworkMonitor/100: PROBE_HTTPS https://www.google.com/generate_204 time=53ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=":443"; ma=2592000,h3-29=":443"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:38:14 GMT], X-Android-Received-Millis=[1793975893883], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793975893872]}
+11-06 14:38:13.886  1000  4386 D NetworkMonitor/100: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=34ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:38:14 GMT], X-Android-Received-Millis=[1793975893883], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793975893872]}
+11-06 14:38:13.999   521   551 I ActivityManager: Start proc 4415:io.github.wdfz.lishijie/u0a192 for next-top-activity {io.github.wdfz.lishijie/io.github.wdfz.lishijie.MainActivity}
+11-06 14:38:16.131  4094  4151 W IndexDataConverter: Skipping index for null-key item IndexData.Builder {title: Spatial audio,package: com.android.settings}
+11-06 14:38:16.246   473   473 E AudioSystem: invalid attributes { Content type: AUDIO_CONTENT_TYPE_UNKNOWN Usage: AUDIO_USAGE_UNKNOWN Source: AUDIO_SOURCE_INVALID Flags: 0x800 Tags:  } when converting to stream
+11-06 14:38:16.428  4415  4415 I GeckoRuntime: Adding debug configuration from: /data/user/0/io.github.wdfz.lishijie/files/geckoview-config.yaml
+11-06 14:38:16.428  4415  4415 D GeckoDebugConfig: Adding prefs from debug config: {media.autoplay.default=0, media.autoplay.blocking_policy=0, media.autoplay.block-webaudio=false, media.autoplay.block-event.enabled=false}
+11-06 14:38:16.440  4415  4415 D GeckoThread: State changed to LAUNCHED
+11-06 14:38:16.484   473  4492 D CCodecConfig: read media type: audio/raw
+11-06 14:38:16.484  4415  4415 D GeckoRuntime: Lifecycle: onCreate
+11-06 14:38:16.488   473  4492 D CCodecConfig:   string input.media-type.value = "audio/raw"
+11-06 14:38:16.488   473  4492 D CCodecConfig:   string output.media-type.value = "audio/raw"
+11-06 14:38:16.493   473  4492 D CCodec  :   string mime = "audio/raw"
+11-06 14:38:16.493   473  4492 D CCodec  :   string mime = "audio/raw"
+11-06 14:38:16.502   521   551 I ActivityManager: Start proc 4500:io.github.wdfz.lishijie:crashhelper_disable_art_image_/u0a192 for service {io.github.wdfz.lishijie/org.mozilla.gecko.crashhelper.CrashHelper}
+11-06 14:38:16.503  4415  4494 I GeckoThread: preparing to run Gecko
+11-06 14:38:16.506   398   985 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000008) and output flags (00000002)
+11-06 14:38:16.507   398   985 D AudioFlinger: Client defaulted notificationFrames to 5738 for frameCount 11477
+11-06 14:38:16.507   398   985 D AF::TrackHandle: OpPlayAudio: track:55 usage:0 not muted
+11-06 14:38:16.516   398  4383 D audioserver: FGS Logger Transaction failed
+11-06 14:38:16.516   398  4383 D audioserver: -129
+11-06 14:38:16.536  4415  4494 D GeckoThread: State changed to MOZGLUE_READY
+11-06 14:38:16.549  4415  4415 D GeckoRuntime: Lifecycle: onStart
+11-06 14:38:16.551  4415  4415 D GeckoRuntime: Lifecycle: onResume
+11-06 14:38:16.552  4415  4415 D GeckoNetworkManager: Incoming event start for state OffNoListeners -> OnNoListeners
+11-06 14:38:16.557  4415  4415 D GeckoNetworkManager: New network state: UP, WIFI, WIFI
+11-06 14:38:16.570   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(25)
+11-06 14:38:16.633  4415  4494 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:16.818   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(16)
+11-06 14:38:16.974   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(2)
+11-06 14:38:17.033  4415  4494 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:17.041   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(29)
+11-06 14:38:17.126  4415  4494 E GeckoLibLoad: Load sqlite start
+11-06 14:38:17.127  4415  4494 E GeckoLibLoad: Load sqlite done
+11-06 14:38:17.129  4415  4494 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:17.129  4415  4494 E GeckoLibLoad: Load nss start
+11-06 14:38:17.129  4415  4494 E GeckoLibLoad: Load nss done
+11-06 14:38:17.129  4415  4494 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:17.138  4415  4415 D GeckoNetworkManager: Incoming event receivedUpdate for state OnNoListeners -> OnNoListeners
+11-06 14:38:17.139  4415  4494 E GeckoLibLoad: Loaded libs in 9.673503ms total, 0ms(3ms) user, 8ms(6ms) system, 0(0) faults
+11-06 14:38:17.139  4415  4494 D GeckoThread: State changed to LIBS_READY
+11-06 14:38:17.139  4415  4494 W GeckoThread: zerdatime 54386 - runGecko
+11-06 14:38:17.155   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(8)
+11-06 14:38:17.162  4415  4415 D GeckoNetworkManager: New network state: UP, WIFI, WIFI
+11-06 14:38:17.404   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:38:17.560  4415  4494 I Gecko:DumpUtils: Fifo watcher disabled via pref.
+11-06 14:38:17.619  4415  4494 D GeckoScreenOrientation: updating to new orientation LANDSCAPE_PRIMARY
+11-06 14:38:17.620  4415  4494 D GeckoThread: State changed to JNI_READY
+11-06 14:38:17.721   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(11)
+11-06 14:38:18.135  4415  4494 I GeckoConsole: No chrome package registered for chrome://browser/content/built_in_addons.json
+11-06 14:38:18.304  4415  4494 D GeckoThread: State changed to PROFILE_READY
+11-06 14:38:18.507  4415  4494 D GeckoThread: State changed to RUNNING
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/g711-mlaw
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/mp4a-latm
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/raw
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/amr-wb
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/amr-wb
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/3gpp
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/flac
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/vorbis
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/opus
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/3gpp
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/flac
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/opus
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/mp4a-latm
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/mpeg
+11-06 14:38:19.074  4415  4494 D HardwareCodecCapability: MIME support: SW audio/g711-alaw
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/g711-mlaw
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/mp4a-latm
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/raw
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/amr-wb
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/amr-wb
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/3gpp
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/flac
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/vorbis
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/opus
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/3gpp
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/flac
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/opus
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/mp4a-latm
+11-06 14:38:19.080  4415  4494 D HardwareCodecCapability: MIME support: SW audio/mpeg
+11-06 14:38:19.083  4415  4494 D HardwareCodecCapability: MIME support: SW audio/g711-alaw
+11-06 14:38:19.090  4415  4494 D HardwareCodecCapability: MIME support: SW audio/g711-mlaw
+11-06 14:38:19.090  4415  4494 D HardwareCodecCapability: MIME support: SW audio/mp4a-latm
+11-06 14:38:19.090  4415  4494 D HardwareCodecCapability: MIME support: SW audio/raw
+11-06 14:38:19.090  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/amr-wb
+11-06 14:38:19.092  4415  4494 D HardwareCodecCapability: MIME support: SW audio/amr-wb
+11-06 14:38:19.092  4415  4494 D HardwareCodecCapability: MIME support: SW audio/3gpp
+11-06 14:38:19.092  4415  4494 D HardwareCodecCapability: MIME support: SW audio/flac
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SW audio/vorbis
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/opus
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/3gpp
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/flac
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SW audio/opus
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SWE audio/mp4a-latm
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SW audio/mpeg
+11-06 14:38:19.093  4415  4494 D HardwareCodecCapability: MIME support: SW audio/g711-alaw
+11-06 14:38:19.161   521   551 I ActivityManager: Start proc 4630:io.github.wdfz.lishijie:gpu_disable_art_image_/u0a192 for service {io.github.wdfz.lishijie/org.mozilla.gecko.process.GeckoChildProcessServices$gpu}
+11-06 14:38:19.195  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$gpu updateBindings: FOREGROUND priority, 0 importance, not connected pid, 3 successful binds, 0 failed binds, 0 successful unbinds
+11-06 14:38:19.355   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(49)
+11-06 14:38:19.464  4415  4415 W Gecko   : type=1400 audit(0.0:24): avc:  denied  { read } for  name="product_name" dev="sysfs" ino=973 scontext=u:r:untrusted_app:s0:c192,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=io.github.wdfz.lishijie
+11-06 14:38:19.472  4415  4415 W Gecko   : type=1400 audit(0.0:25): avc:  denied  { read } for  name="product_sku" dev="sysfs" ino=977 scontext=u:r:untrusted_app:s0:c192,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=io.github.wdfz.lishijie
+11-06 14:38:19.624  4415  4415 D GeckoNetworkManager: Incoming event enableNotifications for state OnNoListeners -> OnWithListeners
+11-06 14:38:19.627  4415  4415 D GeckoNetworkManager: New network state: UP, WIFI, WIFI
+11-06 14:38:19.632   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(5)
+11-06 14:38:19.633   521   822 W ActivityManager: Receiver with filter android.content.IntentFilter@c8b3a01 already registered for pid 4415, callerPackage is io.github.wdfz.lishijie
+11-06 14:38:19.765   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(30)
+11-06 14:38:19.875  4415  4415 D GeckoNetworkManager: Incoming event receivedUpdate for state OnWithListeners -> OnWithListeners
+11-06 14:38:19.905  4415  4415 D GeckoNetworkManager: New network state: UP, WIFI, WIFI
+11-06 14:38:20.111   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(17)
+11-06 14:38:20.176   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:38:20.391   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(26)
+11-06 14:38:20.420   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(8)
+11-06 14:38:20.533   521   551 I ActivityManager: Start proc 4680:io.github.wdfz.lishijie:sandboxed_tab_disable_art_image_34/u0a192 for service {io.github.wdfz.lishijie/org.mozilla.gecko.process.GeckoChildProcessServices$tab34}
+11-06 14:38:20.557  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab34 updateBindings: FOREGROUND priority, 0 importance, not connected pid, 3 successful binds, 0 failed binds, 0 successful unbinds
+11-06 14:38:20.807   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(33)
+11-06 14:38:20.858  4630  4630 D GeckoThread: State changed to LAUNCHED
+11-06 14:38:20.858  4630  4698 I GeckoThread: preparing to run Gecko
+11-06 14:38:20.881  4630  4698 D GeckoThread: State changed to MOZGLUE_READY
+11-06 14:38:20.891  4630  4698 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:20.891  4630  4698 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:20.892  4630  4698 E GeckoLibLoad: Load sqlite start
+11-06 14:38:20.893  4630  4698 E GeckoLibLoad: Load sqlite done
+11-06 14:38:20.893  4630  4698 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:20.893  4630  4698 E GeckoLibLoad: Load nss start
+11-06 14:38:20.893  4630  4698 E GeckoLibLoad: Load nss done
+11-06 14:38:20.893  4630  4698 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:20.972  4630  4698 E GeckoLibLoad: Loaded libs in 78.267103ms total, 5ms(5ms) user, 0ms(0ms) system, 0(0) faults
+11-06 14:38:20.972  4630  4698 D GeckoThread: State changed to LIBS_READY
+11-06 14:38:20.972  4630  4698 W GeckoThread: zerdatime 58219 - runGecko
+11-06 14:38:21.098  4630  4698 D GeckoThread: State changed to RUNNING
+11-06 14:38:21.161   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(31)
+11-06 14:38:21.211   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(5)
+11-06 14:38:21.254   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(7)
+11-06 14:38:21.283   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(1)
+11-06 14:38:21.902  4680  4680 D GeckoThread: State changed to LAUNCHED
+11-06 14:38:21.904  4680  4724 I GeckoThread: preparing to run Gecko
+11-06 14:38:21.916  4680  4724 D GeckoThread: State changed to MOZGLUE_READY
+11-06 14:38:21.923  4680  4724 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:21.923  4680  4724 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:21.925  4680  4724 E GeckoLibLoad: Load sqlite start
+11-06 14:38:21.925  4680  4724 E GeckoLibLoad: Load sqlite done
+11-06 14:38:21.925  4680  4724 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:21.925  4680  4724 E GeckoLibLoad: Load nss start
+11-06 14:38:21.925  4680  4724 E GeckoLibLoad: Load nss done
+11-06 14:38:21.925  4680  4724 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:21.934  4680  4724 E GeckoLibLoad: Loaded libs in 8.661549ms total, 0ms(1ms) user, 4ms(4ms) system, 0(0) faults
+11-06 14:38:21.934  4680  4724 D GeckoThread: State changed to LIBS_READY
+11-06 14:38:21.934  4680  4724 W GeckoThread: zerdatime 59182 - runGecko
+11-06 14:38:21.939  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab34 updateBindings: FOREGROUND priority, 2 importance, 4680 pid, 1 successful binds, 0 failed binds, 0 successful unbinds
+11-06 14:38:22.394  4680  4724 D GeckoThread: State changed to RUNNING
+11-06 14:38:22.487   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(12)
+11-06 14:38:22.593   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(11)
+11-06 14:38:22.702   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(16)
+11-06 14:38:22.754   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(21)
+11-06 14:38:22.968   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(21)
+11-06 14:38:23.024   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(1)
+11-06 14:38:23.047   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(11)
+11-06 14:38:23.088  4415  4494 I GeckoSession: zerdatime 60335 - chrome startup finished
+11-06 14:38:23.153  4415  4415 D GeckoSession: handleMessage GeckoView:PageStart uri=about:blank
+11-06 14:38:23.154  4680  4724 W GeckoEditableChild: No editable parent
+11-06 14:38:23.154  4415  4415 D GeckoSession: handleMessage GeckoView:LocationChange uri=about:blank
+11-06 14:38:23.158  4415  4415 D GeckoSession: handleMessage GeckoView:PageStop uri=null
+11-06 14:38:23.331  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab6 updateBindings: FOREGROUND priority, 0 importance, not connected pid, 3 successful binds, 0 failed binds, 0 successful unbinds
+11-06 14:38:23.337  4415  4415 D GeckoSession: handleMessage GeckoView:ProgressChanged uri=null
+11-06 14:38:23.337  4415  4415 D GeckoSession: handleMessage GeckoView:PageStart uri=http://127.0.0.1:47831/?app=android&diag=1
+11-06 14:38:23.349   521   551 I ActivityManager: Start proc 4784:io.github.wdfz.lishijie:sandboxed_tab_disable_art_image_6/u0a192 for service {io.github.wdfz.lishijie/org.mozilla.gecko.process.GeckoChildProcessServices$tab6}
+11-06 14:38:23.453  4415  4494 D GeckoIdleService: Registering Idle observer callback
+11-06 14:38:23.453  4415  4494 D GeckoIdleService: Register idle observer 0x7971ad83fe20 for 180 seconds
+11-06 14:38:23.453  4415  4494 D GeckoIdleService: Register: adjusting next switch from -1 to 180 seconds
+11-06 14:38:23.453  4415  4494 D GeckoIdleService: next timeout 180000 msec from now
+11-06 14:38:23.453  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 180000 msec from now
+11-06 14:38:23.453  4415  4494 D GeckoIdleService: reset timer expiry to 180010 msec from now
+11-06 14:38:23.467  4415  4494 D GeckoIdleService: Get idle time: time since reset 13 msec
+11-06 14:38:23.484  4415  4494 D GeckoIdleService: Register idle observer 0x7971ad848e78 for 5 seconds
+11-06 14:38:23.486  4415  4494 D GeckoIdleService: Register: adjusting next switch from 180 to 5 seconds
+11-06 14:38:23.488  4415  4494 D GeckoIdleService: next timeout 4965 msec from now
+11-06 14:38:23.489  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 4964 msec from now
+11-06 14:38:23.489  4415  4494 D GeckoIdleService: reset timer expiry to 4974 msec from now
+11-06 14:38:23.568   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(35)
+11-06 14:38:24.296  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab29 updateBindings: FOREGROUND priority, 0 importance, not connected pid, 3 successful binds, 0 failed binds, 0 successful unbinds
+11-06 14:38:24.557   521   551 I ActivityManager: Start proc 4850:io.github.wdfz.lishijie:sandboxed_tab_disable_art_image_29/u0a192 for service {io.github.wdfz.lishijie/org.mozilla.gecko.process.GeckoChildProcessServices$tab29}
+11-06 14:38:24.589   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(27)
+11-06 14:38:24.662  4784  4784 D GeckoThread: State changed to LAUNCHED
+11-06 14:38:24.833  4784  4851 I GeckoThread: preparing to run Gecko
+11-06 14:38:24.878  4784  4851 D GeckoThread: State changed to MOZGLUE_READY
+11-06 14:38:24.881  4784  4851 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:24.881  4784  4851 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:24.881  4784  4851 E GeckoLibLoad: Load sqlite start
+11-06 14:38:24.882  4784  4851 E GeckoLibLoad: Load sqlite done
+11-06 14:38:24.882  4784  4851 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:24.882  4784  4851 E GeckoLibLoad: Load nss start
+11-06 14:38:24.882  4784  4851 E GeckoLibLoad: Load nss done
+11-06 14:38:24.882  4784  4851 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:24.917  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab6 updateBindings: BACKGROUND priority, 3 importance, 4784 pid, 1 successful binds, 0 failed binds, 1 successful unbinds
+11-06 14:38:24.925  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab6 updateBindings: FOREGROUND priority, 2 importance, 4784 pid, 1 successful binds, 0 failed binds, 0 successful unbinds
+11-06 14:38:25.002  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab34 updateBindings: IDLE priority, 6 importance, 4680 pid, 1 successful binds, 0 failed binds, 2 successful unbinds
+11-06 14:38:25.014  4784  4851 E GeckoLibLoad: Loaded libs in 131.962328ms total, 1ms(2ms) user, 5ms(4ms) system, 1(1) faults
+11-06 14:38:25.014  4784  4851 D GeckoThread: State changed to LIBS_READY
+11-06 14:38:25.015  4784  4851 W GeckoThread: zerdatime 62262 - runGecko
+11-06 14:38:25.189  4784  4851 D GeckoThread: State changed to RUNNING
+11-06 14:38:25.469  4850  4850 D GeckoThread: State changed to LAUNCHED
+11-06 14:38:25.528  4850  4897 I GeckoThread: preparing to run Gecko
+11-06 14:38:25.531  4850  4897 D GeckoThread: State changed to MOZGLUE_READY
+11-06 14:38:25.583  4850  4897 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:25.599  4850  4897 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:25.669  4415  4415 D GeckoSession: handleMessage GeckoView:LocationChange uri=http://127.0.0.1:47831/?app=android&diag=1
+11-06 14:38:25.674  4415  4415 D GeckoSession: handleMessage GeckoView:SecurityChanged uri=null
+11-06 14:38:25.676  4850  4897 E GeckoLibLoad: Load sqlite start
+11-06 14:38:25.677  4850  4897 E GeckoLibLoad: Load sqlite done
+11-06 14:38:25.678  4850  4897 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:25.678  4850  4897 E GeckoLibLoad: Load nss start
+11-06 14:38:25.678  4850  4897 E GeckoLibLoad: Load nss done
+11-06 14:38:25.678  4850  4897 D GeckoLoader: Library base=/data/app/~~IE20Rds9FfMAvxJLWMspfA==/io.github.wdfz.lishijie-5pf-1hFxMB_bnj4Q0yYx2A==/lib/x86_64
+11-06 14:38:25.735  4850  4897 E GeckoLibLoad: Loaded libs in 56.510436ms total, 3ms(0ms) user, 5ms(7ms) system, 0(0) faults
+11-06 14:38:25.736  4850  4897 D GeckoThread: State changed to LIBS_READY
+11-06 14:38:25.737  4850  4897 W GeckoThread: zerdatime 62985 - runGecko
+11-06 14:38:25.738  4415  4560 D ServiceAllocator: org.mozilla.gecko.process.GeckoChildProcessServices$tab29 updateBindings: BACKGROUND priority, 3 importance, 4850 pid, 1 successful binds, 0 failed binds, 1 successful unbinds
+11-06 14:38:26.723  4850  4897 D GeckoThread: State changed to RUNNING
+11-06 14:38:27.263  4415  4415 D GeckoSession: handleMessage: GeckoView:DismissClipboardPermissionRequest
+11-06 14:38:27.364   398   507 D audioserver: FGS Logger Transaction failed
+11-06 14:38:27.364   398   507 D audioserver: -129
+11-06 14:38:27.408   398   507 D audioserver: FGS Logger Transaction failed
+11-06 14:38:27.408   398   507 D audioserver: -129
+11-06 14:38:28.464  4415  4494 D GeckoIdleService: Get idle time: time since reset 5010 msec
+11-06 14:38:28.464  4415  4494 D GeckoIdleService: Idle timer callback: current idle time 5010 msec
+11-06 14:38:28.464  4415  4494 D GeckoIdleService: next timeout 174990 msec from now
+11-06 14:38:28.464  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 174990 msec from now
+11-06 14:38:28.464  4415  4494 D GeckoIdleService: reset timer expiry to 175000 msec from now
+11-06 14:38:28.464  4415  4494 D GeckoIdleService: Idle timer callback: tell observer 0x7971ad848e78 user is idle
+11-06 14:38:30.140  4415  5049 I WDFZ    : BOOT {"ua":"Mozilla/5.0 (Android 14; Mobile; rv:159.0) Gecko/159.0 Firefox/159.0"}
+11-06 14:38:30.221   342  4501 D android.hardware.audio@7.1-impl.ranchu: threadLoop: entering standby, frames: 659328
+11-06 14:38:31.953  1684  2459 W ModernMediaScanner: Failed to apply ContentProviderOperation(type=insert uri=content://media/internal/file values={instance_id=null, compilation=null, disc_number=null, duration=10170, is_ringtone=1, album_artist=null, resolution=null, orientation=null, artist=<unknown>, author=null, height=null, is_drm=0, is_audiobook=0, date_modified=1720722121, writer=null, composer=null, _modifier=3, is_recording=0, datetaken=null, mime_type=audio/ogg, is_notification=0, bitrate=192000, cd_track_number=null, xmp=[], year=null, _data=/product/media/audio/ringtones/Perseus.ogg, _size=236343, album=ringtones, genre=null, is_alarm=0, title=Perseus, track=null, width=null, is_music=0, document_id=null, is_podcast=0, capture_framerate=null, num_tracks=1, original_document_id=null, media_type=2} exceptionAllowed)
+11-06 14:38:31.955  1684  2459 W ModernMediaScanner: Failed to apply ContentProviderOperation(type=insert uri=content://media/internal/file values={instance_id=null, compilation=null, disc_number=null, duration=3498, is_ringtone=1, album_artist=null, resolution=null, orientation=null, artist=<unknown>, author=null, height=null, is_drm=0, is_audiobook=0, date_modified=1720722121, writer=null, composer=null, _modifier=3, is_recording=0, datetaken=null, mime_type=audio/ogg, is_notification=0, bitrate=80000, cd_track_number=null, xmp=[], year=null, _data=/product/media/audio/ringtones/CanisMajor.ogg, _size=31133, album=ringtones, genre=null, is_alarm=0, title=Canis Major, track=null, width=null, is_music=0, document_id=null, is_podcast=0, capture_framerate=null, num_tracks=1, original_document_id=null, media_type=2} exceptionAllowed)
+11-06 14:38:32.190  4415  4415 D GeckoSession: handleMessage GeckoView:ProgressChanged uri=null
+11-06 14:38:32.290  4415  4415 D GeckoSession: handleMessage GeckoView:ProgressChanged uri=null
+11-06 14:38:32.291  4415  4415 D GeckoSession: handleMessage GeckoView:PageStop uri=null
+11-06 14:38:33.226  4415  4774 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+11-06 14:38:33.227  4415  4774 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+11-06 14:38:33.229  4415  4774 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 0
+11-06 14:38:33.229  4415  4774 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+11-06 14:38:33.230  4415  4774 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+11-06 14:38:33.243  4415  4774 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+11-06 14:38:33.255   398   985 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000104) and output flags (00000002)
+11-06 14:38:33.255   398   985 D AudioFlinger: Client defaulted notificationFrames to 960 for frameCount 4360
+11-06 14:38:33.256   398   985 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:38:33.268  4415  4774 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+11-06 14:38:33.268  4415  4774 D AudioStreamTrack: open() perfMode changed from 12 to 10
+11-06 14:38:33.268  4415  4774 D AAudioStream: setState(s#1) from 0 to 2
+11-06 14:38:33.287  4415  4774 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+11-06 14:38:33.289  4415  4774 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+11-06 14:38:33.290  4415  4774 D AAudioStream: setState(s#1) from 2 to 3
+11-06 14:38:33.291   398  4383 D audioserver: FGS Logger Transaction failed
+11-06 14:38:33.291   398  4383 D audioserver: -129
+11-06 14:38:33.291  4415  4774 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+11-06 14:38:33.292  4415  4699 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+11-06 14:38:33.308  4415  5114 D AAudioStream: setState(s#1) from 3 to 4
+11-06 14:38:33.369   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(32)
+11-06 14:38:34.008   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(2)
+11-06 14:38:38.582   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(8)
+11-06 14:38:38.741   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(5)
+11-06 14:38:39.558   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(4)
+11-06 14:38:39.669   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(7)
+11-06 14:38:40.031   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(1)
+11-06 14:38:40.711   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:38:41.135  1674  2474 I AiAiCaptions: Enable com.google.android.apps.miphone.aiai.captions.tulip.audiosource.impl.CIS
+11-06 14:38:42.060  1684  2459 W ModernMediaScanner: Failed to apply ContentProviderOperation(type=insert uri=content://media/internal/file values={instance_id=null, compilation=null, disc_number=null, duration=1000, is_ringtone=0, album_artist=null, resolution=null, orientation=null, artist=pdx, author=null, height=null, is_drm=0, is_audiobook=0, date_modified=1720722121, writer=null, composer=null, _modifier=3, is_recording=0, datetaken=null, mime_type=audio/ogg, is_notification=1, bitrate=80000, cd_track_number=2dB214a, xmp=[], year=null, _data=/product/media/audio/notifications/arcturus.ogg, _size=7908, album=notifications, genre=null, is_alarm=0, title=Arcturus, track=null, width=null, is_music=0, document_id=null, is_podcast=0, capture_framerate=null, num_tracks=1, original_document_id=null, media_type=2} exceptionAllowed)
+11-06 14:38:42.135  1684  2459 W MediaProvider: Didn't find any volume for getVolume(/product/media/audio/ringtones/Ring_Synth_04.ogg)
+11-06 14:38:42.136  1684  2459 I MediaProvider: Open with lower FS for /product/media/audio/ringtones/Ring_Synth_04.ogg. Uid: 10177
+11-06 14:38:42.164  1684  2459 W MediaProvider: Didn't find any volume for getVolume(/product/media/audio/notifications/pixiedust.ogg)
+11-06 14:38:42.164  1684  2459 I MediaProvider: Open with lower FS for /product/media/audio/notifications/pixiedust.ogg. Uid: 10177
+11-06 14:38:42.186  1684  2459 W MediaProvider: Didn't find any volume for getVolume(/product/media/audio/alarms/Alarm_Classic.ogg)
+11-06 14:38:42.193  1684  2459 I MediaProvider: Open with lower FS for /product/media/audio/alarms/Alarm_Classic.ogg. Uid: 10177
+11-06 14:38:43.749   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(14)
+11-06 14:38:46.494   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(7)
+11-06 14:38:46.859   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(27)
+11-06 14:38:47.202   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(11)
+11-06 14:38:48.375   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(2)
+11-06 14:38:51.493   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(38)
+11-06 14:38:51.539   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(8)
+11-06 14:38:52.309   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(55)
+11-06 14:38:56.632  1714  1714 E VS.BluetoothShim: 	at com.google.android.apps.gsa.speech.audio.a.l.<clinit>(PG:1)
+11-06 14:38:56.632  1714  1714 E VS.BluetoothShim: 	at com.google.android.apps.gsa.speech.audio.a.i.onServiceConnected(PG:1)
+11-06 14:38:58.002  4415  4415 D GeckoSession: handleMessage GeckoView:HangReport uri=null
+11-06 14:38:58.005  1049  1088 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.notification.SpatialAudioParentPreferenceController
+11-06 14:38:58.055  1049  4357 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.notification.SpatialAudioParentPreferenceController
+11-06 14:38:58.066  1049  1088 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.accessibility.HearingAidAudioRoutingPreferenceController
+11-06 14:38:58.127  4784  4851 W Isolated Web Content: [JavaScript Warning: "WebGL warning: generateMipmap: Tex image TEXTURE_2D level 0 is incurring lazy initialization."]
+11-06 14:38:58.134  1049  1088 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.notification.SpatialAudioPreferenceController
+11-06 14:38:58.134  1049  1088 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.notification.SpatialAudioWiredHeadphonesController
+11-06 14:38:58.147  4415  4415 D GeckoSession: handleMessage GeckoView:StateUpdated uri=null
+11-06 14:38:58.148  4784  4851 I Gecko   : [GFX1-]: Couldn't sanitize GL_RENDERER "Android Emulator OpenGL ES Translator (Google SwiftShader)"
+11-06 14:38:58.190  1049  1088 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.accessibility.AudioDescriptionPreferenceController
+11-06 14:38:58.281  1049  4357 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.accessibility.HearingAidAudioRoutingPreferenceController
+11-06 14:38:58.324  1049  4357 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.notification.SpatialAudioPreferenceController
+11-06 14:38:58.324  1049  4357 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.notification.SpatialAudioWiredHeadphonesController
+11-06 14:38:58.367  4415  4779 I WDFZ    : SHOT menu {"scene":{"screen":"menu","mode":"in","room":null,"linkPreviews":0,"stairPreviews":0,"lights":8,"quality":1,"renderer":"webgl"},"audio":{"available":false,"bgm":0.058,"ctx":"suspended","policy":"disallowed","musicOn":true,"vol":70,"gestures":0},"gpu":{"engine":{"phase":"ready","backend":"webgl","requested":"webgl","fallbackReason":null,"diagnostic":null},"gpu":"Generic Renderer","vendor":"Google (Google Inc.)","gl":"WebGL 2.0","maxTex":8192,"texUnits":16,"fragUniforms":261,"varyings":15,"depthBits":24,"fragHighp":23,"vertHighp":23,"programs":17,"badPrograms":0,"glError":0,"pixelRatio":1.4,"lost":0},"extra":{"note":"before tap"}}
+11-06 14:38:58.785   521   907 I MediaFocusControl: requestAudioFocus() from uid/pid 10169/834 AA=USAGE_NOTIFICATION/CONTENT_TYPE_SONIFICATION clientId=android.media.AudioManager@1e5fb9f callingPack=com.android.systemui req=3 flags=0x0 sdk=34
+11-06 14:38:58.786   521   907 I AudioService.FadeOutManager: unfadeOutUid() uid:10169
+11-06 14:38:59.290   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(21)
+11-06 14:38:59.456   473  5428 D CCodecConfig: read media type: audio/vorbis
+11-06 14:38:59.485   473  5428 D CCodecConfig:   string input.media-type.value = "audio/vorbis"
+11-06 14:38:59.485   473  5428 D CCodecConfig:   string output.media-type.value = "audio/raw"
+11-06 14:38:59.490   473  5428 D CCodec  :   string mime = "audio/vorbis"
+11-06 14:38:59.490   473  5428 D CCodec  :   string mime = "audio/raw"
+11-06 14:38:59.732  1049  4357 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.accessibility.AudioDescriptionPreferenceController
+11-06 14:39:00.050   398   412 D AudioFlinger: Client defaulted notificationFrames to 12512 for frameCount 25024
+11-06 14:39:00.050   398   412 D AF::TrackHandle: OpPlayAudio: track:57 usage:5 not muted
+11-06 14:39:00.109   398   412 D audioserver: FGS Logger Transaction failed
+11-06 14:39:00.109   398   412 D audioserver: -129
+11-06 14:39:00.125   473  5426 D AudioTrack: getTimestamp_l(17): device stall time corrected using current time 97372771127
+11-06 14:39:00.146   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(22)
+11-06 14:39:00.511  4415  4494 D GeckoIdleService: next timeout 5000 msec from now
+11-06 14:39:00.511  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 5000 msec from now
+11-06 14:39:00.511  4415  4494 D GeckoIdleService: reset timer expiry to 5010 msec from now
+11-06 14:39:00.511  4415  4494 D GeckoIdleService: Reset idle timeout: tell observer 0x7971ad848e78 user is back
+11-06 14:39:00.806   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(16)
+11-06 14:39:00.853   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(29)
+11-06 14:39:01.043   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(18)
+11-06 14:39:01.103   398   507 D audioserver: FGS Logger Transaction failed
+11-06 14:39:01.106   398   507 D audioserver: -129
+11-06 14:39:01.133   398  4383 D audioserver: FGS Logger Transaction failed
+11-06 14:39:01.133   398  4383 D audioserver: -129
+11-06 14:39:01.134   521  2120 I MediaFocusControl: abandonAudioFocus() from uid/pid 10169/834 clientId=android.media.AudioManager@1e5fb9f
+11-06 14:39:01.699   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(17)
+11-06 14:39:01.919   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(14)
+11-06 14:39:02.113  5433  5433 I PhenotypeBackgroundRecv: Skipping com.google.android.libraries.search.audio.device#com.google.android.googlequicksearchbox which doesn't use ProcessStable flags.
+11-06 14:39:02.236   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(9)
+11-06 14:39:02.790  1000  5495 D NetworkMonitor/100: PROBE_HTTPS https://www.google.com/generate_204 time=101ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=":443"; ma=2592000,h3-29=":443"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:39:02 GMT], X-Android-Received-Millis=[1793975942789], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793975942768]}
+11-06 14:39:02.808  1000  5496 D NetworkMonitor/100: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=84ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:39:02 GMT], X-Android-Received-Millis=[1793975942808], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793975942767]}
+11-06 14:39:03.054   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(2)
+11-06 14:39:03.219  4784  4851 I Gecko   : [GFX1-]: Couldn't sanitize GL_RENDERER "Android Emulator OpenGL ES Translator (Google SwiftShader)"
+11-06 14:39:03.293  4415  5049 I WDFZ    : SHOT menu_tap {"scene":{"screen":"menu","mode":"in","room":null,"linkPreviews":0,"stairPreviews":0,"lights":8,"quality":1,"renderer":"webgl"},"audio":{"available":true,"bgm":0.058,"ctx":"running","policy":"allowed","musicOn":true,"vol":70,"gestures":2},"gpu":{"engine":{"phase":"ready","backend":"webgl","requested":"webgl","fallbackReason":null,"diagnostic":null},"gpu":"Generic Renderer","vendor":"Google (Google Inc.)","gl":"WebGL 2.0","maxTex":8192,"texUnits":16,"fragUniforms":261,"varyings":15,"depthBits":24,"fragHighp":23,"vertHighp":23,"programs":17,"badPrograms":0,"glError":0,"pixelRatio":1.4,"lost":0},"extra":{"note":"after tap"}}
+11-06 14:39:03.894   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(2)
+11-06 14:39:04.230   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(8)
+11-06 14:39:04.331   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(9)
+11-06 14:39:04.417   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:39:05.141   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(40)
+11-06 14:39:05.525   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(16)
+11-06 14:39:05.535  4415  4494 D GeckoIdleService: Get idle time: time since reset 1923 msec
+11-06 14:39:05.535  4415  4494 D GeckoIdleService: Idle timer callback: current idle time 1923 msec
+11-06 14:39:05.535  4415  4494 D GeckoIdleService: next timeout 3076 msec from now
+11-06 14:39:05.535  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 3076 msec from now
+11-06 14:39:05.535  4415  4494 D GeckoIdleService: reset timer expiry to 3086 msec from now
+11-06 14:39:05.776   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(10)
+11-06 14:39:06.443  2829  2829 I PhenotypeBackgroundRecv: Skipping com.google.android.libraries.search.audio.device#com.google.android.tts which doesn't use ProcessStable flags.
+11-06 14:39:06.680   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:39:08.137   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(28)
+11-06 14:39:08.628  4415  4494 D GeckoIdleService: Get idle time: time since reset 5016 msec
+11-06 14:39:08.631  4415  4494 D GeckoIdleService: Idle timer callback: current idle time 5016 msec
+11-06 14:39:08.631  4415  4494 D GeckoIdleService: next timeout 174981 msec from now
+11-06 14:39:08.631  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 174981 msec from now
+11-06 14:39:08.631  4415  4494 D GeckoIdleService: reset timer expiry to 174990 msec from now
+11-06 14:39:08.631  4415  4494 D GeckoIdleService: Idle timer callback: tell observer 0x7971ad848e78 user is idle
+11-06 14:39:09.807   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(20)
+11-06 14:39:11.623   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(13)
+11-06 14:39:12.687   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(9)
+11-06 14:39:14.476   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:39:15.881   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(5)
+11-06 14:39:16.177  4415  4494 D GeckoIdleService: Get idle time: time since reset 12565 msec
+11-06 14:39:16.770   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(26)
+11-06 14:39:17.037   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(2)
+11-06 14:39:18.172   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(6)
+11-06 14:39:18.665   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.666   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.692   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.694   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.702   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.702   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.714   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.714   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.714   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.715   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.715   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.716   398   412 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.717   398  4383 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.719   398  4383 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.721   398  4383 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:18.721   398  4383 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+11-06 14:39:20.781   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(27)
+11-06 14:39:20.919   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(6)
+11-06 14:39:21.412   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:39:22.388   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(32)
+11-06 14:39:23.323  4784  4851 I Gecko   : [GFX1-]: Couldn't sanitize GL_RENDERER "Android Emulator OpenGL ES Translator (Google SwiftShader)"
+11-06 14:39:24.653   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(2)
+11-06 14:39:26.738   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(1)
+11-06 14:39:27.828   521   521 D BluetoothDeviceConfigChangeTracker: shouldRestartWhenPropertiesUpdated: INIT_gd_hal_snoop_logger_filtering='true',scan_timeout_millis='300000',location_denylist_name='',audio_policy_hf_enabled='true',INIT_gd_hal_snoop_logger_socket='true',location_denylist_advertising_data='⊈0016AAFE40/00FFFFFFF0,⊆0016AAFE/00FFFFFF,⊆00FF4C0002/00FFFFFFFF',le_audio_enabled_by_default='false',location_denylist_mac='',audio_policy_ag_enabled='true'
+11-06 14:39:29.279  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:29.293  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:30.550   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(3)
+11-06 14:39:34.006  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.022  1448  3422 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.031  1448  3422 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.033  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.041  1448  3422 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.054  1448  3422 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.071  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.081  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.097  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.130  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.151  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.160  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.182  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.194  1448  5873 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.228  1448  5873 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.251  1448  5858 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.258  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.274  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.293  1448  5265 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.317  1448  5266 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.341  1448  5266 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.360  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.370  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.385  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.394  1448  5266 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.417  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.435  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.439  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.451  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.462  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.472  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.488  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.497  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.513  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.532  1448  5266 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.537  1448  5895 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.564  1448  5895 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.587  1448  5266 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.601  1448  5266 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.628  1448  5266 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.645  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.667  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.751  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.754  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.766  1448  5895 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.784  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.809  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.829  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.849  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.869  1448  5895 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.889  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.900  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.914  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.933  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.970  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.977  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.981  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:34.995  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.007  1448  5522 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.013  1448  5522 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.020  1448  5522 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.025  1448  5522 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.044  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.058  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.131  1448  5522 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.158  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.164  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.181  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.195  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.203  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.231  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.248  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.290  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.324  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.334  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.351  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.376  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.395  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.410  1448  5265 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.415  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.432  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.453  1448  5265 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.465  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.469  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.473  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.479  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.495  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.503  1448  5265 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.514  1448  5265 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.527  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.536  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.539  1448  5265 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.554  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.558  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.573  1448  5265 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.585  1448  5872 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.610  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.618  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.622  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.631  1448  5891 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.652  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.666  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.672  1448  5268 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.680  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.703  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.709  1448  5522 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.730  1448  5522 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.733  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.736  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.744  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.757  1448  5871 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.769  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.777  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.780  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.797  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.809  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.824  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.831  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.843  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.861  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.871  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.877  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.893  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.915  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.921  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.934  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.939  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.947  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.953  1448  5869 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.977  1448  5868 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:35.985  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.005  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.011  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.023  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.030  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.048  1448  1518 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.061  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.085  1448  5267 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.107  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.135  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.166  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.201  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.218  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.224  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.270  1448  5873 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.278  1448  5873 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.306  1448  5873 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.338  1448  5872 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.350  1448  5872 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.379  1448  5872 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.428  1448  5872 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.451  1448  5872 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:36.463  1448  5896 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:37.051  5957  6070 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:37.352  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:39.604  6072  6137 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.873  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.880  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.907  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.918  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.930  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.943  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.946  5957  6068 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.958  5957  6048 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.973  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:44.985  5957  6070 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:46.969  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:46.976  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.022  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.070  5957  6068 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.112  5957  6383 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.179  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.215  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.250  5957  6068 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.279  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.298  5957  6048 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.315  5957  6048 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.337  5957  6048 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.371  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.411  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.478   398   507 D AudioFlinger: mixer(0x7865107b1930) throttle end: throttle time(4)
+11-06 14:39:47.489  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.540  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.561  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.571  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.589  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.602  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.612  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.623  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.636  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.642  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.651  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.679  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.685  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.692  5957  6385 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.697  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.701  5957  6384 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.706  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.729  5957  6400 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.765  5957  6400 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.780  5957  6400 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.801  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.817  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.825  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.848  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.873  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.893  5957  6390 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.914  5957  6384 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.933  5957  6384 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.953  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:47.974  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.008  5957  6385 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.025  5957  6385 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.061  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.076  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.081  5957  6384 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.089  5957  6384 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.093  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.110  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.125  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.150  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.155  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.170  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.244  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.253  5957  6385 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.257  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.259  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.263  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.304  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.342  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.350  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.355  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.359  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.368  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.375  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.379  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.384  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.388  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.393  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.400  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.403  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.407  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.412  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.415  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.419  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.424  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.428  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.436  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.443  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.447  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.450  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.454  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.457  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.464  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.468  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.472  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.476  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.481  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.485  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.489  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.493  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.501  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.504  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.509  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.513  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.518  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.521  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.526  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.530  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.533  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.538  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.541  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.546  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.549  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.552  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.557  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.559  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.562  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.565  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.573  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.576  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.589  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.597  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.603  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.618  5957  6370 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.627  5957  6046 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.635  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.640  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.648  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.654  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.659  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.663  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.668  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.673  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.677  5957  6049 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.681  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.685  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.688  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.691  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.694  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.697  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.700  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.705  5957  6382 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.712  5957  6399 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.717  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:39:48.730  5957  6054 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:40:02.478  1000  6490 D NetworkMonitor/100: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=11ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:40:02 GMT], X-Android-Received-Millis=[1793976002478], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793976002474]}
+11-06 14:40:02.519  1000  6489 D NetworkMonitor/100: PROBE_HTTPS https://www.google.com/generate_204 time=44ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=":443"; ma=2592000,h3-29=":443"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:40:02 GMT], X-Android-Received-Millis=[1793976002518], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793976002515]}
+11-06 14:42:03.621  4415  4494 D GeckoIdleService: Get idle time: time since reset 180009 msec
+11-06 14:42:03.621  4415  4494 D GeckoIdleService: Idle timer callback: current idle time 180009 msec
+11-06 14:42:03.621  4415  4494 D GeckoIdleService: next timeout 4294967114990 msec from now
+11-06 14:42:03.621  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 4294967114990 msec from now
+11-06 14:42:03.621  4415  4494 D GeckoIdleService: reset timer expiry to 4294967115000 msec from now
+11-06 14:42:03.621  4415  4494 D GeckoIdleService: Idle timer callback: tell observer 0x7971ad83fe20 user is idle
+11-06 14:42:03.621  4415  4494 D GeckoIdleService: Notifying idle-daily observers
+11-06 14:42:03.626  4415  4494 D GeckoIdleService: Register idle observer 0x7971a1bfb290 for 1 seconds
+11-06 14:42:03.626  4415  4494 D GeckoIdleService: Register: adjusting next switch from -1 to 1 seconds
+11-06 14:42:03.626  4415  4494 D GeckoIdleService: next timeout -179015 msec from now
+11-06 14:42:03.626  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout -179015 msec from now
+11-06 14:42:03.626  4415  4494 D GeckoIdleService: reset timer expiry to 10 msec from now
+11-06 14:42:03.627  4415  4494 D GeckoIdleService: Remove observer 0x7971ad83fe20 (180 seconds), 1 remain idle
+11-06 14:42:03.627  4415  4494 D GeckoIdleService: Storing last idle time as 1793976123
+11-06 14:42:03.636  4415  4494 D GeckoIdleService: Get idle time: time since reset 180024 msec
+11-06 14:42:03.636  4415  4494 D GeckoIdleService: Idle timer callback: current idle time 180024 msec
+11-06 14:42:03.636  4415  4494 D GeckoIdleService: next timeout 4294967114975 msec from now
+11-06 14:42:03.636  4415  4494 D GeckoIdleService: SetTimerExpiryIfBefore: next timeout 4294967114975 msec from now
+11-06 14:42:03.636  4415  4494 D GeckoIdleService: reset timer expiry to 4294967114985 msec from now
+11-06 14:42:03.636  4415  4494 D GeckoIdleService: Idle timer callback: tell observer 0x7971a1bfb290 user is idle
+11-06 14:42:19.490  1000  6970 D NetworkMonitor/100: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=11ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:42:19 GMT], X-Android-Received-Millis=[1793976139490], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793976139487]}
+11-06 14:42:19.493  1000  6969 D NetworkMonitor/100: PROBE_HTTPS https://www.google.com/generate_204 time=16ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=":443"; ma=2592000,h3-29=":443"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:42:19 GMT], X-Android-Received-Millis=[1793976139493], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793976139489]}
+11-06 14:43:04.541  5957  7119 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:43:04.599  5957  7119 I NamespaceManager: Package com.google.android.audioproxy name not found! Using module version.
+11-06 14:43:05.396   521   521 D BluetoothDeviceConfigChangeTracker: shouldRestartWhenPropertiesUpdated: INIT_gd_hal_snoop_logger_filtering='true',scan_timeout_millis='300000',location_denylist_name='',audio_policy_hf_enabled='true',INIT_gd_hal_snoop_logger_socket='true',location_denylist_advertising_data='⊈0016AAFE40/00FFFFFFF0,⊆0016AAFE/00FFFFFF,⊆00FF4C0002/00FFFFFFFF',le_audio_enabled_by_default='false',location_denylist_mac='',audio_policy_ag_enabled='true'
+11-06 14:47:02.470  1000  7863 D NetworkMonitor/100: PROBE_HTTPS https://www.google.com/generate_204 time=19ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=":443"; ma=2592000,h3-29=":443"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:47:02 GMT], X-Android-Received-Millis=[1793976422470], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793976422467]}
+11-06 14:47:02.507  1000  7864 D NetworkMonitor/100: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=38ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 06 Nov 2026 14:47:02 GMT], X-Android-Received-Millis=[1793976422507], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793976422479]}
