@@ -24,11 +24,13 @@ var RunRecords=(function(){
   }
   function write(){ try{ return $imports.GameStorage.write(CLEARS_KEY,JSON.stringify(read())); }catch(e){ return false; } }
   function real(x){ return x.source!=='debug'; }
+  /* 本体：真实、不是 DLC 玩法模式（variant）的；最佳、速通排行、评级取得只看这些 */
+  function base(x){ return real(x)&&!x.variant; }
   /* 「最佳」：每条路线 × 难度的最高评级分、最快用时（只看真实的） */
   function bestIds(list){
     var keep={}, byKey={};
     list.filter(real).forEach(function(x){
-      var k=x.route+'|'+x.diff, b=byKey[k]||(byKey[k]={g:null,t:null});
+      var k=x.route+'|'+x.diff+'|'+(x.variant||''), b=byKey[k]||(byKey[k]={g:null,t:null});   /* 各模式各留各的最佳 */
       if(!b.g||x.gradeScore>b.g.gradeScore) b.g=x;
       if(!b.t||x.time.used<b.t.time.used) b.t=x;
     });
@@ -65,7 +67,7 @@ var RunRecords=(function(){
     rec.id='c'+Date.now().toString(36)+$imports.PresentationRandom.integer(0,9999).toString(36);   /* 只是编号：不动玩法随机流 */
     rec.replay=0;
     d.list.push(rec);
-    if(real(rec)){
+    if(base(rec)){
       var g=d.grades[rec.grade]||(d.grades[rec.grade]={first:rec.at,count:0,best:null});
       g.count++; if(!g.first) g.first=rec.at;
       var cur=g.best&&d.list.filter(function(x){ return x.id===g.best; })[0];
@@ -90,7 +92,7 @@ var RunRecords=(function(){
   function removeDebug(){ var n=0; read().list.filter(function(x){ return !real(x); }).forEach(function(x){ if(remove(x.id)) n++; }); return n; }
   /* 速通排行：真实、速通模式、有 RTA 的记录；by:'time'|'grade' */
   function ranking(diff,route,by){
-    var rows=read().list.filter(function(x){ return real(x)&&x.mode==='speedrun'&&x.time&&x.time.rta>0&&x.diff===diff&&x.route===route; });
+    var rows=read().list.filter(function(x){ return base(x)&&x.mode==='speedrun'&&x.time&&x.time.rta>0&&x.diff===diff&&x.route===route; });
     var order=$imports.GRADES.map(function(g){ return g.g; });
     rows.sort(by==='grade'?function(a,b){ return (order.indexOf(b.grade)-order.indexOf(a.grade))||(a.time.rta-b.time.rta); }
       :function(a,b){ return a.time.rta-b.time.rta; });
@@ -98,10 +100,10 @@ var RunRecords=(function(){
   }
   function bestGrade(diff,route,mode){
     var order=$imports.GRADES.map(function(g){ return g.g; }), best=null;
-    read().list.forEach(function(x){ if(real(x)&&x.diff===diff&&x.route===route&&(!mode||x.mode===mode)&&(!best||order.indexOf(x.grade)>order.indexOf(best))) best=x.grade; });
+    read().list.forEach(function(x){ if(base(x)&&x.diff===diff&&x.route===route&&(!mode||x.mode===mode)&&(!best||order.indexOf(x.grade)>order.indexOf(best))) best=x.grade; });
     return best;
   }
-  return {read:read,write:write,add:add,get:get,replay:replay,remove:remove,removeDebug:removeDebug,ranking:ranking,bestGrade:bestGrade,
+  return {read:read,write:write,add:add,base:base,get:get,replay:replay,remove:remove,removeDebug:removeDebug,ranking:ranking,bestGrade:bestGrade,
     list:function(){ return read().list.slice(); },
     grades:function(){ return read().grades; },
     _reset:function(){ cache=null; }};

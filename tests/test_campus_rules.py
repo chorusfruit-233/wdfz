@@ -223,3 +223,32 @@ class CampusRulesTest(BrowserCase):
         page = self.game(False)
         self.open_archive(page)
         self.assertFalse(page.evaluate("!!document.getElementById('arsec-rules')"))
+
+    # ---------- T5：模式成绩分开展示 ----------
+    def test_a_rules_clear_is_recorded_on_its_own_and_kept_out_of_base_bests(self):
+        page = self.game()
+        r = page.evaluate("""()=>{localStorage.removeItem('wdfz3d_clears_v1');RunRecords._reset();
+          gameFact('ending',{id:'car',legit:true,fake:false,trueEnd:true});
+          const L=RunRecords.list(),x=L[0]||{};
+          return {n:L.length,variant:x.variant,name:x.variantName,group:x.variantGroup,grades:Object.keys(RunRecords.grades()).length,best:RunRecords.bestGrade(S.diff,'car'),base:L.filter(RunRecords.base).length};}""")
+        self.assertEqual(r['n'], 1)
+        self.assertEqual([r['variant'], r['name'], r['group']], ['rules@1.1.0', '规则怪谈', 'A'])
+        self.assertEqual(r['grades'], 0)                          # 不点亮本体的「评级取得」
+        self.assertIsNone(r['best'])                              # 不占本体最佳
+        self.assertEqual(r['base'], 0)
+        page.evaluate("()=>{Game.quit&&Game.quit();RecordsUI.open();}")
+        page.wait_for_function("!document.getElementById('records').hidden")
+        r = page.evaluate("""()=>{const m=document.getElementById('rcMode'),base=document.querySelectorAll('#rcList .rcrow').length;
+          m.value='rules@1.1.0';m.dispatchEvent(new Event('change'));
+          const rows=[...document.querySelectorAll('#rcList .rcrow')];
+          return {opts:[...m.options].map(o=>o.textContent),base,rows:rows.length,tag:rows[0]&&rows[0].textContent};}""")
+        self.assertEqual(r['opts'], ['本体', '规则怪谈 · v1.1.0'])
+        self.assertEqual(r['base'], 0)                            # 默认只看本体
+        self.assertEqual(r['rows'], 1)
+        self.assertIn('规则组 A', r['tag'])
+
+    def test_an_untrusted_rules_clear_is_not_recorded(self):
+        page = self.game()
+        r = page.evaluate("""()=>{localStorage.removeItem('wdfz3d_clears_v1');RunRecords._reset();DEV.on=true;CampusRules.trusted();DEV.on=false;
+          gameFact('ending',{id:'car',legit:true,fake:false,trueEnd:true});return RunRecords.list().length;}""")
+        self.assertEqual(r, 0)

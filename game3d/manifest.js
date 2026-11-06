@@ -157,6 +157,7 @@
       'game3d/js/modules/run-record/records.js','game3d/js/modules/run-record/grade-screen.js','game3d/js/modules/run-record/results-ui.js',
       'game3d/js/modules/run-record/records-ui.js','game3d/js/modules/run-record/debug-tab.js','game3d/js/modules/run-record/run-record.js'],
     exports:['ScoreRules','RunTrack','RunScore','RunLog','RunRecords','GradeScreen','ResultsUI','RecordsUI','DebugArchiveTab','RunRecord','GRADES','SCORE_CFG'],
+    emits:['runVariant'],
     uses:['gameFact','newGame','enterRoom','leaveRoom','tick','boundary','boot','endingCard','deathScreen','devTab']},
   {id:'campus-link',name:'连续校园：连廊',desc:'计划《校园直通、翻越受伤与国际交流》第 3 节、第 15.0a 节 C1：两条连廊四个端口开门洞，越过门槛线无缝换场景（和梯井同一套刚性变换），两头互相看得见；端口表 CAMPUS_LINK 也供巡察导航用。C3：教学楼二到五层敞开外廊（gallery.js，挂室外模型）。C2：教学楼一楼南门门槛连续（doors.js：室外楼体在门口留缺口，门里门外互相看得见）。拿掉后回到按 E 换场景、走廊南墙照旧、门口是关着的玻璃门。',
     files:['game3d/js/modules/campus-link/link.js','game3d/js/modules/campus-link/link-view.js','game3d/js/modules/campus-link/gallery.js','game3d/js/modules/campus-link/doors.js'],exports:['CampusLink','CAMPUS_LINK','CampusLinkView','TeachGallery','TEACH_GALLERY','CampusDoor','CAMPUS_DOOR'],uses:['interiors','sceneBuilt','stepMoved','linkContinuous','clearWorld','openAir','doorContinuous','frame']},

@@ -180,6 +180,8 @@ GameModules.mod({
         {label:'不答应',fn:function(){ UI.closeChoice(); try{ gameFact('ruleResolved',{id:'R10',ok:true}); }catch(e){} os('我：我没有出声。那个声音又念了一遍，然后念了下一个名字。',3.4); }}
       ]);
     }
+    /* 通关记录：规则局单独记、单独展示（计划第 11、15.2 节）；本体成就照旧不记这一局 */
+    api.on('runVariant',function(){ if(!on()) return undefined; return {variant:'rules@1.1.0',name:'规则怪谈',bundle:bundle(),trusted:trusted()}; });
     /* 本局经历：目光、返航、死亡、结局（事实流水 gameFact，计划第 11 节） */
     api.on('gameFact',function(f){
       if(!f||!on()) return;
