@@ -49,9 +49,11 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    // 单文件页面（tools/build_single_html.cjs 生成，工作流拷进 src/main/assets/wdfz.html）不压缩：本机服务直接流式读出
-    androidResources {
-        noCompress 'html'
+    // 体积：GeckoView 的原生库（libxul 等）默认不压缩直接放进 APK（约 217 MB）。压缩后下载小得多，安装时解压到手机上
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     lint {

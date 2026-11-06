@@ -125,11 +125,11 @@ final class LocalServer implements Runnable {
 
     private void page(OutputStream out, boolean head) throws IOException {
         long length = -1;
-        try (AssetFileDescriptor fd = assets.openFd(PAGE)) {      // 不压缩的资源才能拿到长度（build.gradle 里 noCompress 'html'）
+        try (AssetFileDescriptor fd = assets.openFd(PAGE)) {      // 不压缩的资源才能直接拿到长度
             length = fd.getLength();
         } catch (IOException ignored) {
         }
-        if (length < 0) {                                          // 万一被压缩了：读进内存再算长度
+        if (length < 0) {                                          // 资源在 APK 里是压缩的：读进内存再算长度（约 19 MB，只在打开游戏时读一次）
             byte[] all = readAll(assets.open(PAGE));
             status(out, "200 OK", "text/html; charset=utf-8", all.length);
             if (!head) out.write(all);
