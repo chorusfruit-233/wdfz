@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动画面的门（和图标同一个造型）：门框、门后透出的冷光、门扇（左边是门轴）、门把手、红色门槛线。
+     动画在 splash_door_anim.xml：门扇绕门轴转开（横向缩），冷光亮起来 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#2A2F33" android:pathData="M36,26h36v58h-36z" />
+    <group android:name="light" android:pivotX="38" android:pivotY="55" android:scaleX="0.08">
+        <path android:name="lightFill" android:fillColor="#9FD4E8" android:fillAlpha="0.25" android:pathData="M38,28h32v54h-32z" />
+    </group>
+    <group android:name="leaf" android:pivotX="38" android:pivotY="55">
+        <path android:fillColor="#5C4A3A" android:pathData="M38,28h30l-2,54h-28z" />
+        <path android:fillColor="#C8A24A" android:pathData="M61,55m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+    </group>
+    <path android:fillColor="#B5332F" android:pathData="M30,84h48v3h-48z" />
+</vector>

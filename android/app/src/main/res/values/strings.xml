@@ -3,4 +3,6 @@
     <string name="app_name">里世界</string>
     <string name="server_failed">本机服务启动失败，请重启应用。</string>
     <string name="no_file_app">没有可以选文件的应用。</string>
+    <string name="splash_title">里世界</string>
+    <string name="splash_sub">武汉大学附属中学</string>
 </resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 门扇：先停一下，再慢慢转开（门轴在左边） -->
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:propertyName="scaleX"
+    android:valueFrom="1"
+    android:valueTo="0.18"
+    android:startOffset="180"
+    android:duration="900"
+    android:interpolator="@android:interpolator/accelerate_decelerate" />
