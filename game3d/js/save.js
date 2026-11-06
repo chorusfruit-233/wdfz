@@ -122,7 +122,23 @@ var SAVE_SCHEMA=[
   }
 ];
 /* 速通用单独的存档槽，不覆盖、不删除普通模式的「继续上次」 */
-function saveSlot(){ return (typeof $imports.RUN_MODE!=='undefined'&&$imports.RUN_MODE==='speedrun')?'wdfz3d_speedrun_slot':'wdfz3d'; }
+/* 独立普通槽（规则怪谈计划第 4.1、15.2 节）：主存档是规则怪谈局、而这次 DLC 没加载（关掉了或 ?nomod）时，
+   新开的普通局写进 wdfz3d_plain，规则存档原样留着；不能在 DLC 关着的时候读规则存档接着玩。 */
+var SAVE_PLAIN=false;
+var SaveSlots={
+  MAIN:'wdfz3d', PLAIN:'wdfz3d_plain',
+  usePlain:function(on){ SAVE_PLAIN=!!on; },
+  plain:function(){ return SAVE_PLAIN; },
+  peek:function(key){ try{ var r=GameStorage.read(key); return r.ok&&r.value?prepareSave(JSON.parse(r.value)):null; }catch(e){ return null; } },
+  isRules:function(d){ return !!(d&&d.rt&&d.rt.rulesMode&&d.rt.rulesMode.v); },
+  rulesLoaded:function(){ try{ return GameModules.mods().some(function(m){ return m.id==='campus-rules'&&m.status==='active'; }); }catch(e){ return false; } },
+  /* 主存档是规则局，而规则怪谈没加载：读主存档要先问一下 */
+  mainLocked:function(){ return !SaveSlots.rulesLoaded()&&SaveSlots.isRules(SaveSlots.peek(SaveSlots.MAIN)); }
+};
+function saveSlot(){
+  if(typeof $imports.RUN_MODE!=='undefined'&&$imports.RUN_MODE==='speedrun') return 'wdfz3d_speedrun_slot';
+  return SAVE_PLAIN?SaveSlots.PLAIN:SaveSlots.MAIN;
+}
 function saveGame(){
   try{
     $imports.CampusPressure.observe();
@@ -178,7 +194,7 @@ function endMark(id){
 }
 function paintMenuSave(){
   var sc=document.getElementById('btncont');
-  if(sc) sc.style.display=loadGame()?'block':'none';
+  if(sc) sc.style.display=(loadGame()||SaveSlots.peek(SaveSlots.MAIN)||SaveSlots.peek(SaveSlots.PLAIN))?'block':'none';
   var el=document.getElementById('mends');
   if(!el) return;
   var seen=endsSeen(), ids=Object.keys($imports.ENDINGS), got=[];
@@ -242,6 +258,8 @@ GameModules.publish("game3d/js/save.js",{
 "GameStorage":{get:function(){return GameStorage;},set:function($value){GameStorage=$value;}},
 "prepareSave":{get:function(){return prepareSave;},set:function($value){prepareSave=$value;}},
 "SAVE_SCHEMA":{get:function(){return SAVE_SCHEMA;},set:function($value){SAVE_SCHEMA=$value;}},
+"SAVE_PLAIN":{get:function(){return SAVE_PLAIN;},set:function($value){SAVE_PLAIN=$value;}},
+"SaveSlots":{get:function(){return SaveSlots;},set:function($value){SaveSlots=$value;}},
 "saveSlot":{get:function(){return saveSlot;},set:function($value){saveSlot=$value;}},
 "saveGame":{get:function(){return saveGame;},set:function($value){saveGame=$value;}},
 "applySave":{get:function(){return applySave;},set:function($value){applySave=$value;}},

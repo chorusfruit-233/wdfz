@@ -6,7 +6,7 @@
    足迹图：每个到过的场景一张，路线按时间从浅到深，停留越久圆点越大，事件标在发生的位置；可以保存成图片。 */
 'use strict';
 var RecordsUI=(function(){
-  var view={sort:'at',route:'',diff:''}, rp=null, fp=null;
+  var view={sort:'at',mode:'',route:'',diff:''}, rp=null, fp=null;   /* mode：''＝本体，否则是 DLC 玩法模式的 variant */
   function el(id){ return document.getElementById(id); }
   function esc(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function fmt(sec){ sec=Math.max(0,Math.round(sec||0)); var m=Math.floor(sec/60), s=sec%60; return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
@@ -28,12 +28,12 @@ var RecordsUI=(function(){
     box.innerHTML='<div class="mdbox wide"><div class="tphead"><b id="rcTitle">通关记录</b><i id="rcCount"></i></div>'+
       '<p class="tplead">每次通关记一条：评级、用时、积分明细和探索度。最近 10 次和每条路线、难度的最佳记录保留回放与足迹图；记录只存在这台设备的浏览器里。</p>'+
       '<div class="rcbar"><label>排序<select id="rcSort"><option value="at">最近</option><option value="grade">评级</option><option value="time">用时</option></select></label>'+
-      '<label>路线<select id="rcRoute"></select></label><label>难度<select id="rcDiff"><option value="">全部</option><option value="easy">预知梦</option><option value="hard">梦魇</option></select></label></div>'+
+      '<label>模式<select id="rcMode"></select></label><label>路线<select id="rcRoute"></select></label><label>难度<select id="rcDiff"><option value="">全部</option><option value="easy">预知梦</option><option value="hard">梦魇</option></select></label></div>'+
       '<div class="arscroll"><div id="rcList" class="rclist"></div></div>'+
       '<div class="tpfoot"><button type="button" id="rcBack">返回</button></div></div>';
     document.body.appendChild(box);
     el('rcBack').addEventListener('click',close);
-    ['rcSort','rcRoute','rcDiff'].forEach(function(id){ el(id).addEventListener('change',function(){ view.sort=el('rcSort').value; view.route=el('rcRoute').value; view.diff=el('rcDiff').value; paint(); }); });
+    ['rcSort','rcMode','rcRoute','rcDiff'].forEach(function(id){ el(id).addEventListener('change',function(){ view.sort=el('rcSort').value; view.mode=el('rcMode').value; view.route=el('rcRoute').value; view.diff=el('rcDiff').value; paint(); }); });
     mountReplay(); mountFootprint(); paintMenu();
   }
   function paintMenu(){ var s=el('btnrecSub'); if(!s) return; var n=$imports.RunRecords.list().filter(function(x){ return x.source!=='debug'; }).length; s.textContent=n?('通关 '+n+' 次 · 评级与回放'):'通关以后，在这里回看'; }
@@ -44,7 +44,12 @@ var RecordsUI=(function(){
     return ids;
   }
   function paint(){
-    var all=$imports.RunRecords.list(), sel=el('rcRoute'), cur=view.route;
+    var every=$imports.RunRecords.list(), mode=view.mode||'', modes={};
+    every.forEach(function(x){ if(x.variant) modes[x.variant]=x.variantName||x.variant; });
+    if(mode&&!modes[mode]) mode=view.mode='';
+    el('rcMode').innerHTML='<option value="">本体</option>'+Object.keys(modes).sort().map(function(v){ return '<option value="'+esc(v)+'"'+(v===mode?' selected':'')+'>'+esc(modes[v])+' · v'+esc(v.split('@')[1]||'')+'</option>'; }).join('');
+    /* 模式分开：本体只看没有 variant 的，DLC 玩法模式各看各的（计划《规则怪谈》第 11 节） */
+    var all=every.filter(function(x){ return (x.variant||'')===mode; }), sel=el('rcRoute'), cur=view.route;
     sel.innerHTML='<option value="">全部</option>'+routes(all).map(function(r){ var x=all.filter(function(a){ return a.route===r; })[0];
       return '<option value="'+r+'"'+(r===cur?' selected':'')+'>'+esc(x?x.routeName:(($imports.ENDINGS[r]&&$imports.ENDINGS[r].t.replace(/\s+/g,''))||r))+'</option>'; }).join('');
     var list=all.filter(function(x){ return (!view.route||x.route===view.route)&&(!view.diff||x.diff===view.diff); });
@@ -54,7 +59,7 @@ var RecordsUI=(function(){
     if(!list.length){ box.innerHTML='<p class="rcempty">'+(all.length?'没有符合条件的记录。':'还没有通关记录。')+'</p>'; return; }
     list.forEach(function(x){
       var b=document.createElement('button'); b.type='button'; b.className='rcrow'; b.dataset.id=x.id;
-      var tags=[]; if(x.mode==='speedrun') tags.push('速通'); if(x.source==='debug') tags.push('调试生成'); if(x.replay) tags.push('回放');
+      var tags=[]; if(x.variant) tags.push(x.variantName||'DLC 模式'); if(x.variantGroup) tags.push('规则组 '+x.variantGroup); if(x.mode==='speedrun') tags.push('速通'); if(x.source==='debug') tags.push('调试生成'); if(x.replay) tags.push('回放');
       b.innerHTML='<em class="g-'+x.grade+'">'+x.grade+'</em><span><b>'+esc(x.routeName)+' · '+diffName(x.diff)+(talentName(x.talent)?' · '+esc(talentName(x.talent)):'')+'</b>'+
         '<i>'+fmtDate(x.at)+' · 用时 '+fmt(x.time.used)+' · 积分 '+x.score.total+' · 探索度 '+x.explore.pct+'%</i></span>'+
         (tags.length?'<small>'+tags.join(' · ')+'</small>':'');

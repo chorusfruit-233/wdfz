@@ -129,6 +129,9 @@ var RunScore=(function(){
     var active=typeof $imports.Mechanics!=='undefined'?$imports.Mechanics.activePlaySeconds:0;
     var sec=($imports.RUN_MODE==='speedrun'&&rta)?rta/1000:active, par=$imports.SCORE_CFG.par[f.id]||1200;
     var rate=$imports.ScoreRules.rate(sum.total,sec,par,ctx);
+    /* 自带 DLC 的玩法模式（规则怪谈）：自己判可信，记录带 variant，不进本体的最佳、排行、评级取得 */
+    var vr=null; try{ vr=GameModules.first('runVariant')||null; }catch(e){ vr=null; }
+    var base=trusted(), modeOk=!!(vr&&typeof vr.variant==='string'&&vr.variant&&vr.trusted);
     result={id:null,at:Date.now(),mode:$imports.RUN_MODE==='speedrun'?'speedrun':'normal',diff:$imports.S.diff,talent:$imports.S.talent,route:f.id,routeName:routeName(f.id),
       day:$imports.S.day,clock:$imports.S.tsec,time:{active:Math.round(active*10)/10,rta:rta,par:par,used:Math.round(sec*10)/10},
       score:{rules:$imports.SCORE_RULES,total:sum.total,sum:sum.sum,mult:sum.mult,items:sum.items},
@@ -136,7 +139,8 @@ var RunScore=(function(){
       gate:rate.gate,capped:rate.capped,explore:ctx.explore,san:{final:Math.round($imports.S.san),min:Math.round(ctx.minSan)},
       ach:{run:(typeof $imports.Achievements!=='undefined')?$imports.Achievements.run().got.slice():[],newly:(typeof $imports.Achievements!=='undefined')?$imports.Achievements.runNew():[]},
       legacy:st.legacy,source:'play',version:typeof $imports.SPEEDRUN_GAME!=='undefined'?$imports.SPEEDRUN_GAME:'',runId:sr&&sr.rec?sr.rec.runId:null,
-      rated:ok&&trusted(),debug:!trusted()};
+      variant:modeOk?vr.variant:'',variantName:modeOk?String(vr.name||vr.variant):'',variantGroup:modeOk&&vr.bundle?String(vr.bundle):'',
+      rated:ok&&(base||modeOk),debug:!(base||modeOk)};
     if(!result.rated) return;
     try{ result.id=$imports.RunRecords.add(result,$imports.RunLog.finish()); }catch(e){}
     try{ if(result.mode==='speedrun'&&result.runId) $imports.Speedrun.attachScore(result.runId,{score:result.score.total,grade:result.grade,rules:$imports.SCORE_RULES}); }catch(e){}
