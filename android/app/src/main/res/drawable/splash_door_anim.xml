@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动动画：教室门慢慢打开，门缝里透出冷光（约 1.1 秒）。系统启动画面（Android 12+）和应用自己的启动层共用 -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/splash_door">
+    <target android:name="leaf" android:animation="@animator/door_leaf_open" />
+    <target android:name="light" android:animation="@animator/door_light_spread" />
+    <target android:name="lightFill" android:animation="@animator/door_light_on" />
+</animated-vector>

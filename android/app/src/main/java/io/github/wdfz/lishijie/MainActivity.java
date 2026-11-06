@@ -3,15 +3,21 @@ package io.github.wdfz.lishijie;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.drawable.Animatable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import org.mozilla.geckoview.AllowOrDeny;
@@ -29,9 +35,12 @@ import org.mozilla.geckoview.GeckoView;
  * · 返回键：先发一次 Esc 给游戏（暂停、关面板）；1.5 秒内再按一次回到桌面（游戏留在后台）
  * · 不是本机页面的链接（Wiki、仓库）交给系统浏览器
  * · 导入 DLC 文件：用系统的文件选择器
+ * · 启动动画：Android 12 起先是系统启动画面（门打开）；然后是应用自己的启动层——同一扇门打开、标题渐显、
+ *   底部红线跟着页面载入进度走，游戏页面第一次画出来以后淡出（至少停 1.8 秒，最多等 15 秒）
  */
 public class MainActivity extends Activity {
     private static final int REQ_FILE = 7;
+    private static final long SPLASH_MIN_MS = 1800, SPLASH_MAX_MS = 15000, SPLASH_FADE_MS = 450;
     private static GeckoRuntime runtime;                 // 整个进程只能有一个
 
     private GeckoSession session;
@@ -41,6 +50,11 @@ public class MainActivity extends Activity {
     private boolean hinted;
     private GeckoResult<GeckoSession.PromptDelegate.PromptResponse> pendingFile;
     private GeckoSession.PromptDelegate.FilePrompt pendingPrompt;
+    private final Handler ui = new Handler(Looper.getMainLooper());
+    private View splash;
+    private View splashBar;
+    private long splashAt;
+    private boolean splashGone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +63,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         view = findViewById(R.id.gecko);
         immersive();
+        startSplash();
 
         server = new LocalServer(getAssets());
         if (!server.start()) {
@@ -75,6 +90,7 @@ public class MainActivity extends Activity {
         session.setNavigationDelegate(new Navigation());
         session.setContentDelegate(new Content());
         session.setPromptDelegate(new Prompts());
+        session.setProgressDelegate(new Progress());
         session.open(runtime);
         view.setSession(session);
         session.loadUri(server.url());
@@ -116,6 +132,11 @@ public class MainActivity extends Activity {
         }
 
         @Override
+        public void onFirstContentfulPaint(GeckoSession s) {
+            hideSplash();                                                // 游戏页面第一次画出来了
+        }
+
+        @Override
         public void onCrash(GeckoSession s) {
             restart();
         }
@@ -124,6 +145,45 @@ public class MainActivity extends Activity {
         public void onKill(GeckoSession s) {
             restart();
         }
+    }
+
+    private final class Progress implements GeckoSession.ProgressDelegate {
+        @Override
+        public void onProgressChange(GeckoSession s, int progress) {
+            if (splashBar != null && !splashGone) splashBar.animate().scaleX(Math.max(0.04f, progress / 100f)).setDuration(240).start();
+        }
+    }
+
+    /* ---------- 启动层：门打开、标题渐显、载入进度 ---------- */
+    private void startSplash() {
+        splash = findViewById(R.id.splash);
+        splashBar = findViewById(R.id.splashBar);
+        splashAt = SystemClock.uptimeMillis();
+        ImageView door = findViewById(R.id.splashDoor);
+        Drawable d = door.getDrawable();
+        if (d instanceof Animatable) ((Animatable) d).start();
+        splashBar.setPivotX(0);
+        splashBar.setScaleX(0.04f);
+        DecelerateInterpolator ease = new DecelerateInterpolator(1.6f);
+        View title = findViewById(R.id.splashTitle), sub = findViewById(R.id.splashSub);
+        title.setTranslationY(18f);
+        sub.setTranslationY(12f);
+        title.animate().alpha(1f).translationY(0f).setStartDelay(650).setDuration(900).setInterpolator(ease).start();
+        sub.animate().alpha(1f).translationY(0f).setStartDelay(1050).setDuration(800).setInterpolator(ease).start();
+        ui.postDelayed(this::hideSplash, SPLASH_MAX_MS);                // 保底：页面迟迟没画出来也不一直挡着
+    }
+
+    private void hideSplash() {
+        runOnUiThread(() -> {
+            if (splashGone || splash == null) return;
+            long wait = SPLASH_MIN_MS - (SystemClock.uptimeMillis() - splashAt);
+            if (wait > 0) { ui.postDelayed(this::hideSplash, wait); return; }   // 动画至少演完一遍
+            splashGone = true;
+            ui.removeCallbacksAndMessages(null);
+            splashBar.animate().scaleX(1f).setDuration(200).start();
+            splash.animate().alpha(0f).setStartDelay(120).setDuration(SPLASH_FADE_MS)
+                    .withEndAction(() -> { splash.setVisibility(View.GONE); view.requestFocus(); }).start();
+        });
     }
 
     private void restart() {
@@ -216,6 +276,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        ui.removeCallbacksAndMessages(null);
         if (session != null) session.close();
         if (server != null) server.stop();
         super.onDestroy();
