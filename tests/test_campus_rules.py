@@ -3,7 +3,7 @@ from browser_case import BrowserCase
 
 
 class CampusRulesTest(BrowserCase):
-    def game(self, on=True):
+    def game(self, on=True, bundle='A'):
         page = self.browser.new_context(viewport={'width': 1000, 'height': 700}).new_page()
         page.add_init_script("localStorage.setItem('wdfz_pro','1');localStorage.setItem('zw3d_set',JSON.stringify({q:0,amb:0,vol:0,renderer:'webgl'}));localStorage.removeItem('wdfz3d_rules_records_v1');")
         self.errs = []
@@ -13,6 +13,8 @@ class CampusRulesTest(BrowserCase):
         page.evaluate("Game.start('hard',{talent:'watch'})")
         page.wait_for_function("S.room==='teach1'&&GLR.roomMesh")
         page.evaluate("clearIntroTimers();running=false;S.intro=0;S.day=2;S.tsec=900;AN.active=false;AN.next=1e6;PAT.next=1e6;patReset();DEV.god=false;S.seated=false;S.screen='play';true;")
+        if on and bundle:
+            page.evaluate(f"()=>{{CampusRules.state().bundle='{bundle}';RT.rulesMode.bundle='{bundle}';}}")   # 规则组按本局种子抽：用例固定一组
         return page
 
     def test_off_by_default_and_on_marks_the_run(self):
@@ -21,7 +23,7 @@ class CampusRulesTest(BrowserCase):
         page = self.game(True)
         r = page.evaluate("()=>({on:CampusRules.on(),mode:RT.rulesMode,n:CampusRules.RULES.length,kinds:[...new Set(CampusRules.RULES.map(x=>x.t))].sort(),spots:CampusRules.spots().length,listed:GameModules.mods().some(m=>m.id==='campus-rules'&&m.status==='active')})")
         self.assertEqual(r['on'], True)
-        self.assertEqual(r['mode'], {'v': 1})
+        self.assertEqual(r['mode'], {'v': 1, 'ver': '1.1.0', 'bundle': 'A'})
         self.assertEqual(r['n'], 10)
         self.assertEqual(r['kinds'], ['false', 'half', 'true'])
         self.assertGreaterEqual(r['spots'], 12)              # 9 处有位置的规则 + 4 处证据
@@ -64,3 +66,36 @@ class CampusRulesTest(BrowserCase):
         r = page.evaluate("()=>GameModules.first('paperText','danger')")
         self.assertIn('纸从哪里来就回哪里去', r)
         self.assertIsNone(page.evaluate("()=>GameModules.first('paperText','peace')===undefined?null:1"))
+
+    # ---------- T2：规则组相容性抽选（计划第 15.2 节） ----------
+    def test_every_bundle_passes_the_compatibility_check_and_bad_ones_fail(self):
+        page = self.game()
+        r = page.evaluate("""()=>{const C=CampusRules,ok=Object.keys(C.BUNDLES).map(k=>[k,C.validBundle(C.BUNDLES[k])]);
+          const all=C.BUNDLES.A,drop=ids=>all.filter(x=>ids.indexOf(x)<0);
+          const bad={noR03:C.validBundle(drop(['R03'])),noR05:C.validBundle(drop(['R05'])),twoFalse:C.validBundle(drop(['R04','R07'])),
+            twoHalf:C.validBundle(drop(['R06','R10'])),twoTrue:C.validBundle(drop(['R02','R08'])),noRefute:C.validBundle(drop(['R02','R05','R08']).concat(['R05'])),unknown:C.validBundle(all.concat(['R99']))};
+          return {ok,bad};}""")
+        self.assertEqual(r['ok'], [['A', True], ['B', True], ['C', True], ['D', True]])
+        self.assertEqual(set(r['bad'].values()), {False}, r['bad'])   # 缺 R03／R05、真假半真不够、假规则没反证、没有的规则都不行
+
+    def test_bundle_is_picked_from_the_run_seed_and_saved(self):
+        page = self.game(bundle=None)
+        r = page.evaluate("""()=>{const C=CampusRules,seen={};for(let i=0;i<400;i++)seen[C.pickBundle('s'+i)]=1;
+          const same=C.pickBundle('abc')===C.pickBundle('abc');
+          const b=C.bundle(),mode=RT.rulesMode.bundle;saveGame();const d=loadGame();
+          C.state().bundle='Z';GameModules.loadAll(d.mods);const back=C.bundle();
+          const old=JSON.parse(JSON.stringify(d.mods));delete old['mod:campus-rules'].bundle;GameModules.loadAll(old);
+          return {seen:Object.keys(seen).sort(),same,b,mode,back,legacy:C.bundle()};}""")
+        self.assertEqual(r['seen'], ['A', 'B', 'C', 'D'])
+        self.assertTrue(r['same'])
+        self.assertEqual(r['b'], r['mode'])
+        self.assertEqual(r['back'], r['b'])                    # 读档不重抽
+        self.assertEqual(r['legacy'], 'A')                     # 1.0.0 的存档没有组号：按 A
+
+    def test_rules_outside_the_bundle_have_no_carrier_and_their_slice_stays_off(self):
+        page = self.game(bundle='B')                           # B 组没有 R06（餐券）和 R09
+        r = page.evaluate("""()=>{const ids=CampusRules.spots().map(o=>o.item.id);
+          doEnterRoom('canteen1');S.tsec=760;const meal=mealNow();for(let i=0;i<3;i++)GameModules.emit('tick',1);
+          return {r06:ids.indexOf('R06')>=0,r09:ids.indexOf('R09')>=0,r04:ids.indexOf('R04')>=0,e04:ids.indexOf('E04')>=0,meal,ticket:UI.chooseOpen&&document.getElementById('choices').innerText.indexOf('餐券')>=0};}""")
+        self.assertEqual(r, {'r06': False, 'r09': False, 'r04': True, 'e04': True, 'meal': True, 'ticket': False})
+
