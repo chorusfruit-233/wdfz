@@ -3,6 +3,7 @@ package io.github.wdfz.lishijie;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -35,12 +36,19 @@ import org.mozilla.geckoview.GeckoView;
  * · 返回键：先发一次 Esc 给游戏（暂停、关面板）；1.5 秒内再按一次回到桌面（游戏留在后台）
  * · 不是本机页面的链接（Wiki、仓库）交给系统浏览器
  * · 导入 DLC 文件：用系统的文件选择器
- * · 启动动画：Android 12 起先是系统启动画面（门打开）；然后是应用自己的启动层——同一扇门打开、标题渐显、
- *   底部红线跟着页面载入进度走，游戏页面第一次画出来以后淡出（至少停 1.8 秒，最多等 15 秒）
+ * · 启动动画（应用自己的启动层，Android 12 起系统启动画面只是一下黑场）：
+ *   ① DeepShawn 签名书写动画（{@link SignatureView}，约 5.7 秒）
+ *   ② 黑场约 2.6 秒，门的轮廓在黑里暗闪两下
+ *   ③ 门打开、标题渐显、底部红线跟着页面载入进度走；游戏页面画出来、门打开后至少 1.8 秒才淡出；最多 25 秒保底
+ *   点一下屏幕：签名／黑场直接跳到门；门那段页面已画出来就直接进游戏
+ * · 横屏：默认横屏（左右都行）；游戏设置关掉「自动横屏」时，页面请求本机服务 /__app/orientation 改成跟随系统
+ * · 声音：允许页面自动播放（主菜单一打开就有 BGM）
+ * · 页面地址带 ?app=android：游戏据此隐藏「进入全屏」按钮（App 本来就全屏）
  */
 public class MainActivity extends Activity {
     private static final int REQ_FILE = 7;
-    private static final long SPLASH_MIN_MS = 1800, SPLASH_MAX_MS = 15000, SPLASH_FADE_MS = 450;
+    private static final long SPLASH_MIN_MS = 1800, SPLASH_MAX_MS = 25000, SPLASH_FADE_MS = 450, DARK_MS = 2600;
+    private static final Object DARK = new Object();                // 黑场里排着的回调（暗闪、开门），跳过时一起取消
     private static GeckoRuntime runtime;                 // 整个进程只能有一个
 
     private GeckoSession session;
@@ -52,9 +60,11 @@ public class MainActivity extends Activity {
     private GeckoSession.PromptDelegate.FilePrompt pendingPrompt;
     private final Handler ui = new Handler(Looper.getMainLooper());
     private View splash;
-    private View splashBar;
-    private long splashAt;
-    private boolean splashGone;
+    private View splashBar, doorBox;
+    private SignatureView sign;
+    private long doorAt;
+    private int phase;                                                 // 0 签名  1 黑场  2 门
+    private boolean splashGone, painted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +75,8 @@ public class MainActivity extends Activity {
         immersive();
         startSplash();
 
-        server = new LocalServer(getAssets());
+        server = new LocalServer(getAssets(), landscape -> runOnUiThread(() -> setRequestedOrientation(landscape
+                ? ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_FULL_USER)));
         if (!server.start()) {
             Toast.makeText(this, R.string.server_failed, Toast.LENGTH_LONG).show();
             finish();
@@ -91,9 +102,10 @@ public class MainActivity extends Activity {
         session.setContentDelegate(new Content());
         session.setPromptDelegate(new Prompts());
         session.setProgressDelegate(new Progress());
+        session.setPermissionDelegate(new Permissions());
         session.open(runtime);
         view.setSession(session);
-        session.loadUri(server.url());
+        session.loadUri(server.url() + "?app=android");
     }
 
     private boolean isLocal(String uri) {
@@ -133,7 +145,8 @@ public class MainActivity extends Activity {
 
         @Override
         public void onFirstContentfulPaint(GeckoSession s) {
-            hideSplash();                                                // 游戏页面第一次画出来了
+            painted = true;                                              // 游戏页面第一次画出来了
+            hideSplash();
         }
 
         @Override
@@ -150,39 +163,96 @@ public class MainActivity extends Activity {
     private final class Progress implements GeckoSession.ProgressDelegate {
         @Override
         public void onProgressChange(GeckoSession s, int progress) {
-            if (splashBar != null && !splashGone) splashBar.animate().scaleX(Math.max(0.04f, progress / 100f)).setDuration(240).start();
+            if (splashBar != null && !splashGone && phase == 2) splashBar.animate().scaleX(Math.max(0.04f, progress / 100f)).setDuration(240).start();
         }
     }
 
-    /* ---------- 启动层：门打开、标题渐显、载入进度 ---------- */
+    /* 允许页面自动播放声音：主菜单一打开就有 BGM，不用先点一下 */
+    private static final class Permissions implements GeckoSession.PermissionDelegate {
+        @Override
+        public GeckoResult<Integer> onContentPermissionRequest(GeckoSession s, ContentPermission perm) {
+            if (perm.permission == PERMISSION_AUTOPLAY_AUDIBLE || perm.permission == PERMISSION_AUTOPLAY_INAUDIBLE)
+                return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW);
+            return null;                                                 // 其他权限：照 GeckoView 默认处理
+        }
+    }
+
+    /* ---------- 启动层：① 签名书写 → ② 黑场（门暗闪）→ ③ 门打开、标题、载入进度 ---------- */
     private void startSplash() {
         splash = findViewById(R.id.splash);
         splashBar = findViewById(R.id.splashBar);
-        splashAt = SystemClock.uptimeMillis();
+        doorBox = findViewById(R.id.splashDoorBox);
+        sign = findViewById(R.id.splashSign);
+        splashBar.setPivotX(0);
+        splashBar.setScaleX(0.04f);
+        phase = 0;
+        sign.setOnDone(this::darkPause);
+        splash.setOnClickListener(v -> skipSplash());
+        ui.postDelayed(() -> hideSplash(true), SPLASH_MAX_MS);           // 保底：页面迟迟没画出来也不一直挡着
+    }
+
+    /* ② 黑场：什么都没有，只有门的轮廓在黑里暗闪两下，然后才开门 */
+    private void darkPause() {
+        if (phase != 0 || splashGone) return;
+        phase = 1;
+        sign.setVisibility(View.GONE);
+        long t = SystemClock.uptimeMillis();
+        float[][] flicker = {{700, 0.10f}, {760, 0f}, {1380, 0.05f}, {1440, 0.16f}, {1500, 0f}, {1560, 0.06f}, {1640, 0f}};
+        for (float[] f : flicker) {
+            final float alpha = f[1];
+            ui.postAtTime(() -> doorBox.setAlpha(alpha), DARK, t + (long) f[0]);
+        }
+        ui.postAtTime(this::openDoor, DARK, t + DARK_MS);
+    }
+
+    /* ③ 门打开、标题渐显、载入进度 */
+    private void openDoor() {
+        if (phase == 2 || splashGone) return;
+        if (phase == 0) sign.skip();
+        phase = 2;
+        ui.removeCallbacksAndMessages(DARK);
+        sign.setVisibility(View.GONE);
+        doorAt = SystemClock.uptimeMillis();
+        doorBox.animate().cancel();
+        doorBox.setAlpha(0f);
+        doorBox.animate().alpha(1f).setDuration(500).start();
         ImageView door = findViewById(R.id.splashDoor);
         Drawable d = door.getDrawable();
         if (d instanceof Animatable) ((Animatable) d).start();
-        splashBar.setPivotX(0);
-        splashBar.setScaleX(0.04f);
+        splashBar.animate().alpha(1f).setDuration(400).start();
         DecelerateInterpolator ease = new DecelerateInterpolator(1.6f);
         View title = findViewById(R.id.splashTitle), sub = findViewById(R.id.splashSub);
         title.setTranslationY(18f);
         sub.setTranslationY(12f);
         title.animate().alpha(1f).translationY(0f).setStartDelay(650).setDuration(900).setInterpolator(ease).start();
         sub.animate().alpha(1f).translationY(0f).setStartDelay(1050).setDuration(800).setInterpolator(ease).start();
-        ui.postDelayed(this::hideSplash, SPLASH_MAX_MS);                // 保底：页面迟迟没画出来也不一直挡着
+        hideSplash();
+    }
+
+    /* 点一下：签名／黑场直接到门；门那段页面已画出来就直接进游戏 */
+    private void skipSplash() {
+        if (phase < 2) openDoor();
+        else if (painted) hideSplash(true);
     }
 
     private void hideSplash() {
+        hideSplash(false);
+    }
+
+    private void hideSplash(boolean now) {
         runOnUiThread(() -> {
             if (splashGone || splash == null) return;
-            long wait = SPLASH_MIN_MS - (SystemClock.uptimeMillis() - splashAt);
-            if (wait > 0) { ui.postDelayed(this::hideSplash, wait); return; }   // 动画至少演完一遍
+            if (!now) {
+                if (!painted || phase < 2) return;                       // 还在签名／黑场：开门时再看
+                long wait = SPLASH_MIN_MS - (SystemClock.uptimeMillis() - doorAt);
+                if (wait > 0) { ui.postDelayed(this::hideSplash, wait); return; }   // 门的动画至少演完一遍
+            }
             splashGone = true;
             ui.removeCallbacksAndMessages(null);
+            if (sign != null) sign.skip();
             splashBar.animate().scaleX(1f).setDuration(200).start();
             splash.animate().alpha(0f).setStartDelay(120).setDuration(SPLASH_FADE_MS)
-                    .withEndAction(() -> { splash.setVisibility(View.GONE); view.requestFocus(); }).start();
+                    .withEndAction(() -> { splash.setVisibility(View.GONE); sign.setVisibility(View.GONE); view.requestFocus(); }).start();
         });
     }
 

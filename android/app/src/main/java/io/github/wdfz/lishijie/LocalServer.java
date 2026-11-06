@@ -19,18 +19,25 @@ import java.util.concurrent.Executors;
  * 只监听 127.0.0.1 的小 HTTP 服务：把 APK 里的单文件页面（assets/wdfz.html，由 tools/build_single_html.cjs 生成）交给 GeckoView。
  * 用固定端口，页面的来源（http://127.0.0.1:端口）每次都一样，浏览器存储（存档、设置、成就、档案）才能留住；
  * 端口被占用时依次试后面几个（换了端口，存档会是另一份）。
+ * 另有一个给页面用的小接口：GET /__app/orientation?mode=landscape|any（游戏设置「自动横屏」），回 204。
  */
 final class LocalServer implements Runnable {
     static final int BASE_PORT = 47831;
     private static final String PAGE = "wdfz.html";
 
+    interface Listener {
+        void onOrientation(boolean landscape);
+    }
+
     private final AssetManager assets;
+    private final Listener listener;
     private final ExecutorService pool = Executors.newFixedThreadPool(4);
     private ServerSocket socket;
     private int port;
 
-    LocalServer(AssetManager assets) {
+    LocalServer(AssetManager assets, Listener listener) {
         this.assets = assets;
+        this.listener = listener;
     }
 
     boolean start() {
@@ -100,8 +107,9 @@ final class LocalServer implements Runnable {
             String[] parts = line.split(" ");
             String method = parts.length > 0 ? parts[0] : "";
             String path = parts.length > 1 ? parts[1] : "/";
+            String query = "";
             int q = path.indexOf('?');
-            if (q >= 0) path = path.substring(0, q);
+            if (q >= 0) { query = path.substring(q + 1); path = path.substring(0, q); }
             int h = path.indexOf('#');
             if (h >= 0) path = path.substring(0, h);
             OutputStream out = new BufferedOutputStream(raw, 1 << 16);
@@ -110,6 +118,10 @@ final class LocalServer implements Runnable {
                 status(out, "405 Method Not Allowed", "text/plain; charset=utf-8", 0);
             } else if ("/".equals(path) || "/index.html".equals(path)) {
                 page(out, head);
+            } else if ("/__app/orientation".equals(path)) {
+                String mode = param(query, "mode");
+                if (listener != null && mode != null) listener.onOrientation("landscape".equals(mode));
+                status(out, "204 No Content", "text/plain; charset=utf-8", 0);
             } else if ("/favicon.ico".equals(path)) {
                 status(out, "204 No Content", "text/plain; charset=utf-8", 0);
             } else {
@@ -142,6 +154,14 @@ final class LocalServer implements Runnable {
             int n;
             while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
         }
+    }
+
+    private static String param(String query, String name) {
+        for (String kv : query.split("&")) {
+            int e = kv.indexOf('=');
+            if (e > 0 && kv.substring(0, e).equals(name)) return kv.substring(e + 1);
+        }
+        return null;
     }
 
     private static byte[] readAll(InputStream in) throws IOException {

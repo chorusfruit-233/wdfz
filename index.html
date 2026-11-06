@@ -122,6 +122,8 @@
   <p class="shint" id="textSizeHint">字幕、选项、笔记和课堂纸条一起放大。</p>
   </section>
   <section class="sgroup" aria-labelledby="sgCtl"><h4 id="sgCtl">操作</h4>
+  <div class="srow"><span>自动横屏</span><div class="seg" id="sAutoLand"><button onclick="Settings.autoLand(0)">开</button><button onclick="Settings.autoLand(1)">关</button></div></div>
+  <p class="shint">手机上把画面固定成横屏（左右两个方向都行）。安卓版马上生效；浏览器里要先「进入全屏」，有的浏览器不支持。</p>
   <div class="srow"><label for="mouseSense">鼠标灵敏度</label><input type="range" id="mouseSense" min="25" max="250" step="5" oninput="Settings.comfort('mouseSense',this.value)"><b id="mouseSenseValue"></b></div>
   <div class="srow"><label for="touchSense">触屏灵敏度</label><input type="range" id="touchSense" min="25" max="250" step="5" oninput="Settings.comfort('touchSense',this.value)"><b id="touchSenseValue"></b></div>
   <div class="srow"><label for="touchSize">触屏按键大小</label><input type="range" id="touchSize" min="85" max="125" step="5" oninput="Settings.comfort('touchSize',this.value)"><b id="touchSizeValue"></b></div>

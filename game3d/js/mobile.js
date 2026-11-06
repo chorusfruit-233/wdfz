@@ -3,6 +3,24 @@
 /* 里世界 3D · 全屏与触屏界面 */
 'use strict';
 
+/* 外壳：安卓版（GeckoView）打开 ?app=android。安卓版没有「进入全屏」按钮（一直是全屏），横屏由原生来锁 */
+var APP_SHELL=(function(){ try{ return /[?&]app=android(?:&|$)/.test(location.search)?'android':''; }catch(e){ return ''; } })();
+/* 自动横屏（设置「操作」，默认开）：安卓版发给 App 内的本机服务（/__app/orientation），由原生锁成横屏或跟随系统；
+   网页版只在手机上、全屏时试着锁（浏览器不支持就算了） */
+function applyOrientation(){
+  var want=!($imports.SET&&$imports.SET.autoLand===0);
+  if(APP_SHELL==='android'){
+    try{ fetch('/__app/orientation?mode='+(want?'landscape':'any'),{cache:'no-store'}).catch(function(){}); }catch(e){}
+    return want;
+  }
+  try{
+    var so=window.screen&&window.screen.orientation;
+    if(!so) return false;
+    if(!want){ if(so.unlock) so.unlock(); return false; }
+    if(IS_TOUCH&&fullscreenElement()&&so.lock) so.lock('landscape').catch(function(){});
+  }catch(e){}
+  return want;
+}
 var IS_TOUCH=(function(){
   /* 触屏笔记本也有触摸能力；优先按主要指针决定初始界面。 */
   if(window.matchMedia){
@@ -34,7 +52,7 @@ function syncFullscreenUI(){
   button.disabled=FULLSCREEN.busy||standalone;
   button.setAttribute('aria-pressed',String(active||standalone));
   button.setAttribute('aria-label',text);button.title=text;
-  button.hidden=!!($imports.PRO.on||$imports.S.dead||$imports.S.screen==='end'||$imports.PC.on||$imports.PHONE.on||$imports.UI.chooseOpen||
+  button.hidden=!!(APP_SHELL==='android'||$imports.PRO.on||$imports.S.dead||$imports.S.screen==='end'||$imports.PC.on||$imports.PHONE.on||$imports.UI.chooseOpen||
     ($imports.UI.openPanel&&$imports.UI.openPanel!=='pause'&&$imports.UI.openPanel!=='set'));
   var hint=document.getElementById('mios');
   if(hint)hint.style.display=IS_TOUCH&&!fullscreenSupported()&&!isStandalone()?'block':'none';
@@ -67,7 +85,7 @@ function goFullscreen(){
       result=(el.requestFullscreen&&document.fullscreenEnabled!==false)?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen();
     }
   }catch(e){result=Promise.reject(e);}
-  return Promise.resolve(result).then(function(){return true;},function(){
+  return Promise.resolve(result).then(function(){ if(!exiting) applyOrientation(); return true;},function(){
     (0,$imports.toast)(exiting?'退出全屏失败，请重试或使用浏览器退出。':'未能进入全屏，请再次点击按钮；在内嵌页面中可尝试用浏览器单独打开。');
     return false;
   }).then(function(ok){
@@ -96,6 +114,8 @@ function initMobileShell(){
     },{passive:false});
   });
   syncFullscreenUI();
+  if(APP_SHELL) document.body.classList.add('app-'+APP_SHELL);
+  applyOrientation();                                           /* 安卓版：按设置告诉 App 锁横屏还是跟随系统 */
 }
 function updateTouchUI(){
   var el=document.getElementById('touch');if(!el)return;
@@ -182,6 +202,8 @@ var TouchLayout={rects:{},
 
 /* @module-exports */
 GameModules.publish("game3d/js/mobile.js",{
+"APP_SHELL":{get:function(){return APP_SHELL;},set:function($value){APP_SHELL=$value;}},
+"applyOrientation":{get:function(){return applyOrientation;},set:function($value){applyOrientation=$value;}},
 "IS_TOUCH":{get:function(){return IS_TOUCH;},set:function($value){IS_TOUCH=$value;}},
 "FULLSCREEN":{get:function(){return FULLSCREEN;},set:function($value){FULLSCREEN=$value;}},
 "isStandalone":{get:function(){return isStandalone;},set:function($value){isStandalone=$value;}},

@@ -336,12 +336,36 @@ var SFX=(function(){
   }
   GameModules.on('boundary',function(){lastPeriod=null;},{owner:'audio'});
   GameModules.on('reset',function(){lastPeriod=null;},{owner:'audio'});
+  /* 主菜单 BGM（2026-11-06，用户要求「从主页就开始有」）：同一套铺底，固定在不安的低音上，偶尔几声八音盒；
+     「音乐/环境」关掉、档案馆回放、过场时不响 */
+  function menuTick(dt,duck){
+    var a=ctx(); if(!a||!L) return;
+    var on=$imports.S.screen==='menu'&&(typeof $imports.AMB_ON==='undefined'||$imports.AMB_ON)&&!(typeof $imports.ArchiveReplay!=='undefined'&&$imports.ArchiveReplay.on);
+    scapeTick(dt,false,1);
+    if(revIn) setG(revIn.gain,on?0.32:0.1,0.6);
+    setG(L.padG.gain,on?0.058*duck:0,on?2.4:0.6);
+    setG(L.padF.frequency,on?240+60*Math.sin(L.t*0.11):200,2.5);
+    var root=43.65;
+    L.osc[0].frequency.setTargetAtTime(root,a.currentTime,2);
+    L.osc[1].frequency.setTargetAtTime(root*1.5*0.944,a.currentTime,2);          /* 五度压成三全音：不稳 */
+    L.osc[2].frequency.setTargetAtTime(root*1.012,a.currentTime,2);
+    L.osc[3].frequency.setTargetAtTime(root*1.94,a.currentTime,2);
+    [L.tenG,L.wind.g,L.rain.g,L.rain2.g,L.humG,L.rumble.g].forEach(function(n){ setG(n.gain,0,0.8); });
+    if(!on) return;
+    L.nextMenu=(L.nextMenu===undefined?2.5:L.nextMenu)-dt;
+    if(L.nextMenu<=0){
+      L.nextMenu=$imports.PresentationRandom.range(6,12);
+      var sc=MEL[0], n=2+Math.floor($imports.PresentationRandom.next()*3), j;
+      for(j=0;j<n;j++){ var f=sc[Math.floor($imports.PresentationRandom.next()*sc.length)]*($imports.PresentationRandom.next()<0.25?2:1); P('music.box',{pitch:f/440,at:j*$imports.PresentationRandom.range(0.45,0.9),wet:0.7}); }
+    }
+  }
   function tick(dt){
     var a=ctx(); if(!a||!L) return;
     L.t+=dt;
     /* 骤静：环境声忽然全没了几秒，再慢慢回来 */
     var duck=(L.duckUntil&&L.t<L.duckUntil)?0.05:1, dtc=duck<1?0.18:null;
     var play=($imports.S.screen==='play');
+    if(!play){ menuTick(dt,duck); return; }                                       /* 主菜单的 BGM；其他画面（过场、结算、档案回放）时铺底静下来 */
     var on=play&&(typeof $imports.AMB_ON==='undefined'||$imports.AMB_ON)&&!$imports.S.dead;
     var out_=play&&$imports.S.mode==='out', night=1;
     try{ night=1-(0,$imports.sunAt)((0,$imports.hourNow)()).day; }catch(e){}
@@ -433,9 +457,15 @@ var SFX=(function(){
     $imports.SoundPlayer.ids().forEach(function(id){ if(id.indexOf('death.')===0&&id!=='death.base'&&id!=='death.generic') out.push(id.slice(6)); });
     return out;
   }
+  /* 浏览器要等用户点一下、按个键才放声音：主菜单上的第一下就把声音唤醒（BGM 从主页开始）。安卓版允许自动播放，一打开就有 */
+  if(typeof document!=='undefined'){
+    var wake=function(){ try{ if(ac&&ac.state==='running') return; ctx(); }catch(e){} };
+    ['pointerdown','keydown','touchend'].forEach(function(ev){ document.addEventListener(ev,wake,{capture:true,passive:true}); });
+  }
   return {
     moonlight: moonlight,
     available:function(){return !!(ac&&ac.state==='running');},
+    bgmLevel:function(){ return L?L.padG.gain.value:0; },                       /* 只读：铺底现在的音量（测试主菜单 BGM 用） */
     bodySound:function(kind,k){return P(kind==='chase'?'threat.heartPat':kind==='muffled'?'distant.tinnitus':kind==='breath'?'threat.breath':'threat.heartLow',{k:k||.5});},
     resume:function(){ ctx(); },
     ambient:function(){ var a=ctx(); if(!a) return; try{ buildLayers(); }catch(e){} bgOn=true; },
