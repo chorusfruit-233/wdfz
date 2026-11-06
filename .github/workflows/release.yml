@@ -1,6 +1,6 @@
 # 单文件 HTML 与 GeckoView 安卓版（docs/打包与发布.md）
 # · PR（改了打包相关文件）和手动运行：只构建，产物在这次运行的 Artifacts 里
-# · 推送 v* 标签：构建并新建同名 Release，上传单文件 HTML 和 APK
+# · 推送 v* 标签，或手动运行时填了版本号：构建并新建 Release（手动运行时由工作流自己建 v<版本号> 标签），上传单文件 HTML 和 APK
 name: release
 
 on:
@@ -12,6 +12,11 @@ on:
       - 'tools/build_single_html.cjs'
       - '.github/workflows/release.yml'
   workflow_dispatch:
+    inputs:
+      version:
+        description: '要发布的版本号（例如 2026.11.6，会建 v2026.11.6 标签）；留空只构建不发布'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -33,10 +38,17 @@ jobs:
 
       - name: 版本号
         id: ver
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; else v="0.0.0-dev.${GITHUB_RUN_NUMBER}"; fi
+          publish=false
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; publish=true
+          elif [[ -n "${INPUT_VERSION}" ]]; then v="${INPUT_VERSION#v}"; publish=true
+          else v="0.0.0-dev.${GITHUB_RUN_NUMBER}"; fi
+          [[ "$v" =~ ^[0-9A-Za-z._-]+$ ]] || { echo "版本号只能有字母、数字、点、横线"; exit 1; }
           echo "name=$v" >> "$GITHUB_OUTPUT"
-          echo "版本：$v"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "版本：$v（发布：$publish）"
 
       - name: 单文件 HTML
         run: |
@@ -77,9 +89,11 @@ jobs:
           if-no-files-found: error
 
       - name: 发布 Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.ver.outputs.publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.ver.outputs.name }}
+          target_commitish: ${{ github.sha }}
           name: 里世界 3D ${{ steps.ver.outputs.name }}
           files: dist/*
           body: |
