@@ -19,7 +19,7 @@ android {
         targetSdk 35
         versionCode appVersionCode
         versionName appVersionName
-        ndk { abiFilters 'arm64-v8a' }               // GeckoView 只打 64 位 ARM（绝大多数手机）；APK 体积约 70–90 MB
+        ndk { abiFilters 'arm64-v8a' }               // GeckoView 只打 64 位 ARM（绝大多数手机）；APK 体积约 105 MB（原生库压缩后；安装后约 220 MB）
     }
 
     // 侧载用的固定证书（随仓库公开，不是保密密钥）：每次发布用同一把，覆盖安装不用先卸载。
