@@ -213,9 +213,11 @@ var DeathArchive={
       t.textContent=e.n; p.textContent=e.d;
       var m=document.createElement('small'); m.textContent=meta;
       body.appendChild(t); body.appendChild(p); body.appendChild(m); card.appendChild(body);
-      var btn=document.createElement('button'); btn.type='button'; btn.textContent='重看';
-      btn.addEventListener('click',function(){ if(onReplay) onReplay(e.id); else ArchiveReplay.play(e.id); });
-      card.appendChild(btn);
+      if(!e.noReplay){                                            /* 模块登记的节里，成就之类没有演出的条目不给「重看」 */
+        var btn=document.createElement('button'); btn.type='button'; btn.textContent='重看';
+        btn.addEventListener('click',function(){ if(onReplay) onReplay(e.id); else ArchiveReplay.play(e.id); });
+        card.appendChild(btn);
+      }
     }else{
       t.textContent=locked[0]; p.textContent=locked[1]; body.appendChild(t); body.appendChild(p); card.appendChild(body);
     }
@@ -272,8 +274,17 @@ var ArchiveReplay={on:false,id:null,timer:0,wait:0,snap:null,t0:0,cut:null,
   play:function(id){
     var e=ARCHIVE_BY_ID[id], d=DeathArchive.state();
     if(!e||!DeathArchive.avail(e)||!DeathArchive.isOpen(e,d)||ArchiveReplay.on) return false;
+    return ArchiveReplay.begin(e);
+  },
+  /* 模块登记的节（例如规则怪谈 DLC）重看自己的死亡演出：解锁由那一节自己判断，这里只查演出在不在 */
+  playEntry:function(e){
+    if(!e||!e.id||!e.fx||e.cut||ArchiveReplay.on) return false;
+    if(typeof $imports.DeathCG==='undefined'||!$imports.DeathCG.has(e.fx)) return false;
+    return ArchiveReplay.begin(e);
+  },
+  begin:function(e){
     if($imports.S.screen!=='menu') return false;
-    ArchiveReplay.on=true; ArchiveReplay.id=id; ArchiveReplay.t0=performance.now();
+    ArchiveReplay.on=true; ArchiveReplay.id=e.id; ArchiveReplay.t0=performance.now();
     ArchiveReplay.snap={mode:$imports.S.mode,room:$imports.S.room,x:$imports.S.x,y:$imports.S.y,ang:$imports.S.ang,pitch:$imports.S.pitch,seated:$imports.S.seated,tsec:$imports.S.tsec,day:$imports.S.day};
     document.getElementById('archive').hidden=true;
     document.getElementById('menu').style.display='none';

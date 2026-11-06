@@ -185,3 +185,41 @@ class CampusRulesTest(BrowserCase):
         page.evaluate("Game.continue_()")
         page.wait_for_function("S.screen==='play'&&GLR.roomMesh")
         self.assertEqual(page.evaluate("[RT.rulesMode.v,CampusRules.on(),S.day,SaveSlots.plain()]"), [1, True, 3, False])
+
+    # ---------- T3：CG 档案馆「规则怪谈」一节 ----------
+    def open_archive(self, page):
+        page.evaluate("()=>{Game.quit&&Game.quit();}")
+        page.wait_for_function("S.screen==='menu'")
+        page.evaluate("DeathArchive.open()")
+        page.wait_for_function("!document.getElementById('archive').hidden")
+
+    def test_archive_has_its_own_rules_page_and_the_base_total_is_unchanged(self):
+        page = self.game()
+        self.open_archive(page)
+        r = page.evaluate("""()=>{const sec=document.getElementById('arsec-rules'),head=document.querySelector('.arsec[data-sec="rules"]');
+          const cards=[...sec.querySelectorAll('.arcard')];
+          return {n:cards.length,count:head.textContent,hidden:cards[cards.length-1].textContent.indexOf('？？？')>=0,
+            openN:cards.filter(c=>c.classList.contains('open')).length,base:DeathArchive.visible().some(e=>/rules/.test(e.id))};}""")
+        self.assertEqual(r['n'], 8)                                   # 一份死亡档案 + 七条模式成就
+        self.assertIn('已记录 0 / 8', r['count'])
+        self.assertTrue(r['hidden'])                                  # 隐藏的那条没拿到前只显示 ？？？
+        self.assertEqual(r['openN'], 0)
+        self.assertFalse(r['base'])                                   # 本体档案不含 DLC 条目
+        page.evaluate("()=>{localStorage.setItem('wdfz3d_rules_records_v1',JSON.stringify({'rules.h.reply':{at:Date.now(),ver:'1.1.0'},'rules.e.knock':{at:Date.now(),ver:'1.1.0',bundle:'C'}}));DeathArchive.open();}")
+        r = page.evaluate("""()=>{const c=id=>document.querySelector('#arsec-rules .arcard[data-id="'+id+'"]');
+          return {knock:c('x.rules.knock').classList.contains('open'),knockBtn:!!c('x.rules.knock').querySelector('button'),
+            ach:c('x.rules.e.knock').classList.contains('open'),achBtn:!!c('x.rules.e.knock').querySelector('button'),meta:c('x.rules.e.knock').textContent,
+            count:document.querySelector('.arsec[data-sec="rules"]').textContent};}""")
+        self.assertEqual([r['knock'], r['knockBtn'], r['ach'], r['achBtn']], [True, True, True, False])   # 成就卡没有「重看」
+        self.assertIn('规则组 C', r['meta'])
+        self.assertIn('已记录 3 / 8', r['count'])                    # 死亡档案、门外的声音、没有人答应
+        page.evaluate("document.querySelector('#arsec-rules .arcard[data-id=\"x.rules.knock\"] button').click()")
+        page.wait_for_function("ArchiveReplay.on&&ANFX.kind==='death'", timeout=20000)   # 在宿舍舞台上重看「门外有你的名字」
+        self.assertEqual(page.evaluate("[ArchiveReplay.id,S.room]"), ['x.rules.knock', 'dorm1'])
+        page.evaluate("ArchiveReplay.stop()")
+        self.assertEqual(self.errs, [])
+
+    def test_without_the_dlc_the_archive_has_no_rules_page(self):
+        page = self.game(False)
+        self.open_archive(page)
+        self.assertFalse(page.evaluate("!!document.getElementById('arsec-rules')"))

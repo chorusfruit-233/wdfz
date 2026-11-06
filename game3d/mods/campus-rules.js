@@ -227,6 +227,31 @@ GameModules.mod({
     }
     if(typeof DEATH_SOURCES!=='undefined') DEATH_SOURCES.rules_knock={cause:'熄灯后门外敲了三下，我应了一声。',hint:'规则怪谈：门外的敲门声，不一定是来查寝的。'};
     if(typeof DEATH_HINTS!=='undefined') DEATH_HINTS.rules_knock='别替门外的人答应。';
+    /* ---------- CG 档案馆「规则怪谈」一节（计划第 10、15.2 节）：DLC 自己的总数，本体档案总数不含这些 ---------- */
+    var KNOCK={id:'x.rules.knock',fx:'rules_knock',n:'门外有你的名字',d:'熄灯后门外敲了三下，有人问「在吗？查寝。」我应了一声。',stage:'dorm1',no:1};
+    function arcId(a){ return 'x.rules.'+a.id.slice(6); }                      /* rules.e.knock → x.rules.e.knock */
+    function fmtDay(t){ var d=new Date(t); function p(n){ return (n<10?'0':'')+n; } return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+    if(typeof DeathArchive!=='undefined'&&DeathArchive.addSection){
+      DeathArchive.addSection({
+        id:'rules', title:'规则怪谈（DLC）',
+        ids:function(){ return [KNOCK.id].concat(ACH.map(arcId)); },
+        isOpen:function(id,d){ var r=records(), g=!!(d&&d.granted&&d.granted[id]); if(id===KNOCK.id) return !!r['rules.h.reply']||g; var a=ACH.filter(function(x){ return arcId(x)===id; })[0]; return !!(a&&r[a.id])||g; },
+        count:function(d){ var me=this, n=me.ids().filter(function(id){ return me.isOpen(id,d); }).length; return '已记录 '+n+' / '+me.ids().length+' · 只算这个 DLC'; },
+        cards:function(d){
+          var r=records(), g=(d&&d.granted)||{}, out=[];
+          var kr=r['rules.h.reply'];
+          out.push({id:KNOCK.id,no:1,n:'死亡 · '+KNOCK.n,d:KNOCK.d,open:!!kr||!!g[KNOCK.id],meta:kr?('第一次 '+fmtDay(kr.at)+' · 规则 v'+(kr.ver||'1.0.0')):'直接解锁 · 没有亲历',locked:['尚未记录','封存的死亡档案。']});
+          ACH.forEach(function(a,i){
+            var x=r[a.id], id=arcId(a);
+            out.push({id:id,no:i+2,n:a.name,d:a.tier+' · 规则模式成就（只记录，不给加成）',noReplay:true,open:!!x||!!g[id],
+              meta:x?('记录于 '+fmtDay(x.at)+' · 规则 v'+(x.ver||'1.0.0')+(x.bundle?' · 规则组 '+x.bundle:'')):'直接解锁 · 没有亲历',
+              locked:a.hidden?['？？？','隐藏的记录。']:[a.name,'尚未记录。']});
+          });
+          return out;
+        },
+        replay:function(id){ if(id===KNOCK.id&&typeof ArchiveReplay!=='undefined') ArchiveReplay.playEntry(KNOCK); }
+      });
+    }
     window.CampusRules={RULES:RULES,EVID:EVID,BUNDLES:BUNDLES,REFUTE:REFUTE,validBundle:validBundle,pickBundle:pickBundle,bundle:bundle,inBundle:inBundle,ACH:ACH,records:records,trusted:trusted,grant:grant,state:S_,on:on,near:near,spots:spots,knock:knock,ticket:ticket,borrowed:borrowed};
   }
 });
