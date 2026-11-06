@@ -16,6 +16,8 @@ Wiki 收录操作、课表、地点、道具、异象和公开结局路线的攻
 
 本地运行时，在仓库目录执行 `python -m http.server 8000`，然后访问 `http://localhost:8000/`，也可以直接双击打开 `index.html`。游戏所需的脚本和素材均在仓库内：模型和贴图打包在 `game3d/assets/`，开局按画质读一档。模型在 Blender 里用脚本建（`tools/blender/`，改了以后运行 `python tools/blender/build.py` 重新打包，需要 `pip install bpy==5.2.3` 和 Python 3.13），贴图由 `tools/textures/build_textures.py` 离线生成。
 
+**离线单文件与安卓版**：[Releases](https://github.com/wd-fz/wd-fz.github.io/releases) 里有单文件 HTML（约 19 MB，下载后用浏览器直接打开）和安卓 APK（Android 8.0 以上、64 位 ARM；自带 Mozilla GeckoView 引擎，不用系统 WebView）。打包方式见 [打包与发布](docs/打包与发布.md)：`node tools/build_single_html.cjs` 生成单文件版；推送 `v*` 标签时工作流自动构建并发布。
+
 图形模式默认使用 WebGL 2（2026-11-05 起）；主菜单和暂停里的「设置」可改选「自动（先试 WebGPU）」，不支持或初始化失败时自动回退 WebGL 2，下次打开游戏或点「重新载入」生效。WebGPU 设备丢失时原地切换兼容渲染器，保留进度和输入；[后端、构建与兼容说明](docs/WebGPU与WebGL渲染.md)。
 
 代码使用私有实现和显式依赖契约：全部脚本在 `game3d/manifest.js` 里按模块登记并按顺序加载，新功能做成 `game3d/js/modules/` 下的独立模块，通过钩子接入。游戏支持 Mod：暂停菜单「Mod 与模块」可导入本地 `.js`，网址加 `?mod=名字` 加载 `game3d/mods/` 里的 Mod，`?nomod` 为安全模式。共享空间配方可脱离渲染生成碰撞，玩法与画面／音效使用独立随机来源；接入边界见[模块边界与迁移](docs/模块边界与迁移.md)。约定与写法见[模块化与 Mod 规范](docs/模块化与Mod规范.md)。

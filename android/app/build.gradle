@@ -11,7 +11,7 @@ def appVersionCode = (project.findProperty('versionCode') ?: '1').toString().toI
 
 android {
     namespace 'io.github.wdfz.lishijie'
-    compileSdk 35
+    compileSdk 37                                     // GeckoView 159 起要求 37（2026-11）
 
     defaultConfig {
         applicationId 'io.github.wdfz.lishijie'
