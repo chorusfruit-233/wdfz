@@ -16,12 +16,12 @@
         android:hardwareAccelerated="true">
 
         <!-- 旋转、键盘、窗口大小变化都不重建 Activity：游戏不重新载入。
-             默认横屏（左右两个方向都行，跟随系统的自动旋转锁）；游戏设置里关掉「自动横屏」后，页面通过本机服务让它跟随系统 -->
+             默认横屏（左右两个方向都按重力感应转）；游戏设置里关掉「自动横屏」后，页面通过本机服务让它跟随系统，App 记住这个选择 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="userLandscape"
+            android:screenOrientation="sensorLandscape"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density"
             android:windowSoftInputMode="adjustNothing">
             <intent-filter>
