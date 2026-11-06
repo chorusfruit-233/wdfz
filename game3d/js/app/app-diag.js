@@ -112,7 +112,8 @@ var AppDiag=(function(){
   function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
   function until(f,ms){ var t0=Date.now(); return new Promise(function(r){ (function poll(){ var ok=false; try{ ok=f(); }catch(e){} if(ok||Date.now()-t0>ms) r(ok); else setTimeout(poll,250); })(); }); }
   function shot(name,extra){ send('SHOT '+name+' '+JSON.stringify({scene:scene(),audio:audio(),gpu:gpu(),extra:extra||null})); }
-  function keepRendering(ms){ var t0=Date.now(); return new Promise(function(r){ (function f(){ try{ (0,$imports.render)(0); }catch(e){ note('render',e); } if(Date.now()-t0<ms) requestAnimationFrame(f); else r(); })(); }); }
+  /* 用定时器而不是 requestAnimationFrame：系统弹窗盖着、或软件渲染很慢时 rAF 可能停住，诊断路线不能跟着卡死 */
+  function keepRendering(ms){ var t0=Date.now(),frames=0; return new Promise(function(r){ (function f(){ var a=Date.now(); try{ (0,$imports.render)(0); frames++; }catch(e){ note('render',e); } var dt=Date.now()-a; if(Date.now()-t0<ms) setTimeout(f,Math.max(16,Math.min(dt,500))); else r({frames:frames,lastMs:dt}); })(); }); }
   function place(js){ try{ js(); (0,$imports.syncCamera)(0); (0,$imports.updateHUD)(); }catch(e){ note('place',e&&e.stack||e); } }
   async function tour(){
     send('BOOT '+JSON.stringify({ua:navigator.userAgent}));
@@ -135,7 +136,7 @@ var AppDiag=(function(){
       ['outdoor',function(){ (0,$imports.doExitRoom)(); $imports.S.x=1580; $imports.S.y=1800; $imports.S.ang=0; $imports.S.pitch=0; }]
     ];
     for(var i=0;i<stops.length;i++){
-      place(stops[i][1]); await keepRendering(2500); shot(stops[i][0]); await keepRendering(3500);
+      send('STOP '+stops[i][0]); var t0=Date.now(); place(stops[i][1]); var tp=Date.now()-t0; var kr=await keepRendering(2500); shot(stops[i][0],{placeMs:tp,render:kr}); await keepRendering(3000);
     }
     send('DONE '+JSON.stringify(report()));
   }

@@ -9,6 +9,7 @@ adb wait-for-device
 adb install -r -g "$APK" || exit 1
 adb logcat -c
 adb shell settings put system accelerometer_rotation 0 || true
+adb shell settings put secure immersive_mode_confirmations confirmed || true   # 不弹「Viewing full screen」提示
 adb shell am start -n io.github.wdfz.lishijie/.MainActivity --es query diag=1
 read -r NW NH < <(adb shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1 | tr x ' ')
 W=$(( NW > NH ? NW : NH )); H=$(( NW > NH ? NH : NW ))

@@ -149,6 +149,7 @@ public class MainActivity extends Activity {
     private String writeGeckoConfig() {
         java.io.File f = new java.io.File(getFilesDir(), "geckoview-config.yaml");
         String yaml = "prefs:\n"
+                + "  media.geckoview.autoplay.request: false\n"         // 不把自动播放交给 App 逐次判断，按下面的默认值（允许）
                 + "  media.autoplay.default: 0\n"
                 + "  media.autoplay.blocking_policy: 0\n"
                 + "  media.autoplay.block-webaudio: false\n"
