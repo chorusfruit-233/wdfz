@@ -1,0 +1,19 @@
+// 里世界 3D 安卓版：内置 GeckoView（Mozilla Gecko 引擎），不用 Android 系统 WebView。
+// 构建见 docs/打包与发布.md；Release 由 .github/workflows/release.yml 在 GitHub 构建机上生成。
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://maven.mozilla.org/maven2/' }   // GeckoView
+    }
+}
+rootProject.name = 'wdfz-android'
+include ':app'
