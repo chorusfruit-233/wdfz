@@ -1,8 +1,15 @@
 # 武大附中 · 里世界 3D
 
-3D 校园怪谈探索游戏。仓库首页 `index.html` 是游戏入口，原来的 `3d.html` 链接会自动跳转到首页。
+> [!WARNING]
+> **本仓库已废弃，停止维护（2026-11-06）。**
+>
+> 后续开发已转移到 **[wd-fz/wdfz](https://github.com/wd-fz/wdfz)**，用于开发 **Godot 移植版**。新功能、问题反馈与代码贡献请前往新仓库。
+>
+> 本仓库保留历史 Web 版的源码、资源、文档与验证记录，随后由仓库维护者归档。下文仅描述历史 Web 版，不代表 Godot 移植版的现状或开发计划。
 
-[开始游戏](https://wd-fz.github.io/) · [游戏 Wiki](https://wd-fz.github.io/wiki/) · [游戏设计与机制总览](https://wd-fz.github.io/docs/game-design-overview.html)
+历史 Web 版是一款 3D 校园怪谈探索游戏。仓库首页 `index.html` 是游戏入口，原来的 `3d.html` 链接会自动跳转到首页。
+
+[Godot 移植版开发仓库](https://github.com/wd-fz/wdfz) · [游玩历史 Web 版](https://wd-fz.github.io/) · [历史 Web 版 Wiki](https://wd-fz.github.io/wiki/) · [历史 Web 版机制总览](https://wd-fz.github.io/docs/game-design-overview.html)
 
 [观看四条公开真结局实录](https://wd-fz.github.io/video/endings.html)：汽车逃脱、白名单验证、收集材料造门与《网安仙人》。录像保留各自录制版本的原速画面、游戏原声、章节与操作日志；《网安仙人》实录早于无线破解位置暴露规则，不能当作当前版本的通关示范。[生成代码和运行方法](video/游玩示例.md)。
 

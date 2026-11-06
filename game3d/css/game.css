@@ -46,6 +46,11 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#05040
 #menu .mschool{font:14px var(--ui-serif);letter-spacing:6px;color:var(--ui-dim);margin-top:14px;
   padding-bottom:12px;border-bottom:1px solid rgba(221,213,196,.12);max-width:340px}
 #menu .mhook{font:13px/1.95 var(--ui-serif);letter-spacing:2px;color:#b9b0a1;margin-top:14px}
+#menu .mnotice{margin-top:14px;padding:10px 12px 0;border-left:3px solid var(--seal-text);
+  background:rgba(14,12,11,.9);color:var(--paper);font:12px/1.7 var(--ui-font);overflow-wrap:anywhere}
+#menu .mnotice strong{display:block;font-size:13px}
+#menu .mnotice a{display:block;min-height:44px;padding:10px 0;color:var(--seal-text);text-underline-offset:3px}
+#menu .mnotice a:focus-visible{outline:2px solid var(--seal-text);outline-offset:2px}
 #menu .mcards{margin-top:22px;display:flex;flex-direction:column;gap:8px}
 .mcard{position:relative;display:flex;align-items:center;gap:18px;width:100%;text-align:left;
   padding:14px 20px;background:rgba(14,12,11,.72);border:1px solid var(--ui-line);border-left:3px solid var(--ui-line2);border-radius:2px;
