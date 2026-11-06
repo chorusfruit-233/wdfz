@@ -12,6 +12,8 @@ var AN={
      dfx 致死时的死亡演出，msg 出现时的那句话，lethal 会直接杀人，warn 出现前先预警，fx 有场景里的表现，
      exam 考试时也会出，late 第一天的预知梦不出，rained 下过雨（之后才会有蛾群、雨点成字）；
      when 能不能在当前位置 / 时间出现，place 布置判定点（返回表现生成的位置），begin 出现后的第一下，tick 每帧。 */
+/* 「黑板上的字」「被划掉的名字」会在最近的墙上临时挂一块板／一张纸：楼梯间是整块建的梯段，没有按格子划的墙，挂不上去，不在那里出现 */
+function wallRoom(){ var R=$imports.S.mode==='in'&&$imports.INTERIORS[$imports.S.room]; return !!R&&!R.stairwell; }
 var AN_DEFS={
   blackout:{w:0.5, small:1, cool:180,
     cn:'楼里的灯全灭了', name:'停电', dfx:'lamps',
@@ -185,7 +187,7 @@ var AN_DEFS={
   chalk:{w:0.42, small:1, fx:1, exam:1,
     cn:'黑板上的「下一次」', name:'黑板上的字', dfx:'chalk',
     msg:'我：黑板上，有人在写字。粉笔自己在动。',
-    when:function(){ return $imports.S.mode==='in'; },
+    when:function(){ return wallRoom(); },
     begin:function(d){
       var next=pickAnomaly();
       if(AN_WARN[next]){
@@ -222,7 +224,7 @@ var AN_DEFS={
   roster:{w:0.42, small:1, fx:1, exam:1,
     cn:'被划掉的名字', name:'被划掉的名字', dfx:'names',
     msg:'我：墙上多了一张名单。纸是新的。上面有我的名字——被一道红线划掉了。',
-    when:function(){ return $imports.S.mode==='in'; },
+    when:function(){ return wallRoom(); },
     place:function(d){
       d.rx=$imports.S.x; d.ry=$imports.S.y; d.done=false;
     },
@@ -808,6 +810,7 @@ function anNotifyWarning(visible){
 /* @module-exports */
 GameModules.publish("game3d/js/anomaly.js",{
 "AN":{get:function(){return AN;},set:function($value){AN=$value;}},
+"wallRoom":{get:function(){return wallRoom;},set:function($value){wallRoom=$value;}},
 "AN_DEFS":{get:function(){return AN_DEFS;},set:function($value){AN_DEFS=$value;}},
 "AN_ID":{get:function(){return AN_ID;},set:function($value){AN_ID=$value;}},
 "anTable":{get:function(){return anTable;},set:function($value){anTable=$value;}},

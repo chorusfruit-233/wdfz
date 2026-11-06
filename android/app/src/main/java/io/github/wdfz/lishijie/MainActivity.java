@@ -3,6 +3,7 @@ package io.github.wdfz.lishijie;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
@@ -41,7 +42,8 @@ import org.mozilla.geckoview.GeckoView;
  *   ② 黑场约 2.6 秒，门的轮廓在黑里暗闪两下
  *   ③ 门打开、标题渐显、底部红线跟着页面载入进度走；游戏页面画出来、门打开后至少 1.8 秒才淡出；最多 25 秒保底
  *   点一下屏幕：签名／黑场直接跳到门；门那段页面已画出来就直接进游戏
- * · 横屏：默认横屏（左右都行）；游戏设置关掉「自动横屏」时，页面请求本机服务 /__app/orientation 改成跟随系统
+ * · 横屏：默认横屏（左右都行）；游戏设置关掉「自动横屏」时，页面请求本机服务 /__app/orientation 改成跟随系统。
+ *   App 自己记住页面上次的选择（SharedPreferences），启动时、回到前台时都按它重新锁一次，不只靠 Manifest
  * · 声音：允许页面自动播放（主菜单一打开就有 BGM）
  * · 页面地址带 ?app=android：游戏据此隐藏「进入全屏」按钮（App 本来就全屏）
  */
@@ -65,6 +67,7 @@ public class MainActivity extends Activity {
     private long doorAt;
     private int phase;                                                 // 0 签名  1 黑场  2 门
     private boolean splashGone, painted;
+    private boolean landscape = true;                                  // 游戏设置「自动横屏」（默认开）
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,11 +75,16 @@ public class MainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
         view = findViewById(R.id.gecko);
+        landscape = prefs().getBoolean("landscape", true);
+        applyOrientation();
         immersive();
         startSplash();
 
-        server = new LocalServer(getAssets(), landscape -> runOnUiThread(() -> setRequestedOrientation(landscape
-                ? ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_FULL_USER)));
+        server = new LocalServer(getAssets(), want -> runOnUiThread(() -> {
+            if (want != landscape) prefs().edit().putBoolean("landscape", want).apply();
+            landscape = want;
+            applyOrientation();
+        }));
         if (!server.start()) {
             Toast.makeText(this, R.string.server_failed, Toast.LENGTH_LONG).show();
             finish();
@@ -106,6 +114,16 @@ public class MainActivity extends Activity {
         session.open(runtime);
         view.setSession(session);
         session.loadUri(server.url() + "?app=android");
+    }
+
+    private SharedPreferences prefs() {
+        return getSharedPreferences("wdfz", MODE_PRIVATE);
+    }
+
+    /* 开：横屏（左右两个方向都行）；关：跟随系统的旋转设置 */
+    private void applyOrientation() {
+        int want = landscape ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_FULL_USER;
+        if (getRequestedOrientation() != want) setRequestedOrientation(want);
     }
 
     private boolean isLocal(String uri) {
@@ -341,6 +359,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (session != null) session.setActive(true);
+        applyOrientation();
         immersive();
     }
 
