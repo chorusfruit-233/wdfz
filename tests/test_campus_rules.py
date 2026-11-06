@@ -252,3 +252,36 @@ class CampusRulesTest(BrowserCase):
         r = page.evaluate("""()=>{localStorage.removeItem('wdfz3d_clears_v1');RunRecords._reset();DEV.on=true;CampusRules.trusted();DEV.on=false;
           gameFact('ending',{id:'car',legit:true,fake:false,trueEnd:true});return RunRecords.list().length;}""")
         self.assertEqual(r, 0)
+
+    # ---------- 主菜单的 DLC 入口（2026-11-06）与 Wiki 的 DLC 玩法 ----------
+    def test_main_menu_has_a_dlc_entry_that_toggles_the_builtin_dlc(self):
+        page = self.game(False)
+        page.evaluate("()=>{Game.quit&&Game.quit();}")
+        page.wait_for_function("S.screen==='menu'")
+        r = page.evaluate("""()=>{const b=document.getElementById('btndlc'),row=b&&b.closest('.mctl');b.click();
+          const ov=document.getElementById('dlcmenu'),cs=getComputedStyle(ov),body=document.getElementById('dlcMenuBody');
+          const t=[...body.querySelectorAll('[data-mm="builtin"]')].find(x=>x.dataset.id==='campus-rules');
+          const shown=cs.display!=='none'&&!ov.hidden,top=document.elementFromPoint(innerWidth/2,innerHeight/2);
+          return {inRow:!!row,shown,onTop:ov.contains(top),simple:!body.querySelector('.mm-mods'),label:t&&t.textContent,
+            link:ov.querySelector('a[href="wiki/index.html#dlc"]')!==null,beforeWiki:b.nextElementSibling&&b.nextElementSibling.classList.contains('mwiki')};}""")
+        self.assertEqual(r, {'inRow': True, 'shown': True, 'onTop': True, 'simple': True, 'label': '打开', 'link': True, 'beforeWiki': True})
+        page.evaluate("[...document.querySelectorAll('#dlcMenuBody [data-mm=\"builtin\"]')].find(x=>x.dataset.id==='campus-rules').click()")
+        r = page.evaluate("()=>({on:GameModules.builtinList().find(m=>m.id==='campus-rules').enabled,label:[...document.querySelectorAll('#dlcMenuBody [data-mm=\"builtin\"]')].find(x=>x.dataset.id==='campus-rules').textContent,state:[...document.querySelectorAll('#dlcMenuBody [data-mm=\"builtin\"]')].find(x=>x.dataset.id==='campus-rules').closest('li').querySelector('small').textContent})")
+        self.assertTrue(r['on'])
+        self.assertIn('已开', r['label'])
+        self.assertIn('刷新后载入', r['state'])                    # 这次还没载入：要刷新
+        page.keyboard.press('Escape')
+        self.assertEqual(page.evaluate("[document.getElementById('dlcmenu').hidden,document.activeElement.id,S.screen]"), [True, 'btndlc', 'menu'])
+        self.assertEqual(self.errs, [])
+
+    def test_wiki_explains_the_dlc_without_internal_answers(self):
+        import pathlib
+        html = (pathlib.Path(__file__).resolve().parents[1] / 'wiki' / 'index.html').read_text(encoding='utf-8')
+        start = html.index('<section id="dlc">'); sec = html[start:html.index('</section>', start)]
+        for need in ('主菜单底行的「DLC」', '从下一局开始生效', '可信', '证据', '每局不一样', '规则怪谈的存档只能在 DLC 打开时接着玩', '另有一条隐藏的', '?nomod'):
+            self.assertIn(need, sec)
+        self.assertIn('href="#dlc"', html)
+        for secret in ('门外有你的名字', '门外的声音', '应一声', 'rules_knock', '查寝'):
+            self.assertNotIn(secret, html)                          # DLC 的死法、隐藏成就、选项原文不进 Wiki
+        for secret in ('不出声', '放回托盘', '不答应', '收下', 'R0', 'R10', '餐券', '敲门'):
+            self.assertNotIn(secret, sec)                           # DLC 一节不写哪件事该怎么选
