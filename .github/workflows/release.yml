@@ -1,0 +1,104 @@
+# 单文件 HTML 与 GeckoView 安卓版（docs/打包与发布.md）
+# · PR（改了打包相关文件）和手动运行：只构建，产物在这次运行的 Artifacts 里
+# · 推送 v* 标签，或手动运行时填了版本号：构建并新建 Release（手动运行时由工作流自己建 v<版本号> 标签），上传单文件 HTML 和 APK
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'tools/build_single_html.cjs'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '要发布的版本号（例如 2026.11.6，会建 v2026.11.6 标签）；留空只构建不发布'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 版本号
+        id: ver
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          publish=false
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; publish=true
+          elif [[ -n "${INPUT_VERSION}" ]]; then v="${INPUT_VERSION#v}"; publish=true
+          else v="0.0.0-dev.${GITHUB_RUN_NUMBER}"; fi
+          [[ "$v" =~ ^[0-9A-Za-z._-]+$ ]] || { echo "版本号只能有字母、数字、点、横线"; exit 1; }
+          echo "name=$v" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "版本：$v（发布：$publish）"
+
+      - name: 单文件 HTML
+        run: |
+          node tools/build_single_html.cjs "dist/wdfz-3d-${{ steps.ver.outputs.name }}.html"
+          mkdir -p android/app/src/main/assets
+          cp "dist/wdfz-3d-${{ steps.ver.outputs.name }}.html" android/app/src/main/assets/wdfz.html
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current          # AGP 9 需要 Gradle 9
+
+      - name: GeckoView 稳定版
+        id: gecko
+        run: |
+          v=$(curl -fsSL https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-arm64-v8a/maven-metadata.xml | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n1)
+          test -n "$v"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "GeckoView：$v"
+
+      - name: APK
+        run: |
+          gradle -p android --no-daemon assembleRelease \
+            -PgeckoVersion="${{ steps.gecko.outputs.version }}" \
+            -PversionName="${{ steps.ver.outputs.name }}" \
+            -PversionCode="${{ github.run_number }}"
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/wdfz-3d-${{ steps.ver.outputs.name }}-arm64-v8a.apk"
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wdfz-3d-${{ steps.ver.outputs.name }}
+          path: dist/*
+          if-no-files-found: error
+
+      - name: 发布 Release
+        if: steps.ver.outputs.publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          name: 里世界 3D ${{ steps.ver.outputs.name }}
+          files: dist/*
+          body: |
+            **单文件 HTML**：`wdfz-3d-${{ steps.ver.outputs.name }}.html`，下载后直接用浏览器打开就能玩（离线可用；Wiki 链接指向线上）。
+
+            **安卓版**：`wdfz-3d-${{ steps.ver.outputs.name }}-arm64-v8a.apk`，需要 Android 8.0 以上、64 位 ARM 手机。APK 自带 GeckoView（Mozilla Gecko 引擎 ${{ steps.gecko.outputs.version }}），不用系统 WebView。安装时要允许「安装未知来源的应用」。存档、设置、成就存在应用自己的浏览器存储里，和网页版不共通。
+
+            返回键：先当作 Esc（暂停、关面板），1.5 秒内再按一次回到桌面。

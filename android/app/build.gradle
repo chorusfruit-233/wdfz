@@ -1,0 +1,67 @@
+plugins {
+    id 'com.android.application'
+}
+
+// 构建参数（Release 工作流传入）：
+//   -PgeckoVersion=…  GeckoView 版本（工作流取 maven.mozilla.org 上当前的稳定版；不传时用最新稳定版）
+//   -PversionName=…   版本名（取自 v* 标签）  -PversionCode=…  版本号（工作流的运行序号）
+def geckoVersion = (project.findProperty('geckoVersion') ?: '+').toString()
+def appVersionName = (project.findProperty('versionName') ?: 'dev').toString()
+def appVersionCode = (project.findProperty('versionCode') ?: '1').toString().toInteger()
+
+android {
+    namespace 'io.github.wdfz.lishijie'
+    compileSdk 37                                     // GeckoView 159 起要求 37（2026-11）
+
+    defaultConfig {
+        applicationId 'io.github.wdfz.lishijie'
+        minSdk 26
+        targetSdk 35
+        versionCode appVersionCode
+        versionName appVersionName
+        ndk { abiFilters 'arm64-v8a' }               // GeckoView 只打 64 位 ARM（绝大多数手机）；APK 体积约 105 MB（原生库压缩后；安装后约 220 MB）
+    }
+
+    // 侧载用的固定证书（随仓库公开，不是保密密钥）：每次发布用同一把，覆盖安装不用先卸载。
+    // 想用自己的证书：设置环境变量 WDFZ_KEYSTORE（路径）、WDFZ_KEYSTORE_PASSWORD、WDFZ_KEY_ALIAS、WDFZ_KEY_PASSWORD。
+    signingConfigs {
+        sideload {
+            def ks = System.getenv('WDFZ_KEYSTORE')
+            storeFile ks ? file(ks) : file('wdfz-sideload.keystore')
+            storePassword System.getenv('WDFZ_KEYSTORE_PASSWORD') ?: 'wdfz-sideload'
+            keyAlias System.getenv('WDFZ_KEY_ALIAS') ?: 'wdfz'
+            keyPassword System.getenv('WDFZ_KEY_PASSWORD') ?: 'wdfz-sideload'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.sideload
+        }
+        debug {
+            signingConfig signingConfigs.sideload
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // 体积：GeckoView 的原生库（libxul 等）默认不压缩直接放进 APK（约 217 MB）。压缩后下载小得多，安装时解压到手机上
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
+    lint {
+        checkReleaseBuilds false                     // 发布构建不因 lint 中断（工程很小，问题在 CI 日志里看）
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation "org.mozilla.geckoview:geckoview-arm64-v8a:${geckoVersion}"
+}

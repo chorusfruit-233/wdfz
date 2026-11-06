@@ -283,7 +283,9 @@ var GameModules=(function(){
   }
 
   /* ---------- 加载：index.html 里调用一次，按清单顺序写入脚本 ---------- */
-  function scriptTag(src){ return '<script src="'+src.replace(/"/g,'&quot;')+'"><\/script>'; }
+  /* 单文件版（tools/build_single_html.cjs）：所有脚本作为文本块嵌在页面里，WDFZ_BUNDLE.url 把路径换成 blob 地址；平时原样返回 */
+  function src(path){ try{ if(typeof WDFZ_BUNDLE!=='undefined'&&WDFZ_BUNDLE.url){ var u=WDFZ_BUNDLE.url(path); if(u) return u; } }catch(e){} return path; }
+  function scriptTag(path){ return '<script src="'+src(path).replace(/"/g,'&quot;')+'"><\/script>'; }
   function modName(n){ return /^[a-z0-9][a-z0-9_-]{0,47}$/i.test(n||'')?n:null; }
   function boot(){
     if(loaded) return; loaded=true;
@@ -317,7 +319,7 @@ var GameModules=(function(){
     configureContracts:configureContracts,imports:importFile,publish:publishFile,adoptFile:adoptFile,dependencies:dependencySnapshot,
     define:define, on:on, off:off, has:has, emit:emit, first:first,
     persistent:persistent, saveAll:saveAll, loadAll:loadAll, resetAll:resetAll,
-    mod:mod, boot:boot, verify:verify, safeMode:safeMode,
+    mod:mod, boot:boot, verify:verify, safeMode:safeMode, src:src,
     _afterCore:afterCore, _loadBuiltin:loadBuiltin, _finish:finish,
     /* game3d/mods/index.js 用：登记 game3d/mods/ 里自带的 Mod，默认不开，玩家在调试面板里打开 */
     builtin:function(list){ (list||[]).forEach(function(b){ if(b&&modName(b.id)&&!builtin.some(function(x){ return x.id===b.id; })) builtin.push({id:b.id,name:b.name||b.id,desc:b.desc||''}); }); },

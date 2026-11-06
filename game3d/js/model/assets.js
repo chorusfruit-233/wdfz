@@ -158,7 +158,7 @@ var Assets=(function(){
     ASSETS.loading[lod]=1;
     if(typeof document==='undefined'){assetLoadFailed(lod);return false;}
     var s=document.createElement('script');
-    s.src=ASSETS_BASE+'models_l'+lod+'.js'; s.async=true;
+    s.src=GameModules.src(ASSETS_BASE+'models_l'+lod+'.js'); s.async=true;
     s.onerror=function(){ assetLoadFailed(lod);s.remove(); };
     s.onload=function(){ assetLoadFinished(lod);s.remove(); };
     document.head.appendChild(s);
@@ -235,7 +235,7 @@ var Assets=(function(){
 })();
 var ASSETS_BASE=(function(){
   /* 和本脚本同一个目录往上一层的 assets/（game3d/js/model/assets.js → game3d/assets/） */
-  try{ var s=document.currentScript&&document.currentScript.src; if(s) return s.replace(/js\/model\/assets\.js(\?.*)?$/,'assets/'); }catch(e){}
+  try{ var s=document.currentScript&&document.currentScript.src, re=/js\/model\/assets\.js(\?.*)?$/; if(s&&re.test(s)) return s.replace(re,'assets/'); }catch(e){}   /* 单文件版里是 blob 地址：用默认目录 */
   return 'game3d/assets/';
 })();
 /* 开局的画质：照 settings.js 读存档（没存过、是触屏就是流畅）。模型包、贴图包（materials.js）都按它挑开局读哪一档 */
@@ -260,7 +260,7 @@ function bootQuality(){
   if(typeof document==='undefined'||!document.write) return;
   var lod=$imports.Quality.get(bootQuality()).lod;
   ASSETS.loading[lod]=1;
-  document.write('<script src="'+ASSETS_BASE+'models_l'+lod+'.js" onerror="assetLoadFailed('+lod+')" onload="assetLoadFinished('+lod+')"><\/script>');
+  document.write('<script src="'+GameModules.src(ASSETS_BASE+'models_l'+lod+'.js')+'" onerror="assetLoadFailed('+lod+')" onload="assetLoadFinished('+lod+')"><\/script>');
 })();
 
 /* @module-exports */
