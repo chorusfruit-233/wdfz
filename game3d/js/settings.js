@@ -75,7 +75,7 @@ var Settings={
   comfort:function(key,value){if(!COMFORT_LIMITS[key])return;SET[key]=Number(value);applyComfort();paintSet();saveSet();},
   resetComfort:function(){Object.keys(COMFORT_LIMITS).forEach(function(k){SET[k]=100;});SET.touchLayout=null;applyComfort();paintSet();saveSet();(0,$imports.toast)('操作与文字设置已恢复默认');},
   vol:function(v){ SET.vol=+v; try{ $imports.SFX.setVol(SET.vol/100); }catch(e){}
-    var e=document.getElementById('sVolV'); if(e) e.textContent=SET.vol; saveSet(); },
+    var e=document.getElementById('sVolV'); if(e) e.textContent=SET.vol; saveSet(); try{ (0,$imports.applyAppAudio)(); }catch(e2){} },
   sub:function(i){ SET.sub=i; SUB_MULT=[0.6,1.0,1.6][i]; paintSet(); saveSet(); },
   bright:function(v){
     SET.bright=+v;
@@ -91,7 +91,7 @@ var Settings={
   /* 自动横屏：安卓版由原生锁横屏；网页版在手机上全屏时尽量锁横屏（mobile.js 的 applyOrientation） */
   autoLand:function(off){ SET.autoLand=off?0:1; paintSet(); saveSet(); try{ (0,$imports.applyOrientation)(); }catch(e){} },
   shake:function(off){ SET.shake=off?0:1; SHAKE_ON=!off; document.body.classList.toggle('noshake',!SHAKE_ON); paintSet(); saveSet(); },
-  amb:function(on){ SET.amb=on; AMB_ON=!!on; paintSet(); saveSet(); if(on) $imports.SFX.ambient(); else $imports.SFX.stopAmbient(); },
+  amb:function(on){ SET.amb=on; AMB_ON=!!on; paintSet(); saveSet(); if(on) $imports.SFX.ambient(); else $imports.SFX.stopAmbient(); try{ (0,$imports.applyAppAudio)(); }catch(e){} },
   grain:function(on){ SET.grain=on?1:0; $imports.Engine.grain(SET.grain); paintSet(); saveSet(); }
 };
 

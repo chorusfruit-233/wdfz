@@ -724,3 +724,4 @@ body.paused #soundcaptions{display:none}
 /* Independent renderer benchmark entry; large enough for touch. */
 #set .renderer-benchmark-link{display:inline-flex;align-items:center;min-height:44px;color:var(--ui-text);text-underline-offset:4px}
 #set .renderer-benchmark-link:focus-visible{outline:2px solid #c8b176;outline-offset:3px}
+.pbox pre.diagout{max-height:42vh;overflow:auto;margin:6px 0;padding:8px 10px;font:11px/1.45 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all;color:var(--ui-dim);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);user-select:text;-webkit-user-select:text}

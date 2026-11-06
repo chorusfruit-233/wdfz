@@ -1,0 +1,101 @@
+# 安卓模拟器诊断（2026-11-06，排查安卓版贴图、连廊、声音）：
+# 用 x86_64 的 GeckoView 编一个诊断版 APK，在 GitHub 构建机的安卓模拟器里跑页面自带的诊断路线（?diag=1），
+# 截屏、页面报告和 Gecko/音频的系统日志转成 JPEG 和文本，提交回 PR 分支：pictures/安卓模拟器诊断/、docs/validation/安卓模拟器诊断/。
+# 模拟器的显卡是软件渲染（SwiftShader），和真手机的 GPU 不一样：真机问题还要看玩家在「设置 → 设备诊断」里复制的信息。
+name: android-diag
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'game3d/js/app/app-diag.js'
+      - 'tools/android_diag.sh'
+      - '.github/workflows/android-diag.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-diag-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 单文件 HTML
+        run: |
+          node tools/build_single_html.cjs dist/wdfz-3d-diag.html
+          mkdir -p android/app/src/main/assets
+          cp dist/wdfz-3d-diag.html android/app/src/main/assets/wdfz.html
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current
+
+      - name: GeckoView 稳定版（x86_64）
+        id: gecko
+        run: |
+          v=$(curl -fsSL https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-x86_64/maven-metadata.xml | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n1)
+          test -n "$v"; echo "version=$v" >> "$GITHUB_OUTPUT"; echo "GeckoView：$v"
+
+      - name: 诊断版 APK（x86_64）
+        run: |
+          gradle -p android --no-daemon assembleDebug -Pabi=x86_64 -PgeckoVersion="${{ steps.gecko.outputs.version }}" -PversionName=diag
+          ls -la android/app/build/outputs/apk/debug/
+
+      - name: 打开 KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: 模拟器里跑诊断
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back none
+          script: bash tools/android_diag.sh android/app/build/outputs/apk/debug/app-debug.apk diag-out
+
+      - name: 截屏转 JPEG，提交回 PR 分支
+        if: always()
+        run: |
+          python3 -m pip install --quiet pillow
+          mkdir -p pictures/安卓模拟器诊断 docs/validation/安卓模拟器诊断
+          rm -f pictures/安卓模拟器诊断/*.jpg
+          python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          for f in sorted(glob.glob('diag-out/*.png')):
+              try:
+                  im = Image.open(f).convert('RGB'); im.thumbnail((1280, 1280))
+                  im.save('pictures/安卓模拟器诊断/' + os.path.basename(f)[:-4] + '.jpg', quality=78)
+              except Exception as e:
+                  print('skip', f, e)
+          PY
+          cp diag-out/wdfz.log diag-out/logcat.txt docs/validation/安卓模拟器诊断/ 2>/dev/null || true
+          echo "run ${{ github.run_id }} · ${{ github.sha }} · GeckoView ${{ steps.gecko.outputs.version }}" > docs/validation/安卓模拟器诊断/RUN.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pictures/安卓模拟器诊断 docs/validation/安卓模拟器诊断
+          git commit -m "CI：安卓模拟器诊断截屏与日志（run ${{ github.run_id }}）" || exit 0
+          for i in 1 2 3; do git pull --rebase --quiet && git push && break; sleep 5; done

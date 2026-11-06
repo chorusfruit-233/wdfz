@@ -139,6 +139,12 @@
   </details>
   <button type="button" class="sreset" onclick="Settings.resetComfort()">灵敏度、字号、触屏按键恢复默认</button>
   </section>
+  <section class="sgroup" aria-labelledby="sgDiag"><h4 id="sgDiag">设备诊断</h4>
+  <p class="shint">画面、声音不对的时候用：显示这台设备的显卡、渲染、贴图、声音状态和最近的报错，可以复制下来发给开发者。不含存档内容。</p>
+  <button type="button" class="sreset" onclick="AppDiag.open()">查看诊断信息</button>
+  <pre id="diagOut" class="diagout" hidden></pre>
+  <button type="button" class="sreset" id="diagCopy" onclick="AppDiag.copy()" hidden>复制诊断信息</button>
+  </section>
   <div class="sfoot"><button class="primary" onclick="Settings.back()">返回</button>
   <button id="setResume" onclick="Game.resume()">返回游戏</button></div>
 </div></div>

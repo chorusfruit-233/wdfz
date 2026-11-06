@@ -91,7 +91,7 @@
   {id:'mono', name:'独白', desc:'按地点和状态的自言自语。',
     files:['game3d/js/mono.js'], exports:['MONO','monoTick']},
   {id:'mobile', name:'移动端外壳', desc:'触屏、全屏、视口。',
-    files:['game3d/js/mobile.js'], exports:['IS_TOUCH']},
+    files:['game3d/js/mobile.js','game3d/js/app/app-diag.js'], exports:['IS_TOUCH','AppDiag']},
   {id:'prologue', name:'前情提要', desc:'开局前情提要与醒来。',
     files:['game3d/js/prologue.js'], exports:['PRO']},
   {id:'chalk-marks', name:'粉笔记号', desc:'用粉笔在面前的地面或墙上画 X、↑、O 等记号，跟着存档保留；校园和虚空迷宫都能画。',
