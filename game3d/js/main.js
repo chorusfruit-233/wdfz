@@ -8,7 +8,18 @@
 var lastT=0, accum=0, running=false,dtG=.016;
 function frame(t){
   requestAnimationFrame(frame);
-  if(!running||!$imports.Engine.ready()) { lastT=t; return; }
+  if(!running||!$imports.Engine.ready()) {
+    /* 主菜单上游戏不跑，但 BGM 要响（2026-11-06）：只给声音打拍子，不推进任何模拟 */
+    var mdt=Math.min(0.1,Math.max(0,(t-lastT)/1000)||0); lastT=t;
+    if($imports.S.screen==='menu'){
+      try{
+        if($imports.AMB_ON&&!$imports.SFX._ambOn){ $imports.SFX.ambient(); $imports.SFX._ambOn=true; }
+        else if(!$imports.AMB_ON&&$imports.SFX._ambOn){ $imports.SFX.stopAmbient(); $imports.SFX._ambOn=false; }
+        $imports.SFX.tick(mdt);
+      }catch(e){}
+    }
+    return;
+  }
   var dt=(t-lastT)/1000; lastT=t;
   dtG=dt;
   $imports.Playtest.frame(dt);

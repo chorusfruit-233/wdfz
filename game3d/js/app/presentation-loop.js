@@ -4,7 +4,7 @@
 'use strict';
 function render(dt){
   try{ if($imports.DEV.on){$imports.DEV.refreshT-=dt;if($imports.DEV.refreshT<=0){$imports.DEV.refreshT=.3;$imports.Dev.refresh();}} }catch(e){}
-  try{ if($imports.AMB_ON&&$imports.S.screen==='play'){ if(!$imports.SFX._ambOn){ $imports.SFX.ambient(); $imports.SFX._ambOn=true; } } else if(!$imports.AMB_ON&&$imports.SFX._ambOn){ $imports.SFX.stopAmbient(); $imports.SFX._ambOn=false; } }catch(e){}
+  try{ if($imports.AMB_ON&&($imports.S.screen==='play'||$imports.S.screen==='menu')){ if(!$imports.SFX._ambOn){ $imports.SFX.ambient(); $imports.SFX._ambOn=true; } } else if(!$imports.AMB_ON&&$imports.SFX._ambOn){ $imports.SFX.stopAmbient(); $imports.SFX._ambOn=false; } }catch(e){}
   try{ $imports.SFX.tick(dt); }catch(e){}
   if($imports.CarChase.active()&&$imports.S.screen==='play')$imports.CarChase.draw();
   try{ $imports.PortalDevice.tick(dt); }catch(e){}          /* 物理实验室演示台上的传送门：按剧情状态摆、每帧动 */

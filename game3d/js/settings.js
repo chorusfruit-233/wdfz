@@ -4,12 +4,13 @@
 'use strict';
 
 /* rv：图形模式设置的版本。2026-11-05 起默认 WebGL，不再默认先试 WebGPU；没有 rv 的旧设置（当时默认是「自动」）一律改成 WebGL，之后玩家自己选的照存 */
-var SET={renderer:'webgl',rv:1,distortion:2,reduceFlash:0,soundCaptions:1,vol:70,sub:1,q:1,shake:1,amb:1,bright:100,grain:1,mouseSense:100,touchSense:100,textSize:100,touchSize:100,touchLayout:null};
+var SET={renderer:'webgl',rv:1,distortion:2,reduceFlash:0,soundCaptions:1,vol:70,sub:1,q:1,shake:1,amb:1,bright:100,grain:1,mouseSense:100,touchSense:100,textSize:100,touchSize:100,touchLayout:null,autoLand:1};   /* autoLand：自动横屏（2026-11-06，默认开） */
 var COMFORT_LIMITS={mouseSense:[25,250],touchSense:[25,250],textSize:[85,150],touchSize:[85,125]};
 function normalizeComfort(){
   if(!['auto','webgl'].includes(SET.renderer))SET.renderer='webgl';
   ['distortion','soundCaptions'].forEach(function(k){if(![0,1,2].includes(SET[k]))SET[k]=k==='distortion'?2:1;});
   SET.reduceFlash=SET.reduceFlash===1?1:0;
+  SET.autoLand=SET.autoLand===0?0:1;
   Object.keys(COMFORT_LIMITS).forEach(function(k){var v=Number(SET[k]),lim=COMFORT_LIMITS[k];SET[k]=Number.isFinite(v)?(0,$imports.clamp)(v,lim[0],lim[1]):100;});
   var layout=SET.touchLayout;
   if(!layout||typeof layout!=='object'||Array.isArray(layout)){SET.touchLayout=null;return;}
@@ -56,7 +57,7 @@ function paintSet(){
   if(typeof $imports.TouchLayout!=='undefined')$imports.TouchLayout.paint();
   var v=document.getElementById('sVol'); if(v) v.value=SET.vol;
   var vv=document.getElementById('sVolV'); if(vv) vv.textContent=SET.vol;
-  [['sDistortion',2-SET.distortion],['sReduceFlash',1-SET.reduceFlash],['sSoundCaptions',SET.soundCaptions],['sSub',SET.sub],['sQ',SET.q],['sShake',SET.shake?0:1],['sAmb',SET.amb?0:1],['sGrain',SET.grain?0:1]].forEach(function(p){
+  [['sDistortion',2-SET.distortion],['sReduceFlash',1-SET.reduceFlash],['sSoundCaptions',SET.soundCaptions],['sSub',SET.sub],['sQ',SET.q],['sShake',SET.shake?0:1],['sAmb',SET.amb?0:1],['sGrain',SET.grain?0:1],['sAutoLand',SET.autoLand?0:1]].forEach(function(p){
     var el=document.getElementById(p[0]); if(!el) return;
     var bs=el.querySelectorAll('button');
     for(var i=0;i<bs.length;i++) bs[i].className=(i===p[1])?'on':'';
@@ -87,6 +88,8 @@ var Settings={
     $imports.Engine.applyQuality();
     (0,$imports.toast)($imports.Quality.get().label);
   },
+  /* 自动横屏：安卓版由原生锁横屏；网页版在手机上全屏时尽量锁横屏（mobile.js 的 applyOrientation） */
+  autoLand:function(off){ SET.autoLand=off?0:1; paintSet(); saveSet(); try{ (0,$imports.applyOrientation)(); }catch(e){} },
   shake:function(off){ SET.shake=off?0:1; SHAKE_ON=!off; document.body.classList.toggle('noshake',!SHAKE_ON); paintSet(); saveSet(); },
   amb:function(on){ SET.amb=on; AMB_ON=!!on; paintSet(); saveSet(); if(on) $imports.SFX.ambient(); else $imports.SFX.stopAmbient(); },
   grain:function(on){ SET.grain=on?1:0; $imports.Engine.grain(SET.grain); paintSet(); saveSet(); }
