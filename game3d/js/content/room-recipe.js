@@ -50,7 +50,7 @@ function buildRoomRecipe(R,K,view){
       }
     }
   })();
-  function isWall(x,y){ return G(y,x)==='#'&&!STAIR_CUT[x+','+y]; }
+  function isWall(x,y){ return G(y,x)==='#'&&!STAIR_CUT[x+','+y]&&!(R.openWall&&R.openWall(x,y)); }   /* R.openWall：只是不画（连续校园的外廊由室外模型画栏杆），碰撞仍按格子 */
 
   /* ---- 地面：每格一块，棋盘格深浅；教学楼走廊换水磨石 ---- */
   var fy, fx;
@@ -182,6 +182,11 @@ function roomExit(c,x,y,cx,cz){
   var rot=vert?(sgn>0?Math.PI/2:-Math.PI/2):(sgn>0?0:Math.PI);
   K.frame(cx,cz,rot);                       /* 局部 +z 朝外 */
   var TH=c.theme;
+  if(R.openExitAt&&R.openExitAt(R.ox+(x+0.5)*R.tw,R.oy+(y+0.5)*R.th)){                          /* 连续出入口：门洞敞着，只留门头和一道门槛石 */
+    K.g(TH.wallMat).boxFaces(0,(2.30+$imports.WALLH)/2,0,1,$imports.WALLH-2.30,1,TH.wall,0.94,'nd');               /* 门头朝外那一面由室外楼体画 */
+    K.box('stone',0,0.006,0,1,0.012,0.30,0xb8b2a8,1.0);
+    K.unframe(); return;
+  }
   K.g(TH.wallMat).boxFaces(0,(2.30+$imports.WALLH)/2,0,1,$imports.WALLH-2.30,1,TH.wall,0.94,'nsd');               /* 门头 */
   K.asset('exit_door',0,0,0,0);                                                                  /* 铝框玻璃门、推杠、透进来的天光、安全出口灯、门外的水泥台 */
   K.unframe();

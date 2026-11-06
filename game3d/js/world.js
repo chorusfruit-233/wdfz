@@ -30,7 +30,9 @@ function buildRoomBounds(){
     var o=(0,$imports.objById)(R.host);
     R.w=R.cols*R.tw; R.h=R.rows*R.th;
     if(o){
-      var hc={x:o.x*$imports.SC+o.w*$imports.SC/2, y:o.y*$imports.SC+o.h*$imports.SC/2};
+      /* o.ic：室内的中心（地图单位）。连续校园把楼体外壳挪去和室内对齐时，室内坐标保持不变（旧存档、巡察栅格都照旧），
+         室内与室外之间差一个固定平移，见 campusShift */
+      var hc=o.ic?{x:o.ic[0]*$imports.SC,y:o.ic[1]*$imports.SC}:{x:o.x*$imports.SC+o.w*$imports.SC/2, y:o.y*$imports.SC+o.h*$imports.SC/2};
       R.ox=hc.x-R.w/2; R.oy=hc.y-R.h/2;
     }else{ R.ox=0; R.oy=0; }
     R.cx=R.ox+R.w/2; R.cy=R.oy+R.h/2;
@@ -97,7 +99,7 @@ function solidAtOutdoor(wx,wy){
   for(i=0;i<$imports.OBJ.length;i++){
     var o=$imports.OBJ[i];
     if(o.k!=='roof'||o.open) continue;                       /* 开敞的棚子（车棚）按 OUT_SOLID 里的钢架和车挡人 */
-    if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h) return true;
+    if(mx>o.x&&mx<o.x+o.w&&my>o.y&&my<o.y+o.h&&(0,$imports.roofSolids)(o).some(function(q){ return wx>q.x0&&wx<q.x1&&wy>q.y0&&wy<q.y1; })) return true;   /* 门口挖掉的缺口（连续出入口）不算 */
   }
   for(i=0;i<$imports.OUT_SOLID.length;i++){
     var q=$imports.OUT_SOLID[i];
@@ -127,7 +129,7 @@ function moveBy(dx,dy,dt){
     if(ax<1e-7||ax<before-1e-7){$imports.S.x=nx;before=ax;}
     var ay=$imports.Collision.depth($imports.S.x,ny,PRAD);
     if(ay<1e-7||ay<before-1e-7)$imports.S.y=ny;
-    var beforeAngle=$imports.S.ang;$imports.StairWorld.moved();
+    var beforeAngle=$imports.S.ang;$imports.StairWorld.moved();GameModules.emit('stepMoved');   /* 模块的门槛（连续校园的连廊）：越过就换场景，朝向变化下面一起转 */
     var da=$imports.S.ang-beforeAngle;if(da){var ndx=dx*Math.cos(da)-dy*Math.sin(da);dy=dx*Math.sin(da)+dy*Math.cos(da);dx=ndx;}
     (0,$imports.spiralUpdate)();
     MR=$imports.S.mode==='in'?$imports.INTERIORS[$imports.S.room]:null;
@@ -275,7 +277,8 @@ function doEnterRoom(id,spawn){
   (0,$imports.autoSave)();
 }
 function exitRoom(){ fadeTo(function(){ doExitRoom(); }); }
-function doExitRoom(){
+/* spawn：显式落点 {x,y,ang,seamless}（连续出入口越过门槛线：不出横幅、不等冷却） */
+function doExitRoom(spawn){
   var R=$imports.INTERIORS[$imports.S.room]; if(!R) return;
   $imports.Lifecycle.scope('transition').cancel();
   $imports.Lifecycle.renew('scene');
@@ -287,9 +290,10 @@ function doExitRoom(){
   $imports.S.mode='out'; $imports.S.room=null; $imports.S.seated=false;$imports.S.seat=null;
   $imports.Classmates.enter();
   try{ (0,$imports.spiralReset)(); }catch(e){}
-  showBanner('武大附中 · 校园');
-  if(o){ var d=doorWorld(o); $imports.S.x=d.x; $imports.S.y=d.y; }
-  $imports.S.enterCool=1.0;
+  if(!(spawn&&spawn.seamless)) showBanner('武大附中 · 校园');
+  if(spawn){ $imports.S.x=spawn.x; $imports.S.y=spawn.y; if(spawn.ang!==undefined) $imports.S.ang=spawn.ang; }
+  else if(o){ var d=doorWorld(o); $imports.S.x=d.x; $imports.S.y=d.y; }
+  $imports.S.enterCool=spawn&&spawn.seamless?0:1.0;
   enterWorldOut();
   (0,$imports.autoSave)();
 }

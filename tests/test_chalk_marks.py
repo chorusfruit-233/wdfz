@@ -56,7 +56,7 @@ class ChalkMarksTest(BrowserCase):
 
     def test_outdoors_and_nothing_to_draw_on(self):
         page = self.game()
-        r = page.evaluate("""()=>{doExitRoom();const o=objById('teach');S.x=(o.x+o.w/2)*SC;S.y=(o.y+o.h)*SC+8;S.ang=-Math.PI/2;S.pitch=0;
+        r = page.evaluate("""()=>{doExitRoom();const o=objById('teach');S.x=(o.x+o.w/2)*SC+40;S.y=(o.y+o.h)*SC+8;S.ang=-Math.PI/2;S.pitch=0;   // 正门旁边的墙（连续校园 C2 起正门是敞开的门洞）
           const wall=ChalkMarks.target();
           const f=objById('field');S.x=(f.x+f.w/2)*SC;S.y=(f.y+f.h/2)*SC;S.ang=0;const none=ChalkMarks.target();
           S.pitch=-0.8;const ground=ChalkMarks.target();

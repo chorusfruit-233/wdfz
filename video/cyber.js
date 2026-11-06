@@ -36,12 +36,21 @@ var PilotCyber=(function(){
     const from=INTERIORS[S.room]?.host;
     if(!['teach','lab'].includes(from)||!['teach','lab'].includes(to)||from===to)throw Error('连廊路线起终点不正确');
     await p.leaveSeat();await p.floor(2);
+    if(typeof CampusLink!=='undefined'&&p.through){                     /* 连续校园：门洞直接走过去 */
+      const v=CampusLink.ports(S.room).find(v=>v.peer.room==='link2');
+      if(!v)throw Error('没有找到二号连廊入口');
+      await p.through(v.self);
+      if(S.room!=='link2')throw Error('未正常进入二号连廊');
+      const w=CampusLink.ports('link2').find(w=>INTERIORS[w.peer.room].host===to);
+      await p.through(w.self);
+    }else{
     const port=p.cells('L').find(point=>from==='teach'||point.c<INTERIORS[S.room].cols/2);
     if(!port)throw Error('没有找到二号连廊入口');
     await p.interact(port,11);await p.sleep(1400);
     if(S.room!=='link2')throw Error('未正常进入二号连廊');
     const exits=p.cells('L').sort((a,b)=>a.r-b.r),exit=to==='lab'?exits[0]:exits.at(-1);
     await p.interact(exit,11);await p.sleep(1400);
+    }
     if(INTERIORS[S.room]?.host!==to)throw Error('连廊没有到达目标教学楼');
     p.event('bridge',{from,to,via:'link2'});
   }

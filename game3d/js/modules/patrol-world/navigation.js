@@ -158,10 +158,19 @@ var PatrolNav=(function(){
     });
     [['link1','admin2','lab2',true],['link2','lab2','teach2',false]].forEach(function(v){
       var id=v[0],a=v[1],b=v[2],R=$imports.INTERIORS[id],Ra=$imports.INTERIORS[a],Rb=$imports.INTERIORS[b];
+      /* 连续校园（campus-link）：门洞两侧紧贴门槛线的两点，跨过去和楼梯口一样不计时间；没有这个模块时按原来的「走连廊」换场景 */
+      var cl=typeof $imports.CampusLink!=='undefined'&&$imports.CampusLink.navPair?$imports.CampusLink:null,na2=cl&&cl.navPair(a,id),nb2=cl&&cl.navPair(b,id);
+      if(na2&&nb2){
+        node(id+':north',snap(id,point(id,na2[1].x,na2[1].y)));node(id+':south',snap(id,point(id,nb2[1].x,nb2[1].y)));edge(id+':north',id+':south','walk',true);
+        node(a+':'+id,snap(a,point(a,na2[0].x,na2[0].y)));node(b+':'+id,snap(b,point(b,nb2[0].x,nb2[0].y)));
+        edge(a+':'+id,id+':north','stair-portal',true);edge(b+':'+id,id+':south','stair-portal',true);
+      }else{
       node(id+':north',snap(id,tilePoint(id,2,1)));node(id+':south',snap(id,tilePoint(id,2,R.rows-2)));edge(id+':north',id+':south','walk',true);
-      node(a+':'+id,snap(a,tilePoint(a,v[3]?Ra.cols-3:2,a.startsWith('admin')?18:16)));
-      node(b+':'+id,snap(b,tilePoint(b,v[3]?Rb.cols-3:2,b.startsWith('teach')?18:16)));
+      /* 连廊入口的吊牌（连续校园 A2 起在楼的南／北墙边，和 interact.js 的 linksOf 一致） */
+      node(a+':'+id,snap(a,tilePoint(a,v[3]?47:7,v[3]?20:18)));
+      node(b+':'+id,snap(b,tilePoint(b,v[3]?47:6,1)));
       edge(a+':'+id,id+':north','bridge',true);edge(b+':'+id,id+':south','bridge',true);
+      }
       edge(a+':stairs',a+':'+id,'walk',true);edge(b+':stairs',b+':'+id,'walk',true);
     });
     var exterior={teach:'teach1',bell:'bell1',dormN:'dorm1',dormS:'dorm4',canteen:'canteen1',trash:'trash1',guard:'guard1',gear:'gear1',garw:'garage1',garage:'garage1',admin:'admin1',lab:'lab1'};

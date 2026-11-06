@@ -55,7 +55,7 @@ function objHeightM(b){
 function facadeDoor(o,px,pz,sw,sd,kind){
   var face=o.door||'s', horiz=(face==='s'||face==='n'), along=horiz?sw:sd;
   var dw=(kind==='small')?Math.min(1.6,along*0.5):Math.min(4.2,along*0.26);
-  FAC.gap={face:face, c:horiz?px:pz,
+  FAC.gap={face:face, c:(horiz?px:pz)+(o.seamDoor&&o.seamDoor.dx||0),   /* 连续出入口的门中线可以偏离楼中线 */
     recess:((kind==='small')?dw+0.3:dw+0.5)/2+((kind==='small')?0.12:0.47),     /* 大门的门垛宽 0.45 */
     wide:((kind==='small')?dw+1.2:Math.max(dw+1.9,4.6)+0.4)/2,
     top:(kind==='small')?2.6:(kind==='colonnade'?3.7:4.4)};
@@ -222,11 +222,12 @@ function solarHeater(K,x,y,z,rot){
   K.unframe();
 }
 /* 一圈白色腰线 */
-function bandAround(K,px,pz,sw,sd,y,h,out,col){
+function bandAround(K,px,pz,sw,sd,y,h,out,col,skip){
   var F=[['s',px,pz+sd/2+out/2,sw+out*2,true],['n',px,pz-sd/2-out/2,sw+out*2,true],
          ['e',px+sw/2+out/2,pz,sd,false],['w',px-sw/2-out/2,pz,sd,false]], i, g=FAC.gap;
   for(i=0;i<4;i++){
     var f=F[i], len=f[3], c0=f[4]?f[1]:f[2], segs=[[c0-len/2,c0+len/2]];
+    if(skip&&skip.indexOf(f[0])>=0) continue;
     if(g&&g.face===f[0]&&y-h/2<g.top) segs=[[c0-len/2,g.c-g.wide],[g.c+g.wide,c0+len/2]];   /* 门头那一段断开 */
     segs.forEach(function(sg){
       var L=sg[1]-sg[0], m=(sg[0]+sg[1])/2; if(L<0.05) return;
@@ -263,7 +264,7 @@ function roofTop(K,px,top,pz,sw,sd,seed){
 }
 
 /* ---- 大门口：门洞暗腔、双开门、门套、雨棚（有柱廊的楼不要雨棚）、台阶、门牌 ---- */
-function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name){
+function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name, seam){
   face=face||'s';
   var horz=(face==='e'||face==='w');
   var along=horz?sd:sw;
@@ -276,7 +277,20 @@ function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name){
   var rot=Math.atan2(nx,nz);
   K.frame(bx,bz,rot);                           /* 局部：+z 朝外 */
   var en=(colonnade?'entrance_col_':'entrance_')+Math.round(dw*100);
-  if(K.asset(en,0,0,0,0)){}                      /* 门斗、地弹门、台阶、雨棚是模型（exterior.py） */
+  if(seam){                                      /* 连续出入口：门洞敞开（和室内门洞同宽），两扇玻璃门推开贴在两边墙上；门槛平铺，不做台阶 */
+    var hw=seam.width/2;
+    K.unframe(); K.frame(bx+(horz?0:(seam.dx||0)),bz+(horz?(seam.dx||0):0),rot);   /* 门中线可以偏离楼中线（实验楼宽 50 格） */
+    [-1,1].forEach(function(sx){
+      K.bevel('stone',sx*(hw+0.09),1.2,0.11,0.18,2.40,0.22,0xd8d4cc,1.05,0.02);                 /* 门套 */
+      var lz=seam.leaf||0.135;                                                                   /* 墙基挑出多少，门扇就贴在它外面 */
+      K.bevel('metal',sx*(hw+0.85),1.12,lz,1.30,2.18,0.05,0x2a3136,1.02,0.01);                  /* 推开的门扇（贴在墙基外面） */
+      K.box('glass',sx*(hw+0.85),1.25,lz+0.03,1.06,1.70,0.01,0x5a7080,1.0);
+    });
+    K.bevel('stone',0,2.39,0.11,seam.width+0.36,0.18,0.22,0xd8d4cc,1.05,0.02);                  /* 门头线 */
+    K.box('emit',hw*0.6,2.20,0.13,0.30,0.14,0.04,0x2fae6a,1.0);                                /* 安全出口灯 */
+    K.box('stone',0,0.006,0.55,seam.width+0.6,0.012,1.1,0xb8b2a8,1.0);                          /* 门槛石 */
+  }
+  else if(K.asset(en,0,0,0,0)){}                      /* 门斗、地弹门、台阶、雨棚是模型（exterior.py） */
   else{
   K.box('dark',0,dh/2,dep*0.5,dw+0.5,dh,dep,0x0e1316,1.0);                     /* 门洞暗腔 */
   K.bevel('metal',-dw*0.25,dh/2-0.05,dep*0.95,dw*0.48,dh-0.1,0.08,0x2a3136,1.02,0.01);   /* 双开门 */
@@ -306,7 +320,30 @@ function addEntrance(K, grp, px, pz, sw, sd, face, colonnade, name){
     back.position.set(bx+nx*(sd2-0.05),sy,bz+nz*(sd2-0.05)); back.rotation.y=rot; grp.add(back);
   }
 }
-function addSmallDoor(K, px, pz, sw, sd, face){
+/* 连续出入口的小屋、钟楼（连续校园 A3）：外壳只是四面墙，屋里的样子是挂进来的室内模型。
+   调用前外壳已经比室内大一圈（每面往外 4 厘米），墙只有半米厚，里侧那面埋在室内的外墙（1 米厚）里；
+   门那一面开门洞，比室内门洞每边宽 2 厘米（洞口侧面也埋进室内墙里），门洞上面留门头 */
+var SEAM_OUT=0.04;
+function seamWalls(K,mat,px,pz,sw,sd,h,col,seam,face){
+  var t=0.5, hw=seam.width/2+0.02, top=2.32, off=seam.dx||0;
+  function wallX(z,cut){                                                               /* 南北两面：整面宽 */
+    var a0=px-sw/2, a1=px+sw/2, cx=px+off;
+    if(!cut){ K.box(mat,px,h/2,z,sw,h,t,col,0.97); return; }
+    K.box(mat,(a0+cx-hw)/2,h/2,z,cx-hw-a0,h,t,col,0.97);
+    K.box(mat,(cx+hw+a1)/2,h/2,z,a1-cx-hw,h,t,col,0.97);
+    K.box(mat,cx,(top+h)/2,z,hw*2,h-top,t,col,0.97);                                   /* 门头 */
+  }
+  function wallZ(x,cut){                                                               /* 东西两面：夹在南北两面中间 */
+    var a0=pz-sd/2+t, a1=pz+sd/2-t, cz=pz+off;
+    if(!cut){ K.box(mat,x,h/2,pz,t,h,a1-a0,col,0.97); return; }
+    K.box(mat,x,h/2,(a0+cz-hw)/2,t,h,cz-hw-a0,col,0.97);
+    K.box(mat,x,h/2,(cz+hw+a1)/2,t,h,a1-cz-hw,col,0.97);
+    K.box(mat,x,(top+h)/2,cz,t,h-top,hw*2,col,0.97);
+  }
+  wallX(pz+sd/2-t/2,face==='s'); wallX(pz-sd/2+t/2,face==='n');
+  wallZ(px+sw/2-t/2,face==='e'); wallZ(px-sw/2+t/2,face==='w');
+}
+function addSmallDoor(K, px, pz, sw, sd, face, seam){
   face=face||'s';
   var horz=(face==='e'||face==='w');
   var along=horz?sd:sw;
@@ -316,6 +353,17 @@ function addSmallDoor(K, px, pz, sw, sd, face){
   else if(face==='n'){ nz=-1; bz=pz-sd/2; }
   else if(face==='e'){ nx=1;  bx=px+sw/2; }
   else { nx=-1; bx=px-sw/2; }
+  if(seam){                                       /* 连续出入口：门洞敞着，铁门推开贴在门洞一侧的外墙上，门槛石平铺 */
+    var hw=seam.width/2;
+    K.frame(bx+(horz?0:(seam.dx||0)),bz+(horz?(seam.dx||0):0),Math.atan2(nx,nz));
+    [-1,1].forEach(function(sx){ K.bevel('stone',sx*(hw+0.08),1.16,0.07,0.16,2.32,0.14,0xd8d4cc,1.05,0.02); });   /* 门垛 */
+    K.bevel('stone',0,2.40,0.07,seam.width+0.32,0.16,0.14,0xd8d4cc,1.05,0.02);
+    K.bevel('metal',hw+0.16+0.55,1.06,0.10,1.10,2.06,0.05,0x6a747c,1.02,0.01);            /* 推开的铁门（比门洞亮，不像第二个门洞） */
+    K.box('metal',hw+0.16+0.18,1.0,0.13,0.04,0.04,0.02,0xc8a24a,1.3);                      /* 门把手 */
+    K.bevel('concrete',0,2.62,0.45,seam.width+0.8,0.10,0.9,0xc9c4bb,1.0,0.02);            /* 小雨棚 */
+    K.box('stone',0,0.006,0.40,seam.width+0.5,0.012,0.8,0xb8b2a8,1.0);                     /* 门槛石 */
+    K.unframe(); return;
+  }
   K.frame(bx,bz,Math.atan2(nx,nz));
   if(K.asset('door_small_'+Math.round(dw*100),0,0,0,0)){ K.unframe(); return; }     /* 子母铁门、门垛、雨棚、台阶 */
   K.box('dark',0,dh/2,dep*0.4,dw+0.30,dh,dep,0x0e1316,1.0);
@@ -341,10 +389,33 @@ function addGardenSign(grp){
 }
 
 /* ---- 教学楼 / 行政楼 / 实验楼：一层架空柱廊 + 四层教室 ---- */
+/* 接在这栋楼某一面上的连廊（连续校园 A2：楼端头的南北向直桥）：返回这一面上连廊占的那几段（米，沿墙的坐标） */
+function linkSpansOn(o,face){
+  var out=[];
+  $imports.OBJ.forEach(function(b){
+    if(b.k!=='link'||b.x+b.w<=o.x||b.x>=o.x+o.w) return;
+    var touch=face==='s'?Math.abs(b.y-(o.y+o.h))<1:face==='n'?Math.abs(b.y+b.h-o.y)<1:false;
+    if(touch) out.push([(0,$imports.M)(b.x),(0,$imports.M)(b.x+b.w)]);
+  });
+  return out;
+}
 function bldClassroom(K,grp,o,px,pz,sw,sd){
-  var total=16.0, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth;
+  var total=16.0, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth, links=linkSpansOn(o,'s');
+  var underLink=function(x,pad){ return links.some(function(l){ return x>l[0]-pad&&x<l[1]+pad; }); };
   facadeDoor(o,px,pz,sw,sd,'colonnade');
-  K.box('brick',px,total/2,pz,sw,total,sd,$imports.BRICK,0.97);
+  var seam=o.seamDoor;
+  if(seam&&(o.door||'s')==='s'){
+    /* 连续出入口（连续校园 A2，外壳和室内同尺寸）：一楼走廊那一段镂空，门里看得见室内模型。
+       北边的房间块整栋实心；走廊上方（二楼楼板往上）实心；一楼留东西两头的端墙和南外墙，外墙在正门那里开洞、留门头。
+       贴着室内墙面的那几面都往里退 4 厘米，室内模型挂进来时不重叠 */
+    var t=1.0, hz=seam.hollow*t, zc=pz+sd/2-hz, wh=g0-0.18, dxo=px+(seam.dx||0), dh=seam.width/2, iw=t-0.04;
+    K.box('brick',px,total/2,(pz-sd/2+zc-0.04)/2,sw,total,zc-0.04-(pz-sd/2),$imports.BRICK,0.97);   /* 房间块 */
+    K.box('brick',px,(wh+total)/2,(zc+pz+sd/2)/2,sw,total-wh,hz,$imports.BRICK,0.97);             /* 走廊上方 */
+    [-1,1].forEach(function(e){ K.box('brick',px+e*(sw/2-iw/2),wh/2,(zc+pz+sd/2)/2,iw,wh,hz,$imports.BRICK,0.97); });   /* 一楼两头的端墙 */
+    var wz1=pz+sd/2-iw/2;
+    [[px-sw/2+iw,dxo-dh-0.02],[dxo+dh+0.02,px+sw/2-iw]].forEach(function(g){ if(g[1]-g[0]>0.05) K.box('brick',(g[0]+g[1])/2,wh/2,wz1,g[1]-g[0],wh,iw,$imports.BRICK,0.97); });
+    K.box('brick',dxo,(2.32+wh)/2,wz1,dh*2+0.04,wh-2.32,iw,$imports.BRICK,0.97);                  /* 门头 */
+  }else K.box('brick',px,total/2,pz,sw,total,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));                 /* 底层浅灰：0.9 米高，以前 1.5 米把一楼窗户截掉半截 */
   /* 女儿墙（挑出的尺寸改成固定值：以前按楼宽的百分比，宽楼挑出半米，插进隔壁钟楼的柱子） */
   K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,$imports.WHITEBAND,1.0);
@@ -362,8 +433,14 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
     K.bevel('stone',c.x,0.16,c.z,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
     K.bevel('stone',c.x,g0-0.12,c.z,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
   });
-  if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',px,g0+0.14,pz+sd/2+dep/2,sw+0.4,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
-  K.box('concrete',px,g0-0.30,pz+sd/2+dep/2,sw+0.2,0.26,dep+0.3,$imports.BRICK_D,0.96);
+  /* 雨篷和梁：在南面连廊的桥下断开（连续校园 A2） */
+  var segs=[[px-sw/2-0.2,px+sw/2+0.2]];
+  links.forEach(function(l0){ var l=[l0[0]-0.3,l0[1]+0.3], nx=[]; segs.forEach(function(g){ if(l[1]<=g[0]||l[0]>=g[1]){ nx.push(g); return; } if(l[0]>g[0]) nx.push([g[0],l[0]]); if(l[1]<g[1]) nx.push([l[1],g[1]]); }); segs=nx; });   /* 桥两边立着落地柱，再让出 0.3 米 */
+  segs.forEach(function(g){
+    var cm=(g[0]+g[1])/2, cl=g[1]-g[0]; if(cl<0.05) return;
+    if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',cm,g0+0.14,pz+sd/2+dep/2,cl,0.30,dep+0.5,$imports.WHITEBAND,1.02,0.04);
+    K.box('concrete',cm,g0-0.30,pz+sd/2+dep/2,Math.max(0.05,cl-0.2),0.26,dep+0.3,$imports.BRICK_D,0.96);
+  });
   /* 首层：柱廊后面的窗 */
   var spans=faceFreeSpans(o,'s'), si;
   for(si=0;si<spans.length;si++) facadeWindows(K,'s',px,pz,sw,sd,(0,$imports.M)(spans[si][0])+2.4,(0,$imports.M)(spans[si][1])-2.4,1.7,1.8,1.2,4.2);
@@ -378,22 +455,132 @@ function bldClassroom(K,grp,o,px,pz,sw,sd){
     facadeWindows(K,'s',px,pz,sw,sd,px-sw/2+0.8,px+sw/2-0.8,fy,1.8,1.25,3.2,fl+30);
     /* 南面：一层层外走廊的栏板 + 红色栏杆 + 空调外机 */
     var sy=fy-0.77, rz=pz+sd/2+0.62;                                              /* 栏板顶比窗台低一点（以前窗台埋进栏板 6 厘米） */
-    K.box('concrete',px,sy,pz+sd/2+0.36,sw*0.98,0.14,0.72,0xd8d4cb,1.04);
-    K.box('plaster',px,sy-0.04,pz+sd/2+0.73,sw*0.98,0.24,0.04,$imports.WHITEBAND,1.0);
-    var rpn=Math.max(4,Math.round(sw/1.3)), rp;
-    for(rp=0;rp<=rpn;rp++){ var rx=px-sw*0.48+(sw*0.96/rpn)*rp; K.rod('metal',rx,sy+0.07,rz,rx,sy+1.05,rz,0.025,0.025,5,0x8b3a2e,1.0); }
-    K.rod('metal',px-sw*0.48,sy+1.05,rz,px+sw*0.48,sy+1.05,rz,0.04,0.04,6,0x8b3a2e,1.05);
-    K.rod('metal',px-sw*0.48,sy+0.55,rz,px+sw*0.48,sy+0.55,rz,0.018,0.018,4,0x8b3a2e,1.0);
+    /* 栏板和栏杆在连廊接过来的那一段断开（连续校园 A2） */
+    var bsegs=[[px-sw*0.49,px+sw*0.49]];
+    links.forEach(function(l0){ var l=[l0[0]-0.3,l0[1]+0.3], nx=[]; bsegs.forEach(function(g){ if(l[1]<=g[0]||l[0]>=g[1]){ nx.push(g); return; } if(l[0]>g[0]) nx.push([g[0],l[0]]); if(l[1]<g[1]) nx.push([l[1],g[1]]); }); bsegs=nx; });
+    bsegs.forEach(function(g){
+      var bm=(g[0]+g[1])/2, bl=g[1]-g[0]; if(bl<0.3) return;
+      K.box('concrete',bm,sy,pz+sd/2+0.36,bl,0.14,0.72,0xd8d4cb,1.04);
+      K.box('plaster',bm,sy-0.04,pz+sd/2+0.73,bl,0.24,0.04,$imports.WHITEBAND,1.0);
+      var r0=g[0]+0.1, r1=g[1]-0.1, rpn=Math.max(1,Math.round((r1-r0)/1.3)), rp;
+      for(rp=0;rp<=rpn;rp++){ var rx=r0+((r1-r0)/rpn)*rp; K.rod('metal',rx,sy+0.07,rz,rx,sy+1.05,rz,0.025,0.025,5,0x8b3a2e,1.0); }
+      K.rod('metal',r0,sy+1.05,rz,r1,sy+1.05,rz,0.04,0.04,6,0x8b3a2e,1.05);
+      K.rod('metal',r0,sy+0.55,rz,r1,sy+0.55,rz,0.018,0.018,4,0x8b3a2e,1.0);
+    });
     var acn=Math.max(2,Math.floor(sw/5.2)), ac;
-    for(ac=0;ac<acn;ac++) acUnit(K,px-sw*0.42+ac*(sw*0.84/(acn-1||1)),sy+0.31,pz+sd/2+0.28,'s');
+    for(ac=0;ac<acn;ac++){ var acx=px-sw*0.42+ac*(sw*0.84/(acn-1||1)); if(!underLink(acx,0.8)) acUnit(K,acx,sy+0.31,pz+sd/2+0.28,'s'); }   /* 连廊接过来的那一段不挂空调外机 */
   }
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id]);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id],o.seamDoor);
+}
+/* ---- 教学楼（连续校园 A1：按室内 63×22 格重建，砖墙、白腰线、红栏杆、柱廊和正门的样式不变） ----
+   五层每层 3.2 米（和楼梯一样）。北边是实心的教室块；南侧一楼是走廊外墙（窗、正门、柱廊），二到五层是敞开的外廊：
+   每层一块楼板（顶面比室内地面低 2 厘米、底面比室内吊顶高 2 厘米，从走廊里看都被室内挡住），外沿红栏杆，
+   里面是教室块的南墙（每间教室两扇门、高窗）。楼前三座塔：两部楼梯（西边那部上到天台）和电梯井。 */
+function bldTeach(K,grp,o,px,pz,sw,sd){
+  var L=(0,$imports.teachSouth)(px,pz,sw,sd), total=16.0, rise=3.2, g0=3.2, dep=$imports.STRUCTURE_CFG.colonnade.depth;
+  var gz=L.gz, zs=L.zs, ge0=L.ge0, ge1=L.ge1, gw=ge1-ge0, gx=(ge0+ge1)/2, k;
+  facadeDoor(o,px,pz,sw,sd,'colonnade');
+  /* 教室块：北墙到走廊北墙 */
+  K.box('brick',px,total/2,(L.z0+gz)/2,sw,total,gz-L.z0,$imports.BRICK,0.97);
+  /* 东头厕所那一段、西头端墙：从教室块一直到南沿 */
+  K.box('brick',(ge1+L.x0+sw)/2,total/2,(gz+zs)/2,L.x0+sw-ge1,total,zs-gz,$imports.BRICK,0.97);
+  K.box('brick',(L.x0+ge0)/2,total/2,(gz+zs)/2,ge0-L.x0,total,zs-gz,$imports.BRICK,0.97);
+  /* 一楼：走廊外墙（室内第 21 格），二楼楼板以下。里面那层退进 4 厘米：门里看得见室内模型时两面墙不重叠。
+     连续出入口（o.seamDoor，连续校园模块给）：正门那 3 米墙开敞，只留门头 */
+  var w1=L.t-0.04, wz=zs-w1/2, wh=g0-0.18, dh=o.seamDoor?o.seamDoor.width/2:0;
+  if(dh){
+    /* 墙段、门头都比室内门洞让开 2 厘米：室内模型挂进来时两边的门边、门头底面不在同一个平面上 */
+    [[ge0,px-dh-0.02],[px+dh+0.02,ge1]].forEach(function(sg){ K.box('brick',(sg[0]+sg[1])/2,wh/2,wz,sg[1]-sg[0],wh,w1,$imports.BRICK,0.97); });
+    K.box('brick',px,(2.32+wh)/2,wz,dh*2+0.04,wh-2.32,w1,$imports.BRICK,0.97);                  /* 门头 */
+  }else K.box('brick',gx,wh/2,wz,gw,wh,w1,$imports.BRICK,0.97);
+  plinthAround(K,px,pz,sw,sd,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));
+  /* 女儿墙和压顶：北、东、西三面挑出，南面和楼梯塔、电梯井贴齐（塔从南沿立起来，挑出去就插进塔身） */
+  K.box('plaster',px,total+0.18,pz,sw-0.02,0.42,sd-0.02,$imports.WHITEBAND,1.0);
+  K.box('brick',px,total+0.78,pz-0.03,sw+0.12,0.80,sd+0.06,$imports.BRICK,0.99);
+  K.bevel('stone',px,total+1.22,pz-0.06,sw+0.24,0.10,sd+0.12,0xd8d4cb,1.05,0.02);
+  roofTop(K,px,total+1.27,(L.z0+gz)/2,sw,gz-L.z0,o.x);
+  lightningBelt(K,px,pz,sw+0.16,sd+0.16,total+1.27);
+  (function(){ var u0=px-sw/2+0.8, len=sw-1.6, nw=Math.max(1,Math.floor(len/3.2)), q;
+    for(q=1;q<4;q++){ var kk=Math.round(nw*q/4); if(kk>0&&kk<nw) downpipe(K,'n',px,pz,sw,sd,u0+kk*len/nw,total+0.9); } })();
+  /* 柱廊和雨篷（立柱位置和碰撞来自 content/structure-recipe.js）。雨篷和下面的梁在楼梯塔、电梯井处断开；
+     落在塔里的立柱不画（塔身就是柱子）；立柱顶到梁底，梁托着雨篷 */
+  var beamY0=g0-0.43, inTower=function(x,pad){ return L.towers.some(function(b){ return Math.abs(x-b.x)<b.half+pad; }); };
+  (0,$imports.colonnadeColumns)(px,pz,sw,sd).forEach(function(c){
+    if(inTower(c.x,0.23)) return;
+    K.bevel('brick',c.x,beamY0/2,c.z,0.46,beamY0,0.46,$imports.BRICK,1.02,0.03);
+    K.bevel('stone',c.x,0.16,c.z,0.62,0.32,0.62,$imports.BASE_GREY,0.95,0.03);
+    K.bevel('stone',c.x,beamY0-0.06,c.z,0.56,0.12,0.56,$imports.WHITEBAND,1.0,0.02);
+  });
+  var cutsC=L.towers.map(function(b){ return [b.x-b.half,b.x+b.half]; }).sort(function(a,b){return a[0]-b[0];}), cx0=L.x0, si;
+  for(si=0;si<=cutsC.length;si++){
+    var cx1=si<cutsC.length?cutsC[si][0]:L.x0+sw;
+    if(cx1-cx0>0.05){
+      var cm=(cx0+cx1)/2, cl=cx1-cx0;
+      /* 从楼板外沿的白边外面起（白边厚 4 厘米） */
+      if(!$imports.DEV_HIDE.canopy) K.bevel('plaster',cm,g0+0.14,zs+0.04+(dep+0.21)/2,cl,0.30,dep+0.21,$imports.WHITEBAND,1.02,0.04);
+      K.box('concrete',cm,(beamY0+g0-0.01)/2,zs+0.04+(dep+0.11)/2,cl,g0-0.01-beamY0,dep+0.11,$imports.BRICK_D,0.96);
+    }
+    if(si<cutsC.length) cx0=cutsC[si][1];
+  }
+  /* 一楼南窗：避开楼梯塔、电梯井和正门 */
+  var cuts=L.towers.map(function(b){ return [b.x-b.half-0.6,b.x+b.half+0.6]; }).concat([[px-3.2,px+3.2]]).sort(function(a,b){return a[0]-b[0];});
+  var from=ge0+0.6, ci;
+  for(ci=0;ci<=cuts.length;ci++){
+    var to=ci<cuts.length?cuts[ci][0]:ge1-0.6;
+    if(to-from>2.4) facadeWindows(K,'s',px,pz,sw,sd,from+0.4,to-0.4,1.7,1.8,1.2,4.2);
+    if(ci<cuts.length) from=Math.max(from,cuts[ci][1]);
+  }
+  /* 北、东、西三面每层的窗，每层腰线 */
+  for(k=0;k<5;k++){
+    var fy=k*rise+1.75;
+    if(k>0) bandAround(K,px,pz,sw,sd,k*rise-0.09,0.18,0.06,null,['s']);   /* 南面是外廊，楼板外沿的白边就是腰线 */
+    facadeWindows(K,'n',px,pz,sw,sd,px-sw/2+0.8,px+sw/2-0.8,fy,1.8,1.25,3.2,k);
+    facadeWindows(K,'e',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,fy,1.6,1.25,3.4,k+10);
+    facadeWindows(K,'w',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,fy,1.6,1.25,3.4,k+20);
+  }
+  /* 二到五层外廊 */
+  var doors=[10,18,22,30,34,42,46,54];
+  for(k=1;k<=5;k++){
+    var y=k*rise;
+    /* 楼板（五层上面那块是屋顶下的檐板） */
+    K.box('concrete',gx,y-0.10,(gz+zs)/2,gw,0.16,zs-gz,0xd8d4cb,1.04);
+    K.box('plaster',gx,y-0.06,zs+0.02,gw,0.24,0.04,$imports.WHITEBAND,1.0);                          /* 楼板外沿的白边 */
+    if(k===5) continue;
+    /* 教室块南墙上的门和高窗（外廊这一侧） */
+    doors.forEach(function(c){
+      var dx=L.x0+(c+0.5)*L.t;
+      K.box('wood',dx,y+1.02,gz+0.03,0.92,2.04,0.06,0x6a4a34,0.95);
+      K.box('plaster',dx,y+2.1,gz+0.03,1.06,0.10,0.07,$imports.WHITEBAND,1.0);
+    });
+    facadeWindows(K,'s',px,L.z0+(gz-L.z0)/2,sw,gz-L.z0,ge0+2.2,ge1-2.2,y+2.55,1.6,0.6,4.0,k+30);   /* 高窗在门头（2.15 米）以上、上一层楼板以下 */
+    /* 外沿：矮栏板 + 红栏杆（室内第 21 格的里沿，人走到这里正好挨着栏杆） */
+    var rz=zs-L.t+0.08, rpn=Math.max(4,Math.round(gw/1.3)), rp;
+    K.box('concrete',gx,y+0.08,rz,gw,0.16,0.18,0xd8d4cb,1.02);
+    for(rp=0;rp<=rpn;rp++){ var rx=ge0+(gw/rpn)*rp; K.rod('metal',rx,y+0.16,rz,rx,y+1.08,rz,0.025,0.025,5,0x8b3a2e,1.0); }
+    K.rod('metal',ge0,y+1.08,rz,ge1,y+1.08,rz,0.04,0.04,6,0x8b3a2e,1.05);
+    K.rod('metal',ge0,y+0.6,rz,ge1,y+0.6,rz,0.018,0.018,4,0x8b3a2e,1.0);
+    var acn=Math.max(2,Math.floor(gw/9)), ac;
+    for(ac=0;ac<acn;ac++) acUnit(K,ge0+2+ac*((gw-4)/(acn-1||1)),y+0.31,gz+0.3,'s');
+  }
+  /* 楼前三座塔：楼梯两座、电梯一座，砖墙、白顶，楼梯塔南面每个半层一扇窗 */
+  L.towers.forEach(function(b){
+    var d=b.z1-b.z0, cz=(b.z0+b.z1)/2;
+    K.box('brick',b.x,b.top/2,cz,b.half*2,b.top,d,$imports.BRICK,0.97);
+    K.box('plaster',b.x,b.top+0.15,cz,b.half*2+0.12,0.30,d+0.12,$imports.WHITEBAND,1.0);
+    plinthAround(K,b.x,cz,b.half*2,d,0.9,0.08,(0,$imports.shadeHex)($imports.BASE_GREY,0.92));
+    if(b.kind==='stair'){ for(var h=1.6+rise/2;h<b.top-1;h+=rise) facadeWindows(K,'s',b.x,cz,b.half*2,d,b.x-0.9,b.x+0.9,h,1.2,1.1,1.8,(h*7)|0); }
+  });
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',true,BLD_NAME[o.id],o.seamDoor);
 }
 /* ---- 宿舍：六层，阳台开在门的对面（贴着食堂的那段不画） ---- */
 function bldDorm(K,grp,o,px,pz,sw,sd){
-  var dh=OBLD_H[o.id], dn=Math.round(dh/3.0), dfl;
+  var dh=OBLD_H[o.id], dn=Math.round(dh/3.0), dfl, seam=o.seamDoor;
+  if(seam){ sw+=2*SEAM_OUT; sd+=2*SEAM_OUT; }
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,dh/2,pz,sw,dh,sd,$imports.BRICK,0.97);
+  if(seam){                                                                              /* 连续出入口（连续校园 A3）：一楼镂空（四面墙），屋里是挂进来的室内模型；二楼往上实心 */
+    seamWalls(K,'brick',px,pz,sw,sd,3.2,$imports.BRICK,seam,o.door||'s');
+    K.box('brick',px,(3.2+dh)/2,pz,sw,dh-3.2,sd,$imports.BRICK,0.97);
+  }else K.box('brick',px,dh/2,pz,sw,dh,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.7,0.10,$imports.BASE_GREY);                                 /* 以前 2.5 米高，一楼窗户整个埋在里面 */
   K.box('plaster',px,dh+0.16,pz,sw-0.02,0.32,sd-0.02,$imports.WHITEBAND,1.0);
   K.bevel('stone',px,dh+0.45,pz,sw+0.2,0.10,sd+0.2,0xd8d4cb,1.0,0.02);
@@ -404,7 +591,7 @@ function bldDorm(K,grp,o,px,pz,sw,sd){
     for(shx=px-sw/2+2.2;shx<px+sw/2-2;shx+=3.2) solarHeater(K,shx,dh+0.5,pz+sd*0.28,Math.PI);
   }
   downpipe(K,'e',px,pz,sw,sd,pz,dh+0.3); downpipe(K,'w',px,pz,sw,sd,pz,dh+0.3);
-  var bs=(o.door==='n')?1:-1, balFace=bs>0?'s':'n', doorFace=bs>0?'n':'s';
+  var bs=(o.door==='s')?-1:1, balFace=bs>0?'s':'n', doorFace=bs>0?'n':'s';            /* 阳台朝南（门朝南的那栋除外） */
   var spans=faceFreeSpans(o,balFace), sp2;
   for(dfl=1;dfl<=dn;dfl++){
     var dy=dfl*(dh/(dn+0.5));
@@ -432,13 +619,17 @@ function bldDorm(K,grp,o,px,pz,sw,sd){
       }
     }
   }
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id]);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id],seam);
 }
 /* ---- 钟楼：砖砌塔身、两道竖长窗、四面钟、四柱亭子、攒尖顶，里面吊着钟 ---- */
 function bldBell(K,grp,o,px,pz,sw,sd){
-  var bh=19.0, bTop=15.2, fs2, f;
+  var bh=19.0, bTop=15.2, fs2, f, seam=o.seamDoor;
+  if(seam){ sw+=2*SEAM_OUT; sd+=2*SEAM_OUT; }
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,bTop/2,pz,sw,bTop,sd,$imports.BRICK,0.98);
+  if(seam){
+    seamWalls(K,'brick',px,pz,sw,sd,bTop,$imports.BRICK,seam,o.door||'s');
+    K.box('brick',px,bTop-0.5,pz,sw-1.0,1.0,sd-1.0,$imports.BRICK,0.98);               /* 塔身顶上的楼板（室内通高 9.8 米，板在它上面） */
+  }else K.box('brick',px,bTop/2,pz,sw,bTop,sd,$imports.BRICK,0.98);
   plinthAround(K,px,pz,sw,sd,1.6,0.17,$imports.STONE);
   var FACES=['s','n','e','w'];
   for(f=0;f<4;f++){
@@ -446,10 +637,10 @@ function bldBell(K,grp,o,px,pz,sw,sd){
     var gsv=FAC.gap; FAC.gap=null;                                                       /* 只看贴没贴着别的楼：开门的那一面窗和钟面照画（以前被门洞的避让一起挡掉了） */
     var blk=facadeBlocked(face,(horiz?px:pz)-1,(horiz?px:pz)+1,3,bTop); FAC.gap=gsv;
     if(blk) continue;                                                                    /* 贴着教学楼的那一面看不见，不画窗和钟面 */
-    var twn='tower_window_'+Math.round((horiz?sw:sd)*0.20*100);
+    var twd=(horiz?sw:sd)*0.20, twb=horiz?2.31:4.18, twn='tower_window_'+Math.round(twb*100);   /* 只有按原尺寸做的两种窗，宽度差一点就沿窗宽拉一下 */
     for(fs2=0;fs2<2;fs2++){
       var off=(fs2?0.28:-0.28)*(horiz?sw:sd);
-      if(K.asset(twn,horiz?px+off:px+sg*sw/2,bTop*0.31,horiz?pz+sg*sd/2:pz+off,FACE_ROT[face])) continue;   /* 尖拱窗：石窗套、铁窗棂 */
+      if(Math.abs(twd/twb-1)<0.1&&K.asset(twn,horiz?px+off:px+sg*sw/2,bTop*0.31,horiz?pz+sg*sd/2:pz+off,FACE_ROT[face],{sx:twd/twb})) continue;   /* 尖拱窗：石窗套、铁窗棂 */
       var wx=horiz?px+off:px+sg*(sw/2+0.02), wz=horiz?pz+sg*(sd/2+0.02):pz+off;
       var wsz=horiz?[sw*0.20,0.04]:[0.04,sd*0.20];
       K.box('dark',wx,bTop*0.56,wz,wsz[0],bTop*0.50,wsz[1],$imports.WIN_DARK,1.0);
@@ -479,7 +670,8 @@ function bldBell(K,grp,o,px,pz,sw,sd){
   var bk;
   for(bk=0;bk<8;bk++){ var ba=bk/8*6.283; K.cyl('stone',px+Math.cos(ba)*sw*0.36,bTop+0.1,pz+Math.sin(ba)*sd*0.36,0.06,0.06,0.9,6,0xc9c4bb,1); }
   K.bevel('concrete',px,bh+0.18,pz,sw*1.12,0.36,sd*1.12,0x8a5a52,1.0,0.06);          /* 檐 */
-  if(!(Math.abs(sw*1.12-12.95)<0.1&&Math.abs(sd*1.12-23.40)<0.1&&K.asset('bell_roof',px,bh+0.36,pz,0))){   /* 庑殿顶（按这座钟楼的平面建模） */
+  var rfs=sd*1.12/23.40, rfx=sw*1.12/12.95/rfs;                                          /* 庑殿顶按 11.56×20.89 米的平面建模；平面差一点就整体缩放、东西向再拉一下 */
+  if(!(Math.abs(rfs-1)<0.1&&Math.abs(rfx-1)<0.1&&K.asset('bell_roof',px,bh+0.36,pz,0,{s:rfs,sx:rfx}))){
     K.frame(px,pz,Math.PI/4);
     K.cyl('concrete',0,bh+0.36,0,Math.max(sw,sd)*0.80,0.08,3.0,4,0x7a4c46,1.0);          /* 攒尖顶 */
     K.unframe();
@@ -488,13 +680,15 @@ function bldBell(K,grp,o,px,pz,sw,sd){
   if(!K.asset('bell_bronze',px,bTop-0.10,pz,0,{s:1.21}))                                 /* 亭子里吊着的钟（钟楼里那口铜钟放大） */
     K.cyl('metal',px,bTop+1.6,pz,0.85,0.45,1.3,12,0x6e5228,1.0);
   K.rod('metal',px,bTop+2.75,pz,px,bh,pz,0.04,0.04,4,0x2a2018);
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,null);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,null,seam&&{width:seam.width,dx:seam.dx,leaf:0.215});   /* 钟楼墙基挑出 0.17 米 */
 }
 /* ---- 食堂：两层，大窗 ---- */
 function bldCanteen(K,grp,o,px,pz,sw,sd){
-  var h=OBLD_H.canteen;
+  var h=OBLD_H.canteen, seam=o.seamDoor;
+  if(seam){ sw+=2*SEAM_OUT; sd+=2*SEAM_OUT; }
   facadeDoor(o,px,pz,sw,sd,'big');
-  K.box('brick',px,h/2,pz,sw,h,sd,$imports.BRICK,0.97);
+  if(seam) seamWalls(K,'brick',px,pz,sw,sd,h,$imports.BRICK,seam,o.door||'s');         /* 连续出入口：四面墙，屋里是室内模型 */
+  else K.box('brick',px,h/2,pz,sw,h,sd,$imports.BRICK,0.97);
   plinthAround(K,px,pz,sw,sd,0.9,0.10,$imports.BASE_GREY);
   K.box('plaster',px,h+0.16,pz,sw-0.02,0.32,sd-0.02,$imports.WHITEBAND,1.0);
   K.bevel('stone',px,h+0.40,pz,sw+0.2,0.08,sd+0.2,0xd8d4cb,1.0,0.02);
@@ -511,14 +705,16 @@ function bldCanteen(K,grp,o,px,pz,sw,sd){
     K.bevel('metal',px+sw/2+0.4,h-1.0,pz+sd*0.25,0.8,1.2,1.2,0xb8bcbe,1.0,0.03);
     K.cyl('metal',px+sw/2+0.4,h-0.4,pz+sd*0.25,0.25,0.25,1.6,8,0x9aa0a4,1.0);
   }
-  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id]);
+  addEntrance(K,grp,px,pz,sw,sd,o.door||'s',false,BLD_NAME[o.id],seam);
 }
 /* ---- 小平房：保安岗、器材室、垃圾站 ---- */
 function bldSmall(K,grp,o,px,pz,sw,sd){
   var h=OBLD_H[o.id]!==undefined?OBLD_H[o.id]:11.5;
-  var body=(o.id==='trash')?0xa8aca0:$imports.BRICK;
+  var body=(o.id==='trash')?0xa8aca0:$imports.BRICK, seam=o.seamDoor;
+  if(seam){ sw+=2*SEAM_OUT; sd+=2*SEAM_OUT; }                                         /* 外壳比室内每面大 4 厘米，室内外墙的外表面藏在里面 */
   facadeDoor(o,px,pz,sw,sd,'small');
-  K.box(o.id==='trash'?'concrete':'brick',px,h/2,pz,sw,h,sd,body,0.97);
+  if(seam) seamWalls(K,o.id==='trash'?'concrete':'brick',px,pz,sw,sd,h,body,seam,o.door||'s');
+  else K.box(o.id==='trash'?'concrete':'brick',px,h/2,pz,sw,h,sd,body,0.97);
   plinthAround(K,px,pz,sw,sd,h*0.24,0.08,$imports.BASE_GREY);
   K.bevel('concrete',px,h+0.12,pz,sw+0.6,0.24,sd+0.6,0xc9c4bb,1.0,0.04);             /* 挑出来的屋面板 */
   K.box('plaster',px,h-0.06,pz,sw*1.002,0.12,sd*1.002,$imports.WHITEBAND,1.0);
@@ -533,7 +729,7 @@ function bldSmall(K,grp,o,px,pz,sw,sd){
     facadeWindows(K,'e',px,pz,sw,sd,pz-sd/2+0.8,pz+sd/2-0.8,2.4,1.6,0.9,3.0,3);
     facadeWindows(K,'n',px,pz,sw,sd,px-sw/2+0.8,px+sw/2-0.8,2.4,1.6,0.9,3.0,4);
   }
-  addSmallDoor(K,px,pz,sw,sd,face);
+  addSmallDoor(K,px,pz,sw,sd,face,seam);
   if(BLD_NAME[o.id]){
     var m=signMesh(BLD_NAME[o.id],Math.min(2.2,sw*0.5),0.34,'#e8e4de','#8b3a2e');
     var hz=(face==='s'||face==='n'), sg=(face==='s'||face==='e')?1:-1;
@@ -775,6 +971,7 @@ function gateModel(K,grp,wx,wy,wide,tallSign,vert,name){
 var BLD_BY_ID={
   garage:function(K,grp,o,px,pz,sw,sd){ garageRamp(K,px,pz,sw,sd); },
   garw:  function(K,grp,o,px,pz,sw,sd){ (0,$imports.garagePed)(K,px,pz,sw,sd); },
+  teach:  function(K,grp,o,px,pz,sw,sd){ bldTeach(K,grp,o,px,pz,sw,sd); },
   bell:   function(K,grp,o,px,pz,sw,sd){ bldBell(K,grp,o,px,pz,sw,sd); },
   dormN:  function(K,grp,o,px,pz,sw,sd){ bldDorm(K,grp,o,px,pz,sw,sd); },
   canteen:function(K,grp,o,px,pz,sw,sd){ bldCanteen(K,grp,o,px,pz,sw,sd); },
@@ -849,9 +1046,13 @@ GameModules.publish("game3d/js/model/building.js",{
 "acUnit":{get:function(){return acUnit;},set:function($value){acUnit=$value;}},
 "roofTop":{get:function(){return roofTop;},set:function($value){roofTop=$value;}},
 "addEntrance":{get:function(){return addEntrance;},set:function($value){addEntrance=$value;}},
+"SEAM_OUT":{get:function(){return SEAM_OUT;},set:function($value){SEAM_OUT=$value;}},
+"seamWalls":{get:function(){return seamWalls;},set:function($value){seamWalls=$value;}},
 "addSmallDoor":{get:function(){return addSmallDoor;},set:function($value){addSmallDoor=$value;}},
 "addGardenSign":{get:function(){return addGardenSign;},set:function($value){addGardenSign=$value;}},
+"linkSpansOn":{get:function(){return linkSpansOn;},set:function($value){linkSpansOn=$value;}},
 "bldClassroom":{get:function(){return bldClassroom;},set:function($value){bldClassroom=$value;}},
+"bldTeach":{get:function(){return bldTeach;},set:function($value){bldTeach=$value;}},
 "bldDorm":{get:function(){return bldDorm;},set:function($value){bldDorm=$value;}},
 "bldBell":{get:function(){return bldBell;},set:function($value){bldBell=$value;}},
 "bldCanteen":{get:function(){return bldCanteen;},set:function($value){bldCanteen=$value;}},

@@ -242,13 +242,14 @@ function initInput(){
     if(owner==='death'&&(k===' '||k==='enter'||k==='escape')){   /* 跳过死亡演出 */
       e.preventDefault();if(!e.repeat)(0,$imports.deathSkip)();return;
     }
+    if(k==='escape'&&$imports.Settings.fromMenu&&$imports.UI.openPanel==='set'){e.preventDefault();if(!e.repeat)$imports.Settings.back();return;}   /* 主菜单打开的设置：Esc 回主菜单 */
     if($imports.S.screen!=='play'||$imports.S.dead||e.ctrlKey||e.metaKey||e.altKey)return;
     if(k==='escape'){
       e.preventDefault();if(e.repeat)return;
       if($imports.PC.on){$imports.PCGAME.stop();return;}
       if($imports.PHONE.on){$imports.PHONE.stop();return;}
       if($imports.LESSON.on){$imports.LESSON.close(true);return;}
-      if($imports.UI.openPanel==='set'){$imports.UI.close('set',false);if($imports.PAUSE.on)$imports.UI.open('pause');return;}
+      if($imports.UI.openPanel==='set'){$imports.Settings.back();return;}   /* 主菜单打开的回主菜单，暂停里打开的回暂停 */
       if($imports.UI.openPanel&&$imports.UI.openPanel!=='pause'){$imports.UI.close($imports.UI.openPanel);return;}
       if($imports.PAUSE.on&&performance.now()-INPUT.unlockedAt<200)return;
       $imports.Game.pauseToggle();return;

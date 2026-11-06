@@ -3,6 +3,26 @@
 /* 与渲染无关的圆形角色碰撞。坐标均为游戏世界单位，四档画质共用。 */
 'use strict';
 var Physics=Object.freeze({hz:240});
+/* 楼体在室外挡人的矩形（世界单位）：整块楼，减掉连续出入口在门口挖的缺口（o.gaps，连续校园模块给，世界单位）。
+   每个缺口把一块矩形切成最多四块；结果按 gaps 数组缓存在楼上。 */
+function roofSolids(o){
+  var B={x0:o.x*$imports.SC,y0:o.y*$imports.SC,x1:(o.x+o.w)*$imports.SC,y1:(o.y+o.h)*$imports.SC};
+  if(!o.gaps||!o.gaps.length) return [B];
+  if(o._solidsFor===o.gaps&&o._solids) return o._solids;
+  var list=[B];
+  o.gaps.forEach(function(g){
+    var next=[];
+    list.forEach(function(r){
+      if(g.x1<=r.x0||g.x0>=r.x1||g.y1<=r.y0||g.y0>=r.y1){ next.push(r); return; }
+      var gx0=Math.max(g.x0,r.x0),gx1=Math.min(g.x1,r.x1),gy0=Math.max(g.y0,r.y0),gy1=Math.min(g.y1,r.y1);
+      [{x0:r.x0,y0:r.y0,x1:r.x1,y1:gy0},{x0:r.x0,y0:gy1,x1:r.x1,y1:r.y1},{x0:r.x0,y0:gy0,x1:gx0,y1:gy1},{x0:gx1,y0:gy0,x1:r.x1,y1:gy1}]
+        .forEach(function(q){ if(q.x1-q.x0>1e-6&&q.y1-q.y0>1e-6) next.push(q); });
+    });
+    list=next;
+  });
+  o._solidsFor=o.gaps; o._solids=list;
+  return list;
+}
 var Collision={
   rectDepth:function(x,y,r,x0,y0,x1,y1){
     var dx=Math.max(x0-x,0,x-x1),dy=Math.max(y0-y,0,y-y1);
@@ -43,7 +63,7 @@ var Collision={
     }else{
       var bx0=($imports.BOUND.x0+4)*$imports.SC,by0=($imports.BOUND.y0+4)*$imports.SC,bx1=($imports.BOUND.x1-4)*$imports.SC,by1=($imports.BOUND.y1-4)*$imports.SC;
       if(x-r<bx0||y-r<by0||x+r>bx1||y+r>by1)return Infinity;
-      $imports.OBJ.forEach(function(o){if(o.k==='roof'&&!o.open)rect(o.x*$imports.SC,o.y*$imports.SC,(o.x+o.w)*$imports.SC,(o.y+o.h)*$imports.SC);});
+      $imports.OBJ.forEach(function(o){if(o.k==='roof'&&!o.open)roofSolids(o).forEach(function(q){rect(q.x0,q.y0,q.x1,q.y1);});});
       $imports.OUT_SOLID.forEach(function(b){rect(b.x0*$imports.SC,b.y0*$imports.SC,b.x1*$imports.SC,b.y1*$imports.SC);});
     }
     return total;
@@ -53,6 +73,7 @@ var Collision={
 /* @module-exports */
 GameModules.publish("game3d/js/collision.js",{
 "Physics":{get:function(){return Physics;},set:function($value){Physics=$value;}},
+"roofSolids":{get:function(){return roofSolids;},set:function($value){roofSolids=$value;}},
 "Collision":{get:function(){return Collision;},set:function($value){Collision=$value;}}
 });
 })(GameModules.imports("game3d/js/collision.js"));

@@ -250,14 +250,14 @@ function useRoster(timeoutMs){
 function canteenHint(h,R){ return (R.host==='canteen'&&!(0,$imports.mealNow)())?((0,$imports.hasItem)('coin')?'投币买饭':'打饭窗口'):'翻找'; }
 var TILE_HINT={
   '=':function(h,R){ var need=(0,$imports.doorLockNeed)(R,h.c,h.r); return (need&&!(0,$imports.hasItem)(need))?'开门（锁着）':$imports.OPENDOORS[(0,$imports.doorKeyAt)(R,h.c,h.r)]?'关门':'开门'; },
-  O:'出去', H:'躲进柜子',
+  O:function(h,R){ return R.openExitAt&&R.openExitAt(h.x,h.y)?'':'出去'; }, H:'躲进柜子',   /* 连续出入口：直接走出去，不提示按 E */
   M:function(){
     var j=$imports.Investigation.state(),sup=j.supply;
     if(j.entries.notice&&sup&&sup.site===$imports.S.room&&!sup.taken) return '看补给箱 / 售货机';   /* 只有补给箱真在这儿才这么写 */
     return (0,$imports.hasItem)('coin')?'投币（售货机）':'售货机';
   },
   k:function(h,R){ return R.host==='guard'?'查看值班台':canteenHint(h,R); }, t:canteenHint,
-  L:'走连廊', Q:'看服务器终端', S:'沿楼梯行走', J:function(){return $imports.S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return $imports.Investigation.carHint(h);},
+  L:function(){ return GameModules.first('linkContinuous')?'':'走连廊'; },   /* 连续校园：门洞直接走过去，不再提示按 E */ Q:'看服务器终端', S:'沿楼梯行走', J:function(){return $imports.S.room==='lift_dream'?'走向门':'电梯';}, j:'打开门', u:'翻看日记', P:'坐下', c:'上车', V:function(h){return $imports.Investigation.carHint(h);},
   T:function(h,R){
     if($imports.Investigation.isPodium(R,h.c,h.r)) return $imports.Investigation.visible('notice')?'再看移交单':'看移交单';
     return $imports.S.room==='teach1'?'拿粉笔':'看讲台';
@@ -290,6 +290,7 @@ function interactHint(){
     return (typeof th==='function')?th(h,R):th;
   }
   var nb=nearWorld(0), act=nb?null:sanActFor(null,null), i;
+  if(nb&&GameModules.first('doorContinuous',nb.obj.id)) nb=null;      /* 连续出入口：直接走进去，不提示按 E */
   if(nb) return nb.obj.id==='garw'?'沿楼梯下到车库':'进入 '+nb.obj.n;
   if(act) return SAN_ACTS[act].n+'（'+SAN_ACTS[act].min+' 分钟）';
   for(i=0;i<GATE_HINT.length;i++){
@@ -315,6 +316,7 @@ function tryInteract(){
         dormN:'dorm1',dormS:'dorm4',garage:'garage1',garw:'garage1',trash:'trash1',
         guard:'guard1',gear:'gear1',bell:'bell1'};
 
+      if(map[id]&&GameModules.first('doorContinuous',id)){ (0,$imports.os)('我：门开着，直接走进去就行。',2.0); return; }
       if(map[id]){ $imports.ENTER_VIA='out'; try{ $imports.SFX.door(); }catch(e){} (0,$imports.enterRoom)(map[id]); return; }
       return;
     }
@@ -360,6 +362,7 @@ function tryInteract(){
     return;
   }
   if(ch==='O'){
+    if(R.openExitAt&&R.openExitAt(hit.x,hit.y)){ (0,$imports.os)('我：门开着，直接走出去就行。',2.0); return; }
     if(R.floor>1){ (0,$imports.os)('我：这是'+R.floor+'楼。这边的窗子封死了。',3.0); return; }
     (0,$imports.exitRoom)(); return;
   }
@@ -490,6 +493,7 @@ function spawnAtTile(id,r2,c2){
   return {x:R.ox+(c2+0.5)*R.tw, y:R.oy+(r2+0.5)*R.th};
 }
 function useLink(R,c,r){
+  if(GameModules.first('linkContinuous')){ (0,$imports.os)('我：门洞开着，直接走过去就是连廊。',2.2); return; }   /* 连续校园：连廊不再换场景 */
   var id=R.id, host=R.host, f=R.floor;
   if(R.host==='c1'||R.host==='c2'){
     var to=linksOf(R.host);
@@ -515,15 +519,14 @@ function useLink(R,c,r){
 function linksOf(host){
   if(host==='c1'){
     var A=$imports.INTERIORS['admin2'], L=$imports.INTERIORS['lab2'];
-    return {
-      north:{id:'admin2', c:A?A.cols-3:0, r:18},
-      south:{id:'lab2',  c:L?L.cols-3:0, r:16}
+    return {                                                     /* 连续校园 A2：连廊从楼的南／北墙接进来 */
+      north:{id:'admin2', c:47, r:20},
+      south:{id:'lab2',  c:47, r:1}
     };
   }
-  var L2=$imports.INTERIORS['lab2'], T=$imports.INTERIORS['teach2'];
   return {
-    north:{id:'lab2',  c:2, r:16},
-    south:{id:'teach2',c:2, r:18}
+    north:{id:'lab2',  c:7, r:18},
+    south:{id:'teach2',c:6, r:1}
   };
 }
 /* 楼梯：能上能下。以前行政楼 / 实验楼只能往上（顶层原地不动），南宿舍的楼梯直接把人送出楼外 */

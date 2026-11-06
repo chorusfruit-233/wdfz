@@ -217,6 +217,7 @@ body.touch .bagacts kbd{display:none}
 #pause,#set{position:fixed;inset:0;display:none;align-items:center;justify-content:center;overflow-y:auto;
   padding:calc(24px + var(--st)) 16px calc(24px + var(--sb));background:rgba(3,2,2,.82);font-family:var(--ui-font);color:var(--ui-text)}
 #pause{z-index:34}#set{z-index:36}
+body.setmenu #set{z-index:70}   /* 从主菜单打开设置：盖在主菜单（60）上面 */
 .pbox{display:flex;flex-direction:column;gap:10px;width:min(400px,100%);margin:auto;padding:26px 24px 22px}
 /* 标题像盖上去的红章 */
 .ptitle{align-self:center;margin:2px 0 10px;padding:6px 8px 6px 18px;font:400 19px/1.3 var(--ui-serif);letter-spacing:10px;

@@ -1016,24 +1016,24 @@ class ControlsTest(BrowserCase):
 
     def test_tsinghua_cup_only_falls_along_tall_outer_walls(self):
         page = self.page()
-        page.evaluate("S.x=560*SC;S.y=857*SC")
+        page.evaluate("S.x=560*SC;S.y=(objById('teach').y-8)*SC")
         self.assert_js(page, "anAllowed('cup')&&cupWall().id==='teach'&&cupWall().m<2.4")
-        page.evaluate("S.y=830*SC")                              # 离墙太远
+        page.evaluate("S.y=(objById('teach').y-35)*SC")                              # 离墙太远
         self.assert_js(page, "!anAllowed('cup')")
-        page.evaluate("S.y=990*SC")                              # 教学楼南面柱廊下：头顶有顶
+        page.evaluate("S.y=(objById('teach').y+objById('teach').h+5)*SC")                              # 教学楼南面柱廊下：头顶有顶
         self.assert_js(page, "!anAllowed('cup')")
-        page.evaluate("S.y=857*SC;USE.brollyShield=true")        # 伞挡不住保温杯
+        page.evaluate("S.y=(objById('teach').y-8)*SC;USE.brollyShield=true")        # 伞挡不住保温杯
         self.assert_js(page, "anAllowed('cup')")
         page.evaluate("USE.brollyShield=false;doEnterRoom('teach1');running=false")
         self.assert_js(page, "!anAllowed('cup')&&cupWall()===null")
 
     def test_tsinghua_cup_kills_if_you_stay_and_misses_if_you_move(self):
         page = self.page()
-        page.evaluate("""S.x=560*SC;S.y=857*SC;AN.pre='cup';AN.locked=true;anStart();
+        page.evaluate("""S.x=560*SC;S.y=(objById('teach').y-8)*SC;AN.pre='cup';AN.locked=true;anStart();
             for(var i=0;i<80&&!S.dead;i++){ anTick(0.05); anfxUpdate(0.05); }""")
         self.assert_js(page, "S.dead")
         page = self.page()
-        page.evaluate("""S.x=560*SC;S.y=857*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
+        page.evaluate("""S.x=560*SC;S.y=(objById('teach').y-8)*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
             for(var i=0;i<40&&AN.data.phase<1;i++){ anTick(0.05); anfxUpdate(0.05); }""")
         self.assert_js(page, "AN.id==='cup'&&AN.data.phase===1&&ANFX.cup.ring.visible")
         page.evaluate("""S.y-=14;                                   // 往外躲开约 1.6 米
@@ -1042,7 +1042,7 @@ class ControlsTest(BrowserCase):
 
     def test_tsinghua_cup_survives_save_and_leaves_trace_outdoors(self):
         page = self.page()
-        page.evaluate("""S.x=560*SC;S.y=857*SC;AN.pre='cup';AN.locked=true;anStart();anTick(0.1);saveGame();
+        page.evaluate("""S.x=560*SC;S.y=(objById('teach').y-8)*SC;AN.pre='cup';AN.locked=true;anStart();anTick(0.1);saveGame();
             anfxClear();Game.continue_();running=false;""")
         self.assert_js(page, "AN.id==='cup'&&AN.data.phase===0&&ANFX.kind==='cup'&&!!ANFX.cup&&ANFX.cup.cup.visible")
         page.evaluate("""for(var i=0;i<40&&AN.data.phase<1;i++){ anTick(0.05); anfxUpdate(0.05); }""")
@@ -1087,7 +1087,7 @@ class ControlsTest(BrowserCase):
         self.assertNotIn('紫色的保温杯', r['msg'])
         # 砸到地上：杯身上的盖子藏起来，换一个单独的盖子滚开
         page = self.page()
-        page.evaluate("""S.x=560*SC;S.y=857*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
+        page.evaluate("""S.x=560*SC;S.y=(objById('teach').y-8)*SC;S.san=100;AN.pre='cup';AN.locked=true;anStart();
             for(var i=0;i<40&&AN.data.phase<1;i++){ anTick(0.05); anfxUpdate(0.05); }
             S.y-=14;for(i=0;i<60&&AN.data.phase<2;i++){ anTick(0.05); anfxUpdate(0.05); }
             anTick(0.05); anfxUpdate(0.05); window.__lid0=ANFX.cup.lidWrap.position.clone();
@@ -1179,7 +1179,7 @@ class ControlsTest(BrowserCase):
         self.assert_js(page, '!S.dead&&S.immuneUsed')
         page = self.page()
         page.evaluate("""S.diff='hard';S.talent='immune';S.immuneUsed=false;S.bag=[];
-            S.x=560*SC;S.y=857*SC;AN.pre='cup';AN.locked=true;anStart();
+            S.x=560*SC;S.y=(objById('teach').y-8)*SC;AN.pre='cup';AN.locked=true;anStart();
             for(var i=0;i<80&&!S.immuneUsed;i++) anTick(.05);""")
         self.assert_js(page, "S.immuneUsed&&!S.dead&&!AN.active&&RT.traces.some(function(t){return t.k==='cup'})")
 

@@ -93,7 +93,7 @@ function mixRGB(a,b,t){ return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]
 function lightState(){
   var sun=sunAt(hourNow());
   var indoor=($imports.Engine.sceneView().mode==='in');
-  var roof=indoor&&$imports.Engine.sceneView().room==='teach6';
+  var roof=indoor&&($imports.Engine.sceneView().room==='teach6'||!!GameModules.first('openAir',$imports.Engine.sceneView().room));   /* 天台；连续校园的敞开外廊（openAir 钩子）也按室外打光 */
   if(roof) indoor=false;                     /* 天台上头顶就是天 */
   var day=sun.day;
   var wn=$imports.GLR.worldNorm||0;
